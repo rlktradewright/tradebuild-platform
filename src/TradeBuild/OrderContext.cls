@@ -399,10 +399,10 @@ Public Property Get quantity() As Long
 quantity = mQuantity
 End Property
 
-Public Property Get risk() As Currency
+Public Property Get Risk() As Currency
 Dim orderPlex As orderPlex
 For Each orderPlex In mActiveOrderPlexes
-    risk = risk + orderPlex.risk
+    Risk = Risk + orderPlex.Risk
 Next
 End Property
 
@@ -455,6 +455,12 @@ Set Ticker = mTicker
 End Property
 
 Public Property Let timeInForce(ByVal value As OrderTifs)
+If Not gIsValidTIF(value) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "timeInForce", _
+            "Value must be a member of the OrderTifs enum"
+End If
+
 checkAttributeSupported OrderAttributeIds.OrderAttTimeInForce
 If Not isOrderTifValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttTimeInForce, value
 mTimeInForce = value
@@ -489,9 +495,9 @@ End Property
 '           EntryOrderTypeMarketOnClose     a market on close order
 '           EntryOrderTypeMarketIfTouched   a market if touched order
 '           EntryOrderTypeMarketToLimit     a market to limit order
-'           EntryOrderTypeBid               a limit order at the current bid
-'           EntryOrderTypeAsk               a limit order at the current ask
-'           EntryOrderTypeLast              a limit order at the last trade price
+'           EntryOrderTypeBid               a limit order at the current Bid
+'           EntryOrderTypeAsk               a limit order at the current Ask
+'           EntryOrderTypeLast              a limit order at the last Trade price
 '           EntryOrderTypeLimit             a limit order
 '           EntryOrderTypeLimitOnOpen       a limit on open order
 '           EntryOrderTypeLimitOnClose      a limit on close order
@@ -501,7 +507,7 @@ End Property
 ' @param BuyPrice       the limit price for a limit order (ignored for EntryOrderTypeBid,
 '                       EntryOrderTypeAsk and EntryOrderTypeLast)
 ' @param BuyOffset      number of ticks to modify the BuyPrice. For example, to place an order
-'                       one tick below the current ask, use EntryOrderTypeAsk and set
+'                       one tick below the current Ask, use EntryOrderTypeAsk and set
 '                       BuyOffset to -1
 ' @param TriggerPrice   used with EntryOrderTypeMarketIfTouched, EntryOrderTypeLimitIfTouched,
 '                       EntryOrderTypeStop and EntryOrderTypeStopLimit to specify the price
@@ -510,9 +516,9 @@ End Property
 '           StopOrderTypeNone               no stop loss order
 '           StopOrderTypeStop               use a stop order
 '           StopOrderTypeStopLimit          use a stop limit order
-'           StopOrderTypeBid                use a stop order at the current bid (see StopOffset)
-'           StopOrderTypeAsk                use a stop order at the current ask (see StopOffset)
-'           StopOrderTypeLast               use a stop order at the last trade price (see StopOffset)
+'           StopOrderTypeBid                use a stop order at the current Bid (see StopOffset)
+'           StopOrderTypeAsk                use a stop order at the current Ask (see StopOffset)
+'           StopOrderTypeLast               use a stop order at the last Trade price (see StopOffset)
 '           StopOrderTypeAuto               use a stop order at the fill price for the
 '                                           entry order (see StopOffset)
 ' @param StopPrice      the trigger price for StopOrderTypeStop and StopOrderTypeStopLimit
@@ -525,9 +531,9 @@ End Property
 '           TargetOrderTypeLimit            use a limit order
 '           TargetOrderTypeLimitIfTouched   use a limit if touched order
 '           TargetOrderTypeMarketIfTouched  use a market if touched order
-'           TargetOrderTypeBid              use a limit order at the current bid (see TargetOffset)
-'           TargetOrderTypeAsk              use a limit order at the current ask (see TargetOffset)
-'           TargetOrderTypeLast             use a limit order at the last trade price (see TargetOffset)
+'           TargetOrderTypeBid              use a limit order at the current Bid (see TargetOffset)
+'           TargetOrderTypeAsk              use a limit order at the current Ask (see TargetOffset)
+'           TargetOrderTypeLast             use a limit order at the last Trade price (see TargetOffset)
 '           TargetOrderTypeAuto             use a limit order at the fill price for the
 '                                           entry order (see TargetOffset)
 ' @param TargetPrice    the limit price for the target order
@@ -575,36 +581,29 @@ Public Function Buy(ByRef number As Long, _
 Dim failpoint As Long
 On Error GoTo Err
 
-Select Case entryTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::buy", _
-    "Invalid entry TIF"
-End Select
-
-Select Case stopTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::buy", _
-    "Invalid stop TIF"
-End Select
-
-Select Case targetTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::buy", _
-    "Invalid target TIF"
-End Select
-
+gLogLogger.Log LogLevelNormal, _
+                "Buy " & mTicker.Contract.specifier.localSymbol & _
+                " number=" & number & _
+                "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
+                "; buyPrice=" & buyPrice & _
+                "; buyOffset=" & buyOffset & _
+                "; triggerPrice=" & triggerPrice & _
+                "; StopOrderType=" & gStopOrderTypeToShortString(StopOrderType) & _
+                "; stopPrice=" & stopPrice & _
+                "; stopOffset=" & stopOffset & _
+                "; stopLimitPrice=" & stopLimitPrice & _
+                "; TargetOrderType=" & gTargetOrderTypeToShortString(TargetOrderType) & _
+                "; targetPrice=" & targetPrice & _
+                "; targetOffset=" & targetOffset & _
+                "; targetTriggerPrice=" & targetTriggerPrice & _
+                "; cancelPrice=" & cancelPrice & _
+                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
+                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
+                "; targetTIF=" & gOrderTIFToString(targetTIF) & _
+                "; stopStrategy=" & TypeName(stopStrategy) & _
+                "; exitStrategy=" & TypeName(exitStrategy) & _
+                "; scalingStrategy=" & TypeName(scalingStrategy)
+                
 Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 number, _
                                 EntryOrderType, _
@@ -620,15 +619,19 @@ Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 targetOffset, _
                                 targetTriggerPrice)
                                 
+Buy.entryOrder.timeInForce = entryTIF
+If Not Buy.stoporder Is Nothing Then Buy.stoporder.timeInForce = stopTIF
+If Not Buy.targetOrder Is Nothing Then Buy.targetOrder.timeInForce = targetTIF
+
 executeOrderPlex Buy, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Buy" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Buy" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -646,9 +649,9 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Cancel" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Cancel" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Function
@@ -667,9 +670,9 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CancelPending" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CancelPending" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Function
@@ -719,9 +722,9 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateBuyOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CreateBuyOrderPlex" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -751,7 +754,7 @@ Dim lTargetPrice As Double
 
 If Not isReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "OrderContext::CreateOrderPlex", _
-                            "The service provider is not ready"
+                            "The service provider is not Ready"
 
 If number <= 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "OrderContext::CreateOrderPlex", _
@@ -809,7 +812,7 @@ End Select
 
 Set orderPlex = New orderPlex
 orderPlex.OrderContext = Me
-orderPlex.key = nextPlexKey
+orderPlex.Key = nextPlexKey
 orderPlex.PositionManager = mPositionManager
 orderPlex.Ticker = mTicker
 orderPlex.orderSubmitter = mOrderSubmitter
@@ -916,10 +919,9 @@ If StopOrderType <> StopOrderTypeNone Then
     Case StopOrderTypeLast
         stoporder.triggerPrice = mTicker.TradePrice + stopOffset * mTickSize
     Case StopOrderTypeAuto
-        stoporder.offset = stopOffset
+        stoporder.offset = stopOffset * mTickSize
     End Select
     lStopPrice = stoporder.triggerPrice
-    stoporder.offset = stopOffset
 End If
 
 If TargetOrderType <> TargetOrderTypeNone Then
@@ -958,10 +960,9 @@ If TargetOrderType <> TargetOrderTypeNone Then
     Case TargetOrderTypeLast
         targetOrder.limitPrice = mTicker.TradePrice + targetOffset * mTickSize
     Case TargetOrderTypeAuto
-        targetOrder.offset = targetOffset
+        targetOrder.offset = targetOffset * mTickSize
     End Select
 
-    targetOrder.offset = targetOffset
     lTargetPrice = targetOrder.limitPrice
 End If
 
@@ -971,7 +972,7 @@ Set CreateOrderPlex = orderPlex
 
 gTB.notifyListeners _
             "Create order plex: (" & mTicker.TradePrice & ") " & _
-            orderPlex.key & ": " & _
+            orderPlex.Key & ": " & _
             gOrderActionToString(action) & " " & number & " at " & _
             gOrderTypeToString(entryOrder.orderType) & " " & lEntryPrice & _
             IIf(lTriggerPrice <> 0, "(" & lTriggerPrice & ")", "") & _
@@ -1018,9 +1019,9 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateSellOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CreateSellOrderPlex" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -1045,10 +1046,10 @@ If orderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
 If checkMoneyManagement And Not mIsSimulated Then
     origQuantity = orderPlex.entryOrder.quantity
     newQuantity = origQuantity
-    If Not mPositionManager.allowOrder( _
+    If Not mPositionManager.AllowOrder( _
                             IIf(orderPlex.entryOrder.action = ActionBuy, True, False), _
                             newQuantity, _
-                            orderPlex.risk, _
+                            orderPlex.Risk, _
                             msg) _
     Then
         gTB.notifyListeners "Rejected: " & msg, _
@@ -1085,36 +1086,36 @@ End If
 
 gTB.notifyListeners _
             "Execute order plex: (" & mTicker.TradePrice & ") " & _
-            orderPlex.key, _
+            orderPlex.Key, _
             IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
 
-mActiveOrderPlexes.add orderPlex
+mActiveOrderPlexes.Add orderPlex
 orderPlex.execute cancelPrice
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "executeOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "executeOrderPlex" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
-Friend Function finish()
+Friend Function Finish()
 Dim op As orderPlex
 
 Set mTicker = Nothing
 Set mPositionManager = Nothing
 For Each op In mActiveOrderPlexes
-    op.finish
+    op.Finish
 Next
 Set mActiveOrderPlexes = Nothing
 
 For Each op In mClosedOrderPlexes
-    op.finish
+    op.Finish
 Next
 Set mClosedOrderPlexes = Nothing
 
@@ -1194,15 +1195,15 @@ With lOrder
     If isAttributeSupported(OrderAttributeIds.OrderAttTriggerPrice) Then .triggerPrice = mTriggerPrice
 End With
 
-mPositionManager.Orders.add lOrder
+mPositionManager.Orders.Add lOrder
 
 Set newOrder = lOrder
 End Function
 
 Friend Function orderPlexClosed( _
                 ByVal orderPlex As orderPlex)
-mClosedOrderPlexes.add orderPlex
-mActiveOrderPlexes.remove orderPlex
+mClosedOrderPlexes.Add orderPlex
+mActiveOrderPlexes.Remove orderPlex
 mCompletedSize = mCompletedSize + orderPlex.size
 ' now check if there are any active order plexes left -
 ' if not, need to tell the Position Manager
@@ -1235,36 +1236,29 @@ Public Function Sell(ByRef number As Long, _
 Dim failpoint As Long
 On Error GoTo Err
 
-Select Case entryTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::sell", _
-    "Invalid entry TIF"
-End Select
-
-Select Case stopTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::sell", _
-    "Invalid stop TIF"
-End Select
-
-Select Case targetTIF
-Case TIFDay
-Case TIFGoodTillCancelled
-Case TIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::sell", _
-    "Invalid target TIF"
-End Select
-
+gLogLogger.Log LogLevelNormal, _
+                "Sell " & mTicker.Contract.specifier.localSymbol & _
+                " number=" & number & _
+                "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
+                "; sellPrice=" & sellPrice & _
+                "; sellOffset=" & sellOffset & _
+                "; triggerPrice=" & triggerPrice & _
+                "; StopOrderType=" & gStopOrderTypeToShortString(StopOrderType) & _
+                "; stopPrice=" & stopPrice & _
+                "; stopOffset=" & stopOffset & _
+                "; stopLimitPrice=" & stopLimitPrice & _
+                "; TargetOrderType=" & gTargetOrderTypeToShortString(TargetOrderType) & _
+                "; targetPrice=" & targetPrice & _
+                "; targetOffset=" & targetOffset & _
+                "; targetTriggerPrice=" & targetTriggerPrice & _
+                "; cancelPrice=" & cancelPrice & _
+                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
+                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
+                "; targetTIF=" & gOrderTIFToString(targetTIF) & _
+                "; stopStrategy=" & TypeName(stopStrategy) & _
+                "; exitStrategy=" & TypeName(exitStrategy) & _
+                "; scalingStrategy=" & TypeName(scalingStrategy)
+                
 Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 number, _
                                 EntryOrderType, _
@@ -1279,15 +1273,20 @@ Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 targetPrice, _
                                 targetOffset, _
                                 targetTriggerPrice)
+
+Sell.entryOrder.timeInForce = entryTIF
+If Not Sell.stoporder Is Nothing Then Sell.stoporder.timeInForce = stopTIF
+If Not Sell.targetOrder Is Nothing Then Sell.targetOrder.timeInForce = targetTIF
+
 executeOrderPlex Sell, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Sell" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Sell" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -1327,6 +1326,6 @@ End Sub
 Private Function nextPlexKey() As String
 Static currID As Long
 currID = currID + 1
-nextPlexKey = mTicker.key & "/" & mName & "/" & currID
+nextPlexKey = mTicker.Key & "/" & mName & "/" & currID
 End Function
 

@@ -58,12 +58,12 @@ Private Const ModuleName As String = "StudyLibraryManager"
 '@================================================================================
 
 Private Type LibraryTableEntry
-    name            As String
+    Name            As String
     libObject       As StudyLibrary
 End Type
 
 Public Type StudyListEntry
-    name            As String
+    Name            As String
     StudyLibrary As String
 End Type
 
@@ -109,35 +109,37 @@ Dim j As Long
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
         Set studyLib = mStudyLibraries(i).libObject
-        spList = studyLib.getImplementedStudyNames
+        spList = studyLib.GetImplementedStudyNames
         For j = 0 To UBound(spList)
             If nextStudyListIndex > UBound(studylist) Then
                 ReDim Preserve studylist(2 * (UBound(studylist) + 1) - 1) As StudyListEntry
             End If
-            studylist(nextStudyListIndex).name = spList(j)
-            studylist(nextStudyListIndex).StudyLibrary = mStudyLibraries(i).name
+            studylist(nextStudyListIndex).Name = spList(j)
+            studylist(nextStudyListIndex).StudyLibrary = mStudyLibraries(i).Name
             nextStudyListIndex = nextStudyListIndex + 1
         Next
     End If
 Next
 
-ReDim Preserve studylist(nextStudyListIndex - 1) As StudyListEntry
-AvailableStudies = studylist
+If nextStudyListIndex <> 0 Then
+    ReDim Preserve studylist(nextStudyListIndex - 1) As StudyListEntry
+    AvailableStudies = studylist
+End If
 End Property
 
 Friend Property Get StudyDefinition( _
-                ByVal name As String, _
+                ByVal Name As String, _
                 ByVal libName As String) As StudyDefinition
 Dim studyLib As StudyLibrary
 Dim i As Long
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
-        If (mStudyLibraries(i).name = libName Or _
+        If (mStudyLibraries(i).Name = libName Or _
             libName = "") _
         Then
             Set studyLib = mStudyLibraries(i).libObject
-            Set StudyDefinition = studyLib.GetStudyDefinition(name)
+            Set StudyDefinition = studyLib.GetStudyDefinition(Name)
             If Not StudyDefinition Is Nothing Or _
                 libName <> "" _
                 Then Exit For
@@ -150,13 +152,13 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function add( _
+Friend Function Add( _
                 ByVal studyLib As StudyLibrary, _
-                ByVal name As String _
+                ByVal Name As String _
                 ) As StudyLibrary
 Dim i As Long
 
-If name <> "" Then studyLib.name = name
+If Name <> "" Then studyLib.Name = Name
 
 ' we don't reuse removed entries to ensure that service providers added later are
 ' always later in the table than those added earlier
@@ -167,10 +169,10 @@ For i = 0 To mMaxLibIndex
                     "StudyUtils25.StudyLibraryManager::Add", _
                     "This StudyLibrary object has already been added"
         End If
-        If mStudyLibraries(i).name = studyLib.name Then
+        If mStudyLibraries(i).Name = studyLib.Name Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "StudyUtils25.StudyLibraryManager::Add", _
-                    "A StudyLibrary with this name has already been added"
+                    "A StudyLibrary with this Name has already been added"
         End If
     End If
 Next
@@ -179,29 +181,29 @@ If mMaxLibIndex = UBound(mStudyLibraries) Then
     ReDim Preserve mStudyLibraries(2 * (UBound(mStudyLibraries) + 1) - 1) As LibraryTableEntry
 End If
 mMaxLibIndex = mMaxLibIndex + 1
-Set add = studyLib
+Set Add = studyLib
 
-mStudyLibraries(mMaxLibIndex).name = studyLib.name
+mStudyLibraries(mMaxLibIndex).Name = studyLib.Name
 Set mStudyLibraries(mMaxLibIndex).libObject = studyLib
 
 studyLib.initialise Me, mMaxLibIndex
 
 End Function
 
-Friend Sub addConfigEntry( _
+Friend Sub AddConfigEntry( _
                 ByVal progId As String, _
                 ByVal enabled As Boolean, _
-                ByVal name As String _
+                ByVal Name As String _
                 )
 Dim sl As ConfigurationSection
 
 If mConfig Is Nothing Then Exit Sub
 
-If mStudyLibs Is Nothing Then
-    Set mStudyLibs = mConfig.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
-End If
+'If mStudyLibs Is Nothing Then
+'    Set mStudyLibs = mConfig.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
+'End If
 
-Set sl = mStudyLibs.AddConfigurationSection(ConfigNameStudyLibrary & "(" & name & ")")
+Set sl = mStudyLibs.AddConfigurationSection(ConfigNameStudyLibrary & "(" & Name & ")")
 sl.setAttribute AttributeNameEnabled, enabled
 sl.setAttribute AttributeNameStudyLibraryProgId, progId
 End Sub
@@ -209,29 +211,29 @@ End Sub
 Friend Function AddStudyLibrary( _
                 ByVal progId As String, _
                 ByVal enabled As Boolean, _
-                ByVal name As String _
+                ByVal Name As String _
                 ) As StudyLibrary
 
 If enabled Then
-    Set AddStudyLibrary = add(CreateObject(progId), name)
+    Set AddStudyLibrary = Add(CreateObject(progId), Name)
 End If
-addConfigEntry progId, enabled, name
+AddConfigEntry progId, enabled, Name
 End Function
 
-Public Function createStudy( _
+Public Function CreateStudy( _
                 ByVal studyName As String, _
-                ByVal libName As String) As study
+                ByVal libName As String) As Study
 Dim studyLib As StudyLibrary
 Dim i As Long
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
-        If (mStudyLibraries(i).name = libName Or _
+        If (mStudyLibraries(i).Name = libName Or _
             libName = "") _
         Then
             Set studyLib = mStudyLibraries(i).libObject
-            Set createStudy = studyLib.createStudy(studyName)
-            If Not createStudy Is Nothing Or _
+            Set CreateStudy = studyLib.CreateStudy(studyName)
+            If Not CreateStudy Is Nothing Or _
                 libName <> "" _
                 Then Exit For
         End If
@@ -239,7 +241,7 @@ For i = 0 To mMaxLibIndex
 Next
 End Function
 
-Public Sub errorInLibrary( _
+Public Sub ErrorInLibrary( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal libHandle As Long)
@@ -252,7 +254,7 @@ End If
 RaiseEvent StudyLibraryError(ev)
 End Sub
 
-Public Sub fatalErrorInLibrary( _
+Public Sub FatalErrorInLibrary( _
                 ByVal errorCode As Long, _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
@@ -268,13 +270,13 @@ End Sub
 
 Friend Function FetchStudyDefaultParameters( _
                 ByVal studyName As String, _
-                ByVal libName As String) As parameters
+                ByVal libName As String) As Parameters
 Dim studyLib As StudyLibrary
 Dim i As Long
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
-        If (mStudyLibraries(i).name = libName Or _
+        If (mStudyLibraries(i).Name = libName Or _
             libName = "") _
         Then
             Set studyLib = mStudyLibraries(i).libObject
@@ -290,16 +292,79 @@ End Function
 Friend Sub LoadStudyLibraryConfiguration( _
                 ByVal config As ConfigurationSection)
 
-Set mConfig = config
-
 On Error Resume Next
-Set mStudyLibs = mConfig.GetConfigurationSection(ConfigNameStudyLibraries)
+Set mStudyLibs = config.GetConfigurationSection(ConfigNameStudyLibraries)
 On Error GoTo 0
 
 If Not mStudyLibs Is Nothing Then
+    Set mConfig = config
     loadStudyLibs
 End If
 End Sub
+
+Friend Sub Remove( _
+                ByVal lib As StudyLibrary, _
+                Optional ByVal removeFromConfig As Boolean)
+Dim i As Long
+
+If lib Is Nothing Then Exit Sub
+
+For i = 0 To mMaxLibIndex
+    If mStudyLibraries(i).libObject Is lib Then
+        lib.Terminate
+        Set mStudyLibraries(i).libObject = Nothing
+        If Not mConfig Is Nothing And removeFromConfig Then
+            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).Name & ")")
+        End If
+        mStudyLibraries(i).Name = ""
+        Exit For
+    End If
+Next
+End Sub
+
+Friend Sub RemoveAll( _
+                Optional ByVal removeFromConfig As Boolean)
+Dim i As Long
+Dim lib As StudyLibrary
+
+For i = 0 To mMaxLibIndex
+    If Not mStudyLibraries(i).libObject Is Nothing Then
+        Set lib = mStudyLibraries(i).libObject
+        lib.Terminate
+        Set mStudyLibraries(i).libObject = Nothing
+        If Not mConfig Is Nothing And removeFromConfig Then
+            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).Name & ")")
+        End If
+        mStudyLibraries(i).Name = ""
+    End If
+Next
+End Sub
+
+Friend Function SetStudyDefaultParameters( _
+                ByVal studyName As String, _
+                ByVal libName As String, _
+                ByVal params As Parameters) As Boolean
+Dim studyLib As StudyLibrary
+Dim i As Long
+
+For i = 0 To mMaxLibIndex
+    If Not mStudyLibraries(i).libObject Is Nothing Then
+        If (mStudyLibraries(i).Name = libName Or _
+            libName = "") _
+        Then
+            Set studyLib = mStudyLibraries(i).libObject
+            SetStudyDefaultParameters = studyLib.SetStudyDefaultParameters(studyName, params)
+            If SetStudyDefaultParameters Or _
+                libName <> "" _
+                Then Exit For
+        End If
+    End If
+Next
+End Function
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
 
 Private Sub loadStudyLibs()
 Dim sl As ConfigurationSection
@@ -332,77 +397,10 @@ For Each sl In mStudyLibs
                     "Invalid study library ProgId in configuration file: " & slProgId
         
         On Error GoTo 0
-        add slObj, slName
+        Add slObj, slName
     End If
 Next
 End Sub
-
-Friend Sub remove(ByVal lib As StudyLibrary)
-Dim i As Long
-
-If lib Is Nothing Then Exit Sub
-
-For i = 0 To mMaxLibIndex
-    If mStudyLibraries(i).libObject Is lib Then
-        lib.terminate
-        Set mStudyLibraries(i).libObject = Nothing
-        If Not mConfig Is Nothing Then
-            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).name & ")")
-        End If
-        mStudyLibraries(i).name = ""
-        Exit For
-    End If
-Next
-End Sub
-
-Friend Sub RemoveAll()
-Dim i As Long
-Dim lib As StudyLibrary
-
-For i = 0 To mMaxLibIndex
-    If Not mStudyLibraries(i).libObject Is Nothing Then
-        Set lib = mStudyLibraries(i).libObject
-        lib.terminate
-        Set mStudyLibraries(i).libObject = Nothing
-        If Not mConfig Is Nothing Then
-            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).name & ")")
-        End If
-        mStudyLibraries(i).name = ""
-    End If
-Next
-End Sub
-
-Friend Function SetStudyDefaultParameters( _
-                ByVal studyName As String, _
-                ByVal libName As String, _
-                ByVal params As parameters) As Boolean
-Dim studyLib As StudyLibrary
-Dim i As Long
-
-For i = 0 To mMaxLibIndex
-    If Not mStudyLibraries(i).libObject Is Nothing Then
-        If (mStudyLibraries(i).name = libName Or _
-            libName = "") _
-        Then
-            Set studyLib = mStudyLibraries(i).libObject
-            SetStudyDefaultParameters = studyLib.SetStudyDefaultParameters(studyName, params)
-            If SetStudyDefaultParameters Or _
-                libName <> "" _
-                Then Exit For
-        End If
-    End If
-Next
-End Function
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Function nameFromHandle( _
-                ByVal handle As Long) As String
-If handle < 0 Then Exit Function
-nameFromHandle = mStudyLibraries(handle).name
-End Function
 
 
 

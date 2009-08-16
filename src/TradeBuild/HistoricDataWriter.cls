@@ -140,7 +140,7 @@ If Not mServiceProviderWriterReady Then
     pendingWrite.barType = barType
     Set pendingWrite.barTimePeriod = barTimePeriod
     Set pendingWrite.Bar = theBar
-    mPendingWrites.addToEnd pendingWrite
+    mPendingWrites.AddToEnd pendingWrite
 Else
     mWriter.WriteBar theBar, barType, barTimePeriod
 End If

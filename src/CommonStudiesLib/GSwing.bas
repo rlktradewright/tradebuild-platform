@@ -77,6 +77,7 @@ If mStudyDefinition Is Nothing Then
                                     "Minimum swing (ticks) parameter."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SwingInputValue)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
@@ -86,6 +87,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
@@ -93,6 +95,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
@@ -100,10 +103,12 @@ If mStudyDefinition Is Nothing Then
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLine)
     valueDef.Description = "Swing point lines"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeLine

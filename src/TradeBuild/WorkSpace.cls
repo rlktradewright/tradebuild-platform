@@ -57,8 +57,8 @@ Private mName                       As String
 Private mTickers                    As Tickers
 Private mOrderPlexes                As orderPlexes
 Private mOrderPlexesSimulated       As orderPlexes
-Private mExecutions                 As executions
-Private mExecutionsSimulated        As executions
+Private mExecutions                 As Executions
+Private mExecutionsSimulated        As Executions
 
 '@================================================================================
 ' Class Event Handlers
@@ -66,11 +66,14 @@ Private mExecutionsSimulated        As executions
 
 Private Sub Class_Initialize()
 Set mTickers = New Tickers
-mTickers.addCollectionChangeListener Me
+mTickers.AddCollectionChangeListener Me
+mTickers.Workspace = Me
+
 Set mOrderPlexes = New orderPlexes
 Set mOrderPlexesSimulated = New orderPlexes
-Set mExecutions = New executions
-Set mExecutionsSimulated = New executions
+
+Set mExecutions = New Executions
+Set mExecutionsSimulated = New Executions
 End Sub
 
 Private Sub Class_Terminate()
@@ -87,10 +90,10 @@ If TypeOf ev.affectedItem Is Ticker Then
     Set lTicker = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        lTicker.PositionManager.OrderContexts.addCollectionChangeListener Me
-        lTicker.PositionManagerSimulated.OrderContexts.addCollectionChangeListener Me
-        lTicker.executions.addCollectionChangeListener Me
-        lTicker.ExecutionsSimulated.addCollectionChangeListener Me
+        lTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
+        lTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
+        lTicker.Executions.AddCollectionChangeListener Me
+        lTicker.ExecutionsSimulated.AddCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
@@ -99,9 +102,9 @@ ElseIf TypeOf ev.affectedItem Is OrderContext Then
     Set lOrderContext = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        lOrderContext.activeOrderPlexes.addCollectionChangeListener Me
+        lOrderContext.activeOrderPlexes.AddCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
-        lOrderContext.activeOrderPlexes.removeCollectionChangeListener Me
+        lOrderContext.activeOrderPlexes.RemoveCollectionChangeListener Me
     End Select
 ElseIf TypeOf ev.affectedItem Is orderPlex Then
     Dim lOrderPlex As orderPlex
@@ -109,9 +112,9 @@ ElseIf TypeOf ev.affectedItem Is orderPlex Then
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         If lOrderPlex.IsSimulated Then
-            mOrderPlexesSimulated.add lOrderPlex
+            mOrderPlexesSimulated.Add lOrderPlex
         Else
-            mOrderPlexes.add lOrderPlex
+            mOrderPlexes.Add lOrderPlex
         End If
     Case CollectionChangeTypes.CollItemRemoved
         ' do nothing here because we don't care whether the order plex
@@ -123,15 +126,15 @@ ElseIf TypeOf ev.affectedItem Is Execution Then
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         If lExec.IsSimulated Then
-            mExecutionsSimulated.add lExec
+            mExecutionsSimulated.Add lExec
         Else
-            mExecutions.add lExec
+            mExecutions.Add lExec
         End If
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
         gTB.NotifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
                                         "Unexpected execution deletion", _
-                                        "Workspace::CollectionChangeListener_Change"
+                                        "TradeBuild26.Workspace::CollectionChangeListener_Change"
     End Select
 End If
 End Sub
@@ -144,11 +147,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get executions() As executions
-Set executions = mExecutions
+Public Property Get Executions() As Executions
+Set Executions = mExecutions
 End Property
 
-Public Property Get ExecutionsSimulated() As executions
+Public Property Get ExecutionsSimulated() As Executions
 Set ExecutionsSimulated = mExecutionsSimulated
 End Property
 

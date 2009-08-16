@@ -34,12 +34,11 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event ItemAdded(ByVal studyConfig As StudyConfiguration)
-Event ItemRemoved(ByVal studyConfig As StudyConfiguration)
-
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ConfigSectionStudyConfig                  As String = "StudyConfig"
 
 '@================================================================================
 ' Enums
@@ -54,6 +53,8 @@ Event ItemRemoved(ByVal studyConfig As StudyConfiguration)
 '@================================================================================
 
 Private mStudyConfigurations As Collection
+
+Private mConfig                                         As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
@@ -75,6 +76,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
+
+End Property
+
 Public Property Get count() As Long
 count = mStudyConfigurations.count
 End Property
@@ -83,53 +92,44 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub add( _
+Public Sub Add( _
                 ByVal studyConfig As StudyConfiguration)
-Dim key As String
-Dim keyInc As String
-Dim i As Long
-Dim lStudyConfig As StudyConfiguration
-
-key = studyConfig.study.instancePath
-
 On Error Resume Next
-If studyConfig.instanceFullyQualifiedName = "" Then
-    Set lStudyConfig = mStudyConfigurations(key)
-Else
-    Set lStudyConfig = mStudyConfigurations(studyConfig.instanceFullyQualifiedName)
-End If
-On Error GoTo 0
-
-If lStudyConfig Is studyConfig Then
-    ' this studyConfig has already been added
-    Exit Sub
-End If
-
-If lStudyConfig Is Nothing Then
-    studyConfig.instanceFullyQualifiedName = key
-Else
-    Do
-        i = i + 1
-        keyInc = key & "." & i
-        
-        On Error Resume Next
-        Set lStudyConfig = Nothing
-        Set lStudyConfig = mStudyConfigurations(keyInc)
-        On Error GoTo 0
-    
-    Loop Until lStudyConfig Is Nothing
-    studyConfig.instanceFullyQualifiedName = keyInc
-End If
-
-
-mStudyConfigurations.add studyConfig, studyConfig.instanceFullyQualifiedName
-RaiseEvent ItemAdded(studyConfig)
+' the studyconfig may already be in the collection because it was Added when
+' recreating this object from the config
+mStudyConfigurations.Add studyConfig, studyConfig.ID
+If Err.Number = 0 Then storeStudyConfigSettings studyConfig
 End Sub
 
-Public Function item( _
+' Only called when a chart has been cleared, so no need to worry about whether regions are
+' still in use etc
+Friend Sub Finish()
+Dim studyConfig As StudyConfiguration
+For Each studyConfig In mStudyConfigurations
+    studyConfig.Finish
+Next
+End Sub
+
+Public Function Item( _
                 ByVal index As Variant) As StudyConfiguration
-Set item = mStudyConfigurations.item(index)
+Attribute Item.VB_UserMemId = 0
+Set Item = mStudyConfigurations.Item(index)
 End Function
+
+Friend Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection)
+Dim scSect As ConfigurationSection
+Dim sc As StudyConfiguration
+
+Set mConfig = config
+If mConfig Is Nothing Then Exit Sub
+
+For Each scSect In mConfig
+    Set sc = New StudyConfiguration
+    sc.LoadFromConfig scSect
+    mStudyConfigurations.Add sc, sc.ID
+Next
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
@@ -137,15 +137,29 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mStudyConfigurations.[_NewEnum]
 End Function
 
-Public Sub remove( _
+Public Sub Remove( _
                 ByVal studyConfig As StudyConfiguration)
-mStudyConfigurations.remove studyConfig.instanceFullyQualifiedName
-RaiseEvent ItemRemoved(studyConfig)
+mStudyConfigurations.Remove studyConfig.ID
+studyConfig.RemoveFromConfig
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub storeSettings()
+Dim sc As StudyConfiguration
+For Each sc In mStudyConfigurations
+    storeStudyConfigSettings sc
+Next
+End Sub
+
+Private Sub storeStudyConfigSettings( _
+                ByVal studyConfig As StudyConfiguration)
+If Not mConfig Is Nothing Then
+    studyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyConfig & "(" & studyConfig.ID & ")")
+End If
+End Sub
 
 
 

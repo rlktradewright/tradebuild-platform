@@ -36,8 +36,6 @@ Implements TradeBuildSP.ITickfileInputServiceConsumer
 ' Events
 '@================================================================================
 
-Event Notification(ByRef ev As NotificationEvent)
-
 Event QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
@@ -130,89 +128,29 @@ Dim ev As NotificationEvent
 
 Set ev.source = Me
 Select Case eventCode
-Case TradeBuildSP.StandardSPEventCodes.TFConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToTickfileDataSource
-    ev.eventMessage = "Connected to tickfile: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileDoesntExist
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
-    ev.eventMessage = "Empty tickfile: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileEmpty
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
-    ev.eventMessage = "Empty tickfile: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileInvalid
-    ev.eventMessage = "Not a valid tickfile: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileVersionNotSupported
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileVersionNotSupported
-    ev.eventMessage = "Tickfile version not supported: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFContractDetailsInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyContractDetailsInvalid
-    ev.eventMessage = "Tickfile contains invalid contract details: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFNoContractDetails
-    ev.eventCode = ApiNotifyCodes.ApiNotifyNoContractDetails
-    ev.eventMessage = "Tickfile contains no contract details: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFDataSourceNotResponding
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
-    ev.eventMessage = "Tickfile data source not responding: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     FinishTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
-    ev.eventMessage = "Can't connect to tickfile data source: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     FinishTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToTickfileDataSource
-    ev.eventMessage = "Retrying connection to tickfile data source: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
     ' don't need to move on to next tickfile - the user can do
     ' that if they want to, or they can fix the reason for
     ' failing to connect (eg start the data source software)
-Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
-    ev.eventMessage = "The specified contract does not exist: " & _
-                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
-    Set mReader = Nothing
-Case Else
-    gTB.SetServiceProviderError eventCode, _
-                        eventMessage, _
-                        gTB.ServiceProviders.nameFromHandle(spHandle)
 End Select
+
+gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
 
 End Sub
 
@@ -221,43 +159,52 @@ Private Sub ITickfileInputServiceConsumer_Ready( _
                 ByVal TickfileSizeBytes As Long)
 
 Dim contractSpec As contractSpecifier
+Dim ctb As ContractsBuilder
 
-' we now determine a contract specifier with which we'll query the
-' contract info service providers to get the canonical contract definition
 If Not mReader.Contract Is Nothing Then
-    Set contractSpec = mReader.Contract.specifier
+    Set ctb = CreateContractsBuilder(mReader.Contract.specifier)
+    ctb.AddContract mReader.Contract
+    ctb.LoadComplete
+    mTicker.Contracts = ctb.Contracts
 ElseIf Not mReader.contractSpecifier Is Nothing Then
     Set contractSpec = mReader.contractSpecifier
+    
+    'now query the Contract Details service provider(s) to see if we can
+    ' determine the canonical contract for this contract spec
+    mTicker.ContractsLoadTC = gTB.loadContracts(contractSpec)
 ElseIf Not tfSpec.Contract Is Nothing Then
     Set contractSpec = tfSpec.Contract.specifier
+
+    'now query the Contract Details service provider(s) to see if we can
+    ' determine the canonical contract for this contract spec
+    mTicker.ContractsLoadTC = gTB.loadContracts(contractSpec)
 ElseIf Not mDefaultContract Is Nothing Then
-    Set contractSpec = mDefaultContract.specifier
+    Set ctb = CreateContractsBuilder(mDefaultContract.specifier)
+    ctb.AddContract mDefaultContract
+    ctb.LoadComplete
+    mTicker.Contracts = ctb.Contracts
 Else
     ' we have no way to determine what the contract is
     Dim ev As NotificationEvent
     Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyNoContractDetails
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileNoContractDetails
     ev.eventMessage = "Contract details must be supplied for tickfile: " & _
                     gTickfileSpecifierToString(tfSpec)
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
+    gTB.notify ev
     Set mReader = Nothing
     Exit Sub
 End If
 
-'now query the Contract Details service provider(s) to see if we can
-' determine the canonical contract for this contract spec
-mTicker.Contracts = gTB.loadContracts(contractSpec)
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
-                            mTickfileSpecifiers(mCurrTickfileIndex).filename)
-mTicker.stopTicker
+                            mTickfileSpecifiers(mCurrTickfileIndex).Filename)
+mTicker.StopTicker
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
 mEventsPlayed = eventsPlayed
@@ -266,7 +213,7 @@ If percentComplete > 100 Then percentComplete = 100
 mPercentComplete = percentComplete
 mReader.percentComplete = percentComplete
 If mReplaySpeed <> 0 And mReplayProgressEventFrequency > 0 Then
-    RaiseEvent ReplayProgress(timestamp, _
+    RaiseEvent ReplayProgress(Timestamp, _
                                 eventsPlayed, _
                                 percentComplete)
 End If
@@ -277,7 +224,7 @@ End Sub
 '@================================================================================
 
 Private Sub mProgressTimer_TimerExpired()
-RaiseEvent ReplayProgress(mTicker.timestamp, _
+RaiseEvent ReplayProgress(mTicker.Timestamp, _
                         mEventsPlayed, _
                         mPercentComplete)
 End Sub
@@ -312,7 +259,7 @@ Public Property Let ReplayProgressEventFrequency(ByVal value As Long)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TickFileManager::(Let)ReplayProgressEventFrequency", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 If value < 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -336,7 +283,7 @@ Public Property Let ReplayProgressEventIntervalMillisecs(ByVal value As Long)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)ReplayProgressEventIntervalMillisecs", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 If value < 50 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -353,7 +300,7 @@ End Property
 
 Public Property Let replaySpeed(ByVal value As Long)
 mReplaySpeed = value
-If Not mTicker Is Nothing Then mTicker.clockRate = mReplaySpeed
+If Not mTicker Is Nothing Then mTicker.ClockRate = mReplaySpeed
 setReplayAttributes
 End Property
 
@@ -381,10 +328,10 @@ Public Property Let TickfileSpecifier(ByVal value As TickfileSpecifier)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TickfileSpecifiers", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 Set mTickfileSpecifiers = New TickfileSpecifiers
-mTickfileSpecifiers.add value
+mTickfileSpecifiers.Add value
 mCurrTickfileIndex = 0
 End Property
 
@@ -392,7 +339,7 @@ Public Property Let TickfileSpecifiers(ByVal value As TickfileSpecifiers)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TickfileSpecifiers", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 Set mTickfileSpecifiers = value
 mCurrTickfileIndex = 0
@@ -406,7 +353,7 @@ Public Property Let TimestampAdjustmentStart(ByVal value As Double)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TimestampAdjustmentStart", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 mTimestampAdjustmentStart = value
 End Property
@@ -419,7 +366,7 @@ Public Property Let TimestampAdjustmentEnd(ByVal value As Double)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TimestampAdjustmentEnd", _
-            "Tickfile is already replaying"
+            "Tickfile is alReady replaying"
 End If
 mTimestampAdjustmentEnd = value
 End Property
@@ -461,8 +408,8 @@ If mTicker Is Nothing Or mReader Is Nothing Then
             "Tickfile is not replaying"
 End If
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
-                            mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
-mTicker.stopTicker
+                            mTickfileSpecifiers.Item(mCurrTickfileIndex).Filename)
+mTicker.StopTicker
 End Sub
 
 Friend Sub StartNextTickfile()
@@ -493,7 +440,7 @@ End If
 StartNextTickfile
 End Sub
 
-Friend Sub startTicker(ByVal value As Contract)
+Friend Sub StartTicker(ByVal value As Contract)
 Set mContract = value
 If Not mReader Is Nothing Then
     mReader.Contract = mContract
@@ -505,9 +452,9 @@ Public Sub stopReplay()
 If Not mReplayInProgress Then Exit Sub
 mReplayInProgress = False
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
-                            mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
+                            mTickfileSpecifiers.Item(mCurrTickfileIndex).Filename)
 mCurrTickfileIndex = mTickfileSpecifiers.Count + 1
-mTicker.stopTicker
+mTicker.StopTicker
 RaiseEvent ReplayCompleted
 End Sub
 
@@ -522,7 +469,7 @@ Private Sub playOrNot( _
 Dim continueMode As ReplayContinueModes
 
 'mContract.setSession mReader.firstTickFileTime
-mTicker.timestamp = mReader.firstTickFileTime
+mTicker.Timestamp = mReader.firstTickFileTime
 
 RaiseEvent QueryReplayNextTickfile( _
                 mCurrTickfileIndex, _
@@ -564,13 +511,13 @@ Do
         Exit Sub
     End If
     
-    Set mTicker = mTickers.add(mTickerOptions)
+    Set mTicker = mTickers.Add(mTickerOptions)
     mTicker.TickFileManager = Me
-    mTicker.replayingTickfile = True
-    mTicker.clockRate = mReplaySpeed
+    mTicker.ReplayingTickfile = True
+    mTicker.ClockRate = mReplaySpeed
     RaiseEvent TickerAllocated(mTicker)
     
-    Set lTickfileSpecifier = mTickfileSpecifiers.item(mCurrTickfileIndex)
+    Set lTickfileSpecifier = mTickfileSpecifiers.Item(mCurrTickfileIndex)
     Set mReader = gTB.ServiceProviders.CreateTickfileReader( _
                                     mTicker, _
                                     Me, _

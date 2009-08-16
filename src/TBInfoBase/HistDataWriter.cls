@@ -157,7 +157,7 @@ With data
                                             .volume, _
                                             .tickVolume, _
                                             .openInterest)
-        tc.addTaskCompletionListener Me
+        tc.AddTaskCompletionListener Me
     End If
     For index = 0 To UBound(mTimeframeTable)
         If mTimeframeTable(index).timeframe.length = barTimePeriod.length Then
@@ -177,7 +177,7 @@ End With
 Exit Sub
 Err:
 gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":IBarDataWriter_WriteBar: error (" & Err.Number & "): " & Err.Description
-mCommonServiceConsumer.ServiceProviderError Err.Number, _
+mCommonServiceConsumer.NotifyRecoverableError Err.Number, _
                                             Err.Description, _
                                             mHistDataServiceProvider.handle
 End Sub
@@ -190,7 +190,7 @@ Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TWUtilities30.TaskCompletionEvent)
 If ev.errorNumber <> 0 Then
     gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":TaskCompletionListener_taskCompleted: error (" & Err.Number & "): " & Err.Description
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
                                         ev.errorMessage, _
                                         mHistDataServiceProvider.handle
 End If
@@ -355,7 +355,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, _
+mCommonServiceConsumer.NotifyFatalError Number, _
                             Source, _
                             Description, _
                             mHistDataServiceProvider.handle

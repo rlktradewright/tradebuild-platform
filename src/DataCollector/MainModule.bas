@@ -102,6 +102,8 @@ Private mExitTimeDescriptor                             As String
 
 Private mConfigManager                                  As ConfigManager
 
+Private mListener                                   As LogListener
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -142,11 +144,16 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub gKillLogging()
+gLogger.removeLogListener mListener
+End Sub
+
 Public Sub Main()
 
 On Error GoTo Err
 
 InitialiseTWUtilities
+RunTasksAtLowerThreadPriority = False
 
 mLeftOffset = -1
 mRightOffset = -1
@@ -169,11 +176,13 @@ TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeDat
                                                 ServiceProviderRoles.SPTickfileOutput
 
 If Not getConfig Then
+    gKillLogging
     TerminateTWUtilities
     Exit Sub
 End If
 
 If setup Then
+    gKillLogging
     TerminateTWUtilities
     Exit Sub
 End If
@@ -182,6 +191,7 @@ mNoUI = getNoUi
 
 If Not configure Then
     If Not mNoUI Then showConfig
+    gKillLogging
     TerminateTWUtilities
     Exit Sub
 End If
@@ -212,6 +222,7 @@ If mNoUI Then
     
     gLogger.Log LogLevelNormal, "Data Collector program exiting"
     
+    gKillLogging
     TerminateTWUtilities
     
 Else
@@ -371,10 +382,13 @@ If mCLParser.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mCLPar
 
 
 Set gLogger = GetLogger("log")
-GetLogger("").addLogListener CreateFileLogListener(LogFileName, _
+
+Set mListener = CreateFileLogListener(LogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
+GetLogger("").addLogListener mListener
+
 gLogger.Log LogLevelNormal, "Log file: " & LogFileName
 gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
 End Sub
@@ -461,7 +475,7 @@ End Sub
 
 Private Function showHelp() As Boolean
 Dim s As String
-If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
+If mCLParser.Switch("?") Then
     s = vbCrLf & _
             "datacollector26 [configfilename]" & vbCrLf & _
             "                /setup " & vbCrLf & _

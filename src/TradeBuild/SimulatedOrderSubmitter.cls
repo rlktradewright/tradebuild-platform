@@ -177,8 +177,8 @@ Case Else
 End Select
 End Sub
 
-Private Property Let IOrderSubmitter_clockRate(ByVal RHS As Single)
-mSimulator.clockRate(mMarketIndex) = RHS
+Private Property Let IOrderSubmitter_ClockRate(ByVal RHS As Single)
+mSimulator.ClockRate(mMarketIndex) = RHS
 End Property
 
 Private Sub IOrderSubmitter_executeOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
@@ -228,7 +228,7 @@ Else
 End If
 End Sub
 
-Private Sub IOrderSubmitter_finish()
+Private Sub IOrderSubmitter_Finish()
 mSimulator.stopMarket mMarketIndex
 Set mServiceConsumer = Nothing
 Set mSimulator = Nothing
@@ -347,18 +347,18 @@ Case TickTypes.TickTypeAsk
     mFirstAskReceived = True
     If mFirstBidReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.ready
+        mServiceConsumer.Ready
     End If
         
-    mSimulator.ask Tick.timestamp, mMarketIndex, Tick.price
+    mSimulator.Ask Tick.Timestamp, mMarketIndex, Tick.price
 Case TickTypes.TickTypeBid
     mFirstBidReceived = True
     If mFirstAskReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.ready
+        mServiceConsumer.Ready
     End If
         
-    mSimulator.bid Tick.timestamp, mMarketIndex, Tick.price
+    mSimulator.Bid Tick.Timestamp, mMarketIndex, Tick.price
 Case TickTypes.TickTypeClosePrice
 Case TickTypes.TickTypeHighPrice
 Case TickTypes.TickTypeLowPrice
@@ -367,7 +367,7 @@ Case TickTypes.TickTypeMarketDepthReset
 Case TickTypes.TickTypeOpenInterest
 Case TickTypes.TickTypeOpenPrice
 Case TickTypes.TickTypeTrade
-    mSimulator.trade Tick.timestamp, mMarketIndex, Tick.price
+    mSimulator.Trade Tick.Timestamp, mMarketIndex, Tick.price
 Case TickTypes.TickTypeVolume
 End Select
 

@@ -56,7 +56,7 @@ Private mLogger As Logger
 '================================================================================
 
 Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.tbinfobase")
+If mLogger Is Nothing Then Set mLogger = GetLogger("tradebuild.log.serviceprovider.tbinfobase")
 Set gLogger = mLogger
 End Property
 

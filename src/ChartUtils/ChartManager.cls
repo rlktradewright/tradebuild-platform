@@ -36,12 +36,17 @@ Implements TaskCompletionListener
 ' Events
 '@================================================================================
 
+Event StudyAdded(ByVal studyConfig As StudyConfiguration)
+Event StudyRemoved(ByVal studyConfig As StudyConfiguration)
+
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "ChartUtils26"
-Private Const ModuleName                As String = "ChartManager"
+
+Private Const ModuleName                                As String = "ChartManager"
+
+Private Const ConfigSectionBaseStudyConfig              As String = "BaseStudyConfig"
 
 '@================================================================================
 ' Enums
@@ -55,35 +60,36 @@ Private Const ModuleName                As String = "ChartManager"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mChartController As chartController
+Private mChartController                                As ChartController
 Attribute mChartController.VB_VarHelpID = -1
-Private mStudyManager As studyManager
+Private mStudyManager                                   As studyManager
 
-Private mSourceStudies As Collection
+Private mRegionEntries                                  As Collection
 
-Private mRegions As Collection
+' we use this collection to locate studyConfigurations from Study objects
+Private mAllStudyConfigs                                As Collection
 
-Private mStudyConfigurations As StudyConfigurations
+Private mInstanceFullyQualifiedNames                    As Collection
 
-Private mUpdatePerTick As Boolean
+Private mUpdatePerTick                                  As Boolean
 
-Private mPeriods As Periods
+Private mPeriods                                        As Periods
 
-Private mHighPrice As Double
-Private mLowPrice As Double
-Private mPrevClosePrice As Double
+' the Study on which all others are built
+Private mBaseStudy                                      As Study
+Private mBaseStudyConfig                                As StudyConfiguration
+Private mBars                                           As Bars
 
-' the study on which all others are built
-Private mBaseStudy As study
+Private mConfig                                         As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mSourceStudies = New Collection
-Set mRegions = New Collection
-Set mStudyConfigurations = New StudyConfigurations
+Set mRegionEntries = New Collection
+Set mAllStudyConfigs = New Collection
+Set mInstanceFullyQualifiedNames = New Collection
 mUpdatePerTick = True
 
 End Sub
@@ -98,63 +104,89 @@ If ev.errorNumber <> 0 Then
     Debug.Print "Task: " & ev.taskName; "; Error: " & ev.errorNumber; "; Message: "; ev.errorMessage
 End If
 
-mChartController.SuppressDrawing = False
+mChartController.EnableDrawing
 
-End Sub
-
-'@================================================================================
-' mChartController Event Handlers
-'@================================================================================
-
-Private Sub mChartController_ChartCleared()
-Dim studyConfig As StudyConfiguration
-Set mPeriods = mChartController.Periods
-For Each studyConfig In mStudyConfigurations
-    studyConfig.finish
-Next
-Set mSourceStudies = New Collection
-Set mRegions = New Collection
-Set mStudyConfigurations = New StudyConfigurations
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get BaseStudy() As study
+Public Property Get BaseStudy() As Study
 Set BaseStudy = mBaseStudy
 End Property
 
-Public Property Get chartController() As chartController
-Set chartController = mChartController
+Public Property Get BaseStudyConfiguration() As StudyConfiguration
+Set BaseStudyConfiguration = mBaseStudyConfig.Clone ' return a defensive copy
 End Property
 
-Public Property Get regionNames() As String()
+Public Property Let BaseStudyConfiguration( _
+                ByVal studyConfig As StudyConfiguration)
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not TypeOf studyConfig.Study Is BarStudy Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "BaseStudyConfiguration", _
+            "Base Study must implement the BarStudy interface"
+End If
+
+setBaseStudyConfiguration studyConfig.Clone ' take a defensive copy
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "BaseStudyConfiguration" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+End Property
+
+Public Property Get Chart() As ChartController
+Set Chart = mChartController
+End Property
+
+Public Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+Dim failpoint As Long
+On Error GoTo Err
+
+If value Is mConfig Then Exit Property
+Set mConfig = value
+If Not mBaseStudyConfig Is Nothing Then
+    mBaseStudyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBaseStudyConfig)
+End If
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ConfigurationSection" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Property
+
+Public Property Get RegionNames() As String()
 Dim names() As String
 Dim re As RegionEntry
 Dim i As Long
 
-If mRegions.count = 0 Then Exit Property
+If mRegionEntries.count = 0 Then Exit Property
 
-ReDim names(mRegions.count - 1) As String
+ReDim names(mRegionEntries.count - 1) As String
 
-For i = 1 To mRegions.count
-    re = mRegions(i)
-    names(i - 1) = re.Region.name
+For i = 1 To mRegionEntries.count
+    re = mRegionEntries(i)
+    names(i - 1) = re.Region.Name
 Next
-regionNames = names
+RegionNames = names
 End Property
 
-Public Property Get StudyConfigurations() As StudyConfigurations
-Set StudyConfigurations = mStudyConfigurations
-End Property
-
-'Public Property Let suppressDrawing( _
-'                ByVal value As Boolean)
-'mChartController.suppressDrawing = value
-'End Property
-
-Public Property Let updatePerTick(ByVal value As Boolean)
+Public Property Let UpdatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
 End Property
 
@@ -162,88 +194,77 @@ End Property
 ' Methods
 '@================================================================================
 
-'Public Function addChartRegion( _
-'                    ByVal name As String, _
-'                    ByVal percentheight As Double, _
-'                    Optional ByVal minimumPercentHeight As Double) As ChartRegion
-'Dim re As RegionEntry
-'Set addChartRegion = mChartController.addChartRegion(percentheight, minimumPercentHeight, name)
-'Set re.region = addChartRegion
-'mRegions.add re, name
-'End Function
+Public Function AddStudyConfiguration( _
+                ByVal studyConfig As StudyConfiguration) As Study
+Dim lStudy As Study
 
-Public Function addStudy( _
-                ByVal studyConfig As StudyConfiguration, _
-                Optional noStudyValueListeners As Boolean) As study
-Dim study As study
-Dim Region As ChartRegion
-Dim studyHorizRule As StudyHorizontalRule
-Dim horizRulesLineSeries As LineSeries
-Dim line As ChartSkil26.line
+Dim failpoint As Long
+On Error GoTo Err
 
-If studyConfig.underlyingStudy Is Nothing Then
-    studyConfig.underlyingStudy = mBaseStudy
-    'studyConfig.inputValueNames = "Close"
-End If
+Set lStudy = AddStudy(studyConfig)
 
-Set study = mStudyManager.addStudy(studyConfig.name, _
-                            studyConfig.underlyingStudy, _
-                            studyConfig.inputValueNames, _
-                            studyConfig.parameters, _
-                            studyConfig.StudyLibraryName)
+removeExistingStudyConfig lStudy
 
-If mBaseStudy Is Nothing Then Set mBaseStudy = study
+AddStudyConfig studyConfig
 
-'studyConfig.instanceName = study.instanceName
-'studyConfig.instanceFullyQualifiedName = study.instancePath
-studyConfig.study = study
+Set AddStudyConfiguration = lStudy
+RaiseEvent StudyAdded(studyConfig)
 
-determineDefaultRegionName studyConfig
+Exit Function
 
-Set Region = findRegion(studyConfig.chartRegionName, study.instanceName, False)
-    
-If Not noStudyValueListeners Then
-    setupStudyValueListeners studyConfig
-End If
-
-If studyConfig.studyHorizontalRules.count > 0 Then
-    Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
-    horizRulesLineSeries.extended = True
-    horizRulesLineSeries.extendAfter = True
-    horizRulesLineSeries.extendBefore = True
-    For Each studyHorizRule In studyConfig.studyHorizontalRules
-        horizRulesLineSeries.color = studyHorizRule.color
-        horizRulesLineSeries.lineStyle = studyHorizRule.style
-        horizRulesLineSeries.thickness = studyHorizRule.thickness
-        Set line = horizRulesLineSeries.add
-        line.point1 = Region.newPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-        line.point2 = Region.newPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-    Next
-    studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
-End If
-
-mStudyConfigurations.add studyConfig
-
-Set addStudy = study
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddStudyConfiguration" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
-Public Sub clearChart()
-mChartController.clearChart
+Public Sub ClearChart()
+Dim failpoint As Long
+On Error GoTo Err
+
+mChartController.ClearChart
 Set mPeriods = mChartController.Periods
+
+If Not mBaseStudyConfig Is Nothing Then
+    mBaseStudyConfig.Finish
+    mBaseStudyConfig.RemoveFromConfig
+    Set mBaseStudyConfig = Nothing
+    Set mBaseStudy = Nothing
+End If
+
+Set mAllStudyConfigs = New Collection
+Set mRegionEntries = New Collection
+Set mBars = Nothing
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ClearChart" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Sub finish()
-Dim studyConfig As StudyConfiguration
+Public Sub Finish()
 
 On Error GoTo Err
 
-mChartController.clearChart
+mChartController.Finish
+Set mChartController = Nothing
+Set mStudyManager = Nothing
+Set mAllStudyConfigs = Nothing
 
-For Each studyConfig In mStudyConfigurations
-    studyConfig.finish
-Next
-
-Set mStudyConfigurations = New StudyConfigurations
+Set mPeriods = Nothing
+If Not mBaseStudyConfig Is Nothing Then
+    mBaseStudyConfig.Finish
+    Set mBaseStudyConfig = Nothing
+    Set mBaseStudy = Nothing
+End If
+Set mRegionEntries = Nothing
+Set mBars = Nothing
 
 Exit Sub
 
@@ -251,63 +272,539 @@ Err:
 'ignore any errors
 End Sub
 
-Friend Function getPeriod(ByVal pTimestamp As Date) As Period
+Friend Function GetPeriod(ByVal pTimestamp As Date) As Period
 Static sPeriod As Period
 Static sTimestamp As Date
 
 
 If pTimestamp = sTimestamp Then
     If Not sPeriod Is Nothing Then
-        Set getPeriod = sPeriod
+        Set GetPeriod = sPeriod
         Exit Function
     End If
 End If
 
 On Error Resume Next
-Set getPeriod = mPeriods(pTimestamp)
+Set GetPeriod = mPeriods(pTimestamp)
 On Error GoTo 0
 
-If getPeriod Is Nothing Then
-    Set getPeriod = mPeriods.add(pTimestamp)
+If GetPeriod Is Nothing Then
+    Set GetPeriod = mPeriods.Add(pTimestamp)
     mChartController.ScrollX 1
 End If
-Set sPeriod = getPeriod
+Set sPeriod = GetPeriod
 sTimestamp = pTimestamp
 End Function
 
-Friend Function getSpecialValue(ByVal valueType As SpecialValues) As Variant
+Friend Function GetSpecialValue(ByVal valueType As SpecialValues) As Variant
 
 Select Case valueType
 Case SpecialValues.SVCurrentSessionEndTime
-    getSpecialValue = mChartController.currentSessionEndTime
+    GetSpecialValue = mChartController.CurrentSessionEndTime
 Case SpecialValues.SVCurrentSessionStartTime
-    getSpecialValue = mChartController.currentSessionStartTime
+    GetSpecialValue = mChartController.CurrentSessionStartTime
 Case SpecialValues.SVHighPrice
-    getSpecialValue = mHighPrice
+    GetSpecialValue = mBars.HighValue
 Case SpecialValues.SVLowPrice
-    getSpecialValue = mLowPrice
+    GetSpecialValue = mBars.LowValue
 Case SpecialValues.SVPreviousClosePrice
-    getSpecialValue = mPrevClosePrice
+    GetSpecialValue = mBars.CloseValue(-1)
 End Select
+End Function
+
+Public Function GetStudyConfig( _
+                ByVal studyId As String) As StudyConfiguration
+Dim failpoint As Long
+On Error GoTo Err
+
+Set GetStudyConfig = mAllStudyConfigs(studyId)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetStudyConfig" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Friend Sub Initialise( _
                 ByVal pStudyManager As studyManager, _
-                ByVal pChartController As chartController)
+                ByVal pChart As ChartController)
 Set mStudyManager = pStudyManager
-Set mChartController = pChartController
+Set mChartController = pChart
 Set mPeriods = mChartController.Periods
-'initialiseChart
 End Sub
 
-Public Sub notifyInput( _
+Public Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection, _
+                ByVal BaseStudy As Study)
+Dim baseStudySect As ConfigurationSection
+Dim studyConfig As StudyConfiguration
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set mConfig = config
+
+If Not mConfig Is Nothing Then
+    Set baseStudySect = mConfig.GetConfigurationSection(ConfigSectionBaseStudyConfig)
+    Set studyConfig = New StudyConfiguration
+    studyConfig.Study = BaseStudy
+    studyConfig.UnderlyingStudy = mStudyManager.GetUnderlyingStudy(BaseStudy)
+    
+    studyConfig.LoadFromConfig baseStudySect
+    
+    setBaseStudyConfiguration studyConfig
+    
+    AddDependentStudies studyConfig
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadFromConfig" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub NotifyInput( _
                 ByVal inputHandle As Long, _
                 ByVal inputValue As Variant, _
                 ByVal timestamp As Date)
-mStudyManager.notifyInput inputHandle, inputValue, timestamp
+Dim failpoint As Long
+On Error GoTo Err
+
+mStudyManager.NotifyInput inputHandle, inputValue, timestamp
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "NotifyInput" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Function removeStudy( _
+Public Function RemoveStudyConfiguration( _
+                ByVal studyConfig As StudyConfiguration)
+Dim sc As StudyConfiguration
+
+Dim failpoint As Long
+On Error GoTo Err
+
+removeStudyValueListeners studyConfig
+
+For Each sc In studyConfig.StudyConfigurations
+    RemoveStudyConfiguration sc
+Next
+
+removeStudyConfig studyConfig
+
+RaiseEvent StudyRemoved(studyConfig)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "RemoveStudyConfiguration" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Function ReplaceStudyConfiguration( _
+                ByVal oldStudyConfig As StudyConfiguration, _
+                ByVal newStudyConfig As StudyConfiguration) As Study
+
+Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
+removeStudyValueListeners oldStudyConfig
+
+If newStudyConfig.Study Is oldStudyConfig.Study Then
+    
+    moveChildStudyConfigs oldStudyConfig, newStudyConfig
+
+    removeStudyConfig oldStudyConfig
+    
+    AddStudyConfig newStudyConfig
+Else
+
+    AddStudyConfig newStudyConfig
+    
+    RaiseEvent StudyRemoved(oldStudyConfig)
+    RaiseEvent StudyAdded(newStudyConfig)
+    
+    reconfigureChildStudies oldStudyConfig, newStudyConfig
+    
+    removeStudyConfig oldStudyConfig
+    
+    StartStudy newStudyConfig.Study
+
+End If
+
+End Function
+
+Public Sub ScrollToTime(ByVal pTime As Date)
+Dim periodNumber As Long
+Dim failpoint As Long
+On Error GoTo Err
+
+periodNumber = mPeriods(pTime).periodNumber
+mChartController.LastVisiblePeriod = periodNumber + Int((mChartController.LastVisiblePeriod - mChartController.FirstVisiblePeriod) / 2) - 1
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ScrollToTime" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub SetInputRegion( _
+                ByVal inputHandle As Long, _
+                ByVal ChartRegionName As String)
+Dim inputDescr As InputDescriptor
+Dim studyConfig As StudyConfiguration
+Dim studyValueConfig As StudyValueConfiguration
+Dim source As Study
+
+Dim failpoint As Long
+On Error GoTo Err
+
+inputDescr = mStudyManager.GetInputDescriptor(inputHandle)
+Set source = inputDescr.source
+
+On Error Resume Next
+Set studyConfig = mAllStudyConfigs.Item(source.ID)
+On Error GoTo Err
+
+If studyConfig Is Nothing Then
+    Set studyConfig = New StudyConfiguration
+    studyConfig.Study = source
+    studyConfig.Name = source.InstanceName
+    mAllStudyConfigs.Add studyConfig, source.ID
+End If
+
+' need to do this here to ensure we have the definition with all inputs
+'studyConfig.studyDefinition = inputDescr.source.studyDefinition
+
+Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(inputDescr.inputName)
+studyValueConfig.ChartRegionName = ChartRegionName
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetInputRegion" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Function StartStudy( _
+                ByVal pStudy As Study) As TaskController
+Dim lTaskCompletion As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
+Set lTaskCompletion = mStudyManager.StartStudy(pStudy, ReplayNumbers.ReplayAll)
+
+If lTaskCompletion Is Nothing Then Exit Function
+
+Set StartStudy = lTaskCompletion
+lTaskCompletion.AddTaskCompletionListener Me
+mChartController.DisableDrawing
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartStudy" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub AddDependentStudies( _
+                ByVal studyConfig As StudyConfiguration)
+Dim sc As StudyConfiguration
+For Each sc In studyConfig.StudyConfigurations
+    sc.UnderlyingStudy = studyConfig.Study
+    AddStudyConfiguration sc
+    StartStudy sc.Study
+    AddDependentStudies sc
+Next
+End Sub
+
+Private Function AddStudy( _
+                ByVal studyConfig As StudyConfiguration) As Study
+Dim lStudy As Study
+Dim Region As ChartRegion
+Dim studyHorizRule As StudyHorizontalRule
+Dim horizRulesLineSeries As LineSeries
+Dim line As ChartSkil26.line
+Dim InputValueNames() As String
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If mBaseStudy Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "AddStudy", _
+            "Base Study Configuration has not yet been set"
+End If
+
+If studyConfig.UnderlyingStudy Is Nothing Then
+    studyConfig.UnderlyingStudy = mBaseStudy
+End If
+
+InputValueNames = studyConfig.InputValueNames
+Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
+                            studyConfig.UnderlyingStudy, _
+                            InputValueNames, _
+                            studyConfig.Parameters, _
+                            studyConfig.StudyLibraryName)
+' AddStudy will have replaced any $DEFAULT input value names with
+' the correct default Study value Name
+studyConfig.InputValueNames = InputValueNames
+
+If lStudy Is mBaseStudy Then
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & "AddStudy", _
+            "Use the BaseStudyConfiguration property to set the base Study config"
+End If
+
+studyConfig.Study = lStudy
+
+determineDefaultRegionName studyConfig
+
+Set Region = findRegion(studyConfig.ChartRegionName, lStudy.InstanceName, False)
+    
+setupStudyValueListeners studyConfig
+
+If studyConfig.StudyHorizontalRules.count > 0 Then
+    Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
+    horizRulesLineSeries.Extended = True
+    horizRulesLineSeries.ExtendAfter = True
+    horizRulesLineSeries.ExtendBefore = True
+    For Each studyHorizRule In studyConfig.StudyHorizontalRules
+        Set line = horizRulesLineSeries.Add
+        line.Color = studyHorizRule.Color
+        line.LineStyle = studyHorizRule.Style
+        line.Thickness = studyHorizRule.Thickness
+        line.Point1 = Region.NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.Point2 = Region.NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+    Next
+    studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
+End If
+
+Set AddStudy = lStudy
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddStudyConfiguration" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Private Sub AddStudyConfig( _
+                ByVal studyConfig As StudyConfiguration)
+Dim parentStudyConfig As StudyConfiguration
+
+setInstanceFullyQualifiedName studyConfig
+
+If Not studyConfig.Study Is mBaseStudy Then
+    On Error Resume Next
+    Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
+    On Error GoTo 0
+    If Not parentStudyConfig Is Nothing Then parentStudyConfig.StudyConfigurations.Add studyConfig
+End If
+
+mAllStudyConfigs.Add studyConfig, studyConfig.Study.ID
+
+End Sub
+
+Private Sub determineDefaultRegionName( _
+                ByVal studyConfig As StudyConfiguration)
+Dim underlyingStudyConfig As StudyConfiguration
+
+If studyConfig.ChartRegionName = RegionNameDefault Or _
+    studyConfig.ChartRegionName = "" _
+Then
+    ' we will use the Region for the underlying Study
+    Set underlyingStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
+    studyConfig.ChartRegionName = underlyingStudyConfig.ChartRegionName
+ElseIf studyConfig.ChartRegionName = RegionNameCustom Then
+    studyConfig.ChartRegionName = studyConfig.Study.InstancePath
+End If
+End Sub
+
+Private Function findRegion( _
+                ByVal regionName As String, _
+                ByVal title As String, _
+                ByVal incrementUsageCount As Boolean) As ChartRegion
+Dim re As RegionEntry
+
+On Error Resume Next
+re = mRegionEntries(regionName)
+On Error GoTo Err
+
+Set findRegion = re.Region
+
+If findRegion Is Nothing Then
+    If mChartController.Regions.Contains(regionName) Then
+        Set findRegion = mChartController.Regions.Item(regionName)
+    Else
+        Set findRegion = mChartController.Regions.Add(20, , , , regionName)
+        findRegion.GridlineSpacingY = 0.8
+        findRegion.title.Text = title
+        findRegion.title.Color = vbBlue
+    End If
+    Set re.Region = findRegion
+    If incrementUsageCount Then re.usageCount = 1
+    mRegionEntries.Add re, regionName
+ElseIf incrementUsageCount Then
+    re.usageCount = re.usageCount + 1
+    mRegionEntries.Remove regionName
+    mRegionEntries.Add re, regionName
+End If
+
+Exit Function
+
+Err:
+    gErrorLogger.Log LogLevelSevere, "Error: " & vbCrLf & _
+                                    "Stop statement encountered in ChartManager:findRegion"
+    Stop
+End Function
+
+Private Function includeStudyValueInChart( _
+                ByVal studyConfig As StudyConfiguration, _
+                ByVal studyValueConfig As StudyValueConfiguration, _
+                ByVal studyValueDef As StudyValueDefinition) As TaskController
+
+Dim lStudyValueHandler As StudyValueHandler
+Dim Study As Study
+Dim Region As ChartRegion
+Dim regionName As String
+Dim lTaskCompletion As TaskController
+
+Set Study = studyConfig.Study
+If studyValueConfig.ChartRegionName = RegionNameDefault Or studyValueConfig.ChartRegionName = "" Then
+    ' then use the Study's default Region
+    regionName = studyConfig.ChartRegionName
+ElseIf studyValueConfig.ChartRegionName = RegionNameCustom Then
+    regionName = studyValueDef.Name & "." & Study.InstancePath
+    'studyValueConfig.ChartRegionName = regionName
+Else
+    regionName = studyValueConfig.ChartRegionName
+End If
+
+Set Region = findRegion(regionName, Study.InstanceName, True)
+
+Set lStudyValueHandler = studyConfig.StudyValueHandlers.Add(Me, _
+                                        Region, _
+                                        studyValueConfig, _
+                                        studyValueDef, _
+                                        mUpdatePerTick)
+
+
+Set lTaskCompletion = Study.AddStudyValueListener( _
+                            lStudyValueHandler, _
+                            studyValueConfig.ValueName, _
+                            ReplayNumbers.ReplayAll, _
+                            "AddStudyValueListener for value " & studyValueConfig.ValueName & " to Study " & Study.InstanceName)
+
+If Not lTaskCompletion Is Nothing Then
+    lTaskCompletion.AddTaskCompletionListener Me
+    mChartController.DisableDrawing
+End If
+Set includeStudyValueInChart = lTaskCompletion
+End Function
+
+Private Sub moveChildStudyConfigs( _
+                ByVal oldStudyConfig As StudyConfiguration, _
+                ByVal newStudyConfig As StudyConfiguration)
+Dim childStudyConfig As StudyConfiguration
+For Each childStudyConfig In oldStudyConfig.StudyConfigurations
+    oldStudyConfig.StudyConfigurations.Remove childStudyConfig
+    newStudyConfig.StudyConfigurations.Add childStudyConfig
+Next
+End Sub
+
+Private Sub reconfigureChildStudies( _
+                ByVal oldStudyConfig As StudyConfiguration, _
+                ByVal newStudyConfig As StudyConfiguration)
+Dim oldChildStudyConfig As StudyConfiguration
+Dim newChildStudyConfig As StudyConfiguration
+
+For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
+    Set newChildStudyConfig = oldChildStudyConfig.Clone
+    newChildStudyConfig.UnderlyingStudy = newStudyConfig.Study
+    If oldChildStudyConfig.ChartRegionName = oldStudyConfig.ChartRegionName Then
+        newChildStudyConfig.ChartRegionName = newStudyConfig.ChartRegionName
+    End If
+    
+    
+    AddStudy newChildStudyConfig
+    
+    removeStudyValueListeners oldChildStudyConfig
+    
+    AddStudyConfig newChildStudyConfig
+    
+    reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig
+    
+    removeStudyConfig oldChildStudyConfig
+    
+    StartStudy newChildStudyConfig.Study
+    
+    RaiseEvent StudyRemoved(oldChildStudyConfig)
+    RaiseEvent StudyAdded(newChildStudyConfig)
+Next
+
+End Sub
+
+Private Sub removeExistingStudyConfig( _
+                ByVal pStudy As Study)
+Dim prevStudyConfig As StudyConfiguration
+
+On Error Resume Next
+Set prevStudyConfig = mAllStudyConfigs(pStudy.ID)
+On Error GoTo 0
+
+If Not prevStudyConfig Is Nothing Then
+    RemoveStudyConfiguration prevStudyConfig
+End If
+
+End Sub
+
+Private Sub removeStudyConfig( _
+                ByVal studyConfig As StudyConfiguration)
+If studyConfig.Study Is mBaseStudy Then
+    mBaseStudyConfig.RemoveFromConfig
+Else
+    Dim parentStudyConfig As StudyConfiguration
+    Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
+    
+    parentStudyConfig.StudyConfigurations.Remove studyConfig
+End If
+
+mAllStudyConfigs.Remove studyConfig.Study.ID
+mInstanceFullyQualifiedNames.Remove studyConfig.InstanceFullyQualifiedName
+End Sub
+
+Private Sub removeStudyValueListeners( _
                 ByVal studyConfig As StudyConfiguration)
 Dim svh As StudyValueHandler
 Dim horizRulesLineSeries As LineSeries
@@ -315,87 +812,149 @@ Dim regionName As String
 Dim re As RegionEntry
 Dim Region As ChartRegion
 
-mChartController.SuppressDrawing = True
-For Each svh In studyConfig.studyValueHandlers
-    studyConfig.study.removeStudyValueListener svh
-    regionName = svh.Region.name
-    re = mRegions(regionName)
+Dim failpoint As Long
+On Error GoTo Err
+
+mChartController.DisableDrawing
+For Each svh In studyConfig.StudyValueHandlers
+    studyConfig.Study.RemoveStudyValueListener svh
+    regionName = svh.Region.Name
+    re = mRegionEntries(regionName)
     If re.usageCount = 1 Then
-        svh.finish False
-        mChartController.RemoveChartRegion re.Region
-        mRegions.remove regionName
+        mChartController.Regions.Remove re.Region
+        mRegionEntries.Remove regionName
     Else
-        svh.finish True
-        mRegions.remove regionName
+        re.Region.RemoveGraphicObjectSeries svh.ValueSeries
+        mRegionEntries.Remove regionName
         re.usageCount = re.usageCount - 1
-        mRegions.add re, regionName
+        mRegionEntries.Add re, regionName
     End If
 Next
 
-Set horizRulesLineSeries = studyConfig.horizontalRulesLineSeries
+studyConfig.StudyValueHandlers.Clear
+
+Set horizRulesLineSeries = studyConfig.HorizontalRulesLineSeries
 If Not horizRulesLineSeries Is Nothing Then
     Set re.Region = Nothing
     On Error Resume Next
-    re = mRegions(studyConfig.chartRegionName)
-    On Error GoTo 0
+    re = mRegionEntries(studyConfig.ChartRegionName)
+    On Error GoTo Err
     If Not re.Region Is Nothing Then
         Set Region = re.Region
         Region.RemoveGraphicObjectSeries horizRulesLineSeries
     End If
 End If
-mChartController.SuppressDrawing = False
-mStudyConfigurations.remove studyConfig
-End Function
 
-Public Sub scrollToTime(ByVal pTime As Date)
-Dim periodNumber As Long
-periodNumber = mPeriods(pTime).periodNumber
-mChartController.LastVisiblePeriod = periodNumber + Int((mChartController.LastVisiblePeriod - mChartController.FirstVisiblePeriod) / 2) - 1
-End Sub
+mChartController.EnableDrawing
 
-Public Sub setInputRegion( _
-                ByVal inputHandle As Long, _
-                ByVal chartRegionName As String)
-Dim inputDescr As InputDescriptor
-Dim studyConfig As StudyConfiguration
-Dim studyValueConfig As StudyValueConfiguration
-Dim source As InputStudy
-
-On Error GoTo Err
-
-inputDescr = mStudyManager.getInputDescriptor(inputHandle)
-Set source = inputDescr.source
-
-On Error Resume Next
-Set studyConfig = mStudyConfigurations.item(source.name)
-On Error GoTo 0
-
-If studyConfig Is Nothing Then
-    Set studyConfig = New StudyConfiguration
-'    studyConfig.instanceName = source.name
-'    studyConfig.instanceFullyQualifiedName = source.name
-    studyConfig.study = source
-    studyConfig.name = source.name
-    mStudyConfigurations.add studyConfig
-End If
-
-' need to do this here to ensure we have the definition with all inputs
-'studyConfig.studyDefinition = inputDescr.source.studyDefinition
-
-Set studyValueConfig = studyConfig.studyValueConfigurations.add(inputDescr.inputName)
-studyValueConfig.chartRegionName = chartRegionName
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrSubscriptOutOfRange Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSupport" & "." & "ChartManager" & ":" & "setInputRegion", _
-            "inputHandle argument invalid"
-End If
-Err.Raise Err.Number
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "removeStudyValueListeners" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Function setupStudyValueListeners( _
+Private Sub setBaseStudyConfig( _
+                ByVal studyConfig As StudyConfiguration)
+Dim bs As BarStudy
+Set mBaseStudyConfig = studyConfig
+Set mBaseStudy = studyConfig.Study
+Set bs = mBaseStudy
+Set mBars = bs.Bars
+If Not mConfig Is Nothing Then
+    mBaseStudyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBaseStudyConfig)
+End If
+End Sub
+
+Private Sub setBaseStudyConfiguration( _
+                ByVal studyConfig As StudyConfiguration)
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If mBaseStudy Is Nothing Then
+    setBaseStudyConfig studyConfig
+    
+    AddStudyConfig studyConfig
+    
+    setupStudyValueListeners mBaseStudyConfig
+    RaiseEvent StudyAdded(mBaseStudyConfig)
+
+ElseIf Not studyConfig.Study Is mBaseStudy Then
+    AddStudyConfig studyConfig
+    
+    setupStudyValueListeners studyConfig
+    removeStudyValueListeners mBaseStudyConfig
+    
+    RaiseEvent StudyRemoved(mBaseStudyConfig)
+    RaiseEvent StudyAdded(studyConfig)
+    
+    reconfigureChildStudies mBaseStudyConfig, studyConfig
+    
+    removeStudyConfig mBaseStudyConfig
+
+    setBaseStudyConfig studyConfig
+Else
+    
+    setupStudyValueListeners studyConfig
+    removeStudyValueListeners mBaseStudyConfig
+    
+    moveChildStudyConfigs mBaseStudyConfig, studyConfig
+
+    removeStudyConfig mBaseStudyConfig
+    
+    setBaseStudyConfig studyConfig
+    AddStudyConfig mBaseStudyConfig
+    
+End If
+    
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setBaseStudyConfiguration" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+End Sub
+
+Private Sub setInstanceFullyQualifiedName( _
+                ByVal studyConfig As StudyConfiguration)
+Dim key As String
+Dim keyInc As String
+Dim i As Long
+Dim s As String
+
+key = studyConfig.Study.InstancePath
+
+On Error Resume Next
+s = mInstanceFullyQualifiedNames(key)
+On Error GoTo 0
+
+If s = "" Then
+    studyConfig.InstanceFullyQualifiedName = key
+Else
+    Do
+        i = i + 1
+        keyInc = key & "." & i
+        
+        On Error Resume Next
+        s = ""
+        s = mInstanceFullyQualifiedNames(keyInc)
+        On Error GoTo 0
+    
+    Loop Until s = ""
+    studyConfig.InstanceFullyQualifiedName = keyInc
+End If
+
+mInstanceFullyQualifiedNames.Add studyConfig.InstanceFullyQualifiedName, studyConfig.InstanceFullyQualifiedName
+End Sub
+
+Private Function setupStudyValueListeners( _
                 ByVal studyConfig As StudyConfiguration) As TaskController()
 Dim studyValueConfig As StudyValueConfiguration
 Dim studyValueDefs As StudyValueDefinitions
@@ -404,27 +963,22 @@ Dim taskCompletionsIndex As Long
 Dim tc As TaskController
 
 Dim failpoint As Long
-
 On Error GoTo Err
 
 failpoint = 100
 
-If mBaseStudy Is Nothing Then Set mBaseStudy = studyConfig.study
-
-failpoint = 200
-
-Set studyValueDefs = studyConfig.study.StudyDefinition.StudyValueDefinitions
+Set studyValueDefs = studyConfig.Study.StudyDefinition.StudyValueDefinitions
 
 failpoint = 300
 
-For Each studyValueConfig In studyConfig.studyValueConfigurations
-    If studyValueConfig.includeInChart Then
+For Each studyValueConfig In studyConfig.StudyValueConfigurations
+    If studyValueConfig.IncludeInChart Then
 
         failpoint = 400
 
         Set tc = includeStudyValueInChart(studyConfig, _
                                 studyValueConfig, _
-                                studyValueDefs.item(studyValueConfig.valueName))
+                                studyValueDefs.Item(studyValueConfig.ValueName))
 
         failpoint = 500
 
@@ -438,134 +992,17 @@ Next
 
 failpoint = 600
 
-' add the study config to the list if it hasn't already been added
-mStudyConfigurations.add studyConfig
-
-failpoint = 600
-
 setupStudyValueListeners = taskCompletions
 
 Exit Function
 
 Err:
-GetLogger("").Log LogLevelSevere, _
-                "Error " & Err.Number & ": " & Err.Description & " at " & _
-                ProjectName & "." & ModuleName & ":" & "setupStudyValueListeners." & failpoint
-    
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setupStudyValueListeners" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Function
-
-Public Function startStudy( _
-                ByVal pStudy As study) As TaskController
-Dim lTaskCompletion As TaskController
-Set lTaskCompletion = mStudyManager.startStudy(pStudy, ReplayNumbers.ReplayAll)
-
-If lTaskCompletion Is Nothing Then Exit Function
-
-Set startStudy = lTaskCompletion
-lTaskCompletion.addTaskCompletionListener Me
-mChartController.SuppressDrawing = True
-End Function
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Sub determineDefaultRegionName( _
-                ByVal studyConfig As StudyConfiguration)
-Dim underlyingStudyConfig As StudyConfiguration
-
-If studyConfig.chartRegionName = RegionNameDefault Or _
-    studyConfig.chartRegionName = "" _
-Then
-    ' we will use the region for the underlying study
-    For Each underlyingStudyConfig In mStudyConfigurations
-        If underlyingStudyConfig.study Is studyConfig.underlyingStudy Then Exit For
-    Next
-    studyConfig.chartRegionName = underlyingStudyConfig.chartRegionName
-ElseIf studyConfig.chartRegionName = RegionNameCustom Then
-    studyConfig.chartRegionName = studyConfig.study.instancePath
-End If
-End Sub
-
-Private Function findRegion( _
-                ByVal regionName As String, _
-                ByVal title As String, _
-                ByVal incrementUsageCount As Boolean) As ChartRegion
-Dim re As RegionEntry
-Dim regionStyle As ChartRegionStyle
-
-On Error Resume Next
-re = mRegions(regionName)
-On Error GoTo 0
-
-Set findRegion = re.Region
-
-If findRegion Is Nothing Then
-    Set findRegion = mChartController.GetChartRegion(regionName)
-    If findRegion Is Nothing Then
-        Set regionStyle = mChartController.DefaultRegionStyle
-        regionStyle.GridlineSpacingY = 0.8
-        regionStyle.HasGrid = True
-        Set findRegion = mChartController.AddChartRegion(20, , regionStyle, , regionName)
-        findRegion.title.Text = title
-        findRegion.title.color = vbBlue
-    End If
-    Set re.Region = findRegion
-    If incrementUsageCount Then re.usageCount = 1
-    mRegions.add re, regionName
-ElseIf incrementUsageCount Then
-    re.usageCount = re.usageCount + 1
-    mRegions.remove regionName
-    mRegions.add re, regionName
-End If
-End Function
-
-Private Function includeStudyValueInChart( _
-                ByVal studyConfig As StudyConfiguration, _
-                ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudyValueDefinition) As TaskController
-
-Dim lStudyValueHandler As StudyValueHandler
-Dim study As study
-Dim Region As ChartRegion
-Dim regionName As String
-Dim lTaskCompletion As TaskController
-
-Set study = studyConfig.study
-If studyValueConfig.chartRegionName = RegionNameDefault Or studyValueConfig.chartRegionName = "" Then
-    ' then use the study's default region
-    regionName = studyConfig.chartRegionName
-ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
-    regionName = studyValueDef.name & "." & study.instancePath
-    'studyValueConfig.chartRegionName = regionName
-Else
-    regionName = studyValueConfig.chartRegionName
-End If
-
-Set Region = findRegion(regionName, study.instanceName, True)
-
-Set lStudyValueHandler = studyConfig.studyValueHandlers.add(Me, _
-                                        Region, _
-                                        studyValueConfig, _
-                                        studyValueDef, _
-                                        mUpdatePerTick)
-
-
-Set lTaskCompletion = study.addStudyValueListener( _
-                            lStudyValueHandler, _
-                            studyValueConfig.valueName, _
-                            ReplayNumbers.ReplayAll, _
-                            "AddStudyValueListener for value " & studyValueConfig.valueName & " to study " & study.instanceName)
-
-If Not lTaskCompletion Is Nothing Then
-    'mOutstandingTasks = mOutstandingTasks + 1
-    lTaskCompletion.addTaskCompletionListener Me
-    mChartController.SuppressDrawing = True
-End If
-Set includeStudyValueInChart = lTaskCompletion
-End Function
-
-
-
 
 

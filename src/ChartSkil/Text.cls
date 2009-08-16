@@ -23,11 +23,11 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
-Event Click()
-
-Event DblCLick()
-
-Event SelectionStateChanged()
+'Event Click()
+'
+'Event DblCLick()
+'
+'Event SelectionStateChanged()
 
 '@================================================================================
 ' Enums
@@ -49,6 +49,7 @@ Private Const ModuleName                As String = "Text"
 '================================================================================
 
 Private mSeries As TextSeries
+Private mSeriesUpdateNumber As Long
 
 Private mCanvas As Canvas
 Private mLayer As Long
@@ -76,24 +77,6 @@ Private mBoundingRect As TRectangle ' the rectangle that surrounds the box (if
 Private mTextRect As TRectangle ' the rectangle containing the Text
 Private mBoxRect As TRectangle  ' the rectangle used to draw the box
 
-Private mIsSetFont As Boolean
-Private mIsSetColor As Boolean
-Private mIsSetBox As Boolean
-Private mIsSetBoxColor As Boolean
-Private mIsSetBoxStyle As Boolean
-Private mIsSetBoxThickness As Boolean
-Private mIsSetBoxFillColor As Boolean
-Private mIsSetBoxFillStyle As Boolean
-Private mIsSetBoxFillWithBackgroundColor As Boolean
-Private mIsSetAlign As Boolean
-Private mIsSetPaddingX As Boolean
-Private mIsSetPaddingY As Boolean
-Private mIsSetFixedX As Boolean
-Private mIsSetFixedY As Boolean
-Private mIsSetIncludeInAutoscale As Boolean
-Private mIsSetExtended As Boolean
-Private mIsSetLayer As Boolean
-
 Private mFont As StdFont
 Private mColor As Long
 Private mBox As Boolean
@@ -118,6 +101,8 @@ Private mOffset As Dimension
 
 Private mKey As String
 
+Private mPropertyOverrideFlags As TextPropertyOverrideFlags
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -138,6 +123,7 @@ mBoxRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "Text terminated"
 Debug.Print "Text terminated"
 End Sub
 
@@ -164,8 +150,10 @@ End If
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
     (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
     (mFixedX And (canvasChanges And CanvasComparisonCodes.BoundsChangedX)) Or _
-    (mFixedY And (canvasChanges And CanvasComparisonCodes.BoundsChangedY)) _
+    (mFixedY And (canvasChanges And CanvasComparisonCodes.BoundsChangedY)) Or _
+    mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
+    mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     calcCurrentBoundingRect
 End If
 
@@ -179,7 +167,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -196,11 +184,11 @@ IGraphicObject_capabilities = GraphicObjectCapabilities.BlockUndraw
 End Property
 
 Private Sub IGraphicObject_Click()
-RaiseEvent Click
+'RaiseEvent Click
 End Sub
 
 Private Sub IGraphicObject_DblCLick()
-RaiseEvent DblCLick
+'RaiseEvent DblCLick
 End Sub
 
 Private Sub IGraphicObject_draw( _
@@ -220,12 +208,12 @@ Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = True
 End Property
 
-Private Property Let IGraphicObject_handle(ByVal value As Long)
+Private Property Let IGraphicObject_Handle(ByVal value As Long)
 mHandle = value
 End Property
 
-Private Property Get IGraphicObject_handle() As Long
-IGraphicObject_handle = mHandle
+Private Property Get IGraphicObject_Handle() As Long
+IGraphicObject_Handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
@@ -278,7 +266,7 @@ Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
 If RHS = mIsSelected Then
 Else
     mIsSelected = RHS
-    RaiseEvent SelectionStateChanged
+    'RaiseEvent SelectionStateChanged
 End If
 End Property
 
@@ -306,7 +294,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
+'Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbcrlf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint
 'Dim errDescription As String: errDescription = Err.Description
 'gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -327,28 +315,36 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("align")
+Case "ALIGN"
     initiateRedraw True, True
-Case UCase$("box")
+Case "BOX"
     initiateRedraw True, True
-Case UCase$("boxColor")
+Case "BOXCOLOR"
     initiateRedraw False, False
-Case UCase$("boxFillColor")
+Case "BOXFILLCOLOR"
     initiateRedraw False, False
-Case UCase$("boxFillStyle")
+Case "BOXFILLSTYLE"
     initiateRedraw True, False
-Case UCase$("boxStyle")
+Case "BOXSTYLE"
     initiateRedraw True, True
-Case UCase$("boxThickness")
+Case "BOXTHICKNESS"
     initiateRedraw True, True
-Case UCase$("color")
+Case "COLOR"
     initiateRedraw False, False
-Case UCase$("Font")
+Case "FONT"
     initiateRedraw True, True
-Case UCase$("paddingX")
+Case "PADDINGX"
     initiateRedraw True, True
-Case UCase$("paddingY")
+Case "PADDINGY"
     initiateRedraw True, True
+Case "EXTENDED"
+    initiateRedraw True, True
+Case "FIXEDX"
+    initiateRedraw True, True
+Case "FIXEDY"
+    initiateRedraw True, True
+Case "INCLUDEINAUTOSCALE"
+    initiateRedraw False, False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
             ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
@@ -371,160 +367,161 @@ End Sub
 Public Property Get Align() As TextAlignModes
 Align = mSeries.Align
 If Not mLocalStyle Is Nothing Then Align = mLocalStyle.Align
-If mIsSetAlign Then Align = mAlign
+If isPropertyOverrideFlagSet(TextIsSetAlign) Then Align = mAlign
 End Property
 
 Public Property Let Align(ByVal value As TextAlignModes)
-If mAlign = value And mIsSetAlign Then Exit Property
+If mAlign = value And isPropertyOverrideFlagSet(TextIsSetAlign) Then Exit Property
 mAlign = value
-mIsSetAlign = True
+setPropertyOverrideFlag TextIsSetAlign
 initiateRedraw True, True
 End Property
 
 Public Property Get Box() As Boolean
 Box = mSeries.Box
 If Not mLocalStyle Is Nothing Then Box = mLocalStyle.Box
-If mIsSetBox Then Box = mBox
+If isPropertyOverrideFlagSet(TextIsSetBox) Then Box = mBox
 End Property
 
 Public Property Let Box(ByVal value As Boolean)
-If mBox = value And mIsSetBox Then Exit Property
+If mBox = value And isPropertyOverrideFlagSet(TextIsSetBox) Then Exit Property
 mBox = value
-mIsSetBox = True
+setPropertyOverrideFlag TextIsSetBox
 initiateRedraw True, True
 End Property
 
-Public Property Get BoxColor() As OLE_COLOR
+Public Property Get BoxColor() As Long
 BoxColor = mSeries.BoxColor
 If Not mLocalStyle Is Nothing Then BoxColor = mLocalStyle.BoxColor
-If mIsSetBoxColor Then BoxColor = mBoxColor
+If isPropertyOverrideFlagSet(TextIsSetBoxColor) Then BoxColor = mBoxColor
 End Property
 
-Public Property Let BoxColor(ByVal value As OLE_COLOR)
-If mBoxColor = value And mIsSetBoxColor Then Exit Property
+Public Property Let BoxColor(ByVal value As Long)
+If mBoxColor = value And isPropertyOverrideFlagSet(TextIsSetBoxColor) Then Exit Property
 mBoxColor = value
-mIsSetBoxColor = True
+setPropertyOverrideFlag TextIsSetBoxColor
 initiateRedraw False, False
 End Property
 
-Public Property Get BoxFillColor() As OLE_COLOR
+Public Property Get BoxFillColor() As Long
 BoxFillColor = mSeries.BoxFillColor
 If Not mLocalStyle Is Nothing Then BoxFillColor = mLocalStyle.BoxFillColor
-If mIsSetBoxFillColor Then BoxFillColor = mBoxFillColor
+If isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then BoxFillColor = mBoxFillColor
 End Property
 
-Public Property Let BoxFillColor(ByVal value As OLE_COLOR)
-If mBoxFillColor = value And mIsSetBoxFillColor Then Exit Property
+Public Property Let BoxFillColor(ByVal value As Long)
+If mBoxFillColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then Exit Property
 mBoxFillColor = value
-mIsSetBoxFillColor = True
+setPropertyOverrideFlag TextIsSetBoxFillColor
 initiateRedraw False, False
 End Property
 
 Public Property Get BoxFillStyle() As FillStyles
 BoxFillStyle = mSeries.BoxFillStyle
 If Not mLocalStyle Is Nothing Then BoxFillStyle = mLocalStyle.BoxFillStyle
-If mIsSetBoxFillStyle Then BoxFillStyle = mBoxFillStyle
+If isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then BoxFillStyle = mBoxFillStyle
 End Property
 
 Public Property Let BoxFillStyle(ByVal value As FillStyles)
-If mBoxFillStyle = value And mIsSetBoxFillStyle Then Exit Property
+If mBoxFillStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then Exit Property
 mBoxFillStyle = value
-mIsSetBoxFillStyle = True
+setPropertyOverrideFlag TextIsSetBoxFillStyle
 initiateRedraw True, False
 End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
 BoxFillWithBackgroundColor = mSeries.BoxFillWithBackgroundColor
 If Not mLocalStyle Is Nothing Then BoxFillWithBackgroundColor = mLocalStyle.BoxFillWithBackgroundColor
-If mIsSetBoxFillWithBackgroundColor Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+If isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
 End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
-If mBoxFillWithBackgroundColor = value And mIsSetBoxFillWithBackgroundColor Then Exit Property
+If mBoxFillWithBackgroundColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then Exit Property
 mBoxFillWithBackgroundColor = value
-mIsSetBoxFillWithBackgroundColor = True
+setPropertyOverrideFlag TextIsSetBoxFillWithBackGroundColor
 initiateRedraw True, True
 End Property
 
 Public Property Get BoxStyle() As LineStyles
 BoxStyle = mSeries.BoxStyle
 If Not mLocalStyle Is Nothing Then BoxStyle = mLocalStyle.BoxStyle
-If mIsSetBoxStyle Then BoxStyle = mBoxStyle
+If isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then BoxStyle = mBoxStyle
 End Property
 
 Public Property Let BoxStyle(ByVal value As LineStyles)
-If mBoxStyle = value And mIsSetBoxStyle Then Exit Property
+If mBoxStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then Exit Property
 mBoxStyle = value
-mIsSetBoxStyle = True
+setPropertyOverrideFlag TextIsSetBoxStyle
 initiateRedraw True, True
 End Property
 
 Public Property Get BoxThickness() As Long
 BoxThickness = mSeries.BoxThickness
 If Not mLocalStyle Is Nothing Then BoxThickness = mLocalStyle.BoxThickness
-If mIsSetBoxThickness Then BoxThickness = mBoxThickness
+If isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then BoxThickness = mBoxThickness
 End Property
 
 Public Property Let BoxThickness(ByVal value As Long)
-If mBoxThickness = value And mIsSetBoxThickness Then Exit Property
+If mBoxThickness = value And isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then Exit Property
 mBoxThickness = value
-mIsSetBoxThickness = True
+setPropertyOverrideFlag TextIsSetBoxThickness
 initiateRedraw True, True
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If mIsSetColor Then Color = mColor
+If isPropertyOverrideFlagSet(TextIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
-If mColor = value And mIsSetColor Then Exit Property
+Public Property Let Color(ByVal value As Long)
+If mColor = value And isPropertyOverrideFlagSet(TextIsSetColor) Then Exit Property
 mColor = value
-mIsSetColor = True
+setPropertyOverrideFlag TextIsSetColor
 initiateRedraw False, False
 End Property
 
 Public Property Get Extended() As Boolean
 Extended = mSeries.Extended
-If mIsSetExtended Then Extended = mExtended
+If Not mLocalStyle Is Nothing Then Extended = mLocalStyle.Extended
+If isPropertyOverrideFlagSet(TextIsSetExtended) Then Extended = mExtended
 End Property
 
 Public Property Let Extended(ByVal value As Boolean)
-If mExtended = value And mIsSetExtended Then Exit Property
+If mExtended = value And isPropertyOverrideFlagSet(TextIsSetExtended) Then Exit Property
 mExtended = value
-mIsSetExtended = True
+setPropertyOverrideFlag TextIsSetExtended
 initiateRedraw True, True
 End Property
 
 Public Property Get FixedX() As Boolean
 FixedX = mSeries.FixedX
-If mIsSetFixedX Then FixedX = mFixedX
+If Not mLocalStyle Is Nothing Then FixedX = mLocalStyle.FixedX
+If isPropertyOverrideFlagSet(TextIsSetFixedX) Then FixedX = mFixedX
 End Property
 
 Public Property Let FixedX(ByVal value As Boolean)
-If mFixedX = value And mIsSetFixedX Then Exit Property
+If mFixedX = value And isPropertyOverrideFlagSet(TextIsSetFixedX) Then Exit Property
 mFixedX = value
-mIsSetFixedX = True
-ConvertPositionX
+setPropertyOverrideFlag TextIsSetFixedX
 initiateRedraw True, True
 End Property
 
 Public Property Get FixedY() As Boolean
 FixedY = mSeries.FixedY
-If mIsSetFixedY Then FixedY = mFixedY
+If Not mLocalStyle Is Nothing Then FixedY = mLocalStyle.FixedY
+If isPropertyOverrideFlagSet(TextIsSetFixedY) Then FixedY = mFixedY
 End Property
 
 Public Property Let FixedY(ByVal value As Boolean)
-If mFixedY = value And mIsSetFixedY Then Exit Property
+If mFixedY = value And isPropertyOverrideFlagSet(TextIsSetFixedY) Then Exit Property
 mFixedY = value
-mIsSetFixedY = True
-ConvertPositionY
+setPropertyOverrideFlag TextIsSetFixedY
 initiateRedraw True, True
 End Property
 
 Public Property Get Font() As StdFont
-If mIsSetFont Then
+If isPropertyOverrideFlagSet(TextIsSetFont) Then
     Set Font = mFont
 ElseIf Not mLocalStyle Is Nothing Then
     Set Font = mLocalStyle.Font
@@ -536,26 +533,26 @@ End Property
 Public Property Let Font(ByVal value As StdFont)
 Set mFont = value
 If mFont Is Nothing Then
-    mIsSetFont = False
+    clearPropertyOverrideFlag TextIsSetFont
 Else
-    mIsSetFont = True
+    setPropertyOverrideFlag TextIsSetFont
 End If
 initiateRedraw True, True
 End Property
 
-Friend Property Get Handle() As Long
-Handle = mHandle
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
+If isPropertyOverrideFlagSet(TextIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
+If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(TextIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
-mIsSetIncludeInAutoscale = True
+setPropertyOverrideFlag TextIsSetIncludeInAutoscale
 initiateRedraw False, False
 End Property
 
@@ -580,15 +577,15 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
-If mLayer = value And mIsSetLayer Then Exit Property
+If mLayer = value And isPropertyOverrideFlagSet(TextIsSetLayer) Then Exit Property
 mLayer = value
-mIsSetLayer = True
+setPropertyOverrideFlag TextIsSetLayer
 initiateRedraw False, False
 End Property
 
 Public Property Get Layer() As LayerNumbers
 Layer = mSeries.Layer
-If mIsSetLayer Then Layer = mLayer
+If isPropertyOverrideFlagSet(TextIsSetLayer) Then Layer = mLayer
 End Property
 
 Public Property Get LocalStyle() As TextStyle
@@ -602,36 +599,36 @@ initiateRedraw True, True
 End Property
 
 Public Property Let PaddingX(ByVal value As Double)
-If mPaddingX = value And mIsSetPaddingX Then Exit Property
+If mPaddingX = value And isPropertyOverrideFlagSet(TextIsSetPaddingX) Then Exit Property
 mPaddingX = value
-mIsSetPaddingX = True
+setPropertyOverrideFlag TextIsSetPaddingX
 initiateRedraw True, True
 End Property
 
 Public Property Get PaddingX() As Double
 PaddingX = mSeries.PaddingX
 If Not mLocalStyle Is Nothing Then PaddingX = mLocalStyle.PaddingX
-If mIsSetPaddingX Then PaddingX = mPaddingX
+If isPropertyOverrideFlagSet(TextIsSetPaddingX) Then PaddingX = mPaddingX
 End Property
 
 Public Property Let PaddingY(ByVal value As Double)
-If mPaddingY = value And mIsSetPaddingY Then Exit Property
+If mPaddingY = value And isPropertyOverrideFlagSet(TextIsSetPaddingY) Then Exit Property
 mPaddingY = value
-mIsSetPaddingY = True
+setPropertyOverrideFlag TextIsSetPaddingY
 initiateRedraw True, True
 End Property
 
 Public Property Get PaddingY() As Double
 PaddingY = mSeries.PaddingY
 If Not mLocalStyle Is Nothing Then PaddingY = mLocalStyle.PaddingY
-If mIsSetPaddingY Then PaddingY = mPaddingY
+If isPropertyOverrideFlagSet(TextIsSetPaddingY) Then PaddingY = mPaddingY
 End Property
 
-Public Property Get position() As Point
-Set position = mPosition
+Public Property Get Position() As Point
+Set Position = mPosition
 End Property
 
-Public Property Let position(ByVal value As Point)
+Public Property Let Position(ByVal value As Point)
 If value Is Nothing Then
     Set mPosition = Nothing
     mBoundingRect.isValid = False
@@ -692,6 +689,11 @@ End Property
 ' Methods
 '================================================================================
 
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+initiateRedraw True, True
+End Sub
+
 Friend Sub Draw()
 Dim failpoint As Long
 On Error GoTo Err
@@ -704,7 +706,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -735,7 +737,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Initialise" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Initialise" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -977,6 +979,11 @@ If Not mPosition.IsAssigned Then Exit Function
 canBeDrawn = True
 End Function
 
+Private Sub clearPropertyOverrideFlag( _
+                ByVal flag As TextPropertyOverrideFlags)
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+End Sub
+
 Private Sub ConvertPosition()
 ConvertPositionX
 ConvertPositionY
@@ -1055,6 +1062,16 @@ If recalcBoundaries Then
     calcCurrentBoundingRect
 End If
 mGOSP.ObjectChanged mHandle, mBoundingRect
+End Sub
+
+Private Function isPropertyOverrideFlagSet( _
+                ByVal flag As TextPropertyOverrideFlags) As Boolean
+isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Sub setPropertyOverrideFlag( _
+                ByVal flag As TextPropertyOverrideFlags)
+mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 End Sub
 
 Private Sub undraw()

@@ -87,7 +87,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 Set mPsCache = mStudyFoundation.FindValueCache(PsValuePs)
@@ -105,7 +105,7 @@ On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
-If Not mStudyFoundation.isNewBar Then
+If Not mStudyFoundation.IsNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
 sPrevVal = ev.sVal.value
@@ -118,10 +118,10 @@ If mCurrentStop = MaxDouble Then
     mInitialStopForBar = mCurrentStop
 End If
 
-If mStudyFoundation.isNewBar Then
+If mStudyFoundation.IsNewBar Then
     accelAdjustedThisbar = False
     mInitialStopForBar = mCurrentStop
-    mPsCache.addValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mPsCache.AddValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     If mAccelerationFactor = 0 Then
         mAccelerationFactor = mStartFactor
     End If
@@ -130,7 +130,7 @@ If mStudyFoundation.isNewBar Then
     Else
         mCurrentStop = mInitialStopForBar - mAccelerationFactor * (mInitialStopForBar - mExtremePoint)
     End If
-    mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
+    mPsCache.UpdateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
 If mPsCache.Count < 2 Then Exit Sub
@@ -146,16 +146,16 @@ If mLong Then
                 End If
             End If
             mCurrentStop = mInitialStopForBar + mAccelerationFactor * (mExtremePoint - mInitialStopForBar)
-            mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
+            mPsCache.UpdateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         End If
         If newValue > mSignificantPoint Then mSignificantPoint = newValue
-    ElseIf newValue > mPsCache.getValue(-1) Then
-        mCurrentStop = mPsCache.getValue(-1)
+    ElseIf newValue > mPsCache.GetValue(-1) Then
+        mCurrentStop = mPsCache.GetValue(-1)
     Else
         mLong = False
         mCurrentStop = mSignificantPoint
         mInitialStopForBar = mCurrentStop
-        mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
+        mPsCache.UpdateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         mAccelerationFactor = 0
         mExtremePoint = newValue
         mSignificantPoint = newValue
@@ -171,16 +171,16 @@ Else
                 End If
             End If
             mCurrentStop = mInitialStopForBar - mAccelerationFactor * (mInitialStopForBar - mExtremePoint)
-            mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
+            mPsCache.UpdateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         End If
         If newValue < mSignificantPoint Then mSignificantPoint = newValue
-    ElseIf newValue < mPsCache.getValue(-1) Then
-        mCurrentStop = mPsCache.getValue(-1)
+    ElseIf newValue < mPsCache.GetValue(-1) Then
+        mCurrentStop = mPsCache.GetValue(-1)
     Else
         mLong = True
         mCurrentStop = mSignificantPoint
         mInitialStopForBar = mCurrentStop
-        mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
+        mPsCache.UpdateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         mAccelerationFactor = 0
         mExtremePoint = newValue
         mSignificantPoint = newValue
@@ -199,7 +199,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -231,7 +231,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -251,7 +251,7 @@ End Function
 '@================================================================================
 
 Public Property Get ps(Optional ByVal ref As Integer) As SValue
-ps = mPsCache.getSValue(ref)
+ps = mPsCache.GetSValue(ref)
 End Property
 
 Public Sub setStop(ByVal stopValue As Double, _
@@ -260,7 +260,7 @@ Public Sub setStop(ByVal stopValue As Double, _
 mLong = isLong
 mCurrentStop = stopValue
 mInitialStopForBar = mCurrentStop
-mPsCache.updateValue mCurrentStop
+mPsCache.UpdateValue mCurrentStop
 mAccelerationFactor = 0
 mExtremePoint = extremePoint
 mSignificantPoint = extremePoint
@@ -291,7 +291,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -305,7 +305,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -338,7 +338,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -357,21 +357,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -385,7 +385,7 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _

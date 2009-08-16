@@ -458,8 +458,12 @@ TerminateTWUtilities
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+TradeBuild.TradeBuildAPI.ServiceProviders.RemoveAll
+
 gLogger.Log LogLevelNormal, "Data Collector program exiting"
 gLogger.removeLogListener Me
+
+gKillLogging
 End Sub
 
 '================================================================================
@@ -553,6 +557,10 @@ End Sub
 '================================================================================
 ' RawMarketDepth Interface Members
 '================================================================================
+
+Private Sub RawMarketDepthListener_MarketDepthNotAvailable(ByVal reason As String)
+
+End Sub
 
 Private Sub RawMarketDepthListener_resetMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
 
@@ -783,7 +791,7 @@ End Property
 
 Friend Sub initialise( _
                 ByVal pDataCollector As dataCollector, _
-                ByVal pConfigManager As ConfigManager, _
+                ByVal pconfigManager As ConfigManager, _
                 ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
@@ -792,7 +800,7 @@ Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
 Set mDataCollector = pDataCollector
 
-Set mConfigManager = pConfigManager
+Set mConfigManager = pconfigManager
 ConfigNameText = configName
 
 If showMonitor Then

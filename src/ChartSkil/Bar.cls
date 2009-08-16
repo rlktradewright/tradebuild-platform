@@ -23,11 +23,11 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
-Event Click()
-
-Event DblCLick()
-
-Event SelectionStateChanged()
+'Event Click()
+'
+'Event DblCLick()
+'
+'Event SelectionStateChanged()
 
 '@================================================================================
 ' Enums
@@ -62,27 +62,16 @@ Private mTimestamp As Date
 Private WithEvents mLocalStyle As BarStyle
 Attribute mLocalStyle.VB_VarHelpID = -1
 
-Private mIsSetTailThickness As Boolean
-Private mIsSetOutlineThickness As Boolean
-Private mIsSetBarColor As Boolean
-Private mIsSetUpColor As Boolean
-Private mIsSetDownColor As Boolean
-Private mIsSetDisplayMode As Boolean
-Private mIsSetSolidUpBody As Boolean
-Private mIsSetBarThickness As Boolean
-Private mIsSetBarWidth As Boolean
-Private mIsSetLayer As Boolean
-
 Private mTailThickness As Long
 Private mOutlineThickness As Long
-Private mBarColor As Long
+Private mColor As Long
 Private mUpColor As Long
 Private mDownColor As Long
 Private mDisplayMode As BarDisplayModes
 Private mIncludeInAutoscale As Boolean
 Private mSolidUpBody As Boolean
-Private mBarThickness As Long
-Private mBarWidth As Single
+Private mThickness As Long
+Private mWidth As Single
 
 Private mInScope As Boolean
 Private mVisible As Boolean
@@ -91,7 +80,6 @@ Private mGOSP As GraphObjServiceProvider
 
 Private mBoundingRect As TRectangle
 
-'Private mPeriodNumber As Long
 Private mX As Double
 
 Private mKey As String
@@ -104,7 +92,9 @@ Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 
 Private mBarSemiWidth As Single ' half the Width of the bar - this actually depends
                                 ' on the bar display mode, rather than being simply
-                                ' half of BarWidth
+                                ' half of Width
+
+Private mPropertyOverrideFlags As BarPropertyOverrideFlags
 
 '================================================================================
 ' Enums
@@ -126,6 +116,7 @@ mBoundingRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "Bar terminated"
 Debug.Print "Bar terminated"
 End Sub
 
@@ -145,7 +136,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -162,11 +153,11 @@ IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
 End Property
 
 Private Sub IGraphicObject_Click()
-RaiseEvent Click
+'RaiseEvent Click
 End Sub
 
 Private Sub IGraphicObject_DblCLick()
-RaiseEvent DblCLick
+'RaiseEvent DblCLick
 End Sub
 
 Private Sub IGraphicObject_draw( _
@@ -183,7 +174,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -203,15 +194,15 @@ Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = False
 End Property
 
-Private Property Get IGraphicObject_handle() As Long
-IGraphicObject_handle = mHandle
+Private Property Get IGraphicObject_Handle() As Long
+IGraphicObject_Handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
 IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
 End Function
 
-Private Property Let IGraphicObject_handle(ByVal value As Long)
+Private Property Let IGraphicObject_Handle(ByVal value As Long)
 mHandle = value
 End Property
 
@@ -247,7 +238,7 @@ Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
 If RHS = mIsSelected Then
 Else
     mIsSelected = RHS
-    RaiseEvent SelectionStateChanged
+    'RaiseEvent SelectionStateChanged
 End If
 End Property
 
@@ -275,7 +266,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
+'Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbcrlf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint
 'Dim errDescription As String: errDescription = Err.Description
 'gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -296,23 +287,25 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("BarColor")
+Case "COLOR"
     initiateRedraw False, False
-Case UCase$("BarThickness")
+Case "THICKNESS"
     initiateRedraw True, False
-Case UCase$("BarWidth")
+Case "WIDTH"
     initiateRedraw True, True
-Case UCase$("displayMode")
+Case "DISPLAYMODE"
     initiateRedraw True, True
-Case UCase$("downColor")
+Case "DOWNCOLOR"
     initiateRedraw False, False
-Case UCase$("OutlineThickness")
+Case "INCLUDEINAUTOSCALE"
     initiateRedraw False, False
-Case UCase$("SolidUpBody")
+Case "OUTLINETHICKNESS"
     initiateRedraw False, False
-Case UCase$("TailThickness")
+Case "SOLIDUPBODY"
+    initiateRedraw False, False
+Case "TAILTHICKNESS"
     initiateRedraw True, False
-Case UCase$("upColor")
+Case "UPCOLOR"
     initiateRedraw False, False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
@@ -333,48 +326,52 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let BarColor(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "Bar" & ":" & "barColor", _
+            "ChartSkil26" & "." & "Bar" & ":" & "Color", _
             "Value is not a valid color or -1"
 
-If mBarColor = value And mIsSetBarColor Then Exit Property
-mBarColor = value
-mIsSetBarColor = (mBarColor <> -1)
+If mColor = value And isPropertyOverrideFlagSet(BarIsSetColor) Then Exit Property
+mColor = value
+If mColor <> -1 Then
+    setPropertyOverrideFlag BarIsSetColor
+Else
+    clearPropertyOverrideFlag BarIsSetColor
+End If
 initiateRedraw False, False
 End Property
 
-Public Property Get BarColor() As OLE_COLOR
-BarColor = mSeries.BarColor
-If Not mLocalStyle Is Nothing Then BarColor = mLocalStyle.BarColor
-If mIsSetBarColor Then BarColor = mBarColor
+Public Property Get Color() As Long
+Color = mSeries.Color
+If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
+If isPropertyOverrideFlagSet(BarIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let BarThickness(ByVal value As Long)
-If mBarThickness = value And mIsSetBarThickness Then Exit Property
-mBarThickness = value
-mIsSetBarThickness = True
+Public Property Let Thickness(ByVal value As Long)
+If mThickness = value And isPropertyOverrideFlagSet(BarIsSetThickness) Then Exit Property
+mThickness = value
+setPropertyOverrideFlag BarIsSetThickness
 initiateRedraw True, False
 End Property
 
-Public Property Get BarThickness() As Long
-BarThickness = mSeries.BarThickness
-If Not mLocalStyle Is Nothing Then BarThickness = mLocalStyle.BarThickness
-If mIsSetBarThickness Then BarThickness = mBarThickness
+Public Property Get Thickness() As Long
+Thickness = mSeries.Thickness
+If Not mLocalStyle Is Nothing Then Thickness = mLocalStyle.Thickness
+If isPropertyOverrideFlagSet(BarIsSetThickness) Then Thickness = mThickness
 End Property
 
-Public Property Let BarWidth(ByVal value As Single)
-If mBarWidth = value And mIsSetBarWidth Then Exit Property
-mBarWidth = value
-mIsSetBarWidth = True
+Public Property Let Width(ByVal value As Single)
+If mWidth = value And isPropertyOverrideFlagSet(BarIsSetWidth) Then Exit Property
+mWidth = value
+setPropertyOverrideFlag BarIsSetWidth
 initiateRedraw True, True
 End Property
 
-Public Property Get BarWidth() As Single
-BarWidth = mSeries.BarWidth
-If Not mLocalStyle Is Nothing Then BarWidth = mLocalStyle.BarWidth
-If mIsSetBarWidth Then BarWidth = mBarWidth
+Public Property Get Width() As Single
+Width = mSeries.Width
+If Not mLocalStyle Is Nothing Then Width = mLocalStyle.Width
+If isPropertyOverrideFlagSet(BarIsSetWidth) Then Width = mWidth
 End Property
 
 Public Property Get Blank() As Boolean
@@ -386,43 +383,47 @@ ClosePrice = mClose
 End Property
 
 Public Property Let DisplayMode(ByVal value As BarDisplayModes)
-If mDisplayMode = value And mIsSetDisplayMode Then Exit Property
+If mDisplayMode = value And isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then Exit Property
 mDisplayMode = value
-mIsSetDisplayMode = True
+setPropertyOverrideFlag BarIsSetDisplayMode
 initiateRedraw True, True
 End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
 DisplayMode = mSeries.DisplayMode
 If Not mLocalStyle Is Nothing Then DisplayMode = mLocalStyle.DisplayMode
-If mIsSetDisplayMode Then DisplayMode = mDisplayMode
+If isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then DisplayMode = mDisplayMode
 End Property
 
 Public Property Get DownBar() As Boolean
 DownBar = (mClose <= mOpen)
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
+Public Property Let DownColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "Bar" & ":" & "downColor", _
             "Value is not a valid color or -1"
 
-If mDownColor = value And mIsSetDownColor Then Exit Property
+If mDownColor = value And isPropertyOverrideFlagSet(BarIsSetDownColor) Then Exit Property
 mDownColor = value
-mIsSetDownColor = (mDownColor <> -1)
+If mDownColor <> -1 Then
+    setPropertyOverrideFlag BarIsSetDownColor
+Else
+    clearPropertyOverrideFlag BarIsSetDownColor
+End If
 initiateRedraw False, False
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mSeries.DownColor
 If Not mLocalStyle Is Nothing Then DownColor = mLocalStyle.DownColor
-If mIsSetDownColor Then DownColor = mDownColor
+If isPropertyOverrideFlagSet(BarIsSetDownColor) Then DownColor = mDownColor
 If DownColor = -1 Then DownColor = UpColor
 End Property
 
-Friend Property Get Handle() As Long
-Handle = mHandle
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Get HighPrice() As Double
@@ -430,12 +431,16 @@ HighPrice = mHigh
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value Then Exit Property
+If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
+setPropertyOverrideFlag BarIsSetIncludeInAutoscale
 initiateRedraw False, False
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mSeries.IncludeInAutoscale
+If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
@@ -460,15 +465,15 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
-If mLayer = value And mIsSetLayer Then Exit Property
+If mLayer = value And isPropertyOverrideFlagSet(BarIsSetLayer) Then Exit Property
 mLayer = value
-mIsSetLayer = True
+setPropertyOverrideFlag BarIsSetLayer
 initiateRedraw False, False
 End Property
 
 Public Property Get Layer() As LayerNumbers
 Layer = mSeries.Layer
-If mIsSetLayer Then Layer = mLayer
+If isPropertyOverrideFlagSet(BarIsSetLayer) Then Layer = mLayer
 End Property
 
 Public Property Get LocalStyle() As BarStyle
@@ -490,64 +495,68 @@ OpenPrice = mOpen
 End Property
 
 Public Property Let OutlineThickness(ByVal value As Long)
-If mOutlineThickness = value And mIsSetOutlineThickness Then Exit Property
+If mOutlineThickness = value And isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then Exit Property
 mOutlineThickness = value
-mIsSetOutlineThickness = True
+setPropertyOverrideFlag BarIsSetOutlineThickness
 initiateRedraw False, False
 End Property
 
 Public Property Get OutlineThickness() As Long
 OutlineThickness = mSeries.OutlineThickness
 If Not mLocalStyle Is Nothing Then OutlineThickness = mLocalStyle.OutlineThickness
-If mIsSetOutlineThickness Then OutlineThickness = mOutlineThickness
+If isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then OutlineThickness = mOutlineThickness
 End Property
 
 Public Property Let SolidUpBody(ByVal value As Boolean)
-If mSolidUpBody = value And mIsSetSolidUpBody Then Exit Property
+If mSolidUpBody = value And isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then Exit Property
 mSolidUpBody = value
-mIsSetSolidUpBody = True
+setPropertyOverrideFlag BarIsSetSolidUpBody
 initiateRedraw False, False
 End Property
 
 Public Property Get SolidUpBody() As Boolean
 SolidUpBody = mSeries.SolidUpBody
 If Not mLocalStyle Is Nothing Then SolidUpBody = mLocalStyle.SolidUpBody
-If mIsSetSolidUpBody Then SolidUpBody = mSolidUpBody
+If isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then SolidUpBody = mSolidUpBody
 End Property
 
 Public Property Let TailThickness(ByVal value As Long)
-If mTailThickness = value And mIsSetTailThickness Then Exit Property
+If mTailThickness = value And isPropertyOverrideFlagSet(BarIsSetTailThickness) Then Exit Property
 mTailThickness = value
-mIsSetTailThickness = True
+setPropertyOverrideFlag BarIsSetTailThickness
 initiateRedraw True, False
 End Property
 
 Public Property Get TailThickness() As Long
 TailThickness = mSeries.TailThickness
 If Not mLocalStyle Is Nothing Then TailThickness = mLocalStyle.TailThickness
-If mIsSetTailThickness Then TailThickness = mTailThickness
+If isPropertyOverrideFlagSet(BarIsSetTailThickness) Then TailThickness = mTailThickness
 End Property
 
 Public Property Get UpBar() As Boolean
 UpBar = (mClose >= mOpen)
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
+Public Property Let UpColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "Bar" & ":" & "upColor", _
             "Value is not a valid color or -1"
 
-If mUpColor = value And mIsSetUpColor Then Exit Property
+If mUpColor = value And isPropertyOverrideFlagSet(BarIsSetUpColor) Then Exit Property
 mUpColor = value
-mIsSetUpColor = (mUpColor <> -1)
+If mUpColor <> -1 Then
+    setPropertyOverrideFlag BarIsSetUpColor
+Else
+    clearPropertyOverrideFlag BarIsSetUpColor
+End If
 initiateRedraw False, False
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get UpColor() As Long
 UpColor = mSeries.UpColor
 If Not mLocalStyle Is Nothing Then UpColor = mLocalStyle.UpColor
-If mIsSetUpColor Then UpColor = mUpColor
+If isPropertyOverrideFlagSet(BarIsSetUpColor) Then UpColor = mUpColor
 End Property
 
 Public Property Get Visible() As Boolean
@@ -566,6 +575,11 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+initiateRedraw True, True
+End Sub
 
 Friend Sub Initialise( _
                 ByVal series As BarSeries, _
@@ -593,15 +607,15 @@ On Error GoTo Err
 
 Set mLocalStyle = Nothing
 
-mIsSetTailThickness = False
-mIsSetOutlineThickness = False
-mIsSetBarColor = False
-mIsSetUpColor = False
-mIsSetDownColor = False
-mIsSetDisplayMode = False
-mIsSetSolidUpBody = False
-mIsSetBarThickness = False
-mIsSetBarWidth = False
+setPropertyOverrideFlag BarIsSetTailThickness = False
+setPropertyOverrideFlag BarIsSetOutlineThickness = False
+setPropertyOverrideFlag BarIsSetColor = False
+setPropertyOverrideFlag BarIsSetUpColor = False
+setPropertyOverrideFlag BarIsSetDownColor = False
+setPropertyOverrideFlag BarIsSetDisplayMode = False
+setPropertyOverrideFlag BarIsSetSolidUpBody = False
+setPropertyOverrideFlag BarIsSetThickness = False
+setPropertyOverrideFlag BarIsSetWidth = False
 
 initiateRedraw True, True
 
@@ -609,7 +623,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ResetStyle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ResetStyle" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -705,19 +719,24 @@ mBoundingRect.Bottom = mLow
 mBoundingRect.Top = mHigh
 End Sub
 
+Private Sub clearPropertyOverrideFlag( _
+                ByVal flag As BarPropertyOverrideFlags)
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+End Sub
+
 Private Sub Draw(ByRef area As TRectangle)
 'If area.isValid And Not RectContainsRect(area, mBoundingRect) Then
 '    drawPartialBar area, _
 '                    IIf(UpBar, upColor, downColor), _
-'                    IIf(barColor <> -1, _
-'                        barColor, _
+'                    IIf(Color <> -1, _
+'                        Color, _
 '                        IIf(UpBar, upColor, downColor)), _
-'                    IIf(barColor <> -1, _
-'                        barColor, _
+'                    IIf(Color <> -1, _
+'                        Color, _
 '                        IIf(UpBar, upColor, downColor))
 'Else
     drawBar IIf(UpBar, UpColor, DownColor), _
-            IIf(BarColor <> -1, BarColor, IIf(UpBar, UpColor, DownColor))
+            IIf(Color <> -1, Color, IIf(UpBar, UpColor, DownColor))
 'End If
 End Sub
 
@@ -725,8 +744,8 @@ End Sub
 Private Sub drawBar( _
                 ByVal Color As Long, _
                 ByVal outlineColor As Long)
-Dim barThicknessScaleX As Double
-Dim barThicknessScaleY As Double
+Dim ThicknessScaleX As Double
+Dim ThicknessScaleY As Double
 
 If Not mVisible Then Exit Sub
 If Blank Then Exit Sub
@@ -755,7 +774,7 @@ If DisplayMode = BarDisplayModeCandlestick Then
     End If
 Else
     mCanvas.SetBrushAttributes outlineColor, FillStyles.FillSolid
-    If BarThickness = 1 Then
+    If Thickness = 1 Then
         Dim onePixel As Double
         onePixel = mCanvas.ConvertPixelsToLogicalX(1)
         mCanvas.SetPenAttributes outlineColor, _
@@ -773,32 +792,32 @@ Else
                                 1, _
                                 LineStyles.LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
-        barThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(BarThickness - 1)
-        barThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(BarThickness - 1)
+        ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(Thickness - 1)
+        ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(Thickness - 1)
         
-        If (mOpen - barThicknessScaleY / 2) < mLow Then
+        If (mOpen - ThicknessScaleY / 2) < mLow Then
             mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mLow), _
-                                    mCanvas.NewPoint(mX + barThicknessScaleX / 2, mLow + barThicknessScaleY)
-        ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - barThicknessScaleY), _
-                                    mCanvas.NewPoint(mX + barThicknessScaleX / 2, mHigh)
+                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
+        ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
+            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
+                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - barThicknessScaleY / 2), _
-                                    mCanvas.NewPoint(mX + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2)
+            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
+                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
         End If
         
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mLow), _
-                                mCanvas.NewPoint(mX + barThicknessScaleX / 2, mHigh)
+        mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
         
-        If (mClose - barThicknessScaleY / 2) < mLow Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mLow), _
-                                    mCanvas.NewPoint(mX + mBarSemiWidth, mLow + barThicknessScaleY)
-        ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mHigh - barThicknessScaleY), _
+        If (mClose - ThicknessScaleY / 2) < mLow Then
+            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+                                    mCanvas.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
+        ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
+            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
                                     mCanvas.NewPoint(mX + mBarSemiWidth, mHigh)
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2), _
-                                    mCanvas.NewPoint(mX + mBarSemiWidth, mClose + barThicknessScaleY / 2)
+            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
+                                    mCanvas.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
         End If
     End If
 End If
@@ -897,8 +916,8 @@ Private Sub drawPartialBar( _
                 ByVal Color As Long, _
                 ByVal outlineColor As Long, _
                 ByVal tailColor As Long)
-Dim barThicknessScaleX As Double
-Dim barThicknessScaleY As Double
+Dim ThicknessScaleX As Double
+Dim ThicknessScaleY As Double
 If Not mVisible Then Exit Sub
 If Blank Then Exit Sub
 
@@ -945,7 +964,7 @@ Else
                             1, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
-    If BarThickness = 1 Then
+    If Thickness = 1 Then
         Dim onePixel As Double
         onePixel = mCanvas.ConvertPixelsToLogicalX(1)
         If mOpen >= area.Bottom And mOpen <= area.Top Then
@@ -960,37 +979,37 @@ Else
                         mCanvas.NewPoint(mX, IIf(area.Top < mHigh, area.Top, mHigh))
     Else
         mCanvas.SetBrushAttributes outlineColor, FillStyles.FillSolid
-        barThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(BarThickness - 1)
-        barThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(BarThickness - 1)
+        ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(Thickness - 1)
+        ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(Thickness - 1)
         
         If mOpen >= area.Bottom And mOpen <= area.Top Then
-            If (mOpen - barThicknessScaleY / 2) < mLow Then
+            If (mOpen - ThicknessScaleY / 2) < mLow Then
                 mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mLow), _
-                                mCanvas.NewPoint(mX + barThicknessScaleX / 2, mLow + barThicknessScaleY)
-            ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - barThicknessScaleY), _
-                                mCanvas.NewPoint(mX + barThicknessScaleX / 2, mHigh)
+                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
+            ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
+                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
+                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
             Else
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - barThicknessScaleY / 2), _
-                                mCanvas.NewPoint(mX + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2)
+                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
+                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
             End If
         End If
         
         If mClose >= area.Bottom And mClose <= area.Top Then
-            If (mClose - barThicknessScaleY / 2) < mLow Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mLow), _
-                                mCanvas.NewPoint(mX + mBarSemiWidth, mLow + barThicknessScaleY)
-            ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mHigh - barThicknessScaleY), _
+            If (mClose - ThicknessScaleY / 2) < mLow Then
+                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+                                mCanvas.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
+            ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
+                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
                                 mCanvas.NewPoint(mX + mBarSemiWidth, mHigh)
             Else
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2), _
-                                mCanvas.NewPoint(mX + mBarSemiWidth, mClose + barThicknessScaleY / 2)
+                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
+                                mCanvas.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
             End If
         End If
         
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX - barThicknessScaleX / 2, IIf(area.Bottom > mLow, area.Bottom, mLow)), _
-                        mCanvas.NewPoint(mX + barThicknessScaleX / 2, IIf(area.Top < mHigh, area.Top, mHigh))
+        mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, IIf(area.Bottom > mLow, area.Bottom, mLow)), _
+                        mCanvas.NewPoint(mX + ThicknessScaleX / 2, IIf(area.Top < mHigh, area.Top, mHigh))
     End If
 End If
 
@@ -1023,17 +1042,25 @@ End If
 mGOSP.ObjectChanged mHandle, mBoundingRect
 End Sub
 
+Private Function isPropertyOverrideFlagSet( _
+                ByVal flag As BarPropertyOverrideFlags) As Boolean
+isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
 Private Sub setBarSemiWidth()
 Select Case DisplayMode
 Case BarDisplayModeBar
-'    mBarSemiWidth = (2 * barWidth - 0.2) / 2
-'    If mBarSemiWidth > 0.5 Then mBarSemiWidth = 0.5
-    mBarSemiWidth = BarWidth / 2
+    mBarSemiWidth = Width / 2
 Case BarDisplayModeCandlestick
-    mBarSemiWidth = BarWidth / 2
+    mBarSemiWidth = Width / 2
 Case BarDisplayModeLine
-    mBarSemiWidth = BarWidth / 2
+    mBarSemiWidth = Width / 2
 End Select
+End Sub
+
+Private Sub setPropertyOverrideFlag( _
+                ByVal flag As BarPropertyOverrideFlags)
+mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 End Sub
 
 Private Sub undraw(ByRef area As TRectangle)

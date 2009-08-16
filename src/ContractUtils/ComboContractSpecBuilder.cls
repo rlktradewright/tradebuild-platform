@@ -83,16 +83,16 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function addLeg( _
+Public Function AddLeg( _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal isBuyLeg As Boolean, _
                 ByVal ratio As Long, _
                 Optional ByVal key As String) As ComboLeg
-Set addLeg = mComboLegs.addLeg(contractSpec, isBuyLeg, ratio, key)
+Set AddLeg = mComboLegs.AddLeg(contractSpec, isBuyLeg, ratio, key)
 End Function
 
 Public Sub removeLeg(ByVal index As Variant)
-mComboLegs.remove index
+mComboLegs.Remove index
 End Sub
 
 '@================================================================================

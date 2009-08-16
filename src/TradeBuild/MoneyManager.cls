@@ -13,16 +13,16 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Public Function allowOrder(ByVal currentSize As Long, _
+Public Function AllowOrder(ByVal currentSize As Long, _
                             ByVal pendingSize As Long, _
                             ByVal orderLong As Boolean, _
                             ByRef orderSize As Long, _
-                            ByRef risk As Currency, _
+                            ByRef Risk As Currency, _
                             ByVal dayProfit As Currency, _
                             ByVal dayDrawdown As Currency, _
                             ByVal tradeProfit As Currency, _
                             ByVal tradeDrawdown As Currency, _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByRef message As String, _
                             ByRef endSession As Boolean) As Boolean
 End Function
@@ -31,7 +31,7 @@ Public Function closeAll(ByVal dayProfit As Currency, _
                         ByVal dayDrawdown As Currency, _
                         ByVal tradeProfit As Currency, _
                         ByVal tradeDrawdown As Currency, _
-                        ByVal timestamp As Date, _
+                        ByVal Timestamp As Date, _
                         ByRef message As String, _
                         ByRef endSession As Boolean) As Boolean
 End Function

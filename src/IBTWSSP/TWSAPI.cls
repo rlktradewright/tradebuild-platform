@@ -64,7 +64,8 @@ Private Const IncarnationIncrement As Long = &H1000&
 
 Private Const MarketDepthReqIdBase As Long = &H400000
 
-Private Const MaxConcurrentHistDataRequests As Long = 50 ' limit imposed by IB
+'Private Const MaxConcurrentHistDataRequests As Long = 50 ' limit imposed by IB
+Private Const MaxConcurrentHistDataRequests As Long = 1 ' try serialising them
 
 Private Const MIN_SERVER_VER_REAL_TIME_BARS As Long = 34
 Private Const MIN_SERVER_VER_SCALE_ORDERS As Long = 35
@@ -234,6 +235,8 @@ Private mInMessageBuilder As StringBuilder
 
 Private mOutMessageBuilder As StringBuilder
 
+Private mRetryingConnection As Boolean
+
 '================================================================================
 ' External function declarations
 '================================================================================
@@ -340,6 +343,7 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
         .lastPeriodTime = 0
         .lastSecondCount = 0
         .lastSecondTime = 0
+        .maxSecondCount = 0
     End With
 Next
 Exit Sub
@@ -359,6 +363,7 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
         .lastPeriodCount = .lastPeriodCount + .lastSecondCount
         .lastPeriodTime = .lastPeriodTime + .lastSecondTime
+        If .lastSecondTime > .maxSecondCount Then .maxSecondCount = .lastSecondCount
         .totalCount = .totalCount + .lastSecondCount
         .totalTime = .totalTime + .lastSecondTime
         .lastSecondCount = 0
@@ -379,6 +384,7 @@ End Sub
 
 Private Sub mSocket_Close()
 On Error GoTo err
+mSocket.Close
 handleTwsDisconnection
 Exit Sub
 err:
@@ -389,6 +395,20 @@ End Sub
 
 Private Sub mSocket_Connect()
 On Error GoTo err
+
+If mRetryingConnection Then
+    ' this means we have been waiting for TWS to start. If we try to start tickers
+    ' too soon after TWS accepts socket connections, TWS gives a 'max number of
+    ' tickers reached' error. So we'll cancel this connection and connect again in
+    ' 10 seconds
+    logMessage "TWS is now available - connecting again in 10 seconds to allow TWS time to initialise"
+    mSocket.Close
+    Set mConnectionTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
+    mConnectionTimer.StartTimer
+    mRetryingConnection = False
+    Exit Sub
+End If
+
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
 
@@ -415,6 +435,8 @@ Dim bytesReceived As Long
 Static processingMessages As Boolean
 
 On Error GoTo err
+
+If mSocket.state <> StateConstants.sckConnected Then Exit Sub
 
 mSocket.GetData mSocketInputData, vbArray + vbByte
 bytesReceived = UBound(mSocketInputData) + 1
@@ -458,7 +480,7 @@ If mIndexIn <> mInputIndex Then
         ' this is a re-entrant call to DataArrival. We don't want to call checkMessages
         ' here, because the current call to it will process the data we've just
         ' added to the buffer
-        mSocketLogger.Log LogLevels.LogLevelDetail, _
+        mSocketLogger.Log LogLevels.LogLevelNormal, _
                         "Re-entrant call to mSocket_DataArrival"
     Else
         processingMessages = True
@@ -537,8 +559,8 @@ Case sckAddressNotAvailable, _
     sckHostNotFoundTryAgain, _
     sckTimedout
     
+    ReleaseSocket
     If mConnectionState = ConnectionStates.ConnNotConnected Then
-        ReleaseSocket
         If mConnectionRetryIntervalSecs = 0 Then
             logMessage "Failed to connect to TWS: " & _
                         Description & ": " & _
@@ -562,7 +584,6 @@ Case sckAddressNotAvailable, _
                     connectionString, _
                     LogLevelSevere
                     
-        handleTwsDisconnection
     End If
 'Case sckConnectionReset
 
@@ -660,7 +681,7 @@ Dim i As Long
 Dim key As String
 
 On Error GoTo err
-If Not mHistoricalDataTable(requestHandle).dataRetrievedFromTWS Then
+If mHistoricalDataTable(requestHandle).dataRetrievedFromTWS Then
     ' all data has already been got from TWS
     
     '   more here????
@@ -676,7 +697,7 @@ Else
         For i = 0 To UBound(mHistoricalDataTable(requestHandle).requestKeys)
             key = mHistoricalDataTable(requestHandle).requestKeys(i)
             If key = "" Then
-                ' data has alreay been retrieved for this TWS request, so
+                ' data has already been retrieved for this TWS request, so
                 ' nothing to do
                 
             Else
@@ -700,7 +721,6 @@ Else
                     End If
                     
                     mHistoricalDataTable(requestHandle).cancelling = True
-                    mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
                     
                     processNextHistDataRequest
                 End If
@@ -845,8 +865,9 @@ If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
 releaseAllTickerTableEntries
 ReleaseSocket
-If forced Then RaiseEvent Disconnected(reason)
 logMessage "IBTWSSP:TwsAPI:disconnect: Disconnected from: " & connectionString & ": " & reason, LogLevelNormal
+handleTwsDisconnection
+If Not forced Then RaiseEvent Disconnected(reason)
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -1025,14 +1046,12 @@ End Sub
 
 Friend Sub RequestContract( _
                 ByVal contractSpec As ContractSpecifier, _
-                ByVal pContractsBuilder As ContractsBuilder, _
                 ByVal requester As ContractDetailsRequester)
 
 Dim requestQueueEntry As TWSContractDetailsRequestQueueEntry
 
 On Error GoTo err
 Set requestQueueEntry.contractSpec = contractSpec
-Set requestQueueEntry.tradeBuildContractsBuilder = pContractsBuilder
 Set requestQueueEntry.requester = requester
 
 Select Case contractSpec.sectype
@@ -1057,7 +1076,7 @@ End If
     
 mTwsContractDetailsRequestQueue.addToEnd requestQueueEntry
 
-submitNextContractDetailsRequest
+If mConnectionState = ConnConnected Then submitNextContractDetailsRequest
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -1235,65 +1254,65 @@ End If
 
 ' now adjust the bar specifier to indicate the number of bars of
 ' appropriate length supported by IB
-Select Case barSpecifier.barTimePeriod.units
+Select Case barSpecifier.barTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
     ignoreTimestamps = True
     If barSpecifier.barTimePeriod.length > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
     End If
 Case TimePeriodUnits.TimePeriodHour
     If barSpecifier.barTimePeriod.length > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
     End If
 Case TimePeriodUnits.TimePeriodMinute
     If barSpecifier.barTimePeriod.length Mod 30 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
-        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
+        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length Mod 15 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
-        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
+        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length Mod 5 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
-        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
+        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length Mod 2 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 2)
-        barSpecifier.barTimePeriod = GetTimePeriod(2, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 2)
+        barSpecifier.barTimePeriod = GetTimePeriod(2, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
     End If
 Case TimePeriodUnits.TimePeriodMonth
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+    barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
 Case TimePeriodUnits.TimePeriodSecond
     If barSpecifier.barTimePeriod.length Mod 30 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
-        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
+        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length Mod 15 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
-        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
+        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length Mod 5 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
-        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
+        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.Units)
     ElseIf barSpecifier.barTimePeriod.length > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+        barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
     End If
 Case TimePeriodUnits.TimePeriodWeek
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
-    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
+    barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length
+    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.Units)
 Case TimePeriodUnits.TimePeriodYear
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length * NumMonthsInYear
+    barSpecifier.MaxNumberOfBars = barSpecifier.MaxNumberOfBars * barSpecifier.barTimePeriod.length * NumMonthsInYear
     barSpecifier.barTimePeriod = GetTimePeriod(1, TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
     ' nothing to do
 Case Else
-    historicalDataReader.historicalDataRequestInvalid barSpecifier.maxNumberOfBars & "specified timeframe not supported"
+    historicalDataReader.historicalDataRequestInvalid barSpecifier.MaxNumberOfBars & "specified timeframe not supported"
     Exit Function
 End Select
 
@@ -1316,15 +1335,15 @@ mHistoricalDataTable(requestID).cancelling = False
 Set mHistoricalDataTable(requestID).barSpecifier = barSpecifier
 mHistoricalDataTable(requestID).ignoreTimestamps = ignoreTimestamps
 Set mHistoricalDataTable(requestID).SessionBuilder = New SessionBuilder
-mHistoricalDataTable(requestID).SessionBuilder.sessionStartTime = barSpecifier.Contract.sessionStartTime
-mHistoricalDataTable(requestID).SessionBuilder.sessionEndTime = barSpecifier.Contract.sessionEndTime
+mHistoricalDataTable(requestID).SessionBuilder.SessionStartTime = barSpecifier.Contract.SessionStartTime
+mHistoricalDataTable(requestID).SessionBuilder.SessionEndTime = barSpecifier.Contract.SessionEndTime
 Set mHistoricalDataTable(requestID).Session = mHistoricalDataTable(requestID).SessionBuilder.Session
 mHistoricalDataTable(requestID).nextBarIndex = 0
 mHistoricalDataTable(requestID).barType = barSpecifier.barType
 mHistoricalDataTable(requestID).nextBarIndex = -1
 Set mHistoricalDataTable(requestID).historicalDataReader = historicalDataReader
 Set mHistoricalDataTable(requestID).bars = New LinkedList
-mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.maxNumberOfBars <> 0, barSpecifier.maxNumberOfBars, 50)
+mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.MaxNumberOfBars <> 0, barSpecifier.MaxNumberOfBars, 50)
 
 generateTwsHistoricalDataRequest requestID
 RequestHistoricalData = requestID
@@ -1464,35 +1483,40 @@ If AllocateTickerTableEntry = -1 Then
     ReDim Preserve mTickerTable(2 * (UBound(mTickerTable) + 1) - 1) As TickerTableEntry
 End If
 
+' NB: don't use 'With' in the following as it can lead to an Error 10 table is temporarily locked
 mTickerTable(AllocateTickerTableEntry).inUse = True
 Set mTickerTable(AllocateTickerTableEntry).dataConsumer = pDataConsumer
+mTickerTable(AllocateTickerTableEntry).prevAsk = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevBid = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevClose = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevHigh = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevLow = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevOpen = MaxDouble
+mTickerTable(AllocateTickerTableEntry).prevTrade = MaxDouble
 
 End Function
 
-Private Sub cancelMarketDataEx(ByVal tickerId As Long, _
+Private Sub cancelMarketDataEx(ByVal index As Long, _
                 ByVal releaseEntry As Boolean)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
-Dim id As Long
 Const version = 2
 
-If Not mTickerTable(tickerId).inUse Then
+If Not mTickerTable(index).inUse Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.TWSAPI::CancelMarketDataEx", _
-    "Invalid ticker id " & tickerId
+    "Invalid ticker id " & index
 End If
 
-id = tickerId + mTickerTable(tickerId).incarnation
-
-If mTickerTable(tickerId).receivingMarketDepth Then CancelMarketDepth tickerId
-
-If releaseEntry Then releaseTickerTableEntry tickerId
+If mTickerTable(index).receivingMarketDepth Then CancelMarketDepth index
 
 addMsgId CANCEL_MKT_DATA
 addData version, "Version"
-addData id, "Ticker id"
+addData index + mTickerTable(index).incarnation, "Ticker id"
 send
+
+If releaseEntry Then releaseTickerTableEntry index
 
 End Sub
 
@@ -1581,7 +1605,7 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     
     logSocketInputMessage
     
-    mConnectionState = ConnectionStates.ConnConnected
+    mConnectionState = ConnectionStates.ConnReSynching
     logMessage "Connection to TWS successful", LogLevelNormal
     
     ' set the log level in TWS
@@ -1595,8 +1619,8 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     
     ' check for pending contract details requests
     submitNextContractDetailsRequest
-        
     
+    mConnectionState = ConnectionStates.ConnConnected
     RaiseEvent Connected
     
     mCheckPointNumber = 1000
@@ -1775,12 +1799,24 @@ Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
 
 logMessage "IBTWSSP:TwsAPI:checkMessages Error (" & errNum & "): " & errDesc, LogLevelSevere
 logMessage s, LogLevelDetail
-mCommonServiceConsumer.FatalServiceProviderError errNum, "IBTWSSP:TwsAPI:checkMessages", errDesc, -1
+mCommonServiceConsumer.NotifyFatalError errNum, "IBTWSSP:TwsAPI:checkMessages", errDesc, -1
 gReleaseTWSAPIInstance Me, True
 End Sub
 
 Private Sub checkpointBuffer()
 mInputIndexChk = mInputIndex
+End Sub
+
+Private Sub clearPrevPrices( _
+                ByVal index As Long)
+With mTickerTable(index)
+    .prevBid = 0#
+    .prevBidSize = 0&
+    .prevAsk = 0#
+    .prevAskSize = 0&
+    .prevTrade = 0#
+    .prevTradeSize = 0&
+End With
 End Sub
 
 Private Sub createLoggers()
@@ -1840,7 +1876,7 @@ Do While i < mIndexIn
     i = i + 50
     If j < mIndexIn Then s.appendLine ""
 Loop
-formatBuffer = s.toString
+formatBuffer = s.ToString
 End Function
 
 ' Raises an ErrHistGenerationFailed error if IB cannot satisfy the request because
@@ -1906,19 +1942,19 @@ If mServerVersion >= 20 Then
     
     With mHistoricalDataTable(index).barSpecifier
         
-        Select Case .barTimePeriod.units
+        Select Case .barTimePeriod.Units
         Case TimePeriodUnits.TimePeriodDay
             TwsRequest.barSizeSetting = "1 day"
-            If .maxNumberOfBars >= NumDaysInYear Then
+            If .MaxNumberOfBars >= NumDaysInYear Then
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "1 Y"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 60) & " D"
                 End If
-            ElseIf .maxNumberOfBars <= 60 Then
-                TwsRequest.duration = permittedHistDays(.ToDate, .maxNumberOfBars) & " D"
-            ElseIf .maxNumberOfBars <= 52 * NumDaysInWeek Then
-                TwsRequest.duration = permittedHistWeeks(.ToDate, Int(.maxNumberOfBars / NumDaysInWeek)) & " W"
+            ElseIf .MaxNumberOfBars <= 60 Then
+                TwsRequest.duration = permittedHistDays(.ToDate, .MaxNumberOfBars) & " D"
+            ElseIf .MaxNumberOfBars <= 52 * NumDaysInWeek Then
+                TwsRequest.duration = permittedHistWeeks(.ToDate, Int(.MaxNumberOfBars / NumDaysInWeek)) & " W"
             Else
                 TwsRequest.duration = permittedHistDays(.ToDate, 60) & " D"
             End If
@@ -1928,10 +1964,10 @@ If mServerVersion >= 20 Then
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barTimePeriod)
             
-            If .maxNumberOfBars <= 24 Then
-                TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 3600) & " S"
-            ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 34 Then
-                TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+            If .MaxNumberOfBars <= 24 Then
+                TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 3600) & " S"
+            ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 34 Then
+                TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
             Else
                 TwsRequest.duration = permittedHistDays(.ToDate, 34) & " D"
             End If
@@ -1943,69 +1979,69 @@ If mServerVersion >= 20 Then
             Select Case .barTimePeriod.length
             Case 1
                 TwsRequest.barSizeSetting = "1 min"
-                If .maxNumberOfBars <= 1440 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 60) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
+                If .MaxNumberOfBars <= 1440 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 60) & " S"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 2
                 TwsRequest.barSizeSetting = "2 mins"
-                If .maxNumberOfBars <= 720 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 120) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
+                If .MaxNumberOfBars <= 720 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 120) & " S"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 5
                 TwsRequest.barSizeSetting = "5 mins"
-                If .maxNumberOfBars <= 288 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 300) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
+                If .MaxNumberOfBars <= 288 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 300) & " S"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 15
                 TwsRequest.barSizeSetting = "15 mins"
-                If .maxNumberOfBars <= 96 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 900) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
+                If .MaxNumberOfBars <= 96 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 900) & " S"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 20 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 20 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 20) & " D"
                 End If
             Case 30
                 TwsRequest.barSizeSetting = "30 mins"
-                If .maxNumberOfBars <= 48 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 1800) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
+                If .MaxNumberOfBars <= 48 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 1800) & " S"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 34 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.MaxNumberOfBars / numBarsInsession) <= 34 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.MaxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 34) & " D"
                 End If
             End Select
         Case TimePeriodUnits.TimePeriodMonth
             TwsRequest.barSizeSetting = "1 day"
-            If .maxNumberOfBars <= 12 Then
-                TwsRequest.duration = permittedHistMonths(.ToDate, .maxNumberOfBars) & " M"
+            If .MaxNumberOfBars <= 12 Then
+                TwsRequest.duration = permittedHistMonths(.ToDate, .MaxNumberOfBars) & " M"
             Else
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "12 M"
                 Else
-                    TwsRequest.duration = permittedHistMonths(.ToDate, .maxNumberOfBars) & " M"
+                    TwsRequest.duration = permittedHistMonths(.ToDate, .MaxNumberOfBars) & " M"
                 End If
             End If
         Case TimePeriodUnits.TimePeriodSecond
@@ -2016,42 +2052,42 @@ If mServerVersion >= 20 Then
             Select Case .barTimePeriod.length
             Case 1
                 
-                If .maxNumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars) & " S"
+                If .MaxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 2000) & " S"
                 End If
             Case 5
                 TwsRequest.barSizeSetting = "5 secs"
-                If .maxNumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 5) & " S"
+                If .MaxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 5) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 10000) & " S"
                 End If
             Case 15
                 TwsRequest.barSizeSetting = "15 secs"
-                If .maxNumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 15) & " S"
+                If .MaxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 15) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 30000) & "S"
                 End If
             Case 30
                 TwsRequest.barSizeSetting = "30 secs"
-                If .maxNumberOfBars <= 2880 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 30) & " S"
+                If .MaxNumberOfBars <= 2880 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .MaxNumberOfBars * 30) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
                 End If
             End Select
         Case TimePeriodUnits.TimePeriodWeek
             TwsRequest.barSizeSetting = "1 day"
-            If .maxNumberOfBars <= 52 Then
-                TwsRequest.duration = permittedHistWeeks(.ToDate, .maxNumberOfBars) & " W"
+            If .MaxNumberOfBars <= 52 Then
+                TwsRequest.duration = permittedHistWeeks(.ToDate, .MaxNumberOfBars) & " W"
             Else
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "52 W"
                 Else
-                    TwsRequest.duration = permittedHistWeeks(.ToDate, .maxNumberOfBars) & " W"
+                    TwsRequest.duration = permittedHistWeeks(.ToDate, .MaxNumberOfBars) & " W"
                 End If
             End If
         Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
@@ -2401,7 +2437,8 @@ For i = 0 To UBound(orderTypesStr)
             permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
         Case "SWEEP"
             permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
-        Case "ALGO", _
+        Case "ALLOC", _
+            "ALGO", _
             "AVGCOST", _
             "AUC", _
             "BASKET", _
@@ -2421,15 +2458,19 @@ For i = 0 To UBound(orderTypesStr)
             "OPGREROUT", _
             "PAON", _
             "PEGMID", _
+            "POSTONLY", _
             "PREOPGRTH", _
             "RELSTK", _
             "RTHIGNOPG", _
             "SCALE", _
             "SCALERST", _
-            "SMARTSTG", _
-            "SOI", _
+            "SMARTSTG"
+        Case "SOI", _
             "TIMEPRIO", _
-            "VOLAT"
+            "TRAILLIT", _
+            "TRAILMIT", _
+            "VOLAT", _
+            "WHATIF"
             ' not sure what these signify
         Case Else
             If orderTypesStr(i) <> "" Then
@@ -2538,11 +2579,10 @@ mContractDetailsRequest.requester.contractsLoaded mContractDetailsRequest
 
 Set mContractDetailsRequest.contractSpec = Nothing
 Set mContractDetailsRequest.contractWrappers = Nothing
-Set mContractDetailsRequest.tradeBuildContractsBuilder = Nothing
 Set mContractDetailsRequest.requester = Nothing
 mFirstContractDetailsReceived = False
 
-submitNextContractDetailsRequest
+If mConnectionState = ConnConnected Then submitNextContractDetailsRequest
 
 Exit Sub
 
@@ -2596,10 +2636,13 @@ Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
     
     failpoint = 400
 
+    On Error Resume Next
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
-                                        OrderStatuses.OrderStatusRejected
-    mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+    On Error GoTo err
+    If Not mapEntry.order Is Nothing Then
+        mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+        mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
+    End If
 Case 162    ' historical data request problem
     failpoint = 500
 
@@ -2609,7 +2652,7 @@ Case 162    ' historical data request problem
         Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
         mHistoricalDataTable(index).dataRetrievedFromTWS = True
         mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-        mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
+        mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
     Else
         logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
         mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
@@ -2630,8 +2673,9 @@ Case 200    ' security definition not known
         processContractError errorMsg
     Case IdTypeRealtimeData
         ' this must relate to a reqMktData - this can occur even though
-        ' we make sure the contract is valid before starting the ticker because
-        ' for example the contract may have expired
+        ' we make sure the contract is valid before starting the ticker:
+        ' for example the contract may have expired while waiting for TWS
+        ' to be restarted
         
         failpoint = 700
 
@@ -2656,11 +2700,10 @@ Case 200    ' security definition not known
 
         On Error Resume Next
         mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-        On Error GoTo 0
+        On Error GoTo err
         If Not mapEntry.order Is Nothing Then
-            mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
-                                                OrderStatuses.OrderStatusRejected
             mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+            mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
         End If
     End Select
 Case 201
@@ -2668,10 +2711,9 @@ Case 201
 
     On Error Resume Next
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    On Error GoTo 0
+    On Error GoTo err
     If Not mapEntry.order Is Nothing Then
-        mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
-                                            OrderStatuses.OrderStatusRejected
+        mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
         mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
     End If
 Case 202
@@ -2679,7 +2721,7 @@ Case 202
 
     On Error Resume Next
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    On Error GoTo 0
+    On Error GoTo err
     If Not mapEntry.order Is Nothing Then
         mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                             OrderStatuses.OrderStatusCancelled
@@ -2702,7 +2744,9 @@ Case 321    ' invalid request
     failpoint = 1200
 
     Select Case getIdType(id)
-    Case IdTypeNone
+    Case IdTypeNone, IdTypeContractData
+        ' this must relate to a RequestContract
+        processContractError errorMsg
     Case IdTypeRealtimeData
     Case IdTypeMarketDepth
     Case IdTypeHistoricalData
@@ -2712,7 +2756,7 @@ Case 321    ' invalid request
             Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
             mHistoricalDataTable(index).dataRetrievedFromTWS = True
             mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-            mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
+            mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
         Else
             logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
             mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
@@ -2795,7 +2839,7 @@ Case Else
     failpoint = 1700
 
     logMessage "IBTWSSP:TwsAPI:getErrorMsg: Error (" & errorCode & ") from TWS: " & errorMsg, LogLevelSevere
-    mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, -1
+    mCommonServiceConsumer.NotifyRecoverableError errorCode, errorMsg, -1
 End Select
 
 Exit Sub
@@ -2992,12 +3036,12 @@ If checkPointNumber = 0 Then
     index = (requestID - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
     reqNo = Int((requestID - HistoricalDataReqIdBase) / HistoricalDataReqIdIncrement)
     
-    If mHistoricalDataTable(index).barSpecifier.customSessionStartTime <> 0 Or _
-        mHistoricalDataTable(index).barSpecifier.customSessionEndTime <> 0 _
+    If mHistoricalDataTable(index).barSpecifier.CustomSessionStartTime <> 0 Or _
+        mHistoricalDataTable(index).barSpecifier.CustomSessionEndTime <> 0 _
     Then
         Set lCustomSessionBuilder = New SessionBuilder
-        lCustomSessionBuilder.sessionStartTime = mHistoricalDataTable(index).barSpecifier.customSessionStartTime
-        lCustomSessionBuilder.sessionEndTime = mHistoricalDataTable(index).barSpecifier.customSessionEndTime
+        lCustomSessionBuilder.SessionStartTime = mHistoricalDataTable(index).barSpecifier.CustomSessionStartTime
+        lCustomSessionBuilder.SessionEndTime = mHistoricalDataTable(index).barSpecifier.CustomSessionEndTime
         lCustomSessionBuilder.TimeZone = mHistoricalDataTable(index).barSpecifier.Contract.TimeZone
     End If
     
@@ -3047,12 +3091,12 @@ If checkPointNumber >= 200 Then
                                     ConvertDateLocalToUTC(timestamp), _
                                     mHistoricalDataTable(index).barSpecifier.Contract.TimeZone)
             If mHistoricalDataTable(index).ignoreTimestamps Then
-                Bar.timestamp = Bar.timestamp + mHistoricalDataTable(index).barSpecifier.Contract.sessionStartTime
+                Bar.timestamp = Bar.timestamp + mHistoricalDataTable(index).barSpecifier.Contract.SessionStartTime
             End If
             
             If i = 0 Then
-                If mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodVolume Or _
-                    mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodTickMovement _
+                If mHistoricalDataTable(index).barSpecifier.barTimePeriod.Units = TimePeriodVolume Or _
+                    mHistoricalDataTable(index).barSpecifier.barTimePeriod.Units = TimePeriodTickMovement _
                 Then
                     mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, GetTimePeriod(15, TimePeriodSecond), -1)
                 Else
@@ -3108,20 +3152,20 @@ If checkPointNumber >= 200 Then
         End If
         
         If Not mHistoricalDataTable(index).cancelling Then
-            mHistoricalDataTable(index).SessionBuilder.setSessionCurrentTime Bar.timestamp
+            mHistoricalDataTable(index).SessionBuilder.SetSessionCurrentTime Bar.timestamp
             If Not lCustomSessionBuilder Is Nothing Then
-                lCustomSessionBuilder.setSessionCurrentTime Bar.timestamp
-                If lCustomSessionBuilder.Session.isTimeInSession(Bar.timestamp) Then
-                    If mHistoricalDataTable(index).barSpecifier.includeBarsOutsideSession Or _
-                        mHistoricalDataTable(index).Session.isTimeInSession(Bar.timestamp) Or _
+                lCustomSessionBuilder.SetSessionCurrentTime Bar.timestamp
+                If lCustomSessionBuilder.Session.IsTimeInSession(Bar.timestamp) Then
+                    If mHistoricalDataTable(index).barSpecifier.IncludeBarsOutsideSession Or _
+                        mHistoricalDataTable(index).Session.IsTimeInSession(Bar.timestamp) Or _
                         mHistoricalDataTable(index).ignoreTimestamps _
                     Then
                         hint = mHistoricalDataTable(index).bars.add(Bar, Bar.timestamp, hint)
                     End If
                 End If
             Else
-                If mHistoricalDataTable(index).barSpecifier.includeBarsOutsideSession Or _
-                    mHistoricalDataTable(index).Session.isTimeInSession(Bar.timestamp) Or _
+                If mHistoricalDataTable(index).barSpecifier.IncludeBarsOutsideSession Or _
+                    mHistoricalDataTable(index).Session.IsTimeInSession(Bar.timestamp) Or _
                     mHistoricalDataTable(index).ignoreTimestamps _
                 Then
                     hint = mHistoricalDataTable(index).bars.add(Bar, Bar.timestamp, hint)
@@ -3140,24 +3184,23 @@ If mHistoricalDataTable(index).cancelling Then Exit Sub
 
 mHistoricalDataTable(index).requestKeys(reqNo) = ""
 
-mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 processNextHistDataRequest
 
 failpoint = 500
 
-If mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodVolume Then
-    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barTimePeriod.length)
+If mHistoricalDataTable(index).barSpecifier.barTimePeriod.Units = TimePeriodVolume Then
+    mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars = mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barTimePeriod.length)
 Else
-    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - itemCount
+    mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars = mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars - itemCount
 End If
-If mHistoricalDataTable(index).barSpecifier.maxNumberOfBars <= 0 Then
+If mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars <= 0 Then
     
     failpoint = 600
     
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
+    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
 Else
     
     failpoint = 700
@@ -3171,11 +3214,11 @@ Exit Sub
 
 err:
 If err.number = ErrHistGenerationFailed Then
-    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = 0
+    mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars = 0
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
+    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
     Exit Sub
 End If
 
@@ -3523,7 +3566,7 @@ With lOrderReport
     
     If (version >= 20) Then
         setproperty .providerProperties, "UnderComp"
-        If CBool(.providerProperties.getParameterValue("UnderComp")) Then
+        If CBool(.providerProperties.GetParameterValue("UnderComp")) Then
             'UnderComp underComp = new UnderComp()
             setproperty .providerProperties, "UnderComp ConId"
             setproperty .providerProperties, "UnderComp Delta"
@@ -3874,77 +3917,39 @@ With mTickerTable(tickerId Mod IncarnationIncrement)
     
     Select Case ticktype
     Case TICK_BID
-        If Not .Contract.IsValidPrice(tick.Price, .prevBid) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid bid price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevBid, "bid", .Contract) Then Exit Sub
         tick.ticktype = TickTypeBid
         If tick.size = 0 Then tick.size = .prevBidSize
         .prevBid = tick.Price
         If tick.size <> 0 Then .prevBidSize = tick.size
-    
     Case TICK_ASK
-        If Not .Contract.IsValidPrice(tick.Price, .prevAsk) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid ask price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevAsk, "ask", .Contract) Then Exit Sub
         tick.ticktype = TickTypeAsk
         If tick.size = 0 Then tick.size = .prevAskSize
         .prevAsk = tick.Price
         If tick.size <> 0 Then .prevAskSize = tick.size
-    
     Case TICK_LAST
-        If Not .Contract.IsValidPrice(tick.Price, .prevTrade) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid trade price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevTrade, "trade", .Contract) Then Exit Sub
         tick.ticktype = TickTypeTrade
         If tick.size = 0 Then tick.size = .prevTradeSize
         .prevTrade = tick.Price
         If tick.size <> 0 Then .prevTradeSize = tick.size
-    
     Case TICK_HIGH
-        If Not .Contract.IsValidPrice(tick.Price, .prevHigh) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid high price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevHigh, "high", .Contract) Then Exit Sub
         tick.ticktype = TickTypeHighPrice
-    
+        .prevHigh = tick.Price
     Case TICK_LOW
-        If Not .Contract.IsValidPrice(tick.Price, .prevLow) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid low price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevLow, "low", .Contract) Then Exit Sub
         tick.ticktype = TickTypeLowPrice
-    
+        .prevLow = tick.Price
     Case TICK_OPEN
-        If Not .Contract.IsValidPrice(tick.Price, .prevOpen) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid open price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevOpen, "open", .Contract) Then Exit Sub
         tick.ticktype = TickTypeOpenPrice
-    
+        .prevOpen = tick.Price
     Case TICK_CLOSE
-        If Not .Contract.IsValidPrice(tick.Price, .prevClose) Then
-            gLogger.Log LogLevels.LogLevelNormal, "Invalid close price rejected: " & _
-                            "price=" & tick.Price & _
-                            "; contract=" & .Contract.specifier.toString
-            Exit Sub
-        End If
+        If Not validPrice(tick.Price, .prevClose, "close", .Contract) Then Exit Sub
         tick.ticktype = TickTypeClosePrice
-    
+        .prevClose = tick.Price
     End Select
         
     .dataConsumer.tick tick
@@ -4080,16 +4085,16 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 logMessage source & " Error (" & number & "): " & Description, LogLevelSevere
 
-mCommonServiceConsumer.FatalServiceProviderError number, source, Description, -1
+mCommonServiceConsumer.NotifyFatalError number, source, Description, -1
 
 If mConnectionState = ConnConnected Then gReleaseTWSAPIInstance Me, True
 End Sub
 
 Private Sub handleTwsDisconnection()
 mConnectionState = ConnectionStates.ConnNotConnected
-ReleaseSocket
+Set mSocket = Nothing
+
 If mDisconnectedByApplication Then
-    RaiseEvent ConnectionToTWSClosed(False)
     logMessage "Connection to TWS closed: " & connectionString, LogLevelNormal
 Else
     If mConnectionRetryIntervalSecs = 0 Then
@@ -4143,13 +4148,13 @@ Private Sub logSocketInputMessage(Optional ByVal ignoreLogLevel As Boolean)
 Static prevMessageBuilder As StringBuilder
 If ignoreLogLevel Then
     If Not mInMessageBuilder Is Nothing Then
-        mSocketLogger.Log LogLevelNormal, mInMessageBuilder.toString
+        mSocketLogger.Log LogLevelNormal, mInMessageBuilder.ToString
     ElseIf Not prevMessageBuilder Is Nothing Then
-        mSocketLogger.Log LogLevelNormal, prevMessageBuilder.toString
+        mSocketLogger.Log LogLevelNormal, prevMessageBuilder.ToString
         Set prevMessageBuilder = Nothing
     End If
 ElseIf mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    mSocketLogger.Log LogLevelHighDetail, mInMessageBuilder.toString
+    mSocketLogger.Log LogLevelHighDetail, mInMessageBuilder.ToString
     Set prevMessageBuilder = mInMessageBuilder
 End If
 Set mInMessageBuilder = Nothing
@@ -4157,9 +4162,9 @@ End Sub
 
 Private Sub logSocketOutputMessage(Optional ByVal ignoreLogLevel As Boolean)
 If ignoreLogLevel Then
-    mSocketLogger.Log LogLevelNormal, mOutMessageBuilder.toString
+    mSocketLogger.Log LogLevelNormal, mOutMessageBuilder.ToString
 ElseIf mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    mSocketLogger.Log LogLevelHighDetail, mOutMessageBuilder.toString
+    mSocketLogger.Log LogLevelHighDetail, mOutMessageBuilder.ToString
 End If
 Set mOutMessageBuilder = Nothing
 End Sub
@@ -4436,12 +4441,11 @@ Else
 End If
 Set mContractDetailsRequest.contractSpec = Nothing
 Set mContractDetailsRequest.contractWrappers = Nothing
-Set mContractDetailsRequest.tradeBuildContractsBuilder = Nothing
 Set mContractDetailsRequest.requester = Nothing
 mFirstContractDetailsReceived = False
 
 failpoint = 300
-submitNextContractDetailsRequest
+If mConnectionState = ConnConnected Then submitNextContractDetailsRequest
 
 Exit Sub
 
@@ -4453,11 +4457,13 @@ Private Sub processNextHistDataRequest()
 Dim failpoint As Long
 On Error GoTo err
 
+mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
     Dim requestKey As String
     request = mTwsHistDataRequestQueue.removeFromFront
     reqHistoricalData request
+    mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
 End If
 
 Exit Sub
@@ -4476,11 +4482,13 @@ queueTWSHistoricalDataRequest = mTwsHistDataRequestQueue.addToEnd(TwsRequest)
 If mConcurrentHistDataRequests < MaxConcurrentHistDataRequests Then
     mTwsHistDataRequestQueue.removeFromFront
     reqHistoricalData TwsRequest
+    mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
 End If
 End Function
 
 Private Sub reEstablishMarketData(ByVal newConnection As Boolean)
 Dim i As Long
+logMessage "Re-establishing market data: newConnection = " & CStr(newConnection)
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
         If Not .Contract Is Nothing Then
@@ -4489,6 +4497,7 @@ For i = 0 To UBound(mTickerTable)
             reqMarketData i
         End If
     End With
+    clearPrevPrices i
 Next
 End Sub
 
@@ -4520,25 +4529,19 @@ End Sub
 Private Sub ReleaseSocket()
 If Not mSocket Is Nothing Then
     mSocket.Close
-    Set mSocket = Nothing
 End If
 End Sub
 
-Private Sub releaseTickerTableEntry(ByVal tickerId As Long)
-With mTickerTable(tickerId)
+Private Sub releaseTickerTableEntry(ByVal index As Long)
+With mTickerTable(index)
     .inUse = False
     .incarnation = .incarnation + IncarnationIncrement
     Set .Contract = Nothing
-    .prevBid = 0#
-    .prevBidSize = 0&
-    .prevAsk = 0#
-    .prevAskSize = 0&
-    .prevTrade = 0#
-    .prevTradeSize = 0&
     .receivingMarketDepth = False
     Set .dataConsumer = Nothing
     Set .dataReader = Nothing
 End With
+clearPrevPrices index
 End Sub
 
 Private Sub reqContract()
@@ -4596,7 +4599,11 @@ End Sub
 
 Private Sub reqHistoricalData( _
                 request As TWSHistoricalDataRequestQueueEntry)
-Debug.Print "ReqHistData from TWS: barsize=" & request.barSizeSetting & " duration=" & request.duration
+logMessage "Requesting historical data for: " & request.Contract.specifier.localSymbol & _
+            "; id=" & request.id & _
+            "; barsize=" & request.barSizeSetting & _
+            "; endTime=" & request.endDateTime & _
+            "; duration=" & request.duration
 Const version = 4
 
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
@@ -4665,13 +4672,13 @@ End If
 
 send
 
-mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
-      
 End Sub
 
 Private Sub reqMarketData(ByVal tickerTableIndex As Long)
 
 Const version = 8
+
+logMessage "Requesting market data for: " & mTickerTable(tickerTableIndex).Contract.specifier.ToString
 
 addMsgId REQ_MKT_DATA
 addData version, "Version"
@@ -4771,6 +4778,7 @@ If mConnectionRetryIntervalSecs <> 0 Then
         Set mConnectionTimer = CreateIntervalTimer(mConnectionRetryIntervalSecs, ExpiryTimeUnitSeconds)
     End If
     mConnectionTimer.StartTimer
+    mRetryingConnection = True
 End If
 End Sub
 
@@ -4957,7 +4965,7 @@ With pOrder
             addBoolean False, "RTH only" ' (now combined with ignoreRTH)
         End If
         addBoolean False, "Rule 80A"
-        addData .settlingFirm, "Settling firm"
+        addData "", "Settling firm"
         addBoolean .allOrNone, "All or none"
         addData .minimumQuantity, "Minimum quantity"
         addData "", "Percent Offset"
@@ -5039,16 +5047,10 @@ End Sub
 Private Sub setproperty( _
                 ByVal props As Parameters, _
                 ByVal propName As String)
-props.setParameterValue propName, getString(propName)
+props.SetParameterValue propName, getString(propName)
 End Sub
                     
 Private Sub setTWSLogLevel(logLevel As TWSLogLevels)
-
-If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
-                "IBTWSSP.TWSAPI::SetServerLogLevel", _
-                "Not connected"
-End If
 
 Const version = 1
 
@@ -5082,7 +5084,7 @@ Dim failpoint As Long
 
 On Error GoTo err
 
-If Not mConnectionState = ConnConnected Then Exit Sub
+If Not (mConnectionState = ConnReSynching Or mConnectionState = ConnConnected) Then Exit Sub
 If Not mContractDetailsRequest.contractSpec Is Nothing Then Exit Sub
 If mTwsContractDetailsRequestQueue.size = 0 Then Exit Sub
     
@@ -5102,4 +5104,20 @@ err:
 err.Raise err.number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
+Private Function validPrice( _
+                ByVal Price As Double, _
+                ByVal prevPrice As Double, _
+                ByVal priceType As String, _
+                ByVal pContract As Contract) As Boolean
+If (prevPrice <> MaxDouble Or (Price <> 0 And Price <> -1)) And _
+    pContract.IsValidPrice(Price, prevPrice) _
+Then
+    validPrice = True
+Else
+    gLogger.Log LogLevels.LogLevelNormal, "Invalid price rejected (" & priceType & "): " & _
+                    "price=" & Price & _
+                    "; contract={" & pContract.specifier.ToString & "}"
+    Exit Function
+End If
+End Function
 

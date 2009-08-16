@@ -93,43 +93,43 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get currentSessionEndTime() As Date
-currentSessionEndTime = mCurrentSessionEndTime
+Public Property Get CurrentSessionEndTime() As Date
+CurrentSessionEndTime = mCurrentSessionEndTime
 End Property
 
-Public Property Get currentSessionStartTime() As Date
-currentSessionStartTime = mCurrentSessionStartTime
+Public Property Get CurrentSessionStartTime() As Date
+CurrentSessionStartTime = mCurrentSessionStartTime
 End Property
 
-Friend Property Let isLinkable( _
+Friend Property Let IsLinkable( _
                 ByVal value As Boolean)
 mIsLinkable = value
 End Property
                 
-Public Property Get isLinkable() As Boolean
-isLinkable = mIsLinkable
+Public Property Get IsLinkable() As Boolean
+IsLinkable = mIsLinkable
 End Property
 
-Public Property Get sessionCurrentTime() As Date
-sessionCurrentTime = mClock.timestamp
+Public Property Get SessionCurrentTime() As Date
+SessionCurrentTime = mClock.Timestamp
 End Property
 
-Friend Property Let sessionEndTime( _
+Friend Property Let SessionEndTime( _
                 ByVal value As Date)
 mSessionEndTime = gNormaliseTime(value)
 End Property
 
-Public Property Get sessionEndTime() As Date
-sessionEndTime = mSessionEndTime
+Public Property Get SessionEndTime() As Date
+SessionEndTime = mSessionEndTime
 End Property
 
-Friend Property Let sessionStartTime( _
+Friend Property Let SessionStartTime( _
                 ByVal value As Date)
 mSessionStartTime = gNormaliseTime(value)
 End Property
                 
-Public Property Get sessionStartTime() As Date
-sessionStartTime = mSessionStartTime
+Public Property Get SessionStartTime() As Date
+SessionStartTime = mSessionStartTime
 End Property
 
 Friend Property Let TimeZone( _
@@ -147,29 +147,29 @@ End Property
 '@================================================================================
 
 Public Function BarEndTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod) As Date
-BarEndTime = gBarEndTime(timestamp, barTimePeriod, mSessionStartTime, mSessionStartTime)
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod) As Date
+BarEndTime = gBarEndTime(Timestamp, BarTimePeriod, mSessionStartTime, mSessionStartTime)
 End Function
 
 Public Function BarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod) As Date
-BarStartTime = gBarStartTime(timestamp, barTimePeriod, mSessionStartTime)
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod) As Date
+BarStartTime = gBarStartTime(Timestamp, BarTimePeriod, mSessionStartTime)
 End Function
 
 Public Function GetSessionTimes( _
-                            ByVal timestamp As Date) As SessionTimes
+                            ByVal Timestamp As Date) As SessionTimes
 Dim st As SessionTimes
-gCalcSessionTimes timestamp, mSessionStartTime, mSessionEndTime, st.startTime, st.endTime
+gCalcSessionTimes Timestamp, mSessionStartTime, mSessionEndTime, st.startTime, st.endTime
 GetSessionTimes = st
 End Function
 
 Public Function GetOffsetSessionTimes( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal offset As Long) As SessionTimes
 Dim st As SessionTimes
-gCalcOffsetSessionTimes timestamp, _
+gCalcOffsetSessionTimes Timestamp, _
                         offset, _
                         mSessionStartTime, _
                         mSessionEndTime, _
@@ -178,56 +178,56 @@ gCalcOffsetSessionTimes timestamp, _
 GetOffsetSessionTimes = st
 End Function
 
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
+Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 
-If timestamp >= mCurrentSessionStartTime And _
-    timestamp < mCurrentSessionEndTime _
+If Timestamp >= mCurrentSessionStartTime And _
+    Timestamp < mCurrentSessionEndTime _
 Then
-    isTimeInSession = True
+    IsTimeInSession = True
 End If
 End Function
 
 Public Function NumberOfBarsInSession( _
-                ByVal barTimePeriod As TimePeriod) As Long
-NumberOfBarsInSession = gCalcNumberOfBarsInSession(barTimePeriod, mSessionStartTime, mSessionEndTime)
+                ByVal BarTimePeriod As TimePeriod) As Long
+NumberOfBarsInSession = gCalcNumberOfBarsInSession(BarTimePeriod, mSessionStartTime, mSessionEndTime)
 End Function
 
 
 Public Function OffsetBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod, _
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod, _
                 ByVal offset As Long) As Date
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
-                                    timestamp, _
-                                    barTimePeriod, _
+                                    Timestamp, _
+                                    BarTimePeriod, _
                                     offset, _
                                     mSessionStartTime, _
                                     mSessionEndTime)
 End Function
 
-Friend Sub setSessionCurrentTime( _
-                ByVal timestamp As Date)
+Friend Sub SetSessionCurrentTime( _
+                ByVal Timestamp As Date)
 Dim ev As SessionEvent
 Static sessionStartNotified As Boolean
-mClock.SetTime timestamp
-If timestamp >= mCurrentSessionEndTime Then
+mClock.SetTime Timestamp
+If Timestamp >= mCurrentSessionEndTime Then
     Set ev.source = Me
     RaiseEvent sessionEnded(ev)
     sessionStartNotified = False
 End If
 
-If timestamp >= mCurrentSessionEndTime Or _
-    timestamp < mReferenceTime _
+If Timestamp >= mCurrentSessionEndTime Or _
+    Timestamp < mReferenceTime _
 Then
-    mReferenceTime = timestamp
-    gCalcSessionTimes timestamp, _
+    mReferenceTime = Timestamp
+    gCalcSessionTimes Timestamp, _
                         mSessionStartTime, _
                         mSessionEndTime, _
                         mCurrentSessionStartTime, _
                         mCurrentSessionEndTime
 End If
 
-If timestamp >= mCurrentSessionStartTime And _
+If Timestamp >= mCurrentSessionStartTime And _
     Not sessionStartNotified _
 Then
     Set ev.source = Me

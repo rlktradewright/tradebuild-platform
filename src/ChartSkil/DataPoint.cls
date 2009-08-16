@@ -23,11 +23,11 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
-Event Click()
-
-Event DblCLick()
-
-Event SelectionStateChanged()
+'Event Click()
+'
+'Event DblCLick()
+'
+'Event SelectionStateChanged()
 
 '@================================================================================
 ' Enums
@@ -71,22 +71,14 @@ Private mBoundingRect As TRectangle
 Private mX As Double
 Private mKey As String
 
-Private mLineThickness As Long
-Private mColor As Long
-Private mUpColor As Long
-Private mDownColor As Long
-Private mLineStyle As LineStyles
-Private mPointStyle As PointStyles
-Private mDisplayMode As DataPointDisplayModes
-Private mHistBarWidth As Single
-Private mIncludeInAutoscale As Boolean
-
 Private mDataValue As Double
 Private mBlank As Boolean   ' indicates that no value has been assigned
 
-Private mPrevDataPoint As DataPoint
+Private mPrevDataPointRef As WeakReference
 
 Private mPropertyOverrideFlags As DataPointPropertyOverrideFlags
+
+Private mSeriesUpdateNumber As Long
 
 '================================================================================
 ' Enums
@@ -103,6 +95,7 @@ mBoundingRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "DataPoint terminated"
 Debug.Print "DataPoint terminated"
 End Sub
 
@@ -120,8 +113,10 @@ On Error GoTo Err
 
 canvasChanges = mCanvas.CompareTo(prevGaugeX, prevGaugeY, prevRect)
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
+    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
+    mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
+    mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     calcBoundingRect
 End If
 
@@ -135,7 +130,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -152,11 +147,11 @@ IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
 End Property
 
 Private Sub IGraphicObject_Click()
-RaiseEvent Click
+'RaiseEvent Click
 End Sub
 
 Private Sub IGraphicObject_DblCLick()
-RaiseEvent DblCLick
+'RaiseEvent DblCLick
 End Sub
 
 Private Sub IGraphicObject_draw( _
@@ -185,12 +180,12 @@ Case DataPointDisplayModeHistogram
 End Select
 End Property
 
-Private Property Let IGraphicObject_handle(ByVal value As Long)
+Private Property Let IGraphicObject_Handle(ByVal value As Long)
 mHandle = value
 End Property
 
-Private Property Get IGraphicObject_handle() As Long
-IGraphicObject_handle = mHandle
+Private Property Get IGraphicObject_Handle() As Long
+IGraphicObject_Handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
@@ -229,7 +224,7 @@ Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
 If RHS = mIsSelected Then
 Else
     mIsSelected = RHS
-    RaiseEvent SelectionStateChanged
+    'RaiseEvent SelectionStateChanged
 End If
 End Property
 
@@ -257,7 +252,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
+'Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbcrlf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint
 'Dim errDescription As String: errDescription = Err.Description
 'gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -275,26 +270,27 @@ End Property
 '================================================================================
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
-Dim s As DataPointStyle
 Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("Color")
+Case "COLOR"
     initiateRedraw False, False
-Case UCase$("displayMode")
+Case "DISPLAYMODE"
     initiateRedraw True, True
-Case UCase$("downColor")
+Case "DOWNCOLOR"
     initiateRedraw False, False
-Case UCase$("histBarWidth")
+Case "HistogramBarWidth"
     initiateRedraw True, True
-Case UCase$("LineStyle")
+Case "INCLUDEINAUTOSCALE"
     initiateRedraw False, False
-Case UCase$("lineThickness")
+Case "LINESTYLE"
+    initiateRedraw False, False
+Case "LINETHICKNESS"
     initiateRedraw True, True
-Case UCase$("pointStyle")
+Case "POINTSTYLE"
     initiateRedraw False, False
-Case UCase$("upColor")
+Case "UPCOLOR"
     initiateRedraw False, False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
@@ -320,22 +316,24 @@ Public Property Get Blank() As Boolean
 Blank = mBlank
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPoint" & ":" & "color", _
             "Value is not a valid color"
 
-If mColor = value And isPropertyOverrideFlagSet(DataPointIsSetColor) Then Exit Property
-mColor = value
+If isPropertyOverrideFlagSet(DataPointIsSetColor) Then
+    If getProperties.Color = value Then Exit Property
+End If
 setPropertyOverrideFlag DataPointIsSetColor
+getProperties.Color = value
 initiateRedraw False, False
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If isPropertyOverrideFlagSet(DataPointIsSetColor) Then Color = mColor
+If isPropertyOverrideFlagSet(DataPointIsSetColor) Then Color = getProperties.Color
 End Property
 
 Public Property Get DataValue() As Double
@@ -350,66 +348,79 @@ initiateRedraw True, True
 End Property
 
 Public Property Let DisplayMode(ByVal value As DataPointDisplayModes)
-If mDisplayMode = value And isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then Exit Property
-mDisplayMode = value
+If isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then
+    If getProperties.DisplayMode = value Then Exit Property
+End If
 setPropertyOverrideFlag DataPointIsSetDisplayMode
+getProperties.DisplayMode = value
 initiateRedraw True, True
 End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
 DisplayMode = mSeries.DisplayMode
 If Not mLocalStyle Is Nothing Then DisplayMode = mLocalStyle.DisplayMode
-If isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then DisplayMode = mDisplayMode
+If isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then DisplayMode = getProperties.DisplayMode
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
+Public Property Let DownColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPoint" & ":" & "downColor", _
             "Value is not a valid color or -1"
 
-If mDownColor = value And isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then Exit Property
-mDownColor = value
+If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then
+    If getProperties.DownColor = value Then Exit Property
+End If
 setPropertyOverrideFlag DataPointIsSetDownColor
+getProperties.DownColor = value
 initiateRedraw False, False
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mSeries.DownColor
 If Not mLocalStyle Is Nothing Then DownColor = mLocalStyle.DownColor
-If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then DownColor = mDownColor
+If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then DownColor = getProperties.DownColor
 If DownColor = -1 Then DownColor = Color
 End Property
 
-Friend Property Get Handle() As Long
-Handle = mHandle
+Friend Sub Finish()
+Set mPrevDataPointRef = Nothing
+End Sub
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
-Public Property Let HistBarWidth(ByVal value As Single)
+Public Property Let HistogramBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "DataPoint" & ":" & "histBarWidth", _
-            "histBarWidth must be greater than zero but not greater than 1"
-If mHistBarWidth = value And isPropertyOverrideFlagSet(DataPointIsSetHistBarWidth) Then Exit Property
-mHistBarWidth = value
-setPropertyOverrideFlag DataPointIsSetHistBarWidth
+            "ChartSkil26" & "." & "DataPoint" & ":" & "HistogramBarWidth", _
+            "HistogramBarWidth must be greater than zero but not greater than 1"
+If isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then
+    If getProperties.HistogramBarWidth = value Then Exit Property
+End If
+setPropertyOverrideFlag DataPointIsSetHistWidth
+getProperties.HistogramBarWidth = value
 initiateRedraw True, True
 End Property
 
-Public Property Get HistBarWidth() As Single
-HistBarWidth = mSeries.HistBarWidth
-If Not mLocalStyle Is Nothing Then HistBarWidth = mLocalStyle.HistBarWidth
-If isPropertyOverrideFlagSet(DataPointIsSetHistBarWidth) Then HistBarWidth = mHistBarWidth
+Public Property Get HistogramBarWidth() As Single
+HistogramBarWidth = mSeries.HistogramBarWidth
+If Not mLocalStyle Is Nothing Then HistogramBarWidth = mLocalStyle.HistogramBarWidth
+If isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then HistogramBarWidth = getProperties.HistogramBarWidth
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
+If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then IncludeInAutoscale = getProperties.IncludeInAutoscale
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then Exit Property
-mIncludeInAutoscale = value
+If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then
+    If getProperties.IncludeInAutoscale = value Then Exit Property
+End If
+getProperties.IncludeInAutoscale = value
 setPropertyOverrideFlag DataPointIsSetIncludeInAutoscale
 initiateRedraw False, False
 End Property
@@ -435,7 +446,9 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
-If mLayer = value And isPropertyOverrideFlagSet(DataPointIsSetLayer) Then Exit Property
+If isPropertyOverrideFlagSet(DataPointIsSetLayer) Then
+    If mLayer = value Then Exit Property
+End If
 mLayer = value
 setPropertyOverrideFlag DataPointIsSetLayer
 initiateRedraw False, False
@@ -447,8 +460,10 @@ If isPropertyOverrideFlagSet(DataPointIsSetLayer) Then Layer = mLayer
 End Property
 
 Public Property Let LineStyle(ByVal value As LineStyles)
-If mLineStyle = value And isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then Exit Property
-mLineStyle = value
+If isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then
+    If getProperties.LineStyle = value Then Exit Property
+End If
+getProperties.LineStyle = value
 setPropertyOverrideFlag DataPointIsSetLineStyle
 initiateRedraw False, False
 End Property
@@ -456,12 +471,14 @@ End Property
 Public Property Get LineStyle() As LineStyles
 LineStyle = mSeries.LineStyle
 If Not mLocalStyle Is Nothing Then LineStyle = mLocalStyle.LineStyle
-If isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then LineStyle = mLineStyle
+If isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then LineStyle = getProperties.LineStyle
 End Property
 
 Public Property Let LineThickness(ByVal value As Long)
-If mLineThickness = value And isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then Exit Property
-mLineThickness = value
+If isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then
+    If getProperties.LineThickness = value Then Exit Property
+End If
+getProperties.LineThickness = value
 setPropertyOverrideFlag DataPointIsSetLineThickness
 initiateRedraw True, True
 End Property
@@ -469,7 +486,7 @@ End Property
 Public Property Get LineThickness() As Long
 LineThickness = mSeries.LineThickness
 If Not mLocalStyle Is Nothing Then LineThickness = mLocalStyle.LineThickness
-If isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then LineThickness = mLineThickness
+If isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then LineThickness = getProperties.LineThickness
 End Property
 
 Public Property Get LocalStyle() As DataPointStyle
@@ -484,8 +501,10 @@ initiateRedraw True, True
 End Property
 
 Public Property Let PointStyle(ByVal value As PointStyles)
-If mPointStyle = value And isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then Exit Property
-mPointStyle = value
+If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then
+    If getProperties.PointStyle = value Then Exit Property
+End If
+getProperties.PointStyle = value
 setPropertyOverrideFlag DataPointIsSetPointStyle
 initiateRedraw False, False
 End Property
@@ -493,33 +512,35 @@ End Property
 Public Property Get PointStyle() As PointStyles
 PointStyle = mSeries.PointStyle
 If Not mLocalStyle Is Nothing Then PointStyle = mLocalStyle.PointStyle
-If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then PointStyle = mPointStyle
+If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then PointStyle = getProperties.PointStyle
 End Property
 
 Public Property Get PrevDataPoint() As DataPoint
-Set PrevDataPoint = mPrevDataPoint
+If mPrevDataPointRef Is Nothing Then Exit Property
+Set PrevDataPoint = prevDataPointObj
 End Property
 
 Public Property Let PrevDataPoint(ByVal value As DataPoint)
-Set mPrevDataPoint = value
+Set mPrevDataPointRef = CreateWeakReference(value)
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
+Public Property Let UpColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPoint" & ":" & "upColor", _
             "Value is not a valid color"
-
-If mUpColor = value And isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then Exit Property
-mUpColor = value
+If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then
+    If getProperties.UpColor = value Then Exit Property
+End If
+getProperties.UpColor = value
 setPropertyOverrideFlag DataPointIsSetUpColor
 initiateRedraw False, False
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get UpColor() As Long
 UpColor = mSeries.UpColor
 If Not mLocalStyle Is Nothing Then UpColor = mLocalStyle.UpColor
-If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then UpColor = mUpColor
+If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then UpColor = getProperties.UpColor
 If UpColor = -1 Then UpColor = Color
 End Property
 
@@ -541,6 +562,11 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+initiateRedraw True, True
+End Sub
 
 Friend Sub Initialise( _
                 ByVal series As DataPointSeries, _
@@ -566,18 +592,18 @@ End Sub
 
 Private Sub calcBoundingRect()
 Dim boundingRect As TRectangle
-Dim thicknessScaleX As Double
-Dim thicknessScaleY As Double
+Dim ThicknessScaleX As Double
+Dim ThicknessScaleY As Double
 Dim prevX As Long
 Dim prevValue As Double
 
-thicknessScaleX = mCanvas.ConvertPixelsToLogicalX(LineThickness + 2)
-thicknessScaleY = mCanvas.ConvertPixelsToLogicalY(LineThickness + 2)
+ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(LineThickness + 2)
+ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(LineThickness + 2)
 
 If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
     With boundingRect
-        .Left = mX - HistBarWidth / 2
-        .Right = mX + HistBarWidth / 2
+        .Left = mX - HistogramBarWidth / 2
+        .Right = mX + HistogramBarWidth / 2
         If mDataValue >= 0 Then
             .Bottom = 0
             .Top = mDataValue
@@ -588,51 +614,51 @@ If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
     End With
 ElseIf drawAsPoint Then
     With boundingRect
-        .Left = mX - thicknessScaleX / 2
-        .Right = mX + thicknessScaleX / 2
-        .Bottom = mDataValue - thicknessScaleY / 2
-        .Top = mDataValue + thicknessScaleY / 2
+        .Left = mX - ThicknessScaleX / 2
+        .Right = mX + ThicknessScaleX / 2
+        .Bottom = mDataValue - ThicknessScaleY / 2
+        .Top = mDataValue + ThicknessScaleY / 2
     End With
 ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
-    With mPrevDataPoint
+    With prevDataPointObj
         prevX = .X
         prevValue = .DataValue
     End With
     With boundingRect
         If prevX <= mX Then
-            .Left = prevX - thicknessScaleX / 2
-            .Right = mX + thicknessScaleX / 2
+            .Left = prevX - ThicknessScaleX / 2
+            .Right = mX + ThicknessScaleX / 2
         Else
-            .Left = mX - thicknessScaleX / 2
-            .Right = prevX + thicknessScaleX / 2
+            .Left = mX - ThicknessScaleX / 2
+            .Right = prevX + ThicknessScaleX / 2
         End If
         If mDataValue > prevValue Then
-            .Bottom = prevValue - thicknessScaleY / 2
-            .Top = mDataValue + thicknessScaleY / 2
+            .Bottom = prevValue - ThicknessScaleY / 2
+            .Top = mDataValue + ThicknessScaleY / 2
         Else
-            .Bottom = mDataValue - thicknessScaleY / 2
-            .Top = prevValue + thicknessScaleY / 2
+            .Bottom = mDataValue - ThicknessScaleY / 2
+            .Top = prevValue + ThicknessScaleY / 2
         End If
     End With
 ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
-    With mPrevDataPoint
+    With prevDataPointObj
         prevX = .X
         prevValue = .DataValue
     End With
     With boundingRect
         If prevX <= mX Then
-            .Left = prevX - thicknessScaleX / 2
-            .Right = mX + thicknessScaleX / 2
+            .Left = prevX - ThicknessScaleX / 2
+            .Right = mX + ThicknessScaleX / 2
         Else
-            .Left = mX - thicknessScaleX / 2
-            .Right = prevX + thicknessScaleX / 2
+            .Left = mX - ThicknessScaleX / 2
+            .Right = prevX + ThicknessScaleX / 2
         End If
         If mDataValue > prevValue Then
-            .Bottom = prevValue - thicknessScaleY / 2
-            .Top = mDataValue + thicknessScaleY / 2
+            .Bottom = prevValue - ThicknessScaleY / 2
+            .Top = mDataValue + ThicknessScaleY / 2
         Else
-            .Bottom = mDataValue - thicknessScaleY / 2
-            .Top = prevValue + thicknessScaleY / 2
+            .Bottom = mDataValue - ThicknessScaleY / 2
+            .Top = prevValue + ThicknessScaleY / 2
         End If
     End With
 End If
@@ -648,8 +674,8 @@ End Sub
 Private Sub Draw()
 Dim lColor As Long
 
-If Not mPrevDataPoint Is Nothing Then
-    If mDataValue >= mPrevDataPoint.DataValue Then
+If Not mPrevDataPointRef Is Nothing Then
+    If mDataValue >= prevDataPointObj.DataValue Then
         lColor = UpColor
     Else
         lColor = DownColor
@@ -661,15 +687,11 @@ DrawPoint lColor
 End Sub
 
 Private Function drawAsPoint() As Boolean
-If mPrevDataPoint Is Nothing Then
+If mPrevDataPointRef Is Nothing Then
     drawAsPoint = True
-ElseIf mPrevDataPoint.Blank Then
+ElseIf prevDataPointObj.Blank Then
     drawAsPoint = True
 ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint Then
-'ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint Or _
-'    (DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine And Not mPrevDataPoint.inScope) Or _
-'    (DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep And Not mPrevDataPoint.inScope) _
-'Then
     drawAsPoint = True
 Else
     drawAsPoint = False
@@ -677,6 +699,8 @@ End If
 End Function
 
 Private Sub DrawPoint(ByVal Color As Long)
+Dim PrevDataPoint As DataPoint
+
 If Blank Then Exit Sub
 If Not mVisible Then Exit Sub
 
@@ -690,33 +714,41 @@ With mCanvas
     
     If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
         .SetBrushAttributes Color, FillStyles.FillSolid
-        .DrawRectangle .NewPoint(mX - HistBarWidth / 2, 0), .NewPoint(mX + HistBarWidth / 2, mDataValue)
+        .DrawRectangle .NewPoint(mX - HistogramBarWidth / 2, 0), .NewPoint(mX + HistogramBarWidth / 2, mDataValue)
     ElseIf drawAsPoint Then
         If PointStyle = PointRound Then
             .DrawPoint .NewPoint(mX, mDataValue)
         Else
-            Dim thicknessScaleX As Double
-            Dim thicknessScaleY As Double
+            Dim ThicknessScaleX As Double
+            Dim ThicknessScaleY As Double
             
-            thicknessScaleX = .ConvertPixelsToLogicalX(LineThickness)
-            thicknessScaleY = .ConvertPixelsToLogicalY(LineThickness)
+            ThicknessScaleX = .ConvertPixelsToLogicalX(LineThickness)
+            ThicknessScaleY = .ConvertPixelsToLogicalY(LineThickness)
             .SetPenAttributes Color, _
                                     1, _
                                     LineInsideSolid, _
                                     DrawModes.DrawModeCopyPen
             .SetBrushAttributes Color, FillSolid
-            .DrawRectangle .NewPoint(mX - thicknessScaleX / 2, mDataValue - thicknessScaleY / 2), _
-                            .NewPoint(mX + thicknessScaleX / 2, mDataValue + thicknessScaleY / 2)
+            .DrawRectangle .NewPoint(mX - ThicknessScaleX / 2, mDataValue - ThicknessScaleY / 2), _
+                            .NewPoint(mX + ThicknessScaleX / 2, mDataValue + ThicknessScaleY / 2)
         End If
     ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
-        .DrawLine .NewPoint(mPrevDataPoint.X, mPrevDataPoint.DataValue), .NewPoint(mX, mDataValue)
+        Set PrevDataPoint = prevDataPointObj
+        .DrawLine .NewPoint(prevDataPointObj.X, prevDataPointObj.DataValue), .NewPoint(mX, mDataValue)
     ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
-        .DrawLine .NewPoint(mPrevDataPoint.X, mPrevDataPoint.DataValue), .NewPoint(mX - 0.5, mPrevDataPoint.DataValue)
-        .DrawLine .NewPoint(mX - 0.5, mPrevDataPoint.DataValue), .NewPoint(mX - 0.5, mDataValue)
+        Set PrevDataPoint = prevDataPointObj
+        .DrawLine .NewPoint(prevDataPointObj.X, prevDataPointObj.DataValue), .NewPoint(mX - 0.5, prevDataPointObj.DataValue)
+        .DrawLine .NewPoint(mX - 0.5, prevDataPointObj.DataValue), .NewPoint(mX - 0.5, mDataValue)
         .DrawLine .NewPoint(mX - 0.5, mDataValue), .NewPoint(mX, mDataValue)
     End If
 End With
 End Sub
+
+Private Function getProperties() As DataPointProperties
+Static props As DataPointProperties
+If props Is Nothing Then Set props = New DataPointProperties
+Set getProperties = props
+End Function
 
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
@@ -735,6 +767,10 @@ End Sub
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As DataPointPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Function prevDataPointObj() As DataPoint
+Set prevDataPointObj = mPrevDataPointRef.Target
 End Function
 
 Private Sub setPropertyOverrideFlag( _

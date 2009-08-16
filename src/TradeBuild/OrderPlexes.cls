@@ -85,21 +85,21 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function add( _
+Friend Function Add( _
                 ByVal pOrderPlex As orderPlex) As orderPlex
-Set add = pOrderPlex
-mOrderPlexes.add pOrderPlex, pOrderPlex.key
+Set Add = pOrderPlex
+mOrderPlexes.Add pOrderPlex, pOrderPlex.key
 fireChange CollItemAdded, pOrderPlex
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
-Public Function item( _
+Public Function Item( _
                 index As Variant) As orderPlex
-Set item = mOrderPlexes(index)
+Set Item = mOrderPlexes(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -108,16 +108,16 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mOrderPlexes.[_NewEnum]
 End Function
 
-Public Sub remove( _
+Public Sub Remove( _
                 ByVal pOrderPlex As orderPlex)
-mOrderPlexes.remove pOrderPlex.key
+mOrderPlexes.Remove pOrderPlex.key
 fireChange CollItemRemoved, pOrderPlex
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 

@@ -61,6 +61,10 @@ Private Const ConfigSettingArrowEndWidth As String = "&ArrowEndWidth"
 Private Const ConfigSettingArrowEndColor As String = "&ArrowEndColor"
 Private Const ConfigSettingArrowEndFillColor As String = "&ArrowEndFillColor"
 Private Const ConfigSettingArrowEndFillStyle  As String = "&ArrowEndFillStyle"
+Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingFixedX               As String = "&FixedX"
+Private Const ConfigSettingFixedY               As String = "&FixedY"
+Private Const ConfigSettingExtended             As String = "&Extended"
 
 '@================================================================================
 ' Member variables
@@ -85,6 +89,10 @@ Private mArrowEndWidth As Long
 Private mArrowEndColor As Long
 Private mArrowEndFillColor As Long
 Private mArrowEndFillStyle As FillStyles
+Private mIncludeInAutoscale As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
+Private mExtended As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -108,6 +116,10 @@ mArrowEndWidth = 10
 mArrowEndColor = vbBlack
 mArrowEndFillColor = vbBlack
 mArrowEndFillStyle = FillStyles.FillSolid
+mIncludeInAutoscale = False
+mFixedX = False
+mFixedY = False
+mExtended = False
 End Sub
 
 '@================================================================================
@@ -122,7 +134,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let ArrowStartColor(ByVal value As OLE_COLOR)
+Public Property Let ArrowStartColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "LineStyle" & ":" & "ArrowStartColor", _
@@ -132,11 +144,11 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartColor, 
 firePropertyChanged "ArrowStartColor"
 End Property
 
-Public Property Get ArrowStartColor() As OLE_COLOR
+Public Property Get ArrowStartColor() As Long
 ArrowStartColor = mArrowStartColor
 End Property
 
-Public Property Let ArrowStartFillColor(ByVal value As OLE_COLOR)
+Public Property Let ArrowStartFillColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "LineStyle" & ":" & "ArrowStartFillColor", _
@@ -146,7 +158,7 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartFillCol
 firePropertyChanged "ArrowStartFillColor"
 End Property
 
-Public Property Get ArrowStartFillColor() As OLE_COLOR
+Public Property Get ArrowStartFillColor() As Long
 ArrowStartFillColor = mArrowStartFillColor
 End Property
 
@@ -190,7 +202,7 @@ Public Property Get ArrowStartWidth() As Long
 ArrowStartWidth = mArrowStartWidth
 End Property
 
-Public Property Let ArrowEndColor(ByVal value As OLE_COLOR)
+Public Property Let ArrowEndColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "LineStyle" & ":" & "ArrowEndColor", _
@@ -200,11 +212,11 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndColor, mA
 firePropertyChanged "ArrowEndColor"
 End Property
 
-Public Property Get ArrowEndColor() As OLE_COLOR
+Public Property Get ArrowEndColor() As Long
 ArrowEndColor = mArrowEndColor
 End Property
 
-Public Property Let ArrowEndFillColor(ByVal value As OLE_COLOR)
+Public Property Let ArrowEndFillColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "LineStyle" & ":" & "ArrowEndFillColor", _
@@ -214,7 +226,7 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndFillColor
 firePropertyChanged "ArrowEndFillColor"
 End Property
 
-Public Property Get ArrowEndFillColor() As OLE_COLOR
+Public Property Get ArrowEndFillColor() As Long
 ArrowEndFillColor = mArrowEndFillColor
 End Property
 
@@ -258,7 +270,7 @@ Public Property Get ArrowEndWidth() As Long
 ArrowEndWidth = mArrowEndWidth
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "LineStyle" & ":" & "color", _
@@ -268,14 +280,14 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
 firePropertyChanged "Color"
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mColor
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 
-If mConfig Is Nothing Then
+If value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
@@ -300,6 +312,10 @@ mConfig.SetSetting ConfigSettingArrowEndWidth, mArrowEndWidth
 mConfig.SetSetting ConfigSettingArrowEndColor, mArrowEndColor
 mConfig.SetSetting ConfigSettingArrowEndFillColor, mArrowEndFillColor
 mConfig.SetSetting ConfigSettingArrowEndFillStyle, mArrowEndFillStyle
+mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingExtended, mExtended
+mConfig.SetSetting ConfigSettingFixedX, mFixedX
+mConfig.SetSetting ConfigSettingFixedY, mFixedY
 
 End Property
 
@@ -321,6 +337,50 @@ End Property
 
 Public Property Get ExtendBefore() As Boolean
 ExtendBefore = mExtendBefore
+End Property
+
+Public Property Let Extended(ByVal value As Boolean)
+If mExtended = value Then Exit Property
+mExtended = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtended, mExtended
+firePropertyChanged "Extended"
+End Property
+
+Public Property Get Extended() As Boolean
+Extended = mExtended
+End Property
+
+Public Property Let FixedX(ByVal value As Boolean)
+If mFixedX = value Then Exit Property
+mFixedX = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
+firePropertyChanged "FixedX"
+End Property
+
+Public Property Get FixedX() As Boolean
+FixedX = mFixedX
+End Property
+
+Public Property Let FixedY(ByVal value As Boolean)
+If mFixedY = value Then Exit Property
+mFixedY = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
+firePropertyChanged "FixedY"
+End Property
+
+Public Property Get FixedY() As Boolean
+FixedY = mFixedY
+End Property
+
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value Then Exit Property
+mIncludeInAutoscale = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+firePropertyChanged "IncludeInAutoscale"
+End Property
+
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let LineStyle(ByVal value As LineStyles)
@@ -364,6 +424,10 @@ clone.ArrowStartWidth = mArrowStartWidth
 clone.Color = mColor
 clone.ExtendAfter = mExtendAfter
 clone.ExtendBefore = mExtendBefore
+clone.IncludeInAutoscale = mIncludeInAutoscale
+clone.Extended = mExtended
+clone.FixedX = mFixedX
+clone.FixedY = mFixedY
 clone.LineStyle = mLineStyle
 clone.Thickness = mThickness
 End Function
@@ -389,7 +453,11 @@ mArrowEndWidth = mConfig.GetSetting(ConfigSettingArrowEndWidth)
 mArrowEndColor = mConfig.GetSetting(ConfigSettingArrowEndColor)
 mArrowEndFillColor = mConfig.GetSetting(ConfigSettingArrowEndFillColor)
 mArrowEndFillStyle = mConfig.GetSetting(ConfigSettingArrowEndFillStyle)
-                
+mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+mExtended = mConfig.GetSetting(ConfigSettingExtended)
+mFixedX = mConfig.GetSetting(ConfigSettingFixedX)
+mFixedY = mConfig.GetSetting(ConfigSettingFixedY)
+
 End Sub
 
 Public Sub RemoveFromConfig()

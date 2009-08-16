@@ -71,31 +71,31 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub ask(ByRef ev As QuoteEvent)
+Public Sub Ask(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub bid(ByRef ev As QuoteEvent)
+Public Sub Bid(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub high(ByRef ev As QuoteEvent)
+Public Sub High(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub low(ByRef ev As QuoteEvent)
+Public Sub Low(ByRef ev As QuoteEvent)
 End Sub
 
 Public Sub sessionOpen(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub openInterest(ByRef ev As QuoteEvent)
+Public Sub OpenInterest(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub previousClose(ByRef ev As QuoteEvent)
+Public Sub PreviousClose(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub trade(ByRef ev As QuoteEvent)
+Public Sub Trade(ByRef ev As QuoteEvent)
 End Sub
 
-Public Sub volume(ByRef ev As QuoteEvent)
+Public Sub Volume(ByRef ev As QuoteEvent)
 End Sub
 
 '@================================================================================

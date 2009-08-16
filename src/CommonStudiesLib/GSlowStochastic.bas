@@ -77,26 +77,31 @@ If mStudyDefinition Is Nothing Then
                                 
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SStochInputValue)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueK)
     valueDef.Description = "The slow stochastic value (%K)"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     valueDef.minimumValue = -5#
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.maximumValue = 105#
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueD)
-    valueDef.Description = "The result of smoothing %K, also known as the signal line"
+    valueDef.Description = "The result of smoothing %K, also known as the signal line (%D)"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     valueDef.minimumValue = -5#
+    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
     valueDef.maximumValue = 105#
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamKPeriods)

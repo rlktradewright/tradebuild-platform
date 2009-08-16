@@ -33,6 +33,18 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum ContractSortKeyIds
+    ContractSortKeyNone
+    ContractSortKeyLocalSymbol
+    ContractSortKeySymbol
+    ContractSortKeySecType
+    ContractSortKeyExchange
+    ContractSortKeyExpiry
+    ContractSortKeyCurrency
+    ContractSortKeyRight
+    ContractSortKeyStrike
+End Enum
+
 Public Enum OptionRights
     OptNone = 0
     OptCall

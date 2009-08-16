@@ -77,34 +77,34 @@ Public Property Get Session() As Session
 Set Session = mSession
 End Property
                 
-Public Property Let sessionStartTime( _
+Public Property Let SessionStartTime( _
                 ByVal value As Date)
-If mSession.isLinkable Then
+If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "sessionStartTime", _
-            "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+            ProjectName & "." & ModuleName & ":" & "SessionStartTime", _
+            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
-mSession.sessionStartTime = value
+mSession.SessionStartTime = value
 End Property
                 
-Public Property Let sessionEndTime( _
+Public Property Let SessionEndTime( _
                 ByVal value As Date)
-If mSession.isLinkable Then
+If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "sessionEndTime", _
-            "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+            ProjectName & "." & ModuleName & ":" & "SessionEndTime", _
+            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
-mSession.sessionEndTime = value
+mSession.SessionEndTime = value
 End Property
 
 Public Property Let TimeZone( _
                 ByVal value As TimeZone)
-If mSession.isLinkable Then
+If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "TimeZone", _
-            "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.TimeZone = value
@@ -123,45 +123,45 @@ End Property
 '
 ' @param objectToLink the <code>Session</code> object which is to be linked to this
 '               <code>SessionBuilder</code> object.
-' @see setLinkable, unlinkSession
+' @see SetLinkable, UnLinkSession
 '
 '@/
-Public Sub linkSession( _
+Public Sub LinkSession( _
                 ByVal objectToLink As Session)
                 
-If Not objectToLink.isLinkable Then
+If Not objectToLink.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "linkSession", _
+            ProjectName & "." & ModuleName & ":" & "LinkSession", _
             "Target session not linkable"
 End If
 
-objectToLink.sessionStartTime = mSession.sessionStartTime
-objectToLink.sessionEndTime = mSession.sessionEndTime
-objectToLink.setSessionCurrentTime mLatestTimeNotified
+objectToLink.SessionStartTime = mSession.SessionStartTime
+objectToLink.SessionEndTime = mSession.SessionEndTime
+objectToLink.SetSessionCurrentTime mLatestTimeNotified
 mLinkedSessions.Add objectToLink
 End Sub
 
-Public Sub setLinkable()
-mSession.isLinkable = True
+Public Sub SetLinkable()
+mSession.IsLinkable = True
 End Sub
 
-Public Sub setSessionCurrentTime( _
-                ByVal timestamp As Date)
+Public Sub SetSessionCurrentTime( _
+                ByVal Timestamp As Date)
 Dim sess As Session
 
-If mSession.isLinkable Then
+If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setSessionCurrentTime", _
-            "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+            ProjectName & "." & ModuleName & ":" & "SetSessionCurrentTime", _
+            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
-mSession.setSessionCurrentTime timestamp
+mSession.SetSessionCurrentTime Timestamp
 
 For Each sess In mLinkedSessions
-    sess.setSessionCurrentTime timestamp
+    sess.SetSessionCurrentTime Timestamp
 Next
 
-mLatestTimeNotified = timestamp
+mLatestTimeNotified = Timestamp
 End Sub
 
 ''
@@ -170,10 +170,10 @@ End Sub
 '
 ' @param objectToUnlink the <code>Session</code> object which is to be unlinked
 '               from this <code>SessionBuilder</code> object.
-' @see setLinkable, linkSession
+' @see SetLinkable, LinkSession
 '
 '@/
-Public Sub unlinkSession( _
+Public Sub UnLinkSession( _
                 ByVal objectToUnlink As Session)
 Dim sess As Session
 Dim i As Long

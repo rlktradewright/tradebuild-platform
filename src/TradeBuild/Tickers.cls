@@ -24,9 +24,7 @@ Option Explicit
 Event CollectionChanged( _
                 ev As CollectionChangeEvent)
 
-Event Notification(ByRef ev As NotificationEvent)
-
-Event stateChange(ByRef ev As StateChangeEvent)
+Event StateChange(ByRef ev As StateChangeEvent)
 
 '@================================================================================
 ' Constants
@@ -49,16 +47,18 @@ Private Const ModuleName                    As String = "Tickers"
 '@================================================================================
 
 ''
-'  Used to allocate handles for tickers. The handle is not used internally, but
+'  Used to allocate handles for Tickers. The Handle is not used internally, but
 '  can be used by the application to index quickly into tables or collections
-'  of tickers. When a ticker is created, the first entry in this table that is
-'  not set to true is allocated for the new ticker, and its index becomes the
-'  ticker's handle. The handle is only unique within workspace.
+'  of Tickers. When a Ticker is created, the first entry in this table that is
+'  not set to true is allocated for the new Ticker, and its index becomes the
+'  Ticker's Handle. The Handle is only unique within workspace.
 '@/
 Private mTickerHandleTable()        As Boolean
 
 Private mTickers                    As Collection
 Private mChangeListeners            As Collection
+
+Private mWorkspaceRef               As WeakReference
 
 '@================================================================================
 ' Class Event Handlers
@@ -83,38 +83,48 @@ Public Property Get Count() As Long
 Count = mTickers.Count
 End Property
 
-Public Property Get item(ByVal index As Variant) As Ticker
-Attribute item.VB_UserMemId = 0
-Set item = mTickers.item(index)
+Public Property Get Item(ByVal index As Variant) As Ticker
+Attribute Item.VB_UserMemId = 0
+Set Item = mTickers.Item(index)
+End Property
+
+Friend Property Let Workspace( _
+                ByVal pWorkspace As Workspace)
+Set mWorkspaceRef = CreateWeakReference(pWorkspace)
+End Property
+
+Public Property Get Workspace() As Workspace
+Set Workspace = mWorkspaceRef.Target
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal pTickerOptions As TickerOptions, _
-                Optional ByVal key As String) As Ticker
-If key = "" Then key = GenerateGUIDString
-Set add = New Ticker
-add.key = key
-add.initialise AllocateTickerHandle, _
+                Optional ByVal Key As String) As Ticker
+If Key = "" Then Key = GenerateGUIDString
+Set Add = New Ticker
+Add.Key = Key
+Add.Workspace = Me.Workspace
+Add.initialise AllocateTickerHandle, _
                 Me, _
                 pTickerOptions
-mTickers.add add, key
-fireChange CollItemAdded, add
+mTickers.Add Add, Key
+fireChange CollItemAdded, Add
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
-Public Function createTickFileManager( _
+Public Function CreateTickFileManager( _
                 ByVal pTickerOptions As Long) As TickFileManager
-Set createTickFileManager = New TickFileManager
-createTickFileManager.TickerOptions = pTickerOptions
-createTickFileManager.Tickers = Me
+Set CreateTickFileManager = New TickFileManager
+CreateTickFileManager.TickerOptions = pTickerOptions
+CreateTickFileManager.Tickers = Me
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -123,37 +133,53 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal pTicker As Ticker)
+Public Function RefreshPriceChange( _
+                ByVal listener As PriceChangeListener) As TaskController
+Dim pcrt As New PriceChangeRefreshTask
+If mTickers.Count = 0 Then Exit Function
+pcrt.initialise Me, listener
+Set RefreshPriceChange = StartTask(pcrt, PriorityNormal)
+End Function
+                
+Public Function RefreshQuotes( _
+                ByVal listener As PriceChangeListener) As TaskController
+Dim qrt As New QuotesRefreshTask
+If mTickers.Count = 0 Then Exit Function
+qrt.initialise Me, listener
+Set RefreshQuotes = StartTask(qrt, PriorityNormal)
+End Function
+                
+Public Sub Remove(ByVal pTicker As Ticker)
 Dim i As Long
 
 If pTicker.State <> TickerStates.TickerStateClosing Then
-    pTicker.stopTicker
+    pTicker.StopTicker
     Exit Sub
 End If
     
 For i = 1 To mTickers.Count
-    If mTickers.item(i) Is pTicker Then
-        mTickers.remove i
+    If mTickers.Item(i) Is pTicker Then
+        mTickers.Remove i
         Exit For
     End If
 Next
-mTickerHandleTable(pTicker.handle) = False
+mTickerHandleTable(pTicker.Handle) = False
 fireChange CollItemRemoved, pTicker
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 
-Friend Sub stateChange( _
+Friend Sub StateChange( _
                 ByRef ev As StateChangeEvent)
-RaiseEvent stateChange(ev)
+RaiseEvent StateChange(ev)
 End Sub
 
-Public Function startTickers( _
+Public Function StartTickers( _
                 ByVal pTickerOptions As Long, _
                 ByVal pContractSpec As contractSpecifier, _
                 Optional ByVal pDOMEventsRequired As DOMEvents, _
@@ -171,19 +197,20 @@ lTickersStarter.initialise Me, _
                             poutputTickfileFormat, _
                             poutputTickfilePath, _
                             interval
-Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & pContractSpec.toString, , pContractSpec)
+Set StartTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & pContractSpec.ToString, , pContractSpec)
 
 Exit Function
 
 Err:
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "startTickers" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartTickers" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
-Public Function startTickersFromContracts( _
+Public Function StartTickersFromContracts( _
                 ByVal pTickerOptions As Long, _
                 ByVal pContracts As Contracts, _
                 Optional ByVal pDOMEventsRequired As DOMEvents, _
@@ -201,22 +228,17 @@ lTickersStarter.initialise Me, _
                             poutputTickfileFormat, _
                             poutputTickfilePath, _
                             interval
-Set startTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "StartTickersFromContracts/" & GenerateTextID, , pContracts)
+Set StartTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "StartTickersFromContracts/" & GenerateTextID, , pContracts)
 
 Exit Function
 
 Err:
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "startTickersFromContracts" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartTickersFromContracts" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
-
-Friend Sub Notify(ByRef ev As NotificationEvent)
-RaiseEvent Notification(ev)
-gTB.Notify ev
-End Sub
 
 '@================================================================================
 ' Helper Functions

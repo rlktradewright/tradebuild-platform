@@ -52,16 +52,16 @@ Private Const ModuleName                As String = "AdvancedOrderSimulator"
 Private Type MarketTableEntry
     inUse                   As Boolean
     Contract                As Contract
-    bid                     As Double
-    bidSize                 As Long
-    ask                     As Double
+    Bid                     As Double
+    BidSize                 As Long
+    Ask                     As Double
     AskSize                 As Long
     activeOrders            As Collection
     pendingOrders           As Collection
     Clock                   As Clock
     serviceConsumer         As TradeBuildSP.IOrderSubmissionSrvcConsumer
     simulateExchangeDelays  As Boolean
-'    readyNotified           As Boolean
+'    ReadyNotified           As Boolean
 End Type
 
 '@================================================================================
@@ -78,7 +78,7 @@ Private mTimerList As TimerList
 Attribute mTimerList.VB_VarHelpID = -1
     ' This is used to simulate delays in submitting orders to the
     ' exchange for execution. When it is time to change an order's status
-    ' from pendingsubmit to submitted, the order is added to this list
+    ' from pendingsubmit to submitted, the order is Added to this list
     ' with a random wait of between 200 and 500 millisecs.
 
 Private mNextBrokerOrderId As Long
@@ -134,13 +134,13 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let clockRate( _
+Friend Property Let ClockRate( _
                 ByVal marketIndex As Long, _
                 ByVal value As Single)
 Dim latestTimestamp As Date
 With mMarketTable(marketIndex)
     If Not .Clock Is Nothing Then
-        latestTimestamp = .Clock.timestamp
+        latestTimestamp = .Clock.Timestamp
     End If
     Set .Clock = CreateSimulatedClock(value, .Contract.TimeZone.standardName)
     .simulateExchangeDelays = (value <> 0)
@@ -155,15 +155,15 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub bid(ByVal timestamp As Date, _
+Friend Sub Bid(ByVal Timestamp As Date, _
                 ByVal marketIndex As Long, _
-                ByVal bid As Double)
+                ByVal Bid As Double)
                 
 Dim lOrder As SimulatorOrder
 
 With mMarketTable(marketIndex)
-    .Clock.setTime timestamp
-    .bid = bid
+    .Clock.setTime Timestamp
+    .Bid = Bid
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
@@ -188,15 +188,15 @@ End With
 
 End Sub
 
-Friend Sub ask(ByVal timestamp As Date, _
+Friend Sub Ask(ByVal Timestamp As Date, _
                 ByVal marketIndex As Long, _
-                ByVal ask As Double)
+                ByVal Ask As Double)
                 
 Dim lOrder As SimulatorOrder
 
 With mMarketTable(marketIndex)
-    .Clock.setTime timestamp
-    .ask = ask
+    .Clock.setTime Timestamp
+    .Ask = Ask
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
@@ -353,7 +353,7 @@ If Not specifier.Equals(mMarketTable(marketIndex).Contract.specifier) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Incorrect contract in order " & pOrder.id & ": " & _
-            specifier.toString
+            specifier.ToString
 End If
 
 On Error Resume Next
@@ -369,7 +369,7 @@ If lOrder Is Nothing Then
     lOrder.marketIndex = marketIndex
     lOrder.ocaGroup = ocaGroup
     lOrder.parentId = parentId
-    mAllOrders.add lOrder, pOrder.id
+    mAllOrders.Add lOrder, pOrder.id
 ElseIf pOrder.brokerId <> "" Then
     ' the order is being updated
     pOrder.syncToMe lOrder.order
@@ -378,7 +378,7 @@ Else
     ' the order is being re-placed (typically re-placing a stop or target order
     ' after it was cancelled while trying to cancel an order plex, but the entry
     ' order was subsequently filled)
-    mAllOrders.remove (pOrder.id)
+    mAllOrders.Remove (pOrder.id)
     pOrder.status = OrderStatuses.OrderStatusCreated
     pOrder.brokerId = mNextBrokerOrderId
     mNextBrokerOrderId = mNextBrokerOrderId + 1
@@ -387,33 +387,33 @@ Else
     lOrder.marketIndex = marketIndex
     lOrder.ocaGroup = ocaGroup
     lOrder.parentId = parentId
-    mAllOrders.add lOrder, pOrder.id
+    mAllOrders.Add lOrder, pOrder.id
     
 End If
 
 With mMarketTable(marketIndex)
     If Not transmit Then
-        .pendingOrders.add lOrder, lOrder.order.id
+        .pendingOrders.Add lOrder, lOrder.order.id
     Else
-        ' if this order was previously in the pending list, remove
+        ' if this order was previously in the pending list, Remove
         ' it now
         On Error Resume Next
-        .pendingOrders.remove lOrder.order.id
+        .pendingOrders.Remove lOrder.order.id
         On Error GoTo 0
         
         ' now see if there are any other pending orders related
         ' to this one via parentid or oca group
         If lOrder.parentId <> "" Then
             Set pendingOrder = .pendingOrders(lOrder.parentId)
-            .activeOrders.add pendingOrder, pendingOrder.order.id
-            .pendingOrders.remove pendingOrder.order.id
+            .activeOrders.Add pendingOrder, pendingOrder.order.id
+            .pendingOrders.Remove pendingOrder.order.id
             setSubmitOrder pendingOrder
             
             ' find any other child orders
             For Each pendingOrder In .pendingOrders
                 If pendingOrder.parentId = lOrder.parentId Then
-                    .activeOrders.add pendingOrder, pendingOrder.order.id
-                    .pendingOrders.remove pendingOrder.order.id
+                    .activeOrders.Add pendingOrder, pendingOrder.order.id
+                    .pendingOrders.Remove pendingOrder.order.id
                     setSubmitOrder pendingOrder
                 End If
             Next
@@ -424,8 +424,8 @@ With mMarketTable(marketIndex)
                     (pendingOrder.ocaGroup = lOrder.ocaGroup And _
                     lOrder.ocaGroup <> "") _
                 Then
-                    .activeOrders.add pendingOrder, pendingOrder.order.id
-                    .pendingOrders.remove pendingOrder.order.id
+                    .activeOrders.Add pendingOrder, pendingOrder.order.id
+                    .pendingOrders.Remove pendingOrder.order.id
                     setSubmitOrder pendingOrder
                 End If
             Next
@@ -433,7 +433,7 @@ With mMarketTable(marketIndex)
         End If
         
         On Error Resume Next
-        .activeOrders.add lOrder, lOrder.order.id
+        .activeOrders.Add lOrder, lOrder.order.id
         On Error GoTo 0
         setSubmitOrder lOrder
     End If
@@ -470,8 +470,8 @@ End With
 
 End Function
 
-Friend Sub stopMarket(ByVal handle As Long)
-With mMarketTable(handle)
+Friend Sub stopMarket(ByVal Handle As Long)
+With mMarketTable(Handle)
     .inUse = False
     Set .Contract = Nothing
     Set .activeOrders = Nothing
@@ -479,22 +479,22 @@ With mMarketTable(handle)
     Set .Clock = Nothing
     Set .serviceConsumer = Nothing
     .simulateExchangeDelays = False
-    .ask = 0
+    .Ask = 0
     .AskSize = 0
-    .bid = 0
-    .bidSize = 0
+    .Bid = 0
+    .BidSize = 0
 End With
 End Sub
 
-Friend Sub trade(ByVal timestamp As Date, _
+Friend Sub Trade(ByVal Timestamp As Date, _
                 ByVal marketIndex As Long, _
-                ByVal trade As Double)
+                ByVal Trade As Double)
                 
 Dim lOrder As SimulatorOrder
 
 
 With mMarketTable(marketIndex)
-    .Clock.setTime timestamp
+    .Clock.setTime Timestamp
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
@@ -502,7 +502,7 @@ With mMarketTable(marketIndex)
     For Each lOrder In .activeOrders
         If lOrder.order.status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.atExchange Then
-                matchOrderTrade lOrder, trade
+                matchOrderTrade lOrder, Trade
             End If
         ElseIf lOrder.order.status = OrderStatuses.OrderStatusPreSubmitted And _
             lOrder.parentId = "" _
@@ -510,18 +510,18 @@ With mMarketTable(marketIndex)
             Select Case lOrder.order.orderType
                 Case OrderTypes.OrderTypeStop
                     If lOrder.order.action = OrderActions.ActionBuy And _
-                        trade >= lOrder.order.triggerPrice Then
+                        Trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     ElseIf lOrder.order.action = OrderActions.ActionSell And _
-                        trade <= lOrder.order.triggerPrice Then
+                        Trade <= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     End If
                 Case OrderTypes.OrderTypeStopLimit
                     If lOrder.order.action = OrderActions.ActionBuy And _
-                        trade >= lOrder.order.triggerPrice Then
+                        Trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     ElseIf lOrder.order.action = OrderActions.ActionSell And _
-                        trade <= lOrder.order.triggerPrice Then
+                        Trade <= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     End If
             End Select
@@ -586,9 +586,9 @@ With mMarketTable(pOrder.marketIndex)
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                             pOrder.order.status
-                    mTimerList.add(pOrder, _
+                    mTimerList.Add(pOrder, _
                                     delay, _
-                                    expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
+                                    expiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
                 Else
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     pOrder.atExchange = True
@@ -621,37 +621,37 @@ With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
-        setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
+        setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .Ask, .Bid), pOrder.order.quantity
     Case OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeStopLimit
         If pOrder.order.action = OrderActions.ActionBuy And _
-            pOrder.order.limitPrice >= .ask _
+            pOrder.order.limitPrice >= .Ask _
         Then
-            setFillOrder pOrder, .ask, pOrder.order.quantity
+            setFillOrder pOrder, .Ask, pOrder.order.quantity
         ElseIf pOrder.order.action = OrderActions.ActionSell And _
-            pOrder.order.limitPrice <= .bid _
+            pOrder.order.limitPrice <= .Bid _
         Then
-            setFillOrder pOrder, .bid, pOrder.order.quantity
+            setFillOrder pOrder, .Bid, pOrder.order.quantity
         End If
     End Select
 End With
 End Sub
 
 Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
-                            ByVal trade As Double)
+                            ByVal Trade As Double)
 With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
     Case OrderTypes.OrderTypeMarket, _
         OrderTypes.OrderTypeStop
-        setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
+        setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .Ask, .Bid), pOrder.order.quantity
     Case OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeStop
         If pOrder.order.action = OrderActions.ActionBuy And _
-            pOrder.order.limitPrice >= trade _
+            pOrder.order.limitPrice >= Trade _
         Then
             setFillOrder pOrder, pOrder.order.limitPrice, pOrder.order.quantity
         ElseIf pOrder.order.action = OrderActions.ActionSell And _
-            pOrder.order.limitPrice <= trade _
+            pOrder.order.limitPrice <= Trade _
         Then
             setFillOrder pOrder, pOrder.order.limitPrice, pOrder.order.quantity
         End If
@@ -661,7 +661,7 @@ End Sub
 
 
 ' commented out on 22/5/6
-'Private Sub removeCancelledOrder(ByVal id As Long)
+'Private Sub RemoveCancelledOrder(ByVal id As Long)
 '' this function is called by the instrumentProcessor when a real order
 '' has been canceled, in case the simulator hasn't also cancelled it (because
 '' the simulator isn't an exact reflection of reality)
@@ -676,7 +676,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::removeCancelledOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::RemoveCancelledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -715,7 +715,7 @@ End Sub
 '
 'End Sub
 '
-'Private Sub removeFilledOrder(ByVal id As Long)
+'Private Sub RemoveFilledOrder(ByVal id As Long)
 '' this function is called by the instrumentProcessor when a real order
 '' has been filled, in case the simulator hasn't also filled it (because
 '' the simulator isn't an exact reflection of reality)
@@ -727,7 +727,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::removeFilledOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::RemoveFilledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -745,7 +745,7 @@ End Sub
 'End With
 'End Sub
 '
-'Private Sub removeOrder(ByVal id As Long)
+'Private Sub RemoveOrder(ByVal id As Long)
 'Dim lOrder as simulatororder
 '
 'On Error Resume Next
@@ -753,7 +753,7 @@ End Sub
 'On Error GoTo 0
 'If lOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::removeOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::RemoveOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -772,9 +772,9 @@ Case OrderStatuses.OrderStatusSubmitted, OrderStatuses.OrderStatusPreSubmitted
     mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelling
     If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
-        mTimerList.add(pOrder, _
+        mTimerList.Add(pOrder, _
                             delay, _
-                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
+                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
     End If
 Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusCancelling, _
@@ -783,7 +783,7 @@ Case OrderStatuses.OrderStatusCreated, _
     pOrder.order.status = OrderStatuses.OrderStatusCancelled
     mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelled
-    mMarketTable(pOrder.marketIndex).activeOrders.remove pOrder.order.id
+    mMarketTable(pOrder.marketIndex).activeOrders.Remove pOrder.order.id
 End Select
 End Sub
 
@@ -792,7 +792,7 @@ Private Sub setFillOrder(pOrder As SimulatorOrder, _
                         ByVal fillSize As Long)
 ' This needs enhancing to cater for the case
 ' where the quantity ordered is greater than the
-' current bid/offer size
+' current Bid/offer size
 'Dim exec As TradeBuildSP.IExecution
 Dim lContractSpecifier As contractSpecifier
 Dim execId As String
@@ -803,7 +803,7 @@ Static lastMillisecs As Long
 Dim lFillPrice As Double
 Dim lFillSize As Long
 
-If fillPrice = 0 Then Exit Sub ' can occur at start of session before first bid or offer
+If fillPrice = 0 Then Exit Sub ' can occur at start of Session before first Bid or offer
 
 lFillPrice = fillPrice
 lFillSize = fillSize
@@ -832,7 +832,7 @@ Mid(execId, 18, 6) = ".01.01"
 'exec.orderBrokerId = pOrder.order.brokerId
 'exec.orderTradeBuildId = pOrder.order.id
 'exec.action = pOrder.order.action
-'exec.time = mMarketTable(pOrder.marketIndex).Clock.timestamp
+'exec.time = mMarketTable(pOrder.marketIndex).Clock.Timestamp
 
 mMarketTable(pOrder.marketIndex).serviceConsumer.PreFill pOrder.order.id, _
                     lFillPrice, _
@@ -858,7 +858,7 @@ mMarketTable(pOrder.marketIndex).serviceConsumer.ExecutionDetails _
                         pOrder.order.brokerId, _
                         pOrder.order.id, _
                         lFillPrice, lFillSize, _
-                        mMarketTable(pOrder.marketIndex).Clock.timestamp
+                        mMarketTable(pOrder.marketIndex).Clock.Timestamp
 
 mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                         pOrder.order.status
@@ -867,7 +867,7 @@ handleRelatedOrders pOrder
 
 On Error Resume Next
 If pOrder.order.quantityRemaining = 0 Then
-    mMarketTable(pOrder.marketIndex).activeOrders.remove pOrder.order.id
+    mMarketTable(pOrder.marketIndex).activeOrders.Remove pOrder.order.id
 End If
 On Error GoTo 0
 End Sub
@@ -886,7 +886,7 @@ End Sub
 '                        0, _
 '                        order.clientId)
 'If mSimulateExchangeDelays Then
-'    mTimerList.addTimer delay, ExpiryTimeUnits.RelativeMilliseconds, order
+'    mTimerList.AddTimer delay, ExpiryTimeUnits.RelativeMilliseconds, order
 'End If
 'End Sub
 
@@ -944,9 +944,9 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
                 pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                 mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                         pOrder.order.status
-                mTimerList.add(pOrder, _
+                mTimerList.Add(pOrder, _
                                 delay, _
-                                expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
+                                expiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
             Else
                 pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
                 mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
@@ -990,9 +990,9 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
-            mTimerList.add(pOrder, _
+            mTimerList.Add(pOrder, _
                             delay, _
-                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
+                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).AddStateChangeListener Me
         Else
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             pOrder.atExchange = True

@@ -43,14 +43,14 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mStudyLine As studyLine
+Private mStudyLine As StudyLine
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mStudyLine = New studyLine
+Set mStudyLine = New StudyLine
 End Sub
 
 '@================================================================================
@@ -65,16 +65,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let point1(ByVal value As StudyPoint)
-mStudyLine.point1 = value
+Public Property Let Point1(ByVal value As StudyPoint)
+mStudyLine.Point1 = value
 End Property
 
-Public Property Let point2(ByVal value As StudyPoint)
-mStudyLine.point2 = value
+Public Property Let Point2(ByVal value As StudyPoint)
+mStudyLine.Point2 = value
 End Property
 
-Public Property Get studyLine() As studyLine
-Set studyLine = mStudyLine
+Public Property Get StudyLine() As StudyLine
+Set StudyLine = mStudyLine
 End Property
 
 '@================================================================================

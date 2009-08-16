@@ -21,15 +21,9 @@ Option Explicit
 
 Public Const ProjectName                        As String = "TradeBuildUI26"
 
-Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
-
-Public Const RegionNameCustom As String = "$custom"
-Public Const RegionNameDefault As String = "$default"
-Public Const RegionNamePrice As String = "Price"
-Public Const RegionNameVolume As String = "Volume"
-
-Public Const LB_SETHORZEXTENT = &H194
+Public Const KeyDownShift As Integer = &H1
+Public Const KeyDownCtrl As Integer = &H2
+Public Const KeyDownAlt As Integer = &H4
 
 Public Const TaskTypeStartStudy As Long = 1
 Public Const TaskTypeReplayBars As Long = 2
@@ -107,28 +101,6 @@ If (KeyAscii < 48 Or KeyAscii > 57) Then
     KeyAscii = 0
 End If
 End Sub
-
-'Public Function isPrice( _
-'                ByVal value As String, _
-'                ByVal ticksize As Double) As Boolean
-'Dim theVal As Double
-'
-'On Error GoTo Err
-'
-'If IsNumeric(value) Then
-'    theVal = value
-'    If theVal > 0 And _
-'        Int((theVal + 0.99999999 * ticksize) / ticksize) * ticksize = theVal _
-'    Then
-'        isPrice = True
-'    End If
-'End If
-'
-'Exit Function
-'
-'Err:
-'If Err.Number <> VBErrorCodes.VbErrOverflow Then Err.Raise Err.Number
-'End Function
 
 Public Function loadDefaultStudyConfiguration( _
                 ByVal name As String, _

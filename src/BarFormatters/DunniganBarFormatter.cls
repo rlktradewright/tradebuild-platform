@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "DunniganBarFormatter"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -60,33 +60,44 @@ Private Sub BarFormatter_FormatBar( _
                 ByVal sourceBar As TimeframeUtils26.Bar, _
                 ByVal chartBar As ChartSkil26.Bar)
 
-If sourceBar.barNumber <= 2 Or mBars.Count < 2 Then Exit Sub
+Dim failpoint As Long
+On Error GoTo Err
 
-If sourceBar.highValue > mBars.Bar(sourceBar.barNumber - 1).highValue And _
-    sourceBar.lowValue >= mBars.Bar(sourceBar.barNumber - 1).lowValue _
+If sourceBar.BarNumber <= 2 Or mBars.Count < 2 Then Exit Sub
+
+If sourceBar.HighValue > mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
+    sourceBar.LowValue >= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
 Then
-    chartBar.barColor = &H1D9311
-    chartBar.upColor = &H1D9311
-    chartBar.downColor = &H1D9311
-ElseIf sourceBar.highValue <= mBars.Bar(sourceBar.barNumber - 1).highValue And _
-    sourceBar.lowValue < mBars.Bar(sourceBar.barNumber - 1).lowValue _
+    chartBar.Color = &H1D9311
+    chartBar.UpColor = &H1D9311
+    chartBar.DownColor = &H1D9311
+ElseIf sourceBar.HighValue <= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
+    sourceBar.LowValue < mBars.Bar(sourceBar.BarNumber - 1).LowValue _
 Then
-    chartBar.barColor = &H43FC2
-    chartBar.upColor = &H43FC2
-    chartBar.downColor = &H43FC2
-ElseIf sourceBar.highValue <= mBars.Bar(sourceBar.barNumber - 1).highValue And _
-    sourceBar.lowValue >= mBars.Bar(sourceBar.barNumber - 1).lowValue _
+    chartBar.Color = &H43FC2
+    chartBar.UpColor = &H43FC2
+    chartBar.DownColor = &H43FC2
+ElseIf sourceBar.HighValue <= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
+    sourceBar.LowValue >= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
 Then
-    chartBar.barColor = vbMagenta
-    chartBar.upColor = vbMagenta
-    chartBar.downColor = vbMagenta
-ElseIf sourceBar.highValue >= mBars.Bar(sourceBar.barNumber - 1).highValue And _
-    sourceBar.lowValue <= mBars.Bar(sourceBar.barNumber - 1).lowValue _
+    chartBar.Color = vbMagenta
+    chartBar.UpColor = vbMagenta
+    chartBar.DownColor = vbMagenta
+ElseIf sourceBar.HighValue >= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
+    sourceBar.LowValue <= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
 Then
-    chartBar.barColor = vbBlue
-    chartBar.upColor = vbBlue
-    chartBar.downColor = vbBlue
+    chartBar.Color = vbBlue
+    chartBar.UpColor = vbBlue
+    chartBar.DownColor = vbBlue
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "BarFormatter_FormatBar" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '@================================================================================

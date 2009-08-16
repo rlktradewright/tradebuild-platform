@@ -41,6 +41,8 @@ Event StatusChanged()
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "Order"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -652,6 +654,12 @@ Set Ticker = mTicker
 End Property
 
 Public Property Let timeInForce(ByVal value As OrderTifs)
+If Not gIsValidTIF(value) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "timeInForce", _
+            "Value must be a member of the OrderTifs enum"
+End If
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttTimeInForce
 If Not mOrderContext.isOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttTimeInForce, value
 If value = mTimeInForce Then Exit Property
@@ -711,7 +719,7 @@ RaiseEvent Fill(exec.quantity, exec.price)
 
 End Sub
 
-Friend Sub finish()
+Friend Sub Finish()
 Set mTicker = Nothing
 Set mContract = Nothing
 Set mOrderContext = Nothing
@@ -996,7 +1004,7 @@ End If
 End Sub
 
 ''
-' Set the 'dirty' flag, and raise a Dirty event if one has not already
+' Set the 'dirty' flag, and raise a Dirty event if one has not alReady
 ' been raised.
 '@/
 Private Sub setDirty()

@@ -54,19 +54,6 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Enums
 '================================================================================
 
-Public Enum DataPointPropertyOverrideFlags
-    DataPointIsSetLineThickness = 1
-    DataPointIsSetColor = 2
-    DataPointIsSetUpColor = 4
-    DataPointIsSetDownColor = 8
-    DataPointIsSetLineStyle = &H10&
-    DataPointIsSetPointStyle = &H20&
-    DataPointIsSetDisplayMode = &H40&
-    DataPointIsSetHistBarWidth = &H80&
-    DataPointIsSetIncludeInAutoscale = &H100&
-    DataPointIsSetLayer = &H200&
-End Enum
-
 Public Enum LayerNumberRange
     MinLayer = 0
     MaxLayer = 255

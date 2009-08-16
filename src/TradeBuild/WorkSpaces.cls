@@ -85,21 +85,21 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add(ByVal name As String) As WorkSpace
-Attribute add.VB_UserMemId = 0
-Set add = New WorkSpace
-add.name = name
-mWorkSpaces.add add, name
-fireChange CollItemAdded, add
+Public Function Add(ByVal name As String) As Workspace
+Set Add = New Workspace
+Add.name = name
+mWorkSpaces.Add Add, name
+fireChange CollItemAdded, Add
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
-Public Function item(index As Variant) As WorkSpace
-Set item = mWorkSpaces(index)
+Public Function Item(index As Variant) As Workspace
+Attribute Item.VB_UserMemId = 0
+Set Item = mWorkSpaces(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -108,15 +108,15 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mWorkSpaces.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal pWorkspace As WorkSpace)
-mWorkSpaces.remove pWorkspace.name
+Public Sub Remove(ByVal pWorkspace As Workspace)
+mWorkSpaces.Remove pWorkspace.name
 fireChange CollItemRemoved, pWorkspace
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 
@@ -126,7 +126,7 @@ End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As WorkSpace)
+                ByVal affectedObject As Workspace)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Set ev.source = Me

@@ -59,7 +59,7 @@ Private Const ModuleName                As String = "ConstMomentumBars"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mSession As session
+Private mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mMovementPerBar As Long
@@ -111,8 +111,8 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-Set mSession = newUnderlyingStudy.session
-mBarsBuilder.changeSession mSession
+Set mSession = newUnderlyingStudy.Session
+mBarsBuilder.ChangeSession mSession
 End Sub
 
 '@================================================================================
@@ -144,7 +144,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -171,19 +171,19 @@ Select Case UCase$(valueName)
 Case UCase$(ConstMomentumBarsValueBar)
     Set sv.value = bar
 Case UCase$(BarValueOpen)
-        sv.value = bar.openValue
+        sv.value = bar.OpenValue
 Case UCase$(BarValueHigh)
         sv.value = bar.highValue
 Case UCase$(BarValueLow)
         sv.value = bar.lowValue
-Case UCase$(BarValueClose)
-        sv.value = bar.closeValue
+Case UCase$(BarValueClose), UCase$(DefaultStudyValueName)
+        sv.value = bar.CloseValue
 Case UCase$(BarValueTickVolume)
-        sv.value = bar.tickVolume
+        sv.value = bar.TickVolume
 Case UCase$(BarValueVolume)
         sv.value = bar.volume
 Case UCase$(BarValueOpenInterest)
-        sv.value = bar.openInterest
+        sv.value = bar.OpenInterest
 Case UCase$(BarValueHL2)
         sv.value = bar.HL2
 Case UCase$(BarValueHLC3)
@@ -198,7 +198,7 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customGetStudyValue" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customGetStudyValue" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -214,14 +214,15 @@ If IsEmpty(ev.sVal.value) Then Exit Sub
 
 mTimestamp = ev.sVal.timestamp
 
-If ev.valueName = ConstMomentumBarsInputPrice Then
+ev.valueName = UCase$(ev.valueName)
+If ev.valueName = ConstMomentumBarsInputPriceUcase Then
     mBarsBuilder.notifyValue ev.sVal
-ElseIf ev.valueName = ConstMomentumBarsInputTotalVolume Then
-    mBarsBuilder.notifyVolume ev.sVal
-ElseIf ev.valueName = ConstMomentumBarsInputTickVolume Then
-    mBarsBuilder.incrementTickVolume ev.sVal.value
-ElseIf ev.valueName = ConstMomentumBarsInputOpenInterest Then
-    mBarsBuilder.notifyOpenInterest ev.sVal
+ElseIf ev.valueName = ConstMomentumBarsInputTotalVolumeUcase Then
+    mBarsBuilder.NotifyVolume ev.sVal
+ElseIf ev.valueName = ConstMomentumBarsInputTickVolumeUcase Then
+    mBarsBuilder.IncrementTickVolume ev.sVal.value
+ElseIf ev.valueName = ConstMomentumBarsInputOpenInterestUcase Then
+    mBarsBuilder.NotifyOpenInterest ev.sVal
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "customNotify", _
@@ -232,7 +233,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -266,7 +267,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -306,73 +307,73 @@ evOut.sVal.barStartTime = mBar.timestamp
 Set evOut.Source = Me
 evOut.sVal.timestamp = mTimestamp
 
-If mBar.barChanged Then
+If mBar.BarChanged Then
     Set evOut.sVal.value = mBar
     evOut.valueName = ConstMomentumBarsValueBar
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.openChanged Then
-    evOut.sVal.value = mBar.openValue
+If mBar.OpenChanged Then
+    evOut.sVal.value = mBar.OpenValue
     evOut.valueName = BarValueOpen
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.highChanged Then
+If mBar.HighChanged Then
     evOut.sVal.value = mBar.highValue
     evOut.valueName = BarValueHigh
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.lowChanged Then
+If mBar.LowChanged Then
     evOut.sVal.value = mBar.lowValue
     evOut.valueName = BarValueLow
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.closeChanged Then
-    evOut.sVal.value = mBar.closeValue
+If mBar.CloseChanged Then
+    evOut.sVal.value = mBar.CloseValue
     evOut.valueName = BarValueClose
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.volumeChanged Then
+If mBar.VolumeChanged Then
     evOut.sVal.value = mBar.volume
     evOut.valueName = BarValueVolume
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.openInterestChanged Then
-    evOut.sVal.value = mBar.openInterest
+If mBar.OpenInterestChanged Then
+    evOut.sVal.value = mBar.OpenInterest
     evOut.valueName = BarValueOpenInterest
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.barChanged Then
-    evOut.sVal.value = mBar.tickVolume
+If mBar.BarChanged Then
+    evOut.sVal.value = mBar.TickVolume
     evOut.valueName = BarValueTickVolume
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.highChanged Or mBar.lowChanged Then
+If mBar.HighChanged Or mBar.LowChanged Then
     evOut.sVal.value = mBar.HL2
     evOut.valueName = BarValueHL2
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.highChanged Or mBar.lowChanged Or mBar.closeChanged Then
+If mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
     evOut.sVal.value = mBar.HLC3
     evOut.valueName = BarValueHLC3
     mStudyFoundation.notifyValue evOut
 End If
 
-If mBar.openChanged Or mBar.highChanged Or mBar.lowChanged Or mBar.closeChanged Then
+If mBar.OpenChanged Or mBar.HighChanged Or mBar.LowChanged Or mBar.CloseChanged Then
     evOut.sVal.value = mBar.OHLC4
     evOut.valueName = BarValueOHLC4
     mStudyFoundation.notifyValue evOut
 End If
 
-mBarsBuilder.resetBarChangeIndicators
+mBarsBuilder.ResetBarChangeIndicators
 End Sub
 
 Private Function numberOfCachedValues( _
@@ -396,7 +397,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -410,7 +411,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -435,7 +436,8 @@ Select Case UCase$(valueName)
 Case UCase$(BarValueOpen), _
     UCase$(BarValueHigh), _
     UCase$(BarValueLow), _
-    UCase$(BarValueClose)
+    UCase$(BarValueClose), _
+    UCase$(DefaultStudyValueName)
     Study_getValueTicksize = mPriceTickSize
 Case UCase$(BarValueVolume)
     Study_getValueTicksize = mVolumeTickSize
@@ -454,7 +456,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -473,21 +475,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -505,7 +507,7 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _
@@ -513,6 +515,11 @@ Private Sub Study_setInputTicksize( _
                 ByVal tickSize As Double)
 If UCase$(inputName) = UCase$(ConstMomentumBarsInputPrice) Then
     mPriceTickSize = tickSize
+    If Not mBarsBuilder Is Nothing Then
+        ' this can happen if this study is set up before the tick size is
+        ' known
+        mBarsBuilder.tickSize = mPriceTickSize
+    End If
 ElseIf UCase$(inputName) = UCase$(ConstMomentumBarsInputTotalVolume) Then
     mVolumeTickSize = tickSize
 End If

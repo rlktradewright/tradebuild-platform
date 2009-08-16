@@ -31,7 +31,6 @@ Option Explicit
 '@================================================================================
 
 Implements TradeBuildSP.ICommonServiceConsumer
-Implements TradeBuildSP.IContractInfoServiceConsumer
 
 '@================================================================================
 ' Events
@@ -165,51 +164,66 @@ End Sub
 ' ICommonServiceConsumer Interface Members
 '@================================================================================
 
-Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
+Private Sub ICommonServiceConsumer_NotifyEvent( _
+                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventMessage As String, _
+                ByVal serviceProviderHandle As Long)
+
+CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
+End Sub
+
+Private Sub ICommonServiceConsumer_NotifyFatalError( _
                 ByVal errorCode As Long, _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
 Dim spName As String
 spName = NameFromHandle(spHandle)
-removeSP spHandle
+RemoveSP spHandle
 
 gTB.NotifyFatalError errorCode, _
                     errorMessage, _
                     spName & ":" & source
 End Sub
 
+Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
+                            ByVal errorCode As Long, _
+                            ByVal errorMessage As String, _
+                            ByVal spHandle As Long)
+gTB.SetServiceProviderError errorCode, _
+                errorMessage, _
+                NameFromHandle(spHandle)
+End Sub
+
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
-                            ByVal handle As Long, _
+                            ByVal Handle As Long, _
                             ByVal spType As TradeBuildSP.ServiceProviderTypes)
 Dim regOk As Boolean
-mServiceProviders(handle).SPTypes = mServiceProviders(handle).SPTypes Or spType
+mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
 Select Case spType
 Case TradeBuildSP.ServiceProviderTypes.ContractInfo
     Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
     
     On Error Resume Next
-    Set contractInfoSP = mServiceProviders(handle).SPObject
+    Set contractInfoSP = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not contractInfoSP Is Nothing Then
-        contractInfoSP.ContractInfoServiceConsumer = Me
         regOk = True
     End If
 Case TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo
     Dim secContractInfoSP As TradeBuildSP.IContractInfoServiceProvider
     
     On Error Resume Next
-    Set secContractInfoSP = mServiceProviders(handle).SPObject
+    Set secContractInfoSP = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not secContractInfoSP Is Nothing Then
-        secContractInfoSP.ContractInfoServiceConsumer = Me
         regOk = True
     End If
 Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
     Dim exchangeSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
     
     On Error Resume Next
-    Set exchangeSimulatorSp = mServiceProviders(handle).SPObject
+    Set exchangeSimulatorSp = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not exchangeSimulatorSp Is Nothing Then
         regOk = True
@@ -218,7 +232,7 @@ Case TradeBuildSP.ServiceProviderTypes.HistoricalData
     Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
     
     On Error Resume Next
-    Set histDataSp = mServiceProviders(handle).SPObject
+    Set histDataSp = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not histDataSp Is Nothing Then
         regOk = True
@@ -227,7 +241,7 @@ Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
     Dim liveOrderSp As TradeBuildSP.IOrderSubmissionSrvcProvider
     
     On Error Resume Next
-    Set liveOrderSp = mServiceProviders(handle).SPObject
+    Set liveOrderSp = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not liveOrderSp Is Nothing Then
         regOk = True
@@ -237,7 +251,7 @@ Case TradeBuildSP.ServiceProviderTypes.RealtimeData
     Dim realtimeDataSp As TradeBuildSP.IRealtimeDataServiceProvider
     
     On Error Resume Next
-    Set realtimeDataSp = mServiceProviders(handle).SPObject
+    Set realtimeDataSp = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not realtimeDataSp Is Nothing Then
         regOk = True
@@ -246,7 +260,7 @@ Case TradeBuildSP.ServiceProviderTypes.Tickfile
     Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
     
     On Error Resume Next
-    Set tickfileSp = mServiceProviders(handle).SPObject
+    Set tickfileSp = mServiceProviders(Handle).SPObject
     On Error GoTo 0
     If Not tickfileSp Is Nothing Then regOk = True
 End Select
@@ -257,79 +271,7 @@ If Not regOk Then
                 "Caller is not a type " & spType & " service provider object"
 End If
     
-mServiceProviders(handle).SPTypes = mServiceProviders(handle).SPTypes Or spType
-End Sub
-
-Private Sub ICommonServiceConsumer_ServiceProviderError( _
-                            ByVal errorCode As Long, _
-                            ByVal errorMessage As String, _
-                            ByVal spHandle As Long)
-gTB.SetServiceProviderError errorCode, _
-                errorMessage, _
-                NameFromHandle(spHandle)
-End Sub
-
-'@================================================================================
-' IContractInfoServiceConsumer Interface Members
-'@================================================================================
-
-Private Sub IContractInfoServiceConsumer_LoadComplete( _
-                            ByVal handle As Long, _
-                            ByVal pContractsBuilder As ContractsBuilder)
-Dim lContracts As Contracts
-
-Set lContracts = pContractsBuilder.Contracts
-If lContracts.Count = 0 Then
-    ' try the secondary contract service provider if any
-    If Not loadContractsFromSecondarySP(handle, pContractsBuilder) Then
-        pContractsBuilder.LoadComplete
-    End If
-Else
-    pContractsBuilder.LoadComplete
-End If
-End Sub
-
-Private Sub IContractInfoServiceConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
-                ByVal eventMessage As String, _
-                ByVal pContractsBuilder As ContractsBuilder, _
-                ByVal serviceProviderHandle As Long)
-
-Dim ev As NotificationEvent
-
-Select Case eventCode
-Case TradeBuildSP.StandardSPEventCodes.CIConnectedToDataSource
-    ev.eventCode = eventCode
-    ev.eventMessage = eventMessage
-    Set ev.source = pContractsBuilder.Contracts
-    pContractsBuilder.notify ev
-Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
-    pContractsBuilder.ContractSpecifierInvalid eventMessage
-Case TradeBuildSP.StandardSPEventCodes.CICantConnectDataSource
-    gTB.SetServiceProviderError eventCode, _
-                        "Can't connect to Contract database: " & eventMessage, _
-                        gTB.ServiceProviders.NameFromHandle(serviceProviderHandle)
-Case TradeBuildSP.StandardSPEventCodes.CIDisconnectedFromDataSource
-    gTB.SetServiceProviderError eventCode, _
-                        "Disconnected from Contract database: " & eventMessage, _
-                        gTB.ServiceProviders.NameFromHandle(serviceProviderHandle)
-Case TradeBuildSP.StandardSPEventCodes.CILostConnectionToDataSource
-    gTB.SetServiceProviderError eventCode, _
-                        "Lost connection to Contract database: " & eventMessage, _
-                        gTB.ServiceProviders.NameFromHandle(serviceProviderHandle)
-Case TradeBuildSP.StandardSPEventCodes.CIReConnectingDataSource
-    gTB.SetServiceProviderError eventCode, _
-                        "Reconnecting to Contract database: " & eventMessage, _
-                        gTB.ServiceProviders.NameFromHandle(serviceProviderHandle)
-Case TradeBuildSP.StandardSPEventCodes.CIRetryConnectDataSource
-    gTB.SetServiceProviderError eventCode, _
-                        "Attempting again to connect to Contract database: " & eventMessage, _
-                        gTB.ServiceProviders.NameFromHandle(serviceProviderHandle)
-Case Else
-    gTB.SetServiceProviderError eventCode, _
-                        eventMessage, _
-                        NameFromHandle(serviceProviderHandle)
-End Select
+mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
 End Sub
 
 '@================================================================================
@@ -353,7 +295,7 @@ Public Property Let PermittedServiceProviderRoles( _
 If IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
-            "Service providers are already configured"
+            "Service providers are alReady configured"
 End If
 
 mPermittedServiceProviderRoles = value
@@ -474,7 +416,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal progId As String, _
                 ByVal enabled As Boolean, _
                 ByVal paramString As String, _
@@ -484,28 +426,151 @@ Public Function add( _
 Dim params As parameters
 Dim spindex As Long
 
-Set add = CreateObject(progId)
+Dim failpoint As Long
+On Error GoTo Err
+
+Set Add = CreateObject(progId)
 Set params = CreateParametersFromString(paramString)
 
 If enabled Then
-    spindex = addSP(add, params, name)
+    spindex = AddSP(Add, params, name)
     If spindex < 0 Then
-        Set add = Nothing
+        Set Add = Nothing
         Exit Function
     End If
 End If
 
-Set mServiceProviders(spindex).SpConfig = addEntryToConfig(progId, _
+Set mServiceProviders(spindex).SpConfig = AddEntryToConfig(progId, _
                                                         enabled, _
                                                         params, _
                                                         name, _
                                                         Description)
 
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Add" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
+End Sub
+
+Friend Sub CommonServiceConsumerNotifyEvent( _
+                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventMessage As String, _
+                ByVal serviceProviderHandle As Long)
+
+Dim ev As NotificationEvent
+
+If serviceProviderHandle >= 0 Then Set ev.source = mServiceProviders(serviceProviderHandle).SPObject
+ev.eventMessage = NameFromHandle(serviceProviderHandle) & vbCrLf & _
+                eventMessage
+
+Select Case eventCode
+Case TFTickfileEmpty
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
+Case TFTickfileInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileInvalid
+Case TFTickfileVersionNotSupported
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileVersionNotSupported
+Case TFContractDetailsInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileContractDetailsInvalid
+Case TFNoContractDetails
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileNoContractDetails
+Case TFTickfileDoesntExist
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDoesntExist
+Case TFCantConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
+Case TFDataSourceNotResponding
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
+Case TFRetryConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToTickfileDataSource
+Case TFContractSpecifierInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileContractSpecifierInvalid
+Case TFReConnectingDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToTickfileDataSource
+Case TFLostConnectionToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToTickfileDataSource
+Case TFConnectedToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToTickfileDataSource
+Case CIConnectedToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToContractDataSource
+Case CIContractSpecifierInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+Case CICantConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectContractDataSource
+Case CIDisconnectedFromDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromContractDataSource
+Case CILostConnectionToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToContractDataSource
+Case CIReConnectingDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingContractDataSource
+Case CIRetryConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectContractDataSource
+Case HDCantConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectHistoricDataSource
+Case HDRetryConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToHistoricDataSource
+Case HDLostConnectionToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToHistoricDataSource
+Case HDReConnectingDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToHistoricDataSource
+Case HDRequestInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToHistoricDataStore
+Case HDDisconnectedFromDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromHistoricDataSource
+Case HDRequestFailed
+    ev.eventCode = ApiNotifyCodes.ApiNotifyHistoricDataRequestFailed
+Case HDConnectedToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToHistoricDataSource
+Case RTCantConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource
+Case RTRetryConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
+Case RTLostConnectionToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource
+Case RTReConnectingDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
+Case RTRequestInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+Case RTRequestFailed
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRealtimeDataRequestFailed
+Case RTMarketDepthRequestFailed
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+Case RTDisconnectedFromDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource
+Case RTDataSourceNotResponding
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRealtimeDataSourceNotResponding
+Case RTConnectedToDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource
+Case LOCantConnectToBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectToBroker
+Case LORetryConnectToBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectToBroker
+Case LOLostConnectionToBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToBroker
+Case LOReConnectingToBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingToBroker
+Case LOUnknownContract
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+Case LONotUniqueContract
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+Case LODisconnectedFromBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromBroker
+Case LOConnectedToBroker
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToBroker
+Case Else
+    ev.eventCode = ApiNotifyCodes.ApiNotifyNonSpecificNotification
+End Select
+gTB.notify ev
+
 End Sub
 
 Friend Sub ConfigureDefaultServiceProviders( _
@@ -517,7 +582,7 @@ Friend Sub ConfigureDefaultServiceProviders( _
                 Optional ByVal tickfilesPath As String)
 
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
-    add "IBTWSSP26.RealtimeDataServiceProvider", _
+    Add "IBTWSSP26.RealtimeDataServiceProvider", _
         True, _
         "Server=" & twsServer & _
         ";Port=" & twsPort & _
@@ -527,7 +592,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
         ";TWS Log Level=" & twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
-    add "IBTWSSP26.ContractInfoServiceProvider", _
+    Add "IBTWSSP26.ContractInfoServiceProvider", _
         True, _
         "Server=" & twsServer & _
         ";Port=" & twsPort & _
@@ -540,7 +605,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractDa
     ' not relevant in default scenario
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
-    add "IBTWSSP26.HistDataServiceProvider", _
+    Add "IBTWSSP26.HistDataServiceProvider", _
         True, _
         "Server=" & twsServer & _
         ";Port=" & twsPort & _
@@ -553,7 +618,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutpu
     ' no sensible default for this
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
-    add "IBTWSSP26.OrderSubmissionSrvcProvider", _
+    Add "IBTWSSP26.OrderSubmissionSrvcProvider", _
         True, _
         "Server=" & twsServer & _
         ";Port=" & twsPort & _
@@ -563,16 +628,16 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
         ";TWS Log Level=" & twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
-    addSP New OrderSimulatorSP, Nothing, ""
+    AddSP New OrderSimulatorSP, Nothing, ""
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
-    add "TickfileSP26.TickfileServiceProvider", _
+    Add "TickfileSP26.TickfileServiceProvider", _
         True, _
         "Access Mode=Read only" & _
         ";Tickfile Path=" & tickfilesPath
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
-    add "TickfileSP26.TickfileServiceProvider", _
+    Add "TickfileSP26.TickfileServiceProvider", _
         True, _
         "Access Mode=Write only" & _
         ";Tickfile Path=" & tickfilesPath
@@ -649,14 +714,14 @@ Friend Function CreateLiveOrderSubmitter( _
                 ) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
+Dim OrderSubmitter As TradeBuildSP.IOrderSubmitter
             
 Set lOrderSimulatorSp = getLiveOrderSubmissionSP
 If lOrderSimulatorSp Is Nothing Then Exit Function
 
-Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
+Set OrderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
 
-Set CreateLiveOrderSubmitter = orderSubmitter
+Set CreateLiveOrderSubmitter = OrderSubmitter
 
                             
 End Function
@@ -689,7 +754,7 @@ Friend Function CreateSimulatedOrderSubmitter( _
                 ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
+Dim OrderSubmitter As TradeBuildSP.IOrderSubmitter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -702,15 +767,15 @@ For i = 0 To mMaxSPIndex
 Next
 
 If lOrderSimulatorSp Is Nothing Then
-    ' no order simulator sp has been added, so we will resort
+    ' no order simulator sp has been Added, so we will resort
     ' to using the default built-in simulator
     Set lOrderSimulatorSp = New OrderSimulatorSP
-    addSP lOrderSimulatorSp, Nothing, ""
+    AddSP lOrderSimulatorSp, Nothing, ""
 End If
 
-Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
+Set OrderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
 
-Set CreateSimulatedOrderSubmitter = orderSubmitter
+Set CreateSimulatedOrderSubmitter = OrderSubmitter
 
                             
 End Function
@@ -808,8 +873,9 @@ For i = 0 To mMaxSPIndex
 Next
 End Function
 
-Friend Sub loadContracts( _
-                ByVal pContractsBuilder As ContractsBuilder)
+Friend Function loadContracts( _
+                ByVal serviceConsumer As IContractInfoServiceConsumer, _
+                ByVal pContractsBuilder As ContractsBuilder) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
 
@@ -822,19 +888,48 @@ For i = 0 To mMaxSPIndex
     End If
 Next
 
+loadContracts = True
+
 If contractInfoSP Is Nothing Then
     ' there doesn't seem to be a primary contract service provider configured,
     ' so let's try the secondary
     gLogLogger.Log LogLevelDetail, "No primary contract info service provider configured - trying secondary"
-    If Not loadContractsFromSecondarySP(-1, pContractsBuilder) Then
+    If Not loadContractsFromSecondarySP(-1, serviceConsumer, pContractsBuilder) Then
         gLogLogger.Log LogLevelDetail, "No secondary contract info service provider configured - can't load contracts"
-        pContractsBuilder.unableToLoad "No contract info service provider has been configured", ""
+        loadContracts = False
     End If
 Else
-    contractInfoSP.RequestContractDetails pContractsBuilder
+    contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
 End If
 
-End Sub
+End Function
+
+Friend Function loadContractsFromSecondarySP( _
+                            ByVal prevSPIndex As Long, _
+                            ByVal serviceConsumer As IContractInfoServiceConsumer, _
+                            ByVal pContractsBuilder As ContractsBuilder _
+                            ) As Boolean
+Dim i As Long
+Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo) <> 0 Then
+            If i = prevSPIndex Then
+                ' we've alReady tried the secondary, so nothing more we can do
+            Else
+                Set contractInfoSP = mServiceProviders(i).SPObject
+            End If
+            Exit For
+        End If
+    End If
+Next
+
+If contractInfoSP Is Nothing Then Exit Function
+
+contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
+loadContractsFromSecondarySP = True
+End Function
 
 Public Sub LoadServiceProviderConfiguration( _
                 ByVal config As ConfigurationSection)
@@ -857,20 +952,20 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "LoadServiceProviderConfiguration" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadServiceProviderConfiguration" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
 Friend Function NameFromHandle( _
-                ByVal handle As Long) As String
-If handle < 0 Then Exit Function
-NameFromHandle = mServiceProviders(handle).name
+                ByVal Handle As Long) As String
+If Handle < 0 Then Exit Function
+NameFromHandle = mServiceProviders(Handle).name
 End Function
 
-Public Sub remove( _
+Public Sub Remove( _
                 ByVal sp As TradeBuildSP.ICommonServiceProvider)
 Dim i As Long
 
@@ -879,7 +974,7 @@ If sp Is Nothing Then Exit Sub
 For i = 0 To mMaxSPIndex
     If mServiceProviders(i).SPObject Is sp Then
         mServiceProviders(i).SPObject.Terminate
-        removeSP i
+        RemoveSP i
         Exit For
     End If
 Next
@@ -889,27 +984,36 @@ Public Sub RemoveAll()
 Dim i As Long
 Dim sp As TradeBuildSP.ICommonServiceProvider
 
+gTB.StopAllTickers
+
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         Set sp = mServiceProviders(i).SPObject
         sp.Terminate
-        removeSP i
+        RemoveSP i
     End If
 Next
 
 mMaxSPIndex = -1
+
 End Sub
 
-Public Sub removeCollectionChangeListener( _
+Public Sub RemoveCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 
 Public Sub SetDefaultSPConfig( _
-                ByVal configdata As ConfigurationSection)
+                ByVal configdata As ConfigurationSection, _
+                Optional ByVal twsServer As String, _
+                Optional ByVal twsPort As Long = 7496, _
+                Optional ByVal clientId As Long = -1, _
+                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal twsLogLevel As String = "ERROR", _
+                Optional ByVal tickfilesPath As String)
 Dim currSPsList As ConfigurationSection
 Dim currSP As ConfigurationSection
 Dim currProps As ConfigurationSection
@@ -933,10 +1037,12 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsRealtimeData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
+    setProperty currProps, PropertyNameTwsServer, twsServer
+    setProperty currProps, PropertyNameTwsPort, twsPort
+    setProperty currProps, PropertyNameTwsClientId, clientId
     setProperty currProps, PropertyNameTwsKeepConnection, "True"
+    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
+    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
@@ -945,10 +1051,12 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
+    setProperty currProps, PropertyNameTwsServer, twsServer
+    setProperty currProps, PropertyNameTwsPort, twsPort
+    setProperty currProps, PropertyNameTwsClientId, clientId
     setProperty currProps, PropertyNameTwsKeepConnection, "True"
+    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
+    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractData Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
@@ -957,10 +1065,12 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractDa
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
+    setProperty currProps, PropertyNameTwsServer, twsServer
+    setProperty currProps, PropertyNameTwsPort, twsPort
+    setProperty currProps, PropertyNameTwsClientId, clientId
     setProperty currProps, PropertyNameTwsKeepConnection, "True"
+    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
+    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
@@ -969,10 +1079,12 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsBarData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
+    setProperty currProps, PropertyNameTwsServer, twsServer
+    setProperty currProps, PropertyNameTwsPort, twsPort
+    setProperty currProps, PropertyNameTwsClientId, clientId
     setProperty currProps, PropertyNameTwsKeepConnection, "True"
+    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
+    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutput Then
     ' no sensible default for this
@@ -980,14 +1092,16 @@ End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
                                                     "(" & SrvcProviderNameBrokerLive & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "False"
+    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsOrders
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
+    setProperty currProps, PropertyNameTwsServer, twsServer
+    setProperty currProps, PropertyNameTwsPort, twsPort
+    setProperty currProps, PropertyNameTwsClientId, clientId
     setProperty currProps, PropertyNameTwsKeepConnection, "True"
+    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
+    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
@@ -1005,6 +1119,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
     setProperty currProps, PropertyNameTbAccessMode, AccessModeReadOnly
+    setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
     Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
@@ -1014,6 +1129,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
     setProperty currProps, PropertyNameTbAccessMode, AccessModeWriteOnly
+    setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
 End If
 End Sub
 
@@ -1021,7 +1137,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function addEntryToConfig( _
+Private Function AddEntryToConfig( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal params As parameters, _
@@ -1057,10 +1173,10 @@ For Each param In params
     prop.setAttribute AttributeNamePropertyValue, param.value
 Next
 
-Set addEntryToConfig = sp
+Set AddEntryToConfig = sp
 End Function
 
-Private Function addSP( _
+Private Function AddSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
             ByVal params As parameters, _
             ByVal name As String _
@@ -1072,19 +1188,19 @@ On Error GoTo Err
 
 If name <> "" Then serviceProvider.name = name
 
-' we don't reuse removed entries to ensure that service providers added later are
-' always later in the table than those added earlier
+' we don't reuse Removed entries to ensure that service providers Added later are
+' always later in the table than those Added earlier
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         If mServiceProviders(i).SPObject Is serviceProvider Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.ServiceProviders::Add", _
-                    "This Service Provider object has already been added"
+                    "This Service Provider object has alReady been Added"
         End If
         If mServiceProviders(i).name = serviceProvider.name Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.ServiceProviders::Add", _
-                    "A Service Provider with this name has already been added"
+                    "A Service Provider with this name has alReady been Added"
         End If
     End If
 Next
@@ -1102,19 +1218,19 @@ serviceProvider.Link Me, mMaxSPIndex, params
 If mServiceProviders(i).SPObject Is Nothing Then
     ' a fatal error has occurred while linking the SP - eg, invalid parameter
     ' has been passed
-    addSP = -1
+    AddSP = -1
 Else
     fireChange CollItemAdded, serviceProvider
-    addSP = mMaxSPIndex
+    AddSP = mMaxSPIndex
 End If
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addSP" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddSP" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
-gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -1221,7 +1337,7 @@ For Each sp In mServiceProviderConfigList
                                                             ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
                                                             "Property name not specified"
                 'propValue = prop.getAttribute(AttributeNamePropertyValue, "")
-                params.setParameterValue prop.InstanceQualifier, prop.value
+                params.SetParameterValue prop.InstanceQualifier, prop.value
             Next
         End If
         
@@ -1237,13 +1353,13 @@ For Each sp In mServiceProviderConfigList
                                        ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
                                        "Can't create service provider with progId " & spProgId
         
-        spindex = addSP(spObj, params, spName)
+        spindex = AddSP(spObj, params, spName)
         If spindex >= 0 Then
             Set mServiceProviders(spindex).SpConfig = sp
         Else
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
-                    "Can't add service provider " & spName
+                    "Can't Add service provider " & spName
         End If
     End If
 Next
@@ -1252,54 +1368,28 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "loadConfiguration" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "loadConfiguration" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Private Function loadContractsFromSecondarySP( _
-                            ByVal prevSPIndex As Long, _
-                            ByVal pContractsBuilder As ContractsBuilder _
-                            ) As Boolean
-Dim i As Long
-Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo) <> 0 Then
-            If i = prevSPIndex Then
-                ' we've already tried the secondary, so nothing more we can do
-            Else
-                Set contractInfoSP = mServiceProviders(i).SPObject
-            End If
-            Exit For
-        End If
-    End If
-Next
-
-If contractInfoSP Is Nothing Then Exit Function
-
-contractInfoSP.RequestContractDetails pContractsBuilder
-loadContractsFromSecondarySP = True
-End Function
-
-Private Sub removeSP( _
-                ByVal handle As Long, _
-                Optional ByVal removeFromConfig As Boolean)
+Private Sub RemoveSP( _
+                ByVal Handle As Long, _
+                Optional ByVal RemoveFromConfig As Boolean)
 Dim sp As ICommonServiceProvider
 
-If handle < 0 Then Exit Sub
+If Handle < 0 Then Exit Sub
 
-Set sp = mServiceProviders(handle).SPObject
+Set sp = mServiceProviders(Handle).SPObject
 
-If removeFromConfig And Not mServiceProviders(handle).SpConfig Is Nothing Then
-    mServiceProviderConfigList.RemoveConfigurationSection mServiceProviders(handle).SpConfig
+If RemoveFromConfig And Not mServiceProviders(Handle).SpConfig Is Nothing Then
+    mServiceProviderConfigList.RemoveConfigurationSection mServiceProviders(Handle).SpConfig
 End If
 
-Set mServiceProviders(handle).SPObject = Nothing
-Set mServiceProviders(handle).SpConfig = Nothing
-mServiceProviders(handle).SPTypes = 0
-mServiceProviders(handle).name = ""
+Set mServiceProviders(Handle).SPObject = Nothing
+Set mServiceProviders(Handle).SpConfig = Nothing
+mServiceProviders(Handle).SPTypes = 0
+mServiceProviders(Handle).name = ""
 fireChange CollItemRemoved, sp
 End Sub
 

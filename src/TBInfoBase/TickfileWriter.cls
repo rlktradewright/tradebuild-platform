@@ -123,7 +123,7 @@ Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 Dim lInstrument As Instrument
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
                             ev.errorMessage, _
                             mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
@@ -164,7 +164,7 @@ Private Sub mTickWriter_Error( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 On Error GoTo Err
-mCommonServiceConsumer.ServiceProviderError errorCode, _
+mCommonServiceConsumer.NotifyRecoverableError errorCode, _
                                     errorDesc, _
                                     mTickfileServiceProvider.handle
 Exit Sub
@@ -285,7 +285,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, _
+mCommonServiceConsumer.NotifyFatalError Number, _
                             Source, _
                             Description, _
                             mTickfileServiceProvider.handle

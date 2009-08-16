@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#65.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#62.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#124.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#110.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -65,18 +65,18 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(1)=   "Label3"
-      Tab(1).Control(2)=   "Label1"
-      Tab(1).Control(3)=   "Label19"
-      Tab(1).Control(4)=   "StudiesCombo"
-      Tab(1).Control(5)=   "StudyLibraryClassNameText"
-      Tab(1).Control(6)=   "LibToAddText"
-      Tab(1).Control(7)=   "AddLibButton"
-      Tab(1).Control(8)=   "StudyLibraryList"
-      Tab(1).Control(9)=   "RemoveLibButton"
-      Tab(1).Control(10)=   "SetStudyLibraryButton"
-      Tab(1).Control(11)=   "StudyConfigurer1"
+      Tab(1).Control(0)=   "StudyConfigurer1"
+      Tab(1).Control(1)=   "SetStudyLibraryButton"
+      Tab(1).Control(2)=   "RemoveLibButton"
+      Tab(1).Control(3)=   "StudyLibraryList"
+      Tab(1).Control(4)=   "AddLibButton"
+      Tab(1).Control(5)=   "LibToAddText"
+      Tab(1).Control(6)=   "StudyLibraryClassNameText"
+      Tab(1).Control(7)=   "StudiesCombo"
+      Tab(1).Control(8)=   "Label19"
+      Tab(1).Control(9)=   "Label1"
+      Tab(1).Control(10)=   "Label3"
+      Tab(1).Control(11)=   "Label2"
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
@@ -92,6 +92,7 @@ Begin VB.Form StudyTestForm
          Width           =   12375
          _ExtentX        =   21828
          _ExtentY        =   15478
+         ChartBackColor  =   6566450
       End
       Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
          Height          =   5655
@@ -310,19 +311,19 @@ Private Const InputValueVolume As String = "Total volume"
 
 Private Enum TestDataFileColumns
     timestamp
-    openValue
-    highValue
-    lowValue
-    closeValue
+    OpenValue
+    HighValue
+    LowValue
+    CloseValue
     Volume
 End Enum
 
 Private Enum TestDataGridColumns
     timestamp
-    openValue
-    highValue
-    lowValue
-    closeValue
+    OpenValue
+    HighValue
+    LowValue
+    CloseValue
     Volume
     StudyValue1
 End Enum
@@ -488,7 +489,7 @@ If lStudyLibrary Is Nothing Then
 End If
 
 StudiesCombo.Enabled = True
-availableStudies = lStudyLibrary.getImplementedStudyNames
+availableStudies = lStudyLibrary.GetImplementedStudyNames
 For i = 0 To UBound(availableStudies)
     StudiesCombo.AddItem availableStudies(i)
 Next
@@ -525,13 +526,14 @@ regionNames(1) = VolumeRegionName
 
 Set mStudyDefinition = GetStudyDefinition(StudiesCombo)
 
-StudyConfigurer1.initialise Chart1.controller, _
+StudyConfigurer1.Initialise Chart1, _
                             mStudyDefinition, _
                             "", _
                             regionNames, _
                             mInitialStudyConfigs, _
                             Nothing, _
-                            mStudyParams
+                            mStudyParams, _
+                            False
 mIsStudySet = True
 If mIsDataLoaded Then TestButton.Enabled = True
 End Sub
@@ -554,7 +556,7 @@ when = "adding study libraries"
 addStudyLibraries
 
 Set testStudyConfig = StudyConfigurer1.StudyConfiguration
-If testStudyConfig.underlyingStudy Is mSourceStudy Then
+If testStudyConfig.UnderlyingStudy Is mSourceStudy Then
     addTestStudyToSource = True
 End If
 
@@ -563,30 +565,31 @@ when = "creating the study to be tested"
 setupInitialStudies
 
 If addTestStudyToSource Then
-    testStudyConfig.underlyingStudy = mSourceStudy
+    testStudyConfig.UnderlyingStudy = mSourceStudy
 Else
-    testStudyConfig.underlyingStudy = mBarsStudy
+    testStudyConfig.UnderlyingStudy = mBarsStudy
 End If
 
-Set testStudy = mChartManager.addStudy(testStudyConfig)
-mChartManager.startStudy testStudy
+Set testStudy = mChartManager.AddStudyConfiguration(testStudyConfig)
+mChartManager.StartStudy testStudy
 
 ' now re-setup the study configurer so that only current
 ' objects are referenced
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
-StudyConfigurer1.initialise Chart1.controller, _
+StudyConfigurer1.Initialise Chart1, _
                             mStudyDefinition, _
                             "", _
                             regionNames, _
                             mInitialStudyConfigs, _
                             testStudyConfig, _
-                            mStudyParams
+                            mStudyParams, _
+                            False
 
 when = "setting up the Study Value grid"
 setupStudyValueGridColumns testStudyConfig
 
-mChartManager.chartController.SuppressDrawing = True
+Chart1.DisableDrawing
 For i = 1 To TestDataGrid.Rows
     TestDataGrid.row = i
     TestDataGrid.Col = TestDataGridColumns.timestamp
@@ -600,60 +603,60 @@ For i = 1 To TestDataGrid.Rows
     End If
     
     when = "notifying open value for bar " & i
-    mStudyManager.notifyInput _
+    mStudyManager.NotifyInput _
                     mPriceInputHandle, _
-                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.openValue)), _
+                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.OpenValue)), _
                     timestamp
 
     If volumeThisBar <> 0 Then
         when = "notifying volume at open for bar " & i
         accumVolume = accumVolume + Int(volumeThisBar / 4)
-        mStudyManager.notifyInput _
+        mStudyManager.NotifyInput _
                         mVolumeInputHandle, _
                         accumVolume, _
                         timestamp
     End If
             
     when = "notifying high value for bar " & i
-    mStudyManager.notifyInput _
+    mStudyManager.NotifyInput _
                     mPriceInputHandle, _
-                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.highValue)), _
+                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.HighValue)), _
                     timestamp
 
     If volumeThisBar <> 0 Then
         when = "notifying volume at high for bar " & i
         accumVolume = accumVolume + Int(volumeThisBar / 4)
-        mStudyManager.notifyInput _
+        mStudyManager.NotifyInput _
                         mVolumeInputHandle, _
                         accumVolume, _
                         timestamp
     End If
             
     when = "notifying low value for bar " & i
-    mStudyManager.notifyInput _
+    mStudyManager.NotifyInput _
                     mPriceInputHandle, _
-                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.lowValue)), _
+                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.LowValue)), _
                     timestamp
 
     If volumeThisBar <> 0 Then
         when = "notifying volume at low for bar " & i
         accumVolume = accumVolume + Int(volumeThisBar / 4)
-        mStudyManager.notifyInput _
+        mStudyManager.NotifyInput _
                         mVolumeInputHandle, _
                         accumVolume, _
                         timestamp
     End If
             
     when = "notifying close value for bar " & i
-    mStudyManager.notifyInput _
+    mStudyManager.NotifyInput _
                     mPriceInputHandle, _
-                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.closeValue)), _
+                    CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.CloseValue)), _
                     timestamp
 
     If volumeThisBar <> 0 Then
         when = "notifying volume at low for bar " & i
         accumVolume = accumVolume + volumeThisBar - 3 * Int(volumeThisBar / 4)
-        mStudyManager.notifyInput _
+        mStudyManager.NotifyInput _
                         mVolumeInputHandle, _
                         accumVolume, _
                         timestamp
@@ -662,7 +665,7 @@ For i = 1 To TestDataGrid.Rows
     processStudyValues testStudy, testStudyConfig, i, when
 Next
 
-mChartManager.chartController.SuppressDrawing = False
+Chart1.EnableDrawing
 
 setTestDataGridRowBackColors 1
 
@@ -672,8 +675,8 @@ Exit Sub
 err:
 setTestDataGridRowBackColors 1
 
-Do Until Not Chart1.SuppressDrawing
-    Chart1.SuppressDrawing = False
+Do Until Chart1.IsDrawingEnabled
+    Chart1.EnableDrawing
 Loop
 
 MsgBox "Error " & err.Number & _
@@ -720,48 +723,48 @@ Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
 Dim params As New Parameters
 Dim studyValueConfig As StudyValueConfiguration
-Dim barsStyle As barStyle
-Dim volumeStyle As dataPointStyle
+Dim barsStyle As BarStyle
+Dim volumeStyle As DataPointStyle
 
 Set studyDef = GetStudyDefinition("Constant time bars")
 
 Set createBarsStudyConfig = New StudyConfiguration
-createBarsStudyConfig.chartRegionName = PriceRegionName
+createBarsStudyConfig.ChartRegionName = PriceRegionName
 inputValueNames(0) = InputValuePrice
 inputValueNames(1) = InputValueVolume
 createBarsStudyConfig.inputValueNames = inputValueNames
 createBarsStudyConfig.Name = studyDef.Name
-params.setParameterValue "Bar length", 1
-params.setParameterValue "Time units", "Minutes"
+params.SetParameterValue "Bar length", 1
+params.SetParameterValue "Time units", "Minutes"
 createBarsStudyConfig.Parameters = params
 'createBarsStudyConfig.StudyDefinition = studyDef
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Bar")
-studyValueConfig.chartRegionName = PriceRegionName
-studyValueConfig.includeInChart = True
-studyValueConfig.layer = 200
-Set barsStyle = Chart1.DefaultBarStyle
-barsStyle.outlineThickness = 1
-barsStyle.barThickness = 2
-barsStyle.barWidth = 0.6
-barsStyle.displayMode = BarDisplayModeCandlestick
-barsStyle.downColor = &H43FC2
-barsStyle.solidUpBody = True
-barsStyle.tailThickness = 1
-barsStyle.upColor = &H1D9311
-studyValueConfig.barStyle = barsStyle
+studyValueConfig.ChartRegionName = PriceRegionName
+studyValueConfig.IncludeInChart = True
+studyValueConfig.Layer = 200
+Set barsStyle = New BarStyle
+barsStyle.OutlineThickness = 1
+barsStyle.Thickness = 2
+barsStyle.Width = 0.6
+barsStyle.DisplayMode = BarDisplayModeCandlestick
+barsStyle.DownColor = &H43FC2
+barsStyle.SolidUpBody = True
+barsStyle.TailThickness = 1
+barsStyle.UpColor = &H1D9311
+studyValueConfig.BarStyle = barsStyle
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Volume")
-studyValueConfig.chartRegionName = VolumeRegionName
-studyValueConfig.includeInChart = True
-Set volumeStyle = Chart1.DefaultDataPointStyle
-volumeStyle.downColor = vbRed
-volumeStyle.upColor = vbGreen
-volumeStyle.displayMode = DataPointDisplayModeHistogram
-volumeStyle.histBarWidth = 0.7
-volumeStyle.includeInAutoscale = True
-volumeStyle.lineThickness = 1
-studyValueConfig.dataPointStyle = volumeStyle
+studyValueConfig.ChartRegionName = VolumeRegionName
+studyValueConfig.IncludeInChart = True
+Set volumeStyle = New DataPointStyle
+volumeStyle.DownColor = vbRed
+volumeStyle.UpColor = vbGreen
+volumeStyle.DisplayMode = DataPointDisplayModeHistogram
+volumeStyle.HistogramBarWidth = 0.7
+volumeStyle.IncludeInAutoscale = True
+volumeStyle.LineThickness = 1
+studyValueConfig.DataPointStyle = volumeStyle
 End Function
 
 Private Sub determinePeriodParameters()
@@ -820,27 +823,29 @@ Do While Not ts.AtEndOfStream
 Loop
 End Sub
 
-Private Sub initialiseChart( _
-                ByVal pChartManager As ChartManager)
+Private Sub initialiseChart()
+Dim regionStyle As ChartRegionStyle
 Dim priceRegion As ChartRegion
 Dim volumeRegion As ChartRegion
 
 
-pChartManager.chartController.SuppressDrawing = True
+Chart1.DisableDrawing
 
-pChartManager.clearChart
-pChartManager.chartController.ChartBackColor = vbWhite
-pChartManager.chartController.PointerStyle = PointerCrosshairs
-pChartManager.chartController.ShowHorizontalScrollBar = True
-pChartManager.chartController.barTimePeriod = GetTimePeriod(mPeriodLength, mPeriodUnits)
+Chart1.ClearChart
+Chart1.ChartBackColor = vbWhite
+Chart1.PointerStyle = PointerCrosshairs
+Chart1.HorizontalScrollBarVisible = True
+Chart1.BarTimePeriod = GetTimePeriod(mPeriodLength, mPeriodUnits)
 
-Set priceRegion = pChartManager.chartController.AddChartRegion(100, 25, , , PriceRegionName)
+Set regionStyle = New ChartRegionStyle
+
+Set priceRegion = Chart1.Regions.Add(100, 25, regionStyle, , PriceRegionName)
 priceRegion.GridlineSpacingY = 2
 priceRegion.HasGrid = True
 priceRegion.Title.Text = TestDataFilenameText
 priceRegion.Title.Color = vbBlue
 
-Set volumeRegion = pChartManager.chartController.AddChartRegion(20, , , , VolumeRegionName)
+Set volumeRegion = Chart1.Regions.Add(20, , regionStyle, , VolumeRegionName)
 volumeRegion.GridlineSpacingY = 0.8
 volumeRegion.MinimumHeight = 10
 volumeRegion.IntegerYScale = True
@@ -848,8 +853,7 @@ volumeRegion.HasGrid = True
 volumeRegion.Title.Text = "Volume"
 volumeRegion.Title.Color = vbBlue
 
-pChartManager.chartController.SuppressDrawing = False
-
+Chart1.EnableDrawing
 End Sub
 
 Private Sub LoadData()
@@ -884,7 +888,7 @@ setupInitialStudies
 Set fso = New FileSystemObject
 Set ts = fso.OpenTextFile(TestDataFilenameText, ForReading)
 
-Chart1.SuppressDrawing = True
+Chart1.DisableDrawing
 
 Set analyzer = New DataAnalyzer
 
@@ -898,33 +902,33 @@ Do While Not ts.AtEndOfStream
         
         timestamp = CDate(tokens(TestDataFileColumns.timestamp))
         
-        price = CDbl(tokens(TestDataFileColumns.openValue))
-        mStudyManager.notifyInput mPriceInputHandle, _
+        price = CDbl(tokens(TestDataFileColumns.OpenValue))
+        mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
         analyzer.addDataValue price
         
-        price = CDbl(tokens(TestDataFileColumns.highValue))
-        mStudyManager.notifyInput mPriceInputHandle, _
+        price = CDbl(tokens(TestDataFileColumns.HighValue))
+        mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
         analyzer.addDataValue price
         
-        price = CDbl(tokens(TestDataFileColumns.lowValue))
-        mStudyManager.notifyInput mPriceInputHandle, _
+        price = CDbl(tokens(TestDataFileColumns.LowValue))
+        mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
         analyzer.addDataValue price
         
-        price = CDbl(tokens(TestDataFileColumns.closeValue))
-        mStudyManager.notifyInput mPriceInputHandle, _
+        price = CDbl(tokens(TestDataFileColumns.CloseValue))
+        mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
         analyzer.addDataValue price
         
         If tokens(TestDataFileColumns.Volume) <> "" Then
             accumVolume = accumVolume + CLng(tokens(TestDataFileColumns.Volume))
-            mChartManager.notifyInput mVolumeInputHandle, _
+            mChartManager.NotifyInput mVolumeInputHandle, _
                         accumVolume, _
                         timestamp
         End If
@@ -934,14 +938,14 @@ Do While Not ts.AtEndOfStream
         TestDataGrid.row = row
         TestDataGrid.Col = TestDataGridColumns.timestamp
         TestDataGrid.Text = CDate(tokens(TestDataFileColumns.timestamp))
-        TestDataGrid.Col = TestDataGridColumns.openValue
-        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.openValue))
-        TestDataGrid.Col = TestDataGridColumns.highValue
-        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.highValue))
-        TestDataGrid.Col = TestDataGridColumns.lowValue
-        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.lowValue))
-        TestDataGrid.Col = TestDataGridColumns.closeValue
-        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.closeValue))
+        TestDataGrid.Col = TestDataGridColumns.OpenValue
+        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.OpenValue))
+        TestDataGrid.Col = TestDataGridColumns.HighValue
+        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.HighValue))
+        TestDataGrid.Col = TestDataGridColumns.LowValue
+        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.LowValue))
+        TestDataGrid.Col = TestDataGridColumns.CloseValue
+        TestDataGrid.Text = CDbl(tokens(TestDataFileColumns.CloseValue))
         If tokens(TestDataFileColumns.Volume) <> "" Then
             TestDataGrid.Col = TestDataGridColumns.Volume
             TestDataGrid.Text = CLng(tokens(TestDataFileColumns.Volume))
@@ -952,7 +956,7 @@ Loop
 
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
-Chart1.SuppressDrawing = False
+Chart1.EnableDrawing
 
 analyzer.analyze
 MinimumPriceTickText = Format(analyzer.minimumDifference, "0.00000")
@@ -967,7 +971,7 @@ Exit Sub
 err:
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
-Chart1.SuppressDrawing = False
+Chart1.EnableDrawing
 
 Screen.MousePointer = MousePointerConstants.vbDefault
 
@@ -991,35 +995,35 @@ Dim lText As StudyText
 
 For i = 1 To studyConfig.StudyValueConfigurations.Count
     Set svc = studyConfig.StudyValueConfigurations.Item(i)
-    If svc.includeInChart Then
-        Set svd = studyConfig.study.StudyDefinition.StudyValueDefinitions.Item(svc.valueName)
-        when = "getting value for " & svc.valueName & " for bar " & row
-        lStudyValue = study.getStudyValue(svc.valueName, 0)
+    If svc.IncludeInChart Then
+        Set svd = studyConfig.study.StudyDefinition.StudyValueDefinitions.Item(svc.ValueName)
+        when = "getting value for " & svc.ValueName & " for bar " & row
+        lStudyValue = study.GetStudyValue(svc.ValueName, 0)
         
-        Select Case svd.valueMode
+        Select Case svd.ValueMode
         Case ValueModeNone
             TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = lStudyValue.value
         Case ValueModeLine
             Set lLine = lStudyValue.value
             If Not lLine Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
-                        "(" & lLine.point1.x & "," & lLine.point1.y & ")-" & _
-                        "(" & lLine.point2.x & "," & lLine.point2.y & ")"
+                        "(" & lLine.Point1.x & "," & lLine.Point1.y & ")-" & _
+                        "(" & lLine.Point2.x & "," & lLine.Point2.y & ")"
             End If
         Case ValueModeBar
             Set lBar = lStudyValue.value
             If Not lBar Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
-                        lBar.openValue & "," & _
-                        lBar.highValue & "," & _
-                        lBar.lowValue & "," & _
-                        lBar.closeValue
+                        lBar.OpenValue & "," & _
+                        lBar.HighValue & "," & _
+                        lBar.LowValue & "," & _
+                        lBar.CloseValue
             End If
         Case ValueModeText
             Set lText = lStudyValue.value
             If Not lText Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
-                        "(" & lText.position.x & "," & lText.position.y & ")," & _
+                        "(" & lText.Position.x & "," & lText.Position.y & ")," & _
                         """" & lText.Text & """"
             End If
         End Select
@@ -1052,40 +1056,40 @@ Private Sub setupInitialStudies()
 Dim studyConfig As StudyConfiguration
 
 Set mStudyManager = New StudyManager
-Set mChartManager = createChartManager(mStudyManager, Chart1.controller)
+Set mChartManager = CreateChartManager(mStudyManager, Chart1)
 
-initialiseChart mChartManager
+initialiseChart
 
-Set mSourceStudy = mStudyManager.addSource(IIf(TestDataFilenameText = "", _
+Set mSourceStudy = mStudyManager.AddSource(IIf(TestDataFilenameText = "", _
                                                 "Test data", _
                                                 TestDataFilenameText))
 
-mPriceInputHandle = mStudyManager.addInput(mSourceStudy, _
+mPriceInputHandle = mStudyManager.AddInput(mSourceStudy, _
                         InputValuePrice, _
                         "Price", _
                         InputTypeReal, _
                         True, _
                         MinimumPriceTickText)
-mChartManager.setInputRegion mPriceInputHandle, PriceRegionName
+mChartManager.SetInputRegion mPriceInputHandle, PriceRegionName
 
-mVolumeInputHandle = mStudyManager.addInput(mSourceStudy, _
+mVolumeInputHandle = mStudyManager.AddInput(mSourceStudy, _
                         InputValueVolume, _
                         "Volume", _
                         InputTypeInteger, _
                         False, _
                         1)
-mChartManager.setInputRegion mVolumeInputHandle, VolumeRegionName
+mChartManager.SetInputRegion mVolumeInputHandle, VolumeRegionName
 
 Set studyConfig = createBarsStudyConfig
-studyConfig.underlyingStudy = mSourceStudy
-Set mBarsStudy = mChartManager.addStudy(studyConfig)
-mChartManager.startStudy mBarsStudy
+studyConfig.UnderlyingStudy = mSourceStudy
+Set mBarsStudy = mStudyManager.AddStudy(studyConfig.Name, mSourceStudy, studyConfig.inputValueNames, studyConfig.Parameters, studyConfig.StudyLibraryName)
+studyConfig.study = mBarsStudy
+mChartManager.StartStudy mBarsStudy
 
+mChartManager.BaseStudyConfiguration = studyConfig
 
 Set mInitialStudyConfigs = New StudyConfigurations
-For Each studyConfig In mChartManager.StudyConfigurations
-    mInitialStudyConfigs.Add studyConfig
-Next
+mInitialStudyConfigs.Add mChartManager.BaseStudyConfiguration
 End Sub
 
 Private Sub setupStudyValueGridColumns( _
@@ -1100,8 +1104,8 @@ TestDataGrid.Cols = TestDataGridColumns.StudyValue1
 
 For i = 1 To studyConfig.StudyValueConfigurations.Count
     Set svc = studyConfig.StudyValueConfigurations.Item(i)
-    If svc.includeInChart Then
-        Set svd = studyConfig.study.StudyDefinition.StudyValueDefinitions.Item(svc.valueName)
+    If svc.IncludeInChart Then
+        Set svd = studyConfig.study.StudyDefinition.StudyValueDefinitions.Item(svc.ValueName)
         setupTestDataGridColumn TestDataGridColumns.StudyValue1 + j, _
                                 TestDataGridColumnWidths.StudyValue1Width, _
                                 svd.Name, _
@@ -1129,10 +1133,10 @@ With TestDataGrid
 End With
     
 setupTestDataGridColumn TestDataGridColumns.timestamp, TestDataGridColumnWidths.TimeStampWidth, "Timestamp", False, AlignmentSettings.flexAlignLeftCenter
-setupTestDataGridColumn TestDataGridColumns.openValue, TestDataGridColumnWidths.openValueWidth, "Open", False, AlignmentSettings.flexAlignRightCenter
-setupTestDataGridColumn TestDataGridColumns.highValue, TestDataGridColumnWidths.highValueWidth, "High", False, AlignmentSettings.flexAlignRightCenter
-setupTestDataGridColumn TestDataGridColumns.lowValue, TestDataGridColumnWidths.lowValueWidth, "Low", False, AlignmentSettings.flexAlignRightCenter
-setupTestDataGridColumn TestDataGridColumns.closeValue, TestDataGridColumnWidths.closeValueWidth, "Close", False, AlignmentSettings.flexAlignRightCenter
+setupTestDataGridColumn TestDataGridColumns.OpenValue, TestDataGridColumnWidths.openValueWidth, "Open", False, AlignmentSettings.flexAlignRightCenter
+setupTestDataGridColumn TestDataGridColumns.HighValue, TestDataGridColumnWidths.highValueWidth, "High", False, AlignmentSettings.flexAlignRightCenter
+setupTestDataGridColumn TestDataGridColumns.LowValue, TestDataGridColumnWidths.lowValueWidth, "Low", False, AlignmentSettings.flexAlignRightCenter
+setupTestDataGridColumn TestDataGridColumns.CloseValue, TestDataGridColumnWidths.closeValueWidth, "Close", False, AlignmentSettings.flexAlignRightCenter
 setupTestDataGridColumn TestDataGridColumns.Volume, TestDataGridColumnWidths.volumeWidth, "Volume", False, AlignmentSettings.flexAlignRightCenter
 
 setTestDataGridRowBackColors 1

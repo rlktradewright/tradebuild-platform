@@ -1,13 +1,13 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#166.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
-   ClientHeight    =   3630
+   ClientHeight    =   5895
    ClientLeft      =   375
    ClientTop       =   510
    ClientWidth     =   4335
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3630
+   ScaleHeight     =   5895
    ScaleWidth      =   4335
    Begin VB.CommandButton CentreButton 
       Caption         =   "Centre"
@@ -18,13 +18,13 @@ Begin VB.Form fMarketDepth
       Width           =   1215
    End
    Begin TradeBuildUI26.DOMDisplay DOMDisplay1 
-      Height          =   3255
+      Height          =   5520
       Left            =   0
       TabIndex        =   0
       Top             =   375
       Width           =   4335
       _ExtentX        =   7646
-      _ExtentY        =   5741
+      _ExtentY        =   9737
    End
 End
 Attribute VB_Name = "fMarketDepth"
@@ -128,10 +128,10 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_Notification(ev As NotificationEvent)
-If ev.eventCode = ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable Then
-    Unload Me
-End If
+Private Sub mTicker_MarketDepthNotAvailable(ByVal reason As String)
+gModelessMsgBox "Market depth is not available: " & reason, MsgBoxExclamation, "Attention"
+Unload Me
+
 End Sub
 
 '================================================================================
@@ -147,7 +147,7 @@ Set mTicker = value
 mCaption = "Market depth for " & _
             mTicker.Contract.specifier.localSymbol & _
             " on " & _
-            mTicker.Contract.specifier.Exchange
+            mTicker.Contract.specifier.exchange
 Me.caption = mCaption
 DOMDisplay1.Ticker = mTicker
 End Property

@@ -42,7 +42,7 @@ Public Enum BarChangeTypes
     BarPriceChanged
     BarVolumeChanged
     BarOpenInterestChanged
-    BarTickVolumeChanged    ' only fired when tickvolume is specifically incremented
+    BarTickVolumeChanged    ' only fired when TickVolume is specifically incremented
                             ' BarPriceChanged implicitly includes BarTickVolumeChanged
 End Enum
 
@@ -53,7 +53,7 @@ Public Enum BarTypes
 End Enum
 
 ''
-' These values identify different units for measuring elapsed time.
+' These values identify different Units for measuring elapsed time.
 '
 ' @param TimePeriodNone
 '   The unit is not specified.
@@ -72,14 +72,14 @@ End Enum
 ' @param TimePeriodYear
 '   The unit is in years.
 ' @param TimePeriodTickMovement
-'   The unit is a number of price ticks. The corresponding time is the
-'   period during which price moves in a range of the specified number of ticks.
+'   The unit is a number of price Ticks. The corresponding time is the
+'   period during which price moves in a range of the specified number of Ticks.
 ' @param TimePeriodTickVolume
-'   The unit is a trade tick. The corresponding time is the
-'   period during which accumulated tick volume increases by the specified number.
+'   The unit is a trade Tick. The corresponding time is the
+'   period during which accumulated Tick Volume increases by the specified number.
 ' @param TimePeriodVolume
 '   The unit is a contract or share traded. The corresponding time is the
-'   period during which accumulated volume increases by the specified number.
+'   period during which accumulated Volume increases by the specified number.
 '@/
 Public Enum TimePeriodUnits
     TimePeriodNone = 0
@@ -101,20 +101,20 @@ End Enum
 '@================================================================================
 
 'Public Type Bar
-'    timestamp       As Date
-'    openPrice       As Double
-'    highPrice       As Double
-'    lowPrice        As Double
-'    closePrice      As Double
-'    volume          As Long
-'    tickVolume      As Long
-'    openInterest    As Long
+'    Timestamp       As Date
+'    OpenPrice       As Double
+'    HighPrice       As Double
+'    LowPrice        As Double
+'    ClosePrice      As Double
+'    Volume          As Long
+'    TickVolume      As Long
+'    OpenInterest    As Long
 'End Type
 
 Public Type SValue
     value           As Variant
-    barNumber       As Long
-    timestamp       As Date
+    BarNumber       As Long
+    Timestamp       As Date
     BarStartTime    As Date
 End Type
 
@@ -125,7 +125,7 @@ End Type
 
 'Public Type TimePeriod
 '    length          As Long
-'    units           As TimePeriodUnits
+'    Units           As TimePeriodUnits
 'End Type
 
 '@================================================================================
@@ -153,112 +153,110 @@ End Type
 '@================================================================================
 
 Public Function BarEndTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod, _
-                Optional ByVal sessionStartTime As Date, _
-                Optional ByVal sessionEndTime As Date) As Date
-BarEndTime = gBarEndTime(timestamp, _
-                            barTimePeriod, _
-                            gNormaliseTime(sessionStartTime), _
-                            gNormaliseTime(sessionEndTime))
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod, _
+                Optional ByVal SessionStartTime As Date, _
+                Optional ByVal SessionEndTime As Date) As Date
+BarEndTime = gBarEndTime(Timestamp, _
+                            BarTimePeriod, _
+                            gNormaliseTime(SessionStartTime), _
+                            gNormaliseTime(SessionEndTime))
 End Function
 
-Public Function barLength( _
-                ByVal barTimePeriod As TimePeriod) As Date
-Select Case barTimePeriod.units
+Public Function BarLength( _
+                ByVal BarTimePeriod As TimePeriod) As Date
+Select Case BarTimePeriod.Units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
 Case TimePeriodDay
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "barLength", _
-            "Can't calculate bar length for this time unit"
+            ProjectName & "." & ModuleName & ":" & "BarLength", _
+            "Can't calculate Bar length for this time unit"
 End Select
-barLength = gCalcBarLength(barTimePeriod)
+BarLength = gCalcBarLength(BarTimePeriod)
 End Function
 
 Public Function BarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod, _
-                Optional ByVal sessionStartTime As Date) As Date
-BarStartTime = gBarStartTime(timestamp, _
-                            barTimePeriod, _
-                            gNormaliseTime(sessionStartTime))
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod, _
+                Optional ByVal SessionStartTime As Date) As Date
+BarStartTime = gBarStartTime(Timestamp, _
+                            BarTimePeriod, _
+                            gNormaliseTime(SessionStartTime))
 End Function
 
 Public Function CreateBar( _
-                ByVal timestamp As Date, _
-                ByVal openValue As Double, _
-                ByVal highValue As Double, _
-                ByVal lowValue As Double, _
-                ByVal closeValue As Double, _
-                Optional ByVal volume As Long, _
-                Optional ByVal tickVolume As Long, _
-                Optional ByVal openInterest As Long) As Bar
+                ByVal Timestamp As Date, _
+                ByVal OpenValue As Double, _
+                ByVal HighValue As Double, _
+                ByVal LowValue As Double, _
+                ByVal CloseValue As Double, _
+                Optional ByVal Volume As Long, _
+                Optional ByVal TickVolume As Long, _
+                Optional ByVal OpenInterest As Long) As Bar
 Set CreateBar = New Bar
-CreateBar.initialise timestamp, _
-                    openValue, _
-                    highValue, _
-                    lowValue, _
-                    closeValue, _
-                    volume, _
-                    tickVolume, _
-                    openInterest
+CreateBar.Initialise Timestamp, _
+                    OpenValue, _
+                    HighValue, _
+                    LowValue, _
+                    CloseValue, _
+                    Volume, _
+                    TickVolume, _
+                    OpenInterest
 End Function
 
 Public Function CreateBarsBuilder( _
-                ByVal barTimePeriod As TimePeriod, _
+                ByVal BarTimePeriod As TimePeriod, _
                 Optional ByVal pSession As Session, _
-                Optional ByVal tickSize As Double, _
+                Optional ByVal TickSize As Double, _
                 Optional ByVal numberOfBarsToCache As Long) As BarsBuilder
 Set CreateBarsBuilder = New BarsBuilder
-CreateBarsBuilder.initialise barTimePeriod, _
-                            pSession, tickSize, numberOfBarsToCache
+CreateBarsBuilder.Initialise BarTimePeriod, _
+                            pSession, TickSize, numberOfBarsToCache
 End Function
 
 Public Function GetTimePeriod( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits) As TimePeriod
+                ByVal Length As Long, _
+                ByVal Units As TimePeriodUnits) As TimePeriod
 
 Dim failpoint As Long
+
 On Error GoTo Err
 
-Set GetTimePeriod = gGetTimePeriod(length, units)
+Set GetTimePeriod = gGetTimePeriod(Length, Units)
 
 Exit Function
 
 Err:
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
-                            IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                            Err.Description
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
 Public Function CreateValueCache( _
-                ByVal cyclicSize As Long, _
-                ByVal valueName As String) As ValueCache
+                ByVal CyclicSize As Long, _
+                ByVal ValueName As String) As ValueCache
 Set CreateValueCache = New ValueCache
-CreateValueCache.initialise cyclicSize, valueName
+CreateValueCache.Initialise CyclicSize, ValueName
 End Function
 
 Public Function CreateVolumeParser( _
                 ByVal pSession As Session) As VolumeParser
 Set CreateVolumeParser = New VolumeParser
-CreateVolumeParser.initialise pSession
+CreateVolumeParser.Initialise pSession
 End Function
 
 Public Function GetSessionTimes( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 Optional ByVal startTime As Date, _
                 Optional ByVal endTime As Date) As SessionTimes
 Dim st As SessionTimes
-gCalcSessionTimes timestamp, _
+gCalcSessionTimes Timestamp, _
                             gNormaliseTime(startTime), _
                             gNormaliseTime(endTime), _
                             st.startTime, _
@@ -267,12 +265,12 @@ GetSessionTimes = st
 End Function
 
 Public Function GetOffsetSessionTimes( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal offset As Long, _
                 Optional ByVal startTime As Date, _
                 Optional ByVal endTime As Date) As SessionTimes
 Dim st As SessionTimes
-gCalcOffsetSessionTimes timestamp, _
+gCalcOffsetSessionTimes Timestamp, _
                             offset, _
                             gNormaliseTime(startTime), _
                             gNormaliseTime(endTime), _
@@ -289,48 +287,48 @@ End Function
 
 
 Public Function NumberOfBarsInSession( _
-                ByVal barTimePeriod As TimePeriod, _
-                ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date) As Long
-Select Case barTimePeriod.units
+                ByVal BarTimePeriod As TimePeriod, _
+                ByVal SessionStartTime As Date, _
+                ByVal SessionEndTime As Date) As Long
+Select Case BarTimePeriod.Units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "NumberOfBarsInSession", _
-            "Can't calculate number of bars in session for this time unit"
+            "Can't calculate number of Bars in session for this time unit"
 End Select
 
 NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
-                                                barTimePeriod, _
-                                                gNormaliseTime(sessionStartTime), _
-                                                gNormaliseTime(sessionEndTime))
+                                                BarTimePeriod, _
+                                                gNormaliseTime(SessionStartTime), _
+                                                gNormaliseTime(SessionEndTime))
 End Function
 
 Public Function OffsetBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barTimePeriod As TimePeriod, _
+                ByVal Timestamp As Date, _
+                ByVal BarTimePeriod As TimePeriod, _
                 ByVal offset As Long, _
-                Optional ByVal sessionStartTime As Date, _
-                Optional ByVal sessionEndTime As Date) As Date
-If barTimePeriod.units = TimePeriodNone Then
+                Optional ByVal SessionStartTime As Date, _
+                Optional ByVal SessionEndTime As Date) As Date
+If BarTimePeriod.Units = TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "OffsetBarStartTime", _
-            "Invalid time units argument"
+            "Invalid time Units argument"
 End If
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
-                                                timestamp, _
-                                                barTimePeriod, _
+                                                Timestamp, _
+                                                BarTimePeriod, _
                                                 offset, _
-                                                gNormaliseTime(sessionStartTime), _
-                                                gNormaliseTime(sessionEndTime))
+                                                gNormaliseTime(SessionStartTime), _
+                                                gNormaliseTime(SessionEndTime))
 End Function
 
 Public Function TimePeriodFromString( _
                 ByVal value As String) As TimePeriod
 Dim i As Long
-Dim length As Long
+Dim Length As Long
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -343,21 +341,21 @@ Do While IsNumeric(Mid$(value, i, 1))
 Loop
 
 If i = 1 Then
-    length = 1
+    Length = 1
 Else
-    length = CLng(Left$(value, i - 1))
+    Length = CLng(Left$(value, i - 1))
 End If
     
-Set TimePeriodFromString = gGetTimePeriod(length, _
+Set TimePeriodFromString = gGetTimePeriod(Length, _
                                         TimePeriodUnitsFromString(Trim$(Right$(value, Len(value) - i + 1))))
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TimePeriodFromString" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TimePeriodFromString" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 

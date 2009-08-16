@@ -92,11 +92,11 @@ X = mdp.X
 End Property
 
 Friend Property Let Y(ByVal value As Double)
-mdp.dataValue = value
+mdp.DataValue = value
 End Property
 
 Public Property Get Y() As Double
-Y = mdp.dataValue
+Y = mdp.DataValue
 End Property
 
 '@================================================================================
@@ -125,7 +125,7 @@ mStartX = X
 mStartY = Y
 End Sub
 
-Friend Sub undoMove()
+Friend Sub UndoMove()
 X = mStartX
 Y = mStartY
 End Sub

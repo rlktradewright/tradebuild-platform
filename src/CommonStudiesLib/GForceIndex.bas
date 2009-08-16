@@ -8,7 +8,10 @@ Option Explicit
 '@================================================================================
 
 Public Const FiInputPrice As String = "Price"
+Public Const FiInputPriceUcase As String = "PRICE"
+
 Public Const FiInputVolume As String = "Volume"
+Public Const FiInputVolumeUcase As String = "VOLUME"
 
 Public Const FiParamShortPeriods As String = "Short EMA periods"
 Public Const FiParamLongPeriods As String = "Long EMA periods"
@@ -75,6 +78,7 @@ If mStudyDefinition Is Nothing Then
                                     "force in the market"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(FiInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
@@ -93,20 +97,26 @@ If mStudyDefinition Is Nothing Then
 
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndex)
     valueDef.Description = "The Force Index value"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueStyle = gCreateDataPointStyle
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexShort)
     valueDef.Description = "The Force Index value smoothed by the short EMA"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexLong)
     valueDef.Description = "The Force Index value smoothed by the long EMA"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.valueType = ValueTypeReal
     
     

@@ -4,9 +4,9 @@ Begin VB.UserControl OrderTicket
    ClientHeight    =   6195
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   8730
+   ClientWidth     =   8790
    ScaleHeight     =   6195
-   ScaleWidth      =   8730
+   ScaleWidth      =   8790
    Begin VB.CheckBox SimulateOrdersCheck 
       Caption         =   "Simulate orders"
       Height          =   195
@@ -777,7 +777,7 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTicker                              As ticker
+Private WithEvents mTicker                              As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private WithEvents mOrderContext                        As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
@@ -815,7 +815,7 @@ setupActionCombo BracketIndexes.BracketTargetOrder
 End Sub
 
 Private Sub UserControl_Terminate()
-finish
+Finish
 End Sub
 
 '@================================================================================
@@ -1081,7 +1081,7 @@ If PriceText(index) = "" Then Exit Sub
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         PriceText(index) <> "" _
     ) Or _
-    Not mContract.parsePrice(PriceText(index), price) _
+    Not mContract.ParsePrice(PriceText(index), price) _
 Then
     Cancel = True
     Exit Sub
@@ -1112,7 +1112,7 @@ Then
     Exit Sub
 End If
 
-Select Case mContract.specifier.sectype
+Select Case mContract.specifier.secType
 Case SecTypeStock
     max = 100000
 Case SecTypeFuture
@@ -1168,9 +1168,9 @@ End Sub
 
 Private Sub SimulateOrdersCheck_Click()
 If SimulateOrdersCheck.value = vbUnchecked Then
-    Set mOrderContext = mTicker.defaultOrderContext
+    Set mOrderContext = mTicker.DefaultOrderContext
 Else
-    Set mOrderContext = mTicker.defaultOrderContextSimulated
+    Set mOrderContext = mTicker.DefaultOrderContextSimulated
 End If
 setupTicker
 End Sub
@@ -1183,7 +1183,7 @@ Dim price As Double
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         StopPriceText(index) <> "" _
     ) Or _
-    Not mTicker.parsePrice(StopPriceText(index), price) _
+    Not mTicker.ParsePrice(StopPriceText(index), price) _
 Then
     Cancel = True
     Exit Sub
@@ -1278,17 +1278,17 @@ UserControl.Enabled = value
 PropertyChanged "Enabled"
 End Property
 
-Public Property Let ticker(ByVal value As ticker)
+Public Property Let Ticker(ByVal value As Ticker)
 
 If value Is mTicker Then Exit Property
 
-If Not mTicker Is Nothing Then mTicker.removeQuoteListener Me
+If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
 
 Set mTicker = value
-If mTicker.ordersAreLive Then
-    Set mOrderContext = mTicker.defaultOrderContext
+If mTicker.OrdersAreLive Then
+    Set mOrderContext = mTicker.DefaultOrderContext
 Else
-    Set mOrderContext = mTicker.defaultOrderContextSimulated
+    Set mOrderContext = mTicker.DefaultOrderContextSimulated
 End If
 If mOrderContext.isReady Then
     setupTicker
@@ -1302,10 +1302,10 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub finish()
+Public Sub Finish()
 On Error GoTo Err
 If Not mTicker Is Nothing Then
-    mTicker.removeQuoteListener Me
+    mTicker.RemoveQuoteListener Me
     Set mTicker = Nothing
 End If
 clearOrderPlex
@@ -1325,7 +1325,7 @@ Dim targetOrder As Order
 clearOrderPlex
 
 Set mOrderPlex = value
-ticker = mOrderPlex.ticker
+Ticker = mOrderPlex.Ticker
 
 SimulateOrdersCheck.Enabled = False     ' can't allow the simulation mode to be changed
 
@@ -1403,7 +1403,7 @@ Private Sub clearOrderFields(ByVal index As Long)
 enableOrderFields index
 OrderIDText(index) = ""
 ActionCombo(index).ListIndex = 0
-Select Case mContract.specifier.sectype
+Select Case mContract.specifier.secType
 Case SecTypeStock
     QuantityText(index) = 100
 Case SecTypeFuture
@@ -1620,7 +1620,7 @@ field.Enabled = False
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.backColor = SystemColorConstants.vbButtonFace
+field.BackColor = SystemColorConstants.vbButtonFace
 End Sub
 
 Private Sub disableOrderFields(ByVal index As Long)
@@ -1655,7 +1655,7 @@ field.Enabled = True
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.backColor = SystemColorConstants.vbWindowBackground
+field.BackColor = SystemColorConstants.vbWindowBackground
 End Sub
 
 Private Sub enableOrderFields(ByVal index As Long)
@@ -1688,7 +1688,7 @@ End Sub
 Private Function getPrice( _
                 ByVal priceString As String) As Double
 Dim price As Double
-mContract.parsePrice priceString, price
+mContract.ParsePrice priceString, price
 getPrice = price
 End Function
 
@@ -1700,13 +1700,13 @@ End Function
 Private Function isPrice( _
                 ByVal priceString As String) As Boolean
 Dim price As Double
-isPrice = mContract.parsePrice(priceString, price)
+isPrice = mContract.ParsePrice(priceString, price)
 End Function
 
 Private Function isValidOrder( _
                 ByVal index As Long) As Boolean
 
-If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).backColor = vbButtonFace
+If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).BackColor = vbButtonFace
 
 If comboItemData(ActionCombo(index)) = OrderActions.ActionNone Then
     isValidOrder = True
@@ -1824,7 +1824,7 @@ clearOrderFields BracketIndexes.BracketEntryOrder
 clearOrderFields BracketIndexes.BracketStopOrder
 clearOrderFields BracketIndexes.BracketTargetOrder
 
-If mTicker.ordersAreLive Then
+If mTicker.OrdersAreLive Then
     SimulateOrdersCheck.Enabled = True
 Else
     SimulateOrdersCheck.value = vbChecked
@@ -1894,7 +1894,7 @@ Private Sub setInvalidControl( _
                 ByVal index As Long)
 Set mInvalidControls(index) = pControl
 If BracketTabStrip.Visible Then BracketTabStrip.Tabs(index + 1).Selected = True
-pControl.backColor = ErroredFieldColor
+pControl.BackColor = ErroredFieldColor
 End Sub
 
 '/**
@@ -2123,7 +2123,7 @@ If IsNumeric(OffsetText(index)) Then
     offset = OffsetText(index) * mContract.tickSize
 End If
 
-PriceText(index) = mTicker.formatPrice(basePrice + offset)
+PriceText(index) = mTicker.FormatPrice(basePrice + offset)
 End Sub
 
 Private Sub setPriceFields()
@@ -2133,7 +2133,7 @@ setPriceField BracketIndexes.BracketTargetOrder
 End Sub
 
 Private Sub setupActionCombo(ByVal index As Long)
-ActionCombo(index).clear
+ActionCombo(index).Clear
 If index <> BracketIndexes.BracketEntryOrder Then
     addItemToCombo ActionCombo(index), _
                 OrderActionToString(OrderActions.ActionNone), _
@@ -2148,7 +2148,7 @@ addItemToCombo ActionCombo(index), _
 End Sub
 
 Private Sub setupOrderSchemeCombo()
-OrderSchemeCombo.clear
+OrderSchemeCombo.Clear
 addItemToCombo OrderSchemeCombo, _
             "Bracket order", _
             OrderSchemes.Bracketorder
@@ -2185,8 +2185,8 @@ setupTypeCombo BracketIndexes.BracketTargetOrder
 
 reset
 
-mTicker.removeQuoteListener Me
-mTicker.addQuoteListener Me
+mTicker.RemoveQuoteListener Me
+mTicker.AddQuoteListener Me
 showTickerValues
 
 If mOrderContext.IsSimulated Then
@@ -2202,7 +2202,7 @@ Dim permittedTifs As Long
 
 permittedTifs = mOrderContext.permittedOrderTifs
 
-TIFCombo(index).clear
+TIFCombo(index).Clear
 
 If permittedTifs And OrderTifs.TIFDay Then
     addItemToCombo TIFCombo(index), _
@@ -2228,7 +2228,7 @@ Dim permittedTriggers As Long
 
 permittedTriggers = mOrderContext.permittedStopTriggerMethods
 
-TriggerMethodCombo(index).clear
+TriggerMethodCombo(index).Clear
 
 If permittedTriggers And StopTriggerMethods.StopTriggerDefault Then
     addItemToCombo TriggerMethodCombo(index), _
@@ -2274,7 +2274,7 @@ Dim permittedOrderTypes As Long
 
 permittedOrderTypes = mOrderContext.permittedOrderTypes
 
-TypeCombo(index).clear
+TypeCombo(index).Clear
 
 If index = BracketIndexes.BracketEntryOrder Then
     If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
@@ -2408,7 +2408,7 @@ End Sub
 
 Private Sub showOrderFields(ByVal index As Long)
 Dim i As Long
-For i = 0 To ActionCombo.count - 1
+For i = 0 To ActionCombo.Count - 1
     If i = index Then
         OrderIDText(i).Visible = True
         ActionCombo(i).Visible = True
@@ -2471,12 +2471,12 @@ Private Sub showTickerValues()
 AskText.Text = mTicker.AskPriceString
 AskSizeText.Text = mTicker.AskSize
 BidText.Text = mTicker.BidPriceString
-BidSizeText.Text = mTicker.bidSize
+BidSizeText.Text = mTicker.BidSize
 LastText.Text = mTicker.TradePriceString
 LastSizeText.Text = mTicker.TradeSize
-VolumeText.Text = mTicker.volume
-HighText.Text = mTicker.highPriceString
-LowText.Text = mTicker.lowPriceString
+VolumeText.Text = mTicker.Volume
+HighText.Text = mTicker.HighPriceString
+LowText.Text = mTicker.LowPriceString
 setPriceFields
 End Sub
 

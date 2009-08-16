@@ -70,6 +70,11 @@ Option Explicit
 ' Methods
 '@================================================================================
 
+Public Sub MarketDepthNotAvailable( _
+                ByVal reason As String)
+                
+End Sub
+
 Public Sub resetMarketDepth( _
                 ByRef ev As MarketDepthEvent)
                 

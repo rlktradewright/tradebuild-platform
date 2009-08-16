@@ -67,12 +67,12 @@ End Sub
 '@================================================================================
 
 'Private Function IStudyValueDefinitions_Add( _
-'                ByVal valueName As String) As StudyValueDefinition
-'Set IStudyValueDefinitions_Add = add(valueName)
+'                ByVal ValueName As String) As StudyValueDefinition
+'Set IStudyValueDefinitions_Add = Add(ValueName)
 'End Function
 '
 'Private Property Get IStudyValueDefinitions_Count() As Long
-'IStudyValueDefinitions_Count = count
+'IStudyValueDefinitions_Count = Count
 'End Property
 '
 'Private Function IStudyValueDefinitions_Item( _
@@ -92,21 +92,21 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get count() As Long
-count = mStudyValueDefinitions.count
+Public Property Get Count() As Long
+Count = mStudyValueDefinitions.Count
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function add( _
-                ByVal valueName As String) As StudyValueDefinition
-Set add = New StudyValueDefinition
-add.name = valueName
-add.valueMode = ValueModeNone
-add.valueType = ValueTypeReal
-mStudyValueDefinitions.add add, valueName
+Public Function Add( _
+                ByVal ValueName As String) As StudyValueDefinition
+Set Add = New StudyValueDefinition
+Add.Name = ValueName
+Add.valueMode = ValueModeNone
+Add.valueType = ValueTypeReal
+mStudyValueDefinitions.Add Add, ValueName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyValueDefinition

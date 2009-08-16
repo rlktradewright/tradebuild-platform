@@ -50,9 +50,9 @@ Private mServiceProviderError           As ServiceProviderError
 Private mServiceProviders               As ServiceProviders
 
 Private mWorkSpaces                     As WorkSpaces
-Private mDefaultWorkSpace               As WorkSpace
+Private mDefaultWorkSpace               As Workspace
 Private mTickers                        As Tickers
-Private mExecutions                     As executions
+Private mExecutions                     As Executions
 
 Private WithEvents mClosePositionsTC    As TaskController
 Attribute mClosePositionsTC.VB_VarHelpID = -1
@@ -67,12 +67,7 @@ InitialiseTWUtilities
 
 Set mServiceProviders = New ServiceProviders
 
-Set mWorkSpaces = New WorkSpaces
-
-Set mDefaultWorkSpace = mWorkSpaces.add("$default")
-Set mTickers = defaultWorkSpace.Tickers
-Set mExecutions = defaultWorkSpace.executions
-
+initialise
 End Sub
 
 Private Sub Class_Terminate()
@@ -100,12 +95,12 @@ Public Property Get ClosingPositions() As Boolean
 ClosingPositions = Not (mClosePositionsTC Is Nothing)
 End Property
 
-Public Property Get defaultWorkSpace() As WorkSpace
+Public Property Get defaultWorkSpace() As Workspace
 Set defaultWorkSpace = mDefaultWorkSpace
 End Property
 
-Public Property Get executions() As executions
-Set executions = mExecutions
+Public Property Get Executions() As Executions
+Set Executions = mExecutions
 End Property
 
 Public Property Let PermittedServiceProviderRoles( _
@@ -113,7 +108,7 @@ Public Property Let PermittedServiceProviderRoles( _
 If mServiceProviders.IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
-            "Service providers are already configured"
+            "Service providers are alReady configured"
 End If
 
 mServiceProviders.PermittedServiceProviderRoles = value
@@ -154,16 +149,28 @@ End Property
 Public Function CloseAllPositions( _
                 Optional ByVal types As PositionTypes = PositionTypeAll, _
                 Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mClosePositionsTC Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "CloseAllPositions", _
-            "Positions are already being closed"
+            "Positions are alReady being closed"
 End If
 
 Dim t As New ClosePositionsTask
 t.initialise types, flags
 Set mClosePositionsTC = StartTask(t, PriorityHigh)
 Set CloseAllPositions = mClosePositionsTC
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CloseAllPositions" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Sub ConfigureDefaults( _
@@ -173,6 +180,9 @@ Public Sub ConfigureDefaults( _
                 Optional ByVal connectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal twsLogLevel As String = "ERROR", _
                 Optional ByVal tickfilesPath As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
                                                     twsPort, _
                                                     clientId, _
@@ -181,6 +191,15 @@ mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
                                                     tickfilesPath
 
 AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ConfigureDefaults" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -199,7 +218,7 @@ Dim tfs As TickfileSpecifier
 Dim i As Long
 Dim lContract As Contract
 Dim lSessionBuilder As SessionBuilder
-Dim lSession As session
+Dim lSession As Session
 Dim fromSessionTimes As SessionTimes
 Dim toSessionTimes As SessionTimes
 
@@ -211,20 +230,23 @@ Dim aContract As Contract
 Dim FromDate As Date
 Dim ToDate As Date
 
-' the from and to dates, session-oriented if required
+' the from and to dates, Session-oriented if required
 Dim replayFromDate As Date
 Dim replayToDate As Date
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If (customSessionStartTime = 0 And customSessionEndTime <> 0) Or _
     (customSessionStartTime <> 0 And customSessionEndTime = 0) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
-            "session start and end times must be either both supplied or both omitted"
+            "Session start and end times must be either both supplied or both omitted"
     
 If customSessionStartTime <> 0 Then useCustomSessionTimes = True
 
 ' get the most recent contract (though they should all have the same
-' info regarding session times)
+' info regarding Session times)
 Set lContract = pContracts(pContracts.Count)
 
 If useExchangeTimezone Then
@@ -238,7 +260,7 @@ End If
 ' determine start and end times ---------------------------------------------------
 
 Set lSessionBuilder = New SessionBuilder
-Set lSession = lSessionBuilder.session
+Set lSession = lSessionBuilder.Session
 
 ' note that the custom times are in the contract's timezone
 If useCustomSessionTimes Then
@@ -249,7 +271,7 @@ Else
     lSessionBuilder.sessionEndTime = lContract.sessionEndTime
 End If
 
-' set the session start and end times for the starting date (in the contract's
+' set the Session start and end times for the starting date (in the contract's
 ' local timezone)...
 fromSessionTimes = lSession.GetSessionTimes(FromDate)
 If completeSessionsOnly Then
@@ -259,7 +281,7 @@ Else
 End If
 
 If ToDate <> 0 Then
-    ' set the session start and end times for the ending date (in the contract's
+    ' set the Session start and end times for the ending date (in the contract's
     ' local timezone)...
     toSessionTimes = lSession.GetSessionTimes(ToDate)
     
@@ -315,7 +337,7 @@ currSessionStart = FromDate
 If completeSessionsOnly Then
     Do While currSessionStart < replayToDate
         Set tfs = New TickfileSpecifier
-        lTickfileSpecifiers.add tfs
+        lTickfileSpecifiers.Add tfs
         tfs.Contract = currContract
         tfs.TickfileFormatID = TickfileFormatID
         
@@ -324,18 +346,18 @@ If completeSessionsOnly Then
             tfs.FromDate = thisSessionTimes.StartTime
             tfs.ToDate = thisSessionTimes.endTime
             tfs.EntireSession = False
-            tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
+            tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                         "-" & _
                                         FormatDateTime(tfs.ToDate, vbGeneralDate) & _
                                         " " & _
-                                        Replace(currContract.specifier.toString, vbCrLf, "; ")
+                                        Replace(currContract.specifier.ToString, vbCrLf, "; ")
         Else
             tfs.FromDate = currSessionStart
             tfs.EntireSession = True
-            tfs.filename = "Session " & _
+            tfs.Filename = "Session " & _
                             FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
                             " " & _
-                            Replace(currContract.specifier.toString, vbCrLf, "; ")
+                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
             
         End If
         
@@ -379,7 +401,7 @@ If completeSessionsOnly Then
     End If
 Else
     Set tfs = New TickfileSpecifier
-    lTickfileSpecifiers.add tfs
+    lTickfileSpecifiers.Add tfs
     tfs.Contract = currContract
     tfs.TickfileFormatID = TickfileFormatID
 
@@ -400,15 +422,15 @@ Else
                         (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
                         tfs.ToDate = currSessionStart
-                        tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
+                        tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                                     "-" & _
                                                     FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                                    Replace(currContract.specifier.toString, vbCrLf, "; ")
+                                                    Replace(currContract.specifier.ToString, vbCrLf, "; ")
                         
                         Set currContract = aContract
                         
                         Set tfs = New TickfileSpecifier
-                        lTickfileSpecifiers.add tfs
+                        lTickfileSpecifiers.Add tfs
                         
                         tfs.Contract = currContract
                         tfs.TickfileFormatID = TickfileFormatID
@@ -430,14 +452,23 @@ Else
     Loop
         
     tfs.ToDate = replayToDate
-    tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
+    tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                 "-" & _
                                 FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                Replace(currContract.specifier.toString, vbCrLf, "; ")
+                                Replace(currContract.specifier.ToString, vbCrLf, "; ")
 
 End If
 
 Set GenerateTickfileSpecifiers = lTickfileSpecifiers
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
@@ -446,18 +477,48 @@ Set GetServiceProviderError = mServiceProviderError
 'Set mServiceProviderError = Nothing
 End Function
 
+Friend Sub initialise()
+Set mWorkSpaces = New WorkSpaces
+
+Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
+Set mTickers = defaultWorkSpace.Tickers
+Set mExecutions = defaultWorkSpace.Executions
+
+End Sub
+
 Public Function IsSupportedHistoricalDataPeriod( _
                 ByVal period As TimePeriod) As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IsSupportedHistoricalDataPeriod" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Function loadContracts( _
-                ByVal pContractSpec As contractSpecifier) As Contracts
-Dim lContractsBuilder As ContractsBuilder
-Set lContractsBuilder = CreateContractsBuilder(pContractSpec)
-Set loadContracts = lContractsBuilder.Contracts
-gLogLogger.Log LogLevelDetail, "Deferring contract load for " & pContractSpec.toString
-DeferAction New ContractLoadAction, lContractsBuilder
+                ByVal pContractSpec As contractSpecifier) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
+gLogLogger.Log LogLevelDetail, "Starting contract load task for " & pContractSpec.ToString
+Set loadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "loadContracts" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
@@ -474,8 +535,10 @@ Dim ev As ErrorEvent
 
 On Error Resume Next
 
-gLogLogger.Log LogLevelSevere, "Fatal error " & errorCode & ": " & _
-                                errorMessage & "( occurred in " & source & ")"
+gErrorLogger.Log LogLevelSevere, "Fatal error " & errorCode & vbCrLf & _
+                                errorMessage & vbCrLf & _
+                                "Occurred at:" & vbCrLf & _
+                                source
 
 ' kill all the service providers
 mServiceProviders.RemoveAll
@@ -486,7 +549,9 @@ mServiceProviders.RemoveAll
 
 Set ev.source = Me
 ev.errorCode = errorCode
-ev.errorMessage = errorMessage & "( occurred in " & source & ")"
+ev.errorMessage = errorMessage & vbCrLf & _
+                "Occurred at:" & vbCrLf & _
+                source
 Do
     ' do this in a loop because we can't go anywhere else!
     RaiseEvent Error(ev)
@@ -561,13 +626,24 @@ Set mServiceProviderError = New ServiceProviderError
 mServiceProviderError.errorCode = errorCode
 mServiceProviderError.message = errorMessage
 mServiceProviderError.serviceProviderName = serviceProviderName
-mServiceProviderError.timestamp = GetTimestamp
+mServiceProviderError.Timestamp = GetTimestamp
 
 Set ev.source = Me
 ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
 ev.eventMessage = "A Service Provider error has occurred"
 notify ev
                     
+End Sub
+
+Public Sub StopAllTickers()
+Dim ws As Workspace
+Dim t As Ticker
+
+For Each ws In mWorkSpaces
+    For Each t In ws.Tickers
+        t.StopTicker
+    Next
+Next
 End Sub
 
 '@================================================================================

@@ -207,7 +207,7 @@ End Property
 Private Sub mFetchTicksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
                                                 ev.errorMessage, _
                                                 mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
@@ -229,7 +229,7 @@ Private Sub mLoadContractsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
                                                 ev.errorMessage, _
                                                 mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
@@ -354,7 +354,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, _
+mCommonServiceConsumer.NotifyFatalError Number, _
                                 Source, _
                                 Description, _
                                 mTickfileServiceProvider.handle

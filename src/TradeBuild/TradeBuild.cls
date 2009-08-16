@@ -47,28 +47,34 @@ Public Enum ApiNotifyCodes
     ApiNotifyTickfileInvalid   ' Not a valid tickfile format
     ApiNotifyTickfileVersionNotSupported
                             ' The version of tickfile is not supported
-    ApiNotifyContractDetailsInvalid  ' The tickfile contains contract details from
+    ApiNotifyTickfileContractDetailsInvalid  ' The tickfile contains contract details from
                             ' an old version of Contract class
-    ApiNotifyNoContractDetails ' The tickfile contains no contract details
+    ApiNotifyTickfileNoContractDetails ' The tickfile contains no contract details
                             ' (eg an eSignal tickfile) and no contract
                             ' has been specified in the contract property
     ApiNotifyTickfileDataSourceNotResponding
+    ApiNotifyTickfileDoesntExist
+    ApiNOtifyTickfileFormatNotSupported
+    ApiNotifyTickfileContractSpecifierInvalid
+    
     ApiNotifyCantWriteToTickfileDataStore
     ApiNotifyRetryingConnectionToTickfileDataSource
     ApiNotifyConnectedToTickfileDataSource
+    ApiNotifyReconnectingToTickfileDataSource
+    ApiNotifyLostConnectionToTickfileDataSource
     
     ApiNotifyNoHistoricDataSource
     ApiNotifyCantConnectHistoricDataSource
     ApiNotifyConnectedToHistoricDataSource
+    ApiNotifyDisconnectedFromHistoricDataSource
     ApiNotifyRetryingConnectionToHistoricDataSource
+    ApiNotifyLostConnectionToHistoricDataSource
+    ApiNotifyReconnectingToHistoricDataSource
+    ApiNotifyHistoricDataRequestFailed
     
-    ApiNotifyContractSpecifierAmbiguous
-    ApiNotifyContractSpecifierInvalid
-    
-    ApiNotifyMarketDepthNotAvailable
+'    ApiNotifyMarketDepthNotAvailable
     
     ApiNotifyInvalidRequest
-    ApiNotifyFatalError           ' a fatal error has occurred within TradeBuild
     
     ApiNotifyCantConnectRealtimeDataSource
     ApiNotifyConnectedToRealtimeDataSource
@@ -77,27 +83,28 @@ Public Enum ApiNotifyCodes
     ApiNotifyReconnectingToRealtimeDataSource
     ApiNotifyDisconnectedFromRealtimeDataSource
     ApiNotifyRealtimeDataRequestFailed
+    ApiNotifyRealtimeDataSourceNotResponding
     
     ApiNotifyCantConnectToBroker
     ApiNotifyConnectedToBroker
     ApiNotifyRetryConnectToBroker
     ApiNotifyLostConnectionToBroker
     ApiNotifyReConnectingToBroker
-    ApiNotifyInvalidOrder
-    ApiNotifyInsufficientFunds
     ApiNotifyDisconnectedFromBroker
     
     ApiNotifyNonSpecificNotification
     
-    ApiNotifyContractExpired
-    
-    ApiNOtifyTickfileFormatNotSupported
-    
-    ApiNotifyContractDoesNotExist
-    
     ApiNotifyCantWriteToHistoricDataStore
     
     ApiNotifyTryLater
+    
+    ApiNotifyCantConnectContractDataSource
+    ApiNotifyConnectedToContractDataSource
+    ApiNotifyDisconnectedFromContractDataSource
+    ApiNotifyLostConnectionToContractDataSource
+    ApiNotifyReConnectingContractDataSource
+    ApiNotifyRetryConnectContractDataSource
+    
 End Enum
 
 Public Enum BulletinTypes
@@ -355,30 +362,30 @@ End Enum
 ' Members of this enum govern the operation of a <code>Ticker</code> object.
 '
 ' @param TickerOptOrdersAreLive
-'   Orders placed via this ticker are to be passed to the live order submission
+'   Orders placed via this Ticker are to be passed to the live order submission
 '   service provider (if one has been configured).
 ' @param TickerOptUseExchangeTimeZone
-'   Timestamps for ticks received via this ticker are to be expressed in the
+'   Timestamps for ticks received via this Ticker are to be expressed in the
 '   timezone of the relevant exchange, rather than the computer&39;s local
 '   timezone. Note that this only has effect when the contract service provider
 '   supplies exchange timezone information (the IB contract service provider does not).
 ' @param TickerOptWriteTickData
-'   Indicates that tick data for this ticker (excluding market depth data) is to
+'   Indicates that tick data for this Ticker (excluding market depth data) is to
 '   be written to a tickfile. Note that the nature of this tickfile is governed by
 '   the currently configured Tickfile Service Provider.
 ' @param TickerOptWriteTradeBarData
-'   Indicates that bar data for trades notified via this ticker is to
+'   Indicates that bar data for trades notified via this Ticker is to
 '   be written to a historical data store. Note that the nature of this data store, and
 '   the timeframes of the bars recorded, is governed by the currently configured
 '   Historical Data Service Provider.
 ' @param TickerOptWriteBidAndAskBarData
-'   Indicates that bar data for bids and asks notified via this ticker is to
+'   Indicates that bar data for bids and asks notified via this Ticker is to
 '   be written to a historical data store. Note that the nature of this data store, and
 '   the timeframes of the bars recorded, is governed by the currently configured
 '   Historical Data Service Provider.
 ' @param TickerOptUpdateLatestBar
 '   Indicates that where the latest bar written to the historical data store is still
-'   open (ie the end of the bar has not yet been reached), then the data from this ticker
+'   open (ie the end of the bar has not yet been reached), then the data from this Ticker
 '   is to be used to update that bar. If not set, the previously recorded data for that bar
 '   is overwritten. This value is ignored if <code>TickerOptWriteTradeBarData</code> and
 '   <code>TickerOptWriteBidAndAskBarData</code> are not set.
@@ -386,16 +393,16 @@ End Enum
 '   Indicates that market depth data is to be included in the tickfile. This value is
 '   ignored if <code>TickerOptWriteTickData</code> is not set.
 ' @param TickerOptNoImpliedTrades
-'   If set, the ticker does not attempt to deduce the existence of unreported trades
-'   which may be indicated by the ticker data received from the data source. For example,
-'   if volume is incremented by an amount equal to the last reported trade, but no
-'   trade is reported, then an implied trade exists - setting this option prevents
-'   that implied trade being notified.
+'   If set, the Ticker does not attempt to deduce the existence of unreported trades
+'   which may be indicated by the Ticker data received from the data source. For example,
+'   if Volume is incremented by an amount equal to the last reported Trade, but no
+'   Trade is reported, then an implied Trade exists - setting this option prevents
+'   that implied Trade being notified.
 ' @param TickerOptNoVolumeAdjustments
-'   If set, the ticker reports all volume ticks exactly as received from the data source.
-'   Otherwise, the ticker may adjust volume figures to ensure that volume notified by the
-'   ticker is always increasing (this adjustment is to eliminate the backward movement in
-'   total volume that occurs sometimes with some data sources).
+'   If set, the Ticker reports all Volume ticks exactly as received from the data source.
+'   Otherwise, the Ticker may adjust Volume figures to ensure that Volume notified by the
+'   Ticker is always increasing (this adjustment is to eliminate the backward movement in
+'   total Volume that occurs sometimes with some data sources).
 '@/
 Public Enum TickerOptions
     TickerOptOrdersAreLive = 1
@@ -428,6 +435,7 @@ Public Enum TimeframeStates
     TimeframeStateCreated
     TimeframeStateLoading
     TimeframeStateLoaded
+    TimeframeStateFinished
 End Enum
 
 Public Enum ValueChanges
@@ -484,8 +492,10 @@ Public Type QuoteEvent
     price           As Double
     priceString     As String
     size            As Long
-    priceChange     As ValueChanges
+    PriceChange     As ValueChanges
     sizeChange      As ValueChanges
+    recentPriceChange     As ValueChanges   ' if PriceChange = ValueChangeNone
+    recentSizeChange      As ValueChanges   ' if sizeChange = ValueChangeNone
 End Type
 
 Public Type RawMarketDepthEvent
@@ -499,7 +509,7 @@ Public Type RawMarketDepthEvent
 End Type
 
 'Public Type Tick
-'    timestamp       As Date
+'    Timestamp       As Date
 '    TickType        As TickTypes
 '    TickPrice       As Double
 '    TickSize        As Long

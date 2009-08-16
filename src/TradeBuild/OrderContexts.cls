@@ -154,27 +154,27 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add(ByVal name As String) As OrderContext
-Set add = New OrderContext
-add.Ticker = mTicker
-add.PositionManager = mPositionManager
-add.orderSubmitter = mOrderSubmitter
-add.IsSimulated = mIsSimulated
-add.name = name
-mOrderContexts.add add, name
-fireChange CollItemAdded, add
-add.enabled = mEnabled
-add.isReady = mProviderReady
+Public Function Add(ByVal name As String) As OrderContext
+Set Add = New OrderContext
+Add.Ticker = mTicker
+Add.PositionManager = mPositionManager
+Add.orderSubmitter = mOrderSubmitter
+Add.IsSimulated = mIsSimulated
+Add.name = name
+mOrderContexts.Add Add, name
+fireChange CollItemAdded, Add
+Add.enabled = mEnabled
+Add.isReady = mProviderReady
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim lOrderContext As OrderContext
 Dim ev As CollectionChangeEvent
 
-mChangeListeners.add value
+mChangeListeners.Add value
 
-' notify any existing items
+' notify any existing Items
 Set ev.source = Me
 ev.changeType = CollItemAdded
 For Each lOrderContext In mOrderContexts
@@ -196,9 +196,9 @@ For Each OrderContext In mOrderContexts
 Next
 End Sub
 
-Public Function item(index As Variant) As OrderContext
-Attribute item.VB_UserMemId = 0
-Set item = mOrderContexts(index)
+Public Function Item(index As Variant) As OrderContext
+Attribute Item.VB_UserMemId = 0
+Set Item = mOrderContexts(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -207,16 +207,16 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mOrderContexts.[_NewEnum]
 End Function
 
-Public Sub remove( _
+Public Sub Remove( _
                 ByVal pOrderContext As OrderContext)
-mOrderContexts.remove pOrderContext.name
+mOrderContexts.Remove pOrderContext.name
 fireChange CollItemRemoved, pOrderContext
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 

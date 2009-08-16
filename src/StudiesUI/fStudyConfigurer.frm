@@ -14,8 +14,8 @@ Begin VB.Form fStudyConfigurer
       Left            =   120
       TabIndex        =   3
       Top             =   120
-      Width           =   12135
-      _ExtentX        =   21405
+      Width           =   12255
+      _ExtentX        =   21616
       _ExtentY        =   9975
    End
    Begin VB.CommandButton AddButton 
@@ -27,6 +27,7 @@ Begin VB.Form fStudyConfigurer
       Width           =   1095
    End
    Begin VB.CommandButton CancelButton 
+      Cancel          =   -1  'True
       Caption         =   "Cancel"
       Height          =   615
       Left            =   12360
@@ -65,13 +66,15 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event Cancelled()
-Event SetDefault(ByVal studyConfig As studyConfiguration)
-Event AddStudyConfiguration(ByVal studyConfig As studyConfiguration)
+'Event Cancelled()
+'Event SetDefault(ByVal studyConfig As studyConfiguration)
+'Event AddStudyConfiguration(ByVal studyConfig As studyConfiguration)
 
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ModuleName                As String = "fStudyConfigurer"
 
 '@================================================================================
 ' Enums
@@ -84,6 +87,9 @@ Event AddStudyConfiguration(ByVal studyConfig As studyConfiguration)
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mCancelled                              As Boolean
+Private mStudyConfig                            As StudyConfiguration
 
 '@================================================================================
 ' Form Event Handlers
@@ -103,17 +109,18 @@ End Sub
 '@================================================================================
 
 Private Sub AddButton_Click()
-RaiseEvent AddStudyConfiguration(StudyConfigurer1.studyConfiguration)
-Unload Me
+mCancelled = False
+Set mStudyConfig = StudyConfigurer1.StudyConfiguration
+Me.Hide
 End Sub
 
 Private Sub CancelButton_Click()
-RaiseEvent Cancelled
-Unload Me
+mCancelled = True
+Me.Hide
 End Sub
 
 Private Sub SetDefaultButton_Click()
-RaiseEvent SetDefault(StudyConfigurer1.studyConfiguration)
+SetDefaultStudyConfiguration StudyConfigurer1.StudyConfiguration
 End Sub
 
 '@================================================================================
@@ -124,29 +131,48 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get Cancelled() As Boolean
+Cancelled = mCancelled
+End Property
+
+Public Property Get StudyConfiguration() As StudyConfiguration
+If mCancelled Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "StudyConfiguration", _
+            "Study configuration was cancelled by the user"
+End If
+
+Set StudyConfiguration = mStudyConfig
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal controller As chartController, _
+Friend Sub Initialise( _
+                ByVal pChart As ChartController, _
                 ByVal studyDef As StudyDefinition, _
                 ByVal StudyLibraryName As String, _
                 ByRef regionNames() As String, _
-                ByVal configuredStudies As StudyConfigurations, _
-                ByVal defaultConfiguration As studyConfiguration, _
-                ByVal defaultParameters As Parameters)
+                ByRef baseStudyConfig As StudyConfiguration, _
+                ByVal defaultConfiguration As StudyConfiguration, _
+                ByVal defaultParameters As Parameters, _
+                ByVal noParameterModification As Boolean)
                 
+Set mStudyConfig = Nothing
+mCancelled = False
+
 Me.Caption = studyDef.name
 
-StudyConfigurer1.initialise _
-                controller, _
+StudyConfigurer1.Initialise _
+                pChart, _
                 studyDef, _
                 StudyLibraryName, _
                 regionNames, _
-                configuredStudies, _
+                baseStudyConfig, _
                 defaultConfiguration, _
-                defaultParameters
+                defaultParameters, _
+                noParameterModification
 End Sub
 
 '@================================================================================

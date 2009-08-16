@@ -77,31 +77,31 @@ Public Property Get Count() As Long
 Count = mExecutions.Count
 End Property
 
-Public Property Get item(ByVal key As String) As Execution
-Set item = mExecutions.item(key)
+Public Property Get Item(ByVal key As String) As Execution
+Set Item = mExecutions.Item(key)
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub add(pExecution As Execution)
-mExecutions.add pExecution, pExecution.execId
+Friend Sub Add(pExecution As Execution)
+mExecutions.Add pExecution, pExecution.execId
 fireChange CollItemAdded, pExecution
 End Sub
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
-Friend Sub change(pExecution As Execution)
+Friend Sub Change(pExecution As Execution)
 Dim exec As Execution
-Set exec = mExecutions.item(pExecution.execId)
+Set exec = mExecutions.Item(pExecution.execId)
 If Not exec Is pExecution Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "change", _
-            "Changed item is not a member of the collection"
+            "Changed Item is not a member of the collection"
 End If
 fireChange CollItemChanged, pExecution
 End Sub
@@ -112,10 +112,10 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mExecutions.[_NewEnum]
 End Function
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 
@@ -132,7 +132,7 @@ Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
 For Each listener In mChangeListeners
-    listener.change ev
+    listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
 End Sub

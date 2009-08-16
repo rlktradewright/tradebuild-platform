@@ -38,6 +38,17 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ConfigSectionParameters                           As String = "Parameters"
+Private Const ConfigSectionStudyConfigs                         As String = "StudyConfigs"
+Private Const ConfigSectionStudyValueConfigurations             As String = "StudyValueConfigurations"
+Private Const ConfigSectionStudyHorizontalRules                 As String = "StudyHorizontalRules"
+
+Private Const ConfigSettingName                                 As String = ".Name"
+Private Const ConfigSettingStudyLibraryName                     As String = ".StudyLibraryName"
+Private Const ConfigSettingInstanceFullyQualifiedName           As String = ".InstanceFullyQualifiedName"
+Private Const ConfigSettingInputValueNames                      As String = ".InputValueNames"
+Private Const ConfigSettingChartRegionName                      As String = ".ChartRegionName"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -50,21 +61,26 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-'Private mStudyDefinition As studyDefinition
-Private mParameters                         As parameters
-Private mStudyValueConfigurations           As studyValueConfigurations
-Private mStudyValueHandlers                 As studyValueHandlers
-Private mStudyHorizontalRules               As studyHorizontalRules
+Private mStudyConfigs                       As StudyConfigurations
+
+Private mParameters                         As Parameters
+Private mStudyValueConfigurations           As StudyValueConfigurations
+Private mStudyValueHandlers                 As StudyValueHandlers
+Private mStudyHorizontalRules               As StudyHorizontalRules
 Private mHorizontalRulesLineSeries          As LineSeries
 Private mName                               As String
 Private mStudyLibraryName                   As String
-'Private mInstanceName As String
 Private mInstanceFullyQualifiedName         As String
-Private mStudy                              As study
-Private mUnderlyingStudy                    As study
+Private mStudy                              As Study
+Private mUnderlyingStudy                    As Study
 Private mInputValueNames()                  As String
-'Private mNotifyNames() As String
 Private mChartRegionName                    As String
+
+Private mConfig                             As ConfigurationSection
+
+Private mIdent                              As String
+
+Private mBars                               As Bars
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,10 +88,12 @@ Private mChartRegionName                    As String
 
 Private Sub Class_Initialize()
 ReDim mInputValueNames(0) As String
-mInputValueNames(0) = "$default"
-Set mStudyValueConfigurations = New studyValueConfigurations
-Set mStudyValueHandlers = New studyValueHandlers
-Set mStudyHorizontalRules = New studyHorizontalRules
+mInputValueNames(0) = DefaultStudyValueName
+Set mStudyConfigs = New StudyConfigurations
+Set mStudyValueConfigurations = New StudyValueConfigurations
+Set mStudyValueHandlers = New StudyValueHandlers
+Set mStudyHorizontalRules = New StudyHorizontalRules
+mIdent = GenerateGUIDString
 End Sub
 
 '@================================================================================
@@ -90,173 +108,243 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let chartRegionName(ByVal value As String)
+Public Property Let ChartRegionName(ByVal value As String)
 mChartRegionName = value
+storeSettings
 End Property
 
-Public Property Get chartRegionName() As String
-chartRegionName = mChartRegionName
+Public Property Get ChartRegionName() As String
+ChartRegionName = mChartRegionName
 End Property
 
-Public Property Let horizontalRulesLineSeries( _
+Public Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
+End Property
+
+Public Property Let HorizontalRulesLineSeries( _
                 ByVal value As LineSeries)
 Set mHorizontalRulesLineSeries = value
 End Property
 
-Public Property Get horizontalRulesLineSeries() As LineSeries
-Set horizontalRulesLineSeries = mHorizontalRulesLineSeries
+Public Property Get HorizontalRulesLineSeries() As LineSeries
+Set HorizontalRulesLineSeries = mHorizontalRulesLineSeries
 End Property
 
-Public Property Let inputValueNames(ByRef value() As String)
+Friend Property Get ID() As String
+ID = mIdent
+End Property
+
+Public Property Let InputValueNames(ByRef value() As String)
 mInputValueNames = value
+storeSettings
 End Property
 
-Public Property Get inputValueNames() As String()
-inputValueNames = mInputValueNames
+Public Property Get InputValueNames() As String()
+InputValueNames = mInputValueNames
 End Property
 
-'Public Property Let instanceName(ByVal value As String)
-'mInstanceName = value
-'End Property
-'
-'Public Property Get instanceName() As String
-'instanceName = mInstanceName
-'End Property
-
-Friend Property Let instanceFullyQualifiedName(ByVal value As String)
+Friend Property Let InstanceFullyQualifiedName(ByVal value As String)
 mInstanceFullyQualifiedName = value
+storeSettings
 End Property
 
-Public Property Get instanceFullyQualifiedName() As String
-instanceFullyQualifiedName = mInstanceFullyQualifiedName
+Public Property Get InstanceFullyQualifiedName() As String
+InstanceFullyQualifiedName = mInstanceFullyQualifiedName
 End Property
 
-Public Property Let name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
+storeSettings
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-'Public Property Let notifyNames(ByRef value() As String)
-'mNotifyNames = value
-'End Property
-'
-'Public Property Get notifyNames() As String()
-'notifyNames = mNotifyNames
-'End Property
-
-Public Property Let parameters(ByVal value As parameters)
+Public Property Let Parameters(ByVal value As Parameters)
 Set mParameters = value
+storeSettings
 End Property
 
-Public Property Get parameters() As parameters
-Set parameters = mParameters
+Public Property Get Parameters() As Parameters
+Set Parameters = mParameters
 End Property
 
 Public Property Let StudyLibraryName(ByVal value As String)
 mStudyLibraryName = value
+storeSettings
 End Property
 
 Public Property Get StudyLibraryName() As String
 StudyLibraryName = mStudyLibraryName
 End Property
 
-'Public Property Let studyDefinition(ByVal value As studyDefinition)
-'Set mStudyDefinition = value
-'End Property
-
-'Public Property Get studyDefinition() As studyDefinition
-'Set studyDefinition = mStudy.studyDefinition
-'End Property
-
-Public Property Get studyHorizontalRules() As studyHorizontalRules
-Set studyHorizontalRules = mStudyHorizontalRules
+Public Property Get StudyHorizontalRules() As StudyHorizontalRules
+Set StudyHorizontalRules = mStudyHorizontalRules
 End Property
 
-Public Property Let study(ByVal value As study)
+Public Property Let Study(ByVal value As Study)
+Dim lBarStudy As BarStudy
+
 Set mStudy = value
+If mStudy Is Nothing Then Exit Property
+
+If TypeOf mStudy Is BarStudy Then
+    Set lBarStudy = mStudy
+    Set mBars = lBarStudy.Bars
+End If
+    
 End Property
 
-Public Property Get study() As study
-Set study = mStudy
+Public Property Get Study() As Study
+Set Study = mStudy
 End Property
 
-Public Property Get studyValueConfigurations() As studyValueConfigurations
-Set studyValueConfigurations = mStudyValueConfigurations
+Public Property Get StudyConfigurations() As StudyConfigurations
+Set StudyConfigurations = mStudyConfigs
 End Property
 
-Public Property Get studyValueHandlers() As studyValueHandlers
-Set studyValueHandlers = mStudyValueHandlers
+Public Property Get StudyValueConfigurations() As StudyValueConfigurations
+Set StudyValueConfigurations = mStudyValueConfigurations
 End Property
 
-Public Property Let underlyingStudy(ByVal value As study)
+Friend Property Let StudyValueHandlers(ByVal value As StudyValueHandlers)
+Set mStudyValueHandlers = value
+End Property
+
+Friend Property Get StudyValueHandlers() As StudyValueHandlers
+Set StudyValueHandlers = mStudyValueHandlers
+End Property
+
+Public Property Let UnderlyingStudy(ByVal value As Study)
 Set mUnderlyingStudy = value
 End Property
 
-Public Property Get underlyingStudy() As study
-Set underlyingStudy = mUnderlyingStudy
+Public Property Get UnderlyingStudy() As Study
+Set UnderlyingStudy = mUnderlyingStudy
+End Property
+
+Public Property Get ValueSeries(ByVal value As String) As IGraphicObjectSeries
+Set ValueSeries = mStudyValueHandlers.Item(value).ValueSeries
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function clone() As StudyConfiguration
-Set clone = New StudyConfiguration
-clone.chartRegionName = mChartRegionName
-clone.inputValueNames = mInputValueNames
-clone.name = mName
-clone.parameters = mParameters.clone
-clone.StudyLibraryName = mStudyLibraryName
+Public Function Clone() As StudyConfiguration
+Set Clone = New StudyConfiguration
+Clone.ChartRegionName = mChartRegionName
+Clone.InputValueNames = mInputValueNames
+Clone.Name = mName
+Clone.Parameters = mParameters.Clone
+Clone.StudyLibraryName = mStudyLibraryName
 
 Dim hr As StudyHorizontalRule
 Dim newHr As StudyHorizontalRule
-Dim newHrs As studyHorizontalRules
-Set newHrs = clone.studyHorizontalRules
+Dim newHrs As StudyHorizontalRules
+Set newHrs = Clone.StudyHorizontalRules
 For Each hr In mStudyHorizontalRules
-    Set newHr = newHrs.add
-    newHr.color = hr.color
-    newHr.style = hr.style
-    newHr.thickness = hr.thickness
+    Set newHr = newHrs.Add
+    newHr.Color = hr.Color
+    newHr.Style = hr.Style
+    newHr.Thickness = hr.Thickness
     newHr.Y = hr.Y
 Next
 
-clone.study = mStudy
+Clone.Study = mStudy
 
 Dim svc As StudyValueConfiguration
 Dim newSvc As StudyValueConfiguration
-Dim newSvcs As studyValueConfigurations
+Dim newSvcs As StudyValueConfigurations
 
-Set newSvcs = clone.studyValueConfigurations
+Set newSvcs = Clone.StudyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
-    Set newSvc = newSvcs.add(svc.valueName)
-    newSvc.barStyle = svc.barStyle
-    newSvc.chartRegionName = svc.chartRegionName
-    newSvc.dataPointStyle = svc.dataPointStyle
-    newSvc.includeInChart = svc.includeInChart
-    newSvc.layer = svc.layer
-    newSvc.lineStyle = svc.lineStyle
+    Set newSvc = newSvcs.Add(svc.ValueName)
+    newSvc.BarStyle = svc.BarStyle
+    newSvc.ChartRegionName = svc.ChartRegionName
+    newSvc.DataPointStyle = svc.DataPointStyle
+    newSvc.IncludeInChart = svc.IncludeInChart
+    newSvc.Layer = svc.Layer
+    newSvc.LineStyle = svc.LineStyle
     newSvc.SetBarFormatterFactory svc.BarFormatterFactory, svc.Bars
-    newSvc.textStyle = svc.textStyle
+    newSvc.TextStyle = svc.TextStyle
 Next
 
-clone.underlyingStudy = mUnderlyingStudy
+Clone.UnderlyingStudy = mUnderlyingStudy
+
+' don't do a deep copy of the studyValueHandlers because it's
+' immutable as far as non-Friend callers are concerned
+Clone.StudyValueHandlers = mStudyValueHandlers
 End Function
 
-Public Sub finish()
+' Only called when a chart has been cleared, so no need to worry about whether regions are
+' still in use etc
+Friend Sub Finish()
 Dim svh As StudyValueHandler
-For Each svh In mStudyValueHandlers
-    svh.finish False
-    mStudy.removeStudyValueListener svh
+Dim sc As StudyConfiguration
+
+If Not mStudyValueHandlers Is Nothing Then
+    For Each svh In mStudyValueHandlers
+        mStudy.RemoveStudyValueListener svh
+    Next
+    mStudyValueHandlers.Clear
+End If
+
+For Each sc In mStudyConfigs
+    sc.Finish
 Next
-Set mStudyValueHandlers = Nothing
-Set mHorizontalRulesLineSeries = Nothing
+End Sub
+
+Friend Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection)
+Set mConfig = config
+
+If mConfig Is Nothing Then Exit Sub
+
+mIdent = mConfig.InstanceQualifier
+mName = mConfig.GetSetting(ConfigSettingName)
+mStudyLibraryName = mConfig.GetSetting(ConfigSettingStudyLibraryName)
+mInstanceFullyQualifiedName = mConfig.GetSetting(ConfigSettingInstanceFullyQualifiedName)
+mInputValueNames = Split(mConfig.GetSetting(ConfigSettingInputValueNames), ",")
+mChartRegionName = mConfig.GetSetting(ConfigSettingChartRegionName)
+
+Set mParameters = LoadParametersFromConfig(mConfig.GetConfigurationSection(ConfigSectionParameters))
+
+Set mStudyValueConfigurations = New StudyValueConfigurations
+mStudyValueConfigurations.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionStudyValueConfigurations), mBars
+
+Set mStudyHorizontalRules = New StudyHorizontalRules
+mStudyHorizontalRules.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudyHorizontalRules)
+
+Set mStudyConfigs = New StudyConfigurations
+mStudyConfigs.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudyConfigs)
+End Sub
+
+Public Sub RemoveFromConfig()
+If Not mConfig Is Nothing Then mConfig.Remove
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Sub storeSettings()
+If mConfig Is Nothing Then Exit Sub
+
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStudyLibraryName, mStudyLibraryName
+mConfig.SetSetting ConfigSettingInstanceFullyQualifiedName, mInstanceFullyQualifiedName
+mConfig.SetSetting ConfigSettingInputValueNames, Join(mInputValueNames, ",")
+mConfig.SetSetting ConfigSettingChartRegionName, mChartRegionName
+
+mParameters.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionParameters)
+mStudyValueConfigurations.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyValueConfigurations)
+mStudyHorizontalRules.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyHorizontalRules)
+
+mStudyConfigs.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyConfigs)
+End Sub

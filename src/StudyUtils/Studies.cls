@@ -47,10 +47,10 @@ Option Explicit
 '@================================================================================
 
 Private Type StudyTableEntry
-    theStudy            As study
-    studyToNotify       As study
-    valueName           As String
-    notifyName          As String
+    theStudy            As Study
+    studyToNotify       As Study
+    ValueName           As String
+    NotifyName          As String
 End Type
 
 '@================================================================================
@@ -83,101 +83,103 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let defaultValueName(ByVal value As String)
-mDefaultValuename = value
+Public Property Let DefaultValueName(ByVal value As String)
+mDefaultValuename = UCase$(value)
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub add( _
-                ByVal study As study, _
-                ByRef valueNames() As String)
+Public Sub Add( _
+                ByVal Study As Study, _
+                ByRef ValueNames() As String)
 Dim tableEntry As StudyTableEntry
-Dim inputDefs As studyInputDefinitions
+Dim inputDefs As StudyInputDefinitions
 Dim i As Long
 
-Set inputDefs = study.StudyDefinition.studyInputDefinitions
+Set inputDefs = Study.StudyDefinition.StudyInputDefinitions
 
-For i = 0 To UBound(valueNames)
-    If valueNames(i) <> "" Then
+For i = 0 To UBound(ValueNames)
+    If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
-        Set tableEntry.theStudy = study
-        Set tableEntry.studyToNotify = study.baseStudy
-        tableEntry.valueName = valueNames(i)
-        tableEntry.notifyName = inputDefs.Item(i + 1).name
+        Set tableEntry.theStudy = Study
+        Set tableEntry.studyToNotify = Study.BaseStudy
+        tableEntry.ValueName = UCase$(ValueNames(i))
+        tableEntry.NotifyName = UCase$(inputDefs.Item(i + 1).Name)
         mStudyTable(mNextStudyTableIndex) = tableEntry
         mNextStudyTableIndex = mNextStudyTableIndex + 1
     End If
 Next
 End Sub
 
-Public Sub addEx( _
-                ByVal study As study, _
-                ByRef valueNames() As String, _
-                ByRef notifyNames() As String)
+Public Sub AddEx( _
+                ByVal Study As Study, _
+                ByRef ValueNames() As String, _
+                ByRef NotifyNames() As String)
 Dim tableEntry As StudyTableEntry
 Dim i As Long
 
-For i = 0 To UBound(valueNames)
-    If valueNames(i) <> "" Then
+For i = 0 To UBound(ValueNames)
+    If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
-        Set tableEntry.theStudy = study
-        Set tableEntry.studyToNotify = study.baseStudy
-        tableEntry.valueName = valueNames(i)
-        tableEntry.notifyName = notifyNames(i)
+        Set tableEntry.theStudy = Study
+        Set tableEntry.studyToNotify = Study.BaseStudy
+        tableEntry.ValueName = UCase$(ValueNames(i))
+        tableEntry.NotifyName = UCase$(NotifyNames(i))
         mStudyTable(mNextStudyTableIndex) = tableEntry
         mNextStudyTableIndex = mNextStudyTableIndex + 1
     End If
 Next
 End Sub
 
-Public Sub notify(ev As StudyValueEvent)
+Public Sub Notify(ev As StudyValueEvent)
 Dim i As Long
 Dim evOut As StudyValueEvent
 
+ev.ValueName = UCase$(ev.ValueName)
 evOut = ev
 For i = 0 To mNextStudyTableIndex - 1
-    If ev.valueName = mDefaultValuename Then
-        If mStudyTable(i).valueName = DefaultStudyValueNameStr Then
-            evOut.valueName = mStudyTable(i).notifyName
-            mStudyTable(i).studyToNotify.notify evOut
+    If ev.ValueName = mDefaultValuename Then
+        If mStudyTable(i).ValueName = DefaultStudyValueNameStr Then
+            evOut.ValueName = mStudyTable(i).NotifyName
+            mStudyTable(i).studyToNotify.Notify evOut
         End If
     End If
-    If mStudyTable(i).valueName = ev.valueName Then
-        evOut.valueName = mStudyTable(i).notifyName
-        mStudyTable(i).studyToNotify.notify evOut
+    If mStudyTable(i).ValueName = ev.ValueName Then
+        evOut.ValueName = mStudyTable(i).NotifyName
+        mStudyTable(i).studyToNotify.Notify evOut
     End If
 Next
 End Sub
 
-Public Function numberOfBarsRequired() As Long
+Public Function NumberOfBarsRequired() As Long
 Dim num As Long
 Dim numStudy As Long
-Dim study As study
+Dim Study As Study
 Dim i As Long
 
 For i = 0 To mNextStudyTableIndex - 1
-    Set study = mStudyTable(i).theStudy
-    numStudy = study.numberOfBarsRequired
+    Set Study = mStudyTable(i).theStudy
+    numStudy = Study.NumberOfBarsRequired
     If numStudy > num Then num = numStudy
 Next
-numberOfBarsRequired = num
+NumberOfBarsRequired = num
 End Function
 
-Public Sub notifyValueTicksize( _
-                ByVal valueName As String, _
+Public Sub NotifyValueTicksize( _
+                ByVal ValueName As String, _
                 ByVal tickSize As Double)
 Dim i As Long
 
+ValueName = UCase$(ValueName)
 For i = 0 To mNextStudyTableIndex - 1
-    If mStudyTable(i).valueName = valueName Then
-        mStudyTable(i).theStudy.setInputTicksize mStudyTable(i).notifyName, tickSize
+    If mStudyTable(i).ValueName = ValueName Then
+        mStudyTable(i).theStudy.SetInputTicksize mStudyTable(i).NotifyName, tickSize
     End If
 Next
 End Sub

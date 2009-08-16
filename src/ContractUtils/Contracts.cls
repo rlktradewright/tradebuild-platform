@@ -69,7 +69,7 @@ Private mContractSpecifier As ContractSpecifier
 
 Private mChangeListeners As Collection
 
-'Private mServiceProviders As ServiceProviders
+Private mSortKeys() As ContractSortKeyIds
 
 '@================================================================================
 ' Class Event Handlers
@@ -78,6 +78,8 @@ Private mChangeListeners As Collection
 Private Sub Class_Initialize()
 Set mContracts = New EnumerableCollection
 Set mChangeListeners = New Collection
+ReDim mSortKeys(0) As ContractSortKeyIds
+mSortKeys(0) = ContractSortKeyNone
 End Sub
 
 '@================================================================================
@@ -100,6 +102,26 @@ Public Property Get Enumerator() As Enumerator
 Set Enumerator = mContracts.Enumerator
 End Property
 
+Public Property Let SortKeys( _
+                ByRef value() As ContractSortKeyIds)
+Dim lContract As Contract
+
+If UBound(value) < 0 Then
+    ReDim mSortKeys(0) As ContractSortKeyIds
+    mSortKeys(0) = ContractSortKeyNone
+Else
+    mSortKeys = value
+End If
+
+For Each lContract In mContracts
+    lContract.SortKeys = mSortKeys
+Next
+End Property
+                
+Public Property Get SortKeys() As ContractSortKeyIds()
+SortKeys = mSortKeys
+End Property
+                
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -108,11 +130,12 @@ Friend Sub Add(ByVal pContract As Contract)
 ' we no longer use the following statement because some IB contracts have identical
 ' specifiers and differ only in the tick size, eg for symb=ES, sectyp=STK, exchg=SMART, curr=EUR
 'mContracts.Add pContract, pContract.specifier.key
+pContract.SortKeys = mSortKeys
 mContracts.Add pContract
 fireChange CollItemAdded, pContract
 End Sub
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 mChangeListeners.Add value
 End Sub
@@ -126,9 +149,9 @@ Friend Sub initialise( _
 Set mContractSpecifier = contractSpec
 End Sub
 
-Public Function item(ByVal index As Variant) As Contract
-Attribute item.VB_UserMemId = 0
-Set item = mContracts(index)
+Public Function Item(ByVal index As Variant) As Contract
+Attribute Item.VB_UserMemId = 0
+Set Item = mContracts(index)
 End Function
 
 Friend Sub LoadComplete()
@@ -147,18 +170,18 @@ RaiseEvent Notification(ev)
 End Sub
 
 
-Friend Sub remove(ByVal index As Variant)
+Friend Sub Remove(ByVal index As Variant)
 Dim lContract As Contract
 Set lContract = mContracts(index)
-mContracts.remove index
+mContracts.Remove index
 fireChange CollItemRemoved, lContract
 End Sub
 
-Public Sub removeCollectionChangeListener( _
+Public Sub RemoveCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 
@@ -166,6 +189,27 @@ Friend Sub serviceProviderCantHandle( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
 RaiseEvent TryLater(reason, serviceProviderName)
+End Sub
+
+Public Sub Sort()
+Dim i As Long
+Dim ar() As Object
+
+If mContracts.Count = 0 Then Exit Sub
+
+ReDim ar(mContracts.Count - 1) As Object
+
+For i = 0 To UBound(ar)
+    Set ar(i) = mContracts(i + 1)
+Next
+
+mContracts.Clear
+
+SortObjects ar
+
+For i = 0 To UBound(ar)
+    mContracts.Add ar(i)
+Next
 End Sub
 
 Public Function ToString() As String

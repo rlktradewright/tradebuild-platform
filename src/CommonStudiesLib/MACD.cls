@@ -117,7 +117,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 Set mMACDCache = mStudyFoundation.FindValueCache(MACDValueMACD)
@@ -142,7 +142,7 @@ On Error GoTo Err
 prevMACD = mMACD
 prevMACDHist = mMACDHist
 
-If Not mStudyFoundation.isNewBar Then
+If Not mStudyFoundation.IsNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
 sPrevVal = ev.sVal.value
@@ -154,7 +154,7 @@ evOut.sVal.timestamp = ev.sVal.timestamp
 evOut.sVal.value = ev.sVal.value
 evOut.valueName = ""
 
-If mStudyFoundation.isNewBar Then
+If mStudyFoundation.IsNewBar Then
     mMACDPrev = mMACD
     mMACDHistPrev = mMACDHist
     
@@ -163,12 +163,12 @@ If mStudyFoundation.isNewBar Then
     If mTickSize <> 0 Then
         determineLowerBalancePoint IIf(IsEmpty(mLowerBalance), ev.sVal.value, mLowerBalance), ev.sVal.barNumber, ev.sVal.timestamp
     End If
-    mLowerBalanceCache.addValue mLowerBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mLowerBalanceCache.AddValue mLowerBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     
     If mTickSize <> 0 Then
         determineUpperBalancePoint IIf(IsEmpty(mUpperBalance), ev.sVal.value, mUpperBalance), ev.sVal.barNumber, ev.sVal.timestamp
     End If
-    mUpperBalanceCache.addValue mUpperBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mUpperBalanceCache.AddValue mUpperBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
 
 calcMACDValues ev
@@ -203,24 +203,24 @@ If mStrengthCache.Count > 1 Then
     End If
 End If
 
-If mStudyFoundation.isNewBar Then
-    mMACDCache.addValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mMACDHistCache.addValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mMACDSignalCache.addValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mStrengthCache.addValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mStrengthCountCache.addValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+If mStudyFoundation.IsNewBar Then
+    mMACDCache.AddValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mMACDHistCache.AddValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mMACDSignalCache.AddValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mStrengthCache.AddValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mStrengthCountCache.AddValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mMACDCache.updateValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp
-    mMACDHistCache.updateValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp
-    mMACDSignalCache.updateValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp
-    mStrengthCache.updateValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp
-    mStrengthCountCache.updateValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp
+    mMACDCache.UpdateValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp
+    mMACDHistCache.UpdateValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp
+    mMACDSignalCache.UpdateValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp
+    mStrengthCache.UpdateValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp
+    mStrengthCountCache.UpdateValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
 notifyValue mMACD, MACDValueMACD, evOut
 notifyValue mMACDSignal, MACDValueMACDSignal, evOut
 notifyValue mMACDHist, MACDValueMACDHist, evOut
-If mStudyFoundation.isNewBar Then
+If mStudyFoundation.IsNewBar Then
     notifyValue mUpperBalance, MACDValueMACDUpperBalance, evOut
     notifyValue mLowerBalance, MACDValueMACDLowerBalance, evOut
     notifyValue mStrength, MACDValueStrength, evOut
@@ -231,7 +231,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -240,9 +240,9 @@ End Sub
 Private Function customNumberOfBarsRequired() As Long
 Dim Study As Study
 Set Study = mMALongStudy
-customNumberOfBarsRequired = Study.numberOfBarsRequired + _
+customNumberOfBarsRequired = Study.NumberOfBarsRequired + _
                             mSmoothingPeriods + _
-                            mMACDCache.cyclicSize
+                            mMACDCache.CyclicSize
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
@@ -280,7 +280,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -300,7 +300,7 @@ End Function
 '@================================================================================
 
 Public Property Get MACD(Optional ByVal ref As Long) As SValue
-MACD = mMACDCache.getSValue(ref)
+MACD = mMACDCache.GetSValue(ref)
 End Property
 
 Public Property Get MACDDown(Optional ByVal ref As Long) As SValue
@@ -311,7 +311,7 @@ MACDDown = sv
 End Property
 
 Public Property Get MACDHist(Optional ByVal ref As Long) As SValue
-MACDHist = mMACDHistCache.getSValue(ref)
+MACDHist = mMACDHistCache.GetSValue(ref)
 End Property
 
 Public Property Get MACDHistDown(Optional ByVal ref As Long) As SValue
@@ -329,11 +329,11 @@ MACDHistUp = sv
 End Property
 
 Public Property Get MACDLowerBalance(Optional ByVal ref As Long) As SValue
-MACDLowerBalance = mLowerBalanceCache.getSValue(ref)
+MACDLowerBalance = mLowerBalanceCache.GetSValue(ref)
 End Property
 
 Public Property Get MACDSignal(Optional ByVal ref As Long) As SValue
-MACDSignal = mMACDSignalCache.getSValue(ref)
+MACDSignal = mMACDSignalCache.GetSValue(ref)
 End Property
 
 Public Property Get MACDUp(Optional ByVal ref As Long) As SValue
@@ -344,15 +344,15 @@ MACDUp = sv
 End Property
 
 Public Property Get MACDUpperBalance(Optional ByVal ref As Long) As SValue
-MACDUpperBalance = mUpperBalanceCache.getSValue(ref)
+MACDUpperBalance = mUpperBalanceCache.GetSValue(ref)
 End Property
 
 Public Property Get strength(Optional ByVal ref As Long) As SValue
-strength = mStrengthCache.getSValue(ref)
+strength = mStrengthCache.GetSValue(ref)
 End Property
 
 Public Property Get strengthCount(Optional ByVal ref As Long) As SValue
-strengthCount = mStrengthCountCache.getSValue(ref)
+strengthCount = mStrengthCountCache.GetSValue(ref)
 End Property
 
 '@================================================================================
@@ -369,8 +369,8 @@ Dim newEv As StudyValueEvent
 Dim maShort As Variant
 Dim maLong As Variant
 
-mMAShortStudy.notify ev
-mMALongStudy.notify ev
+mMAShortStudy.Notify ev
+mMALongStudy.Notify ev
 
 maShort = mMAShortStudy.getStudyValue(MovingAverageStudyValueName, 0).value
 maLong = mMALongStudy.getStudyValue(MovingAverageStudyValueName, 0).value
@@ -383,7 +383,7 @@ mMACD = maShort - maLong
 
 newEv = ev
 newEv.sVal.value = mMACD
-mMASignalStudy.notify newEv
+mMASignalStudy.Notify newEv
 mMACDSignal = mMASignalStudy.getStudyValue(MovingAverageStudyValueName, 0).value
 If IsEmpty(mMACDSignal) Then
     mMACDHist = Empty
@@ -514,7 +514,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -528,7 +528,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -561,7 +561,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -580,21 +580,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -608,13 +608,13 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
-If inputName = MACDInputValue Then mTickSize = tickSize
+If UCase$(inputName) = UCase$(MACDInputValue) Then mTickSize = tickSize
 End Sub
 
 Private Property Get Study_studyDefinition() As StudyDefinition

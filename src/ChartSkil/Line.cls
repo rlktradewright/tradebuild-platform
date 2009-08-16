@@ -49,6 +49,7 @@ Private Const ModuleName                    As String = "Line"
 '================================================================================
 
 Private mSeries As LineSeries
+Private mSeriesUpdateNumber As Long
 
 Private mCanvas  As Canvas
 Private mLayer As Long
@@ -89,29 +90,6 @@ Private mThicknessOffsetY As Double
 Private mBlank As Boolean
 Private mHidden As Boolean
 
-Private mIsSetColor As Boolean
-Private mIsSetThickness As Boolean
-Private mIsSetLineStyle As Boolean
-Private mIsSetExtendBefore As Boolean
-Private mIsSetExtendAfter As Boolean
-Private mIsSetArrowStartStyle As Boolean
-Private mIsSetArrowStartLength As Boolean
-Private mIsSetArrowStartWidth As Boolean
-Private mIsSetArrowStartColor As Boolean
-Private mIsSetArrowStartFillColor As Boolean
-Private mIsSetArrowStartFillStyle As Boolean
-Private mIsSetArrowEndStyle As Boolean
-Private mIsSetArrowEndLength As Boolean
-Private mIsSetArrowEndWidth As Boolean
-Private mIsSetArrowEndColor As Boolean
-Private mIsSetArrowEndFillColor As Boolean
-Private mIsSetArrowEndFillStyle As Boolean
-Private mIsSetFixedX As Boolean
-Private mIsSetFixedY As Boolean
-Private mIsSetIncludeInAutoscale As Boolean
-Private mIsSetExtended As Boolean
-Private mIsSetLayer As Boolean
-
 Private mColor As Long
 Private mThickness As Long
 Private mLineStyle As LineStyles
@@ -147,6 +125,8 @@ Private mLineAngleSin As Double
 Private mLineAngleCos As Double
 
 Private mKey As String
+
+Private mPropertyOverrideFlags As LinePropertyOverrideFlags
 
 '================================================================================
 ' Enums
@@ -184,6 +164,7 @@ mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "Line terminated"
 Debug.Print "Line terminated"
 End Sub
 
@@ -207,8 +188,10 @@ mGaugeY = mCanvas.GaugeY
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
     (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
     (canvasChanges And CanvasComparisonCodes.BoundsChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.BoundsChangedY) _
+    (canvasChanges And CanvasComparisonCodes.BoundsChangedY) Or _
+    mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
+    mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     calcConstants
     calcEndArrowConstants
     calcStartArrowConstants
@@ -221,7 +204,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -340,7 +323,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectanglesAt" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectanglesAt" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -392,7 +375,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -411,12 +394,12 @@ Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = True
 End Property
 
-Private Property Let IGraphicObject_handle(ByVal value As Long)
+Private Property Let IGraphicObject_Handle(ByVal value As Long)
 mHandle = value
 End Property
 
-Private Property Get IGraphicObject_handle() As Long
-IGraphicObject_handle = mHandle
+Private Property Get IGraphicObject_Handle() As Long
+IGraphicObject_Handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
@@ -507,39 +490,47 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("ArrowEndColor")
+Case "ARROWENDCOLOR"
     initiateRedraw False, False
-Case UCase$("ArrowEndFillColor")
+Case "ARROWENDFILLCOLOR"
     initiateRedraw False, False
-Case UCase$("ArrowEndFillStyle")
+Case "ARROWENDFILLSTYLE"
     initiateRedraw False, False
-Case UCase$("ArrowEndLength")
+Case "ARROWENDLENGTH"
     initiateRedraw True, True
-Case UCase$("ArrowEndStyle")
+Case "ARROWENDSTYLE"
     initiateRedraw True, True
-Case UCase$("ArrowEndWidth")
+Case "ARROWENDWIDTH"
     initiateRedraw True, True
-Case UCase$("ArrowStartColor")
+Case "ARROWSTARTCOLOR"
     initiateRedraw False, False
-Case UCase$("ArrowStartFillColor")
+Case "ARROWSTARTFILLCOLOR"
     initiateRedraw False, False
-Case UCase$("ArrowStartfillStyle")
+Case "ARROWSTARTFILLSTYLE"
     initiateRedraw False, False
-Case UCase$("ArrowStartLength")
+Case "ARROWSTARTLENGTH"
     initiateRedraw True, True
-Case UCase$("ArrowStartStyle")
+Case "ARROWSTARTSTYLE"
     initiateRedraw True, True
-Case UCase$("ArrowStartWidth")
+Case "ARROWSTARTWIDTH"
     initiateRedraw True, True
-Case UCase$("Color")
+Case "COLOR"
     initiateRedraw False, False
-Case UCase$("ExtendAfter")
+Case "EXTENDAFTER"
     initiateRedraw True, True
-Case UCase$("ExtendBefore")
+Case "EXTENDBEFORE"
     initiateRedraw True, True
-Case UCase$("LineStyle")
+Case "EXTENDED"
+    initiateRedraw True, True
+Case "FIXEDX"
+    initiateRedraw True, True
+Case "FIXEDY"
+    initiateRedraw True, True
+Case "INCLUDEINAUTOSCALE"
+    initiateRedraw False, False
+Case "LINESTYLE"
     initiateRedraw True, False
-Case UCase$("Thickness")
+Case "THICKNESS"
     initiateRedraw True, True
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
@@ -561,8 +552,8 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get ArrowEndColor() As OLE_COLOR
-If mIsSetArrowEndColor Then
+Public Property Get ArrowEndColor() As Long
+If isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then
     ArrowEndColor = mArrowEndColor
 ElseIf Not mLocalStyle Is Nothing Then
     ArrowEndColor = mLocalStyle.ArrowEndColor
@@ -571,166 +562,166 @@ Else
 End If
 End Property
 
-Public Property Let ArrowEndColor(ByVal value As OLE_COLOR)
-If mArrowEndColor = value And mIsSetArrowEndColor Then Exit Property
+Public Property Let ArrowEndColor(ByVal value As Long)
+If mArrowEndColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then Exit Property
 mArrowEndColor = value
-mIsSetArrowEndColor = True
+setPropertyOverrideFlag LineIsSetArrowEndColor
 initiateRedraw False, False
 End Property
 
-Public Property Get ArrowEndFillColor() As OLE_COLOR
+Public Property Get ArrowEndFillColor() As Long
 ArrowEndFillColor = mSeries.ArrowEndFillColor
 If Not mLocalStyle Is Nothing Then ArrowEndFillColor = mLocalStyle.ArrowEndFillColor
-If mIsSetArrowEndFillColor Then ArrowEndFillColor = mArrowEndFillColor
+If isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then ArrowEndFillColor = mArrowEndFillColor
 End Property
 
-Public Property Let ArrowEndFillColor(ByVal value As OLE_COLOR)
-If mArrowEndFillColor = value And mIsSetArrowEndFillColor Then Exit Property
+Public Property Let ArrowEndFillColor(ByVal value As Long)
+If mArrowEndFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then Exit Property
 mArrowEndFillColor = value
-mIsSetArrowEndFillColor = True
+setPropertyOverrideFlag LineIsSetArrowEndFillColor
 initiateRedraw False, False
 End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
 ArrowEndFillStyle = mSeries.ArrowEndFillStyle
 If Not mLocalStyle Is Nothing Then ArrowEndFillStyle = mLocalStyle.ArrowEndFillStyle
-If mIsSetArrowEndFillStyle Then ArrowEndFillStyle = mArrowEndFillStyle
+If isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then ArrowEndFillStyle = mArrowEndFillStyle
 End Property
 
 Public Property Let ArrowEndFillStyle(ByVal value As FillStyles)
-If mArrowEndFillStyle = value And mIsSetArrowEndFillStyle Then Exit Property
+If mArrowEndFillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then Exit Property
 mArrowEndFillStyle = value
-mIsSetArrowEndFillStyle = True
+setPropertyOverrideFlag LineIsSetArrowEndFillStyle
 initiateRedraw False, False
 End Property
 
 Public Property Get ArrowEndLength() As Long
 ArrowEndLength = mSeries.ArrowEndLength
 If Not mLocalStyle Is Nothing Then ArrowEndLength = mLocalStyle.ArrowEndLength
-If mIsSetArrowEndLength Then ArrowEndLength = mArrowEndLength
+If isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then ArrowEndLength = mArrowEndLength
 End Property
 
 Public Property Let ArrowEndLength(ByVal value As Long)
-If mArrowEndLength = value And mIsSetArrowEndLength Then Exit Property
+If mArrowEndLength = value And isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then Exit Property
 mArrowEndLength = value
-mIsSetArrowEndLength = True
+setPropertyOverrideFlag LineIsSetArrowEndLength
 initiateRedraw True, True
 End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
 ArrowEndStyle = mSeries.ArrowEndStyle
 If Not mLocalStyle Is Nothing Then ArrowEndStyle = mLocalStyle.ArrowEndStyle
-If mIsSetArrowEndStyle Then ArrowEndStyle = mArrowEndStyle
+If isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then ArrowEndStyle = mArrowEndStyle
 End Property
 
 Public Property Let ArrowEndStyle(ByVal value As ArrowStyles)
-If mArrowEndStyle = value And mIsSetArrowEndStyle Then Exit Property
+If mArrowEndStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then Exit Property
 mArrowEndStyle = value
-mIsSetArrowEndStyle = True
+setPropertyOverrideFlag LineIsSetArrowEndStyle
 initiateRedraw True, True
 End Property
 
 Public Property Get ArrowEndWidth() As Long
 ArrowEndWidth = mSeries.ArrowEndWidth
 If Not mLocalStyle Is Nothing Then ArrowEndWidth = mLocalStyle.ArrowEndWidth
-If mIsSetArrowEndWidth Then ArrowEndWidth = mArrowEndWidth
+If isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then ArrowEndWidth = mArrowEndWidth
 End Property
 
 Public Property Let ArrowEndWidth(ByVal value As Long)
-If mArrowEndWidth = value And mIsSetArrowEndWidth Then Exit Property
+If mArrowEndWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then Exit Property
 mArrowEndWidth = value
-mIsSetArrowEndWidth = True
+setPropertyOverrideFlag LineIsSetArrowEndWidth
 initiateRedraw True, True
 End Property
 
-Public Property Get ArrowStartColor() As OLE_COLOR
+Public Property Get ArrowStartColor() As Long
 ArrowStartColor = mSeries.ArrowStartColor
 If Not mLocalStyle Is Nothing Then ArrowStartColor = mLocalStyle.ArrowStartColor
-If mIsSetArrowStartColor Then ArrowStartColor = mArrowStartColor
+If isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then ArrowStartColor = mArrowStartColor
 End Property
 
-Public Property Let ArrowStartColor(ByVal value As OLE_COLOR)
-If mArrowStartColor = value And mIsSetArrowStartColor Then Exit Property
+Public Property Let ArrowStartColor(ByVal value As Long)
+If mArrowStartColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then Exit Property
 mArrowStartColor = value
-mIsSetArrowStartColor = True
+setPropertyOverrideFlag LineIsSetArrowStartColor
 initiateRedraw False, False
 End Property
 
-Public Property Get ArrowStartFillColor() As OLE_COLOR
+Public Property Get ArrowStartFillColor() As Long
 ArrowStartFillColor = mSeries.ArrowStartFillColor
 If Not mLocalStyle Is Nothing Then ArrowStartFillColor = mLocalStyle.ArrowStartFillColor
-If mIsSetArrowStartFillColor Then ArrowStartFillColor = mArrowStartFillColor
+If isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then ArrowStartFillColor = mArrowStartFillColor
 End Property
 
-Public Property Let ArrowStartFillColor(ByVal value As OLE_COLOR)
-If mArrowStartFillColor = value And mIsSetArrowStartFillColor Then Exit Property
+Public Property Let ArrowStartFillColor(ByVal value As Long)
+If mArrowStartFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then Exit Property
 mArrowStartFillColor = value
-mIsSetArrowStartFillColor = True
+setPropertyOverrideFlag LineIsSetArrowStartFillColor
 initiateRedraw False, False
 End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
 ArrowStartFillStyle = mSeries.ArrowStartFillStyle
 If Not mLocalStyle Is Nothing Then ArrowStartFillStyle = mLocalStyle.ArrowStartFillStyle
-If mIsSetArrowStartFillStyle Then ArrowStartFillStyle = mArrowStartfillStyle
+If isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then ArrowStartFillStyle = mArrowStartfillStyle
 End Property
 
 Public Property Let ArrowStartFillStyle(ByVal value As FillStyles)
-If mArrowStartfillStyle = value And mIsSetArrowStartFillStyle Then Exit Property
+If mArrowStartfillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then Exit Property
 mArrowStartfillStyle = value
-mIsSetArrowStartFillStyle = True
+setPropertyOverrideFlag LineIsSetArrowStartFillStyle
 initiateRedraw False, False
 End Property
 
 Public Property Get ArrowStartLength() As Long
 ArrowStartLength = mSeries.ArrowStartLength
 If Not mLocalStyle Is Nothing Then ArrowStartLength = mLocalStyle.ArrowStartLength
-If mIsSetArrowStartLength Then ArrowStartLength = mArrowStartLength
+If isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then ArrowStartLength = mArrowStartLength
 End Property
 
 Public Property Let ArrowStartLength(ByVal value As Long)
-If mArrowStartLength = value And mIsSetArrowStartLength Then Exit Property
+If mArrowStartLength = value And isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then Exit Property
 mArrowStartLength = value
-mIsSetArrowStartLength = True
+setPropertyOverrideFlag LineIsSetArrowStartLength
 initiateRedraw True, True
 End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
 ArrowStartStyle = mSeries.ArrowStartStyle
 If Not mLocalStyle Is Nothing Then ArrowStartStyle = mLocalStyle.ArrowStartStyle
-If mIsSetArrowStartStyle Then ArrowStartStyle = mArrowStartStyle
+If isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then ArrowStartStyle = mArrowStartStyle
 End Property
 
 Public Property Let ArrowStartStyle(ByVal value As ArrowStyles)
-If mArrowStartStyle = value And mIsSetArrowStartStyle Then Exit Property
+If mArrowStartStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then Exit Property
 mArrowStartStyle = value
-mIsSetArrowStartStyle = True
+setPropertyOverrideFlag LineIsSetArrowStartStyle
 initiateRedraw True, True
 End Property
 
 Public Property Get ArrowStartWidth() As Long
 ArrowStartWidth = mSeries.ArrowStartWidth
 If Not mLocalStyle Is Nothing Then ArrowStartWidth = mLocalStyle.ArrowStartWidth
-If mIsSetArrowStartWidth Then ArrowStartWidth = mArrowStartWidth
+If isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then ArrowStartWidth = mArrowStartWidth
 End Property
 
 Public Property Let ArrowStartWidth(ByVal value As Long)
-If mArrowStartWidth = value And mIsSetArrowStartWidth Then Exit Property
+If mArrowStartWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then Exit Property
 mArrowStartWidth = value
-mIsSetArrowStartWidth = True
+setPropertyOverrideFlag LineIsSetArrowStartWidth
 initiateRedraw True, True
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If mIsSetColor Then Color = mColor
+If isPropertyOverrideFlagSet(LineIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
-If mColor = value And mIsSetColor Then Exit Property
+Public Property Let Color(ByVal value As Long)
+If mColor = value And isPropertyOverrideFlagSet(LineIsSetColor) Then Exit Property
 mColor = value
-mIsSetColor = True
+setPropertyOverrideFlag LineIsSetColor
 initiateRedraw False, False
 End Property
 
@@ -738,72 +729,73 @@ Public Property Get Direction() As Quadrants
 Direction = mDirection
 End Property
 
-Public Property Get Extended() As Boolean
-Extended = mSeries.Extended
-If mIsSetExtended Then Extended = mExtended
-End Property
-
-Public Property Let Extended(ByVal value As Boolean)
-If mExtended = value And mIsSetExtended Then Exit Property
-mExtended = value
-mIsSetExtended = True
-initiateRedraw True, True
-End Property
-
 Public Property Get ExtendAfter() As Boolean
 ExtendAfter = mSeries.ExtendAfter
 If Not mLocalStyle Is Nothing Then ExtendAfter = mLocalStyle.ExtendAfter
-If mIsSetExtendAfter Then ExtendAfter = mExtendAfter
+If isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then ExtendAfter = mExtendAfter
 End Property
 
 Public Property Let ExtendAfter(ByVal value As Boolean)
-If mExtendAfter = value And mIsSetExtendAfter Then Exit Property
+If mExtendAfter = value And isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then Exit Property
 mExtendAfter = value
-mIsSetExtendAfter = True
+setPropertyOverrideFlag LineIsSetExtendAfter
 initiateRedraw True, True
 End Property
 
 Public Property Get ExtendBefore() As Boolean
 ExtendBefore = mSeries.ExtendBefore
 If Not mLocalStyle Is Nothing Then ExtendBefore = mLocalStyle.ExtendBefore
-If mIsSetExtendBefore Then ExtendBefore = mExtendBefore
+If isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then ExtendBefore = mExtendBefore
 End Property
 
 Public Property Let ExtendBefore(ByVal value As Boolean)
-If mExtendBefore = value And mIsSetExtendBefore Then Exit Property
+If mExtendBefore = value And isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then Exit Property
 mExtendBefore = value
-mIsSetExtendBefore = True
+setPropertyOverrideFlag LineIsSetExtendBefore
+initiateRedraw True, True
+End Property
+
+Public Property Get Extended() As Boolean
+Extended = mSeries.Extended
+If Not mLocalStyle Is Nothing Then Extended = mLocalStyle.Extended
+If isPropertyOverrideFlagSet(LineIsSetExtended) Then Extended = mExtended
+End Property
+
+Public Property Let Extended(ByVal value As Boolean)
+If mExtended = value And isPropertyOverrideFlagSet(LineIsSetExtended) Then Exit Property
+mExtended = value
+setPropertyOverrideFlag LineIsSetExtended
 initiateRedraw True, True
 End Property
 
 Public Property Get FixedX() As Boolean
 FixedX = mSeries.FixedX
-If mIsSetFixedX Then FixedX = mFixedX
+If Not mLocalStyle Is Nothing Then FixedX = mLocalStyle.FixedX
+If isPropertyOverrideFlagSet(LineIsSetFixedX) Then FixedX = mFixedX
 End Property
 
 Public Property Let FixedX(ByVal value As Boolean)
-If mFixedX = value And mIsSetFixedX Then Exit Property
+If mFixedX = value And isPropertyOverrideFlagSet(LineIsSetFixedX) Then Exit Property
 mFixedX = value
-mIsSetFixedX = True
-ConvertPositionX
+setPropertyOverrideFlag LineIsSetFixedX
 initiateRedraw True, True
 End Property
 
 Public Property Get FixedY() As Boolean
 FixedY = mSeries.FixedY
-If mIsSetFixedY Then FixedY = mFixedY
+If Not mLocalStyle Is Nothing Then FixedY = mLocalStyle.FixedY
+If isPropertyOverrideFlagSet(LineIsSetFixedY) Then FixedY = mFixedY
 End Property
 
 Public Property Let FixedY(ByVal value As Boolean)
-If mFixedY = value And mIsSetFixedY Then Exit Property
+If mFixedY = value And isPropertyOverrideFlagSet(LineIsSetFixedY) Then Exit Property
 mFixedY = value
-mIsSetFixedY = True
-ConvertPositionY
+setPropertyOverrideFlag LineIsSetFixedY
 initiateRedraw True, True
 End Property
 
-Friend Property Get Handle() As Long
-Handle = mHandle
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -818,13 +810,13 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
+If isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
+If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
-mIsSetIncludeInAutoscale = True
+setPropertyOverrideFlag LineIsSetIncludeInAutoscale
 initiateRedraw False, False
 End Property
 
@@ -849,27 +841,27 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
-If mLayer = value And mIsSetLayer Then Exit Property
+If mLayer = value And isPropertyOverrideFlagSet(LineIsSetLayer) Then Exit Property
 mLayer = value
-mIsSetLayer = True
+setPropertyOverrideFlag LineIsSetLayer
 initiateRedraw False, False
 End Property
 
 Public Property Get Layer() As LayerNumbers
 Layer = mSeries.Layer
-If mIsSetLayer Then Layer = mLayer
+If isPropertyOverrideFlagSet(LineIsSetLayer) Then Layer = mLayer
 End Property
 
 Public Property Get LineStyle() As LineStyles
 LineStyle = mSeries.LineStyle
 If Not mLocalStyle Is Nothing Then LineStyle = mLocalStyle.LineStyle
-If mIsSetLineStyle Then LineStyle = mLineStyle
+If isPropertyOverrideFlagSet(LineIsSetLineStyle) Then LineStyle = mLineStyle
 End Property
 
 Public Property Let LineStyle(ByVal value As LineStyles)
-If mLineStyle = value And mIsSetLineStyle Then Exit Property
+If mLineStyle = value And isPropertyOverrideFlagSet(LineIsSetLineStyle) Then Exit Property
 mLineStyle = value
-mIsSetLineStyle = True
+setPropertyOverrideFlag LineIsSetLineStyle
 initiateRedraw True, False
 End Property
 
@@ -947,13 +939,13 @@ End Property
 Public Property Get Thickness() As Long
 Thickness = mSeries.Thickness
 If Not mLocalStyle Is Nothing Then Thickness = mLocalStyle.Thickness
-If mIsSetThickness Then Thickness = mThickness
+If isPropertyOverrideFlagSet(LineIsSetThickness) Then Thickness = mThickness
 End Property
 
 Public Property Let Thickness(ByVal value As Long)
-If mThickness = value And mIsSetThickness Then Exit Property
+If mThickness = value And isPropertyOverrideFlagSet(LineIsSetThickness) Then Exit Property
 mThickness = value
-mIsSetThickness = True
+setPropertyOverrideFlag LineIsSetThickness
 initiateRedraw True, True
 End Property
 
@@ -968,6 +960,11 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+initiateRedraw True, True
+End Sub
 
 Friend Sub Initialise( _
                 ByVal series As LineSeries, _
@@ -1048,7 +1045,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setPosition" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setPosition" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -1107,18 +1104,6 @@ End Select
 
 mLineAngleSin = Sin(mLineAngle)
 mLineAngleCos = Cos(mLineAngle)
-
-'If mLineAngleSin <> 0 Then
-'    mThicknessOffsetX = Abs(mGaugeX * (Thickness / mLineAngleSin) / 2)
-'Else
-'    mThicknessOffsetX = 0
-'End If
-'
-'If mLineAngleCos <> 0 Then
-'    mThicknessOffsetY = Abs(mGaugeY * (Thickness / mLineAngleCos) / 2)
-'Else
-'    mThicknessOffsetY = 0
-'End If
 
 End Sub
 
@@ -1204,19 +1189,15 @@ With mBoundingRect
         lineInt.isValid = True
         regionInt = rectGetXInterval(mRegionRect)
         rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
-        'rectSetXInterval mBoundingRect, lineInt
         
         If Not .isValid Then
             .Bottom = MinusInfinityDouble
             .Top = PlusInfinityDouble
             .Left = MinusInfinityDouble
             .Right = PlusInfinityDouble
-'            .isValid = True
             Exit Sub
         End If
             
-        'If .Right > Int(mRegionRect.Right) Then .Right = Int(mRegionRect.Right)
-        
         Select Case mDirection
         Case NE
             .Top = mA * .Right + mB + mThicknessOffsetY
@@ -1346,33 +1327,14 @@ With mStartArrowRect
         .Right = X + mStartArrowX2Offset + mThicknessOffsetX
         .isValid = True
         
-'    Case SW
-'        .Bottom = Y + mStartArrowY2Offset - mThicknessOffsetY
-'        .Left = X + mStartArrowX1Offset - mThicknessOffsetX
-'        .Top = Y + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
-'        .Right = X + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
-'        .isvalid = True
-'    Case SE
-'        .Bottom = Y + mStartArrowY1Offset - mThicknessOffsetY
-'        .Left = X + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
-'        .Top = Y + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
-'        .Right = X + mStartArrowX2Offset + mThicknessOffsetX
-'        .isvalid = True
-'    Case NE
-'        .Bottom = Y + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
-'        .Left = X + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
-'        .Top = Y + mStartArrowY2Offset + mThicknessOffsetY
-'        .Right = X + mStartArrowX1Offset + mThicknessOffsetX
-'        .isvalid = True
-'    Case NW
-'        .Bottom = Y + IIf(mStartArrowY2Offset < 0, mStartArrowY2Offset, 0) - mThicknessOffsetY
-'        .Left = X + mStartArrowX2Offset - mThicknessOffsetX
-'        .Top = Y + mStartArrowY1Offset + mThicknessOffsetY
-'        .Right = X + IIf(mStartArrowX1Offset > 0, mStartArrowX1Offset, 0) + mThicknessOffsetX
-'        .isvalid = True
     End Select
     'Debug.Assert (.Right - .Left) < 5 And (.Top - .Bottom) < 5
 End With
+End Sub
+
+Private Sub clearPropertyOverrideFlag( _
+                ByVal flag As LinePropertyOverrideFlags)
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
 
 Private Sub ConvertPositionX()
@@ -1382,16 +1344,6 @@ End Sub
 
 Private Sub ConvertPositionY()
 ConvertPosition1Y
-ConvertPosition2Y
-End Sub
-
-Private Sub ConvertPosition1()
-ConvertPosition1X
-ConvertPosition1Y
-End Sub
-
-Private Sub ConvertPosition2()
-ConvertPosition2X
 ConvertPosition2Y
 End Sub
 
@@ -1756,7 +1708,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -1896,6 +1848,11 @@ Private Function isExtended() As Boolean
 isExtended = Extended Or FixedX
 End Function
 
+Private Function isPropertyOverrideFlagSet( _
+                ByVal flag As LinePropertyOverrideFlags) As Boolean
+isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
 Private Sub setDirection()
 Dim x1 As Double
 Dim y1 As Double
@@ -1944,10 +1901,14 @@ Else
 End If
 End Sub
 
+Private Sub setPropertyOverrideFlag( _
+                ByVal flag As LinePropertyOverrideFlags)
+mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+End Sub
+
 Private Sub undraw()
 
 If Not mVisible Then Exit Sub
-'draw rectIntersection(mBoundingRect, mRegionRect), True
 mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Exit Sub
 

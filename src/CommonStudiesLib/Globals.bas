@@ -121,6 +121,28 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function gCreateDataPointStyle( _
+                Optional ByVal Color As Long = vbBlack, _
+                Optional ByVal DisplayMode As DataPointDisplayModes = DataPointDisplayModeLine, _
+                Optional ByVal DownColor As Long = -1, _
+                Optional ByVal HistogramBarWidth As Single = 0.6, _
+                Optional ByVal LineStyle As LineStyles = LineSolid, _
+                Optional ByVal Linethickness As Long = 1, _
+                Optional ByVal PointStyle As PointStyles = PointRound, _
+                Optional ByVal UpColor As Long = -1) As DataPointStyle
+Dim style As DataPointStyle
+Set style = New DataPointStyle
+style.Color = Color
+style.DisplayMode = DisplayMode
+style.DownColor = DownColor
+style.HistogramBarWidth = HistogramBarWidth
+style.LineStyle = LineStyle
+style.Linethickness = Linethickness
+style.PointStyle = PointStyle
+style.UpColor = UpColor
+Set gCreateDataPointStyle = style
+End Function
+
 Public Function gCreateMA( _
                 ByVal maType As String, _
                 ByVal periods As Long, _

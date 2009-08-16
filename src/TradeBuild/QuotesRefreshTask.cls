@@ -50,6 +50,7 @@ Private mTaskContext                                As TaskContext
 Private mTickers                                    As Tickers
 Private mIndex                                      As Long
 Private mCancelled                                  As Boolean
+Private mListener                                   As QuoteListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -59,7 +60,7 @@ Private mCancelled                                  As Boolean
 ' Task Interface Members
 '@================================================================================
 
-Private Sub Task_cancel()
+Private Sub Task_Cancel()
 mCancelled = True
 End Sub
 
@@ -76,18 +77,16 @@ If mIndex > mTickers.Count Then
     Exit Sub
 End If
 
-mTickers.item(i).RefreshQuotes
-mTickers.item(i).RefreshPriceChange
+mTickers.item(mIndex).RefreshQuotes mListener
 
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
 Set mTaskContext = RHS
-Set mTickers = mTaskContext.data
 End Property
 
 Private Property Get Task_TaskName() As String
-
+Task_TaskName = mTaskContext.name
 End Property
 
 '@================================================================================
@@ -101,6 +100,13 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pTickers As Tickers, _
+                ByVal listener As QuoteListener)
+Set mTickers = pTickers
+Set mListener = listener
+End Sub
 
 '@================================================================================
 ' Helper Functions

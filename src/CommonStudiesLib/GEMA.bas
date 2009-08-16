@@ -67,15 +67,18 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.Description = "An exponential moving average"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(EmaInputValue)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MovingAverageStudyValueName)
     valueDef.Description = "The moving average value"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(&H1D9311)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(EMAParamPeriods)

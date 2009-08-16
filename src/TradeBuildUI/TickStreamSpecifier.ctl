@@ -1,14 +1,14 @@
 VERSION 5.00
 Begin VB.UserControl TickStreamSpecifier 
-   ClientHeight    =   3720
+   ClientHeight    =   4200
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   6720
-   ScaleHeight     =   3720
+   ScaleHeight     =   4200
    ScaleWidth      =   6720
    Begin VB.Frame Frame2 
       Caption         =   "Contract specification"
-      Height          =   3255
+      Height          =   3615
       Left            =   0
       TabIndex        =   21
       Top             =   0
@@ -17,21 +17,21 @@ Begin VB.UserControl TickStreamSpecifier
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   2895
+         Height          =   3255
          Left            =   120
-         ScaleHeight     =   2895
+         ScaleHeight     =   3255
          ScaleWidth      =   2535
          TabIndex        =   22
          Top             =   240
          Width           =   2535
          Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
-            Height          =   2895
+            Height          =   3330
             Left            =   0
             TabIndex        =   0
             Top             =   0
             Width           =   2535
-            _ExtentX        =   4471
-            _ExtentY        =   5106
+            _extentx        =   4471
+            _extenty        =   6509
          End
       End
    End
@@ -73,16 +73,16 @@ Begin VB.UserControl TickStreamSpecifier
    End
    Begin VB.Frame Frame3 
       Caption         =   "Dates/Times"
-      Height          =   2535
+      Height          =   2895
       Left            =   2880
       TabIndex        =   10
       Top             =   720
       Width           =   3735
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
-         Height          =   2175
+         Height          =   2535
          Left            =   120
-         ScaleHeight     =   2175
+         ScaleHeight     =   2535
          ScaleWidth      =   3495
          TabIndex        =   11
          Top             =   240
@@ -91,14 +91,14 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   285
             Left            =   2160
             TabIndex        =   3
-            Top             =   0
+            Top             =   120
             Width           =   1260
          End
          Begin VB.TextBox FromDateText 
             Height          =   285
             Left            =   480
             TabIndex        =   2
-            Top             =   0
+            Top             =   120
             Width           =   1260
          End
          Begin VB.CheckBox CompleteSessionCheck 
@@ -106,7 +106,7 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   255
             Left            =   480
             TabIndex        =   4
-            Top             =   360
+            Top             =   480
             Value           =   1  'Checked
             Width           =   2775
          End
@@ -116,7 +116,7 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   375
             Left            =   480
             TabIndex        =   5
-            Top             =   600
+            Top             =   720
             Value           =   1  'Checked
             Width           =   2895
          End
@@ -125,7 +125,7 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   1095
             Left            =   0
             TabIndex        =   12
-            Top             =   1080
+            Top             =   1200
             Width           =   3495
             Begin VB.PictureBox Picture4 
                BorderStyle     =   0  'None
@@ -199,7 +199,7 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   255
             Left            =   1800
             TabIndex        =   17
-            Top             =   0
+            Top             =   120
             Width           =   255
          End
          Begin VB.Label Label8 
@@ -207,17 +207,17 @@ Begin VB.UserControl TickStreamSpecifier
             Height          =   255
             Left            =   0
             TabIndex        =   16
-            Top             =   0
+            Top             =   120
             Width           =   855
          End
       End
    End
    Begin VB.Label ErrorLabel 
       ForeColor       =   &H000000FF&
-      Height          =   255
+      Height          =   375
       Left            =   0
       TabIndex        =   23
-      Top             =   3360
+      Top             =   3720
       Width           =   6615
    End
 End
@@ -269,11 +269,13 @@ Event TickStreamsSpecified(ByVal pTickfileSpecifiers As TickfileSpecifiers)
 ' Member variables
 '@================================================================================
 
-Private mSupportedTickStreamFormats() As TickfileFormatSpecifier
-Private WithEvents mContracts       As Contracts
+Private mSupportedTickStreamFormats()       As TickfileFormatSpecifier
+Private WithEvents mContractsLoadTC         As TaskController
+Attribute mContractsLoadTC.VB_VarHelpID = -1
+Private mContracts                          As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 
-Private mSecType                    As SecurityTypes
+Private mSecType                            As SecurityTypes
 
 '@================================================================================
 ' Form Event Handlers
@@ -340,61 +342,21 @@ checkReady
 End Sub
 
 '@================================================================================
-' mContracts Event Handlers
+' mContractsLoadTC Event Handlers
 '@================================================================================
 
-Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
+Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 Screen.MousePointer = vbDefault
-ErrorLabel.caption = "Invalid contract specification:" & reason
+If ev.errorNumber <> 0 Then
+    ErrorLabel.caption = ev.errorMessage
+Else
+    Set mContracts = ev.result
+    processContracts
+End If
 End Sub
 
-Private Sub mContracts_NoMoreContractDetails()
-Dim lTickfileSpecifiers As TickfileSpecifiers
-Dim k As Long
-Dim TickfileFormatID As String
-
-On Error GoTo Err
-
-Screen.MousePointer = vbDefault
-If mContracts.count = 0 Then
-    ErrorLabel.caption = "No contracts meet this specification"
-    Exit Sub
-End If
-
-If mSecType <> SecurityTypes.SecTypeFuture And _
-    mSecType <> SecurityTypes.SecTypeOption And _
-    mSecType <> SecurityTypes.SecTypeFuturesOption _
-Then
-    If mContracts.count > 1 Then
-        ' don't see how this can happen, but just in case!
-        ErrorLabel.caption = "More than one contract meets this specification"
-        Exit Sub
-    End If
-End If
-    
-For k = 0 To UBound(mSupportedTickStreamFormats)
-    If mSupportedTickStreamFormats(k).name = FormatCombo.Text Then
-        TickfileFormatID = mSupportedTickStreamFormats(k).FormalID
-        Exit For
-    End If
-Next
-
-Set lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
-                                                mContracts, _
-                                                TickfileFormatID, _
-                                                CDate(FromDateText), _
-                                                CDate(IIf(ToDateText <> "", ToDateText, 0)), _
-                                                CompleteSessionCheck = vbChecked, _
-                                                UseExchangeTimezoneCheck = vbChecked, _
-                                                CDate(IIf(CustomFromTimeText <> "", CustomFromTimeText, 0)), _
-                                                CDate(IIf(CustomToTimeText <> "", CustomToTimeText, 0)))
-
-RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
-Exit Sub
-
-Err:
-ErrorLabel.caption = Err.Description
-
+Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEvent)
+ErrorLabel.caption = ev.eventMessage
 End Sub
 
 '@================================================================================
@@ -415,9 +377,9 @@ ErrorLabel.caption = ""
 Screen.MousePointer = vbHourglass
 
 Set contractSpec = ContractSpecBuilder1.contractSpecifier
-mSecType = contractSpec.sectype
+mSecType = contractSpec.secType
 
-Set mContracts = TradeBuildAPI.loadContracts(contractSpec)
+Set mContractsLoadTC = TradeBuildAPI.loadContracts(contractSpec)
 
 
 Exit Sub
@@ -527,6 +489,54 @@ End If
 Exit Sub
 
 Err:
+
+End Sub
+
+Private Sub processContracts()
+Dim lTickfileSpecifiers As TickfileSpecifiers
+Dim k As Long
+Dim TickfileFormatID As String
+
+On Error GoTo Err
+
+If mContracts.count = 0 Then
+    ErrorLabel.caption = "No contracts meet this specification"
+    Exit Sub
+End If
+
+If mSecType <> SecurityTypes.SecTypeFuture And _
+    mSecType <> SecurityTypes.SecTypeOption And _
+    mSecType <> SecurityTypes.SecTypeFuturesOption _
+Then
+    If mContracts.count > 1 Then
+        ' don't see how this can happen, but just in case!
+        ErrorLabel.caption = "More than one contract meets this specification"
+        Exit Sub
+    End If
+End If
+    
+For k = 0 To UBound(mSupportedTickStreamFormats)
+    If mSupportedTickStreamFormats(k).name = FormatCombo.Text Then
+        TickfileFormatID = mSupportedTickStreamFormats(k).FormalID
+        Exit For
+    End If
+Next
+
+Set lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
+                                                mContracts, _
+                                                TickfileFormatID, _
+                                                CDate(FromDateText), _
+                                                CDate(IIf(ToDateText <> "", ToDateText, 0)), _
+                                                CompleteSessionCheck = vbChecked, _
+                                                UseExchangeTimezoneCheck = vbChecked, _
+                                                CDate(IIf(CustomFromTimeText <> "", CustomFromTimeText, 0)), _
+                                                CDate(IIf(CustomToTimeText <> "", CustomToTimeText, 0)))
+
+RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
+Exit Sub
+
+Err:
+ErrorLabel.caption = Err.Description
 
 End Sub
 

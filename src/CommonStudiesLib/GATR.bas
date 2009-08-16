@@ -73,6 +73,7 @@ If mStudyDefinition Is Nothing Then
                         "previous close for the bar's low (if lower), or for the high (if higher)."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AtrInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
@@ -80,7 +81,10 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AtrValueATR)
     valueDef.Description = "The Average True Range value"
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.IncludeInChart = True
+    valueDef.isDefault = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbGreen)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(AtrParamPeriods)

@@ -41,6 +41,8 @@ Implements ValueReplayTask
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyValueReplayTask"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -58,10 +60,10 @@ Private mTaskContext As TaskContext
 Private mTarget As Object
 Private mTargetIsStudy As Boolean
 
-Private mTargetStudy As study
-Private mStudyToNotify As study
+Private mTargetStudy As Study
+Private mStudyToNotify As Study
 Private mTargetListener As StudyValueListener
-Private mSourceStudy As study
+Private mSourceStudy As Study
 
 ' The following no longer used as the cookie argument to startTask is used instead
 'Private mDiscriminator As Long
@@ -90,37 +92,37 @@ Private mResult As ValueReplayResult
 ' ValueReplayTask Interface Members
 '@================================================================================
 
-Private Property Get ValueReplayTask_discriminator() As Long
-'ValueReplayTask_discriminator = mDiscriminator
-ValueReplayTask_discriminator = 0
+Private Property Get ValueReplayTask_Discriminator() As Long
+'ValueReplayTask_Discriminator = mDiscriminator
+ValueReplayTask_Discriminator = 0
 End Property
 
-Private Property Get ValueReplayTask_notifyName() As String
-ValueReplayTask_notifyName = mNotifyName
+Private Property Get ValueReplayTask_NotifyName() As String
+ValueReplayTask_NotifyName = mNotifyName
 End Property
 
-Private Property Get ValueReplayTask_notifyNames() As String()
-ValueReplayTask_notifyNames = mNotifyNames
+Private Property Get ValueReplayTask_NotifyNames() As String()
+ValueReplayTask_NotifyNames = mNotifyNames
 End Property
 
-Private Property Get ValueReplayTask_sourceStudy() As study
-Set ValueReplayTask_sourceStudy = mSourceStudy
+Private Property Get ValueReplayTask_SourceStudy() As Study
+Set ValueReplayTask_SourceStudy = mSourceStudy
 End Property
 
-Private Property Get ValueReplayTask_target() As Object
-Set ValueReplayTask_target = mTarget
+Private Property Get ValueReplayTask_Target() As Object
+Set ValueReplayTask_Target = mTarget
 End Property
 
-Private Property Get ValueReplayTask_taskName() As String
-ValueReplayTask_taskName = mTaskContext.name
+Private Property Get ValueReplayTask_TaskName() As String
+ValueReplayTask_TaskName = mTaskContext.Name
 End Property
 
 Private Property Get ValueReplayTask_ValueName() As String
 ValueReplayTask_ValueName = mValueName
 End Property
 
-Private Property Get ValueReplayTask_valueNames() As String()
-ValueReplayTask_valueNames = mValueNames
+Private Property Get ValueReplayTask_ValueNames() As String()
+ValueReplayTask_ValueNames = mValueNames
 End Property
 
 '@================================================================================
@@ -132,7 +134,7 @@ Private Sub task_cancel()
 End Sub
 
 Private Property Get task_TaskName() As String
-task_TaskName = mTaskContext.name
+task_TaskName = mTaskContext.Name
 End Property
 
 Private Sub Task_run()
@@ -141,20 +143,21 @@ Dim ev As StudyValueEvent
 Dim valueEntry As SValue
 
 Dim failpoint As Long
+
 On Error GoTo Err
 
 failpoint = 100
 
-If mSourceStudy.numberOfCachedValues = 0 Then
-    mTaskContext.progress 100
-    mTaskContext.finish mResult, False
+If mSourceStudy.NumberOfCachedValues = 0 Then
+    mTaskContext.Progress 100
+    mTaskContext.Finish mResult, False
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
-If mTaskContext.cancelPending Then
-    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
-    mTaskContext.finish mResult, True
+If mTaskContext.CancelPending Then
+    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1)
+    mTaskContext.Finish mResult, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
@@ -163,7 +166,7 @@ For i = 0 To UBound(mReplayValueNames)
     
     failpoint = 200
     
-    valueEntry = mSourceStudy.getStudyValue(mReplayValueNames(i), mNextValueNumber)
+    valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), mNextValueNumber)
      
     If Not IsEmpty(valueEntry.value) Then
         Set ev.source = mSourceStudy
@@ -173,16 +176,16 @@ For i = 0 To UBound(mReplayValueNames)
             
             failpoint = 300
             
-            mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
+            mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
             
             ev.valueName = mReplayNotifyNames(i)
-            mStudyToNotify.notify ev
+            mStudyToNotify.Notify ev
         Else
         
             failpoint = 400
             
             ev.valueName = mReplayValueNames(i)
-            mTargetListener.notify ev
+            mTargetListener.Notify ev
         End If
     End If
 Next
@@ -191,28 +194,28 @@ mNextValueNumber = mNextValueNumber + 1
 mValuesNotified = mValuesNotified + 1
 
 If mValuesNotified Mod 20 = 0 Then
-    ' notify progress each 20 values
-    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
+    ' Notify progress each 20 values
+    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1)
 End If
 
-If mNextValueNumber > mSourceStudy.numberOfCachedValues Then
-    Debug.Print "Study (" & mSourceStudy.id & ") " & _
-                mSourceStudy.instanceName & _
+If mNextValueNumber > mSourceStudy.NumberOfCachedValues Then
+    Debug.Print "Study (" & mSourceStudy.Id & ") " & _
+                mSourceStudy.InstanceName & _
                 " replayed " & mValuesNotified & _
                 " values for " & Join(mReplayValueNames(), ",")
-    mTaskContext.progress 100
-    mTaskContext.finish mResult, False
+    mTaskContext.Progress 100
+    mTaskContext.Finish mResult, False
     Set mTaskContext = Nothing
 End If
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        "StudiesSupp" & "." & "StudyValueReplayTask" & "::" & "Task_run" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.description
-
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -228,9 +231,9 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Get discriminator() As Long
-'discriminator = mDiscriminator
-discriminator = 0
+Public Property Get Discriminator() As Long
+'Discriminator = mDiscriminator
+Discriminator = 0
 End Property
 
 Public Property Get notifyName() As String
@@ -241,7 +244,7 @@ Public Property Get notifyNames() As String()
 notifyNames = notifyNames
 End Property
 
-Public Property Get sourceStudy() As study
+Public Property Get sourceStudy() As Study
 Set sourceStudy = mSourceStudy
 End Property
 
@@ -263,13 +266,13 @@ End Property
 
 Friend Sub initialise( _
                 ByVal target As Object, _
-                ByVal sourceStudy As study, _
+                ByVal sourceStudy As Study, _
                 ByRef replayValueNames() As String, _
                 ByRef replayNotifyNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 ByRef valueNames() As String, _
                 ByRef notifyNames() As String, _
-                ByVal discriminator As Long)
+                ByVal Discriminator As Long)
 Dim numValuesToNotify As Long
 Dim studyEntry As StudyTableEntry
 
@@ -281,22 +284,22 @@ mValueNames = valueNames
 mValueName = mValueNames(0)
 mNotifyNames = notifyNames
 mNotifyName = mNotifyNames(0)
-'mDiscriminator = discriminator
+'mDiscriminator = Discriminator
 
 Set mResult = New ValueReplayResult
 mResult.initialise target, sourceStudy, valueNames, notifyNames
 
-If TypeOf target Is study Then
+If TypeOf target Is Study Then
     mTargetIsStudy = True
     Set mTargetStudy = target
-    Set mStudyToNotify = mTargetStudy.baseStudy
+    Set mStudyToNotify = mTargetStudy.BaseStudy
     
-    studyEntry = Globals.StudiesCollection(mTargetStudy.id)
+    studyEntry = Globals.StudiesCollection(mTargetStudy.Id)
     Set mSessionBuilder = studyEntry.sessionBldr
     
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
-        numValuesToNotify = mTargetStudy.numberOfBarsRequired
+        numValuesToNotify = mTargetStudy.NumberOfBarsRequired
     Else
         numValuesToNotify = numberOfValuesToReplay
     End If
@@ -305,13 +308,13 @@ Else
     numValuesToNotify = numberOfValuesToReplay
 End If
 
-If numValuesToNotify > mSourceStudy.numberOfCachedValues Or _
+If numValuesToNotify > mSourceStudy.NumberOfCachedValues Or _
     numValuesToNotify = ReplayNumbers.ReplayAll _
 Then
-    numValuesToNotify = mSourceStudy.numberOfCachedValues
+    numValuesToNotify = mSourceStudy.NumberOfCachedValues
 End If
 
-mNextValueNumber = mSourceStudy.numberOfCachedValues - numValuesToNotify + 1
+mNextValueNumber = mSourceStudy.NumberOfCachedValues - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
 End Sub
 

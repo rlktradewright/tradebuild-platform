@@ -25,23 +25,34 @@ Public Const AppName                                As String = "TradeSkil Demo 
 
 Public Const ConfigFileVersion                      As String = "1.1"
 
+Public Const ConfigSectionChart                     As String = "Chart"
+Public Const ConfigSectionCharts                    As String = "Charts"
 Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
+Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
+Public Const ConfigSectionMultiChart                As String = "MultiChart"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
+Public Const ConfigSectionTickerGrid                As String = "TickerGrid"
 
-Public Const ConfigSettingNameConfigEditorLeft      As String = ConfigSectionConfigEditor & ".Left"
-Public Const ConfigSettingNameConfigEditorTop       As String = ConfigSectionConfigEditor & ".Top"
+Public Const ConfigSettingHeight                    As String = ".Height"
+Public Const ConfigSettingLeft                      As String = ".Left"
+Public Const ConfigSettingTop                       As String = ".Top"
+Public Const ConfigSettingWidth                     As String = ".Width"
+Public Const ConfigSettingWindowstate               As String = ".Windowstate"
 
-Public Const ConfigSettingNameMainFormControlsHidden   As String = ConfigSectionMainForm & ".ControlsHidden"
-Public Const ConfigSettingNameMainFormFeaturesHidden   As String = ConfigSectionMainForm & ".FeaturesHidden"
-Public Const ConfigSettingNameMainFormHeight        As String = ConfigSectionMainForm & ".Height"
-Public Const ConfigSettingNameMainFormLeft          As String = ConfigSectionMainForm & ".Left"
-Public Const ConfigSettingNameMainFormTop           As String = ConfigSectionMainForm & ".Top"
-Public Const ConfigSettingNameMainFormWidth         As String = ConfigSectionMainForm & ".Width"
-Public Const ConfigSettingNameMainFormWindowstate   As String = ConfigSectionMainForm & ".Windowstate"
+Public Const ConfigSettingConfigEditorLeft          As String = ConfigSectionConfigEditor & ConfigSettingLeft
+Public Const ConfigSettingConfigEditorTop           As String = ConfigSectionConfigEditor & ConfigSettingTop
 
-Public Const ConfigSettingNameOrderTicketLeft       As String = ConfigSectionOrderTicket & ".Left"
-Public Const ConfigSettingNameOrderTicketTop        As String = ConfigSectionOrderTicket & ".Top"
+Public Const ConfigSettingMainFormControlsHidden    As String = ConfigSectionMainForm & ".ControlsHidden"
+Public Const ConfigSettingMainFormFeaturesHidden    As String = ConfigSectionMainForm & ".FeaturesHidden"
+Public Const ConfigSettingMainFormHeight            As String = ConfigSectionMainForm & ConfigSettingHeight
+Public Const ConfigSettingMainFormLeft              As String = ConfigSectionMainForm & ConfigSettingLeft
+Public Const ConfigSettingMainFormTop               As String = ConfigSectionMainForm & ConfigSettingTop
+Public Const ConfigSettingMainFormWidth             As String = ConfigSectionMainForm & ConfigSettingWidth
+Public Const ConfigSettingMainFormWindowstate       As String = ConfigSectionMainForm & ConfigSettingWindowstate
+
+Public Const ConfigSettingOrderTicketLeft           As String = ConfigSectionOrderTicket & ConfigSettingLeft
+Public Const ConfigSettingOrderTicketTop            As String = ConfigSectionOrderTicket & ConfigSettingTop
 
 Private Const DefaultAppInstanceConfigName          As String = "Default Config"
 
@@ -77,6 +88,8 @@ Private mStudyPickerForm                            As fStudyPicker
 Private mMainForm                                   As fTradeSkilDemo
 
 Private mEditConfig                                 As Boolean
+
+Private mListener                                   As LogListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -140,11 +153,12 @@ End Property
 
 Public Sub gHandleFatalError(ByVal errNum As Long, _
                             ByVal Description As String, _
-                            ByVal source As String)
+                            ByVal Source As String)
 gLogger.Log LogLevelSevere, _
         "Error number: " & errNum & vbCrLf & _
         "Description: " & Description & vbCrLf & _
-        "Source: fTradeSkilDemo::" & source
+        "Source: " & Source
+gKillLogging
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
@@ -153,11 +167,25 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
         vbCritical, _
         "Fatal error"
 
-gUnloadMainForm
-
 ' TradeBuild requires us to end the program without exiting from this event handler
 End
 
+End Sub
+
+Public Sub gKillLogging()
+GetLogger("").removeLogListener mListener
+End Sub
+
+Public Sub gModelessMsgBox( _
+                ByVal prompt As String, _
+                ByVal buttons As MsgBoxStyles, _
+                Optional ByVal title As String)
+Dim lMsgBox As New fMsgBox
+
+lMsgBox.initialise prompt, buttons, title
+
+lMsgBox.Show vbModeless, gMainForm
+                
 End Sub
 
 Public Sub gShowStudyPicker( _
@@ -198,6 +226,8 @@ On Error GoTo Err
 failpoint = 100
 
 InitialiseTWUtilities
+TaskConcurrency = 20
+TaskQuantumMillisecs = 50
 
 If showCommandLineOptions() Then Exit Sub
 
@@ -233,7 +263,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "main" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "main" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gHandleFatalError errNumber, errDescription, errSource
 TerminateTWUtilities
@@ -327,7 +357,7 @@ If baseConfigFile Is Nothing Then
             "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
             "The default configuration will connect to TWS running on the " & vbCrLf & _
             "same computer. It will obtain contract data and historical data " & vbCrLf & _
-            "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
+            "from TWS." & vbCrLf & vbCrLf & _
             "You may amend the default configuration by going to the " & vbCrLf & _
             "Configuration tab when the program starts and using the " & vbCrLf & _
             "Configuration Editor." & vbCrLf & vbCrLf & _
@@ -384,7 +414,6 @@ End If
 End Function
 
 Private Function getLog() As Boolean
-Dim listener As LogListener
 
 On Error GoTo Err
 
@@ -394,12 +423,12 @@ Else
     DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
 End If
 
-Set listener = CreateFileLogListener(gLogFileName, _
+Set mListener = CreateFileLogListener(gLogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
 ' ensure log entries of all infotypes get written to the log file
-GetLogger("").addLogListener listener
+GetLogger("").addLogListener mListener
 
 getLog = True
 Exit Function
@@ -417,8 +446,9 @@ Private Sub loadMainForm( _
                 ByVal showConfigEditor As Boolean)
 gLogger.Log LogLevelNormal, "Loading main form"
 If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
-mMainForm.Show
+'mMainForm.Show
 mMainForm.initialise showConfigEditor
+mMainForm.Show
 End Sub
 
 Private Function showCommandLineOptions() As Boolean

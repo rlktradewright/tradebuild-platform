@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#77.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#114.2#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -9,17 +9,26 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12120
-   Begin ChartSkil26.Chart Chart1 
+   Begin ChartSkil26.ChartToolbar ChartToolbar1 
       Align           =   1  'Align Top
-      Height          =   6735
+      Height          =   330
       Left            =   0
-      TabIndex        =   17
+      TabIndex        =   24
       Top             =   0
       Width           =   12120
       _ExtentX        =   21378
-      _ExtentY        =   11880
+      _ExtentY        =   582
+   End
+   Begin ChartSkil26.Chart Chart1 
+      Height          =   6405
+      Left            =   0
+      TabIndex        =   17
+      Top             =   330
+      Width           =   12120
+      _ExtentX        =   21378
+      _ExtentY        =   11298
       ChartBackColor  =   6566450
-      PointerStyle    =   0
+      ShowToobar      =   -1  'True
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -32,6 +41,14 @@ Begin VB.Form ChartForm
       TabIndex        =   7
       Top             =   6840
       Width           =   12015
+      Begin VB.CommandButton FinishButton 
+         Caption         =   "Finish"
+         Height          =   495
+         Left            =   8760
+         TabIndex        =   23
+         Top             =   720
+         Width           =   975
+      End
       Begin VB.Frame DrawingToolsFrame 
          Caption         =   "Drawing Tools"
          Enabled         =   0   'False
@@ -262,6 +279,13 @@ Private mBarLength As Long                  ' the length of each bar in minutes
 Private mTickSize As Double                 ' the minimum tick size for the security
 
 Private mPeriod As Period                   ' a period must be created for each bar
+
+Private mDataRegionStyle As ChartRegionStyle    ' defines the style that will govern
+                                            ' the appearance of the chart's data regions
+
+Private mYAxisRegionStyle As ChartRegionStyle    ' defines the style that will govern
+                                            ' the appearance of the chart's YAxis regions
+
 Private mPriceRegion As ChartRegion
 Attribute mPriceRegion.VB_VarHelpID = -1
                                             ' the region of the chart that displays
@@ -272,15 +296,15 @@ Private mVolumeRegion As ChartRegion        ' the region of the chart that displ
 Private mMACDRegion As ChartRegion          ' the region of the chart that displays
                                             ' the MACD
 
-Private mBarSeries As BarSeries             ' used to define properties for all the
-                                            ' bars
+Private mBarSeries As BarSeries             ' used to create all the bars
 Private mBar As ChartSkil26.Bar             ' an individual bar
 Private mBarTime                            ' the bar start time for mBar
-Private mBarLabelSeries As TextSeries       ' used to define properties for text
-                                            ' labels displaying to bar number
-Private mBarText As Text                    ' the most recent bar label
 
-Private mMovAvg1Series As DataPointSeries   ' used to define properties for the
+Private mBarLabelSeries As TextSeries       ' used to create the text
+                                            ' labels displaying the bar numbers
+Private mLatestBarLabel As Text             ' the most recent bar number label
+
+Private mMovAvg1Series As DataPointSeries   ' used to create the data points for the
                                             ' 1st exponential moving average
 Private mMovAvg1Point As DataPoint          ' the current data point for the
                                             ' 1st MA
@@ -348,13 +372,20 @@ Private mPriceText As Text                  ' displays the current price in the 
 Private mCurrentTool As Object
 
 
+Private Sub FinishButton_Click()
+Chart1.Finish
+clearFields
+ClearButton.Enabled = False
+LoadButton.Enabled = False
+FinishButton.Enabled = False
+End Sub
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
-InitialiseTWUtilities
 End Sub
 
 Private Sub Form_Load()
@@ -364,10 +395,11 @@ End Sub
 
 Private Sub Form_Resize()
 Dim newChartHeight As Single
-' Adjust the chart control's height. No need to worry about the width as the form
-' itself notifies the control of width changes because the control has align=vbAlignTop
+
 BasePicture.Top = Me.ScaleHeight - BasePicture.Height
 BasePicture.Width = Me.ScaleWidth
+
+Chart1.Width = Me.ScaleWidth
 newChartHeight = BasePicture.Top - Chart1.Top
 If Chart1.Height <> newChartHeight And newChartHeight >= 0 Then
     Chart1.Height = newChartHeight
@@ -375,6 +407,7 @@ End If
 End Sub
 
 Private Sub Form_Terminate()
+gKillLogging
 TerminateTWUtilities
 End Sub
 
@@ -390,6 +423,18 @@ End Sub
 '================================================================================
 ' Control Event Handlers
 '================================================================================
+
+Private Sub Chart1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Debug.Print "MouseDown " & X & "," & Y
+End Sub
+
+Private Sub Chart1_mouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Debug.Print "MouseMove " & X & "," & Y
+End Sub
+
+Private Sub Chart1_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Debug.Print "MouseUp " & X & "," & Y
+End Sub
 
 Private Sub Chart1_PointerModeChanged()
 If Chart1.PointerMode = PointerModeDefault Then
@@ -407,56 +452,7 @@ DrawingToolsFrame.Enabled = False
 
 Chart1.ClearChart   ' clear the current chart
 
-Set mPriceRegion = Nothing
-Set mVolumeRegion = Nothing
-Set mMACDRegion = Nothing
-
-Set mBarSeries = Nothing
-Set mBar = Nothing
-Set mBarLabelSeries = Nothing
-Set mBarText = Nothing
-
-Set mMovAvg1Series = Nothing
-Set mMovAvg1Point = Nothing
-Set mMA1 = Nothing
-
-Set mMovAvg2Series = Nothing
-Set mMovAvg2Point = Nothing
-Set mMA2 = Nothing
-
-Set mMovAvg3Series = Nothing
-Set mMovAvg3Point = Nothing
-Set mMa3 = Nothing
-
-Set mMACDSeries = Nothing
-Set mMACDPoint = Nothing
-Set mMACDSignalSeries = Nothing
-Set mMACDSignalPoint = Nothing
-Set mMACDHistSeries = Nothing
-Set mMACDHistPoint = Nothing
-Set mMACD = Nothing
-
-Set mVolumeSeries = Nothing
-Set mVolume = Nothing
-
-Set mSwingLineSeries = Nothing
-Set mSwingLine = Nothing
-Set mPrevSwingLine = Nothing
-Set mNewSwingLine = Nothing
-
-mClockTimer.StopTimer
-Set mClockText = Nothing
-
-Set mTickSimulator = Nothing
-
-Set mTickCountText = Nothing
-
-Set mPriceLine = Nothing
-Set mPriceText = Nothing
-
-Set mCurrentTool = Nothing
-
-mBarTime = 0
+clearFields
                                             
 initialise          ' reset the basic properties of the chart
 
@@ -468,9 +464,7 @@ Dim ls As LineStyle
 Dim tool As FibRetracementTool
 Dim lineSpecs(4) As FibLineSpecifier
 
-Set ls = Chart1.DefaultLineStyle
-ls.extended = True
-ls.includeInAutoscale = False
+Set ls = New LineStyle
 
 ls.Color = vbBlack
 Set lineSpecs(0).Style = ls.Clone
@@ -492,7 +486,7 @@ ls.Color = vbMagenta
 Set lineSpecs(4).Style = ls.Clone
 lineSpecs(4).Percentage = 61.8
 
-Set tool = CreateFibRetracementTool(Chart1.controller, lineSpecs, LayerNumbers.LayerHighestUser)
+Set tool = CreateFibRetracementTool(Chart1.Controller, lineSpecs, LayerNumbers.LayerHighestUser)
 Set mCurrentTool = tool
 Chart1.SetFocus
 End Sub
@@ -501,12 +495,10 @@ Private Sub LineButton_Click()
 Dim tool As LineTool
 Dim ls As LineStyle
 
-Set ls = Chart1.DefaultLineStyle
-ls.extended = True
-ls.extendAfter = True
-ls.includeInAutoscale = False
+Set ls = New LineStyle
+ls.ExtendAfter = True
 
-Set tool = CreateLineTool(Chart1.controller, ls, LayerBackground)
+Set tool = CreateLineTool(Chart1.Controller, ls, LayerBackground)
 Set mCurrentTool = tool
 Chart1.SetFocus
 End Sub
@@ -531,17 +523,17 @@ Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle
 Dim lTextStyle As TextStyle
-ReDim gradientFillColors(1) As Long
+ReDim GradientFillColors(1) As Long
 
 LoadButton.Enabled = False  ' prevent the user pressing load again until the chart is cleared
 
-Chart1.SuppressDrawing = True       ' tells the chart not to draw anything. This is
+Chart1.DisableDrawing               ' tells the chart not to draw anything. This is
                                     ' useful when loading bulk data into the chart
                                     ' as it speeds the loading process considerably
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
-Chart1.barTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
+Chart1.BarTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
 
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
@@ -552,7 +544,7 @@ Chart1.barTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
 ' the first) that uses available space rather than a specific percentage - if you don't
 ' then resizing regions by dragging the dividers gives odd results!
 
-Set mPriceRegion = Chart1.AddChartRegion(100, 25)
+Set mPriceRegion = Chart1.Regions.Add(100, 25, mDataRegionStyle, mYAxisRegionStyle)
                                         ' don't let this region drop to more than
                                         ' 25 percent of the chart by resizing other
                                         ' regions
@@ -565,94 +557,84 @@ mPriceRegion.Title.Text = "Randomly generated data"
                                         ' set the title text.
 mPriceRegion.Title.Color = vbBlue
                                         
-mPriceRegion.SnapCursorToTickBoundaries = True
+mPriceRegion.CursorSnapsToTickBoundaries = True
 
-mPriceRegion.ShowPerformanceText = True ' displays some information about the number
+mPriceRegion.PerformanceTextVisible = True ' displays some information about the number
                                         ' of objects in the region and the time taken
                                         ' to paint the whole region on the screen (you
                                         ' wouldn't normally set this, it's only
                                         ' included here for interest)
+
 
 ' Now create the price bar series and set its properties. Note that there's nothing
 ' to stop you setting up multiple bar series in the same region should you want to,
 ' and you can of course have multiple regions each with its own set of bar series.
 
 ' first we set up the bar style, based on the default style
-Set lBarStyle = Chart1.DefaultBarStyle
+Set lBarStyle = New BarStyle
 With lBarStyle
-    .barWidth = 0.6                     ' specifies how wide each bar is. If this value
+    .Width = 0.6                        ' specifies how wide each bar is. If this value
                                         ' were set to 1, the sides of the bars would touch
-    .outlineThickness = 1               ' the thickness in pixels of a candlestick outline
+    .OutlineThickness = 1               ' the thickness in pixels of a candlestick outline
                                         ' (ignored if displaying as bars)
-    .tailThickness = 1                  ' the thickness in pixels of candlestick tails
+    .TailThickness = 1                  ' the thickness in pixels of candlestick tails
                                         ' (ignored if displaying as bars)
-    .barThickness = 2                   ' the thickness in pixels of the lines used to
+    .Thickness = 2                      ' the thickness in pixels of the lines used to
                                         ' draw bars (ignored if displaying as candlesticks)
-    .displayMode = BarDisplayModeBar
+    .DisplayMode = BarDisplayModeBar
                                         ' draw this bar series as bars not candlesticks
-    .solidUpBody = False                ' draw up candlesticks with open bodies
+    .SolidUpBody = False                ' draw up candlesticks with open bodies
                                         ' (ignored if displaying as bars)
-    .upColor = &H1D9311
-    .downColor = &H43FC2
+    .UpColor = &H1D9311
+    .DownColor = &H43FC2
 End With
 Set mBarSeries = mPriceRegion.AddGraphicObjectSeries(New BarSeries)
 mBarSeries.Style = lBarStyle
 
-' Create a text object that will display the clock time
-' Since this is just a single text field, we don't need to create a text series, just
-' use the region's implicit text series
-Set mClockText = mPriceRegion.AddText(LayerNumbers.LayerTitle)
+' Create a text object that will display the clock time. Place it in the grid text
+' layer, which is behind all other objects except the grid lines and the grid text.
+Set mClockText = mPriceRegion.AddText(, LayerNumbers.LayerGridText)
 mClockText.Align = AlignTopRight        ' use the top right corner of the text for
                                         ' positioning
-mClockText.Color = vbBlack              ' draw it black...
-mClockText.box = True                   ' ...with a box around it...
-mClockText.boxStyle = LineInsideSolid   ' ...whose outline is within the boundary of the
-                                        ' box...
-mClockText.boxThickness = 1             ' ...and is 1 pixel thick...
-mClockText.boxColor = vbBlack           ' ...draw the outline black...
-mClockText.boxFillColor = vbWhite       ' ...and fill it white
-mClockText.paddingX = 1                 ' leave 1 mm padding between the text and the box
-mClockText.Position = mPriceRegion.newPoint(90, 98, CoordsRelative, CoordsRelative)
+mClockText.Color = &HA0A0A0             ' draw it grey...
+mClockText.Box = True                   ' ...with a box around it...
+mClockText.BoxStyle = LineInvisible     ' ...whose outline is not visible...
+mClockText.BoxThickness = 1             ' ...and is 1 pixels thick...
+mClockText.BoxFillWithBackgroundColor = True    ' ...and fill it with the region's backgruond color(s)...
+mClockText.PaddingX = 1                 ' leave 1 mm padding between the text and the box
+mClockText.Position = mPriceRegion.NewPoint(90, 98, CoordsRelative, CoordsRelative)
                                         ' position the box 90 percent across the region
                                         ' and 98 percent up the region (this will be
                                         ' the position of the top right corner as
                                         ' specified by the Align property)
-mClockText.fixedX = True                ' the text's X position is to be fixed (ie it
+mClockText.FixedX = True                ' the text's X position is to be fixed (ie it
                                         ' won't drift left as time passes)
-mClockText.fixedY = True                ' the text's Y position is to be fixed (ie it
+mClockText.FixedY = True                ' the text's Y position is to be fixed (ie it
                                         ' will stay put vertically as well)
+Set aFont = New StdFont                 ' set the font for the text
+aFont.Italic = False
+aFont.Size = 16
+aFont.Bold = True
+aFont.Name = "MS Sans Serif"
+aFont.Underline = False
+mClockText.Font = aFont
 
 ' Define a series of text objects that will be used to label bars periodically
 
 ' first we set up the text style, based on the default style
-Set lTextStyle = Chart1.DefaultTextStyle
+Set lTextStyle = New TextStyle
 With lTextStyle
     .Align = AlignBoxTopCentre              ' Use the top centre of the text's box for
                                             ' aligning it
-    .box = True                             ' Draw a box around each text...
-    .boxThickness = 1                       ' ...with a thickness of 1 pixel...
-    .boxStyle = LineSolid                   ' ...and a solid line that is centred on the
+    .Box = True                             ' Draw a box around each text...
+    .BoxThickness = 1                       ' ...with a thickness of 1 pixel...
+    .BoxStyle = LineSolid                   ' ...and a solid line that is centred on the
                                             ' boundary of the text
-    .boxColor = vbBlack                     ' the box is to be black...
-    .paddingX = 0.5                         ' and there should be half a millimetre of space
+    .BoxColor = vbBlack                     ' the box is to be black...
+    .PaddingX = 0.5                         ' and there should be half a millimetre of space
                                             ' between the text and the surrounding box
     .Color = vbRed                          ' the text is to be red
-    .extended = False                       ' the text is not extended - this means that
-                                            ' when the alignment point is not in the visible
-                                            ' part of the region, none of the text will
-                                            ' be shown, even if parts of it are technically
-                                            ' within the visible part of the region - ie
-                                            ' either all the text is displayed, or none is
-                                            ' displayed
-    .fixedX = False                         ' the text is not fixed in the x coordinate, so
-                                            ' it will move as the chart scrolls left or right
-    .fixedY = False                         ' the text is not fixed in the y coordinate, so
-                                            ' it will move as the chart is scrolled up or
-                                            ' down
-    .includeInAutoscale = True
-                                            ' this means that when the chart is autoscaling
-                                            ' vertically, it will include the text in the
-                                            ' visible vertical extent
+    
     Set aFont = New StdFont                 ' set the font for the text
     aFont.Italic = True
     aFont.Size = 8
@@ -662,10 +644,25 @@ With lTextStyle
     .Font = aFont
 End With
 Set mBarLabelSeries = mPriceRegion.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerHighestUser)
+                                            ' Display them on a high layer but below the
+                                            ' title layer
 mBarLabelSeries.Style = lTextStyle
-                                        ' Display them on a high layer but below the
-                                        ' title layer
-Set mBarText = Nothing
+mBarLabelSeries.Extended = False            ' the text is not extended - this means that
+                                            ' when the alignment point is not in the visible
+                                            ' part of the region, none of the text will
+                                            ' be shown, even if parts of it are technically
+                                            ' within the visible part of the region - ie
+                                            ' either all the text is displayed, or none is
+                                            ' displayed
+mBarLabelSeries.FixedX = False              ' the text is not fixed in the x coordinate, so
+                                            ' it will move as the chart scrolls left or right
+mBarLabelSeries.FixedY = False              ' the text is not fixed in the y coordinate, so
+                                            ' it will move as the chart is scrolled up or
+                                            ' down
+mBarLabelSeries.IncludeInAutoscale = True   ' this means that when the chart is autoscaling
+                                            ' vertically, it will include the text in the
+                                            ' visible vertical extent
+Set mLatestBarLabel = Nothing
 
 ' Set up a line that will indicate the current price in the Y Axis
 Set mPriceLine = mPriceRegion.YAxisRegion.AddLine(LayerNumbers.LayerHighestUser - 1)
@@ -673,31 +670,33 @@ mPriceLine.Color = vbBlack
 
 ' Set up a text that will indicate the current price in the Y Axis
 Set mPriceText = mPriceRegion.YAxisRegion.AddText(LayerNumbers.LayerHighestUser - 1)
-mPriceText.box = True
-mPriceText.boxColor = vbBlack
-mPriceText.boxFillColor = vbWhite
+mPriceText.Box = True
+mPriceText.BoxColor = vbBlack
+mPriceText.BoxFillColor = vbBlack
 mPriceText.Align = AlignBoxCentreLeft
+mPriceText.Color = vbWhite
+mPriceText.Font.Bold = True
 
 ' Set up a datapoint series for the first moving average
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModePoint
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint
                                             ' display this series as discrete points...
-    .lineThickness = 5                      ' ...with a diameter of 5 pixels...
-    .pointStyle = PointRound                ' ...round shape...
+    .LineThickness = 5                      ' ...with a diameter of 5 pixels...
+    .PointStyle = PointRound                ' ...round shape...
     .Color = vbRed                          ' ...in red
 End With
 Set mMovAvg1Series = mPriceRegion.AddGraphicObjectSeries(New DataPointSeries)
 mMovAvg1Series.Style = lDataPointStyle
 
 ' Set up a datapoint series for the second moving average
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
                                             ' display this series as a line connecting
                                             ' individual points...
     .Color = vbBlue                         ' ...in blue
-    .lineThickness = 1                      ' ...with a thickness of 1 pixel...
+    .LineThickness = 1                      ' ...with a thickness of 1 pixel...
     .LineStyle = LineStyles.LineDot
                                             ' ...and a dotted style
 End With
@@ -705,14 +704,14 @@ Set mMovAvg2Series = mPriceRegion.AddGraphicObjectSeries(New DataPointSeries)
 mMovAvg2Series.Style = lDataPointStyle
 
 ' Set up a datapoint series for the third moving average
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeStep
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep
                                             ' display this series as a stepped line
                                             ' connecting the individual points...
-    .upColor = vbGreen                      ' ...in green for an up move
-    .downColor = vbRed                      ' ...in red for a down move
-    .lineThickness = 3                      ' ...3 pixels thick
+    .UpColor = vbGreen                      ' ...in green for an up move
+    .DownColor = vbRed                      ' ...in red for a down move
+    .LineThickness = 3                      ' ...3 pixels thick
 End With
 Set mMovAvg3Series = mPriceRegion.AddGraphicObjectSeries(New DataPointSeries)
 mMovAvg3Series.Style = lDataPointStyle
@@ -720,30 +719,30 @@ mMovAvg3Series.Style = lDataPointStyle
 ' Set up a line series for the swing lines (which connect each high or low
 ' to the following low or high)
 ' First create a LineStyle specifying the lines' display format
-Set lLineStyle = Chart1.DefaultLineStyle
+Set lLineStyle = New LineStyle
 With lLineStyle
     .Color = vbRed                          ' show the lines red...
-    .thickness = 1                          ' ...with a thickness of 1 pixel...
-    .arrowEndStyle = ArrowClosed            ' ...and a closed arrowhead at the end...
-    .arrowEndWidth = 10                     ' ...10 pixels wide at the base...
-    .arrowEndFillColor = vbYellow           ' ...filled yellow...
-    .arrowEndFillStyle = FillSolid          ' ...with a plain solid fill...
-    .arrowEndColor = vbBlue                 ' ...and a blue outline
-    .arrowStartStyle = ArrowNone            ' No arrowhead at the start of the line
-    .extended = True                        ' If this were not set to true, lines
-                                            ' would only be drawn while their
-                                            ' start point was in the visible area of
-                                            ' the chart
+    .Thickness = 1                          ' ...with a thickness of 1 pixel...
+    .ArrowEndStyle = ArrowClosed            ' ...and a closed arrowhead at the end...
+    .ArrowEndWidth = 10                     ' ...10 pixels wide at the base...
+    .ArrowEndFillColor = vbYellow           ' ...filled yellow...
+    .ArrowEndFillStyle = FillSolid          ' ...with a plain solid fill...
+    .ArrowEndColor = vbBlue                 ' ...and a blue outline
+    .ArrowStartStyle = ArrowNone            ' No arrowhead at the start of the line
 End With
 
 Set mSwingLineSeries = mPriceRegion.AddGraphicObjectSeries(New LineSeries)
 mSwingLineSeries.Style = lLineStyle
+mSwingLineSeries.Extended = True            ' If this were not set to true, lines
+                                            ' would only be drawn while their
+                                            ' start point was in the visible area of
+                                            ' the chart
 
 mSwingAmountTicks = MinSwingTicksText.Text
 
 Set mSwingLine = mSwingLineSeries.Add ' create the first swing line
-mSwingLine.Point1 = mPriceRegion.newPoint(0, 0)
-mSwingLine.Point2 = mPriceRegion.newPoint(0, mSwingAmountTicks * mTickSize)
+mSwingLine.Point1 = mPriceRegion.NewPoint(0, 0)
+mSwingLine.Point2 = mPriceRegion.NewPoint(0, mSwingAmountTicks * mTickSize)
 mSwingLine.Hidden = True                ' hide it because we don't want this one
                                         ' to be visible on the chart
 mSwingingUp = True
@@ -751,7 +750,7 @@ Set mPrevSwingLine = Nothing
 Set mNewSwingLine = Nothing
 
 ' Create a region to display the MACD study
-Set mMACDRegion = Chart1.AddChartRegion(20)
+Set mMACDRegion = Chart1.Regions.Add(20, , mDataRegionStyle, mYAxisRegionStyle)
                                         ' use 20 percent of the space for this region
 mMACDRegion.GridlineSpacingY = 0.8      ' the horizontal grid lines should be about
                                         ' 8 millimeters apart
@@ -759,39 +758,42 @@ mMACDRegion.Title.Text = "MACD (12, 24, 5)"
 mMACDRegion.Title.Color = vbBlue
 
 ' Set up a datapoint series for the MACD histogram values on lowest user layer
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
-    .upColor = vbGreen
-    .downColor = vbMagenta
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
+    .UpColor = vbGreen
+    .DownColor = vbMagenta
 End With
 Set mMACDHistSeries = mMACDRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerLowestUser)
 mMACDHistSeries.Style = lDataPointStyle
+mMACDHistSeries.IncludeInAutoscale = True
 
 ' Set up a datapoint series for the MACD values on next layer
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
     .Color = vbBlue
 End With
 Set mMACDSeries = mMACDRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerLowestUser + 1)
 mMACDSeries.Style = lDataPointStyle
+mMACDSeries.IncludeInAutoscale = True
 
 ' Set up a datapoint series for the MACD signal values on next layer
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
     .Color = vbRed
 End With
 Set mMACDSignalSeries = mMACDRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerLowestUser + 2)
 mMACDSignalSeries.Style = lDataPointStyle
+mMACDSignalSeries.IncludeInAutoscale = True
 
 ' Create a region to display the volume bars
-Set mVolumeRegion = Chart1.AddChartRegion(15)
+Set mVolumeRegion = Chart1.Regions.Add(15, , mDataRegionStyle, mYAxisRegionStyle)
                                         ' use 15 percent of the space for this region
 mVolumeRegion.Title.Text = "Volume"
 mVolumeRegion.Title.Color = vbBlue
-mVolumeRegion.ShowPerformanceText = True
+mVolumeRegion.PerformanceTextVisible = True
                                         ' show the performance info just for interest
 mVolumeRegion.IntegerYScale = True      ' constrain the Y scale to only display integer
                                         ' labels
@@ -800,18 +802,22 @@ mVolumeRegion.GridlineSpacingY = 0.8    ' the horizontal grid lines should be ab
                                         ' 8 millimeters apart
 
 ' Set up a datapoint series for the volume bars
-Set lDataPointStyle = Chart1.DefaultDataPointStyle
+Set lDataPointStyle = New DataPointStyle
 With lDataPointStyle
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
+    .DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
                                             ' display this series as a histogram
-    .upColor = vbGreen
-    .downColor = vbRed
+    .UpColor = vbGreen
+    .DownColor = vbRed
 End With
 Set mVolumeSeries = mVolumeRegion.AddGraphicObjectSeries(New DataPointSeries)
 mVolumeSeries.Style = lDataPointStyle
+mVolumeSeries.IncludeInAutoscale = True
 
 mCumVolume = 0
 mPrevBarVolume = 0
+
+' Link up the toolbar
+ChartToolbar1.initialise Chart1.Controller, mPriceRegion, mBarSeries
 
 ' Create a simulator object to generate simulated price and volume ticks
 Set mTickSimulator = New TickSimulator
@@ -823,74 +829,75 @@ mTickSimulator.BarLength = mBarLength
 ' The historical bars are notified using the HistoricalBar event
 mTickSimulator.StartSimulation InitialNumBarsText.Text
 
-Set startText = mPriceRegion.AddText()  ' create a text object that will indicate on the
+Set startText = mPriceRegion.AddText(, LayerHighestUser)
+                                        ' create a text object that will indicate on the
                                         ' chart where the realtime simulation (as
                                         ' opposed to the historical bars) started
 startText.Color = vbRed                 ' the text is to be red
 startText.Font = Nothing                ' use the default font
-startText.box = True                    ' draw a box around it...
-startText.boxColor = vbBlue             ' ...with a blue outline...
-startText.boxStyle = LineStyles.LineInsideSolid
-startText.boxThickness = 1              ' ...1 pixel thick...
-startText.boxFillColor = vbGreen        ' ...and a green fill
-startText.boxFillStyle = FillStyles.FillSolid
+startText.Box = True                    ' draw a box around it...
+startText.BoxColor = vbBlue             ' ...with a blue outline...
+startText.BoxStyle = LineStyles.LineInsideSolid
+startText.BoxThickness = 1              ' ...1 pixel thick...
+startText.BoxFillColor = vbGreen        ' ...and a green fill
+startText.BoxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.Position = mPriceRegion.newPoint(mBar.x, mBar.highPrice)
+startText.Position = mPriceRegion.NewPoint(mBar.X, mBar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
-startText.offset = mPriceRegion.newDimension(0, 0.4)
+startText.offset = mPriceRegion.NewDimension(0, 0.4)
                                         ' ...and offset it 4 millimetres above this
 startText.Align = TextAlignModes.AlignBoxBottomRight
                                         ' use the bottom right corner of the text's box
                                         ' for determining the position
-startText.extended = True               ' the text is an extended object, ie, any part
+startText.Extended = True               ' the text is an extended object, ie, any part
                                         ' of it that falls within the visible part of
                                         ' the region will be shown
-startText.fixedX = False                ' the text is not fixed in position in the...
-startText.fixedY = False                ' ...region, ie it will move as the chart scrolls
-startText.includeInAutoscale = True     ' vertical autoscaling will keep the text visible
+startText.FixedX = False                ' the text is not fixed in position in the...
+startText.FixedY = False                ' ...region, ie it will move as the chart scrolls
+startText.IncludeInAutoscale = True     ' vertical autoscaling will keep the text visible
 startText.Text = "Started here"
 
 Set extendedLine = mPriceRegion.AddLine ' create a line object
 extendedLine.Color = vbMagenta          ' color it magenta (yuk)
-extendedLine.extendAfter = True         ' make it extend forever beyond its second point
-extendedLine.extendBefore = True        ' make it extend forever before its first point
-extendedLine.extended = True            ' make sure it's visible even if its first point isn't
+extendedLine.ExtendAfter = True         ' make it extend forever beyond its second point
+extendedLine.ExtendBefore = True        ' make it extend forever before its first point
+extendedLine.Extended = True            ' make sure it's visible even if its first point isn't
                                         ' in view
-Dim x As Long
+Dim X As Long
 If InitialNumBarsText > 40 Then
-    x = mPeriod.periodNumber - 40
+    X = mPeriod.periodNumber - 40
 Else
-    x = 1
+    X = 1
 End If
-extendedLine.Point1 = mPriceRegion.newPoint(x, mBarSeries.Item(x).highPrice + 20 * mTickSize)
+extendedLine.Point1 = mPriceRegion.NewPoint(X, mBarSeries.Item(X).highPrice + 20 * mTickSize)
                                         ' let its 1st point be 20 ticks above the high 40 bars ago
 If InitialNumBarsText > 5 Then
-    x = mPeriod.periodNumber - 5
+    X = mPeriod.periodNumber - 5
 Else
-    x = 1
+    X = 1
 End If
-extendedLine.Point2 = mPriceRegion.newPoint(x, mBarSeries.Item(x).highPrice)
+extendedLine.Point2 = mPriceRegion.NewPoint(X, mBarSeries.Item(X).highPrice)
                                         ' let its 2nd point be the high 5 bars ago
 
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
-Chart1.SuppressDrawing = False
+Chart1.EnableDrawing
 
 ' create a text object to display the number of ticks generated by the tick simulator
 Set mTickCountText = mPriceRegion.AddText()
 mTickCountText.Color = vbWhite
 mTickCountText.Font = Nothing
-mTickCountText.box = True
-mTickCountText.boxColor = vbBlack
-mTickCountText.boxStyle = LineStyles.LineSolid
-mTickCountText.boxThickness = 1
-mTickCountText.boxFillColor = vbBlack
-mTickCountText.boxFillStyle = FillStyles.FillSolid
-mTickCountText.Position = mPriceRegion.newPoint(5, 90, CoordsRelative, CoordsRelative)
-mTickCountText.fixedX = True
-mTickCountText.fixedY = True
+mTickCountText.Box = True
+mTickCountText.BoxColor = vbBlack
+mTickCountText.BoxStyle = LineStyles.LineSolid
+mTickCountText.BoxThickness = 1
+mTickCountText.BoxFillColor = vbBlack
+mTickCountText.BoxFillStyle = FillStyles.FillSolid
+mTickCountText.Position = mPriceRegion.NewPoint(5, 90, CoordsRelative, CoordsRelative)
+mTickCountText.FixedX = True
+mTickCountText.FixedY = True
 mTickCountText.Align = TextAlignModes.AlignTopLeft
-mTickCountText.includeInAutoscale = False
+mTickCountText.IncludeInAutoscale = False
 
 ' set up the clock timer to fire an event every 250 milliseconds
 Set mClockTimer = CreateIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
@@ -945,23 +952,23 @@ mBar.Tick highPrice
 mBar.Tick lowPrice
 mBar.Tick closePrice
 
-mPriceLine.SetPosition mPriceRegion.YAxisRegion.newPoint(1, closePrice, CoordsRelative), _
-                        mPriceRegion.YAxisRegion.newPoint(98, closePrice, CoordsRelative)
+mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, closePrice, CoordsRelative), _
+                        mPriceRegion.YAxisRegion.NewPoint(98, closePrice, CoordsRelative)
 mPriceText.Text = closePrice
-mPriceText.Position = mPriceRegion.YAxisRegion.newPoint(20, closePrice)
+mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, closePrice)
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' color the bar blue
-    mBar.barColor = vbBlue
+    mBar.Color = vbBlue
     
     ' add a label to the bar
-    Set mBarText = mBarLabelSeries.Add()
-    mBarText.Text = mPeriod.periodNumber
-    mBarText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mBar.lowPrice)
+    Set mLatestBarLabel = mBarLabelSeries.Add()
+    mLatestBarLabel.Text = mPeriod.periodNumber
+    mLatestBarLabel.Position = mPriceRegion.NewPoint(mPeriod.periodNumber, mBar.lowPrice)
     ' position the text 3mm below the bar's low
-    mBarText.offset = mPriceRegion.newDimension(0, -0.3)
+    mLatestBarLabel.offset = mPriceRegion.NewDimension(0, -0.3)
 Else
-    Set mBarText = Nothing
+    Set mLatestBarLabel = Nothing
 End If
 
 swing mPeriod.periodNumber, openPrice
@@ -1015,10 +1022,10 @@ mElapsedTimer.StartTiming
 mBar.Tick price
 tickTime = mElapsedTimer.ElapsedTimeMicroseconds
 
-mPriceLine.SetPosition mPriceRegion.YAxisRegion.newPoint(1, price, CoordsRelative), _
-                        mPriceRegion.YAxisRegion.newPoint(98, price, CoordsRelative)
+mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, price, CoordsRelative), _
+                        mPriceRegion.YAxisRegion.NewPoint(98, price, CoordsRelative)
 mPriceText.Text = price
-mPriceText.Position = mPriceRegion.YAxisRegion.newPoint(20, price)
+mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, price)
 
 calculateStudies price
 
@@ -1027,22 +1034,22 @@ displayStudyValues
 studiesTime = mElapsedTimer.ElapsedTimeMicroseconds
 
 mElapsedTimer.StartTiming
-swing mBar.x, price
+swing mBar.X, price
 swingTime = mElapsedTimer.ElapsedTimeMicroseconds
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' color the bar blue
-    mBar.barColor = vbBlue
+    mBar.Color = vbBlue
     
-    If mBarText Is Nothing Then
-        Set mBarText = mBarLabelSeries.Add()
-        mBarText.Text = mPeriod.periodNumber
+    If mLatestBarLabel Is Nothing Then
+        Set mLatestBarLabel = mBarLabelSeries.Add()
+        mLatestBarLabel.Text = mPeriod.periodNumber
     End If
-    mBarText.Position = mPriceRegion.newPoint(mBar.x, mBar.lowPrice)
+    mLatestBarLabel.Position = mPriceRegion.NewPoint(mBar.X, mBar.lowPrice)
     ' position the text 3mm below the bar's low
-    mBarText.offset = mPriceRegion.newDimension(0, -0.3)
+    mLatestBarLabel.offset = mPriceRegion.NewDimension(0, -0.3)
 Else
-    Set mBarText = Nothing
+    Set mLatestBarLabel = Nothing
 End If
 
 mElapsedTimer.StartTiming
@@ -1083,6 +1090,59 @@ mMa3.datavalue value
 mMACD.datavalue value
 End Sub
 
+Private Sub clearFields()
+Set mPriceRegion = Nothing
+Set mVolumeRegion = Nothing
+Set mMACDRegion = Nothing
+
+Set mBarSeries = Nothing
+Set mBar = Nothing
+Set mBarLabelSeries = Nothing
+Set mLatestBarLabel = Nothing
+
+Set mMovAvg1Series = Nothing
+Set mMovAvg1Point = Nothing
+Set mMA1 = Nothing
+
+Set mMovAvg2Series = Nothing
+Set mMovAvg2Point = Nothing
+Set mMA2 = Nothing
+
+Set mMovAvg3Series = Nothing
+Set mMovAvg3Point = Nothing
+Set mMa3 = Nothing
+
+Set mMACDSeries = Nothing
+Set mMACDPoint = Nothing
+Set mMACDSignalSeries = Nothing
+Set mMACDSignalPoint = Nothing
+Set mMACDHistSeries = Nothing
+Set mMACDHistPoint = Nothing
+Set mMACD = Nothing
+
+Set mVolumeSeries = Nothing
+Set mVolume = Nothing
+
+Set mSwingLineSeries = Nothing
+Set mSwingLine = Nothing
+Set mPrevSwingLine = Nothing
+Set mNewSwingLine = Nothing
+
+If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
+Set mClockText = Nothing
+
+Set mTickSimulator = Nothing
+
+Set mTickCountText = Nothing
+
+Set mPriceLine = Nothing
+Set mPriceText = Nothing
+
+Set mCurrentTool = Nothing
+
+mBarTime = 0
+End Sub
+
 Private Sub displayStudyValues()
 If Not IsEmpty(mMA1.maValue) Then mMovAvg1Point.datavalue = mMA1.maValue
 If Not IsEmpty(mMA2.maValue) Then mMovAvg2Point.datavalue = mMA2.maValue
@@ -1093,19 +1153,18 @@ If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHi
 End Sub
 
 Private Sub initialise()
-Dim regionStyle As ChartRegionStyle
 
-Chart1.Autoscroll = True            ' requests that the chart should automatically scroll
+Chart1.Autoscrolling = True            ' requests that the chart should automatically scroll
                                     ' forward one period each time a new period is added
 Chart1.TwipsPerBar = 150            ' specifies the space between bars - there are
                                     ' 1440 twips per inch or 567 per centimetre
-Chart1.ShowHorizontalScrollBar = True
+Chart1.HorizontalScrollBarVisible = True
                                     ' show a horizontal scrollbar for navigating back
                                     ' and forth in the chart
-Chart1.AllowHorizontalMouseScrolling = True
+Chart1.HorizontalMouseScrollingAllowed = True
                                     ' alternatively the user can scroll by dragging the
                                     ' mouse both horizontally...
-Chart1.AllowVerticalMouseScrolling = True
+Chart1.VerticalMouseScrollingAllowed = True
                                     ' ... and vertically
 Chart1.PointerStyle = PointerCrosshairs
                                     ' request that crosshairs be displayed to track
@@ -1114,45 +1173,60 @@ Chart1.PointerStyle = PointerCrosshairs
 ' set some default properties of the chart regions
 
 ' set the background colour of the chart area when the chart is cleared
-ReDim gradientFillColors(1) As Long
-gradientFillColors(0) = RGB(255, 128, 128)
-gradientFillColors(1) = RGB(255, 255, 255)
-Chart1.controller.ChartBackGradientFillColors = gradientFillColors
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = RGB(255, 128, 128)
+GradientFillColors(1) = RGB(255, 255, 255)
+'Chart1.ChartBackGradientFillColors = gradientFillColors
+Chart1.ChartBackColor = RGB(255, 128, 128)
 
 ' first get the built-in defaults - we modify those that
 ' we want to change
-Set regionStyle = Chart1.DefaultRegionStyle
+Set mDataRegionStyle = New ChartRegionStyle
 
-regionStyle.Autoscale = True        ' indicates that by default, each chart region will
+mDataRegionStyle.Autoscaling = True   ' indicates that by default, each chart region will
                                     ' automatically adjust its vertical scaling to ensure
                                     ' that all relevant data is visible
-ReDim gradientFillColors(1) As Long
-gradientFillColors(0) = RGB(230, 223, 130)
-gradientFillColors(1) = RGB(251, 250, 235)
-regionStyle.BackGradientFillColors = gradientFillColors
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = RGB(230, 223, 130)
+GradientFillColors(1) = RGB(251, 250, 235)
+mDataRegionStyle.BackGradientFillColors = GradientFillColors
                                     ' sets the default background color for all regions
                                     ' of the chart - but each separate region can
                                     ' have its own background color
-regionStyle.GridColor = &HC0C0C0    ' sets the colour of the gridlines
-regionStyle.GridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
-regionStyle.HasGrid = True          ' indicate that there is a grid
-
-' now apply these settings
-Chart1.DefaultRegionStyle = regionStyle
+mDataRegionStyle.GridLineStyle.Color = &HC0C0C0    ' sets the colour of the gridlines
+mDataRegionStyle.GridLineStyle.LineStyle = LineDashDot   ' sets the style of the gridlines
+mDataRegionStyle.GridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
+mDataRegionStyle.HasGrid = True          ' indicate that there is a grid
+mDataRegionStyle.YAxisTextStyle.Font.Name = "Lucida Console"
+mDataRegionStyle.YAxisTextStyle.Font.Size = 7
+mDataRegionStyle.YCursorTextStyle.BoxFillColor = vbYellow
+mDataRegionStyle.YCursorTextStyle.Color = vbBlue
+mDataRegionStyle.YCursorTextStyle.Font.Name = "Times New Roman"
+mDataRegionStyle.YCursorTextStyle.Font.Bold = True
+mDataRegionStyle.YCursorTextStyle.Font.Size = 10
 
 ' now set the style for the X axis
-Set regionStyle = Chart1.XAxisRegion.Style
-gradientFillColors(0) = RGB(230, 236, 207)
-gradientFillColors(1) = RGB(222, 236, 215)
-regionStyle.BackGradientFillColors = gradientFillColors
-Chart1.XAxisRegion.Style = regionStyle
+GradientFillColors(0) = RGB(230, 236, 207)
+GradientFillColors(1) = RGB(222, 236, 215)
+Chart1.XAxisRegion.Style.BackGradientFillColors = GradientFillColors
+Chart1.XAxisRegion.GridTextStyle.Font.Name = "Lucida Console"
+Chart1.XAxisRegion.GridTextStyle.Font.Size = 7
 
-' now set the style for Y axes
-Set regionStyle = Chart1.DefaultYAxisStyle
-gradientFillColors(0) = RGB(234, 246, 254)
-gradientFillColors(1) = RGB(226, 246, 255)
-regionStyle.BackGradientFillColors = gradientFillColors
-Chart1.DefaultYAxisStyle = regionStyle
+' now create the style for Y axes
+Set mYAxisRegionStyle = New ChartRegionStyle
+GradientFillColors(0) = RGB(234, 246, 254)
+GradientFillColors(1) = RGB(226, 246, 255)
+mYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+
+' set the style for the X-axis cursor label
+Chart1.XCursorTextStyle.BoxFillColor = vbYellow
+Chart1.XCursorTextStyle.Color = vbBlue
+Chart1.XCursorTextStyle.Font.Name = "Times New Roman"
+Chart1.XCursorTextStyle.Font.Bold = True
+Chart1.XCursorTextStyle.Font.Size = 10
+
+' set the width of the Y-axis area
+Chart1.YAxisWidthCm = 2
 
 ' create the moving average objects
 Set mMA1 = New ExponentialMovingAverage
@@ -1178,10 +1252,10 @@ If Not IsEmpty(mMA1.maValue) Then
 End If
 
 If mPeriod.periodNumber Mod 5 = 0 Then
-    mMovAvg1Point.upColor = vbGreen         ' make every 5th data point magenta...
-    mMovAvg1Point.downColor = vbMagenta     ' ...or green...
-    mMovAvg1Point.pointStyle = PointSquare  ' ...and square...
-    mMovAvg1Point.lineThickness = 8        ' ...and bigger
+    mMovAvg1Point.UpColor = vbGreen         ' make every 5th data point magenta...
+    mMovAvg1Point.DownColor = vbMagenta     ' ...or green...
+    mMovAvg1Point.PointStyle = PointSquare  ' ...and square...
+    mMovAvg1Point.LineThickness = 8        ' ...and bigger
 End If
 
 mMA2.newPeriod
@@ -1208,11 +1282,10 @@ End If
 End Sub
 
 Private Sub swing(ByVal periodNumber As Long, ByVal price As Double)
-
 If mSwingingUp Then
-    If (mSwingLine.Point2.y - mSwingLine.Point1.y) >= mSwingAmountTicks * mTickSize Then
-        If price >= mSwingLine.Point2.y Then
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+    If (mSwingLine.Point2.Y - mSwingLine.Point1.Y) >= mSwingAmountTicks * mTickSize Then
+        If price >= mSwingLine.Point2.Y Then
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
         Else
             
             Set mPrevSwingLine = mSwingLine
@@ -1223,25 +1296,25 @@ If mSwingingUp Then
                 Set mNewSwingLine = Nothing
                 mSwingLine.Hidden = False
             End If
-            mSwingLine.Point1 = mPriceRegion.newPoint(mPrevSwingLine.Point2.x, mPrevSwingLine.Point2.y)
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+            mSwingLine.Point1 = mPriceRegion.NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
             mSwingingUp = False
         End If
     Else
-        If price > mPrevSwingLine.Point2.y Then
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+        If price > mPrevSwingLine.Point2.Y Then
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
         Else
             Set mNewSwingLine = mSwingLine
             mNewSwingLine.Hidden = True
             Set mSwingLine = mPrevSwingLine
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
             mSwingingUp = False
         End If
     End If
 Else
-    If (mSwingLine.Point1.y - mSwingLine.Point2.y) >= mSwingAmountTicks * mTickSize Then
-        If price <= mSwingLine.Point2.y Then
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+    If (mSwingLine.Point1.Y - mSwingLine.Point2.Y) >= mSwingAmountTicks * mTickSize Then
+        If price <= mSwingLine.Point2.Y Then
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
         Else
             
             Set mPrevSwingLine = mSwingLine
@@ -1252,18 +1325,18 @@ Else
                 Set mNewSwingLine = Nothing
                 mSwingLine.Hidden = False
             End If
-            mSwingLine.Point1 = mPriceRegion.newPoint(mPrevSwingLine.Point2.x, mPrevSwingLine.Point2.y)
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+            mSwingLine.Point1 = mPriceRegion.NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
             mSwingingUp = True
         End If
     Else
-        If price < mPrevSwingLine.Point2.y Then
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+        If price < mPrevSwingLine.Point2.Y Then
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
         Else
             Set mNewSwingLine = mSwingLine
             mNewSwingLine.Hidden = True
             Set mSwingLine = mPrevSwingLine
-            mSwingLine.Point2 = mPriceRegion.newPoint(periodNumber, price)
+            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
             mSwingingUp = True
         End If
     End If

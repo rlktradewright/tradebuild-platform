@@ -67,11 +67,10 @@ End Sub
 '@================================================================================
 
 Private Sub Task_cancel()
-
+mTaskContext.Finish Empty, True
 End Sub
 
 Private Sub Task_run()
-Dim graphObj As IGraphicObject
 Dim i As Long
 
 Dim failpoint As Long
@@ -83,11 +82,7 @@ Do While mGraphObjSeries.Count <> 0
 
     failpoint = 200
 
-    Set graphObj = mGraphObjSeries.Item(1)
-    
-    failpoint = 300
-    
-    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx graphObj, False, False
+    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(1), False, False
     
     failpoint = 400
     
@@ -110,7 +105,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -141,8 +136,10 @@ Friend Sub Initialise( _
                 ByVal Region As ChartRegion, _
                 ByVal removeObjectsFromRegion As Boolean)
 Set mGraphObjSeries = graphObjSeries
-Set mRegion = Region
-mRemoveObjectsFromRegion = removeObjectsFromRegion
+If removeObjectsFromRegion Then
+    Set mRegion = Region
+    mRemoveObjectsFromRegion = True
+End If
 End Sub
 
 '@================================================================================

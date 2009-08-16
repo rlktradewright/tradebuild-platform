@@ -43,8 +43,8 @@ Private Const ConfigSettingDownColor            As String = "&DownColor"
 Private Const ConfigSettingLineStyle            As String = "&LineStyle"
 Private Const ConfigSettingPointStyle           As String = "&PointStyle"
 Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
-Private Const ConfigSettingHistBarWidth         As String = "&HistBarWidth"
-'Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingHistWidth            As String = "&HistBarWidth"
+Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
 
 '@================================================================================
 ' Enums
@@ -67,7 +67,8 @@ Private mDownColor As Long
 Private mLineStyle As LineStyles
 Private mPointStyle As PointStyles
 Private mDisplayMode As DataPointDisplayModes
-Private mHistBarWidth As Single
+Private mHistWidth As Single
+Private mIncludeInAutoscale As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -79,7 +80,7 @@ mColor = vbBlack
 mLineStyle = LineStyles.LineSolid
 mPointStyle = PointRound
 mDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mHistBarWidth = 0.6
+mHistWidth = 0.6
 mDownColor = -1
 mUpColor = -1
 End Sub
@@ -96,7 +97,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Color(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointStyle" & ":" & "color", _
@@ -107,13 +108,13 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
 firePropertyChanged "Color"
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mColor
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
-If mConfig Is Nothing Then
+If value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
@@ -128,8 +129,8 @@ mConfig.SetSetting ConfigSettingDownColor, mDownColor
 mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
 mConfig.SetSetting ConfigSettingPointStyle, mPointStyle
 mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
-mConfig.SetSetting ConfigSettingHistBarWidth, mHistBarWidth
-'mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingHistWidth, mHistWidth
+mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
 
 End Property
 
@@ -144,7 +145,7 @@ Public Property Get DisplayMode() As DataPointDisplayModes
 DisplayMode = mDisplayMode
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
+Public Property Let DownColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointStyle" & ":" & "downColor", _
@@ -155,36 +156,36 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDownColor, mDownC
 firePropertyChanged "DownColor"
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mDownColor
 End Property
 
-Public Property Let HistBarWidth(ByVal value As Single)
+Public Property Let HistogramBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "DataPointStyle" & ":" & "histBarWidth", _
-            "histBarWidth must be greater than zero but not greater than 1"
+            "ChartSkil26" & "." & "DataPointStyle" & ":" & "HistogramBarWidth", _
+            "HistogramBarWidth must be greater than zero but not greater than 1"
 
-If mHistBarWidth = value Then Exit Property
-mHistBarWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHistBarWidth, mHistBarWidth
-firePropertyChanged "HistBarWidth"
+If mHistWidth = value Then Exit Property
+mHistWidth = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHistWidth, mHistWidth
+firePropertyChanged "HistogramBarWidth"
 End Property
 
-Public Property Get HistBarWidth() As Single
-HistBarWidth = mHistBarWidth
+Public Property Get HistogramBarWidth() As Single
+HistogramBarWidth = mHistWidth
 End Property
 
-'Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-'If mIncludeInAutoscale = value Then Exit Property
-'mIncludeInAutoscale = value
-'if not mconfig is nothing then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-'firePropertyChanged "IncludeInAutoscale"
-'End Property
-'
-'Public Property Get IncludeInAutoscale() As Boolean
-'IncludeInAutoscale = mIncludeInAutoscale
-'End Property
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value Then Exit Property
+mIncludeInAutoscale = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+firePropertyChanged "IncludeInAutoscale"
+End Property
+
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
+End Property
 
 Public Property Let LineStyle(ByVal value As LineStyles)
 If mLineStyle = value Then Exit Property
@@ -219,7 +220,7 @@ Public Property Get PointStyle() As PointStyles
 PointStyle = mPointStyle
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
+Public Property Let UpColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointStyle" & ":" & "downColor", _
@@ -230,7 +231,7 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
 firePropertyChanged "UpColor"
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get UpColor() As Long
 UpColor = mUpColor
 End Property
 
@@ -243,8 +244,8 @@ Set clone = New DataPointStyle
 clone.Color = mColor
 clone.DisplayMode = mDisplayMode
 clone.DownColor = mDownColor
-clone.HistBarWidth = mHistBarWidth
-'clone.IncludeInAutoscale = mIncludeInAutoscale
+clone.HistogramBarWidth = mHistWidth
+clone.IncludeInAutoscale = mIncludeInAutoscale
 clone.LineStyle = mLineStyle
 clone.LineThickness = mLineThickness
 clone.PointStyle = PointStyle
@@ -262,8 +263,8 @@ mDownColor = mConfig.GetSetting(ConfigSettingDownColor)
 mLineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
 mPointStyle = mConfig.GetSetting(ConfigSettingPointStyle)
 mDisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
-mHistBarWidth = mConfig.GetSetting(ConfigSettingHistBarWidth)
-'mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+mHistWidth = mConfig.GetSetting(ConfigSettingHistWidth)
+mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
                 
 End Sub
 

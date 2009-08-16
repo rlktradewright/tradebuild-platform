@@ -19,17 +19,20 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                   As String = "ChartTools26"
+Public Const ProjectName                    As String = "ChartUtils26"
+Private Const ModuleName                    As String = "Globals"
 
-Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
+Private Const ConfigSectionDefaultStudyConfig   As String = "DefaultStudyConfig"
 
-Public Const OneMicroSecond As Double = 1.15740740740741E-11
+Public Const MinDouble                      As Double = -(2 - 2 ^ -52) * 2 ^ 1023
+Public Const MaxDouble                      As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
-Public Const RegionNameCustom As String = "$custom"
-Public Const RegionNameDefault As String = "$default"
-Public Const RegionNamePrice As String = "Price"
-Public Const RegionNameVolume As String = "Volume"
+Public Const OneMicroSecond                 As Double = 1.15740740740741E-11
+
+Public Const RegionNameCustom               As String = "$custom"
+Public Const RegionNameDefault              As String = "$default"
+Public Const RegionNamePrice                As String = "Price"
+Public Const RegionNameVolume               As String = "Volume"
 
 '@================================================================================
 ' Enums
@@ -47,6 +50,10 @@ Public Const RegionNameVolume As String = "Volume"
 ' Member variables
 '@================================================================================
 
+Private mDefaultStudyConfigurations         As Collection
+
+Private mConfig                             As ConfigurationSection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -63,6 +70,12 @@ Public Const RegionNameVolume As String = "Volume"
 ' Properties
 '@================================================================================
 
+Public Property Get gErrorLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("error")
+Set gErrorLogger = lLogger
+End Property
+
 Public Property Get gLogger() As Logger
 Static lLogger As Logger
 If lLogger Is Nothing Then Set lLogger = GetLogger("log")
@@ -73,7 +86,150 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function gGetDefaultStudyConfiguration( _
+                ByVal Name As String, _
+                ByVal studyLibName As String) As StudyConfiguration
+Dim studyConfig As StudyConfiguration
+If mDefaultStudyConfigurations Is Nothing Then
+    Set mDefaultStudyConfigurations = New Collection
+End If
+On Error Resume Next
+Set studyConfig = mDefaultStudyConfigurations.item(calcDefaultStudyKey(Name, studyLibName))
+On Error GoTo 0
+If Not studyConfig Is Nothing Then
+    Set gGetDefaultStudyConfiguration = studyConfig.Clone
+Else
+    'no default Study config currently exists so we'll create one from the Study definition
+    Dim sd As StudyDefinition
+    Set sd = GetStudyDefinition(Name, studyLibName)
+
+    Set studyConfig = New StudyConfiguration
+    studyConfig.Name = Name
+    studyConfig.StudyLibraryName = studyLibName
+
+    Select Case sd.DefaultRegion
+        Case StudyDefaultRegions.DefaultRegionNone
+            studyConfig.ChartRegionName = RegionNameDefault
+        Case StudyDefaultRegions.DefaultRegionCustom
+            studyConfig.ChartRegionName = RegionNameCustom
+        Case Else
+            studyConfig.ChartRegionName = RegionNameDefault
+    End Select
+
+    studyConfig.Parameters = GetStudyDefaultParameters(Name, studyLibName)
+    
+    Dim InputValueNames() As String
+    ReDim InputValueNames(sd.StudyInputDefinitions.count - 1) As String
+    
+    InputValueNames(0) = DefaultStudyValueName
+    If sd.StudyInputDefinitions.count > 1 Then
+        Dim i As Long
+        For i = 2 To sd.StudyInputDefinitions.count
+            InputValueNames(i - 1) = sd.StudyInputDefinitions.item(i).Name
+        Next
+    End If
+    studyConfig.InputValueNames = InputValueNames
+
+    Dim studyValueDef As StudyValueDefinition
+    Dim studyValueConfig As StudyValueConfiguration
+    
+    For Each studyValueDef In sd.StudyValueDefinitions
+        Set studyValueConfig = studyConfig.StudyValueConfigurations.add(studyValueDef.Name)
+
+        studyValueConfig.IncludeInChart = studyValueDef.IncludeInChart
+        Select Case studyValueDef.ValueMode
+            Case StudyValueModes.ValueModeNone
+                studyValueConfig.DataPointStyle = studyValueDef.ValueStyle
+                
+            Case StudyValueModes.ValueModeLine
+                studyValueConfig.LineStyle = studyValueDef.ValueStyle
+
+            Case StudyValueModes.ValueModeBar
+                studyValueConfig.BarStyle = studyValueDef.ValueStyle
+
+            Case StudyValueModes.ValueModeText
+                studyValueConfig.TextStyle = studyValueDef.ValueStyle
+
+        End Select
+
+        Select Case studyValueDef.DefaultRegion
+            Case StudyDefaultRegions.DefaultRegionNone
+                studyValueConfig.ChartRegionName = RegionNameDefault
+            Case StudyDefaultRegions.DefaultRegionCustom
+                studyValueConfig.ChartRegionName = RegionNameCustom
+        End Select
+
+    Next
+    gSetDefaultStudyConfiguration studyConfig
+    Set gGetDefaultStudyConfiguration = studyConfig
+End If
+End Function
+
+Public Sub gLoadDefaultStudyConfigurationsFromConfig( _
+                ByVal config As ConfigurationSection)
+Dim sc As StudyConfiguration
+Dim scSect As ConfigurationSection
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set mConfig = config
+
+Set mDefaultStudyConfigurations = New Collection
+
+For Each scSect In mConfig
+    Set sc = New StudyConfiguration
+    sc.LoadFromConfig scSect
+    mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
+Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "gLoadDefaultStudyConfigurationsFromConfig" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+If errNumber = VBErrorCodes.VbErrElementAlreadyExists Then
+    gLogger.Log LogLevelNormal, "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")"
+    Resume Next
+End If
+
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub gSetDefaultStudyConfiguration( _
+                ByVal value As StudyConfiguration)
+Dim sc As StudyConfiguration
+Dim key As String
+
+If mDefaultStudyConfigurations Is Nothing Then
+    Set mDefaultStudyConfigurations = New Collection
+End If
+
+key = calcDefaultStudyKey(value.Name, value.StudyLibraryName)
+
+On Error Resume Next
+Set sc = mDefaultStudyConfigurations(key)
+On Error GoTo 0
+
+If Not sc Is Nothing Then
+    sc.RemoveFromConfig
+    mDefaultStudyConfigurations.Remove key
+End If
+
+Set sc = value.Clone
+sc.UnderlyingStudy = Nothing
+mDefaultStudyConfigurations.add sc, key
+sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function calcDefaultStudyKey(ByVal studyName As String, ByVal StudyLibraryName As String) As String
+calcDefaultStudyKey = "$$" & studyName & "$$" & StudyLibraryName & "$$"
+End Function
+
 

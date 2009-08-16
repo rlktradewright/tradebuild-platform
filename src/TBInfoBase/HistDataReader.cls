@@ -83,6 +83,8 @@ Private mBarRequested               As Boolean
 
 Private mMode                       As AccessModes
 
+Private mNumBarsProcessed           As Long
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -122,7 +124,7 @@ If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "TBInfoBase.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
-Select Case barSpecifier.barTimePeriod.units
+Select Case barSpecifier.barTimePeriod.Units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -147,12 +149,12 @@ Set mContract = mBarDataSpecifier.Contract
 
 Set mBarsTC = mTradingDB.fetchbarsAsync(mBarDataSpecifier.Contract.specifier, _
                                         mBarDataSpecifier.barTimePeriod, _
-                                        mBarDataSpecifier.maxNumberOfBars, _
+                                        mBarDataSpecifier.MaxNumberOfBars, _
                                         mBarDataSpecifier.FromDate, _
                                         mBarDataSpecifier.ToDate, _
-                                        mBarDataSpecifier.customSessionStartTime, _
-                                        mBarDataSpecifier.customSessionEndTime, _
-                                        mBarDataSpecifier.includeBarsOutsideSession, _
+                                        mBarDataSpecifier.CustomSessionStartTime, _
+                                        mBarDataSpecifier.CustomSessionEndTime, _
+                                        mBarDataSpecifier.IncludeBarsOutsideSession, _
                                         mBarDataSpecifier.barType)
 
 Exit Sub
@@ -178,7 +180,7 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
-
+IBarDataReader_NumberOfBars = mBars.Count
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
@@ -205,7 +207,7 @@ Private Sub mBarsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     gLogger.Log LogLevelNormal, _
-                "HistDataReader failed to retrieve bars for " & mBarDataSpecifier.Contract.specifier.toString & vbCrLf & _
+                "HistDataReader failed to retrieve bars for " & mBarDataSpecifier.Contract.specifier.ToString & vbCrLf & _
                 "Error " & ev.errorNumber & ": " & ev.errorMessage
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestFailed, _
                         "Error " & ev.errorNumber & ": " & ev.errorMessage, _
@@ -222,9 +224,11 @@ Else
     Set mBars = ev.result
     Set mEnumerator = mBars.Enumerator
     
-    gLogger.Log LogLevelDetail, "HistDataReader retrieved " & mBars.Count & " bars for " & mBarDataSpecifier.Contract.specifier.toString
+    gLogger.Log LogLevelDetail, "HistDataReader retrieved " & mBars.Count & " bars for " & mBarDataSpecifier.Contract.specifier.ToString
     mServiceConsumer.Ready
     
+    mNumBarsProcessed = 0
+    mServiceConsumer.Progress 0, 0
     If mBarRequested Then
         mBarRequested = False
         ProcessBar
@@ -294,7 +298,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, _
+mCommonServiceConsumer.NotifyFatalError Number, _
                             Source, _
                             Description, _
                             mHistDataServiceProvider.handle
@@ -309,6 +313,8 @@ Dim lBar As Bar
 If mEnumerator.moveNext Then
     Set lBar = mEnumerator.current
     mDataConsumer.Bar lBar, mBarDataSpecifier.barTimePeriod
+    mNumBarsProcessed = mNumBarsProcessed + 1
+    If mNumBarsProcessed Mod 10 = 0 Then mServiceConsumer.Progress mNumBarsProcessed, 100 * mNumBarsProcessed / mBars.Count
 Else
     mServiceConsumer.BarDataComplete
 End If

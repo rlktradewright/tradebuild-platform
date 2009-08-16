@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#34.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#37.0#0"; "TWControls10.ocx"
 Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -780,24 +780,24 @@ Private Sub UserControl_Initialize()
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
 
-DbTypeCombo.ComboItems.add , , ""
-DbTypeCombo.ComboItems.add , , DbTypeMySql
-DbTypeCombo.ComboItems.add , , DbTypeSqlServer7
-DbTypeCombo.ComboItems.add , , DbTypeSqlServer2000
-DbTypeCombo.ComboItems.add , , DbTypeSqlServer2005
+DbTypeCombo.ComboItems.Add , , ""
+DbTypeCombo.ComboItems.Add , , DbTypeMySql
+DbTypeCombo.ComboItems.Add , , DbTypeSqlServer7
+DbTypeCombo.ComboItems.Add , , DbTypeSqlServer2000
+DbTypeCombo.ComboItems.Add , , DbTypeSqlServer2005
 
-TwsLogLevelCombo.ComboItems.add , , TWSLogLevelDetail
-TwsLogLevelCombo.ComboItems.add , , TWSLogLevelError
-TwsLogLevelCombo.ComboItems.add , , TWSLogLevelInformation
-TwsLogLevelCombo.ComboItems.add , , TWSLogLevelSystem
-TwsLogLevelCombo.ComboItems.add , , TWSLogLevelWarning
+TwsLogLevelCombo.ComboItems.Add , , TWSLogLevelDetail
+TwsLogLevelCombo.ComboItems.Add , , TWSLogLevelError
+TwsLogLevelCombo.ComboItems.Add , , TWSLogLevelInformation
+TwsLogLevelCombo.ComboItems.Add , , TWSLogLevelSystem
+TwsLogLevelCombo.ComboItems.Add , , TWSLogLevelWarning
 TwsLogLevelCombo.Text = TWSLogLevelSystem
 
 End Sub
 
 Private Sub UserControl_InitProperties()
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+UserControl.BackColor = UserControl.Ambient.BackColor
+UserControl.ForeColor = UserControl.Ambient.ForeColor
 End Sub
 
 Private Sub UserControl_LostFocus()
@@ -805,8 +805,8 @@ checkForOutstandingUpdates
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+UserControl.BackColor = UserControl.Ambient.BackColor
+UserControl.ForeColor = UserControl.Ambient.ForeColor
 End Sub
 
 Private Sub UserControl_Resize()
@@ -1384,7 +1384,7 @@ On Error Resume Next
 Set mCurrSPsList = mConfig.GetConfigurationSection(ConfigNameServiceProviders)
 On Error GoTo 0
 
-CategoryList.clear
+CategoryList.Clear
 
 If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
     CategoryList.addItem mSPs.SPNameRealtimeData
@@ -1527,10 +1527,10 @@ Dim progId As String
     
 CategoryLabel = "Broker options (live orders)"
 OptionLabel = "Select broker"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTwsOrders
-OptionCombo.ComboItems.add , , SpOptionCustomOrders
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTwsOrders
+OptionCombo.ComboItems.Add , , SpOptionCustomOrders
 
 On Error Resume Next
 findSp mSPs.SPNameBrokerLive
@@ -1560,10 +1560,10 @@ Dim progId As String
     
 CategoryLabel = "Broker options (simulated orders)"
 OptionLabel = "Select broker"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbOrders
-OptionCombo.ComboItems.add , , SpOptionCustomOrders
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbOrders
+OptionCombo.ComboItems.Add , , SpOptionCustomOrders
 
 On Error Resume Next
 findSp mSPs.SPNameBrokerSimulated
@@ -1636,12 +1636,12 @@ Dim progId As String
     
 CategoryLabel = "Historical bar data retrieval source options"
 OptionLabel = "Select historical bar data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbBarData
-OptionCombo.ComboItems.add , , SpOptionQtBarData
-OptionCombo.ComboItems.add , , SpOptionTwsBarData
-OptionCombo.ComboItems.add , , SpOptionCustomBarData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbBarData
+OptionCombo.ComboItems.Add , , SpOptionQtBarData
+OptionCombo.ComboItems.Add , , SpOptionTwsBarData
+OptionCombo.ComboItems.Add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp mSPs.SPNameHistoricalDataInput
@@ -1679,11 +1679,11 @@ Dim progId As String
     
 CategoryLabel = "Historical bar data storage options"
 OptionLabel = "Select historical bar data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbBarData
-OptionCombo.ComboItems.add , , SpOptionTwsBarData
-OptionCombo.ComboItems.add , , SpOptionCustomBarData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbBarData
+OptionCombo.ComboItems.Add , , SpOptionTwsBarData
+OptionCombo.ComboItems.Add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp mSPs.SPNameHistoricalDataOutput
@@ -1713,11 +1713,11 @@ Dim progId As String
     
 CategoryLabel = "Primary contract data source options"
 OptionLabel = "Select primary contract data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbContractData
-OptionCombo.ComboItems.add , , SpOptionTwsContractData
-OptionCombo.ComboItems.add , , SpOptionCustomContractData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbContractData
+OptionCombo.ComboItems.Add , , SpOptionTwsContractData
+OptionCombo.ComboItems.Add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp mSPs.SPNamePrimaryContractData
@@ -1751,11 +1751,11 @@ Dim progId As String
 
 CategoryLabel = "Realtime data source options"
 OptionLabel = "Select realtime data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionQtRealtimeData
-OptionCombo.ComboItems.add , , SpOptionTwsRealtimeData
-OptionCombo.ComboItems.add , , SpOptionCustomRealtimeData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionQtRealtimeData
+OptionCombo.ComboItems.Add , , SpOptionTwsRealtimeData
+OptionCombo.ComboItems.Add , , SpOptionCustomRealtimeData
 
 On Error Resume Next
 findSp mSPs.SPNameRealtimeData
@@ -1800,11 +1800,11 @@ Dim progId As String
     
 CategoryLabel = "Secondary contract data source options"
 OptionLabel = "Select secondary contract data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbContractData
-OptionCombo.ComboItems.add , , SpOptionTwsContractData
-OptionCombo.ComboItems.add , , SpOptionCustomContractData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbContractData
+OptionCombo.ComboItems.Add , , SpOptionTwsContractData
+OptionCombo.ComboItems.Add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp mSPs.SPNameSecondryContractData
@@ -1846,12 +1846,12 @@ Dim progId As String
 
 CategoryLabel = "Tickfile replay data source options"
 OptionLabel = "Select tickfile replay data source"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbTickData
-OptionCombo.ComboItems.add , , SpOptionFileTickData
-OptionCombo.ComboItems.add , , SpOptionQtTickData
-OptionCombo.ComboItems.add , , SpOptionCustomTickData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbTickData
+OptionCombo.ComboItems.Add , , SpOptionFileTickData
+OptionCombo.ComboItems.Add , , SpOptionQtTickData
+OptionCombo.ComboItems.Add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp mSPs.SPNameTickfileInput
@@ -1889,11 +1889,11 @@ Dim progId As String
 
 CategoryLabel = "Tickfile storage options"
 OptionLabel = "Select tickfile data store"
-OptionCombo.ComboItems.clear
-OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbTickData
-OptionCombo.ComboItems.add , , SpOptionFileTickData
-OptionCombo.ComboItems.add , , SpOptionCustomTickData
+OptionCombo.ComboItems.Clear
+OptionCombo.ComboItems.Add , , SpOptionNotConfigured
+OptionCombo.ComboItems.Add , , SpOptionTbTickData
+OptionCombo.ComboItems.Add , , SpOptionFileTickData
+OptionCombo.ComboItems.Add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp mSPs.SPNameTickfileOutput

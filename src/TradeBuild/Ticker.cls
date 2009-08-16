@@ -27,42 +27,42 @@ Implements StateChangeListener
 ' Events
 '@================================================================================
 
-Event ask(ByRef ev As QuoteEvent)
+Event Ask(ByRef ev As QuoteEvent)
 
 Event BarWriterNotification(ByRef ev As WriterEvent)
 
-Event bid(ByRef ev As QuoteEvent)
+Event Bid(ByRef ev As QuoteEvent)
 
 Event DOMSetCell(ByRef ev As MarketDepthEvent)
                 
 Event DOMReset(ByRef ev As MarketDepthEvent)
                 
-Event high(ByRef ev As QuoteEvent)
+Event High(ByRef ev As QuoteEvent)
 
-Event low(ByRef ev As QuoteEvent)
+Event Low(ByRef ev As QuoteEvent)
 
-Event openInterest(ByRef ev As QuoteEvent)
+Event MarketDepthNotAvailable(ByVal reason As String)
 
-Event Notification(ByRef ev As NotificationEvent)
+Event OpenInterest(ByRef ev As QuoteEvent)
 
-Event previousClose(ByRef ev As QuoteEvent)
+Event PreviousClose(ByRef ev As QuoteEvent)
 
-Event priceChange(ByRef ev As PriceChangeEvent)
+Event PriceChange(ByRef ev As PriceChangeEvent)
 
 Event RawMarketDepthUpdate(ByRef ev As RawMarketDepthEvent)
                 
-Event stateChange(ByRef ev As StateChangeEvent)
+Event StateChange(ByRef ev As StateChangeEvent)
 
 Event TickfileWriterNotification( _
                 ByRef ev As WriterEvent)
 
-Event trade(ByRef ev As QuoteEvent)
+Event Trade(ByRef ev As QuoteEvent)
 
-Event tradingSessionEnded()
+Event TradingSessionEnded()
 
-Event tradingSessionStarted()
+Event TradingSessionStarted()
 
-Event volume(ByRef ev As QuoteEvent)
+Event Volume(ByRef ev As QuoteEvent)
 
 '@================================================================================
 ' Constants
@@ -88,8 +88,10 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mStudyManager               As studyManager
-Private mInputStudy                 As inputStudy
+Private mWorkspaceRef               As WeakReference
+
+Private mStudyManager               As StudyManager
+Private mInputStudy                 As InputStudy
 
 Private mKey                        As String
 
@@ -103,12 +105,12 @@ Private mVolumeInputHandle          As Long
 Private mLoadOnly                   As Boolean
 
 ''
-'   This is set true whenever the ticker is in an event handler
-'   or interface member, because if the application stops the ticker
+'   This is set true whenever the Ticker is in an event handler
+'   or interface member, because if the application stops the Ticker
 '   while inside one of these a crash occurs because everything has
 '   been unlinked before the event handler completes.
 '
-'   Calls to stopTicker while mInEventHandler is true are deferred on
+'   Calls to StopTicker while mInEventHandler is true are deferred on
 '   a short timer.
 '@/
 Private mInEventHandler             As Boolean
@@ -121,7 +123,7 @@ Private mPriceFormatString          As String
 Private mDisplayThirtySeconds       As Boolean
 Private mTickSize                   As Double
 
-Private mTickers                    As Tickers
+Private mTickersRef                 As WeakReference
 
 Private mState                      As TickerStates
 
@@ -133,31 +135,48 @@ Private mCurrTickfileIndex          As Long
 Private mAskPrice                   As Double
 Private mAskPriceString             As String
 Private mAskSize                    As Long
+Private mRecentAskPriceChange       As ValueChanges
+Private mRecentAskSizeChange        As ValueChanges
+
 Private mBidPrice                   As Double
 Private mBidPriceString             As String
 Private mBidSize                    As Long
+Private mRecentBidPriceChange       As ValueChanges
+Private mRecentBidSizeChange        As ValueChanges
+
 Private mTradePrice                 As Double
 Private mTradePriceString           As String
 Private mTradeSize                  As Long
+Private mRecentTradePriceChange     As ValueChanges
+Private mRecentTradeSizeChange      As ValueChanges
+
 Private mHighPrice                  As Double
 Private mHighPriceString            As String
+
 Private mLowPrice                   As Double
 Private mLowPriceString             As String
+
 Private mOpenPrice                  As Double
 Private mOpenPriceString            As String
+
 Private mClosePrice                 As Double
 Private mClosePriceString           As String
+
 Private mVolume                     As Long
 Private mOpenInterest               As Long
+
 Private mChange                     As Double
 Private mChangeString               As String
 Private mChangePercent              As Double
 
-Private WithEvents mContracts       As Contracts
+Private WithEvents mContractsLoadTC As TaskController
+Attribute mContractsLoadTC.VB_VarHelpID = -1
+Private mContracts                  As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As Contract
+Private mInitialContractSpec        As contractSpecifier
 
-Private WithEvents mSession         As session
+Private WithEvents mSession         As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mReplayingTickfile          As Boolean
@@ -184,11 +203,11 @@ Private mClock                      As Clock
 
 Private mRealtimeDataReader         As TradeBuildSP.IRealtimeDataReader
 
-Private mPrevBid                    As Double
+Private mPrevBidPrice                    As Double
 Private mPrevBidSize                As Double
-Private mPrevAsk                    As Double
+Private mPrevAskPrice                    As Double
 Private mPrevAskSize                As Double
-Private mPrevTrade                  As Double
+Private mPrevTradePrice                  As Double
 Private mPrevTradeSize              As Long
 Private mPrevVolume                 As Long
 Private mPrevOpenInterest           As Long
@@ -198,7 +217,7 @@ Private mVolumeCorrectionIncrement      As Long
 Private mReceivedFirstVolumeInSession   As Boolean
 
 ' indicates whether we have received the very first
-' volume figure
+' Volume figure
 Private mGotFirstVolume             As Boolean
 
 Private mReceivingMarketDepth       As Boolean
@@ -233,8 +252,8 @@ Private mdefaultOrderContextSimulated   As OrderContext
 
 Private mTimerList                  As TimerList
 
-Private mExecutions                 As executions
-Private mExecutionsSimulated            As executions
+Private mExecutions                 As Executions
+Private mExecutionsSimulated            As Executions
 
 'Private mStudies                    As Collection
 
@@ -242,6 +261,8 @@ Private WithEvents mNoMarketDepthNotifyTimer As IntervalTimer
 Attribute mNoMarketDepthNotifyTimer.VB_VarHelpID = -1
 
 Private mClockRate                  As Long
+
+Private mOptions                    As TickerOptions
 
 
 '@================================================================================
@@ -251,7 +272,7 @@ Private mClockRate                  As Long
 Private Sub Class_Initialize()
 mState = -1
 
-Set mStudyManager = New studyManager
+Set mStudyManager = New StudyManager
 
 Set mBarWriterListeners = New Collection
 Set mQuoteListeners = New Collection
@@ -263,14 +284,14 @@ Set mStateChangeListeners = New Collection
 
 Set mDataConsumers = New Collection
 
-Set mExecutions = New executions
-Set mExecutionsSimulated = New executions
+Set mExecutions = New Executions
+Set mExecutionsSimulated = New Executions
 'Set mStudies = New Collection
 Set mPositionManager = New PositionManager
 Set mPositionManagerSimulated = New PositionManager
  
-Set mDefaultOrderContext = mPositionManager.OrderContexts.add("$default")
-Set mdefaultOrderContextSimulated = mPositionManagerSimulated.OrderContexts.add("$default")
+Set mDefaultOrderContext = mPositionManager.OrderContexts.Add("$default")
+Set mdefaultOrderContextSimulated = mPositionManagerSimulated.OrderContexts.Add("$default")
 
 Set mTimeframes = New Timeframes
 mTimeframes.Ticker = Me
@@ -299,36 +320,14 @@ Dim ev As NotificationEvent
 Set ev.source = Me
 
 Select Case eventCode
-Case StandardSPEventCodes.HDConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToHistoricDataSource
-    ev.eventMessage = "Connect to historic data source: " & vbCrLf & _
-                        eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
 Case HDCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectHistoricDataSource
-    ev.eventMessage = "Can't connect to historic data source: " & vbCrLf & _
-                        eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
     Set mBarWriter = Nothing
-Case HDRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToHistoricDataSource
-    ev.eventMessage = "Retrying connection to historic data source: " & vbCrLf & _
-                        eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-Case HDRequestInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToHistoricDataStore
-    ev.eventMessage = "Historic data store write fail: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
 Case Else
     gTB.SetServiceProviderError eventCode, _
                         eventMessage, _
                         gTB.ServiceProviders.NameFromHandle(spHandle)
 End Select
+gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_NotReady()
@@ -339,9 +338,9 @@ fireBarWriterNotify WriterNotifications.WriterNotReady, ""
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
-                            ByVal filename As String)
+                            ByVal Filename As String)
 fireBarWriterNotify WriterNotifications.WriterFileCreated, _
-                                filename
+                                Filename
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Ready()
@@ -349,8 +348,8 @@ mBarWriter.ServiceProviderWriterReady
 
 fireBarWriterNotify WriterNotifications.WriterReady, ""
 
-If readyToReplay Then
-    mTickfileManager.startTicker mContract
+If ReadyToReplay Then
+    mTickfileManager.StartTicker mContract
     State = TickerStates.TickerStateRunning
 End If
 
@@ -367,7 +366,7 @@ If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
 
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading + 1
 
-Set tf = mTimeframes.addTimeframe(tp, _
+Set tf = mTimeframes.AddTimeframe(tp, _
                         "", _
                         IIf(mUpdateLatestBar, 2, 0), _
                         0, _
@@ -377,7 +376,7 @@ Set tf = mTimeframes.addTimeframe(tp, _
                         mBarWriter, _
                         saveIntervalSeconds, _
                         mWriteBidAskBarData)
-tf.addStateChangeListener Me
+tf.AddStateChangeListener Me
 End Sub
 
 '@================================================================================
@@ -388,92 +387,34 @@ Private Sub IRealtimeDataInputServiceConsumer_NotifyEvent( _
                 ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
-Dim ev As NotificationEvent
 
 mInEventHandler = True
 
 On Error GoTo Err
 
 Select Case eventCode
-Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource
-    ev.eventMessage = "Can't connect to realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case TradeBuildSP.StandardSPEventCodes.RTConnectedToDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource
-    ev.eventMessage = "Connected to realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-Case TradeBuildSP.StandardSPEventCodes.RTDisconnectedFromDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource
-    ev.eventMessage = "Disconnected from realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource
-    ev.eventMessage = "Lost connection to realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case TradeBuildSP.StandardSPEventCodes.RTRetryConnectDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
-    ev.eventMessage = "Reconnecting to realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
+'Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
+'    StopTicker
+'Case TradeBuildSP.StandardSPEventCodes.RTDisconnectedFromDataSource
+'    StopTicker
+'Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
+'    StopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTRequestFailed
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRealtimeDataRequestFailed
-    ev.eventMessage = "Can't start ticker: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case TradeBuildSP.StandardSPEventCodes.RTMarketDepthRequestFailed
-    MarketDepthNotAvailable eventMessage
-Case TradeBuildSP.StandardSPEventCodes.RTReConnectingDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
-    ev.eventMessage = "Reconnecting to realtime data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
+    StopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTRequestInvalid
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-    ev.eventMessage = "Can't start ticker: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case Else
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyNonSpecificNotification
-    ev.eventMessage = "Notification (" & eventCode & "): " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
+    StopTicker
 End Select
+
+gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
 
 mInEventHandler = False
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "IRealtimeDataInputServiceConsumer_NotifyEvent"
 mInEventHandler = False
 End Sub
 
@@ -487,7 +428,7 @@ mInEventHandler = True
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
     mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
+    Exit Sub    ' Ticker has been stopped
 End If
     
 Select Case Tick.tickType
@@ -499,11 +440,15 @@ Case TickTypes.TickTypeAsk, _
         TickTypes.TickTypeMarketDepth, _
         TickTypes.TickTypeOpenPrice, _
         TickTypes.TickTypeTrade
-    If Not validPrice(Tick.price) Then
+    If Tick.tickType = TickTypeMarketDepth And _
+        Tick.operation = DOMDelete Then
+        ' price is always zero
+    ElseIf Not validPrice(Tick.price) Then
         gLogLogger.Log LogLevels.LogLevelNormal, "Invalid price rejected: " & _
-                        "price=" & Tick.price & _
-                        "; contract=" & mContract.specifier.toString
-        mInputStudy.setSessionCurrentTime Tick.timestamp    ' notify the time anyway, even though
+                        "tick={" & GenericTickToString(Tick) & _
+                        "}; contract={" & mContract.specifier.ToString & _
+                        "}"
+        mInputStudy.SetSessionCurrentTime Tick.Timestamp    ' notify the time anyway, even though
                                                             ' the price is invalid
         mInEventHandler = False
         Exit Sub   ' ignore invalid prices
@@ -511,7 +456,7 @@ Case TickTypes.TickTypeAsk, _
 End Select
 
 If mWriteTickData Then
-    ' note that we don't write volume ticks here because they may need
+    ' note that we don't write Volume ticks here because they may need
     ' to be adjusted before writing - see comments in processTickVolume
     If (Tick.tickType <> TickTypeVolume And Tick.tickType <> TickTypeMarketDepth) Or _
         (Tick.tickType = TickTypeMarketDepth And mIncludeMarketDepthInTickfile) _
@@ -520,7 +465,7 @@ If mWriteTickData Then
     End If
 End If
 
-setTime Tick.timestamp
+setTime Tick.Timestamp
 
 Select Case Tick.tickType
 Case TickTypes.TickTypeAsk
@@ -567,48 +512,22 @@ On Error GoTo Err
 
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
-    ev.eventMessage = "Can't connect to tickfile data source for output: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case TradeBuildSP.StandardSPEventCodes.TFConnectedToDataSource
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToTickfileDataSource
-    ev.eventMessage = "Connected to tickfile data source: " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid, _
-        TradeBuildSP.StandardSPEventCodes.TFContractDetailsInvalid
-    mTickWriter.closeOutputFile
-    Set mTickWriter = Nothing
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToTickfileDataStore
-    ev.eventMessage = "Tickfile data store write fail(" & eventCode & "): " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-Case Else
-    mTickWriter.closeOutputFile
-    Set mTickWriter = Nothing
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToTickfileDataStore
-    ev.eventMessage = "Problem with Tickfile data store (" & eventCode & "): " & _
-                    eventMessage
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
+    StopTicker
+Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid
+    StopTicker
+Case TradeBuildSP.StandardSPEventCodes.TFContractDetailsInvalid
+    StopTicker
 End Select
+
+gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
 
 mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -625,26 +544,30 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_NotReady"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_NotReady"
 mInEventHandler = False
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
-                            ByVal filename As String)
+                            ByVal Filename As String)
 
 mInEventHandler = True
 
 On Error GoTo Err
 
 fireTickfileWriterNotify WriterNotifications.WriterFileCreated, _
-                        filename
+                        Filename
 
 
 mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 mInEventHandler = False
 End Sub
 
@@ -655,8 +578,8 @@ On Error GoTo Err
 
 mTickWriter.ServiceProviderWriterReady
 If mState = TickerStates.TickerStateStopped Then
-    ' the ticker is being closed before the tickfile writer has notified that it
-    ' is ready
+    ' the Ticker is being closed before the tickfile writer has notified that it
+    ' is Ready
     mTickWriter.closeOutputFile
     Set mTickWriter = Nothing
     Set mSelfRef = Nothing
@@ -668,8 +591,8 @@ End If
 
 fireTickfileWriterNotify WriterReady, ""
 
-If readyToReplay Then
-    mTickfileManager.startTicker mContract
+If ReadyToReplay Then
+    mTickfileManager.StartTicker mContract
     State = TickerStates.TickerStateRunning
 End If
 
@@ -677,7 +600,9 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
 End Sub
 
@@ -691,9 +616,9 @@ If TypeOf ev.source Is Timeframe Then
     If ev.State = TimeframeStates.TimeframeStateLoaded Then
         If Not mState = TickerStateRunning Then
             mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
-            If readyToReplay Then
+            If ReadyToReplay Then
                 State = TickerStates.TickerStateRunning
-                mTickfileManager.startTicker mContract
+                mTickfileManager.StartTicker mContract
             End If
         End If
     End If
@@ -701,84 +626,16 @@ End If
 End Sub
 
 '@================================================================================
-' mContracts Event Handlers
+' mContractsLoadTC Event Handlers
 '@================================================================================
 
-Private Sub mContracts_ContractSpecifierInvalid( _
-                ByVal reason As String)
-Dim ev As NotificationEvent
-
-Dim failpoint As Long
-On Error GoTo Err
-
-If State <> TickerStateStarting Then Exit Sub
-
-mInEventHandler = True
-
-Set ev.source = Me
-ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
-ev.eventMessage = reason
-RaiseEvent Notification(ev)
-mTickers.notify ev
-stopTicker
-mInEventHandler = False
-
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    ModuleName & ":" & "mContracts_ContractSpecifierInvalid" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
-End Sub
-
-Private Sub mContracts_NoMoreContractDetails()
-Dim ev As NotificationEvent
-
-Dim failpoint As Long
-On Error GoTo Err
-
-If State <> TickerStateStarting Then Exit Sub
-
-mInEventHandler = True
-
-If mContracts.Count = 0 Then
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyContractDoesNotExist
-    ev.eventMessage = "No such contract exists: " & mContracts.contractSpecifier.toString
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-    mInEventHandler = False
-    Exit Sub
+Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.errorNumber <> 0 Then
+    handleContractLoadError ev.errorNumber, ev.errorMessage
+Else
+    Set mContracts = ev.result
+    handleContractLoadComplete
 End If
-
-If mContracts.Count <> 1 Then
-    Set ev.source = Me
-    ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
-    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.toString
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
-    stopTicker
-    mInEventHandler = False
-    Exit Sub
-End If
-
-Set mContract = mContracts(1)
-
-processContract
-
-mInEventHandler = False
-
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    ModuleName & ":" & "mContracts_NoMoreContractDetails" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
 End Sub
 
 '@================================================================================
@@ -790,20 +647,15 @@ Private Sub mNoMarketDepthNotifyTimer_TimerExpired()
 Dim failpoint As Long
 On Error GoTo Err
 
-mInEventHandler = True
-
 Set mNoMarketDepthNotifyTimer = Nothing
 MarketDepthNotAvailable "Can't start market depth replay during tickfile replay"
-mInEventHandler = False
 
 Exit Sub
 
 Err:
 gTB.NotifyFatalError Err.number, _
                     Err.Description, _
-                    ModuleName & ":" & "mNoMarketDepthNotifyTimer_TimerExpired" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mNoMarketDepthNotifyTimer_TimerExpired" & "." & failpoint
 End Sub
 
 '@================================================================================
@@ -811,14 +663,14 @@ End Sub
 '@================================================================================
 
 Private Sub mSession_sessionEnded(ev As SessionEvent)
-RaiseEvent tradingSessionEnded
+RaiseEvent TradingSessionEnded
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
 mReceivedFirstVolumeInSession = False
 mPrevSessionAccumulatedVolume = mAccumulatedVolume
 mAccumulatedVolume = 0
-RaiseEvent tradingSessionStarted
+RaiseEvent TradingSessionStarted
 End Sub
 
 '@================================================================================
@@ -830,16 +682,14 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set mStopTickerTimer = Nothing
-stopTicker
+StopTicker
 
 Exit Sub
 
 Err:
 gTB.NotifyFatalError Err.number, _
                     Err.Description, _
-                    ModuleName & ":" & "mStopTickerTimer_TimerExpired" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStopTickerTimer_TimerExpired" & "." & failpoint
 End Sub
 
 '@================================================================================
@@ -862,9 +712,11 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gLogLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "mTickWriterReleaseTimer_TimerExpired" & "." & failpoint & _
-                            IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                            Err.Description
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mTickWriterReleaseTimer_TimerExpired" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+
 End Sub
 
 '@================================================================================
@@ -891,8 +743,8 @@ Public Property Get BidPriceString() As String
 BidPriceString = mBidPriceString
 End Property
 
-Public Property Get bidSize() As Long
-bidSize = mBidSize
+Public Property Get BidSize() As Long
+BidSize = mBidSize
 End Property
 
 Public Property Get Change() As Double
@@ -911,7 +763,7 @@ Public Property Get Clock() As Clock
 Set Clock = mClock
 End Property
 
-Friend Property Let clockRate(ByVal value As Long)
+Friend Property Let ClockRate(ByVal value As Long)
 If value < 0 Then value = 0
 If Not mClock Is Nothing Then
     If value <> mClock.Rate Then
@@ -921,12 +773,12 @@ If Not mClock Is Nothing Then
 End If
 End Property
 
-Public Property Get closePrice() As Double
-closePrice = mClosePrice
+Public Property Get ClosePrice() As Double
+ClosePrice = mClosePrice
 End Property
 
-Public Property Get closePriceString() As String
-closePriceString = mClosePriceString
+Public Property Get ClosePriceString() As String
+ClosePriceString = mClosePriceString
 End Property
 
 Public Property Get Contract() As Contract
@@ -936,18 +788,23 @@ End Property
 Friend Property Let Contracts(ByVal value As Contracts)
 Set mContracts = value
 State = TickerStateStarting
+handleContractLoadComplete
 End Property
 
-Public Property Get Contracts() As Contracts
+Friend Property Get Contracts() As Contracts
 Set Contracts = mContracts
 End Property
 
-Public Property Get defaultOrderContextSimulated() As OrderContext
-Set defaultOrderContextSimulated = mdefaultOrderContextSimulated
+Friend Property Let ContractsLoadTC(ByVal value As TaskController)
+Set mContractsLoadTC = value
 End Property
 
-Public Property Get defaultOrderContext() As OrderContext
-Set defaultOrderContext = mDefaultOrderContext
+Public Property Get DefaultOrderContextSimulated() As OrderContext
+Set DefaultOrderContextSimulated = mdefaultOrderContextSimulated
+End Property
+
+Public Property Get DefaultOrderContext() As OrderContext
+Set DefaultOrderContext = mDefaultOrderContext
 End Property
 
 Public Property Get Description() As String
@@ -958,7 +815,7 @@ Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)DOMEventsRequired", _
-            "Ticker is already in use"
+            "Ticker is alReady in use"
 End If
 mDOMEventsRequired = value
 End Property
@@ -971,28 +828,28 @@ Public Property Get PositionManagerSimulated() As PositionManager
 Set PositionManagerSimulated = mPositionManagerSimulated
 End Property
 
-Public Property Get ExecutionsSimulated() As executions
+Public Property Get ExecutionsSimulated() As Executions
 Set ExecutionsSimulated = mExecutionsSimulated
 End Property
 
-Public Property Get executions() As executions
-Set executions = mExecutions
+Public Property Get Executions() As Executions
+Set Executions = mExecutions
 End Property
 
-Public Property Get handle() As Long
-handle = mHandle
+Public Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Public Property Get highPrice() As Double
-highPrice = mHighPrice
+Public Property Get HighPrice() As Double
+HighPrice = mHighPrice
 End Property
 
-Public Property Get highPriceString() As String
-highPriceString = mHighPriceString
+Public Property Get HighPriceString() As String
+HighPriceString = mHighPriceString
 End Property
 
-Public Property Get includeMarketDepthInTickfile() As Boolean
-includeMarketDepthInTickfile = mIncludeMarketDepthInTickfile
+Public Property Get IncludeMarketDepthInTickfile() As Boolean
+IncludeMarketDepthInTickfile = mIncludeMarketDepthInTickfile
 End Property
 
 Public Property Get InputNameBid() As String
@@ -1019,64 +876,68 @@ Public Property Get InputNameVolume() As String
 InputNameVolume = VolumeInputName
 End Property
 
-Public Property Get inputStudy() As inputStudy
+Public Property Get InputStudy() As InputStudy
 If mInputStudy Is Nothing Then
     setupInputStudy
 End If
         
-Set inputStudy = mInputStudy
+Set InputStudy = mInputStudy
 End Property
 
-Public Property Get isHistorical() As Boolean
-isHistorical = mLoadOnly
+Public Property Get IsHistorical() As Boolean
+IsHistorical = mLoadOnly
 End Property
 
-Friend Property Let key(ByVal value As String)
+Friend Property Let Key(ByVal value As String)
 mKey = value
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
-Public Property Get lowPrice() As Double
-lowPrice = mLowPrice
+Public Property Get LowPrice() As Double
+LowPrice = mLowPrice
 End Property
 
-Public Property Get lowPriceString() As String
-lowPriceString = mLowPriceString
+Public Property Get LowPriceString() As String
+LowPriceString = mLowPriceString
 End Property
 
-Public Property Get noImpliedTrades() As Boolean
-noImpliedTrades = mNoImpliedTrades
+Public Property Get NoImpliedTrades() As Boolean
+NoImpliedTrades = mNoImpliedTrades
 End Property
 
-Public Property Get noVolumeAdjustments() As Boolean
-noVolumeAdjustments = mNoVolumeAdjustments
+Public Property Get NoVolumeAdjustments() As Boolean
+NoVolumeAdjustments = mNoVolumeAdjustments
 End Property
 
-Public Property Get ordersAreLive() As Boolean
-ordersAreLive = Not mSimulatedOrders
+Public Property Get Options() As TickerOptions
+Options = mOptions
 End Property
 
-Public Property Let outputTickfileFormat(ByVal value As String)
+Public Property Get OrdersAreLive() As Boolean
+OrdersAreLive = Not mSimulatedOrders
+End Property
+
+Public Property Let OutputTickfileFormat(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickfileFormat", _
-            "Ticker is already in use"
+            "Ticker is alReady in use"
 End If
 mOutputTickfileFormat = value
 End Property
 
-Public Property Get outputTickfileFormat() As String
-outputTickfileFormat = mOutputTickfileFormat
+Public Property Get OutputTickfileFormat() As String
+OutputTickfileFormat = mOutputTickfileFormat
 End Property
 
 Public Property Let outputTickfilePath(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickFilePath", _
-            "Ticker is already in use"
+            "Ticker is alReady in use"
 End If
 mOutputTickfilePath = value
 End Property
@@ -1089,21 +950,21 @@ Public Property Get PositionManager() As PositionManager
 Set PositionManager = mPositionManager
 End Property
 
-Public Property Get priceFormatString() As String
-priceFormatString = mPriceFormatString
+Public Property Get PriceFormatString() As String
+PriceFormatString = mPriceFormatString
 End Property
 
-Friend Property Let replayingTickfile(ByVal value As Boolean)
+Friend Property Let ReplayingTickfile(ByVal value As Boolean)
 mReplayingTickfile = value
 If mReplayingTickfile Then mReceivingMarketDepth = True
 End Property
 
-Public Property Get replayingTickfile() As Boolean
-replayingTickfile = mReplayingTickfile
+Public Property Get ReplayingTickfile() As Boolean
+ReplayingTickfile = mReplayingTickfile
 End Property
 
-Public Property Get session() As session
-Set session = mSession
+Public Property Get Session() As Session
+Set Session = mSession
 End Property
 
 Private Property Let State(ByVal value As TickerStates)
@@ -1119,34 +980,34 @@ Public Property Get State() As TickerStates
 State = mState
 End Property
 
-Public Property Get studyManager() As studyManager
-Set studyManager = mStudyManager
+Public Property Get StudyManager() As StudyManager
+Set StudyManager = mStudyManager
 End Property
 
 Friend Property Let TickFileManager(ByVal value As TickFileManager)
 Set mTickfileManager = value
 End Property
 
-Public Property Get tickNumber() As Long
-tickNumber = mTickNumber
+Public Property Get TickNumber() As Long
+TickNumber = mTickNumber
 End Property
 
 Public Property Get Timeframes() As Timeframes
 Set Timeframes = mTimeframes
 End Property
 
-Friend Property Let timestamp(ByVal value As Date)
-If Not mClock.simulated Then
+Friend Property Let Timestamp(ByVal value As Date)
+If Not mClock.Simulated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "timestamp", _
+            ProjectName & "." & ModuleName & ":" & "Timestamp", _
             "Ticker clock is not simulated"
 End If
 
 setTime value
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mClock.timestamp
+Public Property Get Timestamp() As Date
+Timestamp = mClock.Timestamp
 End Property
 
 Public Property Get TradePrice() As Double
@@ -1161,50 +1022,59 @@ Public Property Get TradeSize() As Long
 TradeSize = mTradeSize
 End Property
 
-Public Property Get usingExchangeTimeZone() As Boolean
-usingExchangeTimeZone = mUseExchangeTimeZone
+Public Property Get UsingExchangeTimeZone() As Boolean
+UsingExchangeTimeZone = mUseExchangeTimeZone
 End Property
 
-Public Property Get volume() As Long
-volume = mVolume
+Public Property Get Volume() As Long
+Volume = mVolume
 End Property
 
-Public Property Get writingBidAskBarData() As Boolean
-writingBidAskBarData = mWriteBidAskBarData
+Public Property Get WritingBidAskBarData() As Boolean
+WritingBidAskBarData = mWriteBidAskBarData
 End Property
 
-Public Property Get writingTickData() As Boolean
-writingTickData = mWriteTickData
+Public Property Get WritingTickData() As Boolean
+WritingTickData = mWriteTickData
 End Property
 
-Public Property Get writingTradeBarData() As Boolean
-writingTradeBarData = mWriteTradeBarData
+Public Property Get WritingTradeBarData() As Boolean
+WritingTradeBarData = mWriteTradeBarData
+End Property
+
+Friend Property Let Workspace( _
+                ByVal pWorkspace As Workspace)
+Set mWorkspaceRef = CreateWeakReference(pWorkspace)
+End Property
+
+Public Property Get Workspace() As Workspace
+Set Workspace = mWorkspaceRef.Target
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub addBarWriterListener( _
+Public Sub AddBarWriterListener( _
                 ByVal value As BarWriterListener)
-mBarWriterListeners.add value
+mBarWriterListeners.Add value
 End Sub
 
-Friend Sub addDataConsumer( _
+Friend Sub AddDataConsumer( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
-mDataConsumers.add consumer
-If includeMarketDepth Then requestMarketDepth DOMBothEvents, False
+mDataConsumers.Add consumer
+If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
 End Sub
 
-Public Sub addPriceChangeListener( _
+Public Sub AddPriceChangeListener( _
                 ByVal value As PriceChangeListener)
-mPriceChangeListeners.add value
+mPriceChangeListeners.Add value
 End Sub
 
-Public Sub addMarketDepthListener( _
+Public Sub AddMarketDepthListener( _
                 ByVal value As MarketDepthListener)
-mMarketDepthListeners.add value
+mMarketDepthListeners.Add value
 
 ' send all the current DOM values to the new listener
 Dim processedMarketDepth As MarketDepthEvent
@@ -1232,81 +1102,33 @@ Next
 
 End Sub
 
-Public Sub addQuoteListener(ByVal value As QuoteListener)
-Dim quote As QuoteEvent
-Set quote.source = Me
+Public Sub AddQuoteListener(ByVal value As QuoteListener)
+mQuoteListeners.Add value
 
-mQuoteListeners.add value
-
-If State = TickerStateRunning Or State = TickerStatePaused Then
-    ' send all the current quote values to the new listener
-    quote.price = mAskPrice
-    quote.priceString = mAskPriceString
-    quote.size = mAskSize
-    value.ask quote
-    
-    quote.price = mBidPrice
-    quote.priceString = mBidPriceString
-    quote.size = mBidSize
-    value.bid quote
-    
-    quote.price = mHighPrice
-    quote.priceString = mHighPriceString
-    quote.size = 0
-    value.high quote
-    
-    quote.price = mLowPrice
-    quote.priceString = mLowPriceString
-    quote.size = 0
-    value.low quote
-    
-    quote.price = mOpenPrice
-    quote.priceString = mOpenPriceString
-    quote.size = 0
-    value.sessionOpen quote
-    
-    quote.price = 0
-    quote.priceString = ""
-    quote.size = mOpenInterest
-    value.openInterest quote
-    
-    quote.price = mClosePrice
-    quote.priceString = mClosePriceString
-    quote.size = 0
-    value.previousClose quote
-    
-    quote.price = mTradePrice
-    quote.priceString = mTradePriceString
-    quote.size = mTradeSize
-    value.trade quote
-    
-    quote.price = 0
-    quote.priceString = ""
-    quote.size = mVolume
-    value.volume quote
-End If
+' send all the current quote values to the new listener
+RefreshQuotes value
 End Sub
 
-Public Sub addRawMarketDepthListener(ByVal value As RawMarketDepthListener)
-mRawMarketDepthListeners.add value
+Public Sub AddRawMarketDepthListener(ByVal value As RawMarketDepthListener)
+mRawMarketDepthListeners.Add value
 End Sub
 
-Public Sub addStateChangeListener( _
+Public Sub AddStateChangeListener( _
                 ByVal value As StateChangeListener)
-mStateChangeListeners.add value
+mStateChangeListeners.Add value
 End Sub
 
-Public Sub addTickfileWriterListener(ByVal value As TickfileWriterListener)
-mTickfileWriterListeners.add value
+Public Sub AddTickfileWriterListener(ByVal value As TickfileWriterListener)
+mTickfileWriterListeners.Add value
 End Sub
 
-Friend Function addTimer(ByVal expiryTime As Variant, _
+Friend Function AddTimer(ByVal expiryTime As Variant, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal data As Variant) As TimerListItem
 If mTimerList Is Nothing Then
     Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
 End If
-Set addTimer = mTimerList.add(data, expiryTime, expiryTimeUnits)
+Set AddTimer = mTimerList.Add(data, expiryTime, expiryTimeUnits)
 End Function
 
 Public Sub CancelMarketDepth(Optional ByVal forceCancel As Boolean = False)
@@ -1329,35 +1151,36 @@ If Not mReplayingTickfile Then
 End If
 End Sub
 
-Public Function formatPrice( _
+Public Function FormatPrice( _
                 ByVal price As Double, _
                 Optional ByVal blankIfZero As Boolean) As String
 If blankIfZero And price = 0# Then Exit Function
 If mDisplayThirtySeconds Then
-    formatPrice = Int(price) & " ' " & Format(Int((price - Int(price)) / 0.03125), "00")
+    FormatPrice = Int(price) & " ' " & Format(Int((price - Int(price)) / 0.03125), "00")
 Else
-    formatPrice = Format(price, mPriceFormatString)
+    FormatPrice = Format(price, mPriceFormatString)
 End If
 End Function
 
 Friend Sub initialise( _
-                ByVal handle As Long, _
+                ByVal Handle As Long, _
                 ByVal pTickers As Tickers, _
-                ByVal options As Long)
+                ByVal Options As TickerOptions)
 
-mHandle = handle
+mHandle = Handle
+mOptions = Options
+
+Set mTickersRef = CreateWeakReference(pTickers)
                 
-Set mTickers = pTickers
-                
-mIncludeMarketDepthInTickfile = options And TickerOptions.TickerOptIncludeMarketDepthInTickfile
-mNoImpliedTrades = options And TickerOptions.TickerOptNoImpliedTrades
-mNoVolumeAdjustments = options And TickerOptions.TickerOptNoVolumeAdjustments
-mSimulatedOrders = (options And TickerOptions.TickerOptOrdersAreLive) <> TickerOptions.TickerOptOrdersAreLive
-mUpdateLatestBar = options And TickerOptions.TickerOptUpdateLatestBar
-mUseExchangeTimeZone = options And TickerOptions.TickerOptUseExchangeTimeZone
-mWriteBidAskBarData = options And TickerOptions.TickerOptWriteBidAndAskBarData
-mWriteTickData = options And TickerOptions.TickerOptWriteTickData
-mWriteTradeBarData = options And TickerOptions.TickerOptWriteTradeBarData
+mIncludeMarketDepthInTickfile = Options And TickerOptions.TickerOptIncludeMarketDepthInTickfile
+mNoImpliedTrades = Options And TickerOptions.TickerOptNoImpliedTrades
+mNoVolumeAdjustments = Options And TickerOptions.TickerOptNoVolumeAdjustments
+mSimulatedOrders = (Options And TickerOptions.TickerOptOrdersAreLive) <> TickerOptions.TickerOptOrdersAreLive
+mUpdateLatestBar = Options And TickerOptions.TickerOptUpdateLatestBar
+mUseExchangeTimeZone = Options And TickerOptions.TickerOptUseExchangeTimeZone
+mWriteBidAskBarData = Options And TickerOptions.TickerOptWriteBidAndAskBarData
+mWriteTickData = Options And TickerOptions.TickerOptWriteTickData
+mWriteTradeBarData = Options And TickerOptions.TickerOptWriteTradeBarData
 
 If mWriteBidAskBarData Or _
     mWriteTradeBarData Or _
@@ -1369,76 +1192,156 @@ End If
 State = TickerStates.TickerStateCreated
 End Sub
 
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
+Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 If mSession Is Nothing Then Exit Function
-isTimeInSession = mSession.isTimeInSession(timestamp)
+IsTimeInSession = mSession.IsTimeInSession(Timestamp)
 End Function
 
-Public Sub loadTicker(ByVal pContractSpecifier As contractSpecifier)
+Public Sub LoadTicker(ByVal pContractSpecifier As contractSpecifier)
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::LoadTicker", _
-                        "Ticker is already in use"
+                        "Ticker is alReady in use"
 
 mLoadOnly = True
+Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
 
-Set mContracts = gTB.loadContracts(pContractSpecifier)
+Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
 End Sub
 
-Friend Sub notifyCurrentVolume()
+Friend Sub NotifyCurrentVolume()
 If mVolume <> 0 Then
-    Debug.Print "Ticker: notifyCurrentVolume: " & mVolume
-    mStudyManager.notifyInput mVolumeInputHandle, mVolume, timestamp
+    Debug.Print "Ticker: NotifyCurrentVolume: " & mVolume
+    mStudyManager.NotifyInput mVolumeInputHandle, mVolume, Timestamp
 End If
 End Sub
 
-Public Function parsePrice( _
+Public Function ParsePrice( _
                 ByVal priceString As String, _
                 ByRef price As Double) As Boolean
-parsePrice = mContract.parsePrice(priceString, price)
+ParsePrice = mContract.ParsePrice(priceString, price)
 End Function
 
 Friend Sub PauseTicker()
 State = TickerStates.TickerStatePaused
 End Sub
 
-Public Sub removeBarWriterListener( _
+Public Sub RefreshPriceChange( _
+                ByVal listener As PriceChangeListener)
+Dim ev As PriceChangeEvent
+
+If State = TickerStateRunning Or State = TickerStatePaused Then
+    Set ev.source = Me
+    ev.Change = mTradePrice - mClosePrice
+    ev.ChangeString = FormatPrice(ev.Change)
+    ev.ChangePercent = 100 * ev.Change / mClosePrice
+    listener.Change ev
+End If
+End Sub
+
+Public Sub RefreshQuotes( _
+                ByVal listener As QuoteListener)
+Dim ev As QuoteEvent
+
+If State = TickerStateRunning Or State = TickerStatePaused Then
+    Set ev.source = Me
+    
+    ev.price = mAskPrice
+    ev.priceString = mAskPriceString
+    ev.size = mAskSize
+    ev.PriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
+    ev.sizeChange = calcValueChange(mAskSize, mPrevAskSize)
+    ev.recentPriceChange = mRecentAskPriceChange
+    ev.recentSizeChange = mRecentAskSizeChange
+    listener.Ask ev
+    
+    ev.price = mBidPrice
+    ev.priceString = mBidPriceString
+    ev.size = mBidSize
+    ev.PriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
+    ev.sizeChange = calcValueChange(mBidSize, mPrevBidSize)
+    ev.recentPriceChange = mRecentBidPriceChange
+    ev.recentSizeChange = mRecentBidSizeChange
+    listener.Bid ev
+    
+    ev.price = mHighPrice
+    ev.priceString = mHighPriceString
+    ev.size = 0
+    listener.High ev
+    
+    ev.price = mLowPrice
+    ev.priceString = mLowPriceString
+    ev.size = 0
+    listener.Low ev
+    
+    ev.price = mOpenPrice
+    ev.priceString = mOpenPriceString
+    ev.size = 0
+    listener.sessionOpen ev
+    
+    ev.price = 0
+    ev.priceString = ""
+    ev.size = mOpenInterest
+    listener.OpenInterest ev
+    
+    ev.price = mClosePrice
+    ev.priceString = mClosePriceString
+    ev.size = 0
+    listener.PreviousClose ev
+    
+    ev.price = mTradePrice
+    ev.priceString = mTradePriceString
+    ev.size = mTradeSize
+    ev.PriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
+    ev.sizeChange = calcValueChange(mTradeSize, mPrevTradeSize)
+    ev.recentPriceChange = mRecentTradePriceChange
+    ev.recentSizeChange = mRecentTradeSizeChange
+    listener.Trade ev
+    
+    ev.price = 0
+    ev.priceString = ""
+    ev.size = mVolume
+    listener.Volume ev
+End If
+End Sub
+
+Public Sub RemoveBarWriterListener( _
                 ByVal value As BarWriterListener)
 Dim i As Long
 For i = mBarWriterListeners.Count To 1 Step -1
-    If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.remove i
+    If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.Remove i
 Next
 End Sub
 
-Friend Sub removeDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
+Friend Sub RemoveDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
 Dim i As Long
 If mDataConsumers Is Nothing Then Exit Sub
 For i = mDataConsumers.Count To 1 Step -1
-    If mDataConsumers.item(i) Is consumer Then mDataConsumers.remove i
+    If mDataConsumers.item(i) Is consumer Then mDataConsumers.Remove i
 Next
 End Sub
 
-Public Sub removePriceChangeListener(ByVal value As PriceChangeListener)
+Public Sub RemovePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
 If mPriceChangeListeners Is Nothing Then Exit Sub
 For i = mPriceChangeListeners.Count To 1 Step -1
-    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.remove i
+    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.Remove i
 Next
 End Sub
 
-Public Sub removeStateChangeListener(ByVal value As StateChangeListener)
+Public Sub RemoveStateChangeListener(ByVal value As StateChangeListener)
 Dim i As Long
 If mStateChangeListeners Is Nothing Then Exit Sub
 For i = mStateChangeListeners.Count To 1 Step -1
-    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.remove i
+    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.Remove i
 Next
 End Sub
 
-Public Sub removeMarketDepthListener(ByVal value As MarketDepthListener)
+Public Sub RemoveMarketDepthListener(ByVal value As MarketDepthListener)
 Dim i As Long
 If mMarketDepthListeners Is Nothing Then Exit Sub
 For i = mMarketDepthListeners.Count To 1 Step -1
-    If mMarketDepthListeners.item(i) Is value Then mMarketDepthListeners.remove i
+    If mMarketDepthListeners.item(i) Is value Then mMarketDepthListeners.Remove i
 Next
 If mMarketDepthListeners.Count = 0 And mWaitingToCancelMktDepth Then
     mWaitingToCancelMktDepth = False
@@ -1449,61 +1352,63 @@ If mMarketDepthListeners.Count = 0 And mWaitingToCancelMktDepth Then
 End If
 End Sub
 
-Public Sub removeQuoteListener(ByVal value As QuoteListener)
+Public Sub RemoveQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
 If mQuoteListeners Is Nothing Then Exit Sub
 For i = mQuoteListeners.Count To 1 Step -1
-    If mQuoteListeners.item(i) Is value Then mQuoteListeners.remove i
+    If mQuoteListeners.item(i) Is value Then
+        mQuoteListeners.Remove i
+    End If
 Next
 End Sub
 
-Public Sub removeRawMarketDepthListener(ByVal value As RawMarketDepthListener)
+Public Sub RemoveRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
 If mRawMarketDepthListeners Is Nothing Then Exit Sub
 For i = mRawMarketDepthListeners.Count To 1 Step -1
-    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.remove i
+    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
 End Sub
 
-Public Sub removeTickfileWriterListener(ByVal value As TickfileWriterListener)
+Public Sub RemoveTickfileWriterListener(ByVal value As TickfileWriterListener)
 Dim i As Long
 If mTickfileWriterListeners Is Nothing Then Exit Sub
 For i = mTickfileWriterListeners.Count To 1 Step -1
-    If mTickfileWriterListeners.item(i) Is value Then mTickfileWriterListeners.remove i
+    If mTickfileWriterListeners.item(i) Is value Then mTickfileWriterListeners.Remove i
 Next
 End Sub
 
-Friend Sub removeTimer(ByVal theTimer As TimerListItem)
-mTimerList.remove theTimer
+Friend Sub RemoveTimer(ByVal theTimer As TimerListItem)
+mTimerList.Remove theTimer
 End Sub
 
-Public Sub requestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
+Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
                             ByVal writeToTickFile As Boolean)
 
 If mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mState = TickerStates.TickerStateStopped Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-                    "TradeBuild26.Ticker::requestMarketDepth", _
-                    "Can't call requestMarketDepth on a dead ticker object"
+                    "TradeBuild26.Ticker::RequestMarketDepth", _
+                    "Can't call RequestMarketDepth on a dead Ticker object"
 End If
                         
 If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickFile Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.Ticker::requestMarketDepth", _
+                "TradeBuild26.Ticker::RequestMarketDepth", _
                 "writeToTickFile must be true if DOMEventsRequired=DOMNoevents"
 End If
 
 If writeToTickFile And mTickWriter Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.Ticker::requestMarketDepth", _
-                "Can't write market depth to tickfile: no output tickfile for this ticker"
+                "TradeBuild26.Ticker::RequestMarketDepth", _
+                "Can't write market depth to tickfile: no output tickfile for this Ticker"
 End If
 
 If mReplayingTickfile Then
-    ' don't notify unavailability syncrhonously because this can play havoc
+    ' don't notify unavailability synchronously because this can play havoc
     ' with market depth forms that are being started up (eg form catches the
-    ' MarketDepthNotAvailable event and unloads, but form creator then shows rhe
+    ' MarketDepthNotAvailable event and unloads, but form creator then shows the
     ' form again)
     Set mNoMarketDepthNotifyTimer = CreateIntervalTimer(1)
     mNoMarketDepthNotifyTimer.StartTimer
@@ -1522,10 +1427,10 @@ If Not mReceivingMarketDepth Then
         mRealtimeDataReader.StartMarketDepth DOMEventsReqd
     End If
     mReceivingMarketDepth = True
-    initialisePriceTables
+    InitialisePriceTables
 Else
     
-    ' we are already receiving market depth.
+    ' we are alReady receiving market depth.
     
     If DOMEventsRequired <> DOMEvents.DOMNoEvents And _
         mDOMEventsRequired = DOMEvents.DOMNoEvents _
@@ -1541,30 +1446,31 @@ Else
 End If
 End Sub
 
-Public Sub startTicker(ByVal pContractSpecifier As contractSpecifier)
+Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTicker", _
-                        "Ticker is already in use"
+                        "Ticker is alReady in use"
 
+Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
 
-Set mContracts = gTB.loadContracts(pContractSpecifier)
+Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
 
 End Sub
 
-Public Sub startTickerFromContract(ByVal pContract As Contract)
+Public Sub StartTickerFromContract(ByVal pContract As Contract)
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTickerFromContract", _
-                        "Ticker is already in use"
+                        "Ticker is alReady in use"
 
 State = TickerStateStarting
 Set mContract = pContract
 processContract
 End Sub
 
-Public Sub stopTicker()
+Public Sub StopTicker()
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
@@ -1583,12 +1489,12 @@ If Not mTickWriter Is Nothing Then
         mTickWriter.closeOutputFile
         Set mTickWriter = Nothing
     Else
-        ' we've finished processing the input data before the service provider
-        ' writer is ready - so delay releasing the writer until the
-        ' service provider writer has had a chance to finish initialising
+        ' we've Finished processing the input data before the service provider
+        ' writer is Ready - so delay releasing the writer until the
+        ' service provider writer has had a chance to Finish initialising
         Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
         mTickWriterReleaseTimer.StartTimer
-        Set mSelfRef = Me   ' ensure this ticker isn't released
+        Set mSelfRef = Me   ' ensure this Ticker isn't released
     End If
 End If
 
@@ -1625,6 +1531,15 @@ If Not mPositionManagerSimulated Is Nothing Then
     Set mPositionManagerSimulated = Nothing
 End If
 
+Set mBarWriterListeners = New Collection
+Set mQuoteListeners = New Collection
+Set mPriceChangeListeners = New Collection
+Set mMarketDepthListeners = New Collection
+Set mRawMarketDepthListeners = New Collection
+Set mTickfileWriterListeners = New Collection
+Set mStateChangeListeners = New Collection
+Set mDataConsumers = New Collection
+
 Set mDefaultOrderContext = Nothing
 Set mdefaultOrderContextSimulated = Nothing
 
@@ -1639,14 +1554,12 @@ mLowPrice = 0
 mClosePrice = 0
 mVolume = 0
 
-mTickers.remove Me
-
 Set mStudyManager = Nothing
 Set mInputStudy = Nothing
 
 
 State = TickerStates.TickerStateStopped
-Set mTickers = Nothing
+
 End Sub
 
 '@================================================================================
@@ -1704,6 +1617,20 @@ End Select
 calculateSpDomRequirement = DOMEventsReqd
 End Function
 
+Private Function calcValueChange( _
+                ByVal newValue As Variant, _
+                ByVal oldValue As Variant) As ValueChanges
+If oldValue = 0 Or newValue = 0 Then
+    calcValueChange = ValueChangeNone
+ElseIf newValue > oldValue Then
+    calcValueChange = ValueChangeUp
+ElseIf newValue < oldValue Then
+    calcValueChange = ValueChangeDown
+Else
+    calcValueChange = ValueChangeNone
+End If
+End Function
+
 Private Sub createBarWriter()
 Dim ev As NotificationEvent
 
@@ -1717,8 +1644,7 @@ If mBarWriter Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
     ev.eventMessage = "Can't create historic data writer"
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
+    gTB.notify ev
 End If
 
 End Sub
@@ -1737,27 +1663,21 @@ If mTickWriter Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNOtifyTickfileFormatNotSupported
     ev.eventMessage = "Can't create output tickfile in this format"
-    RaiseEvent Notification(ev)
-    mTickers.notify ev
+    gTB.notify ev
 End If
 
 End Sub
 
 Private Sub DOMClearCell( _
-                ByVal timestamp As Date, _
                 ByVal side As DOMUpdateTypes, _
                 ByVal price As Double)
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
-setTime timestamp
-
-
 fireSetMarketDepthCell side, price, 0
 End Sub
                 
 Private Sub DOMRawUpdate( _
-                        ByVal timestamp As Date, _
                         ByVal position As Long, _
                         ByVal marketMaker As String, _
                         ByVal operation As DOMOperations, _
@@ -1767,117 +1687,80 @@ Private Sub DOMRawUpdate( _
 If mDOMEventsRequired = DOMRawEvents Or _
     mDOMEventsRequired = DOMBothEvents _
 Then
-    updateMarketDepth timestamp, _
-                                position, _
-                                marketMaker, _
-                                operation, _
-                                side, _
-                                price, _
-                                size
+    updateMarketDepth position, _
+                        marketMaker, _
+                        operation, _
+                        side, _
+                        price, _
+                        size
 End If
 
 End Sub
 
-Private Sub DOMReset( _
-                ByVal timestamp As Date)
+Private Sub DOMReset()
 
 
 If mDOMEventsRequired = DOMNoEvents Then Exit Sub
-
-setTime timestamp
-
 
 fireResetMarketDepth
 End Sub
                 
 Private Sub DOMSetCell( _
-                ByVal timestamp As Date, _
                 ByVal side As DOMUpdateTypes, _
                 ByVal price As Double, _
                 ByVal size As Long)
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
-setTime timestamp
-
-
 fireSetMarketDepthCell side, price, size
 End Sub
                 
-Private Sub fireAsk(ByVal price As Double, _
-                ByVal priceString As String, _
-                ByVal size As Long, _
-                ByVal prevPrice As Double, _
-                ByVal prevSize As Long)
+Private Sub fireAsk()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
 Set quote.source = Me
-quote.price = price
-quote.priceString = priceString
-quote.size = size
-If price > prevPrice Then
-    quote.priceChange = ValueChangeUp
-ElseIf price < prevPrice Then
-    quote.priceChange = ValueChangeDown
-Else
-    quote.priceChange = ValueChangeNone
-End If
-If size > prevSize Then
-    quote.sizeChange = ValueChangeUp
-ElseIf size < prevSize Then
-    quote.sizeChange = ValueChangeDown
-Else
-    quote.sizeChange = ValueChangeNone
-End If
+quote.price = mAskPrice
+quote.priceString = mAskPriceString
+quote.size = mAskSize
+quote.PriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
+quote.sizeChange = calcValueChange(mAskSize, mPrevAskSize)
+quote.recentPriceChange = mRecentAskPriceChange
+quote.recentSizeChange = mRecentAskSizeChange
 For Each listener In mQuoteListeners
-    listener.ask quote
+    listener.Ask quote
 Next
-RaiseEvent ask(quote)
+RaiseEvent Ask(quote)
 End Sub
 
 Private Sub fireBarWriterNotify( _
                 ByVal action As WriterNotifications, _
-                ByVal filename As String)
+                ByVal Filename As String)
 Dim listener As BarWriterListener
 Dim ev As WriterEvent
 Set ev.source = Me
 ev.action = action
-ev.filename = filename
+ev.Filename = Filename
 For Each listener In mBarWriterListeners
     listener.notify ev
 Next
 RaiseEvent BarWriterNotification(ev)
 End Sub
                                 
-Private Sub fireBid(ByVal price As Double, _
-                ByVal priceString As String, _
-                ByVal size As Long, _
-                ByVal prevPrice As Double, _
-                ByVal prevSize As Long)
+Private Sub fireBid()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
 Set quote.source = Me
-quote.price = price
-quote.priceString = priceString
-quote.size = size
-If price > prevPrice Then
-    quote.priceChange = ValueChangeUp
-ElseIf price < prevPrice Then
-    quote.priceChange = ValueChangeDown
-Else
-    quote.priceChange = ValueChangeNone
-End If
-If size > prevSize Then
-    quote.sizeChange = ValueChangeUp
-ElseIf size < prevSize Then
-    quote.sizeChange = ValueChangeDown
-Else
-    quote.sizeChange = ValueChangeNone
-End If
+quote.price = mBidPrice
+quote.priceString = mBidPriceString
+quote.size = mBidSize
+quote.PriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
+quote.sizeChange = calcValueChange(mBidSize, mPrevBidSize)
+quote.recentPriceChange = mRecentBidPriceChange
+quote.recentSizeChange = mRecentBidSizeChange
 For Each listener In mQuoteListeners
-    listener.bid quote
+    listener.Bid quote
 Next
-RaiseEvent bid(quote)
+RaiseEvent Bid(quote)
 End Sub
 
 Private Sub fireHigh( _
@@ -1890,9 +1773,9 @@ quote.price = price
 quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
-    listener.high quote
+    listener.High quote
 Next
-RaiseEvent high(quote)
+RaiseEvent High(quote)
 End Sub
 
 Private Sub fireLow( _
@@ -1905,9 +1788,30 @@ quote.price = price
 quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
-    listener.low quote
+    listener.Low quote
 Next
-RaiseEvent low(quote)
+RaiseEvent Low(quote)
+End Sub
+
+Private Sub fireMarketDepthNotAvailable( _
+                ByVal reason As String)
+Dim listener As MarketDepthListener
+Dim ev As MarketDepthEvent
+
+Set ev.source = Me
+For Each listener In mMarketDepthListeners
+    listener.MarketDepthNotAvailable reason
+Next
+RaiseEvent DOMReset(ev)
+
+Dim rawListener As RawMarketDepthListener
+Dim evRaw As RawMarketDepthEvent
+
+Set evRaw.source = Me
+For Each rawListener In mRawMarketDepthListeners
+    rawListener.MarketDepthNotAvailable reason
+Next
+RaiseEvent MarketDepthNotAvailable(reason)
 End Sub
 
 Private Sub fireOpen( _
@@ -1922,7 +1826,7 @@ quote.size = 0
 For Each listener In mQuoteListeners
     listener.sessionOpen quote
 Next
-RaiseEvent low(quote)
+RaiseEvent Low(quote)
 End Sub
 
 Private Sub fireOpenInterest( _
@@ -1933,9 +1837,9 @@ Set quote.source = Me
 quote.price = 0
 quote.size = size
 For Each listener In mQuoteListeners
-    listener.openInterest quote
+    listener.OpenInterest quote
 Next
-RaiseEvent openInterest(quote)
+RaiseEvent OpenInterest(quote)
 End Sub
 
 Private Sub firePreviousClose( _
@@ -1948,24 +1852,24 @@ quote.price = price
 quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
-    listener.previousClose quote
+    listener.PreviousClose quote
 Next
-RaiseEvent previousClose(quote)
+RaiseEvent PreviousClose(quote)
 End Sub
 
 Private Sub firePriceChange(ByVal Change As Double, _
                 ByVal ChangeString As String, _
                 ByVal ChangePercent As Double)
 Dim listener As PriceChangeListener
-Dim priceChange As PriceChangeEvent
-Set priceChange.source = Me
-priceChange.Change = Change
-priceChange.ChangeString = ChangeString
-priceChange.ChangePercent = ChangePercent
+Dim ev As PriceChangeEvent
+Set ev.source = Me
+ev.Change = Change
+ev.ChangeString = ChangeString
+ev.ChangePercent = ChangePercent
 For Each listener In mPriceChangeListeners
-    listener.Change priceChange
+    listener.Change ev
 Next
-RaiseEvent priceChange(priceChange)
+RaiseEvent PriceChange(ev)
 End Sub
 
 Private Sub fireResetMarketDepth()
@@ -2011,54 +1915,39 @@ ev.State = newState
 For Each listener In mStateChangeListeners
     listener.Change ev
 Next
-RaiseEvent stateChange(ev)
-mTickers.stateChange ev
+RaiseEvent StateChange(ev)
+getTickers.StateChange ev
 End Sub
 
 Private Sub fireTickfileWriterNotify( _
                 ByVal action As WriterNotifications, _
-                ByVal filename As String)
+                ByVal Filename As String)
 Dim listener As TickfileWriterListener
 Dim ev As WriterEvent
 Set ev.source = Me
 ev.action = action
-ev.filename = filename
+ev.Filename = Filename
 For Each listener In mTickfileWriterListeners
     listener.notify ev
 Next
 RaiseEvent TickfileWriterNotification(ev)
 End Sub
                                 
-Private Sub fireTrade( _
-                ByVal price As Double, _
-                ByVal priceString As String, _
-                ByVal size As Long, _
-                ByVal prevPrice As Double, _
-                ByVal prevSize As Long)
+Private Sub fireTrade()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
 Set quote.source = Me
-quote.price = price
-quote.priceString = priceString
-quote.size = size
-If price > prevPrice Then
-    quote.priceChange = ValueChangeUp
-ElseIf price < prevPrice Then
-    quote.priceChange = ValueChangeDown
-Else
-    quote.priceChange = ValueChangeNone
-End If
-If size > prevSize Then
-    quote.sizeChange = ValueChangeUp
-ElseIf size < prevSize Then
-    quote.sizeChange = ValueChangeDown
-Else
-    quote.sizeChange = ValueChangeNone
-End If
+quote.price = mTradePrice
+quote.priceString = mTradePriceString
+quote.size = mTradeSize
+quote.PriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
+quote.sizeChange = calcValueChange(mTradeSize, mPrevTradeSize)
+quote.recentPriceChange = mRecentTradePriceChange
+quote.recentSizeChange = mRecentTradeSizeChange
 For Each listener In mQuoteListeners
-    listener.trade quote
+    listener.Trade quote
 Next
-RaiseEvent trade(quote)
+RaiseEvent Trade(quote)
 End Sub
 
 Private Sub fireUpdateMarketDepth( _
@@ -2091,12 +1980,87 @@ Set quote.source = Me
 quote.price = 0
 quote.size = size
 For Each listener In mQuoteListeners
-    listener.volume quote
+    listener.Volume quote
 Next
-RaiseEvent volume(quote)
+RaiseEvent Volume(quote)
 End Sub
 
-Private Sub initialisePriceTables()
+Private Sub handleContractLoadComplete()
+Dim ev As NotificationEvent
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If State <> TickerStateStarting Then Exit Sub
+
+If mContracts.Count = 0 Then
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+    ev.eventMessage = "No such contract exists: " & mContracts.contractSpecifier.ToString
+    gTB.notify ev
+    StopTicker
+    mInEventHandler = False
+    Exit Sub
+End If
+
+If mContracts.Count <> 1 Then
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.ToString
+    gTB.notify ev
+    StopTicker
+    mInEventHandler = False
+    Exit Sub
+End If
+
+Set mContract = mContracts(1)
+
+processContract
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "handleContractLoadComplete" & "." & failpoint
+End Sub
+
+Private Sub handleContractLoadError( _
+                ByVal errorNumber As Long, _
+                ByVal errorMessage As String)
+Dim ev As NotificationEvent
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If State <> TickerStateStarting Then Exit Sub
+
+If errorNumber = ErrorCodes.ErrIllegalArgumentException Then
+    
+    failpoint = 100
+    
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+    ev.eventMessage = errorMessage
+    gTB.notify ev
+    StopTicker
+    
+Else
+    
+    failpoint = 200
+    
+    Err.Raise errorNumber, , errorMessage
+End If
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "handleContractLoadError" & "." & failpoint
+End Sub
+
+Private Sub InitialisePriceTables()
 ReDim mAskPrices(15) As PriceTableEntry
 ReDim mBidPrices(15) As PriceTableEntry
 mMaxAskPricesIndex = 0
@@ -2105,12 +2069,7 @@ End Sub
 
 Private Sub MarketDepthNotAvailable( _
                 ByVal reason As String)
-Dim ev As NotificationEvent
-Set ev.source = Me
-ev.eventCode = ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable
-ev.eventMessage = reason
-RaiseEvent Notification(ev)
-mTickers.notify ev
+fireMarketDepthNotAvailable reason
 End Sub
 
 Private Sub notifyConsumers( _
@@ -2131,18 +2090,16 @@ Dim i As Long
 For i = 0 To UBound(prices)
     If prices(i).size <> 0 Then
         
-        updateMarketDepth timestamp, _
-                    i, _
-                    prices(i).marketMaker, _
-                    DOMOperations.DOMInsert, _
-                    side, _
+        updateMarketDepth i, _
+                            prices(i).marketMaker, _
+                            DOMOperations.DOMInsert, _
+                            side, _
+                            prices(i).price, _
+                            prices(i).size
+        
+        DOMSetCell side, _
                     prices(i).price, _
                     prices(i).size
-        
-        DOMSetCell timestamp, _
-                side, _
-                prices(i).price, _
-                prices(i).size
 
     End If
 Next
@@ -2153,40 +2110,41 @@ Private Sub notifyTrade( _
 Dim volTick As GenericTick
 
 mTradePrice = pTick.price
-mTradePriceString = formatPrice(pTick.price)
+mTradePriceString = FormatPrice(pTick.price)
 mTradeSize = pTick.size
+
+If mTradePrice <> mPrevTradePrice Then mRecentTradePriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
+If mTradeSize <> mPrevTradeSize Then mRecentTradeSizeChange = calcValueChange(mTradeSize, mPrevTradeSize)
 
 notifyConsumers pTick
 
-mStudyManager.notifyInput mTradeInputHandle, mTradePrice, pTick.timestamp
+mStudyManager.NotifyInput mTradeInputHandle, mTradePrice, pTick.Timestamp
 
-fireTrade mTradePrice, mTradePriceString, mTradeSize, mPrevTrade, mPrevTradeSize
+fireTrade
 
 If mClosePrice <> 0 Then
     mChange = mTradePrice - mClosePrice
-    mChangeString = formatPrice(mChange)
+    mChangeString = FormatPrice(mChange)
     mChangePercent = 100 * mChange / mClosePrice
     firePriceChange mChange, mChangeString, mChangePercent
 End If
 
-If mPrevTrade <> 0 And mTradePrice <> mPrevTrade Then
-    DOMClearCell timestamp, _
-            DOMUpdateTypes.DOMUpdateLast, _
-            mPrevTrade
+If mPrevTradePrice <> 0 And mTradePrice <> mPrevTradePrice Then
+    DOMClearCell DOMUpdateTypes.DOMUpdateLast, _
+                mPrevTradePrice
 End If
 
 If mTradeSize <> 0 Then
-    DOMSetCell timestamp, _
-            DOMUpdateTypes.DOMUpdateLast, _
-            mTradePrice, _
-            mTradeSize
+    DOMSetCell DOMUpdateTypes.DOMUpdateLast, _
+                mTradePrice, _
+                mTradeSize
 End If
 
 If Not mNoVolumeAdjustments And mGotFirstVolume Then
     mAccumulatedVolume = mAccumulatedVolume + mTradeSize
     volTick.tickType = TickTypeVolume
     volTick.size = mAccumulatedVolume
-    volTick.timestamp = pTick.timestamp
+    volTick.Timestamp = pTick.Timestamp
     notifyVolume volTick
 End If
 End Sub
@@ -2198,7 +2156,7 @@ mVolume = pTick.size
 
 notifyConsumers pTick
 
-mStudyManager.notifyInput mVolumeInputHandle, mVolume, pTick.timestamp
+mStudyManager.NotifyInput mVolumeInputHandle, mVolume, pTick.Timestamp
 
 fireVolume mVolume
 End Sub
@@ -2210,7 +2168,7 @@ If mReplayingTickfile Then
 Else
 End If
 
-mStudyManager.setSessionTimes mContract.sessionStartTime, _
+mStudyManager.SetSessionTimes mContract.sessionStartTime, _
                             mContract.sessionEndTime, _
                             mContract.TimeZone, _
                             Not mUseExchangeTimeZone
@@ -2250,7 +2208,7 @@ If mWriteTradeBarData Or mWriteBidAskBarData Then
 End If
 
 If mDOMEventsRequired <> DOMNoEvents Or mIncludeMarketDepthInTickfile Then
-    initialisePriceTables
+    InitialisePriceTables
 End If
 
 End Sub
@@ -2260,17 +2218,17 @@ Dim ev As NotificationEvent
 
 If Not mInputStudy Is Nothing Then
     mInputStudy.name = mContract.specifier.localSymbol
-    mStudyManager.setInputTicksize mBidInputHandle, mContract.TickSize
-    mStudyManager.setInputTicksize mAskInputHandle, mContract.TickSize
-    mStudyManager.setInputTicksize mTradeInputHandle, mContract.TickSize
+    mStudyManager.SetInputTicksize mBidInputHandle, mContract.TickSize
+    mStudyManager.SetInputTicksize mAskInputHandle, mContract.TickSize
+    mStudyManager.SetInputTicksize mTradeInputHandle, mContract.TickSize
 End If
 
-mTimeframes.Contract = mContract
-
-mPriceFormatString = mContract.priceFormatString
+mPriceFormatString = mContract.PriceFormatString
 
 mTickSize = mContract.TickSize
 If mTickSize = 0.03125 Then mDisplayThirtySeconds = True
+
+mTimeframes.Contract = mContract
 
 If mLoadOnly Then
     Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
@@ -2283,38 +2241,34 @@ ElseIf mReplayingTickfile Then
                                     ""))
     prepare
     State = TickerStateReady
-    If readyToReplay Then
+    If ReadyToReplay Then
         State = TickerStates.TickerStateRunning
-        mTickfileManager.startTicker mContract
+        mTickfileManager.StartTicker mContract
     End If
 Else
     Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
     
-    If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
-        Set ev.source = Me
-        ev.eventCode = ApiNotifyCodes.ApiNotifyContractExpired
-        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.toString
-        RaiseEvent Notification(ev)
-        mTickers.notify ev
-        stopTicker
-        mInEventHandler = False
-        Exit Sub
-    End If
     prepare
     State = TickerStateReady
     
-    Set mRealtimeDataReader = gTB.ServiceProviders.CreateRealtimeDataReader(Me, Me)
-    
-    If Not mRealtimeDataReader Is Nothing Then
-        mRealtimeDataReader.StartData mContract, calculateSpDomRequirement
-        State = TickerStates.TickerStateRunning
-    Else
+    If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
         Set ev.source = Me
-        ev.eventCode = ApiNotifyCodes.ApiNotifyNoRealtimeDataSource
-        ev.eventMessage = "Can't create realtime data reader"
-        RaiseEvent Notification(ev)
-        mTickers.notify ev
-        stopTicker
+        ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
+        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.ToString
+        gTB.notify ev
+    Else
+        Set mRealtimeDataReader = gTB.ServiceProviders.CreateRealtimeDataReader(Me, Me)
+        
+        If Not mRealtimeDataReader Is Nothing Then
+            mRealtimeDataReader.StartData mContract, calculateSpDomRequirement
+            State = TickerStates.TickerStateRunning
+        Else
+            Set ev.source = Me
+            ev.eventCode = ApiNotifyCodes.ApiNotifyNoRealtimeDataSource
+            ev.eventMessage = "Can't create realtime data reader"
+            gTB.notify ev
+            StopTicker
+        End If
     End If
 End If
 End Sub
@@ -2325,36 +2279,39 @@ On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
         
+mPrevAskPrice = mAskPrice
+mPrevAskSize = mAskSize
+
 mAskPrice = pTick.price
-mAskPriceString = formatPrice(mAskPrice)
+mAskPriceString = FormatPrice(mAskPrice)
 mAskSize = pTick.size
+
+If mAskPrice <> mPrevAskPrice Then mRecentAskPriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
+If mAskSize <> mPrevAskSize Then mRecentAskSizeChange = calcValueChange(mAskSize, mPrevAskSize)
 
 notifyConsumers pTick
 
-mStudyManager.notifyInput mAskInputHandle, mAskPrice, pTick.timestamp
+mStudyManager.NotifyInput mAskInputHandle, mAskPrice, pTick.Timestamp
 
-fireAsk mAskPrice, mAskPriceString, mAskSize, mPrevAsk, mPrevAskSize
+fireAsk
 
-If mPrevAsk <> 0 And mAskPrice > mPrevAsk Then
-    DOMClearCell timestamp, _
-            DOMUpdateTypes.DOMUpdateAsk, _
-            mPrevAsk
+If mPrevAskPrice <> 0 And mAskPrice > mPrevAskPrice Then
+    DOMClearCell DOMUpdateTypes.DOMUpdateAsk, _
+                mPrevAskPrice
 End If
 
 If mAskSize <> 0 Then
-    DOMSetCell timestamp, _
-            DOMUpdateTypes.DOMUpdateAsk, _
-            mAskPrice, _
-            mAskSize
+    DOMSetCell DOMUpdateTypes.DOMUpdateAsk, _
+                mAskPrice, _
+                mAskSize
 End If
-
-mPrevAsk = mAskPrice
-mPrevAskSize = mAskSize
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickAsk"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickAsk"
 mInEventHandler = False
 End Sub
 
@@ -2366,36 +2323,39 @@ On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
         
+mPrevBidPrice = mBidPrice
+mPrevBidSize = mBidSize
+
 mBidPrice = pTick.price
-mBidPriceString = formatPrice(mBidPrice)
+mBidPriceString = FormatPrice(mBidPrice)
 mBidSize = pTick.size
+
+If mBidPrice <> mPrevBidPrice Then mRecentBidPriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
+If mBidSize <> mPrevBidSize Then mRecentBidSizeChange = calcValueChange(mBidSize, mPrevBidSize)
 
 notifyConsumers pTick
 
-mStudyManager.notifyInput mBidInputHandle, mBidPrice, pTick.timestamp
+mStudyManager.NotifyInput mBidInputHandle, mBidPrice, pTick.Timestamp
 
-fireBid mBidPrice, mBidPriceString, mBidSize, mPrevBid, mPrevBidSize
+fireBid
 
-If mPrevBid <> 0 And mBidPrice < mPrevBid Then
-    DOMClearCell timestamp, _
-            DOMUpdateTypes.DOMUpdateBid, _
-            mPrevBid
+If mPrevBidPrice <> 0 And mBidPrice < mPrevBidPrice Then
+    DOMClearCell DOMUpdateTypes.DOMUpdateBid, _
+                mPrevBidPrice
 End If
 
 If mBidSize <> 0 Then
-    DOMSetCell timestamp, _
-            DOMUpdateTypes.DOMUpdateBid, _
-            mBidPrice, _
-            mBidSize
+    DOMSetCell DOMUpdateTypes.DOMUpdateBid, _
+                mBidPrice, _
+                mBidSize
 End If
-
-mPrevBid = mBidPrice
-mPrevBidSize = mBidSize
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickBid"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickBid"
 mInEventHandler = False
 End Sub
 
@@ -2407,14 +2367,16 @@ On Error GoTo Err
 notifyConsumers pTick
 
 mHighPrice = pTick.price
-mHighPriceString = formatPrice(mHighPrice)
+mHighPriceString = FormatPrice(mHighPrice)
 
 fireHigh mHighPrice, mHighPriceString
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickHigh"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickHigh"
 mInEventHandler = False
 End Sub
 
@@ -2426,14 +2388,16 @@ On Error GoTo Err
 notifyConsumers pTick
 
 mLowPrice = pTick.price
-mLowPriceString = formatPrice(mLowPrice)
+mLowPriceString = FormatPrice(mLowPrice)
 
 fireLow mLowPrice, mLowPriceString
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickLow"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickLow"
 mInEventHandler = False
 End Sub
 
@@ -2444,8 +2408,7 @@ On Error GoTo Err
 
 notifyConsumers pTick
 
-DOMRawUpdate timestamp, _
-                pTick.position, _
+DOMRawUpdate pTick.position, _
                 pTick.marketMaker, _
                 pTick.operation, _
                 pTick.side, _
@@ -2453,35 +2416,35 @@ DOMRawUpdate timestamp, _
                 pTick.size
 
 If pTick.side = DOMSides.DOMAsk Then
-    updatePrices timestamp, _
-                mAskPrices, _
+    updatePrices mAskPrices, _
                 mMaxAskPricesIndex, _
                 pTick.side, _
                 pTick.position, _
                 pTick.operation, _
                 pTick.price, _
                 pTick.size, _
-                mPrevBid, _
-                mPrevAsk, _
+                mPrevBidPrice, _
+                mPrevAskPrice, _
                 mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
 Else
-    updatePrices timestamp, _
-                mBidPrices, _
+    updatePrices mBidPrices, _
                 mMaxBidPricesIndex, _
                 pTick.side, _
                 pTick.position, _
                 pTick.operation, _
                 pTick.price, _
                 pTick.size, _
-                mPrevBid, _
-                mPrevAsk, _
+                mPrevBidPrice, _
+                mPrevAskPrice, _
                 mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
 End If
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickMarketDepth"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -2493,14 +2456,16 @@ On Error GoTo Err
 notifyConsumers pTick
 
 mOpenPrice = pTick.price
-mOpenPriceString = formatPrice(mOpenPrice)
+mOpenPriceString = FormatPrice(mOpenPrice)
 
 fireOpen mOpenPrice, mOpenPriceString
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickOpen"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickOpen"
 mInEventHandler = False
 End Sub
 
@@ -2518,7 +2483,9 @@ mPrevOpenInterest = mOpenInterest
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickOpenInterest"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickOpenInterest"
 mInEventHandler = False
 End Sub
 
@@ -2530,13 +2497,13 @@ On Error GoTo Err
 notifyConsumers pTick
 
 mClosePrice = pTick.price
-mClosePriceString = formatPrice(mClosePrice)
+mClosePriceString = FormatPrice(mClosePrice)
 
 firePreviousClose mClosePrice, mClosePriceString
 
 If mTradePrice <> 0 Then
     mChange = mTradePrice - mClosePrice
-    mChangeString = formatPrice(mChange)
+    mChangeString = FormatPrice(mChange)
     mChangePercent = 100 * mChange / mClosePrice
     firePriceChange mChange, mChangeString, mChangePercent
 End If
@@ -2544,7 +2511,9 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickPreviousClose"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickPreviousClose"
 mInEventHandler = False
 End Sub
 
@@ -2555,12 +2524,14 @@ On Error GoTo Err
 
 notifyConsumers pTick
 
-DOMReset timestamp
+DOMReset
     
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickResetMarketDepth"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickResetMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -2571,16 +2542,18 @@ On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
         
-notifyTrade pTick
-
-mPrevTrade = mTradePrice
+mPrevTradePrice = mTradePrice
 mPrevTradeSize = mTradeSize
+
+notifyTrade pTick
 
 mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickTrade"
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickTrade"
 mInEventHandler = False
 End Sub
 
@@ -2600,24 +2573,24 @@ failpoint = 200
 mGotFirstVolume = True
 
 If Not mReceivedFirstVolumeInSession Then
-    ' this is the start of a new session, but there may be a volume
-    ' tick including the accumulated volume for the previous session
-    ' before the first true volume tick for the new session
+    ' this is the start of a new Session, but there may be a Volume
+    ' tick including the accumulated Volume for the previous Session
+    ' before the first true Volume tick for the new Session
     If mPrevSessionAccumulatedVolume = 0 Or _
         pTick.size + mVolumeCorrectionIncrement < mPrevSessionAccumulatedVolume _
     Then
-        ' this is the first true volume tick for the new session
+        ' this is the first true Volume tick for the new Session
         mReceivedFirstVolumeInSession = True
         mVolumeCorrectionIncrement = 0
     Else
-        ' correct this volume figure
+        ' correct this Volume figure
         pTick.size = pTick.size - (mPrevSessionAccumulatedVolume - mVolumeCorrectionIncrement)
     End If
 End If
 
 If pTick.size < 0 Then
     ' tickfile encoding can't cope with negative volumes, so just log it
-    gLogLogger.Log LogLevelWarning, ProjectName & "." & ModuleName & "." & "Corrected volume tick is negative: " & vbCrLf & _
+    gLogLogger.Log LogLevelWarning, ProjectName & "." & ModuleName & "." & "Corrected Volume tick is negative: " & vbCrLf & _
                                     "Corrected size: " & pTick.size & vbCrLf & _
                                     "mPrevSessionAccumulatedVolume: " & mPrevSessionAccumulatedVolume & vbCrLf & _
                                     "mVolumeCorrectionIncrement: " & mVolumeCorrectionIncrement
@@ -2627,11 +2600,11 @@ If pTick.size < 0 Then
 End If
 
 ' we write the corrected size to the tickfile rather than the raw size because
-' otherwise replaying from the start of the session gives inflated volume figures
+' otherwise replaying from the start of the Session gives inflated Volume figures
 ' if the first tick was subject to correction
 If mWriteTickData Then mTickWriter.writeTick pTick
 
-' note that the previous trade will have notified volume of mAccumulatedVolume
+' note that the previous Trade will have notified Volume of mAccumulatedVolume
 
 
 failpoint = 300
@@ -2657,7 +2630,7 @@ ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
         
         Dim adjustedTick As GenericTick
         adjustedTick.tickType = TickTypeVolume
-        adjustedTick.timestamp = pTick.timestamp
+        adjustedTick.Timestamp = pTick.Timestamp
         adjustedTick.size = mAccumulatedVolume
         notifyVolume adjustedTick
     Else
@@ -2666,8 +2639,8 @@ ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
 
         Dim impliedTick As GenericTick
         impliedTick.tickType = TickTypeTrade
-        impliedTick.timestamp = pTick.timestamp
-        impliedTick.price = mPrevTrade
+        impliedTick.Timestamp = pTick.Timestamp
+        impliedTick.price = mPrevTradePrice
         impliedTick.size = pTick.size + mVolumeCorrectionIncrement - mAccumulatedVolume
         notifyTrade impliedTick
     End If
@@ -2681,11 +2654,14 @@ mPrevVolume = mVolume
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickVolume:" & failpoint
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickVolume:" & failpoint
 mInEventHandler = False
+
 End Sub
 
-Private Function readyToReplay() As Boolean
+Private Function ReadyToReplay() As Boolean
 If Not mReplayingTickfile Then Exit Function
 
 If Not mBarWriter Is Nothing Then
@@ -2698,7 +2674,7 @@ End If
 
 If mNumberOfTimeframesLoading <> 0 Then Exit Function
 
-readyToReplay = True
+ReadyToReplay = True
 End Function
 
 Private Sub setTime( _
@@ -2712,45 +2688,47 @@ End Sub
 
 Private Sub setupInputStudy()
 Dim sourceName As String
-Dim contractSpec  As contractSpecifier
 If mContract Is Nothing Then
     ' we don't yet have the contract details, so we can't generate a proper
     ' name for this source, so do the best we can
-    Set contractSpec = mContracts.contractSpecifier
-    sourceName = contractSpec.toString
+    If Not mInitialContractSpec Is Nothing Then
+        sourceName = mInitialContractSpec.ToString
+    Else
+        sourceName = GenerateGUIDString
+    End If
         
-    Set mInputStudy = mStudyManager.addSource(sourceName)
-    mBidInputHandle = mStudyManager.addInput(mInputStudy, _
+    Set mInputStudy = mStudyManager.AddSource(sourceName)
+    mBidInputHandle = mStudyManager.AddInput(mInputStudy, _
                             BidInputName, _
                             "Bid prices", _
                             StudyInputTypes.InputTypeReal, _
                             False, _
                             0)
-    mAskInputHandle = mStudyManager.addInput(mInputStudy, _
+    mAskInputHandle = mStudyManager.AddInput(mInputStudy, _
                             AskInputName, _
                             "Ask prices", _
                             StudyInputTypes.InputTypeReal, _
                             False, _
                             0)
-    mOpenInterestInputHandle = mStudyManager.addInput(mInputStudy, _
+    mOpenInterestInputHandle = mStudyManager.AddInput(mInputStudy, _
                             OpenInterestInputName, _
                             "Open interest", _
                             StudyInputTypes.InputTypeInteger, _
                             False, _
                             1)
-    mTickVolumeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mTickVolumeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             TickVolumeInputName, _
-                            "Tick volume", _
+                            "Tick Volume", _
                             StudyInputTypes.InputTypeInteger, _
                             False, _
                             1)
-    mTradeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mTradeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             TradeInputName, _
                             "Trade prices", _
                             StudyInputTypes.InputTypeReal, _
                             True, _
                             0)
-    mVolumeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mVolumeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             VolumeInputName, _
                             "Volume", _
                             StudyInputTypes.InputTypeInteger, _
@@ -2758,39 +2736,39 @@ If mContract Is Nothing Then
                             1)
 Else
     sourceName = mContract.specifier.localSymbol
-    Set mInputStudy = mStudyManager.addSource(sourceName)
-    Set mSession = mInputStudy.session
-    mBidInputHandle = mStudyManager.addInput(mInputStudy, _
+    Set mInputStudy = mStudyManager.AddSource(sourceName)
+    Set mSession = mInputStudy.Session
+    mBidInputHandle = mStudyManager.AddInput(mInputStudy, _
                             BidInputName, _
                             "Bid prices", _
                             StudyInputTypes.InputTypeReal, _
                             False, _
                             mContract.TickSize)
-    mAskInputHandle = mStudyManager.addInput(mInputStudy, _
+    mAskInputHandle = mStudyManager.AddInput(mInputStudy, _
                             AskInputName, _
                             "Ask prices", _
                             StudyInputTypes.InputTypeReal, _
                             False, _
                             mContract.TickSize)
-    mOpenInterestInputHandle = mStudyManager.addInput(mInputStudy, _
+    mOpenInterestInputHandle = mStudyManager.AddInput(mInputStudy, _
                             OpenInterestInputName, _
                             "Open interest", _
                             StudyInputTypes.InputTypeInteger, _
                             False, _
                             1)
-    mTickVolumeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mTickVolumeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             TickVolumeInputName, _
-                            "Tick volume", _
+                            "Tick Volume", _
                             StudyInputTypes.InputTypeInteger, _
                             False, _
                             1)
-    mTradeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mTradeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             TradeInputName, _
                             "Trade prices", _
                             StudyInputTypes.InputTypeReal, _
                             True, _
                             mContract.TickSize)
-    mVolumeInputHandle = mStudyManager.addInput(mInputStudy, _
+    mVolumeInputHandle = mStudyManager.AddInput(mInputStudy, _
                             VolumeInputName, _
                             "Volume", _
                             StudyInputTypes.InputTypeInteger, _
@@ -2799,17 +2777,17 @@ Else
 End If
 End Sub
 
+Private Function getTickers() As Tickers
+Set getTickers = mTickersRef.Target
+End Function
+
 Private Sub updateMarketDepth( _
-                ByVal timestamp As Date, _
                 ByVal position As Long, _
                 ByVal marketMaker As String, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
                 ByVal price As Double, _
                 ByVal size As Long)
-
-setTime timestamp
-
 
 fireUpdateMarketDepth position, _
                         marketMaker, _
@@ -2819,8 +2797,7 @@ fireUpdateMarketDepth position, _
                         size
 End Sub
 
-Private Sub updatePrices(ByVal timestamp As Date, _
-                    ByRef prices() As PriceTableEntry, _
+Private Sub updatePrices(ByRef prices() As PriceTableEntry, _
                     ByRef maxIndex As Long, _
                     ByVal side As DOMSides, _
                     ByVal position As Long, _
@@ -2834,7 +2811,7 @@ Dim i As Long
 
 ' NB: we don't update the screen if position is 0, since these are
 ' passed earlier via the notifyBid and notifyAsk methods. Except for deletions
-' (for example if the bid drops, the current entry 0 must be deleted - though
+' (for example if the Bid drops, the current entry 0 must be deleted - though
 ' it could just be updated, TWS doesn't seem to work this way)
 
 Select Case operation
@@ -2864,8 +2841,7 @@ Case DOMOperations.DOMInsert
     prices(position).size = size
     If position <> 0 Then
         If notifyApp Then
-            DOMSetCell timestamp, _
-                    side, _
+            DOMSetCell side, _
                     price, _
                     size
         End If
@@ -2873,15 +2849,14 @@ Case DOMOperations.DOMInsert
 Case DOMOperations.DOMUpdate
     If price <> prices(position).price And prices(position).price <> 0 Then
         ' if need be we must blank the size display for the price currently
-        ' in this slot. Note that sometimes the market depth updates teomporarily
+        ' in this slot. Note that sometimes the market depth updates temporarily
         ' result in two or more adjacent slots for the same price - therefore we
         ' only blank the size if the adjacent slot(s) are for a different price.
         If position = 0 Then
             If prices(1).price <> prices(0).price Then
                 If notifyApp Then
-                    DOMClearCell timestamp, _
-                            side, _
-                            prices(0).price
+                    DOMClearCell side, _
+                                prices(0).price
                 End If
             End If
         Else
@@ -2889,9 +2864,8 @@ Case DOMOperations.DOMUpdate
                 prices(position - 1).price <> prices(position).price _
             Then
                 If notifyApp Then
-                    DOMClearCell timestamp, _
-                            side, _
-                            prices(position).price
+                    DOMClearCell side, _
+                                prices(position).price
                 End If
             End If
         End If
@@ -2900,10 +2874,9 @@ Case DOMOperations.DOMUpdate
     prices(position).size = size
     If position <> 0 Then
         If notifyApp Then
-            DOMSetCell timestamp, _
-                    side, _
-                    price, _
-                    size
+            DOMSetCell side, _
+                        price, _
+                        size
         End If
     End If
 Case DOMOperations.DOMDelete
@@ -2911,9 +2884,9 @@ Case DOMOperations.DOMDelete
         Or _
         (position = 0 And side = DOMSides.DOMAsk And prices(position).price = currentAsk) _
     Then
-        ' we get here when we've already set the bid or ask in the notifyBid/notifyAsk
+        ' we get here when we've alReady set the Bid or Ask in the notifyBid/notifyAsk
         ' methods, but the marketdepth updates are deleting some entries prior to
-        ' inserting the bid/ask (why it deletes an entry then immediately reinserts
+        ' inserting the Bid/Ask (why it deletes an entry then immediately reinserts
         ' it is a mystery to me, but it does!).
         ' So in this scenario, we don't want to blank the size display for this price
     Else
@@ -2923,9 +2896,8 @@ Case DOMOperations.DOMDelete
                 ' we getting a delete before a price has been inserted in this position,
                 ' so just ignore it
             Else
-                DOMClearCell timestamp, _
-                        side, _
-                        prices(position).price
+                DOMClearCell side, _
+                            prices(position).price
             End If
         End If
     End If

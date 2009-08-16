@@ -66,31 +66,32 @@ Private Const ModuleName                    As String = "ChartTools"
 '@================================================================================
 
 Public Function CreateFibRetracementTool( _
-                ByVal controller As ChartController, _
+                ByVal pChart As ChartController, _
                 ByRef pLineSpecs() As FibLineSpecifier, _
-                Optional ByVal layer As LayerNumbers = -1) As FibRetracementTool
-If controller Is Nothing Then
+                Optional ByVal Layer As LayerNumbers = -1, _
+                Optional ByVal pTextStyle As TextStyle) As FibRetracementTool
+If pChart Is Nothing Or Not TypeOf pChart Is ChartController Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateLineTool", _
-            "You must supply a ChartController"
+            ProjectName & "." & ModuleName & ":" & "CreateFibRetracementTool", _
+            "You must supply a Chart"
 End If
 
 Set CreateFibRetracementTool = New FibRetracementTool
-CreateFibRetracementTool.Initialise controller, pLineSpecs, layer
+CreateFibRetracementTool.Initialise pChart, pLineSpecs, Layer, pTextStyle
 End Function
 
 Public Function CreateLineTool( _
-                ByVal controller As ChartController, _
+                ByVal pChart As ChartController, _
                 Optional ByVal pLineStyle As LineStyle, _
-                Optional ByVal layer As LayerNumbers = -1) As LineTool
-If controller Is Nothing Then
+                Optional ByVal Layer As LayerNumbers = -1) As LineTool
+If pChart Is Nothing Or Not TypeOf pChart Is ChartController Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "CreateLineTool", _
-            "You must supply a ChartController"
+            "You must supply a Chart"
 End If
 
 Set CreateLineTool = New LineTool
-CreateLineTool.Initialise controller, pLineStyle, layer
+CreateLineTool.Initialise pChart, pLineStyle, Layer
 End Function
 
 '@================================================================================

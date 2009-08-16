@@ -31,6 +31,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ConfigSettingY As String = "&Y"
+Private Const ConfigSettingColor As String = "&Color"
+Private Const ConfigSettingThickness As String = "&Thickness"
+Private Const ConfigSettingStyle As String = "&Style"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -47,6 +52,8 @@ Private mY As Double
 Private mColor As Long
 Private mThickness As Long
 Private mStyle As LineStyles
+
+Private mConfig                                         As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
@@ -70,44 +77,77 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let color(ByVal value As Long)
+Public Property Let Color(ByVal value As Long)
 mColor = value
+storeSettings
 End Property
 
-Public Property Get color() As Long
-color = mColor
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
-Public Property Let style(ByVal value As LineStyles)
+Friend Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
+End Property
+
+Public Property Let Style(ByVal value As LineStyles)
 mStyle = value
+storeSettings
 End Property
 
-Public Property Get style() As LineStyles
-style = mStyle
+Public Property Get Style() As LineStyles
+Style = mStyle
 End Property
 
-Public Property Let thickness(ByVal value As Long)
+Public Property Let Thickness(ByVal value As Long)
 mThickness = value
+storeSettings
 End Property
 
-Public Property Get thickness() As Long
-thickness = mThickness
+Public Property Get Thickness() As Long
+Thickness = mThickness
 End Property
 
-Public Property Let y(ByVal value As Double)
+Public Property Let Y(ByVal value As Double)
 mY = value
+storeSettings
 End Property
 
-Public Property Get y() As Double
-y = mY
+Public Property Get Y() As Double
+Y = mY
+storeSettings
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection)
+Set mConfig = config
+mY = mConfig.GetSetting(ConfigSettingY)
+mColor = mConfig.GetSetting(ConfigSettingColor)
+mThickness = mConfig.GetSetting(ConfigSettingThickness)
+mStyle = mConfig.GetSetting(ConfigSettingStyle)
+End Sub
+
+Friend Sub RemoveFromConfig()
+If Not mConfig Is Nothing Then mConfig.Remove
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Sub storeSettings()
+If mConfig Is Nothing Then Exit Sub
+
+mConfig.SetSetting ConfigSettingY, mY
+mConfig.SetSetting ConfigSettingColor, mColor
+mConfig.SetSetting ConfigSettingThickness, mThickness
+mConfig.SetSetting ConfigSettingStyle, mStyle
+End Sub
 

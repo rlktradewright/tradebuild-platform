@@ -27,26 +27,13 @@ Event Click()
 
 Event DblCLick()
 
+Event PropertyChanged(ev As PropertyChangedEvent)
+
 Event SelectionStateChanged()
 
 '================================================================================
 ' Enums
 '================================================================================
-
-Private Enum PropertyOverrideFlags
-    ColorIsSet = 1
-    BoxIsSet = 2
-    BoxColorIsSet = 4
-    BoxStyleIsSet = 8
-    BoxThicknessIsSet = &H10&
-    BoxFillColorIsSet = &H20&
-    BoxFillStyleIsSet = &H40&
-    AlignIsSet = &H80&
-    PaddingXIsSet = &H100&
-    PaddingYIsSet = &H200&
-    FontIsSet = &H400&
-    BoxFillWithBackGroundColorIsSet = &H800&
-End Enum
 
 '================================================================================
 ' Types
@@ -64,6 +51,7 @@ Private Const ModuleName                As String = "TextSeries"
 '================================================================================
 
 Private mSeriesID As Long
+Private mSeriesUpdateNumber As Long
 
 Private mIsSelectable As Boolean
 Private mIsSelected As Boolean
@@ -86,8 +74,6 @@ Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
 Private mName As String
-
-Private mTaskContext As TaskContext
 
 ' these fields override corresponding items in the Style
 Private mColor As Long
@@ -117,6 +103,7 @@ Set mStyle = New TextStyle
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "TextSeries terminated"
 Debug.Print "TextSeries terminated"
 End Sub
 
@@ -188,6 +175,7 @@ End Sub
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 If RHS <> mIsSelected Then
     mIsSelected = RHS
+    firePropertyChanged "IsSelected"
     RaiseEvent SelectionStateChanged
 End If
 End Property
@@ -201,6 +189,14 @@ IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
+' mFont Event Handlers
+'================================================================================
+
+Private Sub mFont_FontChanged(ByVal PropertyName As String)
+firePropertyChanged "Font"
+End Sub
+
+'================================================================================
 ' mStyle Event Handlers
 '================================================================================
 
@@ -209,33 +205,43 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("align")
+Case "ALIGN"
     repaintRegion True
-Case UCase$("box")
+Case "BOX"
     repaintRegion True
-Case UCase$("boxColor")
+Case "BOXCOLOR"
     repaintRegion False
-Case UCase$("boxFillColor")
+Case "BOXFILLCOLOR"
     repaintRegion False
-Case UCase$("boxFillStyle")
+Case "BOXFILLSTYLE"
     repaintRegion False
-Case UCase$("boxStyle")
+Case "BOXSTYLE"
     repaintRegion True
-Case UCase$("boxThickness")
+Case "BOXTHICKNESS"
     repaintRegion True
-Case UCase$("color")
+Case "COLOR"
     repaintRegion False
-Case UCase$("Font")
+Case "FONT"
     repaintRegion True
-Case UCase$("paddingX")
+Case "PADDINGX"
     repaintRegion True
-Case UCase$("paddingY")
+Case "PADDINGY"
+    repaintRegion True
+Case "EXTENDED"
+    repaintRegion True
+Case "FIXEDX"
+    repaintRegion True
+Case "FIXEDY"
+    repaintRegion True
+Case "INCLUDEINAUTOSCALE"
     repaintRegion True
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
             ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
             "Unhandled property change"
 End Select
+
+firePropertyChanged ev.PropertyName
 
 Exit Sub
 
@@ -252,110 +258,119 @@ End Sub
 
 Public Property Get Align() As TextAlignModes
 Align = mStyle.Align
-If isPropertyOverrideFlagSet(AlignIsSet) Then Align = mAlign
+If isPropertyOverrideFlagSet(TextIsSetAlign) Then Align = mAlign
 End Property
 
 Public Property Let Align(ByVal value As TextAlignModes)
-If mAlign = value And isPropertyOverrideFlagSet(AlignIsSet) Then Exit Property
+If mAlign = value And isPropertyOverrideFlagSet(TextIsSetAlign) Then Exit Property
 mAlign = value
-setPropertyOverrideFlag AlignIsSet
+setPropertyOverrideFlag TextIsSetAlign
 repaintRegion True
+firePropertyChanged "Align"
 End Property
 
 Public Property Get Box() As Boolean
 Box = mStyle.Box
-If isPropertyOverrideFlagSet(BoxIsSet) Then Box = mBox
+If isPropertyOverrideFlagSet(TextIsSetBox) Then Box = mBox
 End Property
 
 Public Property Let Box(ByVal value As Boolean)
-If mBox = value And isPropertyOverrideFlagSet(BoxIsSet) Then Exit Property
+If mBox = value And isPropertyOverrideFlagSet(TextIsSetBox) Then Exit Property
 mBox = value
-setPropertyOverrideFlag BoxIsSet
+setPropertyOverrideFlag TextIsSetBox
 repaintRegion True
+firePropertyChanged "Box"
 End Property
 
-Public Property Get BoxColor() As OLE_COLOR
+Public Property Get BoxColor() As Long
 BoxColor = mStyle.BoxColor
-If isPropertyOverrideFlagSet(BoxColorIsSet) Then BoxColor = mBoxColor
+If isPropertyOverrideFlagSet(TextIsSetBoxColor) Then BoxColor = mBoxColor
 End Property
 
-Public Property Let BoxColor(ByVal value As OLE_COLOR)
-If mBoxColor = value And isPropertyOverrideFlagSet(BoxColorIsSet) Then Exit Property
+Public Property Let BoxColor(ByVal value As Long)
+If mBoxColor = value And isPropertyOverrideFlagSet(TextIsSetBoxColor) Then Exit Property
 mBoxColor = value
-setPropertyOverrideFlag BoxColorIsSet
+setPropertyOverrideFlag TextIsSetBoxColor
 repaintRegion False
+firePropertyChanged "BoxColor"
 End Property
 
-Public Property Get BoxFillColor() As OLE_COLOR
+Public Property Get BoxFillColor() As Long
 BoxFillColor = mStyle.BoxFillColor
-If isPropertyOverrideFlagSet(BoxFillColorIsSet) Then BoxFillColor = mBoxFillColor
+If isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then BoxFillColor = mBoxFillColor
 End Property
 
-Public Property Let BoxFillColor(ByVal value As OLE_COLOR)
-If mBoxFillColor = value And isPropertyOverrideFlagSet(BoxFillColorIsSet) Then Exit Property
+Public Property Let BoxFillColor(ByVal value As Long)
+If mBoxFillColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then Exit Property
 mBoxFillColor = value
-setPropertyOverrideFlag BoxFillColorIsSet
+setPropertyOverrideFlag TextIsSetBoxFillColor
 repaintRegion False
+firePropertyChanged "BoxFillColor"
 End Property
 
 Public Property Get BoxFillStyle() As FillStyles
 BoxFillStyle = mStyle.BoxFillStyle
-If isPropertyOverrideFlagSet(BoxFillStyleIsSet) Then BoxFillStyle = mBoxFillStyle
+If isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then BoxFillStyle = mBoxFillStyle
 End Property
 
 Public Property Let BoxFillStyle(ByVal value As FillStyles)
-If mBoxFillStyle = value And isPropertyOverrideFlagSet(BoxFillStyleIsSet) Then Exit Property
+If mBoxFillStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then Exit Property
 mBoxFillStyle = value
-setPropertyOverrideFlag BoxFillStyleIsSet
+setPropertyOverrideFlag TextIsSetBoxFillStyle
 repaintRegion False
+firePropertyChanged "BoxFillStyle"
 End Property
 
 Public Property Get BoxStyle() As LineStyles
 BoxStyle = mStyle.BoxStyle
-If isPropertyOverrideFlagSet(BoxStyleIsSet) Then BoxStyle = mBoxStyle
+If isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then BoxStyle = mBoxStyle
 End Property
 
 Public Property Let BoxStyle(ByVal value As LineStyles)
-If mBoxStyle = value And isPropertyOverrideFlagSet(BoxStyleIsSet) Then Exit Property
+If mBoxStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then Exit Property
 mBoxStyle = value
-setPropertyOverrideFlag BoxStyleIsSet
+setPropertyOverrideFlag TextIsSetBoxStyle
 repaintRegion True
+firePropertyChanged "BoxStyle"
 End Property
 
 Public Property Get BoxThickness() As Long
 BoxThickness = mStyle.BoxThickness
-If isPropertyOverrideFlagSet(BoxThicknessIsSet) Then BoxThickness = mBoxThickness
+If isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then BoxThickness = mBoxThickness
 End Property
 
 Public Property Let BoxThickness(ByVal value As Long)
-If mBoxThickness = value And isPropertyOverrideFlagSet(BoxThicknessIsSet) Then Exit Property
+If mBoxThickness = value And isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then Exit Property
 mBoxThickness = value
-setPropertyOverrideFlag BoxThicknessIsSet
+setPropertyOverrideFlag TextIsSetBoxThickness
 repaintRegion True
+firePropertyChanged "BoxThickness"
 End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
 BoxFillWithBackgroundColor = mStyle.BoxFillWithBackgroundColor
-If isPropertyOverrideFlagSet(BoxFillWithBackGroundColorIsSet) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+If isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
 End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
-If mBoxFillWithBackgroundColor = value And isPropertyOverrideFlagSet(BoxFillWithBackGroundColorIsSet) Then Exit Property
+If mBoxFillWithBackgroundColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then Exit Property
 mBoxFillWithBackgroundColor = value
-setPropertyOverrideFlag BoxFillWithBackGroundColorIsSet
+setPropertyOverrideFlag TextIsSetBoxFillWithBackGroundColor
 repaintRegion False
+firePropertyChanged "BoxFillWithBackgroundColor"
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mStyle.Color
-If isPropertyOverrideFlagSet(ColorIsSet) Then Color = mColor
+If isPropertyOverrideFlagSet(TextIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
-If mColor = value And isPropertyOverrideFlagSet(ColorIsSet) Then Exit Property
+Public Property Let Color(ByVal value As Long)
+If mColor = value And isPropertyOverrideFlagSet(TextIsSetColor) Then Exit Property
 mColor = value
-setPropertyOverrideFlag ColorIsSet
+setPropertyOverrideFlag TextIsSetColor
 repaintRegion False
+firePropertyChanged "Color"
 End Property
 
 Public Property Get Count() As Long
@@ -363,49 +378,59 @@ Count = mTexts.Count
 End Property
 
 Public Property Get Extended() As Boolean
-Extended = mExtended
+Extended = mStyle.Extended
+If isPropertyOverrideFlagSet(TextIsSetExtended) Then Extended = mExtended
 End Property
 
 Public Property Let Extended(ByVal value As Boolean)
-If mExtended = value Then Exit Property
+If mExtended = value And isPropertyOverrideFlagSet(TextIsSetExtended) Then Exit Property
 mExtended = value
+setPropertyOverrideFlag TextIsSetExtended
 repaintRegion True
+firePropertyChanged "Extended"
 End Property
 
 Public Property Get FixedX() As Boolean
-FixedX = mFixedX
+FixedX = mStyle.FixedX
+If isPropertyOverrideFlagSet(TextIsSetFixedX) Then FixedX = mFixedX
 End Property
 
 Public Property Let FixedX(ByVal value As Boolean)
-If mFixedX = value Then Exit Property
+If mFixedX = value And isPropertyOverrideFlagSet(TextIsSetFixedX) Then Exit Property
 mFixedX = value
+setPropertyOverrideFlag TextIsSetFixedX
 repaintRegion True
+firePropertyChanged "FixedX"
 End Property
 
 Public Property Get FixedY() As Boolean
-FixedY = mFixedY
+FixedY = mStyle.FixedY
+If isPropertyOverrideFlagSet(TextIsSetFixedY) Then FixedY = mFixedY
 End Property
 
 Public Property Let FixedY(ByVal value As Boolean)
-If mFixedY = value Then Exit Property
+If mFixedY = value And isPropertyOverrideFlagSet(TextIsSetFixedY) Then Exit Property
 mFixedY = value
+setPropertyOverrideFlag TextIsSetFixedY
 repaintRegion True
+firePropertyChanged "FixedY"
 End Property
 
 Public Property Get Font() As StdFont
 Set Font = mStyle.Font
-If isPropertyOverrideFlagSet(FontIsSet) Then Set Font = mFont
+If isPropertyOverrideFlagSet(TextIsSetFont) Then Set Font = mFont
 End Property
 
 Public Property Let Font(ByVal value As StdFont)
-If mFont Is value And isPropertyOverrideFlagSet(FontIsSet) Then Exit Property
+If mFont Is value And isPropertyOverrideFlagSet(TextIsSetFont) Then Exit Property
 Set mFont = value
 If mFont Is Nothing Then
-    clearPropertyOverrideFlag FontIsSet
+    clearPropertyOverrideFlag TextIsSetFont
 Else
-    setPropertyOverrideFlag FontIsSet
+    setPropertyOverrideFlag TextIsSetFont
 End If
 repaintRegion True
+firePropertyChanged "Font"
 End Property
 
 Friend Property Get Id() As Long
@@ -420,10 +445,12 @@ Public Property Let IncludeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value Then Exit Property
 mIncludeInAutoscale = value
 repaintRegion True
+firePropertyChanged "IncludeInAutoscale"
 End Property
 
 Public Property Let IsSelectable(ByVal value As Boolean)
 mIsSelectable = value
+firePropertyChanged "IsSelectable"
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -437,6 +464,7 @@ End Property
 Public Property Let Layer(ByVal value As LayerNumbers)
 mLayer = value
 repaintRegion False
+firePropertyChanged "Layer"
 End Property
 
 Public Property Get Layer() As LayerNumbers
@@ -445,26 +473,32 @@ End Property
 
 Public Property Get PaddingX() As Double
 PaddingX = mStyle.PaddingX
-If isPropertyOverrideFlagSet(PaddingXIsSet) Then PaddingX = mPaddingX
+If isPropertyOverrideFlagSet(TextIsSetPaddingX) Then PaddingX = mPaddingX
 End Property
 
 Public Property Let PaddingX(ByVal value As Double)
-If mPaddingX = value And isPropertyOverrideFlagSet(PaddingXIsSet) Then Exit Property
+If mPaddingX = value And isPropertyOverrideFlagSet(TextIsSetPaddingX) Then Exit Property
 mPaddingX = value
-setPropertyOverrideFlag PaddingXIsSet
+setPropertyOverrideFlag TextIsSetPaddingX
 repaintRegion True
+firePropertyChanged "PaddingX"
 End Property
 
 Public Property Get PaddingY() As Double
 PaddingY = mStyle.PaddingY
-If isPropertyOverrideFlagSet(PaddingYIsSet) Then PaddingY = mPaddingY
+If isPropertyOverrideFlagSet(TextIsSetPaddingY) Then PaddingY = mPaddingY
 End Property
 
 Public Property Let PaddingY(ByVal value As Double)
-If mPaddingY = value And isPropertyOverrideFlagSet(PaddingYIsSet) Then Exit Property
+If mPaddingY = value And isPropertyOverrideFlagSet(TextIsSetPaddingY) Then Exit Property
 mPaddingY = value
-setPropertyOverrideFlag PaddingYIsSet
+setPropertyOverrideFlag TextIsSetPaddingY
 repaintRegion True
+firePropertyChanged "PaddingY"
+End Property
+
+Friend Property Get SeriesUpdateNumber() As Long
+SeriesUpdateNumber = mSeriesUpdateNumber
 End Property
 
 Public Property Get Style() As TextStyle
@@ -484,11 +518,12 @@ End If
 Set mStyle = value
 repaintRegion True
 
+firePropertyChanged "Style"
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -511,7 +546,7 @@ Set Add = New Text
 Add.Initialise Me, pKey, mGOSP, mCanvas, pLocalStyle
 
 mTexts.Add Add, pKey
-mGOSP.AddGraphicObject Add, mSeriesID
+mGOSP.AddGraphicObject Add
 End Function
 
 Public Sub ClearOverrides()
@@ -538,7 +573,7 @@ End Function
 Public Sub RemoveObject(ByVal value As ChartSkil26.Text)
 On Error GoTo Err
 mTexts.Remove value.Key
-mGOSP.RemoveObject value.Handle
+mGOSP.RemoveObject value.handle
 
 Exit Sub
 
@@ -550,12 +585,21 @@ End Sub
 '================================================================================
 
 Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As PropertyOverrideFlags)
+                ByVal flag As TextPropertyOverrideFlags)
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
 
+Private Sub firePropertyChanged( _
+                ByVal Name As String)
+Dim ev As PropertyChangedEvent
+
+Set ev.Source = Me
+ev.PropertyName = Name
+RaiseEvent PropertyChanged(ev)
+End Sub
+
 Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As PropertyOverrideFlags) As Boolean
+                ByVal flag As TextPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
 End Function
 
@@ -572,7 +616,7 @@ End If
 End Sub
 
 Private Sub setPropertyOverrideFlag( _
-                ByVal flag As PropertyOverrideFlags)
+                ByVal flag As TextPropertyOverrideFlags)
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 End Sub
 

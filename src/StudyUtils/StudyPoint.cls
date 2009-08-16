@@ -62,20 +62,20 @@ Private mY As Double
 ' Properties
 '@================================================================================
 
-Friend Property Let x(ByVal value As Date)
+Friend Property Let X(ByVal value As Date)
 mX = value
 End Property
 
-Public Property Get x() As Date
-x = mX
+Public Property Get X() As Date
+X = mX
 End Property
 
-Friend Property Let y(ByVal newvalue As Double)
+Friend Property Let Y(ByVal newvalue As Double)
 mY = newvalue
 End Property
 
-Public Property Get y() As Double
-y = mY
+Public Property Get Y() As Double
+Y = mY
 End Property
 
 '@================================================================================

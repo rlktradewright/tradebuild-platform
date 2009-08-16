@@ -53,6 +53,13 @@ Private Const ModuleName                        As String = "ContractInfoSrvcPro
 ' Types
 '@===============================================================================
 
+Private Type ContractRequest
+    serviceConsumer     As IContractInfoServiceConsumer
+    builder             As ContractsBuilder
+    numberOfRequests    As Long
+    next                As Long
+End Type
+
 '@===============================================================================
 ' Member variables
 '@===============================================================================
@@ -63,9 +70,10 @@ Private mConnectionString                       As String
 
 Private mCommonServiceConsumer                  As ICommonServiceConsumer
 Private mHandle                                 As Long
-Private mContractInfoServiceConsumer            As IContractInfoServiceConsumer
 
-Private mRequests                               As Collection
+Private mRequests()                             As ContractRequest
+Private mRequestsMaxIndex                       As Long
+Private mFirstFreeRequestIndex                  As Long
 
 Private mName                                   As String
 
@@ -90,7 +98,9 @@ mUserName = ""
 mPassword = ""
 mRole = "PRIMARY"
 
-Set mRequests = New Collection
+ReDim mRequests(3) As ContractRequest
+mRequestsMaxIndex = -1
+mFirstFreeRequestIndex = -1
 End Sub
 
 '@===============================================================================
@@ -186,23 +196,89 @@ End Sub
 ' IContractInfoServiceProvider Interface Members
 '@===============================================================================
 
-Private Property Let IContractInfoServiceProvider_ContractInfoServiceConsumer( _
-                            ByVal RHS As TradeBuildSP.IContractInfoServiceConsumer)
-Set mContractInfoServiceConsumer = RHS
-End Property
-
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
+                            ByVal serviceConsumer As TradeBuildSP.IContractInfoServiceConsumer, _
                             ByVal pContractsBuilder As ContractsBuilder)
+Dim contractSpec As ContractSpecifier
 Dim tc As TaskController
-Set tc = mTradingDB.loadContractsAsync(pContractsBuilder.Contracts.ContractSpecifier)
+Dim index As Long
 
-tc.addTaskCompletionListener Me
+index = allocateRequestEntry
+Set mRequests(index).serviceConsumer = serviceConsumer
+Set mRequests(index).builder = pContractsBuilder
 
-mRequests.Add pContractsBuilder, tc.TaskName
+Set contractSpec = pContractsBuilder.Contracts.ContractSpecifier
+
+gLogger.Log LogLevelNormal, ProjectName & "." & ModuleName & ": requesting contract data for " & contractSpec.toString
+
+If contractSpec.secType = SecTypeNone Then
+    ' no sectype supplied, so we'll place a separate request for each of the following:
+    '       Futures
+    '       Indexes
+    '       Stocks
+    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
+                                                    contractSpec.symbol, _
+                                                    contractSpec.Exchange, _
+                                                    SecTypeFuture, _
+                                                    contractSpec.currencyCode, _
+                                                    contractSpec.expiry), _
+                                            index)
+    tc.AddTaskCompletionListener Me
+    incrementrequestcount index
+    
+    If contractSpec.localSymbol = "" Then
+        Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.symbol, _
+                                                        "", _
+                                                        contractSpec.Exchange, _
+                                                        SecTypeFuture, _
+                                                        contractSpec.currencyCode, _
+                                                        contractSpec.expiry), _
+                                                index)
+        tc.AddTaskCompletionListener Me
+        incrementrequestcount index
+    End If
+    
+    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
+                                                    contractSpec.symbol, _
+                                                    contractSpec.Exchange, _
+                                                    SecTypeIndex, _
+                                                    contractSpec.currencyCode, _
+                                                    contractSpec.expiry), _
+                                            index)
+    tc.AddTaskCompletionListener Me
+    incrementrequestcount index
+
+    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
+                                                    contractSpec.symbol, _
+                                                    contractSpec.Exchange, _
+                                                    SecTypeStock, _
+                                                    contractSpec.currencyCode, _
+                                                    contractSpec.expiry), _
+                                            index)
+    tc.AddTaskCompletionListener Me
+    incrementrequestcount index
+
+    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
+                                                    contractSpec.symbol, _
+                                                    contractSpec.Exchange, _
+                                                    SecTypeCash, _
+                                                    contractSpec.currencyCode, _
+                                                    contractSpec.expiry), _
+                                            index)
+    tc.AddTaskCompletionListener Me
+    incrementrequestcount index
+
+Else
+    Set tc = mTradingDB.loadContractsAsync(contractSpec, _
+                                            index)
+    tc.AddTaskCompletionListener Me
+    incrementrequestcount index
+End If
 
 End Sub
 
 Private Sub IContractInfoServiceProvider_StoreContractDetails( _
+                            ByVal serviceConsumer As TradeBuildSP.IContractInfoServiceConsumer, _
                             ByVal pContract As Contract)
 
 End Sub
@@ -222,24 +298,29 @@ End Function
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ByRef ev As TWUtilities30.TaskCompletionEvent)
-Dim lBuilder As ContractsBuilder
 Dim lContracts As Contracts
 Dim lContract As Contract
+Dim index As Long
 
+
+index = CLng(ev.cookie)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, ev.errorMessage, mHandle
+    decrementRequestCount index
+    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, ev.errorMessage, mHandle
 Else
-    Set lBuilder = mRequests(ev.TaskName)
-    mRequests.Remove ev.TaskName
-    If IsEmpty(ev.result) Then
-        mContractInfoServiceConsumer.LoadComplete mHandle, lBuilder
-    Else
+    If Not IsEmpty(ev.result) Then
         Set lContracts = ev.result
         For Each lContract In lContracts
-            lBuilder.AddContract lContract
+            mRequests(index).builder.AddContract lContract
         Next
-        mContractInfoServiceConsumer.LoadComplete mHandle, lBuilder
+    End If
+    If decrementRequestCount(index) = 0 Then
+        gLogger.Log LogLevelNormal, ProjectName & "." & ModuleName & _
+                                    ": received contract data for " & _
+                                    mRequests(index).builder.Contracts.ContractSpecifier.toString
+        mRequests(index).serviceConsumer.LoadComplete mHandle
+        releaseRequestEntry index
     End If
 End If
 End Sub
@@ -294,6 +375,17 @@ End Property
 ' Helper Functions
 '@===============================================================================
 
+Private Function allocateRequestEntry() As Long
+If mFirstFreeRequestIndex <> -1 Then
+    allocateRequestEntry = mFirstFreeRequestIndex
+    mFirstFreeRequestIndex = mRequests(mFirstFreeRequestIndex).next
+Else
+    mRequestsMaxIndex = mRequestsMaxIndex + 1
+    If mRequestsMaxIndex > UBound(mRequests) Then ReDim Preserve mRequests(2 * (UBound(mRequests) + 1) - 1) As ContractRequest
+    allocateRequestEntry = mRequestsMaxIndex
+End If
+End Function
+
 Private Sub createDatabase()
 Dim failpoint As Long
 On Error GoTo Err
@@ -319,15 +411,26 @@ gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrL
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
+Private Function decrementRequestCount( _
+                ByVal index As Long) As Long
+mRequests(index).numberOfRequests = mRequests(index).numberOfRequests - 1
+decrementRequestCount = mRequests(index).numberOfRequests
+End Function
+
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
 
 Set mCommonServiceConsumer = Nothing
+End Sub
+
+Private Sub incrementrequestcount( _
+                ByVal index As Long)
+mRequests(index).numberOfRequests = mRequests(index).numberOfRequests + 1
 End Sub
 
 Private Sub registerSP()
@@ -350,5 +453,13 @@ Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "reg
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Private Sub releaseRequestEntry( _
+                ByVal index As Long)
+mRequests(index).next = mFirstFreeRequestIndex
+mFirstFreeRequestIndex = index
+Set mRequests(index).builder = Nothing
+mRequests(index).numberOfRequests = 0
 End Sub
 

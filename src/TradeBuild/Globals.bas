@@ -25,8 +25,8 @@ Public Const BidInputName                   As String = "Bid"
 Public Const AskInputName                   As String = "Ask"
 Public Const OpenInterestInputName          As String = "Open interest"
 Public Const TradeInputName                 As String = "Trade"
-Public Const TickVolumeInputName            As String = "Tick volume"
-Public Const VolumeInputName                As String = "Total volume"
+Public Const TickVolumeInputName            As String = "Tick Volume"
+Public Const VolumeInputName                As String = "Total Volume"
 
 Public Const StrOrderTypeNone               As String = ""
 Public Const StrOrderTypeMarket             As String = "Market"
@@ -108,6 +108,8 @@ End Enum
 Public gTB As TradeBuildAPI
 
 Private mLogLogger As Logger
+Private mErrorLogger As Logger
+
 Private mSpLogLogger As Logger
 
 Private mTraceLogger As Logger
@@ -170,36 +172,46 @@ Case ApiNotifyTickfileInvalid
     gApiNotifyCodeToString = "ApiNotifyTickfileInvalid"
 Case ApiNotifyTickfileVersionNotSupported
     gApiNotifyCodeToString = "ApiNotifyTickfileVersionNotSupported"
-Case ApiNotifyContractDetailsInvalid
-    gApiNotifyCodeToString = "ApiNotifyContractDetailsInvalid"
-Case ApiNotifyNoContractDetails
-    gApiNotifyCodeToString = "ApiNotifyNoContractDetails"
+Case ApiNotifyTickfileContractDetailsInvalid
+    gApiNotifyCodeToString = "ApiNotifyTickfileContractDetailsInvalid"
+Case ApiNotifyTickfileNoContractDetails
+    gApiNotifyCodeToString = "ApiNotifyTickfileNoContractDetails"
 Case ApiNotifyTickfileDataSourceNotResponding
     gApiNotifyCodeToString = "ApiNotifyTickfileDataSourceNotResponding"
+Case ApiNotifyTickfileDoesntExist
+    gApiNotifyCodeToString = "ApiNotifyTickfileDoesntExist"
+Case ApiNOtifyTickfileFormatNotSupported
+    gApiNotifyCodeToString = "ApiNOtifyTickfileFormatNotSupported"
+Case ApiNotifyTickfileContractSpecifierInvalid
+    gApiNotifyCodeToString = "ApiNotifyTickfileContractSpecifierInvalid"
 Case ApiNotifyCantWriteToTickfileDataStore
     gApiNotifyCodeToString = "ApiNotifyCantWriteToTickfileDataStore"
 Case ApiNotifyRetryingConnectionToTickfileDataSource
     gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToTickfileDataSource"
 Case ApiNotifyConnectedToTickfileDataSource
     gApiNotifyCodeToString = "ApiNotifyConnectedToTickfileDataSource"
+Case ApiNotifyReconnectingToTickfileDataSource
+    gApiNotifyCodeToString = "ApiNotifyReconnectingToTickfileDataSource"
+Case ApiNotifyLostConnectionToTickfileDataSource
+    gApiNotifyCodeToString = "ApiNotifyLostConnectionToTickfileDataSource"
 Case ApiNotifyNoHistoricDataSource
     gApiNotifyCodeToString = "ApiNotifyNoHistoricDataSource"
 Case ApiNotifyCantConnectHistoricDataSource
     gApiNotifyCodeToString = "ApiNotifyCantConnectHistoricDataSource"
 Case ApiNotifyConnectedToHistoricDataSource
     gApiNotifyCodeToString = "ApiNotifyConnectedToHistoricDataSource"
+Case ApiNotifyDisconnectedFromHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromHistoricDataSource"
 Case ApiNotifyRetryingConnectionToHistoricDataSource
     gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToHistoricDataSource"
-Case ApiNotifyContractSpecifierAmbiguous
-    gApiNotifyCodeToString = "ApiNotifyContractSpecifierAmbiguous"
-Case ApiNotifyContractSpecifierInvalid
-    gApiNotifyCodeToString = "ApiNotifyContractSpecifierInvalid"
-Case ApiNotifyMarketDepthNotAvailable
-    gApiNotifyCodeToString = "ApiNotifyMarketDepthNotAvailable"
+Case ApiNotifyLostConnectionToHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyLostConnectionToHistoricDataSource"
+Case ApiNotifyReconnectingToHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyReconnectingToHistoricDataSource"
+Case ApiNotifyHistoricDataRequestFailed
+    gApiNotifyCodeToString = "ApiNotifyHistoricDataRequestFailed"
 Case ApiNotifyInvalidRequest
     gApiNotifyCodeToString = "ApiNotifyInvalidRequest"
-Case ApiNotifyFatalError
-    gApiNotifyCodeToString = "ApiNotifyFatalError"
 Case ApiNotifyCantConnectRealtimeDataSource
     gApiNotifyCodeToString = "ApiNotifyCantConnectRealtimeDataSource"
 Case ApiNotifyConnectedToRealtimeDataSource
@@ -214,6 +226,8 @@ Case ApiNotifyDisconnectedFromRealtimeDataSource
     gApiNotifyCodeToString = "ApiNotifyDisconnectedFromRealtimeDataSource"
 Case ApiNotifyRealtimeDataRequestFailed
     gApiNotifyCodeToString = "ApiNotifyRealtimeDataRequestFailed"
+Case ApiNotifyRealtimeDataSourceNotResponding
+    gApiNotifyCodeToString = "ApiNotifyRealtimeDataSourceNotResponding"
 Case ApiNotifyCantConnectToBroker
     gApiNotifyCodeToString = "ApiNotifyCantConnectToBroker"
 Case ApiNotifyConnectedToBroker
@@ -224,24 +238,26 @@ Case ApiNotifyLostConnectionToBroker
     gApiNotifyCodeToString = "ApiNotifyLostConnectionToBroker"
 Case ApiNotifyReConnectingToBroker
     gApiNotifyCodeToString = "ApiNotifyReConnectingToBroker"
-Case ApiNotifyInvalidOrder
-    gApiNotifyCodeToString = "ApiNotifyInvalidOrder"
-Case ApiNotifyInsufficientFunds
-    gApiNotifyCodeToString = "ApiNotifyInsufficientFunds"
 Case ApiNotifyDisconnectedFromBroker
     gApiNotifyCodeToString = "ApiNotifyDisconnectedFromBroker"
 Case ApiNotifyNonSpecificNotification
     gApiNotifyCodeToString = "ApiNotifyNonSpecificNotification"
-Case ApiNotifyContractExpired
-    gApiNotifyCodeToString = "ApiNotifyContractExpired"
-Case ApiNOtifyTickfileFormatNotSupported
-    gApiNotifyCodeToString = "ApiNOtifyTickfileFormatNotSupported"
-Case ApiNotifyContractDoesNotExist
-    gApiNotifyCodeToString = "ApiNotifyContractDoesNotExist"
 Case ApiNotifyCantWriteToHistoricDataStore
     gApiNotifyCodeToString = "ApiNotifyCantWriteToHistoricDataStore"
 Case ApiNotifyTryLater
     gApiNotifyCodeToString = "ApiNotifyTryLater"
+Case ApiNotifyCantConnectContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyCantConnectContractDataSource"
+Case ApiNotifyConnectedToContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyConnectedToContractDataSource"
+Case ApiNotifyDisconnectedFromContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromContractDataSource"
+Case ApiNotifyLostConnectionToContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyLostConnectionToContractDataSource"
+Case ApiNotifyReConnectingContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyReConnectingContractDataSource"
+Case ApiNotifyRetryConnectContractDataSource
+    gApiNotifyCodeToString = "ApiNotifyRetryConnectContractDataSource"
 End Select
 End Function
 
@@ -308,7 +324,7 @@ Case EntryOrderTypeBid
 Case EntryOrderTypeAsk
     gEntryOrderTypeToString = "Ask price"
 Case EntryOrderTypeLast
-    gEntryOrderTypeToString = "Last trade price"
+    gEntryOrderTypeToString = "Last Trade price"
 Case EntryOrderTypeLimit
     gEntryOrderTypeToString = "Limit"
 Case EntryOrderTypeLimitOnOpen
@@ -354,6 +370,19 @@ Case EntryOrderTypeStop
     gEntryOrderTypeToShortString = "STP"
 Case EntryOrderTypeStopLimit
     gEntryOrderTypeToShortString = "STPLMT"
+End Select
+End Function
+
+Public Function gIsValidTIF(ByVal value As OrderTifs) As Boolean
+Select Case value
+Case TIFDay
+    gIsValidTIF = True
+Case TIFGoodTillCancelled
+    gIsValidTIF = True
+Case TIFImmediateOrCancel
+    gIsValidTIF = True
+Case Else
+    gIsValidTIF = False
 End Select
 End Function
 
@@ -488,17 +517,17 @@ End Function
 Public Function gOrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
 Select Case value
 Case StopTriggerMethods.StopTriggerBidAsk
-    gOrderStopTriggerMethodToString = "Bid/ask"
+    gOrderStopTriggerMethodToString = "Bid/Ask"
 Case StopTriggerMethods.StopTriggerDefault
     gOrderStopTriggerMethodToString = "Default"
 Case StopTriggerMethods.StopTriggerDoubleBidAsk
-    gOrderStopTriggerMethodToString = "Double bid/ask"
+    gOrderStopTriggerMethodToString = "Double Bid/Ask"
 Case StopTriggerMethods.StopTriggerDoubleLast
     gOrderStopTriggerMethodToString = "Double last"
 Case StopTriggerMethods.StopTriggerLast
     gOrderStopTriggerMethodToString = "Last"
 Case StopTriggerMethods.StopTriggerLastOrBidAsk
-    gOrderStopTriggerMethodToString = "Last or bid/ask"
+    gOrderStopTriggerMethodToString = "Last or Bid/Ask"
 Case StopTriggerMethods.StopTriggerMidPoint
     gOrderStopTriggerMethodToString = "Mid-point"
 End Select
@@ -596,6 +625,25 @@ Case Else
 End Select
 End Function
 
+Public Function gStopOrderTypeToShortString(ByVal value As StopOrderTypes)
+Select Case value
+Case StopOrderTypeNone
+    gStopOrderTypeToShortString = "NONE"
+Case StopOrderTypeStop
+    gStopOrderTypeToShortString = "STP"
+Case StopOrderTypeStopLimit
+    gStopOrderTypeToShortString = "STPLMT"
+Case StopOrderTypeBid
+    gStopOrderTypeToShortString = "BID"
+Case StopOrderTypeAsk
+    gStopOrderTypeToShortString = "ASK"
+Case StopOrderTypeLast
+    gStopOrderTypeToShortString = "TRADE"
+Case StopOrderTypeAuto
+    gStopOrderTypeToShortString = "AUTO"
+End Select
+End Function
+
 Public Function gStopOrderTypeToString(ByVal value As StopOrderTypes)
 Select Case value
 Case StopOrderTypeNone
@@ -609,7 +657,7 @@ Case StopOrderTypeBid
 Case StopOrderTypeAsk
     gStopOrderTypeToString = "Ask price"
 Case StopOrderTypeLast
-    gStopOrderTypeToString = "Last trade price"
+    gStopOrderTypeToString = "LAST"
 Case StopOrderTypeAuto
     gStopOrderTypeToString = "Auto"
 End Select
@@ -649,6 +697,25 @@ Case Else
 End Select
 End Function
 
+Public Function gTargetOrderTypeToShortString(ByVal value As TargetOrderTypes)
+Select Case value
+Case TargetOrderTypeNone
+    gTargetOrderTypeToShortString = "NONE"
+Case TargetOrderTypeLimit
+    gTargetOrderTypeToShortString = "LMT"
+Case TargetOrderTypeMarketIfTouched
+    gTargetOrderTypeToShortString = "MIT"
+Case TargetOrderTypeBid
+    gTargetOrderTypeToShortString = "BID"
+Case TargetOrderTypeAsk
+    gTargetOrderTypeToShortString = "ASK"
+Case TargetOrderTypeLast
+    gTargetOrderTypeToShortString = "LAST"
+Case TargetOrderTypeAuto
+    gTargetOrderTypeToShortString = "AUTO"
+End Select
+End Function
+
 Public Function gTargetOrderTypeToString(ByVal value As TargetOrderTypes)
 Select Case value
 Case TargetOrderTypeNone
@@ -662,18 +729,18 @@ Case TargetOrderTypeBid
 Case TargetOrderTypeAsk
     gTargetOrderTypeToString = "Ask price"
 Case TargetOrderTypeLast
-    gTargetOrderTypeToString = "Last trade price"
+    gTargetOrderTypeToString = "Last Trade price"
 Case TargetOrderTypeAuto
     gTargetOrderTypeToString = "Auto"
 End Select
 End Function
 
 Public Function gTickfileSpecifierToString(tfSpec As ITickfileSpecifier) As String
-If tfSpec.filename <> "" Then
-    gTickfileSpecifierToString = tfSpec.filename
+If tfSpec.Filename <> "" Then
+    gTickfileSpecifierToString = tfSpec.Filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(tfSpec.Contract.specifier.toString, vbCrLf, "; ") & _
+                                Replace(tfSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(tfSpec.FromDate, vbGeneralDate) & _
                             " To: " & FormatDateTime(tfSpec.ToDate, vbGeneralDate)
 End If
@@ -684,6 +751,13 @@ If mLogLogger Is Nothing Then
     Set mLogLogger = GetLogger("tradebuild.log")
 End If
 Set gLogLogger = mLogLogger
+End Property
+
+Public Property Get gErrorLogger() As Logger
+If mErrorLogger Is Nothing Then
+    Set mErrorLogger = GetLogger("error")
+End If
+Set gErrorLogger = mErrorLogger
 End Property
 
 Public Property Get gSpLogLogger() As Logger
@@ -810,7 +884,7 @@ End Property
 
 Public Property Get gProfitLogger() As Logger
 If mProfitLogger Is Nothing Then
-    Set mProfitLogger = GetLogger("tradebuild.profit")
+    Set mProfitLogger = GetLogger("tradebuild.Profit")
     mProfitLogger.logToParent = False
 End If
 Set gProfitLogger = mProfitLogger
@@ -826,7 +900,7 @@ End Property
 
 Public Property Get gDrawdownLogger() As Logger
 If mDrawdownLogger Is Nothing Then
-    Set mDrawdownLogger = GetLogger("tradebuild.drawdown")
+    Set mDrawdownLogger = GetLogger("tradebuild.Drawdown")
     mDrawdownLogger.logToParent = False
 End If
 Set gDrawdownLogger = mDrawdownLogger

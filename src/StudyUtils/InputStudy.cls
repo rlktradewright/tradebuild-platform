@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements study
+Implements Study
 
 '@================================================================================
 ' Events
@@ -72,7 +72,7 @@ Set mStudies = New Studies
 Set mListeners = New StudyValueListeners
 
 Set mStudyDef = New StudyDefinition
-mStudyDef.defaultRegion = StudyDefaultRegions.DefaultRegionNone
+mStudyDef.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
 
 Set mTickSizes = New Collection
 
@@ -84,105 +84,105 @@ End Sub
 ' Study Interface Members
 '@================================================================================
 
-Private Function Study_addStudy( _
-                ByVal pStudy As study, _
-                ByRef valueNames() As String, _
+Private Function Study_AddStudy( _
+                ByVal pStudy As Study, _
+                ByRef ValueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-mStudies.add pStudy, valueNames
+mStudies.Add pStudy, ValueNames
 End Function
 
-Private Function Study_addStudyValueListener( _
+Private Function Study_AddStudyValueListener( _
                 ByVal listener As StudyValueListener, _
-                ByVal valueName As String, _
+                ByVal ValueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-mListeners.add listener, valueName
+mListeners.Add listener, ValueName
 End Function
 
-Private Property Get Study_baseStudy() As study
-Set Study_baseStudy = Me
+Private Property Get Study_BaseStudy() As Study
+Set Study_BaseStudy = Me
 End Property
 
-Private Function Study_getStudyValue( _
-                ByVal valueName As String, _
+Private Function Study_GetStudyValue( _
+                ByVal ValueName As String, _
                 ByVal ref As Long) As SValue
 
 End Function
 
-Private Function study_getValueTicksize( _
-                ByVal valueName As String) As Double
+Private Function study_GetValueTicksize( _
+                ByVal ValueName As String) As Double
 On Error Resume Next
-study_getValueTicksize = mTickSizes(valueName)
+study_GetValueTicksize = mTickSizes(ValueName)
 End Function
 
-Private Property Get Study_id() As String
-Study_id = mIdent
+Private Property Get Study_Id() As String
+Study_Id = mIdent
 End Property
 
-Private Sub Study_initialise( _
-                ByVal id As String, _
-                ByVal parameters As parameters, _
+Private Sub Study_Initialise( _
+                ByVal Id As String, _
+                ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                valueNames() As String, _
-                ByVal underlyingStudy As study, _
-                ByVal pSession As session)
+                ValueNames() As String, _
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As Session)
 
 End Sub
 
-Private Property Get Study_instanceName() As String
-Study_instanceName = mName
+Private Property Get Study_InstanceName() As String
+Study_InstanceName = mName
 End Property
 
-Private Property Get Study_instancePath() As String
-Study_instancePath = mName
+Private Property Get Study_InstancePath() As String
+Study_InstancePath = mName
 End Property
 
 Private Sub Study_Notify( _
                 ByRef ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
 
-mTimestamp = ev.sVal.timestamp
-mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
+mTimestamp = ev.sVal.Timestamp
+mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
 
 evOut = ev
 
 If mUseLocalTimeForStudies Then
-    evOut.sVal.timestamp = ConvertDateTzToLocal(ev.sVal.timestamp, mExchangeTimeZone)
+    evOut.sVal.Timestamp = ConvertDateTzToLocal(ev.sVal.Timestamp, mExchangeTimeZone)
 End If
 
 evOut.sVal.BarStartTime = 0  ' a higher level study must generate this
-mStudies.notify evOut
-mListeners.notify evOut
+mStudies.Notify evOut
+mListeners.Notify evOut
 End Sub
 
-Private Property Get Study_numberOfBarsRequired() As Long
+Private Property Get Study_NumberOfBarsRequired() As Long
 
 End Property
 
-Private Function Study_numberOfCachedValues( _
-                Optional ByVal valueName As String) As Long
+Private Function Study_NumberOfCachedValues( _
+                Optional ByVal ValueName As String) As Long
 
 End Function
 
-Private Property Get Study_parameters() As parameters
+Private Property Get Study_Parameters() As Parameters
 
 End Property
 
-Private Sub Study_removeStudyValueListener( _
+Private Sub Study_RemoveStudyValueListener( _
                 ByVal listener As StudyValueListener)
 mListeners.remove listener
 End Sub
 
-Private Sub study_setInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
-
+Private Sub study_SetInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
+SetInputTicksize inputName, tickSize
 End Sub
 
 Private Property Get Study_studyDefinition() As StudyDefinition
 
-Set Study_studyDefinition = mStudyDef.clone
+Set Study_studyDefinition = mStudyDef.Clone
 
 End Property
 
@@ -194,39 +194,39 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Let name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
 'mIdent = mName
-mStudyDef.name = mName
+mStudyDef.Name = mName
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Get session() As session
-Set session = mSessionBuilder.session
+Public Property Get Session() As Session
+Set Session = mSessionBuilder.Session
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mTimestamp
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub addInput( _
-                ByVal name As String, _
-                ByVal description As String, _
+Friend Sub AddInput( _
+                ByVal Name As String, _
+                ByVal Description As String, _
                 ByVal valueType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
                 ByVal tickSize As Double)
 Dim valueDef As StudyValueDefinition
 
     
-Set valueDef = mStudyDef.studyValueDefinitions.add(name)
-valueDef.description = description
+Set valueDef = mStudyDef.StudyValueDefinitions.Add(Name)
+valueDef.Description = Description
 valueDef.isDefault = isDefault
 valueDef.valueMode = ValueModeNone
 Select Case valueType
@@ -244,18 +244,18 @@ Case InputTypeBoolean
     valueDef.valueType = ValueTypeBoolean
 End Select
     
-mTickSizes.add tickSize, name
+mTickSizes.Add tickSize, Name
 End Sub
 
-Friend Sub initialise( _
-                ByVal name As String, _
+Friend Sub Initialise( _
+                ByVal Name As String, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date, _
                 ByVal exchangeTimeZone As TimeZone, _
                 ByVal useLocalTimeForStudies As Boolean)
-mName = name
+mName = Name
 mIdent = GenerateGUIDString
-mStudyDef.name = mName
+mStudyDef.Name = mName
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
 Set mExchangeTimeZone = exchangeTimeZone
@@ -273,39 +273,39 @@ End Sub
 '
 ' @param objectToLink the <code>Session</code> object which is to be linked to this
 '               <code>InputStudy</code> object.
-' @see unlinkSession
+' @see UnlinkSession
 '
 '@/
 Friend Sub linkSession( _
-                ByVal objectToLink As session)
+                ByVal objectToLink As Session)
 mSessionBuilder.linkSession objectToLink
 End Sub
 
-Friend Sub setInputTicksize( _
-                ByVal name As String, _
+Friend Sub SetInputTicksize( _
+                ByVal Name As String, _
                 ByVal tickSize As Double)
 On Error GoTo Err
 
-mTickSizes.add tickSize, name
-mStudies.notifyValueTicksize name, tickSize
+mTickSizes.Add tickSize, Name
+mStudies.NotifyValueTicksize Name, tickSize
 
 Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    mTickSizes.remove name
+    mTickSizes.remove Name
     Resume
 End If
 Err.Raise Err.Number
 End Sub
 
-Public Sub setSessionCurrentTime( _
+Public Sub SetSessionCurrentTime( _
                 ByVal currentTime As Date)
 mTimestamp = currentTime
-mSessionBuilder.setSessionCurrentTime currentTime
+mSessionBuilder.SetSessionCurrentTime currentTime
 End Sub
                 
-Friend Sub setSessionTimes( _
+Friend Sub SetSessionTimes( _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date, _
                 ByVal exchangeTimeZone As TimeZone, _
@@ -326,9 +326,9 @@ End Sub
 ' @see linkSession
 '
 '@/
-Friend Sub unlinkSession( _
-                ByVal objectToUnlink As session)
-mSessionBuilder.unlinkSession objectToUnlink
+Friend Sub UnlinkSession( _
+                ByVal objectToUnlink As Session)
+mSessionBuilder.UnlinkSession objectToUnlink
 End Sub
 
 '@================================================================================

@@ -68,11 +68,11 @@ End Sub
 
 'Private Function IStudyParameterDefinitions_Add( _
 '                ByVal paramName As String) As StudyParameterDefinition
-'Set IStudyParameterDefinitions_Add = add(paramName)
+'Set IStudyParameterDefinitions_Add = Add(paramName)
 'End Function
 '
 'Private Property Get IStudyParameterDefinitions_Count() As Long
-'IStudyParameterDefinitions_Count = count
+'IStudyParameterDefinitions_Count = Count
 'End Property
 '
 'Private Function IStudyParameterDefinitions_Item( _
@@ -92,20 +92,20 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get count() As Long
-count = mStudyParameterDefinitions.count
+Public Property Get Count() As Long
+Count = mStudyParameterDefinitions.Count
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal paramName As String) As StudyParameterDefinition
-Set add = New StudyParameterDefinition
-add.name = paramName
-add.parameterType = ParameterTypeInteger
-mStudyParameterDefinitions.add add, paramName
+Set Add = New StudyParameterDefinition
+Add.Name = paramName
+Add.ParameterType = ParameterTypeInteger
+mStudyParameterDefinitions.Add Add, paramName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyParameterDefinition

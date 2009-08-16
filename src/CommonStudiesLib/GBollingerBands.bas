@@ -84,6 +84,7 @@ If mStudyDefinition Is Nothing Then
                         "narrow when volatility decreases."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(BBInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
@@ -91,27 +92,34 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueTop)
     valueDef.Description = "The top Bollinger band value"
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.IncludeInChart = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueBottom)
     valueDef.Description = "The bottom Bollinger band value"
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.IncludeInChart = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueCentre)
     valueDef.Description = "The MA value between the top and bottom bands"
-    valueDef.isDefault = True
+    valueDef.IncludeInChart = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(&H1D9311)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueSpread)
     valueDef.Description = "The difference between the top and bottom " & _
                             "band values"
     valueDef.defaultRegion = DefaultRegionCustom
+    valueDef.isDefault = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(displayMode:=DataPointDisplayModeHistogram, downColor:=&H43FC2, upColor:=&H1D9311)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamPeriods)

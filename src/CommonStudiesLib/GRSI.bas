@@ -71,17 +71,20 @@ If mStudyDefinition Is Nothing Then
                                     "during the specified number of periods"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(RsiInputValue)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(RsiValueRsi)
     valueDef.Description = "The Relative Strength Index value"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.maximumValue = 105
     valueDef.minimumValue = -5
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(&H4040C0)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamPeriods)

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#166.3#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6135
@@ -76,17 +76,17 @@ End Sub
 
 Private Sub Form_Load()
 
-Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingNameOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
-Me.Top = CLng(gAppInstanceConfig.GetSetting(ConfigSettingNameOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(gAppInstanceConfig.GetSetting(ConfigSettingOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
 End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
-updateInstanceSettings
+updateSettings
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
-OrderTicket1.finish
+OrderTicket1.Finish
 End Sub
 
 '================================================================================
@@ -119,11 +119,11 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub updateInstanceSettings()
+Private Sub updateSettings()
 If Not gAppInstanceConfig Is Nothing Then
     gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionOrderTicket
-    gAppInstanceConfig.SetSetting ConfigSettingNameOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
-    gAppInstanceConfig.SetSetting ConfigSettingNameOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
+    gAppInstanceConfig.SetSetting ConfigSettingOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
+    gAppInstanceConfig.SetSetting ConfigSettingOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
 End If
 End Sub
 

@@ -70,20 +70,20 @@ Private mIncludeBarsOutsideSession As Boolean
 ' Properties
 '@================================================================================
 
-Public Property Let barTimePeriod(ByVal value As TimePeriod)
+Public Property Let BarTimePeriod(ByVal value As TimePeriod)
 Set mBarTimePeriod = value
 End Property
 
-Public Property Get barTimePeriod() As TimePeriod
-Set barTimePeriod = mBarTimePeriod
+Public Property Get BarTimePeriod() As TimePeriod
+Set BarTimePeriod = mBarTimePeriod
 End Property
 
-Public Property Let barType(ByVal value As BarTypes)
+Public Property Let BarType(ByVal value As BarTypes)
 mBartype = value
 End Property
 
-Public Property Get barType() As BarTypes
-barType = mBartype
+Public Property Get BarType() As BarTypes
+BarType = mBartype
 End Property
 
 Public Property Let Contract(ByVal value As Contract)
@@ -94,51 +94,51 @@ Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
-Public Property Get customSessionStartTime() As Date
-customSessionStartTime = mCustomSessionStartTime
+Public Property Get CustomSessionStartTime() As Date
+CustomSessionStartTime = mCustomSessionStartTime
 End Property
 
-Public Property Get customSessionEndTime() As Date
-customSessionEndTime = mCustomSessionEndTime
+Public Property Get CustomSessionEndTime() As Date
+CustomSessionEndTime = mCustomSessionEndTime
 End Property
 
-Public Property Let fromDate(ByVal value As Date)
+Public Property Let FromDate(ByVal value As Date)
 mFromDate = value
 End Property
 
-Public Property Get fromDate() As Date
-fromDate = mFromDate
+Public Property Get FromDate() As Date
+FromDate = mFromDate
 End Property
 
-Public Property Let includeBarsOutsideSession(ByVal value As Boolean)
+Public Property Let IncludeBarsOutsideSession(ByVal value As Boolean)
 mIncludeBarsOutsideSession = value
 End Property
 
-Public Property Get includeBarsOutsideSession() As Boolean
-includeBarsOutsideSession = mIncludeBarsOutsideSession
+Public Property Get IncludeBarsOutsideSession() As Boolean
+IncludeBarsOutsideSession = mIncludeBarsOutsideSession
 End Property
 
-Public Property Let maxNumberOfBars(ByVal value As Long)
+Public Property Let MaxNumberOfBars(ByVal value As Long)
 mMaxNumberOfBars = value
 End Property
 
-Public Property Get maxNumberOfBars() As Long
-maxNumberOfBars = mMaxNumberOfBars
+Public Property Get MaxNumberOfBars() As Long
+MaxNumberOfBars = mMaxNumberOfBars
 End Property
 
-Public Property Let toDate(ByVal value As Date)
+Public Property Let ToDate(ByVal value As Date)
 mToDate = value
 End Property
 
-Public Property Get toDate() As Date
-toDate = mToDate
+Public Property Get ToDate() As Date
+ToDate = mToDate
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub setCustomSessionTimes( _
+Public Sub SetCustomSessionTimes( _
                 ByVal startTime As Date, _
                 ByVal endTime As Date)
 If startTime >= 1 Then startTime = startTime - Int(startTime)
@@ -148,17 +148,17 @@ mCustomSessionStartTime = startTime
 mCustomSessionEndTime = endTime
 End Sub
 
-Public Function toString() As String
-toString = _
-    "    Max bars:        " & mMaxNumberOfBars & vbCrLf & _
-    "    Bar time period: " & mBarTimePeriod.toString & vbCrLf & _
+Public Function ToString() As String
+ToString = _
+    "    Max Bars:        " & mMaxNumberOfBars & vbCrLf & _
+    "    Bar time period: " & mBarTimePeriod.ToString & vbCrLf & _
     "    From:            " & FormatTimestamp(mFromDate, TimestampDateAndTimeISO8601) & vbCrLf & _
     "    To:              " & FormatTimestamp(mToDate, TimestampDateAndTimeISO8601) & vbCrLf & _
-    IIf(mCustomSessionStartTime <> 0 And customSessionEndTime <> 0, _
+    IIf(mCustomSessionStartTime <> 0 And CustomSessionEndTime <> 0, _
         "    Session start:   " & FormatTimestamp(mCustomSessionStartTime, TimestampDateAndTimeISO8601) & vbCrLf & _
         "    Session end:     " & FormatTimestamp(mCustomSessionEndTime, TimestampDateAndTimeISO8601), _
         "") & vbCrLf & _
-    "    Contract:       " & mContract.toString
+    "    Contract:       " & mContract.ToString
 End Function
 
 '@================================================================================

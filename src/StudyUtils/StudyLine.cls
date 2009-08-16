@@ -62,20 +62,20 @@ Private mPoint2 As StudyPoint
 ' Properties
 '@================================================================================
 
-Friend Property Let point1(ByVal value As StudyPoint)
+Friend Property Let Point1(ByVal value As StudyPoint)
 Set mPoint1 = value
 End Property
 
-Public Property Get point1() As StudyPoint
-Set point1 = mPoint1
+Public Property Get Point1() As StudyPoint
+Set Point1 = mPoint1
 End Property
 
-Friend Property Let point2(ByVal value As StudyPoint)
+Friend Property Let Point2(ByVal value As StudyPoint)
 Set mPoint2 = value
 End Property
 
-Public Property Get point2() As StudyPoint
-Set point2 = mPoint2
+Public Property Get Point2() As StudyPoint
+Set Point2 = mPoint2
 End Property
 
 '@================================================================================

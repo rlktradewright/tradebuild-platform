@@ -206,7 +206,7 @@ End Sub
 '@================================================================================
 
 Private Function addConfigurationSection() As ConfigurationSection
-Set addConfigurationSection = mContractsConfig.addConfigurationSection(ConfigSectionContract)
+Set addConfigurationSection = mContractsConfig.addConfigurationSection(ConfigSectionContract & "(" & GenerateGUIDString & ")")
 addConfigurationSection.addConfigurationSection ConfigSectionContractspecifier
 End Function
 

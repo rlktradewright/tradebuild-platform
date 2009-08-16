@@ -27,6 +27,8 @@ Event Click()
 
 Event DblCLick()
 
+Event PropertyChanged(ev As PropertyChangedEvent)
+
 Event SelectionStateChanged()
 
 '================================================================================
@@ -48,8 +50,9 @@ Event SelectionStateChanged()
 
 Private Const ModuleName                As String = "DataPointSeries"
 
-Private mChart              As Chart
+Private mChartRef           As WeakReference
 Private mSeriesID           As Long
+Private mSeriesUpdateNumber As Long
 
 Private mIsSelectable As Boolean
 Private mIsSelected As Boolean
@@ -66,11 +69,9 @@ Private mGOSP               As GraphObjServiceProvider
 Private WithEvents mStyle   As DataPointStyle
 Attribute mStyle.VB_VarHelpID = -1
 
-Private mIncludeInAutoscale As Boolean
-
 Private mName               As String
 
-Private mPrevDataPoint      As DataPoint
+Private mPrevDataPointRef   As WeakReference
 
 ' these fields override corresponding items in the Style
 Private mLineThickness      As Long
@@ -80,7 +81,8 @@ Private mDownColor          As Long
 Private mLineStyle          As LineStyles
 Private mPointStyle         As PointStyles
 Private mDisplayMode        As DataPointDisplayModes
-Private mHistBarWidth       As Single
+Private mHistWidth          As Single
+Private mIncludeInAutoscale As Boolean
 
 Private mPropertyOverrideFlags As DataPointPropertyOverrideFlags
 
@@ -95,6 +97,7 @@ Set mStyle = New DataPointStyle
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "DataPointSeries terminated"
 Debug.Print "DataPointSeries terminated"
 End Sub
 
@@ -120,7 +123,8 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
-Set mChart = Nothing
+Set mChartRef = Nothing
+Set mPrevDataPointRef = Nothing
 Set mGOSP = Nothing
 Set mCanvas = Nothing
 End Sub
@@ -137,7 +141,7 @@ mSeriesID = SeriesID
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
-Set mChart = pChart
+Set mChartRef = CreateWeakReference(pChart)
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -153,6 +157,9 @@ IGraphicObjectSeries_Name = mName
 End Property
 
 Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
+Dim dp As DataPoint
+Set dp = mDataPoints.Item(index)
+dp.Finish
 mDataPoints.Remove index
 End Sub
 
@@ -168,6 +175,7 @@ End Sub
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 If RHS <> mIsSelected Then
     mIsSelected = RHS
+    firePropertyChanged "IsSelected"
     RaiseEvent SelectionStateChanged
 End If
 End Property
@@ -185,32 +193,35 @@ End Property
 '================================================================================
 
 Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
-Dim s As DataPointStyle
 Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("Color")
+Case "COLOR"
     repaintRegion False
-Case UCase$("displayMode")
+Case "DISPLAYMODE"
     repaintRegion True
-Case UCase$("downColor")
+Case "DOWNCOLOR"
     repaintRegion False
-Case UCase$("histBarWidth")
+Case "HistogramBarWidth"
     repaintRegion True
-Case UCase$("LineStyle")
-    repaintRegion False
-Case UCase$("lineThickness")
+Case "INCLUDEINAUTOSCALE"
     repaintRegion True
-Case UCase$("pointStyle")
+Case "LINESTYLE"
     repaintRegion False
-Case UCase$("upColor")
+Case "LINETHICKNESS"
+    repaintRegion True
+Case "POINTSTYLE"
+    repaintRegion False
+Case "UPCOLOR"
     repaintRegion False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
             ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
             "Unhandled property change"
 End Select
+
+firePropertyChanged ev.PropertyName
 
 Exit Sub
 
@@ -226,12 +237,12 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mStyle.Color
 If isPropertyOverrideFlagSet(DataPointIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointSeries" & ":" & "color", _
@@ -240,6 +251,7 @@ If mColor = value And isPropertyOverrideFlagSet(DataPointIsSetColor) Then Exit P
 mColor = value
 setPropertyOverrideFlag DataPointIsSetColor
 repaintRegion False
+firePropertyChanged "Color"
 End Property
 
 Public Property Get Count() As Long
@@ -256,14 +268,15 @@ If mDisplayMode = value And isPropertyOverrideFlagSet(DataPointIsSetDisplayMode)
 mDisplayMode = value
 setPropertyOverrideFlag DataPointIsSetDisplayMode
 repaintRegion True
+firePropertyChanged "DisplayMode"
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mStyle.DownColor
 If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then DownColor = mDownColor
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
+Public Property Let DownColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointSeries" & ":" & "downColor", _
@@ -272,22 +285,24 @@ If mDownColor = value And isPropertyOverrideFlagSet(DataPointIsSetDownColor) The
 mDownColor = value
 setPropertyOverrideFlag DataPointIsSetDownColor
 repaintRegion False
+firePropertyChanged "DownColor"
 End Property
 
-Public Property Get HistBarWidth() As Single
-HistBarWidth = mStyle.HistBarWidth
-If isPropertyOverrideFlagSet(DataPointIsSetHistBarWidth) Then HistBarWidth = mHistBarWidth
+Public Property Get HistogramBarWidth() As Single
+HistogramBarWidth = mStyle.HistogramBarWidth
+If isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then HistogramBarWidth = mHistWidth
 End Property
 
-Public Property Let HistBarWidth(ByVal value As Single)
+Public Property Let HistogramBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "DataPointSeries" & ":" & "histBarWidth", _
-            "histBarWidth must be greater than zero but not greater than 1"
-If mHistBarWidth = value And isPropertyOverrideFlagSet(DataPointIsSetHistBarWidth) Then Exit Property
-mHistBarWidth = value
-setPropertyOverrideFlag DataPointIsSetHistBarWidth
+            "ChartSkil26" & "." & "DataPointSeries" & ":" & "HistogramBarWidth", _
+            "HistogramBarWidth must be greater than zero but not greater than 1"
+If mHistWidth = value And isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then Exit Property
+mHistWidth = value
+setPropertyOverrideFlag DataPointIsSetHistWidth
 repaintRegion True
+firePropertyChanged "HistogramBarWidth"
 End Property
 
 Friend Property Get Id() As Long
@@ -295,17 +310,21 @@ Id = mSeriesID
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
-IncludeInAutoscale = mIncludeInAutoscale
+IncludeInAutoscale = mStyle.IncludeInAutoscale
+If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value Then Exit Property
+If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
+setPropertyOverrideFlag DataPointIsSetIncludeInAutoscale
 repaintRegion True
+firePropertyChanged "IncludeInAutoscale"
 End Property
 
 Public Property Let IsSelectable(ByVal value As Boolean)
 mIsSelectable = value
+firePropertyChanged "IsSelectable"
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -319,6 +338,7 @@ End Property
 Public Property Let Layer(ByVal value As LayerNumbers)
 mLayer = value
 repaintRegion False
+firePropertyChanged "Layer"
 End Property
 
 Public Property Get Layer() As LayerNumbers
@@ -335,6 +355,7 @@ If mLineStyle = value And isPropertyOverrideFlagSet(DataPointIsSetLineStyle) The
 mLineStyle = value
 setPropertyOverrideFlag DataPointIsSetLineStyle
 repaintRegion False
+firePropertyChanged "LineStyle"
 End Property
 
 Public Property Get LineThickness() As Long
@@ -347,6 +368,7 @@ If mLineThickness = value And isPropertyOverrideFlagSet(DataPointIsSetLineThickn
 mLineThickness = value
 setPropertyOverrideFlag DataPointIsSetLineThickness
 repaintRegion True
+firePropertyChanged "LineThickness"
 End Property
 
 Public Property Get Name() As String
@@ -355,6 +377,7 @@ End Property
 
 Public Property Let Name(ByVal value As String)
 mName = value
+firePropertyChanged "Name"
 End Property
 
 Public Property Get PointStyle() As PointStyles
@@ -367,6 +390,11 @@ If mPointStyle = value And isPropertyOverrideFlagSet(DataPointIsSetPointStyle) T
 mPointStyle = value
 setPropertyOverrideFlag DataPointIsSetPointStyle
 repaintRegion False
+firePropertyChanged "PointStyle"
+End Property
+
+Friend Property Get SeriesUpdateNumber() As Long
+SeriesUpdateNumber = mSeriesUpdateNumber
 End Property
 
 Public Property Get Style() As DataPointStyle
@@ -387,22 +415,23 @@ End If
 Set mStyle = value
 repaintRegion True
 
+firePropertyChanged "Style"
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get UpColor() As Long
 UpColor = mStyle.UpColor
 If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then UpColor = mUpColor
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
+Public Property Let UpColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "DataPointSeries" & ":" & "upColor", _
@@ -411,6 +440,7 @@ If mUpColor = value And isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then Ex
 mUpColor = value
 setPropertyOverrideFlag DataPointIsSetUpColor
 repaintRegion False
+firePropertyChanged "UpColor"
 End Property
 
 '================================================================================
@@ -429,7 +459,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.DatPointSeries::Add", _
                             "DataPoint series is finished"
 
-If Not mPrevDataPoint Is Nothing Then
+If Not mPrevDataPointRef Is Nothing Then
     If Timestamp = prevTimestamp Then
         duplicateCount = duplicateCount + 1
     Else
@@ -438,18 +468,17 @@ If Not mPrevDataPoint Is Nothing Then
 End If
 
 Set Add = New DataPoint
-If CDbl(Timestamp) <> 0 Then Add.X = mChart.GetXFromTimestamp(Timestamp, False, duplicateCount)
+If CDbl(Timestamp) <> 0 Then Add.X = chartObj.GetXFromTimestamp(Timestamp, False, duplicateCount)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
 Add.Initialise Me, Timestamp, Key, mGOSP, mCanvas, LocalStyle
-Add.IncludeInAutoscale = mIncludeInAutoscale
 
-Add.PrevDataPoint = mPrevDataPoint
+If Not mPrevDataPointRef Is Nothing Then Add.PrevDataPoint = prevDataPointObj
 mDataPoints.Add Add, Key
-Set mPrevDataPoint = Add
+Set mPrevDataPointRef = CreateWeakReference(Add)
 prevTimestamp = Timestamp
-mGOSP.AddGraphicObject Add, mSeriesID
+mGOSP.AddGraphicObject Add
 End Function
 
 Public Sub ClearOverrides()
@@ -470,7 +499,7 @@ End Function
 Public Sub RemoveObject(ByVal value As ChartSkil26.DataPoint)
 On Error GoTo Err
 mDataPoints.Remove value.Key
-mGOSP.RemoveObject value.Handle
+mGOSP.RemoveObject value.handle
 
 Exit Sub
 
@@ -487,14 +516,31 @@ End Function
 ' Helper Functions
 '================================================================================
 
+Private Function chartObj() As Chart
+Set chartObj = mChartRef.Target
+End Function
+
 Private Sub clearPropertyOverrideFlag( _
                 ByVal flag As DataPointPropertyOverrideFlags)
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
 
+Private Sub firePropertyChanged( _
+                ByVal Name As String)
+Dim ev As PropertyChangedEvent
+
+Set ev.Source = Me
+ev.PropertyName = Name
+RaiseEvent PropertyChanged(ev)
+End Sub
+
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As DataPointPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Function prevDataPointObj() As DataPoint
+Set prevDataPointObj = mPrevDataPointRef.Target
 End Function
 
 Private Sub repaintRegion( _

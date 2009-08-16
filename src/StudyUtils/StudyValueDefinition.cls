@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements StudyValueDefinition
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -82,81 +80,20 @@ Private mDefaultRegion As StudyDefaultRegions
 
 Private mValueType As StudyValueTypes
 Private mValueMode As StudyValueModes
+Private mValueStyle As Object
 
 Private mMinimumValue As Variant
 Private mMaximumValue As Variant
+
+Private mIncludeInChart As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IStudyValueDefinition Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-'Private Property Let IStudyValueDefinition_defaultRegion( _
-'                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
-'mDefaultRegion = RHS
-'End Property
-'
-'Private Property Get IStudyValueDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
-'IStudyValueDefinition_defaultRegion = mDefaultRegion
-'End Property
-'
-'Private Property Get IStudyValueDefinition_Description() As String
-'IStudyValueDefinition_Description = mDescription
-'End Property
-'
-'Private Property Let IStudyValueDefinition_Description( _
-'                ByVal RHS As String)
-'mDescription = RHS
-'End Property
-'
-'Private Property Let IStudyValueDefinition_isDefault( _
-'                ByVal RHS As Boolean)
-'mIsDefault = RHS
-'End Property
-'
-'Private Property Get IStudyValueDefinition_isDefault() As Boolean
-'IStudyValueDefinition_isDefault = mIsDefault
-'End Property
-'
-'Friend Property Let IStudyValueDefinition_maximumValue(ByVal value As Variant)
-'mMaximumValue = value
-'End Property
-'
-'Public Property Get IStudyValueDefinition_maximumValue() As Variant
-'IStudyValueDefinition_maximumValue = mMaximumValue
-'End Property
-'
-'Friend Property Let IStudyValueDefinition_minimumValue(ByVal value As Variant)
-'mMinimumValue = value
-'End Property
-'
-'Public Property Get IStudyValueDefinition_minimumValue() As Variant
-'IStudyValueDefinition_minimumValue = mMinimumValue
-'End Property
-'
-'Private Property Get IStudyValueDefinition_name() As String
-'IStudyValueDefinition_name = mName
-'End Property
-'
-'Private Property Let IStudyValueDefinition_valueMode(ByVal RHS As TradeBuildSP.StudyValueModes)
-'mValueMode = RHS
-'End Property
-'
-'Private Property Get IStudyValueDefinition_valueMode() As TradeBuildSP.StudyValueModes
-'IStudyValueDefinition_valueMode = mValueMode
-'End Property
-'
-'Private Property Let IStudyValueDefinition_valuetype( _
-'                ByVal RHS As TradeBuildSP.StudyValueTypes)
-'mValueType = RHS
-'End Property
-'
-'Private Property Get IStudyValueDefinition_valuetype() As TradeBuildSP.StudyValueTypes
-'IStudyValueDefinition_valuetype = mValueType
-'End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -166,69 +103,85 @@ Private mMaximumValue As Variant
 ' Properties
 '@================================================================================
 
-Public Property Let defaultRegion( _
+Public Property Let DefaultRegion( _
                 ByVal RHS As StudyDefaultRegions)
 mDefaultRegion = RHS
 End Property
 
-Public Property Get defaultRegion() As StudyDefaultRegions
-defaultRegion = mDefaultRegion
+Public Property Get DefaultRegion() As StudyDefaultRegions
+DefaultRegion = mDefaultRegion
 End Property
 
-Public Property Let description(ByVal value As String)
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get description() As String
-description = mDescription
+Public Property Get Description() As String
+Description = mDescription
 End Property
 
-Public Property Let isDefault(ByVal value As Boolean)
+Public Property Let IncludeInChart(ByVal value As Boolean)
+mIncludeInChart = value
+End Property
+
+Public Property Get IncludeInChart() As Boolean
+IncludeInChart = mIncludeInChart
+End Property
+
+Public Property Let IsDefault(ByVal value As Boolean)
 mIsDefault = value
 End Property
 
-Public Property Get isDefault() As Boolean
-isDefault = mIsDefault
+Public Property Get IsDefault() As Boolean
+IsDefault = mIsDefault
 End Property
 
-Public Property Let maximumValue(ByVal value As Variant)
+Public Property Let MaximumValue(ByVal value As Variant)
 mMaximumValue = value
 End Property
 
-Public Property Get maximumValue() As Variant
-maximumValue = mMaximumValue
+Public Property Get MaximumValue() As Variant
+MaximumValue = mMaximumValue
 End Property
 
-Public Property Let minimumValue(ByVal value As Variant)
+Public Property Let MinimumValue(ByVal value As Variant)
 mMinimumValue = value
 End Property
 
-Public Property Get minimumValue() As Variant
-minimumValue = mMinimumValue
+Public Property Get MinimumValue() As Variant
+MinimumValue = mMinimumValue
 End Property
 
-Friend Property Let name(ByVal value As String)
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Let valueMode(ByVal value As StudyValueModes)
+Public Property Let ValueMode(ByVal value As StudyValueModes)
 mValueMode = value
 End Property
 
-Public Property Get valueMode() As StudyValueModes
-valueMode = mValueMode
+Public Property Get ValueMode() As StudyValueModes
+ValueMode = mValueMode
 End Property
 
-Public Property Let valueType(ByVal value As StudyValueTypes)
+Public Property Let ValueStyle(ByVal value As Object)
+Set mValueStyle = value
+End Property
+
+Public Property Get ValueStyle() As Object
+Set ValueStyle = mValueStyle
+End Property
+
+Public Property Let ValueType(ByVal value As StudyValueTypes)
 mValueType = value
 End Property
 
-Public Property Get valueType() As StudyValueTypes
-valueType = mValueType
+Public Property Get ValueType() As StudyValueTypes
+ValueType = mValueType
 End Property
 
 '@================================================================================

@@ -894,7 +894,7 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, -1
+mCommonServiceConsumer.NotifyFatalError Number, Source, Description, -1
 
 If mConnectionState = ConnConnected Then disconnect
 End Sub
@@ -955,7 +955,7 @@ bytesProcessed = bytesProcessed + Len(XMLData)
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML XMLData
 If XMLdoc.parseError.errorCode <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError SPErrorCodes.FieldDescriptionCannotBeParsed, _
+    mCommonServiceConsumer.NotifyRecoverableError SPErrorCodes.FieldDescriptionCannotBeParsed, _
             "Field descriptions XML cannot be parsed", _
             -1
     err.Raise LocalErrorCodes.LongJump
@@ -1439,7 +1439,7 @@ bytesProcessed = bytesProcessed + Len(XMLData)
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML XMLData
 If XMLdoc.parseError.errorCode <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError SPErrorCodes.LogonResponseCannotBeParsed, _
+    mCommonServiceConsumer.NotifyRecoverableError SPErrorCodes.LogonResponseCannotBeParsed, _
             "Logon response XML cannot be parsed", _
             -1
     err.Raise LocalErrorCodes.LongJump
@@ -1454,7 +1454,7 @@ Case "0"
     RaiseEvent Connected
 Case "1"
     ' login failed - bad password
-    mCommonServiceConsumer.ServiceProviderError SPErrorCodes.PasswordInvalid, _
+    mCommonServiceConsumer.NotifyRecoverableError SPErrorCodes.PasswordInvalid, _
             "Logon password invalid", _
             -1
     logMessage "Failed to connect to QuoteTracker: logon password invalid: " & _
@@ -1463,7 +1463,7 @@ Case "1"
     err.Raise LocalErrorCodes.LongJump
 Case Else
     Set statusDesc = XMLdoc.selectSingleNode("STATUSDESC")
-    mCommonServiceConsumer.ServiceProviderError SPErrorCodes.UnexpectedError, _
+    mCommonServiceConsumer.NotifyRecoverableError SPErrorCodes.UnexpectedError, _
             statusCode.Text & ": " & statusDesc.Text, _
             -1
     RaiseEvent ConnectFailed("Logon error " & statusCode.Text & ": " & statusDesc.Text, False)

@@ -83,6 +83,7 @@ Private mControlPoint1                      As Point
 Private mControlPoint2                      As Point
 
 Private mLineStyle                          As LineStyle
+Private mTextStyle                          As TextStyle
 
 Private mStartPoint1                        As ChartSkil26.Point
 Private mStartPoint2                        As ChartSkil26.Point
@@ -102,25 +103,23 @@ Private mPrevY                              As Double
 
 Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
 If mLineSeries Is Nothing Then
-    Dim aFont As StdFont
-    Dim tStyle As TextStyle
     
-    Set mControlPoint1 = mRegion.newPoint(X, Y)
-    Set mControlPoint2 = mRegion.newPoint(X, Y)
+    Set mControlPoint1 = mRegion.NewPoint(X, Y)
+    Set mControlPoint2 = mRegion.NewPoint(X, Y)
     
     Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, mLayer)
-    If mLayer = -1 Then
-        mLayer = mLineSeries.layer    ' get the layer allocated
-    End If
+    If mLayer = -1 Then mLayer = mLineSeries.Layer  ' get the layer allocated
+    mLineSeries.Extended = True
+    mLineSeries.IncludeInAutoscale = False
     
+    If mTextStyle Is Nothing Then
+        Set mTextStyle = New TextStyle
+        mTextStyle.Font.Size = 8
+        mTextStyle.Box = False
+        mTextStyle.Align = AlignBoxCentreLeft
+    End If
     Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, mLayer)
-    Set tStyle = mRegion.DefaultTextStyle
-    Set aFont = tStyle.Font
-    aFont.Size = 8
-    tStyle.Font = aFont
-    tStyle.box = False
-    tStyle.Align = AlignBoxCentreLeft
-    mTextSeries.Style = tStyle
+    mTextSeries.Style = mTextStyle
     
     Set mLine1 = addRetracementLine(0, X, Y)
     
@@ -141,15 +140,15 @@ If mLineSeries Is Nothing Then
 Else
     Dim ln As ChartSkil26.Line
     For Each ln In mLineSeries
-        ln.layer = mLayer
+        ln.Layer = mLayer
     Next
     Dim txt As ChartSkil26.Text
     For Each txt In mTextSeries
-        txt.layer = mLayer
+        txt.Layer = mLayer
     Next
     Set mStartPoint1 = Nothing
     Set mStartPoint2 = Nothing
-    mAbstractTool.finish
+    mAbstractTool.Finish
 End If
 End Sub
 
@@ -185,18 +184,18 @@ End Sub
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
 Dim ln As ChartSkil26.Line
 
-Set mControlPoint1 = mRegion.newPoint(mControlPoint1.X + X - mPrevX, mControlPoint1.Y + Y - mPrevY)
-Set mControlPoint2 = mRegion.newPoint(mControlPoint2.X + X - mPrevX, mControlPoint2.Y + Y - mPrevY)
+Set mControlPoint1 = mRegion.NewPoint(mControlPoint1.X + X - mPrevX, mControlPoint1.Y + Y - mPrevY)
+Set mControlPoint2 = mRegion.NewPoint(mControlPoint2.X + X - mPrevX, mControlPoint2.Y + Y - mPrevY)
 
 For Each ln In mLineSeries
-    ln.Point1 = mRegion.newPoint(ln.Point1.X + X - mPrevX, ln.Point1.Y + Y - mPrevY)
-    ln.Point2 = mRegion.newPoint(ln.Point2.X + X - mPrevX, ln.Point2.Y + Y - mPrevY)
+    ln.Point1 = mRegion.NewPoint(ln.Point1.X + X - mPrevX, ln.Point1.Y + Y - mPrevY)
+    ln.Point2 = mRegion.NewPoint(ln.Point2.X + X - mPrevX, ln.Point2.Y + Y - mPrevY)
 Next
 Dim txt As ChartSkil26.Text
 Dim i As Long
 For i = 1 To mTextSeries.Count
     Set txt = mTextSeries(i)
-    txt.Position = mRegion.newPoint(txt.Position.X + X - mPrevX, txt.Position.Y + Y - mPrevY)
+    txt.position = mRegion.NewPoint(txt.position.X + X - mPrevX, txt.position.Y + Y - mPrevY)
     SetText txt, i
 Next
 mPrevX = X
@@ -205,23 +204,23 @@ End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
 If selHandleIndex = 1 Then
-    Set mControlPoint1 = mRegion.newPoint(X, Y)
+    Set mControlPoint1 = mRegion.NewPoint(X, Y)
 ElseIf selHandleIndex = 2 Then
-    Set mControlPoint1 = mRegion.newPoint(mControlPoint1.X, Y)
+    Set mControlPoint1 = mRegion.NewPoint(mControlPoint1.X, Y)
 ElseIf selHandleIndex = 3 Then
-    Set mControlPoint1 = mRegion.newPoint(mControlPoint1.X, Y)
-    Set mControlPoint2 = mRegion.newPoint(X, mControlPoint2.Y)
+    Set mControlPoint1 = mRegion.NewPoint(mControlPoint1.X, Y)
+    Set mControlPoint2 = mRegion.NewPoint(X, mControlPoint2.Y)
 ElseIf selHandleIndex = 4 Then
-    Set mControlPoint1 = mRegion.newPoint(X, mControlPoint1.Y)
+    Set mControlPoint1 = mRegion.NewPoint(X, mControlPoint1.Y)
 ElseIf selHandleIndex = 5 Then
-    Set mControlPoint2 = mRegion.newPoint(X, mControlPoint2.Y)
+    Set mControlPoint2 = mRegion.NewPoint(X, mControlPoint2.Y)
 ElseIf selHandleIndex = 6 Then
-    Set mControlPoint1 = mRegion.newPoint(X, mControlPoint1.Y)
-    Set mControlPoint2 = mRegion.newPoint(mControlPoint2.X, Y)
+    Set mControlPoint1 = mRegion.NewPoint(X, mControlPoint1.Y)
+    Set mControlPoint2 = mRegion.NewPoint(mControlPoint2.X, Y)
 ElseIf selHandleIndex = 7 Then
-    Set mControlPoint2 = mRegion.newPoint(mControlPoint2.X, Y)
+    Set mControlPoint2 = mRegion.NewPoint(mControlPoint2.X, Y)
 Else
-    Set mControlPoint2 = mRegion.newPoint(X, Y)
+    Set mControlPoint2 = mRegion.NewPoint(X, Y)
 End If
 drawLines
 moveSelectionhandles
@@ -232,9 +231,7 @@ Dim i As Long
 Set mRegion = RHS
 For i = 0 To UBound(mLineSpecs)
     If mLineSpecs(i).Style Is Nothing Then
-        Set mLineSpecs(i).Style = mRegion.DefaultLineStyle
-        mLineSpecs(i).Style.extended = True
-        mLineSpecs(i).Style.includeInAutoscale = False
+        Set mLineSpecs(i).Style = New LineStyle
     End If
 Next
 End Property
@@ -247,15 +244,15 @@ Dim retr As Double
 
 If mLineSeries Is Nothing Then Exit Sub
 
-Set mControlPoint2 = mRegion.newPoint(X, Y)
+Set mControlPoint2 = mRegion.NewPoint(X, Y)
 
 For i = 1 To mLineSeries.Count
     Set ln = mLineSeries(i)
     retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
-    ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
-    ln.Point2 = mRegion.newPoint(X, retr)
+    ln.Point1 = mRegion.NewPoint(mControlPoint1.X, retr)
+    ln.Point2 = mRegion.NewPoint(X, retr)
     Set txt = mTextSeries(i)
-    txt.Position = ln.Point2
+    txt.position = ln.Point2
     SetText txt, i
 Next
 
@@ -284,13 +281,13 @@ Set mControlPoint2 = mStartPoint2
 For i = 1 To mLineSeries.Count
     Set ln = mLineSeries(i)
     retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
-    ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
-    ln.Point2 = mRegion.newPoint(mControlPoint2.X, retr)
-    ln.layer = mLayer
+    ln.Point1 = mRegion.NewPoint(mControlPoint1.X, retr)
+    ln.Point2 = mRegion.NewPoint(mControlPoint2.X, retr)
+    ln.Layer = mLayer
     Set txt = mTextSeries(i)
-    txt.Position = ln.Point2
+    txt.position = ln.Point2
     SetText txt, i
-    txt.layer = mLayer
+    txt.Layer = mLayer
 Next
 
 Set mStartPoint1 = Nothing
@@ -342,12 +339,14 @@ End Sub
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal controller As ChartController, _
+                ByVal pChart As ChartController, _
                 ByRef pLineSpecs() As FibLineSpecifier, _
-                ByVal layer As Long)
+                ByVal Layer As Long, _
+                ByVal pTextStyle As TextStyle)
 mLineSpecs = pLineSpecs
-mLayer = layer
-Set mAbstractTool = CreateAbstractChartTool(controller, Me)
+mLayer = Layer
+Set mTextStyle = pTextStyle
+Set mAbstractTool = CreateAbstractChartTool(pChart, Me)
 End Sub
 
 '@================================================================================
@@ -361,15 +360,16 @@ Private Function addRetracementLine( _
 Dim ln As ChartSkil26.Line
 Dim txt As ChartSkil26.Text
 
-Set ln = mLineSeries.Add(, mLineSpecs(index).Style, True)
-ln.layer = LayerNumbers.LayerMax
-ln.SetPosition mRegion.newPoint(X, Y), mRegion.newPoint(X, Y)
+Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
+ln.IsSelectable = True
+ln.Layer = LayerNumbers.LayerMax
+ln.SetPosition mRegion.NewPoint(X, Y), mRegion.NewPoint(X, Y)
 mAbstractTool.AddSelectableObject ln
 
 Set txt = mTextSeries.Add
 txt.Color = mLineSpecs(index).Style.Color
-txt.Position = mRegion.newPoint(X, Y)
-txt.offset = mRegion.newDimension(0.2, 0)
+txt.position = mRegion.NewPoint(X, Y)
+txt.offset = mRegion.NewDimension(0.2, 0)
 txt.Text = mLineSpecs(index).Percentage & "%"
 
 Set addRetracementLine = ln
@@ -397,10 +397,10 @@ Dim retr As Double
 For i = 1 To mLineSeries.Count
     Set ln = mLineSeries(i)
     retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
-    ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
-    ln.Point2 = mRegion.newPoint(mControlPoint2.X, retr)
+    ln.Point1 = mRegion.NewPoint(mControlPoint1.X, retr)
+    ln.Point2 = mRegion.NewPoint(mControlPoint2.X, retr)
     Set txt = mTextSeries(i)
-    txt.Position = ln.Point2
+    txt.position = ln.Point2
     SetText txt, i
 Next
 End Sub
@@ -442,7 +442,7 @@ End Sub
 Private Sub SetText( _
                 ByVal txt As Text, _
                 ByVal index As Long)
-txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.Position.Y) & ")"
+txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.position.Y) & ")"
 End Sub
 
 Private Sub startMove()
@@ -451,10 +451,10 @@ Set mStartPoint2 = mControlPoint2
 
 Dim ln As ChartSkil26.Line
 For Each ln In mLineSeries
-    ln.layer = LayerNumbers.LayerMax
+    ln.Layer = LayerNumbers.LayerMax
 Next
 Dim txt As ChartSkil26.Text
 For Each txt In mTextSeries
-    txt.layer = LayerNumbers.LayerMax
+    txt.Layer = LayerNumbers.LayerMax
 Next
 End Sub

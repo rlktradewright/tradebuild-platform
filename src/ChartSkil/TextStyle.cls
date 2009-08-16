@@ -57,6 +57,10 @@ Private Const ConfigSettingBoxFillWithBackgroundColor   As String = "&BoxFillWit
 Private Const ConfigSettingAlign                    As String = "&Align"
 Private Const ConfigSettingPaddingX                 As String = "&PaddingX"
 Private Const ConfigSettingPaddingY                 As String = "&PaddingY"
+Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingFixedX               As String = "&FixedX"
+Private Const ConfigSettingFixedY               As String = "&FixedY"
+Private Const ConfigSettingExtended             As String = "&Extended"
 
 '@================================================================================
 ' Member variables
@@ -77,6 +81,10 @@ Private mBoxFillWithBackgroundColor As Boolean
 Private mAlign As TextAlignModes
 Private mPaddingX As Double
 Private mPaddingY As Double
+Private mIncludeInAutoscale As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
+Private mExtended As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -103,6 +111,10 @@ mBoxFillWithBackgroundColor = False
 mAlign = TextAlignModes.AlignBottomRight
 mPaddingX = 1#
 mPaddingY = 0.5
+mIncludeInAutoscale = False
+mFixedX = False
+mFixedY = False
+mExtended = False
 
 End Sub
 
@@ -144,25 +156,25 @@ Public Property Get Box() As Boolean
 Box = mBox
 End Property
 
-Public Property Let BoxColor(ByVal value As OLE_COLOR)
+Public Property Let BoxColor(ByVal value As Long)
 If mBoxColor = value Then Exit Property
 mBoxColor = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxColor, mBoxColor
 firePropertyChanged "BoxColor"
 End Property
 
-Public Property Get BoxColor() As OLE_COLOR
+Public Property Get BoxColor() As Long
 BoxColor = mBoxColor
 End Property
 
-Public Property Let BoxFillColor(ByVal value As OLE_COLOR)
+Public Property Let BoxFillColor(ByVal value As Long)
 If mBoxFillColor = value Then Exit Property
 mBoxFillColor = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxFillColor, mBoxFillColor
 firePropertyChanged "BoxFillColor"
 End Property
 
-Public Property Get BoxFillColor() As OLE_COLOR
+Public Property Get BoxFillColor() As Long
 BoxFillColor = mBoxFillColor
 End Property
 
@@ -210,7 +222,7 @@ Public Property Get BoxThickness() As Long
 BoxThickness = mBoxThickness
 End Property
 
-Public Property Let Color(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "TextStyle" & ":" & "color", _
@@ -221,14 +233,14 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
 firePropertyChanged "Color"
 End Property
 
-Public Property Get Color() As OLE_COLOR
+Public Property Get Color() As Long
 Color = mColor
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 
-If mConfig Is Nothing Then
+If value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
@@ -248,7 +260,44 @@ mConfig.SetSetting ConfigSettingBoxFillWithBackgroundColor, mBoxFillWithBackgrou
 mConfig.SetSetting ConfigSettingAlign, mAlign
 mConfig.SetSetting ConfigSettingPaddingX, mPaddingX
 mConfig.SetSetting ConfigSettingPaddingY, mPaddingY
+mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingExtended, mExtended
+mConfig.SetSetting ConfigSettingFixedX, mFixedX
+mConfig.SetSetting ConfigSettingFixedY, mFixedY
 
+End Property
+
+Public Property Let Extended(ByVal value As Boolean)
+If mExtended = value Then Exit Property
+mExtended = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtended, mExtended
+firePropertyChanged "Extended"
+End Property
+
+Public Property Get Extended() As Boolean
+Extended = mExtended
+End Property
+
+Public Property Let FixedX(ByVal value As Boolean)
+If mFixedX = value Then Exit Property
+mFixedX = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
+firePropertyChanged "FixedX"
+End Property
+
+Public Property Get FixedX() As Boolean
+FixedX = mFixedX
+End Property
+
+Public Property Let FixedY(ByVal value As Boolean)
+If mFixedY = value Then Exit Property
+mFixedY = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
+firePropertyChanged "FixedY"
+End Property
+
+Public Property Get FixedY() As Boolean
+FixedY = mFixedY
 End Property
 
 Public Property Let Font(ByVal value As StdFont)
@@ -260,6 +309,17 @@ End Property
 
 Public Property Get Font() As StdFont
 Set Font = mFont
+End Property
+
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value Then Exit Property
+mIncludeInAutoscale = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+firePropertyChanged "IncludeInAutoscale"
+End Property
+
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let PaddingX(ByVal value As Double)
@@ -301,6 +361,10 @@ clone.Color = mColor
 clone.Font = gCloneFont(mFont)
 clone.PaddingX = mPaddingX
 clone.PaddingY = mPaddingY
+clone.IncludeInAutoscale = mIncludeInAutoscale
+clone.Extended = mExtended
+clone.FixedX = mFixedX
+clone.FixedY = mFixedY
 
 End Function
 
@@ -322,6 +386,10 @@ mBoxFillWithBackgroundColor = mConfig.GetSetting(ConfigSettingBoxFillWithBackgro
 mAlign = mConfig.GetSetting(ConfigSettingAlign)
 mPaddingX = mConfig.GetSetting(ConfigSettingPaddingX)
 mPaddingY = mConfig.GetSetting(ConfigSettingPaddingY)
+mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+mExtended = mConfig.GetSetting(ConfigSettingExtended)
+mFixedX = mConfig.GetSetting(ConfigSettingFixedX)
+mFixedY = mConfig.GetSetting(ConfigSettingFixedY)
                 
 End Sub
 

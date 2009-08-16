@@ -60,9 +60,18 @@ Private Const ModuleName                            As String = "IContractSelect
 ' Properties
 '@================================================================================
 
+Public Property Get SelectedContracts() As Contracts
+
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Initialise( _
+                ByVal pContracts As Contracts)
+                
+End Sub
 
 '@================================================================================
 ' Helper Functions

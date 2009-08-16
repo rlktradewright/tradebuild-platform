@@ -98,7 +98,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not mEnumerator.moveNext Then
-    mTaskContext.finish "Yield count =" & mTaskContext.yieldCount, False
+    mTaskContext.Finish "Yield count =" & mTaskContext.yieldCount, False
     Exit Sub
 End If
 
@@ -153,9 +153,10 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
                     mOutputPath, _
                     1000)
     
+    mTaskContext.suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
+    
 End If
 
-mTaskContext.suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
 
 Exit Sub
 

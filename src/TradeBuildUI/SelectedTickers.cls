@@ -27,6 +27,8 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event SelectionChanged()
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -44,6 +46,9 @@ Option Explicit
 '@================================================================================
 
 Private mTickers As Collection
+
+Private mChanging As Boolean
+Private mChanged As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,15 +74,58 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub add(ByVal pTicker As ticker)
-mTickers.add pTicker
+Friend Sub Add(ByVal pTicker As Ticker)
+On Error GoTo Err
+mTickers.Add pTicker, CStr(ObjPtr(pTicker))
+If Not mChanging Then
+    RaiseEvent SelectionChanged
+Else
+    mChanged = True
+End If
+Exit Sub
+
+Err:
 End Sub
 
-Public Function count() As Long
-count = mTickers.count
+Friend Sub BeginChange()
+If mChanging Then Exit Sub
+mChanging = True
+mChanged = False
+End Sub
+
+Friend Sub EndChange()
+mChanging = False
+If mChanged Then
+    mChanged = False
+    RaiseEvent SelectionChanged
+End If
+End Sub
+
+Friend Sub Clear()
+If mTickers.Count = 0 Then Exit Sub
+Set mTickers = New Collection
+If Not mChanging Then
+    RaiseEvent SelectionChanged
+Else
+    mChanged = True
+End If
+End Sub
+
+Public Function Contains( _
+                ByVal pTicker As Ticker) As Boolean
+On Error GoTo Err
+mTickers.item CStr(ObjPtr(pTicker))
+Contains = True
+Exit Function
+
+Err:
 End Function
 
-Public Function item(ByVal index As Variant) As ticker
+Public Function Count() As Long
+Count = mTickers.Count
+End Function
+
+Public Function item(ByVal index As Variant) As Ticker
 Attribute item.VB_UserMemId = 0
 Set item = mTickers.item(index)
 End Function
@@ -88,8 +136,17 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Friend Sub remove(ByVal pTicker As ticker)
-mTickers.remove pTicker
+Friend Sub Remove(ByVal pTicker As Ticker)
+On Error GoTo Err
+mTickers.Remove CStr(ObjPtr(pTicker))
+If Not mChanging Then
+    RaiseEvent SelectionChanged
+Else
+    mChanged = True
+End If
+Exit Sub
+
+Err:
 End Sub
 
 '@================================================================================

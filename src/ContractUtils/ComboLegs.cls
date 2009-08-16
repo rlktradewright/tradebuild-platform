@@ -78,37 +78,37 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub add(ByVal pComboLeg As ComboLeg, _
+Friend Sub Add(ByVal pComboLeg As ComboLeg, _
                 Optional ByVal key As String)
 If key <> "" Then
-    mComboLegs.add pComboLeg, key
+    mComboLegs.Add pComboLeg, key
 Else
-    mComboLegs.add pComboLeg
+    mComboLegs.Add pComboLeg
 End If
 fireChange CollItemAdded, pComboLeg
 End Sub
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
-Friend Function addLeg( _
+Friend Function AddLeg( _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal isBuyLeg As Boolean, _
                 ByVal ratio As Long, _
                 ByVal key As String) As ComboLeg
 
-Set addLeg = New ComboLeg
-addLeg.initialise contractSpec, isBuyLeg, ratio
-add addLeg, key
+Set AddLeg = New ComboLeg
+AddLeg.initialise contractSpec, isBuyLeg, ratio
+Add AddLeg, key
 End Function
 
-Public Function item(ByVal index As Variant) As ComboLeg
-Attribute item.VB_UserMemId = 0
+Public Function Item(ByVal index As Variant) As ComboLeg
+Attribute Item.VB_UserMemId = 0
 Dim theItem As ComboLeg
 Set theItem = mComboLegs(index)
-item = theItem
+Item = theItem
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -117,17 +117,17 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mComboLegs.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal index As Variant)
+Public Sub Remove(ByVal index As Variant)
 Dim lComboLeg As ComboLeg
 Set lComboLeg = mComboLegs(index)
-mComboLegs.remove index
+mComboLegs.Remove index
 fireChange CollItemRemoved, lComboLeg
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 

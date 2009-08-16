@@ -80,24 +80,29 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add( _
+Friend Function Add( _
                 ByVal chartMgr As ChartManager, _
-                ByVal region As ChartRegion, _
+                ByVal Region As ChartRegion, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
-                ByVal updatePerTick As Boolean) As StudyValueHandler
-Set add = New StudyValueHandler
-add.initialise chartMgr, _
-                region, _
+                ByVal UpdatePerTick As Boolean) As StudyValueHandler
+Set Add = New StudyValueHandler
+Add.Initialise chartMgr, _
+                Region, _
                 studyValueConfig, _
                 studyValueDef, _
-                updatePerTick
-mStudyValueHandlers.add add
+                UpdatePerTick
+mStudyValueHandlers.Add Add, studyValueConfig.ValueName
 End Function
 
-Public Function item( _
-                ByVal index As Long) As StudyValueHandler
-Set item = mStudyValueHandlers.item(index)
+Friend Function Clear()
+Set mStudyValueHandlers = New Collection
+End Function
+
+Public Function Item( _
+                ByVal index As Variant) As StudyValueHandler
+Attribute Item.VB_UserMemId = 0
+Set Item = mStudyValueHandlers.Item(index)
 End Function
 
 Public Function NewEnum() As IUnknown

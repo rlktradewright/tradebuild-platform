@@ -38,14 +38,14 @@ Event PropertyChanged( _
 
 Private Const ConfigSettingTailThickness        As String = "&TailThickness"
 Private Const ConfigSettingOutlineThickness     As String = "&OutlineThickness"
-Private Const ConfigSettingBarColor             As String = "&BarColor"
+Private Const ConfigSettingColor                As String = "&BarColor"
 Private Const ConfigSettingUpColor              As String = "&UpColor"
 Private Const ConfigSettingDownColor            As String = "&DownColor"
 Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
 Private Const ConfigSettingSolidUpBody          As String = "&SolidUpBody"
-Private Const ConfigSettingBarThickness         As String = "&BarThickness"
-Private Const ConfigSettingBarWidth             As String = "&BarWidth"
-'Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingThickness            As String = "&BarThickness"
+Private Const ConfigSettingWidth                As String = "&BarWidth"
+Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
 
 '@================================================================================
 ' Enums
@@ -64,15 +64,16 @@ Private mConfig As ConfigurationSection
 Private mTailThickness As Long
 Private mOutlineThickness As Long
 
-Private mBarColor As Long
+Private mColor As Long
 Private mUpColor As Long
 Private mDownColor As Long
 
 Private mDisplayMode As BarDisplayModes
 
 Private mSolidUpBody As Boolean
-Private mBarThickness As Long
-Private mBarWidth As Single
+Private mThickness As Long
+Private mWidth As Single
+Private mIncludeInAutoscale As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -85,9 +86,9 @@ mUpColor = vbBlack
 mDownColor = vbBlack
 mDisplayMode = BarDisplayModeCandlestick
 mSolidUpBody = False
-mBarThickness = 2
-mBarWidth = 0.6
-mBarColor = -1
+mThickness = 2
+mWidth = 0.6
+mColor = -1
 End Sub
 
 '@================================================================================
@@ -102,44 +103,24 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let BarColor(ByVal value As OLE_COLOR)
+Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "BarStyle" & ":" & "barColor", _
+            "ChartSkil26" & "." & "BarStyle" & ":" & "Color", _
             "Value is not a valid color or -1"
 
-mBarColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBarColor, mBarColor
-firePropertyChanged "BarColor"
+mColor = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
+firePropertyChanged "Color"
 End Property
 
-Public Property Get BarColor() As OLE_COLOR
-BarColor = mBarColor
-End Property
-
-Public Property Let BarThickness(ByVal value As Long)
-mBarThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBarThickness, mBarThickness
-firePropertyChanged "BarThickness"
-End Property
-
-Public Property Get BarThickness() As Long
-BarThickness = mBarThickness
-End Property
-
-Public Property Let BarWidth(ByVal value As Single)
-mBarWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBarWidth, mBarWidth
-firePropertyChanged "BarWidth"
-End Property
-
-Public Property Get BarWidth() As Single
-BarWidth = mBarWidth
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
-If mConfig Is Nothing Then
+If value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
@@ -149,14 +130,14 @@ Set mConfig = value
 
 mConfig.SetSetting ConfigSettingTailThickness, mTailThickness
 mConfig.SetSetting ConfigSettingOutlineThickness, mOutlineThickness
-mConfig.SetSetting ConfigSettingBarColor, mBarColor
+mConfig.SetSetting ConfigSettingColor, mColor
 mConfig.SetSetting ConfigSettingUpColor, mUpColor
 mConfig.SetSetting ConfigSettingDownColor, mDownColor
 mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
 mConfig.SetSetting ConfigSettingSolidUpBody, mSolidUpBody
-mConfig.SetSetting ConfigSettingBarThickness, mBarThickness
-mConfig.SetSetting ConfigSettingBarWidth, mBarWidth
-'mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingThickness, mThickness
+mConfig.SetSetting ConfigSettingWidth, mWidth
+mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
 
 End Property
 
@@ -170,7 +151,7 @@ Public Property Get DisplayMode() As BarDisplayModes
 DisplayMode = mDisplayMode
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
+Public Property Let DownColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "BarStyle" & ":" & "downColor", _
@@ -180,8 +161,18 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDownColor, mDownC
 firePropertyChanged "DownColor"
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mDownColor
+End Property
+
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+mIncludeInAutoscale = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+firePropertyChanged "IncludeInAutoscale"
+End Property
+
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let OutlineThickness(ByVal value As Long)
@@ -214,7 +205,17 @@ Public Property Get TailThickness() As Long
 TailThickness = mTailThickness
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
+Public Property Let Thickness(ByVal value As Long)
+mThickness = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingThickness, mThickness
+firePropertyChanged "Thickness"
+End Property
+
+Public Property Get Thickness() As Long
+Thickness = mThickness
+End Property
+
+Public Property Let UpColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26" & "." & "BarStyle" & ":" & "upColor", _
@@ -225,8 +226,18 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
 firePropertyChanged "UpColor"
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get UpColor() As Long
 UpColor = mUpColor
+End Property
+
+Public Property Let Width(ByVal value As Single)
+mWidth = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingWidth, mWidth
+firePropertyChanged "Width"
+End Property
+
+Public Property Get Width() As Single
+Width = mWidth
 End Property
 
 '@================================================================================
@@ -235,12 +246,12 @@ End Property
 
 Public Function clone() As BarStyle
 Set clone = New BarStyle
-clone.BarColor = mBarColor
-clone.BarThickness = mBarThickness
-clone.BarWidth = mBarWidth
+clone.Color = mColor
+clone.Thickness = mThickness
+clone.Width = mWidth
 clone.DisplayMode = mDisplayMode
 clone.DownColor = mDownColor
-'clone.IncludeInAutoscale = mIncludeInAutoscale
+clone.IncludeInAutoscale = mIncludeInAutoscale
 clone.OutlineThickness = mOutlineThickness
 clone.SolidUpBody = mSolidUpBody
 clone.TailThickness = mTailThickness
@@ -252,14 +263,14 @@ Public Sub LoadFromConfig( _
 Set mConfig = config
 mTailThickness = mConfig.GetSetting(ConfigSettingTailThickness)
 mOutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
-mBarColor = mConfig.GetSetting(ConfigSettingBarColor)
+mColor = mConfig.GetSetting(ConfigSettingColor)
 mUpColor = mConfig.GetSetting(ConfigSettingUpColor)
 mDownColor = mConfig.GetSetting(ConfigSettingDownColor)
 mDisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
 mSolidUpBody = mConfig.GetSetting(ConfigSettingSolidUpBody)
-mBarThickness = mConfig.GetSetting(ConfigSettingBarThickness)
-mBarWidth = mConfig.GetSetting(ConfigSettingBarWidth)
-'mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+mThickness = mConfig.GetSetting(ConfigSettingThickness)
+mWidth = mConfig.GetSetting(ConfigSettingWidth)
+mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
                 
 End Sub
 

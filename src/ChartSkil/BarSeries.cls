@@ -27,23 +27,13 @@ Event Click()
 
 Event DblCLick()
 
+Event PropertyChanged(ev As PropertyChangedEvent)
+
 Event SelectionStateChanged()
 
 '================================================================================
 ' Enums
 '================================================================================
-
-Private Enum PropertyOverrideFlags
-    BarColorIsSet = 1
-    UpColorIsSet = 2
-    DownColorIsSet = 4
-    DisplayModeIsSet = 8
-    SolidUpBodyIsSet = &H10&
-    BarThicknessIsSet = &H20&
-    BarWidthIsSet = &H40&
-    TailThicknessIsSet = &H80&
-    OutlineThicknessIsSet = &H100&
-End Enum
 
 '================================================================================
 ' Types
@@ -60,8 +50,9 @@ Private Const ModuleName                As String = "BarSeries"
 ' Member variables
 '================================================================================
 
-Private mChart As Chart
+Private mChartRef As WeakReference
 Private mSeriesID As Long
+Private mSeriesUpdateNumber As Long
 
 Private mIsSelectable As Boolean
 Private mIsSelected As Boolean
@@ -83,17 +74,17 @@ Private mIncludeInAutoscale As Boolean
 Private mName As String
 
 ' these fields override corresponding items in the Style
-Private mBarColor As Long
+Private mColor As Long
 Private mUpColor As Long
 Private mDownColor As Long
 Private mDisplayMode As BarDisplayModes
 Private mSolidUpBody As Boolean
-Private mBarThickness As Long
-Private mBarWidth As Single
+Private mThickness As Long
+Private mWidth As Single
 Private mTailThickness As Long
 Private mOutlineThickness As Long
 
-Private mPropertyOverrideFlags As PropertyOverrideFlags
+Private mPropertyOverrideFlags As BarPropertyOverrideFlags
 
 '================================================================================
 ' Class Event Handlers
@@ -105,6 +96,7 @@ Set mStyle = New BarStyle
 End Sub
 
 Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "BarSeries terminated"
 Debug.Print "BarSeries terminated"
 End Sub
 
@@ -130,7 +122,7 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
-Set mChart = Nothing
+Set mChartRef = Nothing
 Set mGOSP = Nothing
 Set mCanvas = Nothing
 End Sub
@@ -147,7 +139,7 @@ mSeriesID = SeriesID
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
-Set mChart = pChart
+Set mChartRef = CreateWeakReference(pChart)
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -178,6 +170,7 @@ End Sub
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 If RHS <> mIsSelected Then
     mIsSelected = RHS
+    firePropertyChanged "IsSelected"
     RaiseEvent SelectionStateChanged
 End If
 End Property
@@ -199,29 +192,33 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
-Case UCase$("BarColor")
+Case "COLOR"
     repaintRegion False
-Case UCase$("BarThickness")
+Case "THICKNESS"
     repaintRegion False
-Case UCase$("BarWidth")
+Case "WIDTH"
     repaintRegion True
-Case UCase$("displayMode")
+Case "DISPLAYMODE"
     repaintRegion True
-Case UCase$("downColor")
+Case "DOWNCOLOR"
     repaintRegion False
-Case UCase$("OutlineThickness")
+Case "INCLUDEINAUTOSCALE"
+    repaintRegion True
+Case "OUTLINETHICKNESS"
     repaintRegion False
-Case UCase$("SolidUpBody")
+Case "SOLIDUPBODY"
     repaintRegion False
-Case UCase$("TailThickness")
+Case "TAILTHICKNESS"
     repaintRegion False
-Case UCase$("upColor")
+Case "UPCOLOR"
     repaintRegion False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
             ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
             "Unhandled property change"
 End Select
+
+firePropertyChanged ev.PropertyName
 
 Exit Sub
 
@@ -236,40 +233,17 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get BarColor() As OLE_COLOR
-BarColor = mStyle.BarColor
-If isPropertyOverrideFlagSet(BarColorIsSet) Then BarColor = mBarColor
+Public Property Get Color() As Long
+Color = mStyle.Color
+If isPropertyOverrideFlagSet(BarIsSetColor) Then Color = mColor
 End Property
 
-Public Property Let BarColor(ByVal value As OLE_COLOR)
-If mBarColor = value And isPropertyOverrideFlagSet(BarColorIsSet) Then Exit Property
-mBarColor = value
-setPropertyOverrideFlag BarColorIsSet
+Public Property Let Color(ByVal value As Long)
+If mColor = value And isPropertyOverrideFlagSet(BarIsSetColor) Then Exit Property
+mColor = value
+setPropertyOverrideFlag BarIsSetColor
 repaintRegion False
-End Property
-
-Public Property Get BarThickness() As Long
-BarThickness = mStyle.BarThickness
-If isPropertyOverrideFlagSet(BarThicknessIsSet) Then BarThickness = mBarThickness
-End Property
-
-Public Property Let BarThickness(ByVal value As Long)
-If mBarThickness = value And isPropertyOverrideFlagSet(BarThicknessIsSet) Then Exit Property
-mBarThickness = value
-setPropertyOverrideFlag BarThicknessIsSet
-repaintRegion False
-End Property
-
-Public Property Get BarWidth() As Single
-BarWidth = mStyle.BarWidth
-If isPropertyOverrideFlagSet(BarWidthIsSet) Then BarWidth = mBarWidth
-End Property
-
-Public Property Let BarWidth(ByVal value As Single)
-If mBarWidth = value And isPropertyOverrideFlagSet(BarWidthIsSet) Then Exit Property
-mBarWidth = value
-setPropertyOverrideFlag BarWidthIsSet
-repaintRegion True
+firePropertyChanged "Color"
 End Property
 
 Public Property Get Count() As Long
@@ -278,26 +252,28 @@ End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
 DisplayMode = mStyle.DisplayMode
-If isPropertyOverrideFlagSet(DisplayModeIsSet) Then DisplayMode = mDisplayMode
+If isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then DisplayMode = mDisplayMode
 End Property
 
 Public Property Let DisplayMode(ByVal value As BarDisplayModes)
-If mDisplayMode = value And isPropertyOverrideFlagSet(DisplayModeIsSet) Then Exit Property
+If mDisplayMode = value And isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then Exit Property
 mDisplayMode = value
-setPropertyOverrideFlag DisplayModeIsSet
+setPropertyOverrideFlag BarIsSetDisplayMode
 repaintRegion True
+firePropertyChanged "DisplayMode"
 End Property
 
-Public Property Get DownColor() As OLE_COLOR
+Public Property Get DownColor() As Long
 DownColor = mStyle.DownColor
-If isPropertyOverrideFlagSet(DownColorIsSet) Then DownColor = mDownColor
+If isPropertyOverrideFlagSet(BarIsSetDownColor) Then DownColor = mDownColor
 End Property
 
-Public Property Let DownColor(ByVal value As OLE_COLOR)
-If mDownColor = value And isPropertyOverrideFlagSet(DownColorIsSet) Then Exit Property
+Public Property Let DownColor(ByVal value As Long)
+If mDownColor = value And isPropertyOverrideFlagSet(BarIsSetDownColor) Then Exit Property
 mDownColor = value
-setPropertyOverrideFlag DownColorIsSet
+setPropertyOverrideFlag BarIsSetDownColor
 repaintRegion False
+firePropertyChanged "DownColor"
 End Property
 
 Friend Property Get Id() As Long
@@ -305,17 +281,21 @@ Id = mSeriesID
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
-IncludeInAutoscale = mIncludeInAutoscale
+IncludeInAutoscale = mStyle.IncludeInAutoscale
+If isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
-If mIncludeInAutoscale = value Then Exit Property
+If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
+setPropertyOverrideFlag BarIsSetIncludeInAutoscale
 repaintRegion False
+firePropertyChanged "IncludeInAutoscale"
 End Property
 
 Public Property Let IsSelectable(ByVal value As Boolean)
 mIsSelectable = value
+firePropertyChanged "IsSelectable"
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -330,6 +310,7 @@ Public Property Let Layer(ByVal value As LayerNumbers)
 If mLayer = value Then Exit Property
 mLayer = value
 repaintRegion False
+firePropertyChanged "Layer"
 End Property
 
 Public Property Get Layer() As LayerNumbers
@@ -342,30 +323,37 @@ End Property
 
 Public Property Let Name(ByVal value As String)
 mName = value
+firePropertyChanged "Name"
 End Property
 
 Public Property Get OutlineThickness() As Long
 OutlineThickness = mStyle.OutlineThickness
-If isPropertyOverrideFlagSet(OutlineThicknessIsSet) Then OutlineThickness = mOutlineThickness
+If isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then OutlineThickness = mOutlineThickness
 End Property
 
 Public Property Let OutlineThickness(ByVal value As Long)
-If mOutlineThickness = value And isPropertyOverrideFlagSet(OutlineThicknessIsSet) Then Exit Property
+If mOutlineThickness = value And isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then Exit Property
 mOutlineThickness = value
-setPropertyOverrideFlag OutlineThicknessIsSet
+setPropertyOverrideFlag BarIsSetOutlineThickness
 repaintRegion False
+firePropertyChanged "OutlineThickness"
+End Property
+
+Friend Property Get SeriesUpdateNumber() As Long
+SeriesUpdateNumber = mSeriesUpdateNumber
 End Property
 
 Public Property Get SolidUpBody() As Boolean
 SolidUpBody = mStyle.SolidUpBody
-If isPropertyOverrideFlagSet(SolidUpBodyIsSet) Then SolidUpBody = mSolidUpBody
+If isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then SolidUpBody = mSolidUpBody
 End Property
 
 Public Property Let SolidUpBody(ByVal value As Boolean)
-If mSolidUpBody = value And isPropertyOverrideFlagSet(SolidUpBodyIsSet) Then Exit Property
+If mSolidUpBody = value And isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then Exit Property
 mSolidUpBody = value
-setPropertyOverrideFlag SolidUpBodyIsSet
+setPropertyOverrideFlag BarIsSetSolidUpBody
 repaintRegion False
+firePropertyChanged "SolidUpBody"
 End Property
 
 Public Property Get Style() As BarStyle
@@ -386,11 +374,12 @@ End If
 Set mStyle = value
 repaintRegion True
 
+firePropertyChanged "Style"
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -399,26 +388,54 @@ End Property
 
 Public Property Get TailThickness() As Long
 TailThickness = mStyle.TailThickness
-If isPropertyOverrideFlagSet(TailThicknessIsSet) Then TailThickness = mTailThickness
+If isPropertyOverrideFlagSet(BarIsSetTailThickness) Then TailThickness = mTailThickness
 End Property
 
 Public Property Let TailThickness(ByVal value As Long)
-If mTailThickness = value And isPropertyOverrideFlagSet(TailThicknessIsSet) Then Exit Property
+If mTailThickness = value And isPropertyOverrideFlagSet(BarIsSetTailThickness) Then Exit Property
 mTailThickness = value
-setPropertyOverrideFlag TailThicknessIsSet
+setPropertyOverrideFlag BarIsSetTailThickness
 repaintRegion False
+firePropertyChanged "TailThickness"
 End Property
 
-Public Property Get UpColor() As OLE_COLOR
+Public Property Get Thickness() As Long
+Thickness = mStyle.Thickness
+If isPropertyOverrideFlagSet(BarIsSetThickness) Then Thickness = mThickness
+End Property
+
+Public Property Let Thickness(ByVal value As Long)
+If mThickness = value And isPropertyOverrideFlagSet(BarIsSetThickness) Then Exit Property
+mThickness = value
+setPropertyOverrideFlag BarIsSetThickness
+repaintRegion False
+firePropertyChanged "Thickness"
+End Property
+
+Public Property Get UpColor() As Long
 UpColor = mStyle.UpColor
-If isPropertyOverrideFlagSet(UpColorIsSet) Then UpColor = mUpColor
+If isPropertyOverrideFlagSet(BarIsSetUpColor) Then UpColor = mUpColor
 End Property
 
-Public Property Let UpColor(ByVal value As OLE_COLOR)
-If mUpColor = value And isPropertyOverrideFlagSet(UpColorIsSet) Then Exit Property
+Public Property Let UpColor(ByVal value As Long)
+If mUpColor = value And isPropertyOverrideFlagSet(BarIsSetUpColor) Then Exit Property
 mUpColor = value
-setPropertyOverrideFlag UpColorIsSet
+setPropertyOverrideFlag BarIsSetUpColor
 repaintRegion False
+firePropertyChanged "UpColor"
+End Property
+
+Public Property Get Width() As Single
+Width = mStyle.Width
+If isPropertyOverrideFlagSet(BarIsSetWidth) Then Width = mWidth
+End Property
+
+Public Property Let Width(ByVal value As Single)
+If mWidth = value And isPropertyOverrideFlagSet(BarIsSetWidth) Then Exit Property
+mWidth = value
+setPropertyOverrideFlag BarIsSetWidth
+repaintRegion True
+firePropertyChanged "Width"
 End Property
 
 '================================================================================
@@ -436,14 +453,14 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
 
 Set Add = New Bar
 
-Add.X = mChart.GetXFromTimestamp(Timestamp, True)
+Add.X = chartObj.GetXFromTimestamp(Timestamp, True)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
 Add.Initialise Me, Timestamp, Key, mGOSP, mCanvas, LocalStyle
 
 mBars.Add Add, Key
-mGOSP.AddGraphicObject Add, mSeriesID
+mGOSP.AddGraphicObject Add
 End Function
 
 Public Sub ClearOverrides()
@@ -463,7 +480,7 @@ End Function
 Public Sub RemoveObject(ByVal value As ChartSkil26.Bar)
 On Error GoTo Err
 mBars.Remove value.Key
-mGOSP.RemoveObject value.Handle
+mGOSP.RemoveObject value.handle
 
 Exit Sub
 
@@ -480,13 +497,26 @@ End Function
 ' Helper Functions
 '================================================================================
 
+Private Function chartObj() As Chart
+Set chartObj = mChartRef.Target
+End Function
+
 Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As PropertyOverrideFlags)
+                ByVal flag As BarPropertyOverrideFlags)
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
 
+Private Sub firePropertyChanged( _
+                ByVal Name As String)
+Dim ev As PropertyChangedEvent
+
+Set ev.Source = Me
+ev.PropertyName = Name
+RaiseEvent PropertyChanged(ev)
+End Sub
+
 Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As PropertyOverrideFlags) As Boolean
+                ByVal flag As BarPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
 End Function
 
@@ -494,6 +524,7 @@ Private Sub repaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 If mBars.Count <> 0 Then
     If recalcBoundaries Then
+        mSeriesUpdateNumber = mSeriesUpdateNumber + 1
         mGOSP.RecalcBoundary mSeriesID
         mGOSP.PaintRegion True
     Else
@@ -503,7 +534,7 @@ End If
 End Sub
 
 Private Sub setPropertyOverrideFlag( _
-                ByVal flag As PropertyOverrideFlags)
+                ByVal flag As BarPropertyOverrideFlags)
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 End Sub
 

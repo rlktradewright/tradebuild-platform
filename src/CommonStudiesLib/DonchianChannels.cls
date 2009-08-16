@@ -92,7 +92,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 Set mLowerCache = mStudyFoundation.FindValueCache(DoncValueLower)
@@ -110,62 +110,62 @@ On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
-If Not mStudyFoundation.isNewBar Then
+If Not mStudyFoundation.IsNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
 sPrevVal = ev.sVal.value
 
-If mStudyFoundation.isNewBar Then
+If mStudyFoundation.IsNewBar Then
     numValues = numValues + 1
     mCurrHigh = ev.sVal.value
     mCurrLow = ev.sVal.value
-    mHighCache.addValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mLowcache.addValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mHighCache.AddValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mLowcache.AddValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     If numValues >= mPeriods Then
         mUpper = DummyHigh
         For i = 1 To mPeriods - 1
-            If mHighCache.getValue(i) > mUpper Then
-                mUpper = mHighCache.getValue(i)
+            If mHighCache.GetValue(i) > mUpper Then
+                mUpper = mHighCache.GetValue(i)
             End If
         Next
-        mUpperCache.addValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        mUpperCache.AddValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         notifyValue mUpper, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         
         mLower = DummyLow
         For i = 1 To mPeriods - 1
-            If mLowcache.getValue(i) < mLower Then
-                mLower = mLowcache.getValue(i)
+            If mLowcache.GetValue(i) < mLower Then
+                mLower = mLowcache.GetValue(i)
             End If
         Next
-        mLowerCache.addValue mLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        mLowerCache.AddValue mLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         notifyValue mLower, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     Else
-        mUpperCache.addValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        mUpperCache.AddValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         notifyValue Empty, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-        mLowerCache.addValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        mLowerCache.AddValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         notifyValue Empty, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     End If
 End If
 
 If ev.sVal.value > mCurrHigh Then
     mCurrHigh = ev.sVal.value
-    mHighCache.updateValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp
+    mHighCache.UpdateValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 If ev.sVal.value < mCurrLow Then
     mCurrLow = ev.sVal.value
-    mLowcache.updateValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp
+    mLowcache.UpdateValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp
 End If
     
 If numValues < mPeriods Then Exit Sub
 
 If ev.sVal.value > mUpper Then
     mUpper = ev.sVal.value
-    mUpperCache.updateValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp
+    mUpperCache.UpdateValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp
     notifyValue mUpper, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
 If ev.sVal.value < mLower Then
     mLower = ev.sVal.value
-    mLowerCache.updateValue mLower, ev.sVal.barNumber, ev.sVal.timestamp
+    mLowerCache.UpdateValue mLower, ev.sVal.barNumber, ev.sVal.timestamp
     notifyValue mLower, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
 
@@ -173,7 +173,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -181,7 +181,7 @@ Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
-customNumberOfBarsRequired = mPeriods + mHighCache.cyclicSize
+customNumberOfBarsRequired = mPeriods + mHighCache.CyclicSize
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
@@ -203,7 +203,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -223,11 +223,11 @@ End Function
 '@================================================================================
 
 Public Property Get lower(Optional ByVal ref As Long) As SValue
-lower = mLowerCache.getSValue(ref)
+lower = mLowerCache.GetSValue(ref)
 End Property
 
 Public Property Get upper(Optional ByVal ref As Long) As SValue
-upper = mUpperCache.getSValue(ref)
+upper = mUpperCache.GetSValue(ref)
 End Property
 
 '@================================================================================
@@ -273,7 +273,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -287,7 +287,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -320,7 +320,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -339,21 +339,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -367,7 +367,7 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _

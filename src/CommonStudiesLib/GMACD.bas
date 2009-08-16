@@ -84,6 +84,7 @@ If mStudyDefinition Is Nothing Then
                         "histogram."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(MACDInputValue)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
@@ -91,20 +92,26 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACD)
     valueDef.Description = "The MACD value"
     valueDef.isDefault = True
+    valueDef.IncludeInChart = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDSignal)
     valueDef.Description = "The MACD signal value"
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.IncludeInChart = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDHist)
     valueDef.Description = "The MACD histogram value"
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.IncludeInChart = True
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(displayMode:=DataPointDisplayModeHistogram, downColor:=&H43FC2, upColor:=&H1D9311)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrengthCount)
@@ -112,24 +119,28 @@ If mStudyDefinition Is Nothing Then
                             "strength value has not changed"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlack, displayMode:=DataPointDisplayModeHistogram)
     valueDef.valueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrength)
     valueDef.Description = "An indication of the strength of the current move"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(displayMode:=DataPointDisplayModeHistogram, downColor:=&H43FC2, upColor:=&H1D9311)
     valueDef.valueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDUpperBalance)
     valueDef.Description = "The price above which is confirmed strength"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDLowerBalance)
     valueDef.Description = "The price below which is confirmed weakness"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamShortPeriods)

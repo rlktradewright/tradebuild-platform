@@ -13,7 +13,7 @@ Begin VB.UserControl StudyConfigurer
       Caption         =   "Horizontal lines"
       Height          =   735
       Left            =   5040
-      TabIndex        =   37
+      TabIndex        =   36
       Top             =   4200
       Width           =   7095
       Begin VB.PictureBox LinesPicture 
@@ -24,14 +24,14 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          ScaleHeight     =   375
          ScaleWidth      =   6900
-         TabIndex        =   38
+         TabIndex        =   37
          Top             =   240
          Width           =   6900
          Begin VB.TextBox LineText 
             Height          =   285
             Index           =   4
             Left            =   5280
-            TabIndex        =   43
+            TabIndex        =   42
             Top             =   0
             Width           =   615
          End
@@ -39,7 +39,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   3
             Left            =   3960
-            TabIndex        =   42
+            TabIndex        =   41
             Top             =   0
             Width           =   615
          End
@@ -47,7 +47,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   2
             Left            =   2640
-            TabIndex        =   41
+            TabIndex        =   40
             Top             =   0
             Width           =   615
          End
@@ -55,7 +55,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   1
             Left            =   1320
-            TabIndex        =   40
+            TabIndex        =   39
             Top             =   0
             Width           =   615
          End
@@ -63,52 +63,52 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   0
             Left            =   0
-            TabIndex        =   39
+            TabIndex        =   38
             Top             =   0
             Width           =   615
          End
          Begin VB.Label LineColorLabel 
-            BackColor       =   &H00FF0000&
+            BackColor       =   &H00000000&
             Height          =   285
             Index           =   4
             Left            =   6000
-            TabIndex        =   48
-            Top             =   0
-            Width           =   255
-         End
-         Begin VB.Label LineColorLabel 
-            BackColor       =   &H00FF0000&
-            Height          =   285
-            Index           =   3
-            Left            =   4680
             TabIndex        =   47
             Top             =   0
             Width           =   255
          End
          Begin VB.Label LineColorLabel 
-            BackColor       =   &H00FF0000&
+            BackColor       =   &H00000000&
             Height          =   285
-            Index           =   2
-            Left            =   3360
+            Index           =   3
+            Left            =   4680
             TabIndex        =   46
             Top             =   0
             Width           =   255
          End
          Begin VB.Label LineColorLabel 
-            BackColor       =   &H00FF0000&
+            BackColor       =   &H00000000&
             Height          =   285
-            Index           =   1
-            Left            =   2040
+            Index           =   2
+            Left            =   3360
             TabIndex        =   45
             Top             =   0
             Width           =   255
          End
          Begin VB.Label LineColorLabel 
-            BackColor       =   &H00FF0000&
+            BackColor       =   &H00000000&
+            Height          =   285
+            Index           =   1
+            Left            =   2040
+            TabIndex        =   44
+            Top             =   0
+            Width           =   255
+         End
+         Begin VB.Label LineColorLabel 
+            BackColor       =   &H00000000&
             Height          =   285
             Index           =   0
             Left            =   720
-            TabIndex        =   44
+            TabIndex        =   43
             Top             =   0
             Width           =   255
          End
@@ -118,7 +118,7 @@ Begin VB.UserControl StudyConfigurer
       Caption         =   "Output values"
       Height          =   4095
       Left            =   5040
-      TabIndex        =   17
+      TabIndex        =   16
       Top             =   0
       Width           =   7095
       Begin VB.PictureBox ValuesPicture 
@@ -129,7 +129,7 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          ScaleHeight     =   3735
          ScaleWidth      =   6855
-         TabIndex        =   18
+         TabIndex        =   17
          Top             =   240
          Width           =   6855
          Begin MSComDlg.CommonDialog CommonDialog1 
@@ -144,7 +144,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   5400
-            TabIndex        =   50
+            TabIndex        =   49
             ToolTipText     =   "Click to select the font"
             Top             =   240
             Width           =   615
@@ -154,7 +154,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   6360
-            TabIndex        =   28
+            TabIndex        =   27
             ToolTipText     =   "Click for advanced features"
             Top             =   240
             Width           =   495
@@ -163,7 +163,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   195
             Index           =   0
             Left            =   1920
-            TabIndex        =   24
+            TabIndex        =   23
             ToolTipText     =   "Set this to ensure that all values are visible when the chart is auto-scaling"
             Top             =   240
             Width           =   210
@@ -173,7 +173,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   4320
-            TabIndex        =   25
+            TabIndex        =   24
             Text            =   "1"
             ToolTipText     =   "Choose the thickness of lines or points"
             Top             =   240
@@ -183,7 +183,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   195
             Index           =   0
             Left            =   1560
-            TabIndex        =   19
+            TabIndex        =   18
             ToolTipText     =   "Set to include this study value in the chart"
             Top             =   240
             Width           =   195
@@ -192,7 +192,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   5160
-            TabIndex        =   27
+            TabIndex        =   26
             ToolTipText     =   "Choose the line style (ignored if thickness is greater than 1)"
             Top             =   240
             Width           =   1095
@@ -207,7 +207,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   3240
-            TabIndex        =   23
+            TabIndex        =   22
             ToolTipText     =   "Select how to display this value"
             Top             =   240
             Width           =   975
@@ -222,7 +222,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   4800
-            TabIndex        =   26
+            TabIndex        =   25
             Top             =   240
             Width           =   255
             _ExtentX        =   450
@@ -246,7 +246,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Scale"
             Height          =   255
             Left            =   1680
-            TabIndex        =   34
+            TabIndex        =   33
             Top             =   0
             Width           =   495
          End
@@ -254,7 +254,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Value name"
             Height          =   255
             Left            =   0
-            TabIndex        =   30
+            TabIndex        =   29
             Top             =   0
             Width           =   975
          End
@@ -262,7 +262,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Show"
             Height          =   255
             Left            =   1320
-            TabIndex        =   49
+            TabIndex        =   48
             Top             =   0
             Width           =   495
          End
@@ -271,7 +271,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   2865
-            TabIndex        =   22
+            TabIndex        =   21
             Top             =   240
             Width           =   255
          End
@@ -280,7 +280,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   2520
-            TabIndex        =   21
+            TabIndex        =   20
             Top             =   240
             Width           =   255
          End
@@ -291,7 +291,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   2175
-            TabIndex        =   20
+            TabIndex        =   19
             ToolTipText     =   "Click to change the colour for this value"
             Top             =   240
             Width           =   255
@@ -300,7 +300,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Advanced"
             Height          =   255
             Left            =   6120
-            TabIndex        =   36
+            TabIndex        =   35
             Top             =   0
             Width           =   735
          End
@@ -309,7 +309,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Style"
             Height          =   255
             Left            =   5040
-            TabIndex        =   35
+            TabIndex        =   34
             Top             =   0
             Width           =   1095
          End
@@ -317,7 +317,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Thickness"
             Height          =   255
             Left            =   4320
-            TabIndex        =   33
+            TabIndex        =   32
             Top             =   0
             Width           =   975
          End
@@ -326,7 +326,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Display as"
             Height          =   255
             Left            =   3120
-            TabIndex        =   32
+            TabIndex        =   31
             Top             =   0
             Width           =   975
          End
@@ -334,7 +334,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Colors"
             Height          =   255
             Left            =   2400
-            TabIndex        =   31
+            TabIndex        =   30
             Top             =   0
             Width           =   495
          End
@@ -343,7 +343,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   0
-            TabIndex        =   29
+            TabIndex        =   28
             Top             =   240
             Width           =   1575
          End
@@ -353,7 +353,7 @@ Begin VB.UserControl StudyConfigurer
       Caption         =   "Parameters"
       Height          =   4935
       Left            =   2520
-      TabIndex        =   13
+      TabIndex        =   12
       Top             =   0
       Width           =   2415
       Begin VB.PictureBox Picture1 
@@ -364,14 +364,14 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          ScaleHeight     =   4575
          ScaleWidth      =   2175
-         TabIndex        =   14
+         TabIndex        =   13
          Top             =   240
          Width           =   2175
          Begin VB.CheckBox ParameterValueCheck 
             Height          =   255
             Index           =   0
             Left            =   1320
-            TabIndex        =   6
+            TabIndex        =   5
             Top             =   1440
             Visible         =   0   'False
             Width           =   255
@@ -380,7 +380,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   1320
-            TabIndex        =   4
+            TabIndex        =   3
             Top             =   480
             Visible         =   0   'False
             Width           =   855
@@ -393,7 +393,7 @@ Begin VB.UserControl StudyConfigurer
          Begin VB.TextBox ParameterValueTemplateText 
             Height          =   330
             Left            =   1320
-            TabIndex        =   5
+            TabIndex        =   4
             TabStop         =   0   'False
             Top             =   960
             Visible         =   0   'False
@@ -403,7 +403,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   1320
-            TabIndex        =   3
+            TabIndex        =   2
             Top             =   0
             Visible         =   0   'False
             Width           =   570
@@ -412,7 +412,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   1920
-            TabIndex        =   15
+            TabIndex        =   14
             Top             =   0
             Visible         =   0   'False
             Width           =   255
@@ -434,7 +434,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   0
-            TabIndex        =   16
+            TabIndex        =   15
             Top             =   0
             Width           =   1335
          End
@@ -447,7 +447,7 @@ Begin VB.UserControl StudyConfigurer
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   12
+      TabIndex        =   11
       TabStop         =   0   'False
       Top             =   5040
       Width           =   12135
@@ -456,37 +456,38 @@ Begin VB.UserControl StudyConfigurer
       Caption         =   "Inputs"
       Height          =   4935
       Left            =   0
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   0
       Width           =   2415
+      Begin MSComctlLib.TreeView BaseStudiesTree 
+         Height          =   1815
+         Left            =   120
+         TabIndex        =   50
+         Top             =   1080
+         Width           =   2175
+         _ExtentX        =   3836
+         _ExtentY        =   3201
+         _Version        =   393217
+         HideSelection   =   0   'False
+         LabelEdit       =   1
+         SingleSel       =   -1  'True
+         Appearance      =   0
+      End
       Begin VB.PictureBox Picture2 
          BorderStyle     =   0  'None
          Height          =   4575
          Left            =   120
          ScaleHeight     =   4575
          ScaleWidth      =   2175
-         TabIndex        =   8
+         TabIndex        =   7
          Top             =   240
          Width           =   2175
          Begin MSComctlLib.ImageCombo InputValueCombo 
             Height          =   330
             Index           =   0
             Left            =   0
-            TabIndex        =   2
-            Top             =   1440
-            Width           =   2175
-            _ExtentX        =   3836
-            _ExtentY        =   582
-            _Version        =   393216
-            ForeColor       =   -2147483640
-            BackColor       =   -2147483643
-            Locked          =   -1  'True
-         End
-         Begin MSComctlLib.ImageCombo BaseStudiesCombo 
-            Height          =   330
-            Left            =   0
             TabIndex        =   1
-            Top             =   840
+            Top             =   3000
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -512,7 +513,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Chart region"
             Height          =   255
             Left            =   0
-            TabIndex        =   11
+            TabIndex        =   10
             Top             =   0
             Width           =   1335
          End
@@ -520,7 +521,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Base study"
             Height          =   255
             Left            =   0
-            TabIndex        =   10
+            TabIndex        =   9
             Top             =   600
             Width           =   1215
          End
@@ -529,8 +530,8 @@ Begin VB.UserControl StudyConfigurer
             Height          =   255
             Index           =   0
             Left            =   0
-            TabIndex        =   9
-            Top             =   1200
+            TabIndex        =   8
+            Top             =   2760
             Width           =   1455
          End
       End
@@ -561,6 +562,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const CompatibleNode As String = "YES"
+
 Private Const RegionDefault As String = "Use default"
 Private Const RegionCustom As String = "Use own region"
 
@@ -576,19 +579,27 @@ Private Const RegionCustom As String = "Use own region"
 ' Member variables
 '@================================================================================
 
-Private mController As chartController
+Private mChart As ChartController
 Private mStudyname As String
 Private mStudyLibraryName As String
 
 Private mStudyDefinition As StudyDefinition
 
-Private mConfiguredStudies As StudyConfigurations
+Private mBaseStudyConfig As StudyConfiguration
 
 Private mNextTabIndex As Long
 
-Private mDefaultConfiguration As studyConfiguration
+Private mDefaultConfiguration As StudyConfiguration
 
 Private mFonts() As StdFont
+
+Private mFirstCompatibleNode As Node
+
+Private mCompatibleStudies As Collection
+
+Private mPrevSelectedBaseStudiesTreeNode As Node
+
+Private mStudyValueRegionNames() As String
 
 '@================================================================================
 ' Form Event Handlers
@@ -610,11 +621,17 @@ Private Sub AdvancedButton_Click(Index As Integer)
 notImplemented
 End Sub
 
-Private Sub BaseStudiesCombo_Click()
+Private Sub BaseStudiesTree_Click()
 Dim i As Long
-For i = 0 To mStudyDefinition.studyInputDefinitions.Count - 1
-    initialiseInputValueCombo i
-Next
+BaseStudiesTree.SelectedItem.Expanded = True
+If Not BaseStudiesTree.SelectedItem.Tag = CompatibleNode Then
+    Set BaseStudiesTree.SelectedItem = mPrevSelectedBaseStudiesTreeNode
+Else
+    Set mPrevSelectedBaseStudiesTreeNode = BaseStudiesTree.SelectedItem
+    For i = 0 To mStudyDefinition.studyInputDefinitions.Count - 1
+        initialiseInputValueCombo i
+    Next
+End If
 End Sub
 
 Private Sub ColorLabel_Click( _
@@ -623,7 +640,7 @@ Dim studyValueDef As StudyValueDefinition
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
 ColorLabel(Index).BackColor = chooseAColor(ColorLabel(Index).BackColor, _
-                                            IIf(studyValueDef.valueMode = ValueModeBar, True, False))
+                                            IIf(studyValueDef.ValueMode = ValueModeBar, True, False))
 
 End Sub
 
@@ -637,25 +654,25 @@ If Not mDefaultConfiguration Is Nothing Then
     Set studyValueconfig = mDefaultConfiguration.StudyValueConfigurations.item(Index + 1)
 End If
 
-Select Case studyValueDef.valueMode
+Select Case studyValueDef.ValueMode
 Case ValueModeNone
-    Dim dpStyle As dataPointStyle
+    Dim dpStyle As DataPointStyle
     
     If Not studyValueconfig Is Nothing Then
-        Set dpStyle = studyValueconfig.dataPointStyle
+        Set dpStyle = studyValueconfig.DataPointStyle
     Else
-        Set dpStyle = mController.defaultDataPointStyle
+        Set dpStyle = New DataPointStyle
     End If
         
     Select Case DisplayModeCombo(Index).SelectedItem.text
     Case PointDisplayModeLine
-        initialiseLineStyleCombo StyleCombo(Index), dpStyle.lineStyle
+        initialiseLineStyleCombo StyleCombo(Index), dpStyle.LineStyle
     Case PointDisplayModePoint
-        initialisePointStyleCombo StyleCombo(Index), dpStyle.pointStyle
+        initialisePointStyleCombo StyleCombo(Index), dpStyle.PointStyle
     Case PointDisplayModeSteppedLine
-        initialiseLineStyleCombo StyleCombo(Index), dpStyle.lineStyle
+        initialiseLineStyleCombo StyleCombo(Index), dpStyle.LineStyle
     Case PointDisplayModeHistogram
-        initialiseHistogramStyleCombo StyleCombo(Index), dpStyle.histBarWidth
+        initialiseHistogramStyleCombo StyleCombo(Index), dpStyle.HistogramBarWidth
     End Select
 Case ValueModeLine
 
@@ -679,8 +696,8 @@ Dim allowNullColor As Boolean
 
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
-If studyValueDef.valueMode = ValueModeBar Or _
-    studyValueDef.valueMode = ValueModeNone Then allowNullColor = True
+If studyValueDef.ValueMode = ValueModeBar Or _
+    studyValueDef.ValueMode = ValueModeNone Then allowNullColor = True
 
 DownColorLabel(Index).BackColor = chooseAColor(DownColorLabel(Index).BackColor, _
                                             allowNullColor)
@@ -734,8 +751,8 @@ Dim allowNullColor As Boolean
 
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
-If studyValueDef.valueMode = ValueModeBar Or _
-    studyValueDef.valueMode = ValueModeNone Then allowNullColor = True
+If studyValueDef.ValueMode = ValueModeBar Or _
+    studyValueDef.ValueMode = ValueModeNone Then allowNullColor = True
 
 UpColorLabel(Index).BackColor = chooseAColor(UpColorLabel(Index).BackColor, _
                                             allowNullColor)
@@ -750,8 +767,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get studyConfiguration() As studyConfiguration
-Dim studyConfig As studyConfiguration
+Public Property Get StudyConfiguration() As StudyConfiguration
+Dim studyConfig As StudyConfiguration
 Dim params As Parameters
 Dim studyParamDef As StudyParameterDefinition
 Dim studyValueDefs As studyValueDefinitions
@@ -761,19 +778,13 @@ Dim studyHorizRule As StudyHorizontalRule
 Dim regionName As String
 Dim inputValueNames() As String
 Dim i As Long
-Dim scfg As studyConfiguration
 
-Set studyConfig = New studyConfiguration
+Set studyConfig = New StudyConfiguration
 'studyConfig.studyDefinition = mStudyDefinition
 studyConfig.name = mStudyname
 studyConfig.StudyLibraryName = mStudyLibraryName
-If Not BaseStudiesCombo.SelectedItem Is Nothing Then
-    For Each scfg In mConfiguredStudies
-        If scfg.Study.id = BaseStudiesCombo.SelectedItem.Tag Then
-            studyConfig.underlyingStudy = scfg.Study
-            Exit For
-        End If
-    Next
+If Not BaseStudiesTree.SelectedItem Is Nothing Then
+    studyConfig.UnderlyingStudy = mCompatibleStudies(BaseStudiesTree.SelectedItem.Key)
 End If
 
 ReDim inputValueNames(mStudyDefinition.studyInputDefinitions.Count - 1) As String
@@ -785,30 +796,30 @@ Next
 studyConfig.inputValueNames = inputValueNames
 
 If ChartRegionCombo.SelectedItem.text = RegionDefault Then
-    Select Case mStudyDefinition.defaultRegion
+    Select Case mStudyDefinition.DefaultRegion
     Case DefaultRegionNone
-        regionName = RegionNameDefault
+        regionName = ChartRegionNameDefault
     Case DefaultRegionCustom
-        regionName = RegionNameCustom
+        regionName = ChartRegionNameCustom
     End Select
 ElseIf ChartRegionCombo.SelectedItem.text = RegionCustom Then
-    regionName = RegionNameCustom
+    regionName = ChartRegionNameCustom
 Else
     regionName = ChartRegionCombo.SelectedItem.text
 End If
-studyConfig.chartRegionName = regionName
+studyConfig.ChartRegionName = regionName
 
 Set params = New Parameters
 
 For i = 0 To mStudyDefinition.studyParameterDefinitions.Count - 1
     Set studyParamDef = mStudyDefinition.studyParameterDefinitions.item(i + 1)
-    If studyParamDef.parameterType = ParameterTypeBoolean Then
-        params.setParameterValue ParameterNameLabel(i).Caption, _
+    If studyParamDef.ParameterType = ParameterTypeBoolean Then
+        params.SetParameterValue ParameterNameLabel(i).Caption, _
                                 IIf(ParameterValueCheck(i) = vbChecked, "True", "False")
     ElseIf ParameterValueText(i).Visible Then
-        params.setParameterValue ParameterNameLabel(i).Caption, ParameterValueText(i).text
+        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueText(i).text
     Else
-        params.setParameterValue ParameterNameLabel(i).Caption, ParameterValueCombo(i).text
+        params.SetParameterValue ParameterNameLabel(i).Caption, ParameterValueCombo(i).text
     End If
 Next
 
@@ -820,216 +831,220 @@ For i = 0 To ValueNameLabel.UBound
     Set studyValueDef = studyValueDefs.item(i + 1)
     
     Set studyValueconfig = studyConfig.StudyValueConfigurations.Add(ValueNameLabel(i).Caption)
-    studyValueconfig.includeInChart = (IncludeCheck(i).value = vbChecked)
+    studyValueconfig.IncludeInChart = (IncludeCheck(i).value = vbChecked)
     
-    Select Case studyValueDef.defaultRegion
-    Case DefaultRegionNone
-        studyValueconfig.chartRegionName = RegionNameDefault
-    Case DefaultRegionCustom
-        studyValueconfig.chartRegionName = RegionNameCustom
-    End Select
+    If mStudyValueRegionNames(i) <> "" Then
+        studyValueconfig.ChartRegionName = mStudyValueRegionNames(i)
+    Else
+        Select Case studyValueDef.DefaultRegion
+        Case DefaultRegionNone
+            studyValueconfig.ChartRegionName = ChartRegionNameDefault
+        Case DefaultRegionCustom
+            studyValueconfig.ChartRegionName = ChartRegionNameCustom
+        End Select
+    End If
     
-    Select Case studyValueDef.valueMode
+    Select Case studyValueDef.ValueMode
     Case ValueModeNone
-        Dim dpStyle As dataPointStyle
+        Dim dpStyle As DataPointStyle
         
-        Set dpStyle = mController.defaultDataPointStyle
+        Set dpStyle = New DataPointStyle
         
-        dpStyle.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
+        dpStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         dpStyle.Color = ColorLabel(i).BackColor
-        dpStyle.downColor = IIf(DownColorLabel(i).BackColor = NullColor, _
+        dpStyle.DownColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                             -1, _
                             DownColorLabel(i).BackColor)
-        dpStyle.upColor = IIf(UpColorLabel(i).BackColor = NullColor, _
+        dpStyle.UpColor = IIf(UpColorLabel(i).BackColor = NullColor, _
                             -1, _
                             UpColorLabel(i).BackColor)
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case PointDisplayModeLine
-            dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+            dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
             Select Case StyleCombo(i).SelectedItem.text
             Case LineStyleSolid
-                dpStyle.lineStyle = LineSolid
+                dpStyle.LineStyle = LineSolid
             Case LineStyleDash
-                dpStyle.lineStyle = LineDash
+                dpStyle.LineStyle = LineDash
             Case LineStyleDot
-                dpStyle.lineStyle = LineDot
+                dpStyle.LineStyle = LineDot
             Case LineStyleDashDot
-                dpStyle.lineStyle = LineDashDot
+                dpStyle.LineStyle = LineDashDot
             Case LineStyleDashDotDot
-                dpStyle.lineStyle = LineDashDotDot
+                dpStyle.LineStyle = LineDashDotDot
             End Select
         Case PointDisplayModePoint
-            dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModePoint
+            dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModePoint
             Select Case StyleCombo(i).SelectedItem.text
             Case PointStyleRound
-                dpStyle.pointStyle = PointRound
+                dpStyle.PointStyle = PointRound
             Case PointStyleSquare
-                dpStyle.pointStyle = PointSquare
+                dpStyle.PointStyle = PointSquare
             End Select
         Case PointDisplayModeSteppedLine
-            dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeStep
+            dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep
             Select Case StyleCombo(i).SelectedItem.text
             Case LineStyleSolid
-                dpStyle.lineStyle = LineSolid
+                dpStyle.LineStyle = LineSolid
             Case LineStyleDash
-                dpStyle.lineStyle = LineDash
+                dpStyle.LineStyle = LineDash
             Case LineStyleDot
-                dpStyle.lineStyle = LineDot
+                dpStyle.LineStyle = LineDot
             Case LineStyleDashDot
-                dpStyle.lineStyle = LineDashDot
+                dpStyle.LineStyle = LineDashDot
             Case LineStyleDashDotDot
-                dpStyle.lineStyle = LineDashDotDot
+                dpStyle.LineStyle = LineDashDotDot
             End Select
         Case PointDisplayModeHistogram
-            dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
+            dpStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
             Select Case StyleCombo(i).SelectedItem.text
             Case HistogramStyleNarrow
-                dpStyle.histBarWidth = HistogramWidthNarrow
+                dpStyle.HistogramBarWidth = HistogramWidthNarrow
             Case HistogramStyleMedium
-                dpStyle.histBarWidth = HistogramWidthMedium
+                dpStyle.HistogramBarWidth = HistogramWidthMedium
             Case HistogramStyleWide
-                dpStyle.histBarWidth = HistogramWidthWide
+                dpStyle.HistogramBarWidth = HistogramWidthWide
             Case CustomStyle
-                dpStyle.histBarWidth = CSng(StyleCombo(i).SelectedItem.Tag)
+                dpStyle.HistogramBarWidth = CSng(StyleCombo(i).SelectedItem.Tag)
             End Select
         End Select
         
-        dpStyle.lineThickness = ThicknessText(i).text
+        dpStyle.LineThickness = ThicknessText(i).text
         
-        studyValueconfig.dataPointStyle = dpStyle
+        studyValueconfig.DataPointStyle = dpStyle
     Case ValueModeLine
-        Dim lnStyle As lineStyle
+        Dim lnStyle As LineStyle
 
-        Set lnStyle = mController.defaultLineStyle
+        Set lnStyle = New LineStyle
         
-        lnStyle.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
+        lnStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         lnStyle.Color = ColorLabel(i).BackColor
-        lnStyle.arrowStartColor = ColorLabel(i).BackColor
-        lnStyle.arrowEndColor = ColorLabel(i).BackColor
-        lnStyle.arrowStartFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
+        lnStyle.ArrowStartColor = ColorLabel(i).BackColor
+        lnStyle.ArrowEndColor = ColorLabel(i).BackColor
+        lnStyle.ArrowStartFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
                                         -1, _
                                         UpColorLabel(i).BackColor)
-        lnStyle.arrowEndFillColor = IIf(DownColorLabel(i).BackColor = NullColor, _
+        lnStyle.ArrowEndFillColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                                         -1, _
                                         DownColorLabel(i).BackColor)
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case LineDisplayModePlain
-            lnStyle.arrowEndStyle = ArrowNone
-            lnStyle.arrowStartStyle = ArrowNone
+            lnStyle.ArrowEndStyle = ArrowNone
+            lnStyle.ArrowStartStyle = ArrowNone
         Case LineDisplayModeArrowEnd
-            lnStyle.arrowEndStyle = ArrowClosed
-            lnStyle.arrowStartStyle = ArrowNone
+            lnStyle.ArrowEndStyle = ArrowClosed
+            lnStyle.ArrowStartStyle = ArrowNone
         Case LineDisplayModeArrowStart
-            lnStyle.arrowEndStyle = ArrowNone
-            lnStyle.arrowStartStyle = ArrowClosed
+            lnStyle.ArrowEndStyle = ArrowNone
+            lnStyle.ArrowStartStyle = ArrowClosed
         Case LineDisplayModeArrowBoth
-            lnStyle.arrowEndStyle = ArrowClosed
-            lnStyle.arrowStartStyle = ArrowClosed
+            lnStyle.ArrowEndStyle = ArrowClosed
+            lnStyle.ArrowStartStyle = ArrowClosed
         End Select
             
         Select Case StyleCombo(i).SelectedItem.text
         Case LineStyleSolid
-            lnStyle.lineStyle = LineSolid
+            lnStyle.LineStyle = LineSolid
         Case LineStyleDash
-            lnStyle.lineStyle = LineDash
+            lnStyle.LineStyle = LineDash
         Case LineStyleDot
-            lnStyle.lineStyle = LineDot
+            lnStyle.LineStyle = LineDot
         Case LineStyleDashDot
-            lnStyle.lineStyle = LineDashDot
+            lnStyle.LineStyle = LineDashDot
         Case LineStyleDashDotDot
-            lnStyle.lineStyle = LineDashDotDot
+            lnStyle.LineStyle = LineDashDotDot
         End Select
         
-        lnStyle.thickness = ThicknessText(i).text
+        lnStyle.Thickness = ThicknessText(i).text
         ' temporary fix until ChartSkil improves drawing of non-extended lines
-        lnStyle.extended = True
+        lnStyle.Extended = True
         
-        studyValueconfig.lineStyle = lnStyle
+        studyValueconfig.LineStyle = lnStyle
     
     Case ValueModeBar
-        Dim brStyle As barStyle
+        Dim brStyle As BarStyle
         
-        Set brStyle = mController.defaultBarStyle
+        Set brStyle = New BarStyle
         
-        brStyle.barColor = IIf(ColorLabel(i).BackColor = NullColor, _
+        brStyle.Color = IIf(ColorLabel(i).BackColor = NullColor, _
                             -1, _
                             ColorLabel(i).BackColor)
-        brStyle.downColor = IIf(DownColorLabel(i).BackColor = NullColor, _
+        brStyle.DownColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                             -1, _
                             DownColorLabel(i).BackColor)
-        brStyle.upColor = UpColorLabel(i).BackColor
+        brStyle.UpColor = UpColorLabel(i).BackColor
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case BarModeBar
-            brStyle.displayMode = BarDisplayModes.BarDisplayModeBar
-            brStyle.barThickness = ThicknessText(i).text
+            brStyle.DisplayMode = BarDisplayModes.BarDisplayModeBar
+            brStyle.Thickness = ThicknessText(i).text
         Case BarModeCandle
-            brStyle.displayMode = BarDisplayModes.BarDisplayModeCandlestick
-            brStyle.solidUpBody = False
-            brStyle.tailThickness = ThicknessText(i).text
+            brStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
+            brStyle.SolidUpBody = False
+            brStyle.TailThickness = ThicknessText(i).text
         Case BarModeSolidCandle
-            brStyle.displayMode = BarDisplayModes.BarDisplayModeCandlestick
-            brStyle.solidUpBody = True
-            brStyle.tailThickness = ThicknessText(i).text
+            brStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
+            brStyle.SolidUpBody = True
+            brStyle.TailThickness = ThicknessText(i).text
         Case BarModeLine
-            brStyle.displayMode = BarDisplayModes.BarDisplayModeLine
+            brStyle.DisplayMode = BarDisplayModes.BarDisplayModeLine
         End Select
         
         Select Case StyleCombo(i).SelectedItem.text
         Case BarStyleNarrow
-            brStyle.barWidth = BarWidthNarrow
+            brStyle.Width = BarWidthNarrow
         Case BarStyleMedium
-            brStyle.barWidth = BarWidthMedium
+            brStyle.Width = BarWidthMedium
         Case BarStyleWide
-            brStyle.barWidth = BarWidthWide
+            brStyle.Width = BarWidthWide
         Case CustomStyle
-            brStyle.barWidth = CSng(StyleCombo(i).SelectedItem.Tag)
+            brStyle.Width = CSng(StyleCombo(i).SelectedItem.Tag)
         End Select
         
-        studyValueconfig.barStyle = brStyle
+        studyValueconfig.BarStyle = brStyle
     
     Case ValueModeText
-        Dim txStyle As textStyle
+        Dim txStyle As TextStyle
 
-        Set txStyle = mController.defaultLineStyle
+        Set txStyle = New LineStyle
         
-        txStyle.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
+        txStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         txStyle.Color = ColorLabel(i).BackColor
-        txStyle.boxFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
+        txStyle.BoxFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
                                         -1, _
                                         UpColorLabel(i).BackColor)
-        txStyle.boxColor = IIf(DownColorLabel(i).BackColor = NullColor, _
+        txStyle.BoxColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                                         -1, _
                                         DownColorLabel(i).BackColor)
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case TextDisplayModePlain
-            txStyle.box = False
+            txStyle.Box = False
         Case TextDisplayModeWIthBackground
-            txStyle.box = True
-            txStyle.boxStyle = LineInvisible
-            txStyle.boxFillStyle = FillSolid
+            txStyle.Box = True
+            txStyle.BoxStyle = LineInvisible
+            txStyle.BoxFillStyle = FillSolid
         Case TextDisplayModeWithBox
-            txStyle.box = True
-            txStyle.boxStyle = LineInsideSolid
-            txStyle.boxFillStyle = FillTransparent
+            txStyle.Box = True
+            txStyle.BoxStyle = LineInsideSolid
+            txStyle.BoxFillStyle = FillTransparent
         Case TextDisplayModeWithFilledBox
-            txStyle.box = True
-            txStyle.boxStyle = LineInsideSolid
-            txStyle.boxFillStyle = FillSolid
+            txStyle.Box = True
+            txStyle.BoxStyle = LineInsideSolid
+            txStyle.BoxFillStyle = FillSolid
         End Select
             
         If TypeName(FontButton(i).Tag) <> "Nothing" Then
             txStyle.Font = mFonts(i)
         End If
         
-        txStyle.boxThickness = ThicknessText(i).text
+        txStyle.BoxThickness = ThicknessText(i).text
         ' temporary fix until ChartSkil improves drawing of non-extended texts
-        txStyle.extended = True
+        txStyle.Extended = True
         
-        studyValueconfig.textStyle = txStyle
+        studyValueconfig.TextStyle = txStyle
     
 
     End Select
@@ -1039,55 +1054,105 @@ Next
 For i = 0 To 4
     If LineText(i).text <> "" Then
         Set studyHorizRule = studyConfig.StudyHorizontalRules.Add
-        studyHorizRule.y = LineText(i).text
+        studyHorizRule.Y = LineText(i).text
         studyHorizRule.Color = LineColorLabel(i).BackColor
     End If
 Next
 
-Set studyConfiguration = studyConfig
+Set StudyConfiguration = studyConfig
 End Property
 
 '@================================================================================
 ' methods
 '@================================================================================
 
-Public Sub clear()
+Public Sub Clear()
 initialiseControls
 End Sub
 
-Public Sub initialise( _
-                ByVal controller As chartController, _
+Public Sub Initialise( _
+                ByVal pChart As ChartController, _
                 ByVal studyDef As StudyDefinition, _
                 ByVal StudyLibraryName As String, _
                 ByRef regionNames() As String, _
-                ByVal configuredStudies As StudyConfigurations, _
-                ByVal defaultConfiguration As studyConfiguration, _
-                ByVal defaultParameters As Parameters)
+                ByRef baseStudyConfig As StudyConfiguration, _
+                ByVal defaultConfiguration As StudyConfiguration, _
+                ByVal defaultParameters As Parameters, _
+                ByVal noParameterModification As Boolean)
                 
 If Not defaultConfiguration Is Nothing And defaultParameters Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuildUI.StudyConfigurer::initialise", _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "TradeBuildUI.StudyConfigurer::Initialise", _
             "DefaultConfiguration and DefaultParameters cannot both be Nothing"
 End If
 
 initialiseControls
 
-Set mController = controller
+Set mChart = pChart
 Set mStudyDefinition = studyDef
 mStudyLibraryName = StudyLibraryName
-Set mConfiguredStudies = configuredStudies
+Set mBaseStudyConfig = baseStudyConfig
 Set mDefaultConfiguration = defaultConfiguration
 
 processRegionNames regionNames
 
-setupBaseStudiesCombo
+setupBaseStudiesTree
 
-processStudyDefinition defaultParameters
+processStudyDefinition defaultParameters, noParameterModification
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub addBaseStudiesTreeEntry( _
+                ByVal studyConfig As StudyConfiguration, _
+                ByVal parentStudyConfig As StudyConfiguration)
+Dim lNode As Node
+Dim parentNode As Node
+Dim childStudyConfig As StudyConfiguration
+
+If studyConfig Is Nothing Then Exit Sub
+
+If Not mDefaultConfiguration Is Nothing Then
+    If mDefaultConfiguration.Study Is studyConfig.Study Then Exit Sub
+End If
+
+If parentStudyConfig Is Nothing Then
+    Set lNode = BaseStudiesTree.Nodes.Add(, _
+                                TreeRelationshipConstants.tvwChild, _
+                                studyConfig.Study.Id, _
+                                studyConfig.Study.InstanceName)
+Else
+    Set parentNode = BaseStudiesTree.Nodes.item(parentStudyConfig.Study.Id)
+    Set lNode = BaseStudiesTree.Nodes.Add(parentNode, _
+                                TreeRelationshipConstants.tvwChild, _
+                                studyConfig.Study.Id, _
+                                studyConfig.Study.InstanceName)
+    parentNode.Expanded = True
+End If
+
+If (Not TypeOf studyConfig.Study Is InputStudy Or _
+    Not mStudyDefinition.NeedsBars) _
+Then
+    If studiesCompatible(studyConfig.Study.StudyDefinition, mStudyDefinition) Then
+        lNode.Tag = CompatibleNode
+        If mPrevSelectedBaseStudiesTreeNode Is Nothing Then Set mPrevSelectedBaseStudiesTreeNode = lNode
+        mCompatibleStudies.Add studyConfig.Study, lNode.Key
+        If mFirstCompatibleNode Is Nothing Then
+            lNode.selected = True
+            Set mFirstCompatibleNode = lNode
+        End If
+    Else
+        lNode.BackColor = &HC0C0C0
+        lNode.ForeColor = &H808080
+    End If
+End If
+
+For Each childStudyConfig In studyConfig.StudyConfigurations
+    addBaseStudiesTreeEntry childStudyConfig, studyConfig
+Next
+End Sub
 
 Private Function chooseAColor( _
                 ByVal initialColor As Long, _
@@ -1097,8 +1162,8 @@ Dim cursorpos As W32Point
 
 GetCursorPos cursorpos
 
-simpleColorPicker.Top = cursorpos.y * Screen.TwipsPerPixelY
-simpleColorPicker.Left = cursorpos.x * Screen.TwipsPerPixelX
+simpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
+simpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
 simpleColorPicker.initialColor = initialColor
 If allowNull Then simpleColorPicker.NoColorButton.Enabled = True
 simpleColorPicker.Show vbModal, UserControl
@@ -1110,6 +1175,8 @@ Private Sub initialiseControls()
 Dim i As Long
 
 On Error Resume Next
+
+ReDim mFonts(0) As StdFont
 
 For i = InputValueNameLabel.UBound To 1 Step -1
     Unload InputValueNameLabel(i)
@@ -1137,7 +1204,7 @@ For i = ParameterValueCombo.UBound To 1 Step -1
     Unload ParameterValueCombo(i)
 Next
 ParameterValueCombo(0).text = ""
-ParameterValueCombo(0).ComboItems.clear
+ParameterValueCombo(0).ComboItems.Clear
 ParameterValueCombo(0).Visible = False
 
 For i = ParameterValueCheck.UBound To 1 Step -1
@@ -1203,11 +1270,15 @@ For i = FontButton.UBound To 1 Step -1
     Unload FontButton(i)
 Next
 
-ReDim mFonts(0) As StdFont
-
 For i = AdvancedButton.UBound To 1 Step -1
     Unload AdvancedButton(i)
 Next
+
+For i = 0 To LineText.UBound
+    LineText(i).text = ""
+    LineColorLabel(i).BackColor = vbBlack
+Next
+
 
 End Sub
 
@@ -1216,7 +1287,7 @@ Private Sub initialiseBarDisplayModeCombo( _
                 ByVal pDisplayMode As BarDisplayModes, _
                 ByVal pSolid As Boolean)
 Dim item As ComboItem
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , BarModeBar)
 If pDisplayMode = BarDisplayModeBar Then item.selected = True
@@ -1241,7 +1312,7 @@ Private Sub initialiseBarStyleCombo( _
 Dim item As ComboItem
 Dim selected As Boolean
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , BarStyleMedium)
 If barWidth = BarWidthMedium Then item.selected = True: selected = True
@@ -1269,7 +1340,7 @@ Private Sub initialiseHistogramStyleCombo( _
 Dim item As ComboItem
 Dim selected As Boolean
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , HistogramStyleMedium)
 If histBarWidth = HistogramWidthMedium Then item.selected = True: selected = True
@@ -1293,25 +1364,22 @@ End Sub
 
 Private Sub initialiseInputValueCombo( _
                 ByVal Index As Long)
+Dim lstudy As Study
 Dim studyValueDefs As studyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim inputDef As StudyInputDefinition
-Dim item As ComboItem
-Dim i As Long
 Dim selIndex As Long
 
-If mConfiguredStudies Is Nothing Then Exit Sub
-
-Set item = BaseStudiesCombo.SelectedItem
-Set studyValueDefs = mConfiguredStudies.item(item.Key).Study.StudyDefinition.studyValueDefinitions
+Set lstudy = mCompatibleStudies(BaseStudiesTree.SelectedItem.Key)
+Set studyValueDefs = lstudy.StudyDefinition.studyValueDefinitions
 Set inputDef = mStudyDefinition.studyInputDefinitions.item(Index + 1)
 
-InputValueCombo(Index).ComboItems.clear
+InputValueCombo(Index).ComboItems.Clear
 
 selIndex = -1
-InputValueCombo(Index).ComboItems.Add , , ""
+'InputValueCombo(Index).ComboItems.Add , , ""
 For Each valueDef In studyValueDefs
-    If typesCompatible(valueDef.valueType, inputDef.inputType) Then
+    If typesCompatible(valueDef.valueType, inputDef.InputType) Then
         InputValueCombo(Index).ComboItems.Add , , valueDef.name
         If UCase$(inputDef.name) = UCase$(valueDef.name) Then selIndex = InputValueCombo(Index).ComboItems.Count
         If valueDef.isDefault And _
@@ -1319,8 +1387,10 @@ For Each valueDef In studyValueDefs
     End If
 Next
 
-If InputValueCombo(Index).ComboItems.Count <> 0 And selIndex <> -1 Then
-    InputValueCombo(Index).ComboItems(IIf(selIndex <> 0, selIndex, 1)).selected = True
+If selIndex <> -1 Then
+    InputValueCombo(Index).ComboItems(selIndex).selected = True
+ElseIf InputValueCombo(Index).ComboItems.Count <> 0 Then
+    InputValueCombo(Index).ComboItems(1).selected = True
 End If
 
 InputValueCombo(Index).Refresh
@@ -1331,7 +1401,7 @@ Private Sub initialiseLineDisplayModeCombo( _
                 ByVal pArrowStart As Boolean, _
                 ByVal pArrowEnd As Boolean)
 Dim item As ComboItem
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , LineDisplayModePlain)
 If Not pArrowStart And Not pArrowEnd Then item.selected = True
@@ -1355,7 +1425,7 @@ Private Sub initialiseLineStyleCombo( _
                 ByVal pLineStyle As LineStyles)
 Dim item As ComboItem
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , LineStyleSolid)
 If pLineStyle = LineSolid Then item.selected = True
@@ -1382,7 +1452,7 @@ Private Sub initialisePointDisplayModeCombo( _
                 ByVal pDisplayMode As DataPointDisplayModes)
 Dim item As ComboItem
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , PointDisplayModeLine)
 If pDisplayMode = DataPointDisplayModeLine Then item.selected = True
@@ -1404,7 +1474,7 @@ Private Sub initialisePointStyleCombo( _
                 ByVal pPointStyle As PointStyles)
 Dim item As ComboItem
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , PointStyleRound)
 If pPointStyle = PointRound Then item.selected = True
@@ -1428,7 +1498,7 @@ Private Sub initialiseTextDisplayModeCombo( _
 Dim item As ComboItem
 Dim selected As Boolean
 
-combo.ComboItems.clear
+combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , TextDisplayModePlain)
 If Not pBox Then item.selected = True: selected = True
@@ -1460,7 +1530,7 @@ Private Sub processRegionNames( _
                 ByRef regionNames() As String)
 Dim i As Long
 
-ChartRegionCombo.ComboItems.clear
+ChartRegionCombo.ComboItems.Clear
 
 ChartRegionCombo.ComboItems.Add , , RegionDefault
 ChartRegionCombo.ComboItems.Add , , RegionCustom
@@ -1473,8 +1543,10 @@ ChartRegionCombo.Refresh
 End Sub
 
 Private Sub processStudyDefinition( _
-                ByVal defaultParams As Parameters)
+                ByVal defaultParams As Parameters, _
+                ByVal noParameterModification As Boolean)
 Dim i As Long
+Dim j As Long
 Dim studyInputDefinitions As studyInputDefinitions
 Dim studyParameterDefinitions As studyParameterDefinitions
 Dim studyValueDefinitions As studyValueDefinitions
@@ -1490,6 +1562,8 @@ Dim permittedParamValues() As Variant
 Dim permittedParamValue As Variant
 Dim numPermittedParamValues As Long
 Dim defaultParamValue As String
+Dim inputValueNames() As String
+Dim noInputModification As Boolean
 
 mNextTabIndex = 2
 
@@ -1504,23 +1578,34 @@ End If
 StudyDescriptionText.text = mStudyDefinition.Description
 
 If Not mDefaultConfiguration Is Nothing Then
-    If mDefaultConfiguration.chartRegionName = mDefaultConfiguration.instanceFullyQualifiedName Then
+    If mDefaultConfiguration.ChartRegionName = mDefaultConfiguration.InstanceFullyQualifiedName Then
         '
         setComboSelection ChartRegionCombo, RegionCustom
     Else
-        setComboSelection ChartRegionCombo, mDefaultConfiguration.chartRegionName
+        setComboSelection ChartRegionCombo, mDefaultConfiguration.ChartRegionName
     End If
     
-    For i = 1 To BaseStudiesCombo.ComboItems.Count
-        If BaseStudiesCombo.ComboItems(i).Tag = mDefaultConfiguration.underlyingStudy.id Then
-            BaseStudiesCombo.ComboItems(i).selected = True
-            Exit For
+    If Not mDefaultConfiguration.UnderlyingStudy Is Nothing Then
+        If TypeOf mDefaultConfiguration.UnderlyingStudy Is InputStudy Then
+            noInputModification = True
+            mCompatibleStudies.Add mDefaultConfiguration.UnderlyingStudy, mDefaultConfiguration.UnderlyingStudy.Id
+            BaseStudiesTree.Nodes.Clear
+            BaseStudiesTree.Nodes.Add , _
+                                    , _
+                                    mDefaultConfiguration.UnderlyingStudy.Id, _
+                                    mDefaultConfiguration.UnderlyingStudy.InstanceName
+            BaseStudiesTree.Nodes(1).selected = True
+            BaseStudiesTree.Enabled = False
+        Else
+            BaseStudiesTree.Nodes(mDefaultConfiguration.UnderlyingStudy.Id).selected = True
         End If
-    Next
+    End If
     
 End If
 
 Set studyInputDefinitions = mStudyDefinition.studyInputDefinitions
+If Not mDefaultConfiguration Is Nothing Then inputValueNames = mDefaultConfiguration.inputValueNames
+
 For i = 1 To studyInputDefinitions.Count
     Set studyinput = studyInputDefinitions.item(i)
     If i = 1 Then
@@ -1538,11 +1623,10 @@ For i = 1 To studyInputDefinitions.Count
     InputValueCombo(i - 1).ToolTipText = studyinput.Description
 
     initialiseInputValueCombo i - 1
-    If Not mDefaultConfiguration Is Nothing Then
-        Dim inputValueNames() As String
-        inputValueNames = mDefaultConfiguration.inputValueNames
-        setComboSelection InputValueCombo(i - 1), inputValueNames(i - 1)
-    End If
+    If Not mDefaultConfiguration Is Nothing Then setComboSelection InputValueCombo(i - 1), _
+                                                                    inputValueNames(i - 1)
+    
+    If noInputModification Then InputValueCombo(i - 1).Enabled = False
     
 Next
 
@@ -1589,7 +1673,7 @@ For i = 1 To studyParameterDefinitions.Count
         ParameterValueCheck(i - 1).Top = ParameterValueCombo(i - 2).Top + 360
     End If
     
-    permittedParamValues = studyParam.permittedValues
+    permittedParamValues = studyParam.PermittedValues
     
     numPermittedParamValues = -1
     On Error Resume Next
@@ -1600,10 +1684,12 @@ For i = 1 To studyParameterDefinitions.Count
             ParameterValueCombo(i - 1).ComboItems.Add , , permittedParamValue
         Next
         ParameterValueCombo(i - 1).Visible = True
-    ElseIf studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Then
+        ParameterValueCombo(i - 1).Enabled = (Not noParameterModification)
+    ElseIf studyParam.ParameterType = StudyParameterTypes.ParameterTypeInteger Then
         ParameterValueUpDown(i - 1).Min = 1
         ParameterValueUpDown(i - 1).Max = 255
         ParameterValueUpDown(i - 1).Visible = True
+        ParameterValueUpDown(i - 1).Enabled = (Not noParameterModification)
         If i <> 1 Then
             ParameterValueUpDown(i - 1).BuddyControl = ParameterValueText(i - 1)
             ' the following line is necessary because for some reason VB resizes
@@ -1619,19 +1705,22 @@ For i = 1 To studyParameterDefinitions.Count
             firstParamIsInteger = True
         End If
         ParameterValueText(i - 1).Visible = True
-    ElseIf studyParam.parameterType = StudyParameterTypes.ParameterTypeBoolean Then
+        ParameterValueText(i - 1).Enabled = (Not noParameterModification)
+    ElseIf studyParam.ParameterType = StudyParameterTypes.ParameterTypeBoolean Then
         ParameterValueCheck(i - 1).Visible = True
+        ParameterValueCheck(i - 1).Enabled = (Not noParameterModification)
     Else
         If i = 1 Then
             ParameterValueUpDown(0).Visible = False
             ParameterValueText(0).Width = ParameterValueTemplateText.Width
         End If
         ParameterValueText(i - 1).Visible = True
+        ParameterValueText(i - 1).Enabled = (Not noParameterModification)
     End If
     
     ParameterNameLabel(i - 1).Caption = studyParam.name
-    defaultParamValue = defaultParams.getParameterValue(studyParam.name)
-    If studyParam.parameterType = StudyParameterTypes.ParameterTypeBoolean Then
+    defaultParamValue = defaultParams.GetParameterValue(studyParam.name)
+    If studyParam.ParameterType = StudyParameterTypes.ParameterTypeBoolean Then
         Select Case UCase$(defaultParamValue)
         Case "Y", "YES", "T", "TRUE", "1"
             ParameterValueCheck(i - 1) = vbChecked
@@ -1646,8 +1735,8 @@ For i = 1 To studyParameterDefinitions.Count
         ParameterValueCombo(i - 1).ToolTipText = studyParam.Description
     End If
     
-    If studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Or _
-        studyParam.parameterType = StudyParameterTypes.ParameterTypeReal _
+    If studyParam.ParameterType = StudyParameterTypes.ParameterTypeInteger Or _
+        studyParam.ParameterType = StudyParameterTypes.ParameterTypeReal _
     Then
         ParameterValueText(i - 1).Alignment = AlignmentConstants.vbRightJustify
     Else
@@ -1664,10 +1753,24 @@ ThicknessUpDown(0).TabIndex = nextTabIndex
 StyleCombo(0).TabIndex = nextTabIndex
 
 Set studyValueDefinitions = mStudyDefinition.studyValueDefinitions
+ReDim mStudyValueRegionNames(studyValueDefinitions.Count - 1) As String
+j = 1
 For i = 1 To studyValueDefinitions.Count
     Set studyValueDef = studyValueDefinitions.item(i)
     If Not studyValueconfigs Is Nothing Then
-        Set studyValueconfig = studyValueconfigs.item(i)
+        Set studyValueconfig = Nothing
+                
+        On Error Resume Next
+        Set studyValueconfig = studyValueconfigs.item(j)
+        On Error GoTo 0
+        If Not studyValueconfig Is Nothing Then
+            If studyValueconfig.valueName = studyValueDef.name Then
+                mStudyValueRegionNames(i - 1) = studyValueconfig.ChartRegionName
+                j = j + 1
+            Else
+                Set studyValueconfig = Nothing
+            End If
+        End If
     End If
     
     If i = 1 Then
@@ -1761,9 +1864,15 @@ For i = 1 To studyValueDefinitions.Count
     ValueNameLabel(i - 1).Caption = studyValueDef.name
     ValueNameLabel(i - 1).ToolTipText = studyValueDef.Description
 
-    Select Case studyValueDef.valueMode
+    If Not studyValueconfig Is Nothing Then
+        IncludeCheck(i - 1) = IIf(studyValueconfig.IncludeInChart, vbChecked, vbUnchecked)
+    Else
+        IncludeCheck(i - 1) = IIf(studyValueDef.IncludeInChart, vbChecked, vbUnchecked)
+    End If
+        
+    Select Case studyValueDef.ValueMode
     Case ValueModeNone
-        Dim dpStyle As dataPointStyle
+        Dim dpStyle As DataPointStyle
         
         ColorLabel(i - 1).ToolTipText = "Select the color for all values"
         
@@ -1777,33 +1886,34 @@ For i = 1 To studyValueDefinitions.Count
         StyleCombo(i - 1).Visible = True
         
         If Not studyValueconfig Is Nothing Then
-            IncludeCheck(i - 1) = IIf(studyValueconfig.includeInChart, vbChecked, vbUnchecked)
-            Set dpStyle = studyValueconfig.dataPointStyle
+            Set dpStyle = studyValueconfig.DataPointStyle
+        ElseIf Not studyValueDef.ValueStyle Is Nothing Then
+            Set dpStyle = studyValueDef.ValueStyle
         Else
-            Set dpStyle = mController.defaultDataPointStyle
+            Set dpStyle = New DataPointStyle
         End If
         
-        AutoscaleCheck(i - 1) = IIf(dpStyle.includeInAutoscale, vbChecked, vbUnchecked)
+        AutoscaleCheck(i - 1) = IIf(dpStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = dpStyle.Color
-        UpColorLabel(i - 1).BackColor = IIf(dpStyle.upColor = -1, NullColor, dpStyle.upColor)
-        DownColorLabel(i - 1).BackColor = IIf(dpStyle.downColor = -1, NullColor, dpStyle.downColor)
+        UpColorLabel(i - 1).BackColor = IIf(dpStyle.UpColor = -1, NullColor, dpStyle.UpColor)
+        DownColorLabel(i - 1).BackColor = IIf(dpStyle.DownColor = -1, NullColor, dpStyle.DownColor)
         
-        initialisePointDisplayModeCombo DisplayModeCombo(i - 1), dpStyle.displayMode
-        Select Case dpStyle.displayMode
+        initialisePointDisplayModeCombo DisplayModeCombo(i - 1), dpStyle.DisplayMode
+        Select Case dpStyle.DisplayMode
         Case DataPointDisplayModes.DataPointDisplayModeLine
-            initialiseLineStyleCombo StyleCombo(i - 1), dpStyle.lineStyle
+            initialiseLineStyleCombo StyleCombo(i - 1), dpStyle.LineStyle
         Case DataPointDisplayModes.DataPointDisplayModePoint
-            initialisePointStyleCombo StyleCombo(i - 1), dpStyle.pointStyle
+            initialisePointStyleCombo StyleCombo(i - 1), dpStyle.PointStyle
         Case DataPointDisplayModes.DataPointDisplayModeStep
-            initialiseLineStyleCombo StyleCombo(i - 1), dpStyle.lineStyle
+            initialiseLineStyleCombo StyleCombo(i - 1), dpStyle.LineStyle
         Case DataPointDisplayModes.DataPointDisplayModeHistogram
-            initialiseHistogramStyleCombo StyleCombo(i - 1), dpStyle.histBarWidth
+            initialiseHistogramStyleCombo StyleCombo(i - 1), dpStyle.HistogramBarWidth
         End Select
         
-        ThicknessText(i - 1).text = dpStyle.lineThickness
+        ThicknessText(i - 1).text = dpStyle.LineThickness
         
     Case ValueModeLine
-        Dim lnStyle As lineStyle
+        Dim lnStyle As LineStyle
         
         ColorLabel(i - 1).ToolTipText = "Select the color for the line"
         
@@ -1817,27 +1927,26 @@ For i = 1 To studyValueDefinitions.Count
         StyleCombo(i - 1).Visible = True
         
         If Not studyValueconfig Is Nothing Then
-            IncludeCheck(i - 1) = IIf(studyValueconfig.includeInChart, vbChecked, vbUnchecked)
-            Set lnStyle = studyValueconfig.lineStyle
+            Set lnStyle = studyValueconfig.LineStyle
         Else
-            Set lnStyle = mController.defaultLineStyle
+            Set lnStyle = New LineStyle
         End If
         
-        AutoscaleCheck(i - 1) = IIf(lnStyle.includeInAutoscale, vbChecked, vbUnchecked)
+        AutoscaleCheck(i - 1) = IIf(lnStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = lnStyle.Color
-        UpColorLabel(i - 1).BackColor = IIf(lnStyle.arrowStartFillColor = -1, NullColor, lnStyle.arrowStartFillColor)
-        DownColorLabel(i - 1).BackColor = IIf(lnStyle.arrowEndFillColor = -1, NullColor, lnStyle.arrowEndFillColor)
+        UpColorLabel(i - 1).BackColor = IIf(lnStyle.ArrowStartFillColor = -1, NullColor, lnStyle.ArrowStartFillColor)
+        DownColorLabel(i - 1).BackColor = IIf(lnStyle.ArrowEndFillColor = -1, NullColor, lnStyle.ArrowEndFillColor)
         
         initialiseLineDisplayModeCombo DisplayModeCombo(i - 1), _
-                                        (lnStyle.arrowStartStyle <> ArrowNone), _
-                                        (lnStyle.arrowEndStyle <> ArrowNone)
+                                        (lnStyle.ArrowStartStyle <> ArrowNone), _
+                                        (lnStyle.ArrowEndStyle <> ArrowNone)
     
-        initialiseLineStyleCombo StyleCombo(i - 1), lnStyle.lineStyle
+        initialiseLineStyleCombo StyleCombo(i - 1), lnStyle.LineStyle
         
-        ThicknessText(i - 1).text = lnStyle.thickness
+        ThicknessText(i - 1).text = lnStyle.Thickness
         
     Case ValueModeBar
-        Dim brStyle As barStyle
+        Dim brStyle As BarStyle
         
         ColorLabel(i - 1).ToolTipText = "Optionally, select the color for the bar or the candlestick frame"
         
@@ -1851,36 +1960,35 @@ For i = 1 To studyValueDefinitions.Count
         StyleCombo(i - 1).Visible = True
         
         If Not studyValueconfig Is Nothing Then
-            IncludeCheck(i - 1) = IIf(studyValueconfig.includeInChart, vbChecked, vbUnchecked)
-            Set brStyle = studyValueconfig.barStyle
+            Set brStyle = studyValueconfig.BarStyle
         Else
-            Set brStyle = mController.defaultBarStyle
+            Set brStyle = New BarStyle
         End If
         
-        AutoscaleCheck(i - 1) = IIf(brStyle.includeInAutoscale, vbChecked, vbUnchecked)
-        ColorLabel(i - 1).BackColor = IIf(brStyle.barColor = -1, NullColor, brStyle.barColor)
-        UpColorLabel(i - 1).BackColor = IIf(brStyle.upColor = -1, NullColor, brStyle.upColor)
-        DownColorLabel(i - 1).BackColor = IIf(brStyle.downColor = -1, NullColor, brStyle.downColor)
+        AutoscaleCheck(i - 1) = IIf(brStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
+        ColorLabel(i - 1).BackColor = IIf(brStyle.Color = -1, NullColor, brStyle.Color)
+        UpColorLabel(i - 1).BackColor = IIf(brStyle.UpColor = -1, NullColor, brStyle.UpColor)
+        DownColorLabel(i - 1).BackColor = IIf(brStyle.DownColor = -1, NullColor, brStyle.DownColor)
         
         initialiseBarDisplayModeCombo DisplayModeCombo(i - 1), _
-                                        brStyle.displayMode, _
-                                        brStyle.solidUpBody
+                                        brStyle.DisplayMode, _
+                                        brStyle.SolidUpBody
         
-        initialiseBarStyleCombo StyleCombo(i - 1), brStyle.barWidth
+        initialiseBarStyleCombo StyleCombo(i - 1), brStyle.Width
         
         Select Case DisplayModeCombo(i - 1).SelectedItem.text
         Case BarModeBar
-            ThicknessText(i - 1).text = brStyle.barThickness
+            ThicknessText(i - 1).text = brStyle.Thickness
         Case BarModeCandle
-            ThicknessText(i - 1).text = brStyle.tailThickness
+            ThicknessText(i - 1).text = brStyle.TailThickness
         Case BarModeSolidCandle
-            ThicknessText(i - 1).text = brStyle.tailThickness
+            ThicknessText(i - 1).text = brStyle.TailThickness
         Case BarModeLine
-            ThicknessText(i - 1).text = brStyle.barThickness
+            ThicknessText(i - 1).text = brStyle.Thickness
         End Select
         
     Case ValueModeText
-        Dim txStyle As textStyle
+        Dim txStyle As TextStyle
         
         ColorLabel(i - 1).ToolTipText = "Select the color for the text"
         
@@ -1895,26 +2003,25 @@ For i = 1 To studyValueDefinitions.Count
         FontButton(i - 1).Visible = True
         
         If Not studyValueconfig Is Nothing Then
-            IncludeCheck(i - 1) = IIf(studyValueconfig.includeInChart, vbChecked, vbUnchecked)
-            Set txStyle = studyValueconfig.textStyle
+            Set txStyle = studyValueconfig.TextStyle
         Else
-            Set txStyle = mController.defaultTextStyle
+            Set txStyle = New TextStyle
         End If
         
-        AutoscaleCheck(i - 1) = IIf(txStyle.includeInAutoscale, vbChecked, vbUnchecked)
+        AutoscaleCheck(i - 1) = IIf(txStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = txStyle.Color
-        UpColorLabel(i - 1).BackColor = IIf(txStyle.boxFillColor = -1, NullColor, txStyle.boxFillColor)
-        DownColorLabel(i - 1).BackColor = IIf(txStyle.boxColor = -1, NullColor, txStyle.boxColor)
+        UpColorLabel(i - 1).BackColor = IIf(txStyle.BoxFillColor = -1, NullColor, txStyle.BoxFillColor)
+        DownColorLabel(i - 1).BackColor = IIf(txStyle.BoxColor = -1, NullColor, txStyle.BoxColor)
         
         initialiseTextDisplayModeCombo DisplayModeCombo(i - 1), _
-                                        txStyle.box, _
-                                        txStyle.boxThickness, _
-                                        txStyle.boxStyle, _
-                                        txStyle.boxColor, _
-                                        txStyle.boxFillStyle, _
-                                        txStyle.boxFillColor
+                                        txStyle.Box, _
+                                        txStyle.BoxThickness, _
+                                        txStyle.BoxStyle, _
+                                        txStyle.BoxColor, _
+                                        txStyle.BoxFillStyle, _
+                                        txStyle.BoxFillColor
     
-        ThicknessText(i - 1).text = txStyle.boxThickness
+        ThicknessText(i - 1).text = txStyle.BoxThickness
         
         Set mFonts(i - 1) = txStyle.Font
         
@@ -1925,7 +2032,7 @@ Next
 If Not studyHorizRules Is Nothing Then
     For i = 1 To studyHorizRules.Count
         Set studyHorizRule = studyHorizRules.item(i)
-        LineText(i - 1) = studyHorizRule.y
+        LineText(i - 1) = studyHorizRule.Y
         LineColorLabel(i - 1).BackColor = studyHorizRule.Color
     Next
 End If
@@ -1943,24 +2050,17 @@ For Each item In combo.ComboItems
 Next
 End Sub
 
-Private Sub setupBaseStudiesCombo()
-Dim studyConfig As studyConfiguration
-Dim item As ComboItem
+Private Sub setupBaseStudiesTree()
+Dim studyConfig As StudyConfiguration
 
-BaseStudiesCombo.ComboItems.clear
-If mConfiguredStudies Is Nothing Then Exit Sub
-For Each studyConfig In mConfiguredStudies
-    If Not TypeOf studyConfig.Study Is InputStudy Or _
-        Not mStudyDefinition.needsBars _
-    Then
-        If studiesCompatible(studyConfig.Study.StudyDefinition, mStudyDefinition) Then
-            Set item = BaseStudiesCombo.ComboItems.Add(, studyConfig.instanceFullyQualifiedName, studyConfig.Study.instanceName)
-            item.Tag = studyConfig.Study.id
-        End If
-    End If
-Next
-BaseStudiesCombo.ComboItems(1).selected = True
-BaseStudiesCombo.Refresh
+BaseStudiesTree.Nodes.Clear
+Set mCompatibleStudies = New Collection
+Set mFirstCompatibleNode = Nothing
+
+If mBaseStudyConfig Is Nothing Then Exit Sub
+
+Set studyConfig = mBaseStudyConfig
+addBaseStudiesTreeEntry studyConfig, Nothing
 
 End Sub
 
@@ -1974,7 +2074,7 @@ Dim i As Long
 For i = 1 To sinkStudyDefinition.studyInputDefinitions.Count
     Set sinkInputDef = sinkStudyDefinition.studyInputDefinitions.item(i)
     For Each sourceValueDef In sourceStudyDefinition.studyValueDefinitions
-        If typesCompatible(sourceValueDef.valueType, sinkInputDef.inputType) Then
+        If typesCompatible(sourceValueDef.valueType, sinkInputDef.InputType) Then
             studiesCompatible = True
             Exit For
         End If

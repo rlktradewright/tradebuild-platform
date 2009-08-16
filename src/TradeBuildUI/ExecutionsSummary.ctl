@@ -102,13 +102,13 @@ Set mMonitoredWorkspaces = New Collection
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.execId, , "Exec id"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.orderId, , "ID"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.Action, , "Action"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.quantity, , "Quant"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.symbol, , "Symb"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.price, , "Price"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.Time, , "Time"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.execId, , "Exec id"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.orderId, , "ID"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Action, , "Action"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.quantity, , "Quant"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.symbol, , "Symb"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.price, , "Price"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
 
 ExecutionsList.SortKey = ExecutionsColumns.Time - 1
 ExecutionsList.SortOrder = lvwDescending
@@ -164,7 +164,7 @@ Set listItem = ExecutionsList.ListItems(exec.execId)
 On Error GoTo 0
 
 If listItem Is Nothing Then
-    Set listItem = ExecutionsList.ListItems.add(, exec.execId, exec.execId)
+    Set listItem = ExecutionsList.ListItems.Add(, exec.execId, exec.execId)
 End If
 
 listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
@@ -216,35 +216,42 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub clear()
-ExecutionsList.ListItems.clear
+Public Sub Clear()
+ExecutionsList.ListItems.Clear
 End Sub
 
-Public Sub finish()
+Public Sub Finish()
 Dim i As Long
-Dim lWorkspace As WorkSpace
+Dim lWorkspace As Workspace
 
+Dim failpoint As Long
 On Error GoTo Err
+
 For i = mMonitoredWorkspaces.count To 1 Step -1
     Set lWorkspace = mMonitoredWorkspaces(i)
     lWorkspace.Executions.removeCollectionChangeListener Me
     mMonitoredWorkspaces.remove i
 Next
 
-clear
+Clear
+
 Exit Sub
+
 Err:
-'ignore any errors
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Finish" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Public Sub monitorWorkspace( _
-                ByVal pWorkspace As WorkSpace)
+                ByVal pWorkspace As Workspace)
 If mSimulated Then
     pWorkspace.ExecutionsSimulated.addCollectionChangeListener Me
 Else
     pWorkspace.Executions.addCollectionChangeListener Me
 End If
-mMonitoredWorkspaces.add pWorkspace
+mMonitoredWorkspaces.Add pWorkspace
 End Sub
                 
 '@================================================================================

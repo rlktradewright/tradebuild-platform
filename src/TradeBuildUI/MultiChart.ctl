@@ -10,16 +10,16 @@ Begin VB.UserControl MultiChart
    ScaleWidth      =   9480
    Begin TradeBuildUI26.TradeBuildChart TBChart 
       Align           =   1  'Align Top
-      Height          =   5415
+      Height          =   4095
       Index           =   0
       Left            =   0
       TabIndex        =   2
       Top             =   0
+      Visible         =   0   'False
       Width           =   9480
       _ExtentX        =   16722
-      _ExtentY        =   9551
+      _ExtentY        =   7223
       ChartBackColor  =   6566450
-      ShowToobar      =   0   'False
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
@@ -37,7 +37,7 @@ Begin VB.UserControl MultiChart
       ImageList       =   "ImageList1"
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   4
+         NumButtons      =   5
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "selecttimeframe"
             Object.ToolTipText     =   "Choose the timeframe for the new chart"
@@ -45,15 +45,21 @@ Begin VB.UserControl MultiChart
             Object.Width           =   1700
          EndProperty
          BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "change"
+            Object.ToolTipText     =   "Change the timeframe for the current chart"
+            ImageIndex      =   3
+            Style           =   1
+         EndProperty
+         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "add"
             Object.ToolTipText     =   "Select a new timeframe and add another chart"
             ImageIndex      =   1
             Style           =   1
          EndProperty
-         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Style           =   3
          EndProperty
-         BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "remove"
             Object.ToolTipText     =   "Remove current chart"
             ImageIndex      =   2
@@ -63,10 +69,9 @@ Begin VB.UserControl MultiChart
          Height          =   330
          Left            =   0
          TabIndex        =   3
-         ToolTipText     =   "Choose the timeframe for the new chart"
          Top             =   0
-         Width           =   1695
-         _ExtentX        =   2990
+         Width           =   1500
+         _ExtentX        =   2646
          _ExtentY        =   582
       End
    End
@@ -81,13 +86,17 @@ Begin VB.UserControl MultiChart
       MaskColor       =   12632256
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-         NumListImages   =   2
+         NumListImages   =   3
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "MultiChart.ctx":0000
             Key             =   ""
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
             Picture         =   "MultiChart.ctx":0452
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "MultiChart.ctx":08A4
             Key             =   ""
          EndProperty
       EndProperty
@@ -133,6 +142,7 @@ Option Explicit
 '@================================================================================
 
 Event Change(ev As ChangeEvent)
+Event ChartStateChanged(ByVal index As Long, ev As StateChangeEvent)
 
 '@================================================================================
 ' Enums
@@ -148,11 +158,23 @@ Event Change(ev As ChangeEvent)
 
 Private Const ModuleName                    As String = "MultiChart"
 
+Private Const ConfigSectionBarFormatterFactory          As String = "BarFormatterFactory"
+Private Const ConfigSectionChartSpecifier               As String = "ChartSpecifier"
+Private Const ConfigSectionTradeBuildCharts             As String = "TradeBuildCharts"
+Private Const ConfigSectionTradeBuildChart              As String = "TradeBuildChart"
+
+Private Const ConfigSettingCurrentChart                 As String = ".CurrentChart"
+Private Const ConfigSettingFromTime                     As String = ".FromTime"
+Private Const ConfigSettingProgId                       As String = "&ProgId"
+Private Const ConfigSettingToTime                       As String = ".ToTime"
+Private Const ConfigSettingTickerKey                    As String = ".TickerKey"
+Private Const ConfigSettingWorkspace                    As String = ".Workspace"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTicker                             As ticker
+Private mTicker                             As Ticker
 Private mSpec                               As ChartSpecifier
 Private mIsHistoric                         As Boolean
 Private mFromTime                           As Date
@@ -165,6 +187,8 @@ Private mBarFormatterFactory                As BarFormatterFactory
 
 Private mChangeListeners                    As Collection
 
+Private mConfig                             As ConfigurationSection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -172,7 +196,8 @@ Private mChangeListeners                    As Collection
 Private Sub UserControl_Initialize()
 Set mIndexes = New Collection
 Set mChangeListeners = New Collection
-ChartSelector.Tabs.clear
+ChartSelector.Tabs.Clear
+TBChart(0).Visible = True
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
@@ -181,6 +206,11 @@ End Sub
 
 Private Sub UserControl_Resize()
 resize
+End Sub
+
+Private Sub UserControl_Terminate()
+gLogger.Log LogLevelDetail, "MultiChart terminated"
+Debug.Print "MultiChart terminated"
 End Sub
 
 '@================================================================================
@@ -196,27 +226,52 @@ switchToChart ChartSelector.selectedItem.index
 End Sub
 
 Private Sub ControlToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
-Select Case Button.Key
-Case "add"
+Select Case UCase$(Button.Key)
+Case "ADD"
     If ControlToolbar.Buttons("add").value = tbrPressed Then
+        ControlToolbar.Buttons("change").value = tbrUnpressed
         showTimeframeSelector
     Else
         hideTimeframeSelector
     End If
-Case "remove"
-    remove mCurrentIndex
+Case "CHANGE"
+    If ControlToolbar.Buttons("change").value = tbrPressed Then
+        ControlToolbar.Buttons("add").value = tbrUnpressed
+        showTimeframeSelector
+    Else
+        hideTimeframeSelector
+    End If
+Case "REMOVE"
+    ControlToolbar.Buttons("add").value = tbrUnpressed
+    ControlToolbar.Buttons("change").value = tbrUnpressed
+    Remove mCurrentIndex
 End Select
 End Sub
 
+Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities30.StateChangeEvent)
+
+If index = mCurrentIndex And ev.State = ChartStates.ChartStateLoaded Then
+    ControlToolbar.Buttons("change").Enabled = True
+End If
+
+RaiseEvent ChartStateChanged(index, ev)
+End Sub
+
 Private Sub TBChart_TimeframeChange(index As Integer)
-ChartSelector.Tabs(getIndexFromChartControlIndex(index)).caption = TBChart(index).TimePeriod.toShortString
+ChartSelector.Tabs(getIndexFromChartControlIndex(index)).caption = TBChart(index).TimePeriod.ToShortString
 fireChange MultiChartTimeframeChanged
 End Sub
 
 Private Sub TimeframeSelector1_Click()
-add TimeframeSelector1.timeframeDesignator
-hideTimeframeSelector
-ControlToolbar.Buttons("add").value = tbrUnpressed
+If ControlToolbar.Buttons("add").value = tbrPressed Then
+    Add TimeframeSelector1.timeframeDesignator
+    hideTimeframeSelector
+    ControlToolbar.Buttons("add").value = tbrUnpressed
+Else
+    Chart.ChangeTimeframe TimeframeSelector1.timeframeDesignator
+    hideTimeframeSelector
+    ControlToolbar.Buttons("change").value = tbrUnpressed
+End If
 End Sub
 
 '@================================================================================
@@ -227,62 +282,59 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get chartController( _
-                Optional ByVal index As Long = -1) As chartController
+Public Property Get BaseChartController( _
+                Optional ByVal index As Long = -1) As ChartController
 Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
-Set chartController = getChartFromIndex(index).chartController
+Set BaseChartController = getChartFromIndex(index).BaseChartController
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "chartController" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "BaseChartController" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Property
 
-Public Property Get chartManager( _
-                Optional ByVal index As Long = -1) As chartManager
-Dim failpoint As Long
-On Error GoTo Err
-
-index = checkIndex(index)
-Set chartManager = getChartFromIndex(index).chartManager
-
-Exit Property
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "chartManager" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-End Property
-
-Public Property Get count() As Long
-count = ChartSelector.Tabs.count
-End Property
-
-Public Property Get Chart( _
+' do not make this Public because the value returned cannot be handled by non-friend
+' components
+Friend Property Get Chart( _
                 Optional ByVal index As Long = -1) As TradeBuildChart
-Dim failpoint As Long
-On Error GoTo Err
-
 index = checkIndex(index)
 Set Chart = getChartFromIndex(index)
+End Property
+
+Public Property Get ChartManager( _
+                Optional ByVal index As Long = -1) As ChartManager
+Dim failpoint As Long
+On Error GoTo Err
+
+index = checkIndex(index)
+Set ChartManager = getChartFromIndex(index).ChartManager
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Chart" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "chartManager" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
+End Property
+
+Public Property Get Count() As Long
+Count = ChartSelector.Tabs.Count
+End Property
+
+Public Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -295,19 +347,25 @@ UserControl.Enabled = value
 PropertyChanged "Enabled"
 End Property
 
-Public Property Get priceRegion( _
+Public Property Get LoadingText( _
+                Optional ByVal index As Long = -1) As Text
+index = checkIndex(index)
+Set LoadingText = getChartFromIndex(index).LoadingText
+End Property
+
+Public Property Get PriceRegion( _
                 Optional ByVal index As Long = -1) As ChartRegion
 Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
-Set priceRegion = getChartFromIndex(index).priceRegion
+Set PriceRegion = getChartFromIndex(index).PriceRegion
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "priceRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "priceRegion" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -325,10 +383,14 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "state" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "state" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
+End Property
+
+Public Property Get Ticker() As Ticker
+Set Ticker = mTicker
 End Property
 
 Public Property Get Timeframe( _
@@ -343,7 +405,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Timeframe" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Timeframe" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -361,25 +423,25 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "TimePeriod" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TimePeriod" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Property
 
-Public Property Get volumeRegion( _
+Public Property Get VolumeRegion( _
                 Optional ByVal index As Long = -1) As ChartRegion
 Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
-Set volumeRegion = getChartFromIndex(index).volumeRegion
+Set VolumeRegion = getChartFromIndex(index).VolumeRegion
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "volumeRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "VolumeRegion" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -389,34 +451,43 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add( _
-                ByVal Timeframe As TimePeriod) As TradeBuildChart
+Public Function Add( _
+                ByVal pTimeframe As TimePeriod) As TradeBuildChart
 Dim lChart As TradeBuildChart
+Dim lSpec As ChartSpecifier
+Dim lTab As MSComctlLib.Tab
 Dim failpoint As Long
 On Error GoTo Err
 
 load TBChart(TBChart.UBound + 1)
-Set lChart = TBChart(TBChart.UBound).Object
+Set lChart = TBChart(TBChart.UBound).object
 TBChart(TBChart.UBound).align = vbAlignTop
 TBChart(TBChart.UBound).Top = 0
 TBChart(TBChart.UBound).Height = ChartSelector.Top
-mSpec.Timeframe = Timeframe
-If mIsHistoric Then
-    lChart.showHistoricChart mTicker, mSpec, mFromTime, mToTime, mBarFormatterFactory
-Else
-    lChart.showChart mTicker, mSpec, mBarFormatterFactory
+Set lSpec = mSpec.Clone
+lSpec.Timeframe = pTimeframe
+
+Set lTab = addTab(pTimeframe)
+If Not mConfig Is Nothing Then
+    lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts).AddConfigurationSection(ConfigSectionTradeBuildChart & "(" & GenerateGUIDString & ")")
 End If
 
-addTab lChart
+If mIsHistoric Then
+    lChart.showHistoricChart mTicker, lSpec, mFromTime, mToTime, mBarFormatterFactory
+Else
+    lChart.showChart mTicker, lSpec, mBarFormatterFactory
+End If
 
 fireChange MultiChartAdd
+
+lTab.Selected = True
 fireChange MultiChartSelectionChanged
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "add" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Add" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -424,7 +495,7 @@ End Function
 
 Public Sub AddChangeListener( _
                 ByVal listener As ChangeListener)
-mChangeListeners.add listener, CStr(ObjPtr(listener))
+mChangeListeners.Add listener, CStr(ObjPtr(listener))
 End Sub
                
 Public Sub ChangeTimeframe(ByVal pTimeframe As TimePeriod)
@@ -437,30 +508,31 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChangeTimeframe" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ChangeTimeframe" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Sub clear()
-Do While ChartSelector.Tabs.count <> 0
-    remove ChartSelector.Tabs.count
+Public Sub Clear()
+Do While ChartSelector.Tabs.Count <> 0
+    Remove ChartSelector.Tabs.Count
 Loop
 End Sub
 
-Public Sub finish()
+Public Sub Finish()
 Dim i As Long
 Dim index As Long
-For i = 1 To mIndexes.count
+For i = 1 To mIndexes.Count
     index = mIndexes(i)
-    getChartFromIndex(index).finish
+    getChartFromIndex(index).Finish
     Unload TBChart(getChartControlIndexFromIndex(index))
 Next
+TBChart(0).Finish
 End Sub
 
 Public Sub Initialise( _
-                ByVal pTicker As ticker, _
+                ByVal pTicker As Ticker, _
                 ByVal chartSpec As ChartSpecifier, _
                 Optional ByVal fromTime As Date, _
                 Optional ByVal toTime As Date, _
@@ -470,31 +542,86 @@ On Error GoTo Err
 
 Set mTicker = pTicker
 Set mSpec = chartSpec
-TBChart(0).ChartBackGradientFillColors = mSpec.ChartBackGradientFillColors
+TBChart(0).ChartBackColor = mSpec.ChartBackColor
 mIsHistoric = (fromTime <> 0 Or toTime <> 0)
 mFromTime = fromTime
 mToTime = toTime
 Set mBarFormatterFactory = BarFormatterFactory
+
 TimeframeSelector1.Initialise
 TimeframeSelector1.selectTimeframe mSpec.Timeframe
+
+storeSettings
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Initialise" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Initialise" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Sub remove( _
+Public Function LoadFromConfig( _
+                ByVal config As ConfigurationSection) As Boolean
+Dim cs As ConfigurationSection
+Dim currentChartIndex As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set mConfig = config
+If mConfig.GetSetting(ConfigSettingWorkspace) = "" Or _
+    mConfig.GetSetting(ConfigSettingTickerKey) = "" _
+Then
+    Exit Function
+End If
+
+Set mTicker = TradeBuildAPI.WorkSpaces(mConfig.GetSetting(ConfigSettingWorkspace)).Tickers(mConfig.GetSetting(ConfigSettingTickerKey))
+Set mSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
+mFromTime = CDate(mConfig.GetSetting(ConfigSettingFromTime, "0"))
+mToTime = CDate(mConfig.GetSetting(ConfigSettingToTime, "0"))
+
+mIsHistoric = (mFromTime <> 0 Or mToTime <> 0)
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionBarFormatterFactory)
+If Not cs Is Nothing Then
+    Set mBarFormatterFactory = CreateObject(cs.GetSetting(ConfigSettingProgId))
+    mBarFormatterFactory.LoadFromConfig cs
+End If
+
+TimeframeSelector1.Initialise
+TimeframeSelector1.selectTimeframe mSpec.Timeframe
+
+currentChartIndex = CLng(mConfig.GetSetting(ConfigSettingCurrentChart, "1"))
+
+For Each cs In mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts)
+    addFromConfig cs
+Next
+
+If ChartSelector.Tabs.Count > 0 Then SelectChart currentChartIndex
+
+LoadFromConfig = True
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadFromConfig" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+
+LoadFromConfig = False
+End Function
+
+Public Sub Remove( _
                 ByVal index As Long)
 Dim nxtIndex As Long
 Dim failpoint As Long
 On Error GoTo Err
 
-If index > count Or index < 1 Then
+If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "Remove", _
             "Index must not be less than 1 or greater than Count"
@@ -512,27 +639,31 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "remove" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Remove" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Public Sub RemoveChangeListener(ByVal listener As ChangeListener)
-mChangeListeners.remove ObjPtr(listener)
+mChangeListeners.Remove ObjPtr(listener)
 End Sub
 
-Public Sub scrollToTime(ByVal pTime As Date)
+Public Sub RemoveFromConfig()
+mConfig.Remove
+End Sub
+
+Public Sub ScrollToTime(ByVal pTime As Date)
 Dim failpoint As Long
 On Error GoTo Err
 
-Chart.scrollToTime pTime
+Chart.ScrollToTime pTime
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "scrollToTime" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ScrollToTime" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -543,7 +674,7 @@ Public Sub SelectChart( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If index > count Or index < 1 Then
+If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "SelectChart", _
             "Index must not be less than 1 or greater than Count"
@@ -555,7 +686,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SelectChart" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SelectChart" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -565,20 +696,35 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addTab( _
-                ByVal pChart As TradeBuildChart)
+Private Sub addFromConfig( _
+                ByVal chartSect As ConfigurationSection)
+Dim lChart As TradeBuildChart
+Dim failpoint As Long
+
+load TBChart(TBChart.UBound + 1)
+Set lChart = TBChart(TBChart.UBound).object
+TBChart(TBChart.UBound).align = vbAlignTop
+TBChart(TBChart.UBound).Top = 0
+TBChart(TBChart.UBound).Height = ChartSelector.Top
+
+lChart.LoadFromConfig chartSect
+
+addTab(lChart.TimePeriod).Selected = True
+End Sub
+
+Private Function addTab( _
+                ByVal pTimePeriod As TimePeriod) As MSComctlLib.Tab
 Static chartNumber As Long
-Dim lTab As MSComctlLib.Tab
 
 chartNumber = chartNumber + 1
-Set lTab = ChartSelector.Tabs.add(, , pChart.TimePeriod.toShortString)
-lTab.Tag = CStr(chartNumber)
+Set addTab = ChartSelector.Tabs.Add(, , pTimePeriod.ToShortString)
+addTab.Tag = CStr(chartNumber)
 
 ControlToolbar.Buttons("remove").Enabled = True
 
-mIndexes.add TBChart.UBound, CStr(chartNumber)
-lTab.Selected = True
-End Sub
+mIndexes.Add TBChart.UBound, CStr(chartNumber)
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, ChartSelector.Tabs.Count
+End Function
 
 Private Function checkIndex( _
                 ByVal index As Long) As Long
@@ -592,7 +738,7 @@ If index = -1 Then
     End If
 End If
 
-If index > count Or index < 1 Then
+If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "checkIndex", _
             "Index must not be less than 1 or greater than Count"
@@ -605,11 +751,12 @@ Private Sub closeChart( _
                 ByVal index As Long)
 Dim lChart As TradeBuildChart
 Set lChart = getChartFromIndex(index)
-lChart.finish
+lChart.RemoveFromConfig
+lChart.Finish
 Unload TBChart(getChartControlIndexFromIndex(index))
-mIndexes.remove ChartSelector.Tabs(index).Tag
-ChartSelector.Tabs.remove index
-If ChartSelector.Tabs.count = 0 Then
+mIndexes.Remove ChartSelector.Tabs(index).Tag
+ChartSelector.Tabs.Remove index
+If ChartSelector.Tabs.Count = 0 Then
     ControlToolbar.Buttons("remove").Enabled = False
     TBChart(0).Visible = True
     TBChart(0).Top = 0
@@ -634,12 +781,12 @@ getChartControlIndexFromIndex = mIndexes(ChartSelector.Tabs(index).Tag)
 End Function
 
 Private Function getChartFromIndex(index) As TradeBuildChart
-Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index)).Object
+Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index))
 End Function
 
 Private Function getIndexFromChartControlIndex(index) As Long
 Dim i As Long
-For i = 1 To ChartSelector.Tabs.count
+For i = 1 To ChartSelector.Tabs.Count
     If getChartControlIndexFromIndex(i) = index Then
         getIndexFromChartControlIndex = i
         Exit For
@@ -650,9 +797,9 @@ End Function
 Private Sub hideChart( _
                 ByVal index As Long)
 Dim lChart As TradeBuildChart
-If index = 0 Or index > count Then Exit Sub
+If index = 0 Or index > Count Then Exit Sub
 Set lChart = getChartFromIndex(index)
-If lChart.State = ChartStateLoaded Then lChart.chartController.SuppressDrawing = True
+If lChart.State = ChartStateLoaded Then lChart.DisableDrawing
 TBChart(getChartControlIndexFromIndex(index)).Visible = False
 End Sub
 
@@ -668,7 +815,7 @@ Private Function nextIndex( _
                 ByVal index As Long) As Long
 If index > 1 Then
     nextIndex = index - 1
-ElseIf count > 1 Then
+ElseIf Count > 1 Then
     nextIndex = 1
 Else
     nextIndex = 0
@@ -683,24 +830,32 @@ ChartSelector.Width = ControlToolbar.Left
 ChartSelector.Top = UserControl.Height - ChartSelector.Height
 ControlToolbar.ZOrder 0
 ChartSelector.ZOrder 0
-If count > 0 Then
+If Count > 0 Then
     TBChart(getChartControlIndexFromIndex(ChartSelector.selectedItem.index)).Height = ChartSelector.Top
 Else
     TBChart(0).Height = ChartSelector.Top
 End If
 End Sub
 
-Private Sub showChart( _
-                ByVal index As Long)
+Private Function showChart( _
+                ByVal index As Long) As TradeBuildChart
 Dim lChart As TradeBuildChart
-If index = 0 Then Exit Sub
+If index = 0 Then Exit Function
 Set lChart = getChartFromIndex(index)
-If lChart.State = ChartStateLoaded Then lChart.chartController.SuppressDrawing = False
+If lChart.State = ChartStateLoaded Then
+    lChart.EnableDrawing
+    ControlToolbar.Buttons("change").Enabled = True
+Else
+    ControlToolbar.Buttons("change").Enabled = False
+End If
+
 TBChart(getChartControlIndexFromIndex(index)).Visible = True
 TBChart(getChartControlIndexFromIndex(index)).Top = 0
 TBChart(getChartControlIndexFromIndex(index)).Height = ChartSelector.Top
 mCurrentIndex = index
-End Sub
+
+Set showChart = lChart
+End Function
 
 Private Sub showTimeframeSelector()
 ControlToolbar.Buttons("selecttimeframe").Width = TimeframeSelector1.Width
@@ -710,14 +865,45 @@ TimeframeSelector1.Visible = True
 resize
 End Sub
 
-Private Function switchToChart( _
-                ByVal index As Long) As TradeBuildChart
-Set switchToChart = getChartFromIndex(index)
-If index <> mCurrentIndex Then
-    hideChart mCurrentIndex
-    showChart index
+Private Sub storeSettings()
+Dim i As Long
+Dim lChart As TradeBuildChart
+Dim cs As ConfigurationSection
+
+If mConfig Is Nothing Then Exit Sub
+
+If Not mTicker Is Nothing Then
+    mConfig.SetSetting ConfigSettingWorkspace, mTicker.Workspace.name
+    mConfig.SetSetting ConfigSettingTickerKey, mTicker.Key
 End If
 
+mConfig.SetSetting ConfigSettingFromTime, CStr(CDbl(mFromTime))
+mConfig.SetSetting ConfigSettingToTime, CStr(CDbl(mToTime))
+
+If Not mBarFormatterFactory Is Nothing Then
+    Set cs = mConfig.AddConfigurationSection(ConfigSectionBarFormatterFactory)
+    cs.SetSetting ConfigSettingProgId, GetProgIdFromObject(mBarFormatterFactory)
+    mBarFormatterFactory.ConfigurationSection = cs
+End If
+
+If Not mSpec Is Nothing Then mSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
+
+Set cs = mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts)
+For i = 1 To TBChart.UBound
+    If Not TBChart(i) Is Nothing Then
+        Set lChart = TBChart(i).object
+        lChart.ConfigurationSection = cs.AddConfigurationSection(ConfigSectionTradeBuildChart & "(" & GenerateGUIDString & ")")
+    End If
+Next
+End Sub
+
+Private Function switchToChart( _
+                ByVal index As Long) As TradeBuildChart
+If index = mCurrentIndex Then Exit Function
+
+hideChart mCurrentIndex
+Set switchToChart = showChart(index)
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 fireChange MultiChartSelectionChanged
 
 End Function

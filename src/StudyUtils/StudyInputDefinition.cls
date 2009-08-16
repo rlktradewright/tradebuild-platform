@@ -82,22 +82,22 @@ Private mInputType As StudyInputTypes
 'mDescription = RHS
 'End Property
 '
-''Private Property Let IStudyInputDefinition_name( _
+''Private Property Let IStudyInputDefinition_Name( _
 ''                ByVal RHS As String)
 ''mName = RHS
 ''End Property
 '
-'Private Property Get IStudyInputDefinition_name() As String
-'IStudyInputDefinition_name = mName
+'Private Property Get IStudyInputDefinition_Name() As String
+'IStudyInputDefinition_Name = mName
 'End Property
 '
-'Private Property Let IStudyInputDefinition_inputType( _
+'Private Property Let IStudyInputDefinition_InputType( _
 '                ByVal RHS As TradeBuildSP.StudyInputTypes)
 'mInputType = RHS
 'End Property
 '
-'Private Property Get IStudyInputDefinition_inputType() As TradeBuildSP.StudyInputTypes
-'IStudyInputDefinition_inputType = mInputType
+'Private Property Get IStudyInputDefinition_InputType() As TradeBuildSP.StudyInputTypes
+'IStudyInputDefinition_InputType = mInputType
 'End Property
 
 '@================================================================================
@@ -108,28 +108,28 @@ Private mInputType As StudyInputTypes
 ' Properties
 '@================================================================================
 
-Public Property Let description(ByVal value As String)
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get description() As String
-description = mDescription
+Public Property Get Description() As String
+Description = mDescription
 End Property
 
-Friend Property Let name(ByVal value As String)
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Let inputType(ByVal value As StudyInputTypes)
+Public Property Let InputType(ByVal value As StudyInputTypes)
 mInputType = value
 End Property
 
-Public Property Get inputType() As StudyInputTypes
-inputType = mInputType
+Public Property Get InputType() As StudyInputTypes
+InputType = mInputType
 End Property
 
 '@================================================================================

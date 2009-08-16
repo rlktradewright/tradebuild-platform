@@ -6,7 +6,10 @@ Option Explicit
 '@================================================================================
 
 Public Const AccDistInputPrice As String = "Price"
+Public Const AccDistInputPriceUcase As String = "PRICE"
+
 Public Const AccDistInputVolume As String = "Volume"
+Public Const AccDistInputVolumeUcase As String = "VOLUME"
 
 Public Const AccDistValueAccDist As String = "AccDist"
 
@@ -65,6 +68,7 @@ If mStudyDefinition Is Nothing Then
                                 "by combining price movements and volume"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
@@ -75,9 +79,11 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AccDistValueAccDist)
     valueDef.Description = "The Accumulation/Distribution value"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.valueType = ValueTypeReal
     
 End If

@@ -72,15 +72,8 @@ Private mName As String
 
 Private WithEvents mTWSAPI As TWSAPI
 Attribute mTWSAPI.VB_VarHelpID = -1
-Private mPort As Long
-Private mServer As String
-Private mClientID As Long
 
-Private mConnectionRetryIntervalSecs As Long
-Private mkeepConnection As Boolean
-Private mProviderKey As String
-
-Private mTWSLogLevel As TWSLogLevels
+Private mHandle As Long
 
 '================================================================================
 ' Class Event Handlers
@@ -107,9 +100,9 @@ If request.contractWrappers.Count = 1 Then
     Set mContractWrapper = request.contractWrappers(1)
     mServiceConsumer.Ready
 Else
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.LONotUniqueContract, _
+    mServiceConsumer.notifyEvent StandardSPEventCodes.LONotUniqueContract, _
                             "Contract is not uniquely specified", _
-                            mOrderSubmissionServiceProvider.handle
+                            mHandle
                             
 End If
 End Sub
@@ -117,9 +110,9 @@ End Sub
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-mServiceConsumer.NotifyEvent StandardSPEventCodes.LOUnknownContract, _
+mServiceConsumer.notifyEvent StandardSPEventCodes.LOUnknownContract, _
                         "Contract not known", _
-                        mOrderSubmissionServiceProvider.handle
+                        mHandle
 End Sub
 
 '================================================================================
@@ -183,9 +176,8 @@ End If
 ' need some stuff here to cancel if it's an oca group
 Exit Function
 err:
-logMessage "IBTWSSP:OrderSubmitter:cancelOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelOrderPlex", _
+                "IOrderSubmitter_cancelOrderPlex", _
                 err.Description
 
 End Function
@@ -212,9 +204,8 @@ Case Else
 End Select
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:cancelStoporder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelStopOrder", _
+                "IOrderSubmitter_cancelStopOrder", _
                 err.Description
 End Sub
 
@@ -240,9 +231,8 @@ Case Else
 End Select
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:cancelTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelTargetOrder", _
+                "IOrderSubmitter_cancelTargetOrder", _
                 err.Description
 End Sub
 
@@ -295,16 +285,15 @@ Else
 End If
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:executeOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_executeOrderPlex", _
+                "IOrderSubmitter_executeOrderPlex", _
                 err.Description
 End Sub
 
 Private Sub IOrderSubmitter_finish()
-finish
 
 mOrderSubmissionServiceProvider.orderSubmitterFinished Me
+finish
 
 End Sub
 
@@ -349,9 +338,8 @@ If closeoutOrderChanged Then
 End If
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_modifyOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_modifyOrderPlex", _
+                "IOrderSubmitter_modifyOrderPlex", _
                 err.Description
     
 End Sub
@@ -389,9 +377,8 @@ targetOrder.brokerId = "" ' force a new id to be allocated
 placeOrder targetOrder, True, "0", ocaGroup, OrderModeTarget
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopAndTargetOrders (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopAndTargetOrders", _
+                "IOrderSubmitter_resubmitStopAndTargetOrders", _
                 err.Description
 End Sub
 
@@ -413,9 +400,8 @@ Else
 End If
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopOrder", _
+                "IOrderSubmitter_resubmitStopOrder", _
                 err.Description
 End Sub
 
@@ -437,9 +423,8 @@ Else
 End If
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitTargetOrder", _
+                "IOrderSubmitter_resubmitTargetOrder", _
                 err.Description
 End Sub
 
@@ -450,51 +435,35 @@ End Sub
 Private Sub mTWSAPI_Connected()
 On Error GoTo err
 
-mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
-                        "Connected to " & mTWSAPI.connectionString, _
-                        mOrderSubmissionServiceProvider.handle
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 
 Exit Sub
 
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Connected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_Connected", _
+                "mTWSAPI_Connected", _
                 err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
 On Error GoTo err
-If Not retrying Then
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
-                            Description, _
-                            mOrderSubmissionServiceProvider.handle
-Else
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.LORetryConnectToBroker, _
-                            Description, _
-                            mOrderSubmissionServiceProvider.handle
-End If
+
 mServiceConsumer.NotReady
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectFailed", _
+                "mTWSAPI_ConnectFailed", _
                 err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToIBClosed()
 On Error GoTo err
-mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
-                        "Lost connection from TWS to IB servers", _
-                        mOrderSubmissionServiceProvider.handle
+
 mServiceConsumer.NotReady
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBClosed", _
+                "mTWSAPI_ConnectionToIBClosed", _
                 err.Description
 End Sub
 
@@ -503,101 +472,37 @@ On Error GoTo err
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBRecovered (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBRecovered", _
+                "mTWSAPI_ConnectionToIBRecovered", _
                 err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
 On Error GoTo err
-If Not reconnecting Then
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
-                            "Lost connection to TWS", _
-                            mOrderSubmissionServiceProvider.handle
-Else
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
-                            "Lost connection to TWS (reconnecting)", _
-                            mOrderSubmissionServiceProvider.handle
-End If
+
 mServiceConsumer.NotReady
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
+                "mTWSAPI_ConnectionToTWSClosed", _
                 err.Description
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
 On Error GoTo err
-mServiceConsumer.NotifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
-                        reason, _
-                        mOrderSubmissionServiceProvider.handle
+
+mServiceConsumer.NotReady
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_Disconnected", _
+                "mTWSAPI_Disconnected", _
                 err.Description
 End Sub
+
 '================================================================================
 ' Properties
 '================================================================================
-
-Friend Property Let clientID(ByVal value As Long)
-mClientID = value
-End Property
-
-Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-End Property
-
-Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)
-mConnectionRetryIntervalSecs = value
-End Property
-
-Friend Property Get connectionRetryIntervalSecs() As Long
-connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-End Property
-
-Friend Property Let Contract(ByVal value As ContractUtils26.Contract)
-Set mTradeBuildContract = value
-End Property
-
-Public Property Let keepConnection(ByVal value As Boolean)
-mkeepConnection = value
-End Property
-
-Friend Property Let name(ByVal value As String)
-mName = value
-End Property
-
-Friend Property Let OrderSubmissionServiceProvider( _
-                ByVal value As OrderSubmissionSrvcProvider)
-Set mOrderSubmissionServiceProvider = value
-End Property
-
-Friend Property Let port(ByVal value As Long)
-mPort = value
-End Property
-
-Friend Property Let providerKey(ByVal value As String)
-mProviderKey = value
-End Property
-
-Friend Property Let server(ByVal value As String)
-mServer = IIf(value = "", "127.0.0.1", value)
-End Property
-
-Friend Property Let serviceConsumer(ByVal value As TradeBuildSP.IOrderSubmissionSrvcConsumer)
-Set mServiceConsumer = value
-End Property
-
-Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
-mTWSLogLevel = value
-End Property
 
 '================================================================================
 ' Methods
@@ -629,37 +534,41 @@ mServiceConsumer.executionDetails pContractSpecifier, _
 End Sub
 
 Friend Sub finish()
-If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI
-Set mTWSAPI = Nothing
+Set mOrderSubmissionServiceProvider = Nothing
+Set mCommonServiceConsumer = Nothing
 Set mServiceConsumer = Nothing
+Set mTradeBuildContract = Nothing
+Set mTWSAPI = Nothing
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pOrderSubmissionServiceProvider As IOrderSubmissionSrvcProvider, _
+                ByVal commonServiceConsumer As ICommonServiceConsumer, _
+                ByVal orderSubmissionServiceConsumer As IOrderSubmissionSrvcConsumer, _
+                ByVal pContract As Contract, _
+                ByVal pTWSAPI As TWSAPI, _
+                ByVal handle As Long)
+Set mOrderSubmissionServiceProvider = pOrderSubmissionServiceProvider
+Set mCommonServiceConsumer = commonServiceConsumer
+Set mServiceConsumer = orderSubmissionServiceConsumer
+Set mTradeBuildContract = pContract
+Set mTWSAPI = pTWSAPI
+mHandle = handle
+
+mTWSAPI.RequestContract mTradeBuildContract.specifier, Me
 End Sub
 
 Friend Sub invalidOrder( _
                 ByVal orderId As String, _
                 ByVal message As String)
                 
-mServiceConsumer.NotifyEvent StandardSPEventCodes.LOInvalidOrder, _
-                        message, _
-                        mOrderSubmissionServiceProvider.handle
+mServiceConsumer.RejectOrder orderId, _
+                        message
 End Sub
 
 Friend Sub orderReport( _
                 ByVal lOrderReport As orderReport)
 mServiceConsumer.orderReport lOrderReport
-End Sub
-
-Friend Sub start()
-If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mTWSLogLevel)
-    If mTWSAPI.connectionState = ConnConnected Then
-        mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
-                                "Connected to " & mTWSAPI.connectionString, _
-                                mOrderSubmissionServiceProvider.handle
-    End If
-End If
-
-
-mTWSAPI.RequestContract mTradeBuildContract.specifier, Nothing, Me
 End Sub
 
 Friend Sub updateStatus( _
@@ -686,13 +595,19 @@ Private Sub handleFatalError( _
                 ByVal number As Long, _
                 ByVal source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError number, _
-                                source, _
-                                Description, _
-                                mOrderSubmissionServiceProvider.handle
 
-finish
-mOrderSubmissionServiceProvider.orderSubmitterFinished Me
+logMessage "Error " & err.number & ": " & _
+            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
+            err.Description, _
+            LogLevelSevere
+
+gReleaseAllTWSAPIInstances
+
+mCommonServiceConsumer.NotifyFatalError number, _
+                            source, _
+                            Description, _
+                            mHandle
+
 End Sub
 
 Private Sub logMessage( _
@@ -700,7 +615,7 @@ Private Sub logMessage( _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
 If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message
+            ProjectName & "." & ModuleName & ": " & message
 End Sub
 
 Private Sub placeOrder( _

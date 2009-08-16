@@ -70,18 +70,18 @@ Set pm = ev.source
 changeType = ev.changeType
 Select Case changeType
 Case PositionManagerChangeTypes.PositionClosed
-    If pm.positionSize = 0 And pm.pendingPositionSize = 0 Then
+    If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then
         mNumberRemaining = mNumberRemaining - 1
         mClosePositionsResult.numberOfPositionsClosed = mClosePositionsResult.numberOfPositionsClosed + 1
-        pm.removeChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.finish mClosePositionsResult, False
+        pm.RemoveChangeListener Me
+        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
 Case PositionManagerChangeTypes.ProviderReadinessChanged
-    If Not pm.providerIsReady Then
+    If Not pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining - 1
         mClosePositionsResult.numberOfPositionsNotClosed = mClosePositionsResult.numberOfPositionsNotClosed + 1
-        pm.removeChangeListener Me
-        If mNumberRemaining = 0 Then mTaskContext.finish mClosePositionsResult, False
+        pm.RemoveChangeListener Me
+        If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
 End Select
 End Sub
@@ -98,7 +98,7 @@ Private Sub Task_run()
 
 initiateCloses
 If mNumberRemaining = 0 Then
-    mTaskContext.finish 0, False
+    mTaskContext.Finish 0, False
 Else
     mTaskContext.suspend -1
 End If
@@ -139,13 +139,13 @@ End Sub
 
 Private Sub check( _
                 ByVal pm As PositionManager)
-If pm.positionSize <> 0 Or _
-    pm.pendingPositionSize <> 0 _
+If pm.PositionSize <> 0 Or _
+    pm.PendingPositionSize <> 0 _
 Then
-    If pm.providerIsReady Then
+    If pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining + 1
-        pm.closePositions mFlags
-        pm.addChangeListener Me
+        pm.ClosePositions mFlags
+        pm.AddChangeListener Me
     Else
         mClosePositionsResult.numberOfPositionsNotClosed = mClosePositionsResult.numberOfPositionsNotClosed + 1
     End If
@@ -153,7 +153,7 @@ End If
 End Sub
 
 Private Sub initiateCloses()
-Dim ws As WorkSpace
+Dim ws As Workspace
 Dim tckr As Ticker
 
 For Each ws In gTB.WorkSpaces

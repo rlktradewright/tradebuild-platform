@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ConfigSectionHorizontalRule                   As String = "HorizontalRule"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -51,6 +53,8 @@ Option Explicit
 '@================================================================================
 
 Private mStudyHorizRules As Collection
+
+Private mConfig As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,6 +76,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
+
+End Property
+
 Public Property Get count() As Long
 count = mStudyHorizRules.count
 End Property
@@ -80,28 +92,45 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add() As StudyHorizontalRule
-Set add = New StudyHorizontalRule
-mStudyHorizRules.add add
+Public Function Add() As StudyHorizontalRule
+Set Add = New StudyHorizontalRule
+mStudyHorizRules.Add Add
+storeRuleSettings Add
 End Function
 
-Public Function clone() As studyHorizontalRules
+Public Function Clone() As StudyHorizontalRules
 Dim hr As StudyHorizontalRule
 Dim newHr As StudyHorizontalRule
-Set clone = New studyHorizontalRules
+Set Clone = New StudyHorizontalRules
 For Each hr In mStudyHorizRules
-    newHr = clone.add
-    newHr.color = hr.color
-    newHr.style = hr.style
-    newHr.thickness = hr.thickness
-    newHr.y = hr.y
+    newHr = Clone.Add
+    newHr.Color = hr.Color
+    newHr.Style = hr.Style
+    newHr.Thickness = hr.Thickness
+    newHr.Y = hr.Y
 Next
 End Function
 
-Public Function item( _
+Public Function Item( _
                 ByVal index As Long) As StudyHorizontalRule
-Set item = mStudyHorizRules.item(index)
+Attribute Item.VB_UserMemId = 0
+Set Item = mStudyHorizRules.Item(index)
 End Function
+
+Friend Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection)
+Dim shrSect As ConfigurationSection
+Dim shr As StudyHorizontalRule
+
+Set mConfig = config
+If mConfig Is Nothing Then Exit Sub
+
+For Each shrSect In mConfig
+    Set shr = New StudyHorizontalRule
+    shr.LoadFromConfig shrSect
+    mStudyHorizRules.Add shr
+Next
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
@@ -112,6 +141,20 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub storeSettings()
+Dim shr As StudyHorizontalRule
+For Each shr In mStudyHorizRules
+    storeRuleSettings shr
+Next
+End Sub
+
+Private Sub storeRuleSettings( _
+                ByVal shr As StudyHorizontalRule)
+If Not mConfig Is Nothing Then
+    shr.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionHorizontalRule & "(" & GenerateGUIDString & ")")
+End If
+End Sub
 
 
 

@@ -54,7 +54,6 @@ End Type
 
 Public Type TWSContractDetailsRequestQueueEntry
     contractSpec                As ContractSpecifier
-    tradeBuildContractsBuilder  As ContractsBuilder
     contractWrappers            As Collection
     requester                   As ContractDetailsRequester
 End Type

@@ -51,10 +51,11 @@ Private mAbstractTool                       As AbstractChartTool
 
 Private mRegion                             As ChartRegion
 
+Private mLineSeries                         As LineSeries
 Private WithEvents mLine                    As ChartSkil26.Line
 Attribute mLine.VB_VarHelpID = -1
 
-Private mLineStyle                          As lineStyle
+Private mLineStyle                          As LineStyle
 
 Private mStartPoint1                        As ChartSkil26.Point
 Private mStartPoint2                        As ChartSkil26.Point
@@ -74,21 +75,22 @@ Private mPrevY                              As Double
 
 Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
 If mLine Is Nothing Then
-    If mLayer <> -1 Then
-        Set mLine = mRegion.AddLine(mLayer, True)
-    Else
-        Set mLine = mRegion.AddLine(, True)
-        mLayer = mLine.layer
-    End If
-    mLine.layer = LayerNumbers.LayerMax
-    mLine.LocalStyle = mLineStyle
-    mLine.SetPosition mRegion.newPoint(X, Y), mRegion.newPoint(X, Y)
+    Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, mLayer)
+    If mLayer = -1 Then mLayer = mLineSeries.Layer  ' get the layer allocated
+    mLineSeries.Extended = True
+    mLineSeries.IncludeInAutoscale = False
+    
+    Set mLine = mLineSeries.Add(, mLineStyle)
+    mLine.IsSelectable = True
+    
+    mLine.Layer = LayerNumbers.LayerMax
+    mLine.SetPosition mRegion.NewPoint(X, Y), mRegion.NewPoint(X, Y)
     mAbstractTool.AddSelectableObject mLine
 Else
-    mLine.layer = mLayer
+    mLine.Layer = mLayer
     Set mStartPoint1 = Nothing
     Set mStartPoint2 = Nothing
-    mAbstractTool.finish
+    mAbstractTool.Finish
 End If
 End Sub
 
@@ -102,6 +104,7 @@ End Sub
 
 Private Sub IChartTool_Delete()
 mRegion.RemoveGraphicObject mLine
+mRegion.RemoveGraphicObjectSeries mLineSeries
 End Sub
 
 Private Sub IChartTool_Deselected()
@@ -113,32 +116,28 @@ Private Sub IChartTool_EndResize()
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
-mLine.Point1 = mRegion.newPoint(mLine.Point1.X + X - mPrevX, mLine.Point1.Y + Y - mPrevY)
-mLine.Point2 = mRegion.newPoint(mLine.Point2.X + X - mPrevX, mLine.Point2.Y + Y - mPrevY)
+mLine.Point1 = mRegion.NewPoint(mLine.Point1.X + X - mPrevX, mLine.Point1.Y + Y - mPrevY)
+mLine.Point2 = mRegion.NewPoint(mLine.Point2.X + X - mPrevX, mLine.Point2.Y + Y - mPrevY)
 mPrevX = X
 mPrevY = Y
 End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
 If selHandleIndex = 1 Then
-    mLine.Point1 = mRegion.newPoint(X, Y)
+    mLine.Point1 = mRegion.NewPoint(X, Y)
 Else
-    mLine.Point2 = mRegion.newPoint(X, Y)
+    mLine.Point2 = mRegion.NewPoint(X, Y)
 End If
 
 End Sub
 
 Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
 Set mRegion = RHS
-If mLineStyle Is Nothing Then
-    Set mLineStyle = mRegion.DefaultLineStyle
-    mLineStyle.extended = True
-    mLineStyle.includeInAutoscale = False
-End If
+If mLineStyle Is Nothing Then Set mLineStyle = New LineStyle
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
-If Not mLine Is Nothing Then mLine.Point2 = mRegion.newPoint(X, Y)
+If Not mLine Is Nothing Then mLine.Point2 = mRegion.NewPoint(X, Y)
 End Sub
 
 Private Sub IChartTool_StartMove(ByVal X As Single, ByVal Y As Single)
@@ -148,7 +147,7 @@ mPrevY = Y
 Set mStartPoint1 = mLine.Point1
 Set mStartPoint2 = mLine.Point2
 
-mLine.layer = LayerNumbers.LayerMax
+mLine.Layer = LayerNumbers.LayerMax
 End Sub
 
 Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
@@ -157,12 +156,12 @@ If mLine Is Nothing Then Exit Sub
 Set mStartPoint1 = mLine.Point1
 Set mStartPoint2 = mLine.Point2
 
-mLine.layer = LayerNumbers.LayerMax
+mLine.Layer = LayerNumbers.LayerMax
 End Sub
 
 Private Sub IChartTool_Undo()
 mLine.SetPosition mStartPoint1, mStartPoint2
-mLine.layer = mLayer
+mLine.Layer = mLayer
 Set mStartPoint1 = Nothing
 Set mStartPoint2 = Nothing
 End Sub
@@ -208,12 +207,12 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal controller As chartController, _
-                ByVal pLineStyle As lineStyle, _
-                ByVal layer As Long)
+                ByVal pChart As ChartController, _
+                ByVal pLineStyle As LineStyle, _
+                ByVal Layer As Long)
 Set mLineStyle = pLineStyle
-mLayer = layer
-Set mAbstractTool = CreateAbstractChartTool(controller, Me)
+mLayer = Layer
+Set mAbstractTool = CreateAbstractChartTool(pChart, Me)
 End Sub
 
 '@================================================================================

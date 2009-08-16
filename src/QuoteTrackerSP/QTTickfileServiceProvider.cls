@@ -266,7 +266,7 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
 
 finishReaders
 

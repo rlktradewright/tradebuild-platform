@@ -1,20 +1,19 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#98.0#0"; "StudiesUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#165.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#103.0#0"; "StudiesUI2-6.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   16170
-   DefaultCancel   =   -1  'True
    ScaleHeight     =   8325
    ScaleWidth      =   16170
    Begin TradeBuildUI26.SPConfigurer SPConfigurer1 
       Height          =   4005
       Left            =   120
-      TabIndex        =   8
+      TabIndex        =   4
       Top             =   4320
       Width           =   7500
       _ExtentX        =   13229
@@ -25,7 +24,7 @@ Begin VB.UserControl ConfigManager
       Enabled         =   0   'False
       Height          =   375
       Left            =   0
-      TabIndex        =   2
+      TabIndex        =   1
       Top             =   3600
       Width           =   735
    End
@@ -33,7 +32,7 @@ Begin VB.UserControl ConfigManager
       Caption         =   "New"
       Height          =   375
       Left            =   840
-      TabIndex        =   1
+      TabIndex        =   2
       Top             =   3600
       Width           =   735
    End
@@ -42,14 +41,14 @@ Begin VB.UserControl ConfigManager
       Enabled         =   0   'False
       Height          =   375
       Left            =   1680
-      TabIndex        =   0
+      TabIndex        =   3
       Top             =   3600
       Width           =   735
    End
    Begin StudiesUI26.StudyLibConfigurer StudyLibConfigurer1 
       Height          =   4005
       Left            =   8520
-      TabIndex        =   3
+      TabIndex        =   5
       Top             =   4320
       Visible         =   0   'False
       Width           =   7500
@@ -59,7 +58,7 @@ Begin VB.UserControl ConfigManager
    Begin MSComctlLib.TreeView ConfigsTV 
       Height          =   3495
       Left            =   0
-      TabIndex        =   4
+      TabIndex        =   0
       Top             =   0
       Width           =   2415
       _ExtentX        =   4260
@@ -89,7 +88,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   735
       Left            =   10560
-      TabIndex        =   7
+      TabIndex        =   8
       Top             =   2640
       Visible         =   0   'False
       Width           =   2775
@@ -106,7 +105,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   615
       Left            =   5520
-      TabIndex        =   6
+      TabIndex        =   7
       Top             =   1080
       Visible         =   0   'False
       Width           =   2775
@@ -123,7 +122,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   495
       Left            =   10320
-      TabIndex        =   5
+      TabIndex        =   6
       Top             =   120
       Visible         =   0   'False
       Width           =   2775
@@ -451,9 +450,8 @@ End Sub
 Public Function initialise( _
                 ByVal configFile As ConfigurationFile, _
                 ByVal applicationName As String, _
-                ByVal expectedConfigFileVersion) As Boolean
+                ByVal expectedConfigFileVersion As String) As Boolean
 Dim appConfig As ConfigurationSection
-Dim index As Long
 Dim newnode As Node
 
 gLogger.Log LogLevelDetail, "Initialising ConfigManager"
@@ -489,7 +487,6 @@ For Each appConfig In mAppConfigs
         newnode.Bold = True
         Set mDefaultConfigNode = newnode
     End If
-    index = index + 1
 Next
 
 If Not mDefaultConfigNode Is Nothing Then
@@ -528,7 +525,7 @@ If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
     RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
-    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
+    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.Index
     If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
     Set mCurrAppConfig = Nothing
     If mCurrConfigNode Is mDefaultConfigNode Then Set mDefaultConfigNode = Nothing
@@ -574,9 +571,9 @@ mConfigNames.Add newName, newName
 End Sub
 
 Private Sub setCurrentConfig( _
-                ByVal ci As ConfigurationSection, _
+                ByVal cs As ConfigurationSection, _
                 ByVal lNode As Node)
-Set mCurrAppConfig = ci
+Set mCurrAppConfig = cs
 Set mCurrConfigNode = lNode
 
 SPConfigurer1.Visible = False

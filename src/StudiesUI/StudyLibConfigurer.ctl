@@ -240,7 +240,7 @@ Private Const DefaultAppConfigName              As String = "Default config"
 Private Const NewStudyLibraryName               As String = "New study library"
 Private Const BuiltInStudyLibraryName           As String = "Built-in"
 
-Private Const StudyLibrariesRenderer             As String = "$StudyLibraries"
+Private Const StudyLibrariesRenderer            As String = "StudiesUI26.StudyLibConfigurer"
 
 '@================================================================================
 ' Member variables
@@ -511,23 +511,23 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get dirty() As Boolean
-dirty = ApplyButton.Enabled
+Public Property Get Dirty() As Boolean
+Dirty = ApplyButton.Enabled
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function applyChanges() As Boolean
+Public Function ApplyChanges() As Boolean
 If applyProperties Then
     enableApplyButton False
     enableCancelButton False
-    applyChanges = True
+    ApplyChanges = True
 End If
 End Function
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal configdata As ConfigurationSection, _
                 Optional ByVal readOnly As Boolean)
 mReadOnly = readOnly
@@ -724,14 +724,14 @@ Set mConfig = configdata
 
 Set mCurrSLsList = mConfig.GetConfigurationSection(ConfigNameStudyLibraries)
 
-StudyLibList.clear
+StudyLibList.Clear
 
 If Not mCurrSLsList Is Nothing Then
     For Each sl In mCurrSLsList
-        Dim slname As String
-        slname = sl.InstanceQualifier
-        StudyLibList.AddItem slname
-        mNames.Add slname, slname
+        Dim slName As String
+        slName = sl.InstanceQualifier
+        StudyLibList.AddItem slName
+        mNames.Add slName, slName
     Next
     
     StudyLibList.ListIndex = -1

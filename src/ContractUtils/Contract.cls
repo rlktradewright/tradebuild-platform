@@ -30,6 +30,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Comparable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -65,9 +67,49 @@ Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs As Parameters
 Private mTimeZone As timezone
 
+Private mSortKeys() As ContractSortKeyIds
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+'@================================================================================
+' Comparable Interface Members
+'@================================================================================
+
+Private Function Comparable_compareTo( _
+                ByVal obj As TWUtilities30.Comparable) As Long
+Dim i As Long
+Dim other As Contract
+Dim otherSpec As ContractSpecifier
+
+Set other = obj
+Set otherSpec = other.specifier
+
+For i = 0 To UBound(mSortKeys)
+    Select Case mSortKeys(i)
+    Case ContractSortKeyNone
+        Exit Function
+    Case ContractSortKeyLocalSymbol
+        Comparable_compareTo = StrComp(mSpecifier.localSymbol, otherSpec.localSymbol, vbTextCompare)
+    Case ContractSortKeySymbol
+        Comparable_compareTo = StrComp(mSpecifier.symbol, otherSpec.symbol, vbTextCompare)
+    Case ContractSortKeySecType
+        Comparable_compareTo = StrComp(gSecTypeToShortString(mSpecifier.sectype), gSecTypeToShortString(otherSpec.sectype), vbTextCompare)
+    Case ContractSortKeyExchange
+        Comparable_compareTo = StrComp(mSpecifier.exchange, otherSpec.exchange, vbTextCompare)
+    Case ContractSortKeyExpiry
+        Comparable_compareTo = StrComp(mSpecifier.expiry, otherSpec.expiry, vbTextCompare)
+    Case ContractSortKeyCurrency
+        Comparable_compareTo = StrComp(mSpecifier.currencyCode, otherSpec.currencyCode, vbTextCompare)
+    Case ContractSortKeyRight
+        Comparable_compareTo = StrComp(gOptionRightToString(mSpecifier.right), gOptionRightToString(otherSpec.right), vbTextCompare)
+    Case ContractSortKeyStrike
+        Comparable_compareTo = Sgn(mSpecifier.strike - otherSpec.strike)
+    End Select
+    If Comparable_compareTo <> 0 Then Exit Function
+Next
+End Function
 
 '@================================================================================
 ' Properties
@@ -145,6 +187,11 @@ Public Property Get sessionEndTime() As Date
 sessionEndTime = mSessionEndTime
 End Property
 
+Friend Property Let SortKeys( _
+                ByRef value() As ContractSortKeyIds)
+mSortKeys = value
+End Property
+                
 Public Property Get specifier() As ContractSpecifier
 Set specifier = mSpecifier
 End Property
@@ -257,7 +304,7 @@ With specifierObj
     If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
     For Each comboLegEl In nodeList
         Set comboLegObj = New ComboLeg
-        .ComboLegs.Add comboLegObj
+        .ComboLegs.add comboLegObj
         Set comboSpecifierEl = comboLegEl.selectSingleNode("specifier")
         Set comboSpecifierObj = New ContractSpecifier
         With comboSpecifierObj
@@ -282,8 +329,10 @@ End Sub
 Public Function IsValidPrice( _
                 ByVal price As Double, _
                 ByVal prevValidPrice As Double) As Boolean
-If prevValidPrice = 0 Then
-    If Abs(price) / mTickSize > 262143 Then Exit Function
+If prevValidPrice = 0 Or prevValidPrice = MaxDouble Then
+    If Abs(price) / mTickSize > &H1FFFFF Then Exit Function ' note that Z index has ticksize 0.01
+                                                            ' so we need to allow plenty of room
+                                                            ' &H1FFFFF = 2097151
     If mSpecifier.sectype = SecTypeIndex Then
         ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
         ' positive, zero and negative values

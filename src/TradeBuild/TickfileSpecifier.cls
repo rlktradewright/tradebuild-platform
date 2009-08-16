@@ -81,12 +81,12 @@ Private Property Get ITickfileSpecifier_EntireSession() As Boolean
 ITickfileSpecifier_EntireSession = mEntireSession
 End Property
 
-Private Property Let ITickfileSpecifier_filename(ByVal RHS As String)
+Private Property Let ITickfileSpecifier_Filename(ByVal RHS As String)
 mFilename = RHS
 End Property
 
-Private Property Get ITickfileSpecifier_filename() As String
-ITickfileSpecifier_filename = mFilename
+Private Property Get ITickfileSpecifier_Filename() As String
+ITickfileSpecifier_Filename = mFilename
 End Property
 
 Private Property Let ITickfileSpecifier_FromDate(ByVal RHS As Date)
@@ -137,12 +137,12 @@ Public Property Get EntireSession() As Boolean
 EntireSession = mEntireSession
 End Property
 
-Public Property Let filename(ByVal value As String)
+Public Property Let Filename(ByVal value As String)
 mFilename = value
 End Property
 
-Public Property Get filename() As String
-filename = mFilename
+Public Property Get Filename() As String
+Filename = mFilename
 End Property
 
 Public Property Let FromDate(ByVal value As Date)

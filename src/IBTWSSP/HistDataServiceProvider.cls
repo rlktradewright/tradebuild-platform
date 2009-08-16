@@ -41,6 +41,8 @@ Implements IBarDataServiceProvider
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "HistDataServiceProvider"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -57,6 +59,9 @@ Private mName As String
 
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
+
+Private WithEvents mTWSAPI As TWSAPI
+Attribute mTWSAPI.VB_VarHelpID = -1
 
 Private mClientID As Long
 Private mServer As String
@@ -98,26 +103,29 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 Dim reader As HistDataReader
 
 On Error GoTo err
+
+If mTWSAPI Is Nothing Then
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, _
+                                    mPort, _
+                                    mClientID, _
+                                    mProviderKey, _
+                                    mConnectionRetryIntervalSecs, _
+                                    mTWSLogLevel)
+End If
+
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
-reader.HistDataServiceProvider = Me
-reader.commonServiceConsumer = mCommonServiceConsumer
-reader.barDataInputServiceConsumer = serviceConsumer
-reader.dataConsumer = dataConsumer
-reader.clientID = mClientID
-reader.port = mPort
-reader.server = mServer
-reader.keepConnection = mkeepConnection
-reader.providerKey = mProviderKey
-reader.TWSLogLevel = mTWSLogLevel
-reader.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-reader.ServiceProviderName = mName & " (reader)"
+reader.Initialise Me, _
+                mCommonServiceConsumer, _
+                serviceConsumer, _
+                dataConsumer, _
+                mTWSAPI, _
+                mHandle
 mHistDataReaders.add reader
 Exit Function
 err:
-logMessage "IBTWSSP:HistDataServiceProvider:IBarDataServiceProvider_CreateBarDataReader (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
+                "IBarDataServiceProvider_CreateBarDataReader", _
                 err.Description
 End Function
 
@@ -232,21 +240,79 @@ Private Sub ICommonServiceProvider_Terminate()
 
 On Error GoTo err
 
-logMessage "IBTWSSP:HistDataServiceProvider:ICommonServiceProvider_Terminate terminating"
+logMessage "IBTWSSP:HistDataServiceProvider terminating"
 finishReaders
 Set mCommonServiceConsumer = Nothing
 
 Exit Sub
 err:
-logMessage "IBTWSSP:HistDataServiceProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                "ICommonServiceProvider_Terminate", _
                 err.Description
 End Sub
 
 '================================================================================
-' XXXX Event Handlers
+' mTWSAPI Event Handlers
 '================================================================================
+
+Private Sub mTWSAPI_Connected()
+On Error GoTo err
+notifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+            "Connected to TWS " & mTWSAPI.connectionString
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_Connected", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+On Error GoTo err
+If retrying Then
+    notifyEvent StandardSPEventCodes.HDRetryConnectDataSource, _
+                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                ": " & Description
+Else
+    notifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
+                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                ": " & Description
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
+On Error GoTo err
+If reconnecting Then
+    notifyEvent StandardSPEventCodes.HDReConnectingDataSource, _
+                "Lost connection to TWS (reconnecting) " & mTWSAPI.connectionString
+Else
+    notifyEvent StandardSPEventCodes.HDLostConnectionToDataSource, _
+                "Lost connection to TWS " & mTWSAPI.connectionString
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_Disconnected( _
+                ByVal reason As String)
+On Error GoTo err
+notifyEvent StandardSPEventCodes.HDDisconnectedFromDataSource, _
+            "Disconnected from TWS " & mTWSAPI.connectionString & _
+            ": reason=: " & reason
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_Disconnected", _
+                err.Description
+End Sub
 
 '================================================================================
 ' Properties
@@ -318,6 +384,13 @@ For Each reader In mHistDataReaders
     End If
     i = i + 1
 Next
+
+If mHistDataReaders.Count = 0 And _
+    Not mkeepConnection _
+Then
+    gReleaseTWSAPIInstance mTWSAPI
+    Set mTWSAPI = Nothing
+End If
 End Sub
 
 '================================================================================
@@ -329,17 +402,28 @@ Dim reader As HistDataReader
 For Each reader In mHistDataReaders
     reader.finish
 Next
+
+If Not mTWSAPI Is Nothing Then
+    Dim lTWSAPI As TWSAPI
+    Set lTWSAPI = mTWSAPI
+    Set mTWSAPI = Nothing   ' clear event handlers
+    gReleaseTWSAPIInstance lTWSAPI
+End If
 End Sub
 
 Private Sub handleFatalError( _
                 ByVal number As Long, _
                 ByVal source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
 
-finishReaders
+logMessage "Error " & err.number & ": " & _
+            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
+            err.Description, _
+            LogLevelSevere
 
-Set mCommonServiceConsumer = Nothing
+gReleaseAllTWSAPIInstances
+
+mCommonServiceConsumer.NotifyFatalError number, source, Description, mHandle
 End Sub
 
 Private Sub logMessage( _
@@ -347,7 +431,16 @@ Private Sub logMessage( _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
 If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message
+            ProjectName & "." & ModuleName & ": " & message
+End Sub
+
+Private Sub notifyEvent( _
+                ByVal eventCode As StandardSPEventCodes, _
+                ByVal eventMessage As String)
+If mCommonServiceConsumer Is Nothing Then Exit Sub
+mCommonServiceConsumer.notifyEvent eventCode, _
+                                    eventMessage, _
+                                    mHandle
 End Sub
 
 

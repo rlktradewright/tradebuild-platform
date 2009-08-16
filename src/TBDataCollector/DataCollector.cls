@@ -133,11 +133,11 @@ End If
 End Sub
 
 '@================================================================================
-' mExitProgramTimer Event Handlers
+' mEndCollectionTimer Event Handlers
 '@================================================================================
 
 Private Sub mEndCollectionTimer_TimerExpired()
-stopCollection
+stopAll True
 End Sub
 
 '@================================================================================
@@ -145,7 +145,8 @@ End Sub
 '@================================================================================
 
 Private Sub mExitProgramTimer_TimerExpired()
-stopCollection
+stopAll False
+
 RaiseEvent ExitProgram
 End Sub
 
@@ -194,27 +195,6 @@ If ev.changeType = CollItemAdded Then
 End If
 End Sub
 
-Private Sub mTickers_Notification(ev As NotificationEvent)
-If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
-    gLogger.Log LogLevelNormal, "Connected ok to realtime data source"
-    RaiseEvent Connected
-ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
-    gLogger.Log LogLevelSevere, "Connect to realtime data source failed: " & ev.eventMessage
-    RaiseEvent ConnectFailed(ev.eventMessage)
-ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
-        ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
-    gLogger.Log LogLevelNormal, "Connection to realtime data source closed: " & ev.eventMessage
-    RaiseEvent ConnectionClosed
-ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
-    gLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
-    RaiseEvent Reconnecting
-Else
-    gLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
-    RaiseEvent NotifyMessage(ev.eventCode, _
-                            ev.eventMessage)
-End If
-End Sub
-
 Private Sub mTickers_stateChange(ev As StateChangeEvent)
 If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(ev.Source)
@@ -234,7 +214,20 @@ End Sub
 Private Sub mTradeBuildAPI_Notification( _
                 ev As NotificationEvent)
 Dim spError As ServiceProviderError
-If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
+If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
+    gLogger.Log LogLevelNormal, "Connected ok to realtime data source"
+    RaiseEvent Connected
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
+    gLogger.Log LogLevelSevere, "Connect to realtime data source failed: " & ev.eventMessage
+    RaiseEvent ConnectFailed(ev.eventMessage)
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
+        ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
+    gLogger.Log LogLevelNormal, "Connection to realtime data source closed: " & ev.eventMessage
+    RaiseEvent ConnectionClosed
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
+    gLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
+    RaiseEvent Reconnecting
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
         gLogger.Log LogLevelSevere, _
@@ -349,27 +342,7 @@ Err.Raise Err.Number, _
 End Sub
 
 Public Sub stopCollection()
-Dim lTicker As ticker
-Dim startTime As Date
-
-gLogger.Log LogLevelNormal, "Data collection stopped"
-For Each lTicker In mTradeBuildAPI.Tickers
-    lTicker.stopTicker
-Next
-
-If Not mEndCollectionTimer Is Nothing Then
-    mEndCollectionTimer.StopTimer
-    Set mEndCollectionTimer = Nothing
-End If
-
-startTime = calcTimeFromDescriptor(mStartTimeDescriptor)
-If startTime <> 0 Then
-    Set mStartCollectionTimer = CreateIntervalTimer(startTime, _
-                                                    ExpiryTimeUnitDateTime)
-    mStartCollectionTimer.StartTimer
-End If
-
-RaiseEvent CollectionStopped
+stopAll True
 End Sub
 
 '@================================================================================
@@ -560,6 +533,31 @@ stTask.initialise mTickers, _
                 mOutputFormat, _
                 mOutputPath
 Set mStartTasksTC = StartTask(stTask, PriorityNormal, "StartTickers")
+End Sub
+
+Private Sub stopAll( _
+                ByVal allowNextStart As Boolean)
+Dim lTicker As ticker
+Dim startTime As Date
+
+gLogger.Log LogLevelNormal, "Data collection stopped"
+mTradeBuildAPI.StopAllTickers
+
+If Not mEndCollectionTimer Is Nothing Then
+    mEndCollectionTimer.StopTimer
+    Set mEndCollectionTimer = Nothing
+End If
+
+If allowNextStart Then
+    startTime = calcTimeFromDescriptor(mStartTimeDescriptor)
+    If startTime > Now Then
+        Set mStartCollectionTimer = CreateIntervalTimer(startTime, _
+                                                        ExpiryTimeUnitDateTime)
+        mStartCollectionTimer.StartTimer
+    End If
+End If
+
+RaiseEvent CollectionStopped
 End Sub
 
 

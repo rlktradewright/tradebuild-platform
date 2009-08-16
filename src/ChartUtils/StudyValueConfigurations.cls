@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ConfigSectionStudyValueConfig             As String = "StudyValueConfiguration"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -51,6 +53,10 @@ Option Explicit
 '@================================================================================
 
 Private mStudyValueConfigurations As Collection
+
+Private mConfig As ConfigurationSection
+
+Private mBars As Bars
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,6 +78,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
+If value Is mConfig Then Exit Property
+Set mConfig = value
+storeSettings
+
+End Property
+
 Public Property Get count() As Long
 count = mStudyValueConfigurations.count
 End Property
@@ -80,35 +94,54 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add( _
-                ByVal valueName As String) As StudyValueConfiguration
-Set add = New StudyValueConfiguration
-add.valueName = valueName
-mStudyValueConfigurations.add add, valueName
+Public Function Add( _
+                ByVal ValueName As String) As StudyValueConfiguration
+Set Add = New StudyValueConfiguration
+Add.ValueName = ValueName
+mStudyValueConfigurations.Add Add, ValueName
+storeStudyValueSettings Add
 End Function
 
-Public Function clone() As studyValueConfigurations
+Public Function Clone() As StudyValueConfigurations
 Dim svc As StudyValueConfiguration
 Dim newSvc As StudyValueConfiguration
 
-Set clone = New studyValueConfigurations
+Set Clone = New StudyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
-    newSvc = clone.add(svc.valueName)
-    newSvc.barStyle = svc.barStyle
-    newSvc.chartRegionName = svc.chartRegionName
-    newSvc.dataPointStyle = svc.dataPointStyle
-    newSvc.includeInChart = svc.includeInChart
-    newSvc.layer = svc.layer
-    newSvc.lineStyle = svc.lineStyle
-    newSvc.textStyle = svc.textStyle
+    newSvc = Clone.Add(svc.ValueName)
+    newSvc.BarStyle = svc.BarStyle
+    newSvc.ChartRegionName = svc.ChartRegionName
+    newSvc.DataPointStyle = svc.DataPointStyle
+    newSvc.IncludeInChart = svc.IncludeInChart
+    newSvc.Layer = svc.Layer
+    newSvc.LineStyle = svc.LineStyle
+    newSvc.TextStyle = svc.TextStyle
 Next
 End Function
 
-Public Function item( _
-                ByVal index As Long) As StudyValueConfiguration
-Set item = mStudyValueConfigurations.item(index)
+Public Function Item( _
+                ByVal index As Variant) As StudyValueConfiguration
+Attribute Item.VB_UserMemId = 0
+Set Item = mStudyValueConfigurations.Item(index)
 End Function
+
+Friend Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection, _
+                ByVal pBars As Bars)
+Dim svcSect As ConfigurationSection
+Dim svc As StudyValueConfiguration
+
+Set mBars = pBars
+Set mConfig = config
+If mConfig Is Nothing Then Exit Sub
+
+For Each svcSect In mConfig
+    Set svc = New StudyValueConfiguration
+    svc.LoadFromConfig svcSect, mBars
+    mStudyValueConfigurations.Add svc, svc.ValueName
+Next
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
@@ -119,4 +152,20 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub storeSettings()
+Dim svc As StudyValueConfiguration
+For Each svc In mStudyValueConfigurations
+    storeStudyValueSettings svc
+Next
+End Sub
+
+Private Sub storeStudyValueSettings( _
+                ByVal studyValueConfig As StudyValueConfiguration)
+If Not mConfig Is Nothing Then
+    studyValueConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyValueConfig & "(" & GenerateGUIDString & ")")
+End If
+End Sub
+
+
 

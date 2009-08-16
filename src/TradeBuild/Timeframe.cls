@@ -46,9 +46,7 @@ Event BarLoadProgress( _
 
 Event BarsLoaded()
 
-Event Notification(ByRef ev As NotificationEvent)
-
-Event stateChange(ByRef ev As StateChangeEvent)
+Event StateChange(ByRef ev As StateChangeEvent)
 
 
 '@================================================================================
@@ -64,7 +62,7 @@ Private Const ConstTimeBarsStudyName As String = "Constant time bars"
 Private Const ConstTimeBarsParamBarLength As String = "Bar length"
 Private Const ConstTimeBarsParamTimeUnits As String = "Time units"
 
-Private Const ConstVolumeBarsStudyName As String = "Constant volume bars"
+Private Const ConstVolumeBarsStudyName As String = "Constant Volume bars"
 Private Const ConstTimeBarsParamVolPerBar As String = "Volume per bar"
 
 Private Const ConstMomentumBarsStudyName As String = "Constant momentum bars"
@@ -87,6 +85,8 @@ End Type
 ' Member variables
 '@================================================================================
 
+Private mState                      As TimeframeStates
+
 Private mKey                        As String
 Private mTickerRef                  As WeakReference
 
@@ -94,24 +94,24 @@ Private mStudyManagerRef            As WeakReference
 
 Private mAccumulatedVolume          As Long
 
-Private mTradeBars                  As bars
+Private mTradeBars                  As Bars
 Private mTradeBarsStudy             As study
 Private mCurrTradeBar               As Bar
 Private mCurrTradeBarPrevTickvol    As Long
 
-Private mAskBars                    As bars
+Private mAskBars                    As Bars
 Private mAskBarsStudy               As study
 Private mCurrAskBar                 As Bar
 Private mCurrAskBarPrevTickvol      As Long
 
-Private mBidBars                    As bars
+Private mBidBars                    As Bars
 Private mBidBarsStudy               As study
 Private mCurrBidBar                 As Bar
 Private mCurrBidBarPrevTickvol      As Long
 
 Private mContract                   As Contract
 
-Private mInputStudy                 As inputStudy
+Private mInputStudy                 As InputStudy
 
 Private mBidInputHandle             As Long
 Private mAskInputHandle             As Long
@@ -120,7 +120,7 @@ Private mTradeInputHandle           As Long
 Private mVolumeInputHandle          As Long
 Private mTickVolumeInputHandle      As Long
 
-Private WithEvents mSession         As session
+Private WithEvents mSession         As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mStateChangeListeners       As Collection
@@ -159,6 +159,7 @@ Private mTaskContext                As TaskContext
 
 Private Sub Class_Initialize()
 Set mStateChangeListeners = New Collection
+mSaveIntervalSeconds = -1
 Randomize
 End Sub
 
@@ -208,9 +209,9 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 Debug.Print "Timeframe bars loaded: " & getName
-'Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.timestamp
+'Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.Timestamp
 
-mTaskContext.finish Empty, False
+mTaskContext.Finish Empty, False
 
 mHistoricDataLoaded = True
 mBarReader.ReleaseDataStore
@@ -236,16 +237,16 @@ Set ev.source = Me
 
 Select Case eventCode
 Case HDConnectedToDataSource
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToHistoricDataSource
+    gTB.notify ev
 Case Else
     Debug.Print "Timeframe bars loaded with errors: " & getName
     
-    mTaskContext.finish Empty, False
+    mTaskContext.Finish Empty, False
     
     StartStudies
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
+    
+    gTB.notify ev
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     
@@ -292,32 +293,32 @@ Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
 
 If ev.source Is mTradeBarsStudy Then
-    If ev.sVal.barNumber = currTradeBarNumber Then Exit Sub
+    If ev.sVal.BarNumber = currTradeBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currTradeBarNumber > 0 Then
         WriteABar mCurrTradeBar, BarTypeTrade, mCurrTradeBarPrevTickvol
         mCurrTradeBarPrevTickvol = 0
     End If
     Set mCurrTradeBar = ev.sVal.value
-    currTradeBarNumber = ev.sVal.barNumber
+    currTradeBarNumber = ev.sVal.BarNumber
 ElseIf ev.source Is mAskBarsStudy Then
-    If ev.sVal.barNumber = currAskBarNumber Then Exit Sub
+    If ev.sVal.BarNumber = currAskBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currAskBarNumber > 0 Then
         WriteABar mCurrAskBar, BarTypeAsk, mCurrAskBarPrevTickvol
         mCurrAskBarPrevTickvol = 0
     End If
     Set mCurrAskBar = ev.sVal.value
-    currAskBarNumber = ev.sVal.barNumber
+    currAskBarNumber = ev.sVal.BarNumber
 ElseIf ev.source Is mBidBarsStudy Then
-    If ev.sVal.barNumber = currBidBarNumber Then Exit Sub
+    If ev.sVal.BarNumber = currBidBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currBidBarNumber > 0 Then
         WriteABar mCurrBidBar, BarTypeBid, mCurrBidBarPrevTickvol
         mCurrBidBarPrevTickvol = 0
     End If
     Set mCurrBidBar = ev.sVal.value
-    currBidBarNumber = ev.sVal.barNumber
+    currBidBarNumber = ev.sVal.BarNumber
 End If
 
 End Sub
@@ -336,6 +337,13 @@ Dim failpoint As Long
 On Error GoTo Err
 
 failpoint = 100
+
+If mState = TimeframeStateFinished Then
+    ' this can happen between starttask being called
+    ' and getting here
+    mTaskContext.Finish Empty, False
+    Exit Sub
+End If
 
 If mBarReader Is Nothing Then
     setupBarReader
@@ -365,10 +373,8 @@ Exit Sub
 Err:
 gTB.NotifyFatalError Err.number, _
                     Err.Description, _
-                    ModuleName & ":" & "Task_run" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
-mTaskContext.finish Empty, False
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
+mTaskContext.Finish Empty, False
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -401,14 +407,14 @@ If mCurrTradeBar Is Nothing Then
 End If
 
 WriteABar mCurrTradeBar, BarTypeTrade, mCurrTradeBarPrevTickvol
-mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
+mCurrTradeBarPrevTickvol = mCurrTradeBar.TickVolume
 
 If mWriteBidAndAskBars Then
     WriteABar mCurrAskBar, BarTypeAsk, mCurrAskBarPrevTickvol
-    If Not mCurrAskBar Is Nothing Then mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
+    If Not mCurrAskBar Is Nothing Then mCurrAskBarPrevTickvol = mCurrAskBar.TickVolume
     
     WriteABar mCurrBidBar, BarTypeBid, mCurrBidBarPrevTickvol
-    If Not mCurrBidBar Is Nothing Then mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
+    If Not mCurrBidBar Is Nothing Then mCurrBidBarPrevTickvol = mCurrBidBar.TickVolume
 End If
 
 Exit Sub
@@ -416,15 +422,13 @@ Exit Sub
 Err:
 gTB.NotifyFatalError Err.number, _
                     Err.Description, _
-                    ModuleName & ":" & "mWriteTimer_TimerExpired" & "." & failpoint & _
-                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                    Err.Description
+                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mWriteTimer_TimerExpired" & "." & failpoint
 End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get askBars() As bars
+Public Property Get askBars() As Bars
 Set askBars = mAskBars
 End Property
 
@@ -436,7 +440,7 @@ Public Property Get barTimePeriod() As TimePeriod
 Set barTimePeriod = mBarTimePeriod
 End Property
 
-Public Property Get bidBars() As bars
+Public Property Get bidBars() As Bars
 Set bidBars = mBidBars
 End Property
 
@@ -448,15 +452,15 @@ Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
-' only gets called if contract was not available when initialise was called
+' only gets called if contract was not available when Initialise was called
 Friend Property Let Contract(ByVal value As Contract)
 
 Set mContract = value
 
 mInputStudy.name = getName & " (historical data)"
-studyMgr.setInputTicksize mBidInputHandle, mContract.TickSize
-studyMgr.setInputTicksize mAskInputHandle, mContract.TickSize
-studyMgr.setInputTicksize mTradeInputHandle, mContract.TickSize
+studyMgr.SetInputTicksize mBidInputHandle, mContract.TickSize
+studyMgr.SetInputTicksize mAskInputHandle, mContract.TickSize
+studyMgr.SetInputTicksize mTradeInputHandle, mContract.TickSize
 
 startHistDataFetch
 
@@ -466,15 +470,19 @@ Public Property Get historicDataLoaded() As Boolean
 historicDataLoaded = mHistoricDataLoaded
 End Property
 
-Public Property Get isHistorical() As Boolean
-isHistorical = mIsHistorical
+Public Property Get IsHistorical() As Boolean
+IsHistorical = mIsHistorical
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
-Public Property Get tradeBars() As bars
+Public Property Get State() As TimeframeStates
+State = mState
+End Property
+
+Public Property Get tradeBars() As Bars
 Set tradeBars = mTradeBars
 End Property
 
@@ -486,19 +494,20 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub addStateChangeListener( _
+Public Sub AddStateChangeListener( _
                 ByVal value As StateChangeListener)
-mStateChangeListeners.add value
+mStateChangeListeners.Add value
 End Sub
 
-Friend Sub finish()
+Friend Sub Finish()
 Clear
+fireStateChange TimeframeStateFinished
 Set mTickerRef = Nothing
 End Sub
 
 Friend Sub initialise( _
                 ByVal pContract As Contract, _
-                ByVal key As String, _
+                ByVal Key As String, _
                 ByVal pTicker As Ticker, _
                 ByVal barTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToFetch As Long, _
@@ -510,15 +519,10 @@ Friend Sub initialise( _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean)
 
-If Not pTicker.replayingTickfile Then
-    mSaveIntervalSeconds = saveIntervalSeconds
-    'Set mTimerList = GetGlobalTimerList
-End If
-
 Set mContract = pContract
-mKey = key
+mKey = Key
 Set mTickerRef = CreateWeakReference(pTicker)
-Set mStudyManagerRef = CreateWeakReference(pTicker.studyManager)
+Set mStudyManagerRef = CreateWeakReference(pTicker.StudyManager)
 
 Set mBarTimePeriod = barTimePeriod
 
@@ -546,29 +550,36 @@ End If
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mExcludeCurrentBar = excludeCurrentbar
 
-setupBarStudies
-
-If Not mContract Is Nothing Then
-    startHistDataFetch
-End If
-
 If Not barWriter Is Nothing Then
     Set mBarWriter = barWriter
+    
+    If pTicker.ReplayingTickfile Then
+        mSaveIntervalSeconds = 0
+    Else
+        mSaveIntervalSeconds = saveIntervalSeconds
+    End If
+    
     If mSaveIntervalSeconds > 0 Then
         Set mWriteTimer = CreateIntervalTimer(Rnd * 1000 * mSaveIntervalSeconds + 1, , mSaveIntervalSeconds * 1000)
         mWriteTimer.StartTimer
     End If
 End If
 
+setupBarStudies
+
+If Not mContract Is Nothing Then
+    startHistDataFetch
+End If
+
 fireStateChange TimeframeStateCreated
 End Sub
 
-Public Sub removeStateChangeListener( _
+Public Sub RemoveStateChangeListener( _
                 ByVal value As StateChangeListener)
 Dim i As Long
 If mStateChangeListeners Is Nothing Then Exit Sub
 For i = mStateChangeListeners.Count To 1 Step -1
-    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.remove i
+    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.Remove i
 Next
 End Sub
 
@@ -596,7 +607,7 @@ If Not mBarReader Is Nothing Then
     mBarReader.CancelFetch
     mBarReader.ReleaseDataStore
     Set mBarReader = Nothing
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
 End If
 
 End Sub
@@ -614,6 +625,9 @@ Dim listener As StateChangeListener
 Dim ev As StateChangeEvent
 Dim s As String
 
+If newState = mState Then Exit Sub
+mState = newState
+
 If gLogLogger.isLoggable(LogLevelDetail) Then
     s = "Timeframe (" & getName & ") "
     Select Case newState
@@ -623,6 +637,8 @@ If gLogLogger.isLoggable(LogLevelDetail) Then
         s = s & "loading"
     Case TimeframeStateLoaded
         s = s & "loaded " & mTradeBars.Count & " bars"
+    Case TimeframeStateFinished
+        s = s & "Finished " & mTradeBars.Count & " bars"
     End Select
     gLogLogger.Log LogLevelDetail, s
 End If
@@ -632,7 +648,7 @@ ev.State = newState
 For Each listener In mStateChangeListeners
     listener.Change ev
 Next
-RaiseEvent stateChange(ev)
+RaiseEvent StateChange(ev)
 End Sub
 
 Private Sub ProcessHistoricBar()
@@ -640,49 +656,49 @@ Static firstVolumeSent As Boolean
 
 With mHistoricBar
 
-    Debug.Print "Historic bar (" & getName & ") " & FormatTimestamp(.timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .openValue & " " & .highValue & " " & .lowValue & " " & .closeValue & " " & .volume & " " & .tickVolume
-    studyMgr.notifyInput mTradeInputHandle, .openValue, .timestamp
+    Debug.Print "Historic bar (" & getName & ") " & FormatTimestamp(.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .OpenValue & " " & .HighValue & " " & .LowValue & " " & .CloseValue & " " & .Volume & " " & .TickVolume
+    studyMgr.NotifyInput mTradeInputHandle, .OpenValue, .Timestamp
     
     If Not firstVolumeSent Then
-        ' send an initial volume of 1, because the first volume notification
-        ' is used by the bar studies to set the accum volume at end of
+        ' send an initial Volume of 1, because the first Volume notification
+        ' is used by the bar studies to set the accum Volume at end of
         ' previous bar
-        studyMgr.notifyInput mVolumeInputHandle, 1, .timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, 1, .Timestamp
         mAccumulatedVolume = 1
         firstVolumeSent = True
     End If
     
-    If .closeValue >= .openValue Then
-        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.volume / 3), .timestamp
+    If .CloseValue >= .OpenValue Then
+        studyMgr.NotifyInput mTradeInputHandle, .LowValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.Volume / 3), .Timestamp
         
-        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
-        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.volume / 3), .timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .LowValue, .Timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .HighValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.Volume / 3), .Timestamp
     
-        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
-        studyMgr.notifyInput mTradeInputHandle, .closeValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume - 2 * Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + .volume, .timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .HighValue, .Timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .CloseValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, .TickVolume - 2 * Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + .Volume, .Timestamp
     Else
-        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.volume / 3), .timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .HighValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.Volume / 3), .Timestamp
         
-        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
-        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.volume / 3), .timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .HighValue, .Timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .LowValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.Volume / 3), .Timestamp
     
-        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
-        studyMgr.notifyInput mTradeInputHandle, .closeValue, .timestamp
-        studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume - 2 * Int(.tickVolume / 3) - 2, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + .volume, .timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .LowValue, .Timestamp
+        studyMgr.NotifyInput mTradeInputHandle, .CloseValue, .Timestamp
+        studyMgr.NotifyInput mTickVolumeInputHandle, .TickVolume - 2 * Int(.TickVolume / 3) - 2, .Timestamp
+        studyMgr.NotifyInput mVolumeInputHandle, mAccumulatedVolume + .Volume, .Timestamp
     End If
     
-    mAccumulatedVolume = mAccumulatedVolume + .volume
+    mAccumulatedVolume = mAccumulatedVolume + .Volume
         
 End With
 
@@ -700,7 +716,7 @@ If mNumberOfBarsToFetch = 0 Then
     StartStudies
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
-    mTaskContext.finish 0, False
+    mTaskContext.Finish 0, False
     Exit Sub
 End If
 
@@ -715,11 +731,10 @@ If mBarReader Is Nothing Then
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
     ev.eventMessage = "Timeframe: Can't create historic data reader (" & getName & ")"
     gLogLogger.Log LogLevelWarning, ev.eventMessage
-    RaiseEvent Notification(ev)
-    gTB.Notify ev
+    gTB.notify ev
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
-    mTaskContext.finish 0, False
+    mTaskContext.Finish 0, False
     Exit Sub
 End If
 
@@ -731,18 +746,18 @@ If mIsHistorical Then
     barSpecifier.ToDate = mToTime
 Else
     If mExcludeCurrentBar Then
-        barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
+        barSpecifier.ToDate = mSession.BarStartTime(tickr.Timestamp, _
                                     mBarTimePeriod)
     Else
         ' ensure we get the latest bar
-        barSpecifier.ToDate = mSession.BarEndTime(tickr.timestamp, _
+        barSpecifier.ToDate = mSession.BarEndTime(tickr.Timestamp, _
                                     mBarTimePeriod)
     End If
 End If
-barSpecifier.maxNumberOfBars = mNumberOfBarsToFetch
+barSpecifier.MaxNumberOfBars = mNumberOfBarsToFetch
 barSpecifier.includeBarsOutsideSession = mIncludeBarsOutsideSession
 Debug.Print "Fetching bars:" & vbCrLf & _
-            barSpecifier.toString
+            barSpecifier.ToString
 mBarReader.FetchBars barSpecifier
 
 ' other bar types ????????????????????????????????????????
@@ -753,7 +768,7 @@ Private Sub setupBarStudies()
 
 setupInputStudies
 
-Select Case mBarTimePeriod.units
+Select Case mBarTimePeriod.Units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -770,11 +785,11 @@ Case TimePeriodVolume
     setupConstantVolumeBarsStudies
 End Select
 
-If mSaveIntervalSeconds >= 0 Then
-    mTradeBarsStudy.addStudyValueListener Me, "Bar", 0
+If Not mBarWriter Is Nothing Then
+    mTradeBarsStudy.AddStudyValueListener Me, "Bar", 0
     If mWriteBidAndAskBars Then
-        mAskBarsStudy.addStudyValueListener Me, "Bar", 0
-        mBidBarsStudy.addStudyValueListener Me, "Bar", 0
+        mAskBarsStudy.AddStudyValueListener Me, "Bar", 0
+        mBidBarsStudy.AddStudyValueListener Me, "Bar", 0
     End If
 End If
 
@@ -784,7 +799,7 @@ Private Sub setupConstantMomentumBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstMomentumBarsParamTicksPerBar, mBarTimePeriod.length
+params.SetParameterValue ConstMomentumBarsParamTicksPerBar, mBarTimePeriod.length
 
 ReDim inputValueNames(3) As String
 inputValueNames(0) = TradeInputName
@@ -796,10 +811,10 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.bars
-studyMgr.startStudy mTradeBarsStudy, 0
+Set mTradeBars = barsStudy.Bars
+studyMgr.StartStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
@@ -809,10 +824,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.bars
-    studyMgr.startStudy mBidBarsStudy, 0
+    Set mBidBars = barsStudy.Bars
+    studyMgr.StartStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
@@ -821,10 +836,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.bars
-    studyMgr.startStudy mAskBarsStudy, 0
+    Set mAskBars = barsStudy.Bars
+    studyMgr.StartStudy mAskBarsStudy, 0
 
 End If
 
@@ -834,9 +849,9 @@ Private Sub setupConstantTimeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstTimeBarsParamBarLength, mBarTimePeriod.length
-params.setParameterValue ConstTimeBarsParamTimeUnits, _
-                        TimePeriodUnitsToString(mBarTimePeriod.units)
+params.SetParameterValue ConstTimeBarsParamBarLength, mBarTimePeriod.length
+params.SetParameterValue ConstTimeBarsParamTimeUnits, _
+                        TimePeriodUnitsToString(mBarTimePeriod.Units)
 
 ReDim inputValueNames(3) As String
 inputValueNames(0) = TradeInputName
@@ -848,10 +863,10 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstTimeBarsStudyName, _
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.bars
-studyMgr.startStudy mTradeBarsStudy, 0
+Set mTradeBars = barsStudy.Bars
+studyMgr.StartStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
@@ -861,10 +876,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.bars
-    studyMgr.startStudy mBidBarsStudy, 0
+    Set mBidBars = barsStudy.Bars
+    studyMgr.StartStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
@@ -873,10 +888,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.bars
-    studyMgr.startStudy mAskBarsStudy, 0
+    Set mAskBars = barsStudy.Bars
+    studyMgr.StartStudy mAskBarsStudy, 0
 
 End If
 
@@ -886,7 +901,7 @@ Private Sub setupConstantVolumeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstTimeBarsParamVolPerBar, mBarTimePeriod.length
+params.SetParameterValue ConstTimeBarsParamVolPerBar, mBarTimePeriod.length
 
 ReDim inputValueNames(3) As String
 inputValueNames(0) = TradeInputName
@@ -898,10 +913,10 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.bars
-studyMgr.startStudy mTradeBarsStudy, 0
+Set mTradeBars = barsStudy.Bars
+studyMgr.StartStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
@@ -911,10 +926,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.bars
-    studyMgr.startStudy mBidBarsStudy, 0
+    Set mBidBars = barsStudy.Bars
+    studyMgr.StartStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
@@ -923,10 +938,10 @@ If mWriteBidAndAskBars Then
                                         inputValueNames, _
                                         params, _
                                         , _
-                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
+                                        IIf(mBarWriter Is Nothing, 0, 2))
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.bars
-    studyMgr.startStudy mAskBarsStudy, 0
+    Set mAskBars = barsStudy.Bars
+    studyMgr.StartStudy mAskBarsStudy, 0
 
 End If
 
@@ -944,39 +959,39 @@ Else
     TickSize = mContract.TickSize
 End If
 
-Set mInputStudy = studyMgr.addSource(sourceName)
-Set mSession = mInputStudy.session
-mBidInputHandle = studyMgr.addInput(mInputStudy, _
+Set mInputStudy = studyMgr.AddSource(sourceName)
+Set mSession = mInputStudy.Session
+mBidInputHandle = studyMgr.AddInput(mInputStudy, _
                         BidInputName, _
                         "Bid prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         TickSize)
-mAskInputHandle = studyMgr.addInput(mInputStudy, _
+mAskInputHandle = studyMgr.AddInput(mInputStudy, _
                         AskInputName, _
                         "Ask prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
                         TickSize)
-mTradeInputHandle = studyMgr.addInput(mInputStudy, _
+mTradeInputHandle = studyMgr.AddInput(mInputStudy, _
                         TradeInputName, _
                         "Trade prices", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
                         TickSize)
-mOpenInterestInputHandle = studyMgr.addInput(mInputStudy, _
+mOpenInterestInputHandle = studyMgr.AddInput(mInputStudy, _
                         OpenInterestInputName, _
                         "Open interest", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
                         TickSize)
-mTickVolumeInputHandle = studyMgr.addInput(mInputStudy, _
+mTickVolumeInputHandle = studyMgr.AddInput(mInputStudy, _
                         TickVolumeInputName, _
                         "Tick Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
-mVolumeInputHandle = studyMgr.addInput(mInputStudy, _
+mVolumeInputHandle = studyMgr.AddInput(mInputStudy, _
                         VolumeInputName, _
                         "Volume", _
                         StudyInputTypes.InputTypeInteger, _
@@ -986,52 +1001,52 @@ End Sub
 
 Private Sub startHistDataFetch()
 ' ensure that fetching the historical data occurs after the current call has completed,
-' since this is within the Timeframes.add call, otherwise the caller may miss the
+' since this is within the Timeframes.Add call, otherwise the caller may miss the
 ' BarsLoaded event.
 
 StartTask Me, PriorityNormal, "Timeframe (" & getName & "): start bar fetch"
 End Sub
 
 Private Sub StartStudies()
-Dim lInputStudy As inputStudy
+Dim lInputStudy As InputStudy
 Dim lStudy As BarStudy
 
-' for historical timeframes, don't want to switch to the ticker
+' for historical timeframes, don't want to switch to the Ticker
 If mIsHistorical Then Exit Sub
 
-Set lInputStudy = tickr.inputStudy
+Set lInputStudy = tickr.InputStudy
 
-' first use the target Input Study's timestamp to set the current Input Study's
-' time to ensure the study is aware of any session boundary that has been notified to
+' first use the target Input Study's Timestamp to set the current Input Study's
+' time to ensure the study is aware of any Session boundary that has been notified to
 ' the target
-If lInputStudy.timestamp > mInputStudy.timestamp Then mInputStudy.setSessionCurrentTime lInputStudy.timestamp
+If lInputStudy.Timestamp > mInputStudy.Timestamp Then mInputStudy.SetSessionCurrentTime lInputStudy.Timestamp
 
 ReDim inputValueNames(1) As String
 inputValueNames(0) = TradeInputName
 inputValueNames(1) = VolumeInputName
 
 Set lStudy = mTradeBarsStudy
-studyMgr.moveStudy lStudy, lInputStudy, inputValueNames
+studyMgr.MoveStudy lStudy, lInputStudy, inputValueNames
 
-' now make sure any volume studies get the correct
-' current volume value
-tickr.notifyCurrentVolume
+' now make sure any Volume studies get the correct
+' current Volume value
+tickr.NotifyCurrentVolume
 
 If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     
     inputValueNames(0) = BidInputName
     Set lStudy = mBidBarsStudy
-    studyMgr.moveStudy lStudy, lInputStudy, inputValueNames
+    studyMgr.MoveStudy lStudy, lInputStudy, inputValueNames
     
     inputValueNames(0) = AskInputName
     Set lStudy = mAskBarsStudy
-    studyMgr.moveStudy lStudy, lInputStudy, inputValueNames
+    studyMgr.MoveStudy lStudy, lInputStudy, inputValueNames
     
 End If
 End Sub
 
-Private Function studyMgr() As studyManager
+Private Function studyMgr() As StudyManager
 Set studyMgr = mStudyManagerRef.Target
 End Function
 
@@ -1045,12 +1060,12 @@ Private Sub WriteABar( _
                 ByVal prevTickVolume)
 Dim bar2Write As BarToWrite
 
-If mSaveIntervalSeconds < 0 Then Exit Sub
+If mBarWriter Is Nothing Then Exit Sub
 
 If theBar Is Nothing Then Exit Sub
 
 If (Not theBar.Blank) And _
-    theBar.tickVolume <> prevTickVolume _
+    theBar.TickVolume <> prevTickVolume _
 Then
     If mSaveIntervalSeconds = 0 Then
         WriteBar theBar, barType
@@ -1069,19 +1084,19 @@ Private Sub WriteBar( _
                 ByVal theBar As Bar, _
                 ByVal barType As BarTypes)
         
-' because of the delayed writes, the Timeframe may have been finished between
+' because of the delayed writes, the Timeframe may have been Finished between
 ' initiating the write timer and getting here, so check for this
 If mBarWriter Is Nothing Then Exit Sub
 
 Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
-            " Write " & mBarTimePeriod.toString & _
-            " type " & barType & " bar " & theBar.barNumber & _
-            " (" & FormatDateTime(theBar.timestamp, vbLongTime) & _
-            "): open=" & theBar.openValue & _
-            "; high=" & theBar.highValue & _
-            "; low=" & theBar.lowValue & _
-            "; close=" & theBar.closeValue & _
-            "; vol=" & theBar.volume
+            " Write " & mBarTimePeriod.ToString & _
+            " type " & barType & " bar " & theBar.BarNumber & _
+            " (" & FormatDateTime(theBar.Timestamp, vbLongTime) & _
+            "): open=" & theBar.OpenValue & _
+            "; high=" & theBar.HighValue & _
+            "; low=" & theBar.LowValue & _
+            "; close=" & theBar.CloseValue & _
+            "; vol=" & theBar.Volume
 mBarWriter.WriteBar theBar, barType, mBarTimePeriod
 End Sub
 

@@ -17,20 +17,20 @@ Public Enum Actions
     ActPlaceOrders = 1
     
     ' This action cancels all outstanding orders whose current status
-    ' indicates that they are not already either filled, cancelled or
+    ' indicates that they are not alReady either filled, cancelled or
     ' cancelling. Note that where an order has not yet been placed, there
     ' may still be work to do, for example logging or notifying listeners.
     ActCancelOrders
     
     ' This action cancels the stop order if it exists and its current
-    ' status indicates that it is not already either filled, cancelled or
+    ' status indicates that it is not alReady either filled, cancelled or
     ' cancelling. Note that where the order has not yet been placed,
     ' there may still be work to do, for example logging or notifying
     ' listeners.
     ActCancelStopOrder
     
     ' This action cancels the target order if it exists and its current
-    ' status indicates that it is not already either filled, cancelled or
+    ' status indicates that it is not alReady either filled, cancelled or
     ' cancelling. Note that where the order has not yet been placed,
     ' there may still be work to do, for example logging or notifying
     ' listeners.
@@ -51,7 +51,7 @@ Public Enum Actions
     ActResubmitStopAndTargetOrders
     
     ' This action creates and places an orders whose effect is to cancel
-    ' any existing size already acquired by this order plex. For example,
+    ' any existing size alReady acquired by this order plex. For example,
     ' if the order plex is currently long 1 contract, the closeout order
     ' must sell 1 contract.
     ActPlaceCloseoutOrder
@@ -114,14 +114,14 @@ Public Enum StateTransitionStimuli
     StimExecute = 1
     
     ' This stimulus indicates that the application has requested that
-    ' the order plex be cancelled provided the entry order has not already
+    ' the order plex be cancelled provided the entry order has not alReady
     ' been fully or partially filled. If the entry order is filled during
     ' cancelling, then the stop and target orders (if they exist) must
     ' remain in place
     StimCancelIfNoFill
     
     ' This stimulus indicates that the application has requested that
-    ' the order plex be cancelled even if the entry order has already been
+    ' the order plex be cancelled even if the entry order has alReady been
     ' fully or partially filled. If the entry order is filled during
     ' cancelling, then the stop and target orders (if they exist) must
     ' nevertheless be cancelled.
@@ -308,7 +308,7 @@ mTableBuilder.addStateTableEntry _
             Actions.ActCompletionActions
 
 ' The application requests that the order plex be cancelled provided no fills
-' have occurred. But a fill has already occurred, so we do nothing.
+' have occurred. But a fill has alReady occurred, so we do nothing.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             StateTransitionStimuli.StimCancelIfNoFill, _
@@ -317,7 +317,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted
 
 ' The application requests that the order plex be cancelled provided no fills
-' have occurred. No fills have already occurred, so we cancel all the orders
+' have occurred. No fills have alReady occurred, so we cancel all the orders
 ' and enter the cancelling state.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
@@ -472,7 +472,7 @@ mTableBuilder.addStateTableEntry _
 '=======================================================================
 
 ' The application has requested that the order plex be cancelled, provided
-' there have been no fills. Since it is already being cancelled, there is
+' there have been no fills. Since it is alReady being cancelled, there is
 ' nothing to do.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
@@ -482,7 +482,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' The application has requested that the order plex be cancelled, even if
-' there have already been fills. Since it is already being cancelled, there
+' there have alReady been fills. Since it is alReady being cancelled, there
 ' is nothing to do.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _

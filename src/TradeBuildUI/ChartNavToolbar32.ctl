@@ -334,7 +334,7 @@ Implements ChangeListener
 
 Private Const ModuleName                    As String = "ChartNavToolbar32"
 
-Private Const ChartNavCommandAutoScale           As String = "autoscale"
+Private Const ChartNavCommandAutoScale           As String = "Autoscaling"
 Private Const ChartNavCommandAutoScroll          As String = "autoscroll"
 
 Private Const ChartNavCommandIncreaseSpacing     As String = "increasespacing"
@@ -365,10 +365,11 @@ Private Const ChartNavCommandThinnerBars         As String = "thinnerbars"
 
 Private WithEvents mTradeBuildChart             As TradeBuildChart
 Attribute mTradeBuildChart.VB_VarHelpID = -1
-Private mController                             As chartController
 Private WithEvents mPriceRegion                 As ChartRegion
 Attribute mPriceRegion.VB_VarHelpID = -1
-Private mMultichart                             As MultiChart
+Private mMultichartRef                          As WeakReference
+Private WithEvents mBarSeries                   As BarSeries
+Attribute mBarSeries.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -376,6 +377,11 @@ Private mMultichart                             As MultiChart
 
 Private Sub UserControl_Resize()
 UserControl.Height = Toolbar1.Height
+End Sub
+
+Private Sub UserControl_Terminate()
+gLogger.Log LogLevelDetail, "ChartNavToolbar32 terminated"
+Debug.Print "ChartNavToolbar32 terminated"
 End Sub
 
 '================================================================================
@@ -389,49 +395,49 @@ On Error GoTo Err
 
 Select Case Button.Key
 Case ChartNavCommandShowBars
-    mPriceRegion.firstBarSeries.displayMode = BarDisplayModeBar
+    mBarSeries.Style.DisplayMode = BarDisplayModeBar
 Case ChartNavCommandShowCandlesticks
-    mPriceRegion.firstBarSeries.displayMode = BarDisplayModeCandlestick
+    mBarSeries.Style.DisplayMode = BarDisplayModeCandlestick
 Case ChartNavCommandShowLine
     ' not yet implemented in ChartSkil
 Case ChartNavCommandShowCrosshair
-    mController.PointerStyle = PointerCrosshairs
+    mTradeBuildChart.PointerStyle = PointerCrosshairs
 Case ChartNavCommandShowDiscCursor
-    mController.PointerStyle = PointerDisc
+    mTradeBuildChart.PointerStyle = PointerDisc
 Case ChartNavCommandThinnerBars
-    Select Case mPriceRegion.firstBarSeries.displayMode
+    Select Case mBarSeries.DisplayMode
     Case BarDisplayModeCandlestick
-        If mPriceRegion.firstBarSeries.barWidth > 0.1 Then
-            mPriceRegion.firstBarSeries.barWidth = mPriceRegion.firstBarSeries.barWidth - 0.1
+        If mBarSeries.Width > 0.1 Then
+            mBarSeries.Style.Width = mBarSeries.Width - 0.1
         End If
-        If mPriceRegion.firstBarSeries.barWidth <= 0.1 Then
+        If mBarSeries.Width <= 0.1 Then
             Button.Enabled = False
         End If
     Case BarDisplayModeBar
-        If mPriceRegion.firstBarSeries.barThickness > 1 Then
-            mPriceRegion.firstBarSeries.barThickness = mPriceRegion.firstBarSeries.barThickness - 1
+        If mBarSeries.Thickness > 1 Then
+            mBarSeries.Style.Thickness = mBarSeries.Thickness - 1
         End If
-        If mPriceRegion.firstBarSeries.barThickness = 1 Then
+        If mBarSeries.Thickness = 1 Then
             Button.Enabled = False
         End If
     End Select
 Case ChartNavCommandThickerBars
-    Select Case mPriceRegion.firstBarSeries.displayMode
+    Select Case mBarSeries.DisplayMode
     Case BarDisplayModeCandlestick
-        mPriceRegion.firstBarSeries.barWidth = mPriceRegion.firstBarSeries.barWidth + 0.1
+        mBarSeries.Style.Width = mBarSeries.Width + 0.1
     Case BarDisplayModeBar
-        mPriceRegion.firstBarSeries.barThickness = mPriceRegion.firstBarSeries.barThickness + 1
+        mBarSeries.Style.Thickness = mBarSeries.Thickness + 1
     End Select
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = True
 Case ChartNavCommandReduceSpacing
-    If mController.twipsPerBar >= 50 Then
-        mController.twipsPerBar = mController.twipsPerBar - 25
+    If mTradeBuildChart.TwipsPerBar >= 50 Then
+        mTradeBuildChart.TwipsPerBar = mTradeBuildChart.TwipsPerBar - 25
     End If
-    If mController.twipsPerBar < 50 Then
+    If mTradeBuildChart.TwipsPerBar < 50 Then
         Button.Enabled = False
     End If
 Case ChartNavCommandIncreaseSpacing
-    mController.twipsPerBar = mController.twipsPerBar + 25
+    mTradeBuildChart.TwipsPerBar = mTradeBuildChart.TwipsPerBar + 25
     Toolbar1.Buttons(ChartNavCommandReduceSpacing).Enabled = True
 Case ChartNavCommandScaleDown
     mPriceRegion.ScaleUp -0.09091
@@ -442,16 +448,16 @@ Case ChartNavCommandScrollDown
 Case ChartNavCommandScrollUp
     mPriceRegion.ScrollVerticalProportion 0.2
 Case ChartNavCommandScrollLeft
-    mController.ScrollX -(mController.ChartWidth * 0.2)
+    mTradeBuildChart.BaseChartController.ScrollX -(mTradeBuildChart.BaseChartController.ChartWidth * 0.2)
 Case ChartNavCommandScrollRight
-    mController.ScrollX mController.ChartWidth * 0.2
+    mTradeBuildChart.BaseChartController.ScrollX mTradeBuildChart.BaseChartController.ChartWidth * 0.2
 Case ChartNavCommandScrollEnd
-    mController.LastVisiblePeriod = mController.currentPeriodNumber
+    mTradeBuildChart.BaseChartController.LastVisiblePeriod = mTradeBuildChart.BaseChartController.CurrentPeriodNumber
 Case ChartNavCommandAutoScale
     If Button.value = tbrPressed Then
-        mPriceRegion.Autoscale = True
+        mPriceRegion.Autoscaling = True
     Else
-        mPriceRegion.Autoscale = False
+        mPriceRegion.Autoscaling = False
     End If
 End Select
 
@@ -459,7 +465,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "TimeframeToolbar_ButtonClick" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TimeframeToolbar_ButtonClick" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 
@@ -483,11 +489,19 @@ End Select
 End Sub
 
 '================================================================================
+' mBarSeries Event Handlers
+'================================================================================
+
+Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
+End Sub
+
+'================================================================================
 ' mPriceRegion Event Handlers
 '================================================================================
 
 Private Sub mPriceRegion_AutoscaleChanged()
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscale, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
 End Sub
 
 '@================================================================================
@@ -540,18 +554,13 @@ Then
 End If
 
 If Not pChart Is Nothing Then
-    Set mTradeBuildChart = pChart
-    Set mController = mTradeBuildChart.chartController
-    Set mPriceRegion = mTradeBuildChart.priceRegion
-    If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+    attachToChart pChart
 ElseIf Not pMultiChart Is Nothing Then
-    Set mMultichart = pMultiChart
-    mMultichart.AddChangeListener Me
+    Set mMultichartRef = CreateWeakReference(pMultiChart)
+    multiChartObj.AddChangeListener Me
     attachToCurrentChart
 Else
-    Toolbar1.Enabled = False
     Set mTradeBuildChart = Nothing
-    Set mController = Nothing
     Set mPriceRegion = Nothing
 End If
 End Sub
@@ -560,37 +569,35 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub attachToChart(ByVal pChart As TradeBuildChart)
+Set mTradeBuildChart = pChart
+Set mPriceRegion = mTradeBuildChart.PriceRegion
+Set mBarSeries = mTradeBuildChart.TradeBarSeries
+If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+End Sub
+
 Private Sub attachToCurrentChart()
-If mMultichart.count > 0 Then
+Toolbar1.Enabled = False
+If multiChartObj.count > 0 Then
     Toolbar1.Enabled = True
-    Set mTradeBuildChart = mMultichart.Chart
-    Set mController = mTradeBuildChart.chartController
-    Set mPriceRegion = mTradeBuildChart.priceRegion
-    If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+    attachToChart multiChartObj.Chart
 Else
     Toolbar1.Enabled = False
     Set mTradeBuildChart = Nothing
-    Set mController = Nothing
     Set mPriceRegion = Nothing
 End If
 End Sub
 
+Private Function multiChartObj() As MultiChart
+Set multiChartObj = mMultichartRef.Target
+End Function
+
 Private Sub setupChartNavButtons()
 
-Dim firstBarSeries As BarSeries
-Set firstBarSeries = mPriceRegion.firstBarSeries
+Set mBarSeries = mTradeBuildChart.TradeBarSeries
+If mBarSeries Is Nothing Then Exit Sub
 
-If firstBarSeries Is Nothing Then Exit Sub
-
-If firstBarSeries.displayMode = BarDisplayModes.BarDisplayModeBar Then
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (firstBarSeries.barThickness > 1)
-Else
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (firstBarSeries.barWidth > 0.1)
-End If
+setupDisplayModeButtons
 
 If mPriceRegion.PointerStyle = PointerStyles.PointerCrosshairs Then
     Toolbar1.Buttons(ChartNavCommandShowCrosshair).value = tbrPressed
@@ -600,10 +607,22 @@ Else
     Toolbar1.Buttons(ChartNavCommandShowDiscCursor).value = tbrPressed
 End If
 
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscale, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
+Toolbar1.Enabled = True
 End Sub
 
+Private Sub setupDisplayModeButtons()
+If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
+    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
+Else
+    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Width > 0.1)
+End If
+End Sub
 
 
 

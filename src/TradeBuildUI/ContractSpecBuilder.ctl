@@ -1,12 +1,21 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#36.0#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
-   ClientHeight    =   2835
+   BackStyle       =   0  'Transparent
+   ClientHeight    =   3330
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   2190
-   ScaleHeight     =   2835
+   ScaleHeight     =   3330
    ScaleWidth      =   2190
+   Begin VB.CommandButton AdvancedButton 
+      Caption         =   "Advanced <<"
+      Height          =   330
+      Left            =   840
+      TabIndex        =   16
+      Top             =   3000
+      Width           =   1335
+   End
    Begin TWControls10.TWImageCombo CurrencyCombo 
       Height          =   330
       Left            =   840
@@ -88,35 +97,34 @@ Begin VB.UserControl ContractSpecBuilder
       Text            =   ""
    End
    Begin VB.TextBox SymbolText 
-      Height          =   285
+      Height          =   330
       Left            =   840
       TabIndex        =   1
       Top             =   360
       Width           =   1335
    End
    Begin VB.TextBox ExpiryText 
-      Height          =   285
+      Height          =   330
       Left            =   840
       TabIndex        =   3
       Top             =   1080
       Width           =   1335
    End
    Begin VB.TextBox StrikePriceText 
-      Height          =   285
+      Height          =   330
       Left            =   840
       TabIndex        =   6
       Top             =   2160
       Width           =   1335
    End
    Begin VB.TextBox LocalSymbolText 
-      Height          =   285
+      Height          =   330
       Left            =   840
       TabIndex        =   0
       Top             =   0
       Width           =   1335
    End
    Begin VB.Label RightLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Right"
       Height          =   255
       Left            =   0
@@ -125,7 +133,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label StrikePriceLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Strike price"
       Height          =   255
       Left            =   0
@@ -134,7 +141,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label SymbolLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Symbol"
       Height          =   255
       Left            =   0
@@ -143,7 +149,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label TypeLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Type"
       Height          =   255
       Left            =   0
@@ -152,7 +157,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label ExpiryLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Expiry"
       Height          =   255
       Left            =   0
@@ -161,7 +165,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label ExchangeLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Exchange"
       Height          =   255
       Left            =   0
@@ -170,7 +173,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label CurrencyLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Currency"
       Height          =   255
       Left            =   0
@@ -179,7 +181,6 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label LocalSymbolLabel 
-      BackStyle       =   0  'Transparent
       Caption         =   "Short name"
       Height          =   255
       Left            =   0
@@ -220,9 +221,11 @@ Event Ready()
 
 Private Const PropNameBackColor                         As String = "BackColor"
 Private Const PropNameForeColor                         As String = "ForeColor"
+Private Const PropNameModeAdvanced                      As String = "ModeAdvanced"
 
 Private Const PropDfltBackColor                         As Long = vbWindowBackground
 Private Const PropDfltForeColor                         As Long = vbWindowText
+Private Const PropDfltModeAdvanced                      As String = "False"
 
 '@================================================================================
 ' Enums
@@ -236,14 +239,22 @@ Private Const PropDfltForeColor                         As Long = vbWindowText
 ' Member variables
 '@================================================================================
 
-Private mReady As Boolean
+Private mReady                                          As Boolean
+
+Private mModeAdvanced                                   As Boolean
 
 '@================================================================================
 ' UserControl Event Handlers
 '@================================================================================
 
-Private Sub UserControl_GotFocus()
-If LocalSymbolText <> "" Then
+Private Sub UserControl_AmbientChanged(PropertyName As String)
+If PropertyName = "BackColor" Then setLabelsBackColor
+End Sub
+
+Private Sub UserControl_EnterFocus()
+If Not mModeAdvanced Then
+    SymbolText.SetFocus
+ElseIf LocalSymbolText <> "" Then
     LocalSymbolText.SetFocus
 ElseIf SymbolText <> "" Then
     SymbolText.SetFocus
@@ -288,19 +299,18 @@ End Sub
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+setLabelsBackColor
 
 backColor = PropDfltBackColor
 foreColor = PropDfltForeColor
+ModeAdvanced = PropDfltModeAdvanced
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
 On Error Resume Next
 
-UserControl.backColor = UserControl.Ambient.backColor
-UserControl.foreColor = UserControl.Ambient.foreColor
+setLabelsBackColor
 
 backColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
 If Err.Number <> 0 Then
@@ -314,68 +324,40 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
+ModeAdvanced = CBool(PropBag.ReadProperty(PropNameModeAdvanced, PropDfltModeAdvanced))
+If Err.Number <> 0 Then
+    ModeAdvanced = PropDfltModeAdvanced
+    Err.clear
+End If
+
 End Sub
 
 Private Sub UserControl_Resize()
-Dim rowHeight As Long
-Dim controlWidth
-
-If UserControl.Width < 1710 Then UserControl.Width = 1710
-If UserControl.Height < 8 * 315 Then UserControl.Height = 8 * 315
-
-controlWidth = UserControl.Width - LocalSymbolLabel.Width
-
-rowHeight = (UserControl.Height - RightCombo.Height) / 7
-LocalSymbolLabel.Top = 0
-LocalSymbolText.Top = 0
-LocalSymbolText.Left = LocalSymbolLabel.Width
-LocalSymbolText.Width = controlWidth
-
-SymbolLabel.Top = rowHeight
-SymbolText.Top = rowHeight
-SymbolText.Left = LocalSymbolLabel.Width
-SymbolText.Width = controlWidth
-
-TypeLabel.Top = 2 * rowHeight
-TypeCombo.Top = 2 * rowHeight
-TypeCombo.Left = LocalSymbolLabel.Width
-TypeCombo.Width = controlWidth
-
-ExpiryLabel.Top = 3 * rowHeight
-ExpiryText.Top = 3 * rowHeight
-ExpiryText.Left = LocalSymbolLabel.Width
-ExpiryText.Width = controlWidth
-
-ExchangeLabel.Top = 4 * rowHeight
-ExchangeCombo.Top = 4 * rowHeight
-ExchangeCombo.Left = LocalSymbolLabel.Width
-ExchangeCombo.Width = controlWidth
-
-CurrencyLabel.Top = 5 * rowHeight
-CurrencyCombo.Top = 5 * rowHeight
-CurrencyCombo.Left = LocalSymbolLabel.Width
-CurrencyCombo.Width = controlWidth
-
-StrikePriceLabel.Top = 6 * rowHeight
-StrikePriceText.Top = 6 * rowHeight
-StrikePriceText.Left = LocalSymbolLabel.Width
-StrikePriceText.Width = controlWidth
-
-RightLabel.Top = 7 * rowHeight
-RightCombo.Top = 7 * rowHeight
-RightCombo.Left = LocalSymbolLabel.Width
-RightCombo.Width = controlWidth
-
+resize
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 PropBag.WriteProperty PropNameBackColor, backColor, PropDfltBackColor
 PropBag.WriteProperty PropNameForeColor, foreColor, PropDfltForeColor
+PropBag.WriteProperty PropNameModeAdvanced, ModeAdvanced, PropDfltModeAdvanced
 End Sub
 
 '@================================================================================
 ' Control Event Handlers
 '@================================================================================
+
+Private Sub AdvancedButton_Click()
+ModeAdvanced = Not ModeAdvanced
+If Not ModeAdvanced Then
+    LocalSymbolText.Text = ""
+    TypeCombo.Text = ""
+    ExpiryText.Text = ""
+    ExchangeCombo.Text = ""
+    CurrencyCombo.Text = ""
+    StrikePriceText.Text = ""
+    RightCombo.Text = ""
+End If
+End Sub
 
 Private Sub CurrencyCombo_Change()
 handleCurrencyComboChange
@@ -462,10 +444,10 @@ End If
 LocalSymbolText = value.localSymbol
 SymbolText = value.symbol
 ExchangeCombo = value.exchange
-TypeCombo = SecTypeToString(value.sectype)
+TypeCombo = SecTypeToString(value.secType)
 CurrencyCombo = value.currencyCode
 ExpiryText = value.expiry
-StrikePriceText = value.expiry
+StrikePriceText = value.strike
 RightCombo = OptionRightToString(value.Right)
 End Property
 
@@ -499,6 +481,16 @@ End Property
 
 Public Property Get isReady() As Boolean
 isReady = mReady
+End Property
+
+Public Property Let ModeAdvanced( _
+                ByVal value As Boolean)
+mModeAdvanced = value
+resize
+End Property
+                
+Public Property Get ModeAdvanced() As Boolean
+ModeAdvanced = mModeAdvanced
 End Property
 
 '@================================================================================
@@ -559,21 +551,21 @@ If StrikePriceText <> "" Then
     End If
 End If
 
-If LocalSymbolText = "" Then
-    If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeNone Then
-        RaiseEvent NotReady
-        Exit Sub
-    End If
-End If
+'If LocalSymbolText = "" Then
+'    If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeNone Then
+'        RaiseEvent NotReady
+'        Exit Sub
+'    End If
+'End If
     
-If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeFuturesOption Or _
-    SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeOption _
-Then
-    If OptionRightFromString(RightCombo.Text) = OptNone Then
-        RaiseEvent NotReady
-        Exit Sub
-    End If
-End If
+'If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeFuturesOption Or _
+'    SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeOption _
+'Then
+'    If OptionRightFromString(RightCombo.Text) = OptNone Then
+'        RaiseEvent NotReady
+'        Exit Sub
+'    End If
+'End If
 
 mReady = True
 RaiseEvent Ready
@@ -629,4 +621,118 @@ Case SecurityTypes.SecTypeIndex
 End Select
 
 checkIfValid
+End Sub
+
+Private Sub resize()
+Const rowHeight As Long = 420
+Dim controlWidth
+
+If UserControl.Width < 2190 Then UserControl.Width = 2190
+If UserControl.Height <> (8 * rowHeight) + 330 Then UserControl.Height = (8 * rowHeight) + 330
+
+controlWidth = UserControl.Width - LocalSymbolLabel.Width
+
+If mModeAdvanced Then
+    LocalSymbolLabel.Visible = True
+    LocalSymbolLabel.Top = 0
+    LocalSymbolText.Visible = True
+    LocalSymbolText.Top = 0
+    LocalSymbolText.Left = LocalSymbolLabel.Width
+    LocalSymbolText.Width = controlWidth
+    
+    SymbolLabel.Visible = True
+    SymbolLabel.Top = rowHeight
+    SymbolText.Visible = True
+    SymbolText.Top = rowHeight
+    SymbolText.Left = LocalSymbolLabel.Width
+    SymbolText.Width = controlWidth
+    
+    TypeLabel.Visible = True
+    TypeLabel.Top = 2 * rowHeight
+    TypeCombo.Visible = True
+    TypeCombo.Top = 2 * rowHeight
+    TypeCombo.Left = LocalSymbolLabel.Width
+    TypeCombo.Width = controlWidth
+    
+    ExpiryLabel.Visible = True
+    ExpiryLabel.Top = 3 * rowHeight
+    ExpiryText.Visible = True
+    ExpiryText.Top = 3 * rowHeight
+    ExpiryText.Left = LocalSymbolLabel.Width
+    ExpiryText.Width = controlWidth
+    
+    ExchangeLabel.Visible = True
+    ExchangeLabel.Top = 4 * rowHeight
+    ExchangeCombo.Visible = True
+    ExchangeCombo.Top = 4 * rowHeight
+    ExchangeCombo.Left = LocalSymbolLabel.Width
+    ExchangeCombo.Width = controlWidth
+    
+    CurrencyLabel.Visible = True
+    CurrencyLabel.Top = 5 * rowHeight
+    CurrencyCombo.Visible = True
+    CurrencyCombo.Top = 5 * rowHeight
+    CurrencyCombo.Left = LocalSymbolLabel.Width
+    CurrencyCombo.Width = controlWidth
+    
+    StrikePriceLabel.Visible = True
+    StrikePriceLabel.Top = 6 * rowHeight
+    StrikePriceText.Visible = True
+    StrikePriceText.Top = 6 * rowHeight
+    StrikePriceText.Left = LocalSymbolLabel.Width
+    StrikePriceText.Width = controlWidth
+    
+    RightLabel.Visible = True
+    RightLabel.Top = 7 * rowHeight
+    RightCombo.Visible = True
+    RightCombo.Top = 7 * rowHeight
+    RightCombo.Left = LocalSymbolLabel.Width
+    RightCombo.Width = controlWidth
+    
+    AdvancedButton.Top = 8 * rowHeight
+    AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
+    AdvancedButton.caption = "Advanced <<"
+Else
+    LocalSymbolLabel.Visible = False
+    
+    SymbolLabel.Visible = True
+    SymbolLabel.Top = 0
+    SymbolText.Top = 0
+    SymbolText.Left = LocalSymbolLabel.Width
+    SymbolText.Width = controlWidth
+    
+    TypeLabel.Visible = False
+    TypeCombo.Visible = False
+    
+    ExpiryLabel.Visible = False
+    ExpiryText.Visible = False
+    
+    ExchangeLabel.Visible = False
+    ExchangeCombo.Visible = False
+    
+    CurrencyLabel.Visible = False
+    CurrencyCombo.Visible = False
+    
+    StrikePriceLabel.Visible = False
+    StrikePriceText.Visible = False
+    
+    RightLabel.Visible = False
+    RightCombo.Visible = False
+    
+    AdvancedButton.Top = rowHeight
+    AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
+    AdvancedButton.caption = "Advanced >>"
+End If
+End Sub
+
+Private Sub setLabelsBackColor()
+Dim ctl As Control
+Dim lbl As Label
+On Error Resume Next
+For Each ctl In UserControl.Controls
+    If TypeOf ctl Is Label Then
+        Set lbl = ctl
+        lbl.backColor = UserControl.Ambient.backColor
+    End If
+Next
 End Sub

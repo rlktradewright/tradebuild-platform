@@ -59,11 +59,11 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-Public Property Get name() As String
+Public Property Get Name() As String
 
 End Property
 
-Public Property Let name( _
+Public Property Let Name( _
                 ByVal value As String)
 
 End Property
@@ -72,38 +72,38 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function createStudy( _
-                ByVal name As String) As study
+Public Function CreateStudy( _
+                ByVal Name As String) As Study
                 
 End Function
 
-Public Function getImplementedStudyNames() As String()
+Public Function GetImplementedStudyNames() As String()
 
 End Function
 
 Public Function GetStudyDefaultParameters( _
-                ByVal name As String) As parameters
+                ByVal Name As String) As Parameters
                 
 End Function
 
 Public Function GetStudyDefinition( _
-                ByVal name As String) As StudyDefinition
+                ByVal Name As String) As StudyDefinition
     
 End Function
     
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
 
 End Sub
 
 Public Function SetStudyDefaultParameters( _
-                ByVal name As String, _
-                ByVal params As parameters) As Boolean
+                ByVal Name As String, _
+                ByVal params As Parameters) As Boolean
 
 End Function
 
-Public Sub terminate()
+Public Sub Terminate()
 
 End Sub
 

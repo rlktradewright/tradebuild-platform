@@ -52,9 +52,9 @@ Private Const ModuleName                    As String = "AbstractChartTool"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mControllerEV            As chartController
-Attribute mControllerEV.VB_VarHelpID = -1
-Private mController                         As chartController
+Private WithEvents mChartEV                 As ChartController
+Attribute mChartEV.VB_VarHelpID = -1
+Private mChart                              As ChartController
 
 Private mRegion                             As ChartRegion
 Private WithEvents mRegionEV                As ChartRegion
@@ -69,8 +69,6 @@ Private mSelMode                            As SelectionModes
 
 Private mPrevX                              As Double
 Private mPrevY                              As Double
-
-Private mLayer                              As LayerNumbers
 
 Private mToolRef                            As WeakReference
 Private mTool                               As IChartTool
@@ -88,10 +86,10 @@ Private mPointerIcon                        As IPictureDisp
 '@================================================================================
 
 '@================================================================================
-' mController Event Handlers
+' mChart Event Handlers
 '@================================================================================
 
-Private Sub mControllerEV_KeyDown(KeyCode As Integer, Shift As Integer)
+Private Sub mChartEV_KeyDown(KeyCode As Integer, Shift As Integer)
 
 Select Case KeyCode
 Case vbKeyDelete
@@ -105,14 +103,14 @@ Case vbKeyEscape
 End Select
 End Sub
 
-Private Sub mControllerEV_PointerModeChanged()
-If mController.PointerMode = PointerModeDefault Then
+Private Sub mChartEV_PointerModeChanged()
+If mChart.PointerMode = PointerModeDefault Then
     Deselected
     mTool.Deselected
 End If
 End Sub
 
-Private Sub mControllerEV_RegionSelected(ByVal Region As ChartSkil26.ChartRegion)
+Private Sub mChartEV_RegionSelected(ByVal Region As ChartSkil26.ChartRegion)
 If mRegion Is Nothing Then
     
     Set mTool = mToolRef.Target ' convert to a strong ref for efficiency, now that we know
@@ -123,11 +121,11 @@ If mRegion Is Nothing Then
     mTool.Region = Region
 
     Set mSelectionHandleSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerMax)
-    mSelectionHandleSeries.includeInAutoscale = False
-    mSelectionHandleSeries.displayMode = DataPointDisplayModePoint
-    mSelectionHandleSeries.pointStyle = PointSquare
-    mSelectionHandleSeries.lineThickness = 5
-    mSelectionHandleSeries.color = vbBlack
+    mSelectionHandleSeries.IncludeInAutoscale = False
+    mSelectionHandleSeries.DisplayMode = DataPointDisplayModePoint
+    mSelectionHandleSeries.PointStyle = PointSquare
+    mSelectionHandleSeries.LineThickness = 5
+    mSelectionHandleSeries.Color = vbBlack
     
     Set mSelectionHandles = New Collection
     
@@ -170,7 +168,7 @@ Case SelectionModeTool
         Else
             
             mToolInControl = True
-            mController.SetPointerModeTool
+            mChart.SetPointerModeTool
             
             StartMove
             If SelectionHandleHit(X, Y) Then
@@ -251,7 +249,7 @@ End Property
 
 Public Sub AddSelectableObject( _
                 ByVal obj As IGraphicObject)
-mSelectableObjects.add obj
+mSelectableObjects.Add obj
 End Sub
 
 Public Sub AddSelectionHandle( _
@@ -262,14 +260,14 @@ Public Sub AddSelectionHandle( _
 Dim dp As DataPoint
 Dim selHandle As New SelectionHandle
 
-Set dp = mSelectionHandleSeries.add(CDate(0))
+Set dp = mSelectionHandleSeries.Add(CDate(0))
 dp.X = X
-dp.dataValue = Y
+dp.DataValue = Y
 selHandle.Initialise dp, AllowXMove, AllowYMove
-mSelectionHandles.add selHandle
+mSelectionHandles.Add selHandle
 End Sub
 
-Public Sub finish()
+Public Sub Finish()
 
 mToolInControl = False
 
@@ -279,27 +277,27 @@ Case SelectionModeNone
 Case SelectionModeCreate
     mSelMode = SelectionModeNone
     Set mRegionEV = Nothing
-    Set mControllerEV = Nothing
+    Set mChartEV = Nothing
 Case SelectionModeTool
 
 Case Else
     mSelMode = SelectionModeTool
 End Select
 
-mController.SetPointerModeSelection
+mChart.SetPointerModeSelection
 mTool.EndResize
 End Sub
 
 Friend Sub Initialise( _
-                ByVal controller As chartController, _
+                ByVal pChart As ChartController, _
                 ByVal tool As IChartTool, _
                 ByVal pointerIcon As IPictureDisp)
-Set mController = controller
-Set mControllerEV = controller
+Set mChart = pChart
+Set mChartEV = pChart
 Set mToolRef = CreateWeakReference(tool)
 Set mPointerIcon = pointerIcon
 Set mSelectableObjects = New Collection
-mController.SetPointerModeTool
+mChart.SetPointerModeTool
 End Sub
 
 Public Sub MoveSelectionHandle( _
@@ -307,7 +305,7 @@ Public Sub MoveSelectionHandle( _
                 ByVal X As Double, _
                 ByVal Y As Double)
 Dim selHandle As SelectionHandle
-Set selHandle = mSelectionHandles.item(index)
+Set selHandle = mSelectionHandles.Item(index)
 selHandle.X = Round(X)
 selHandle.Y = Y
 End Sub
@@ -316,7 +314,7 @@ Public Function SetSelected() As Boolean
 If Not mSelMode = SelectionModeCreate Then
     mSelMode = SelectionModeTool
     Set mRegionEV = mRegion
-    Set mControllerEV = mController
+    Set mChartEV = mChart
     SetSelected = True
 End If
 End Function
@@ -332,10 +330,10 @@ For Each selHandle In mSelectionHandles
 Next
 mRegion.RemoveGraphicObjectSeries mSelectionHandleSeries
 Set mSelectableObjects = Nothing
-mController.SetPointerModeSelection
+mChart.SetPointerModeSelection
 Set mTool = Nothing
 Set mRegionEV = Nothing
-Set mControllerEV = Nothing
+Set mChartEV = Nothing
 End Sub
 
 Private Sub Deselected()
@@ -346,7 +344,7 @@ For Each selHandle In mSelectionHandles
 Next
 Set mSelectionHandles = New Collection
 Set mRegionEV = Nothing
-Set mControllerEV = Nothing
+Set mChartEV = Nothing
 End Sub
 
 Private Function SelectionHandleHit( _
@@ -380,7 +378,7 @@ Dim selHandle As SelectionHandle
 
 Select Case mSelMode
 Case SelectionModeNone
-    mController.SetPointerModeDefault
+    mChart.SetPointerModeDefault
     Undo = True
 Case SelectionModeCreate
     mTool.Delete
@@ -391,7 +389,7 @@ Case SelectionModeTool
         mToolInControl = False
         mTool.Undo
         For Each selHandle In mSelectionHandles
-            selHandle.undoMove
+            selHandle.UndoMove
         Next
         Undo = True
     End If
@@ -400,7 +398,7 @@ Case Else
         mToolInControl = False
         mTool.Undo
         For Each selHandle In mSelectionHandles
-            selHandle.undoMove
+            selHandle.UndoMove
         Next
         Undo = True
     End If

@@ -64,27 +64,27 @@ End Enum
 ' Properties
 '@================================================================================
 
-Public Property Get baseStudy() As Study
+Public Property Get BaseStudy() As Study
 
 End Property
 
-Public Property Get id() As String
+Public Property Get Id() As String
 
 End Property
 
-Public Property Get instanceName() As String
+Public Property Get InstanceName() As String
 
 End Property
 
-Public Property Get instancePath() As String
+Public Property Get InstancePath() As String
 
 End Property
 
-Public Property Get numberOfBarsRequired() As Long
+Public Property Get NumberOfBarsRequired() As Long
 
 End Property
 
-Public Property Get parameters() As parameters
+Public Property Get Parameters() As Parameters
 
 End Property
 
@@ -96,61 +96,61 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function addStudy( _
+Public Function AddStudy( _
                 ByVal pStudy As Study, _
-                ByRef valueNames() As String, _
+                ByRef ValueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
                 
 End Function
                 
-Public Function addStudyValueListener( _
+Public Function AddStudyValueListener( _
                 ByVal listener As StudyValueListener, _
-                ByVal valueName As String, _
+                ByVal ValueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
                 
 End Function
 
-Public Function getStudyValue( _
-                ByVal valueName As String, _
+Public Function GetStudyValue( _
+                ByVal ValueName As String, _
                 ByVal ref As Long) As SValue
 
 End Function
 
-Public Function getValueTicksize( _
-                ByVal valueName As String) As Double
+Public Function GetValueTicksize( _
+                ByVal ValueName As String) As Double
                 
 End Function
      
-Public Sub initialise( _
-                ByVal id As String, _
-                ByVal params As parameters, _
+Public Sub Initialise( _
+                ByVal Id As String, _
+                ByVal params As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByRef valueNames() As String, _
+                ByRef ValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 End Sub
 
-Public Sub notify( _
+Public Sub Notify( _
                 ByRef ev As StudyValueEvent)
 
 End Sub
 
-Public Function numberOfCachedValues( _
-                Optional ByVal valueName As String) As Long
+Public Function NumberOfCachedValues( _
+                Optional ByVal ValueName As String) As Long
                 
 End Function
 
-Public Sub removeStudyValueListener( _
+Public Sub RemoveStudyValueListener( _
                 ByVal listener As StudyValueListener)
                 
 End Sub
 
-Public Sub setInputTicksize( _
+Public Sub SetInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
                 

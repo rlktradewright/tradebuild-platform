@@ -79,7 +79,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 
@@ -109,20 +109,21 @@ Dim maEv As StudyValueEvent ' event structure for notifying values to the
 Dim failpoint As Long
 On Error GoTo Err
 
-If mStudyFoundation.isNewBar Then
+If mStudyFoundation.IsNewBar Then
     mPrevBarClose = sPrevInputVal
 End If
 
-If ev.valueName = FiInputVolume Then
+ev.valueName = UCase$(ev.valueName)
+If ev.valueName = FiInputVolumeUcase Then
     ' this is a volume notification. We will assume that a volume
     ' that is received as the first notification in a bar relates to a price
     ' reported in the previous bar, so we will not check for a new bar here
     mCurrentBarVolume = ev.sVal.value
     lForceIndex = calcForceIndex(sPrevInputVal, mPrevBarClose, mCurrentBarVolume)
-    mFiCache.updateValue lForceIndex, , ev.sVal.timestamp
+    mFiCache.UpdateValue lForceIndex, , ev.sVal.timestamp
 Else
     ' this is a price notification
-    If Not mStudyFoundation.isNewBar Then
+    If Not mStudyFoundation.IsNewBar Then
         ' this is the same value as last time, so don't need to do
         ' anything as it won't change the study values
         If ev.sVal.value = sPrevInputVal Then Exit Sub
@@ -136,32 +137,32 @@ Else
     maEv = ev
     maEv.sVal.value = lForceIndex
     
-    mShortMA.notify maEv
+    mShortMA.Notify maEv
     lForceIndexShort = mShortMA.getStudyValue(DefaultStudyValueName, 0).value
     
-    mLongMA.notify maEv
+    mLongMA.Notify maEv
     lForceIndexLong = mLongMA.getStudyValue(DefaultStudyValueName, 0).value
     
     ' and update the value caches
-    If mStudyFoundation.isNewBar Then
-        mFiCache.addValue lForceIndex, _
+    If mStudyFoundation.IsNewBar Then
+        mFiCache.AddValue lForceIndex, _
                             mStudyFoundation.barNumber, _
                             ev.sVal.timestamp, _
                             ev.sVal.barStartTime
-        mFiCacheShort.addValue lForceIndexShort, _
+        mFiCacheShort.AddValue lForceIndexShort, _
                                 mStudyFoundation.barNumber, _
                                 ev.sVal.timestamp, _
                                 ev.sVal.barStartTime
-        mFiCacheLong.addValue lForceIndexLong, _
+        mFiCacheLong.AddValue lForceIndexLong, _
                                 mStudyFoundation.barNumber, _
                                 ev.sVal.timestamp, _
                                 ev.sVal.barStartTime
     Else
-        mFiCache.updateValue lForceIndex, mStudyFoundation.barNumber, ev.sVal.timestamp
-        mFiCacheShort.updateValue lForceIndexShort, _
+        mFiCache.UpdateValue lForceIndex, mStudyFoundation.barNumber, ev.sVal.timestamp
+        mFiCacheShort.UpdateValue lForceIndexShort, _
                                 mStudyFoundation.barNumber, _
                                 ev.sVal.timestamp
-        mFiCacheLong.updateValue lForceIndexLong, _
+        mFiCacheLong.UpdateValue lForceIndexLong, _
                                 mStudyFoundation.barNumber, _
                                 ev.sVal.timestamp
     End If
@@ -176,7 +177,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -214,7 +215,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -287,7 +288,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -301,7 +302,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -334,7 +335,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -353,21 +354,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -381,7 +382,7 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _

@@ -43,14 +43,14 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mStudyText As studyText
+Private mStudyText As StudyText
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set studyText = New studyText
+Set StudyText = New StudyText
 End Sub
 
 '@================================================================================
@@ -65,16 +65,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let position(ByVal value As StudyPoint)
-mStudyText.position = value
+Public Property Let Position(ByVal value As StudyPoint)
+mStudyText.Position = value
 End Property
 
-Public Property Let text(ByVal value As String)
-mStudyText.text = value
+Public Property Let Text(ByVal value As String)
+mStudyText.Text = value
 End Property
 
-Public Property Get studyText() As studyText
-Set studyText = mStudyText
+Public Property Get StudyText() As StudyText
+Set StudyText = mStudyText
 End Property
 
 '@================================================================================

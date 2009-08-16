@@ -56,23 +56,23 @@ Private mTimePeriods                        As New Collection
 '@================================================================================
 
 Public Function gGetTimePeriod( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits) As TimePeriod
+                ByVal Length As Long, _
+                ByVal Units As TimePeriodUnits) As TimePeriod
 Dim tp As TimePeriod
 
-If length < 1 And units <> TimePeriodNone Then
+If Length < 1 And Units <> TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
             "Length cannot be < 1"
 End If
 
-If length <> 0 And units = TimePeriodNone Then
+If Length <> 0 And Units = TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
             "Length must be zero for a null timeperiod"
 End If
 
-Select Case units
+Select Case Units
     Case TimePeriodNone
 
     Case TimePeriodSecond
@@ -97,20 +97,20 @@ Select Case units
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
-            "Invalid units argument"
+            "Invalid Units argument"
 End Select
 
 Set tp = New TimePeriod
-tp.initialise length, units
+tp.Initialise Length, Units
 
 
 ' now ensure that only a single object for each timeperiod exists
 On Error Resume Next
-Set gGetTimePeriod = mTimePeriods(tp.toString)
+Set gGetTimePeriod = mTimePeriods(tp.ToString)
 On Error GoTo 0
 
 If gGetTimePeriod Is Nothing Then
-    mTimePeriods.add tp, tp.toString
+    mTimePeriods.Add tp, tp.ToString
     Set gGetTimePeriod = tp
 End If
 

@@ -343,7 +343,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
 
 finishReaders
 finishWriters

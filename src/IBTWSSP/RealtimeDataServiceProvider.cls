@@ -41,6 +41,8 @@ Implements IRealtimeDataServiceProvider
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "RealtimeDataServiceProvider"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -53,6 +55,9 @@ Implements IRealtimeDataServiceProvider
 ' Member variables
 '================================================================================
 
+Private WithEvents mTWSAPI As TWSAPI
+Attribute mTWSAPI.VB_VarHelpID = -1
+
 Private mServer As String
 Private mPort As Long
 Private mClientID As Long
@@ -62,6 +67,7 @@ Private mProviderKey As String
 
 Private mName As String
 Private mHandle As Long
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mTWSLogLevel As TWSLogLevels
@@ -155,14 +161,13 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 On Error GoTo err
-logMessage "IBTWSSP:RealtimeDataServiceProvider:ICommonServiceProvider_Terminate terminating"
+logMessage "IBTWSSP:RealtimeDataServiceProvider terminating"
 finishReaders
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 err:
-logMessage "IBTWSSP:RealtimeDataServiceProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                "ICommonServiceProvider_Terminate", _
                 err.Description
 End Sub
 
@@ -177,26 +182,31 @@ Private Function IRealtimeDataServiceProvider_CreateRealtimeDataReader( _
 Dim reader As RealtimeDataReader
 
 On Error GoTo err
+
+If mTWSAPI Is Nothing Then
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, _
+                                    mPort, _
+                                    mClientID, _
+                                    mProviderKey, _
+                                    mConnectionRetryIntervalSecs, _
+                                    mTWSLogLevel)
+End If
+
 Set reader = New RealtimeDataReader
 Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
-reader.RealtimeDataServiceProvider = Me
-reader.commonServiceConsumer = mCommonServiceConsumer
-reader.realtimeDataInputServiceConsumer = serviceConsumer
-reader.streamingDataConsumer = dataConsumer
-reader.server = mServer
-reader.port = mPort
-reader.clientID = mClientID
-reader.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-reader.keepConnection = mkeepConnection
-reader.providerKey = mProviderKey
-reader.TWSLogLevel = mTWSLogLevel
-reader.name = mName & " (reader)"
+reader.Initialise Me, _
+                mCommonServiceConsumer, _
+                serviceConsumer, _
+                dataConsumer, _
+                mTWSAPI, _
+                mHandle
+
 mRealtimeDataReaders.add reader
+
 Exit Function
 err:
-logMessage "IBTWSSP:RealtimeDataServiceProvider:IRealtimeDataServiceProvider_CreateRealtimeDataReader (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
+                "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
                 err.Description
 End Function
 
@@ -206,8 +216,63 @@ IRealtimeDataServiceProvider_Supports = gRealtimeDataSupports(capabilities)
 End Function
 
 '================================================================================
-' xxxx Event Handlers
+' mTWSAPI Event Handlers
 '================================================================================
+
+Private Sub mTWSAPI_Connected()
+notifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
+            "Connected to TWS " & mTWSAPI.connectionString
+End Sub
+
+Private Sub mTWSAPI_ConnectFailed( _
+                ByVal Description As String, _
+                ByVal retrying As Boolean)
+On Error GoTo err
+If retrying Then
+    notifyEvent StandardSPEventCodes.RTRetryConnectDataSource, _
+                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                ": " & Description
+Else
+    notifyEvent StandardSPEventCodes.RTCantConnectDataSource, _
+                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                ": " & Description
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
+On Error GoTo err
+If reconnecting Then
+    notifyEvent StandardSPEventCodes.RTReConnectingDataSource, _
+                "Lost connection to TWS (reconnecting) " & mTWSAPI.connectionString
+Else
+    notifyEvent StandardSPEventCodes.RTLostConnectionToDataSource, _
+                "Lost connection to TWS " & mTWSAPI.connectionString
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_Disconnected( _
+                ByVal reason As String)
+On Error GoTo err
+notifyEvent StandardSPEventCodes.RTDisconnectedFromDataSource, _
+            "Disconnected from TWS " & mTWSAPI.connectionString & _
+            ": reason=: " & reason
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_Disconnected", _
+                err.Description
+End Sub
 
 '================================================================================
 ' Properties
@@ -219,10 +284,6 @@ End Property
 
 Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
-End Property
-
-Friend Property Get handle() As Long
-handle = mHandle
 End Property
 
 Friend Property Let keepConnection(ByVal value As Boolean)
@@ -279,6 +340,13 @@ For Each reader In mRealtimeDataReaders
     End If
     i = i + 1
 Next
+
+If mRealtimeDataReaders.Count = 0 And _
+    Not mkeepConnection _
+Then
+    gReleaseTWSAPIInstance mTWSAPI
+    Set mTWSAPI = Nothing
+End If
 End Sub
 
 '================================================================================
@@ -290,17 +358,28 @@ Dim reader As RealtimeDataReader
 For Each reader In mRealtimeDataReaders
     reader.finish
 Next
+If Not mTWSAPI Is Nothing Then
+    Dim lTWSAPI As TWSAPI
+    Set lTWSAPI = mTWSAPI
+    Set mTWSAPI = Nothing   ' clear event handlers
+    gReleaseTWSAPIInstance lTWSAPI
+End If
+
 End Sub
 
 Private Sub handleFatalError( _
                 ByVal number As Long, _
                 ByVal source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
 
-finishReaders
+logMessage "Error " & err.number & ": " & _
+            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
+            err.Description, _
+            LogLevelSevere
 
-Set mCommonServiceConsumer = Nothing
+gReleaseAllTWSAPIInstances
+
+mCommonServiceConsumer.NotifyFatalError number, source, Description, mHandle
 End Sub
 
 Private Sub logMessage( _
@@ -308,8 +387,18 @@ Private Sub logMessage( _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
 If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message
+            ProjectName & "." & ModuleName & ": " & message
 End Sub
+
+Private Sub notifyEvent( _
+                ByVal eventCode As StandardSPEventCodes, _
+                ByVal eventMessage As String)
+If mCommonServiceConsumer Is Nothing Then Exit Sub
+mCommonServiceConsumer.notifyEvent eventCode, _
+                                    eventMessage, _
+                                    mHandle
+End Sub
+
 
 
 

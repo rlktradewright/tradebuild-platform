@@ -120,6 +120,8 @@ Private mBarSeries          As BarSeries
 Private mLineSeries         As LineSeries
 Private mTextSeries         As TextSeries
 
+Private mValueSeries        As IGraphicObjectSeries
+
 Private mTextOffset         As Dimension
 
 Private mConditionalActions()   As ConditionalAction
@@ -130,6 +132,8 @@ Private mUpdatePerTick      As Boolean
 
 Private mBarFormatter       As BarFormatter
 
+Private mValueName          As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -137,6 +141,11 @@ Private mBarFormatter       As BarFormatter
 Private Sub Class_Initialize()
 ReDim mConditionalActions(10) As ConditionalAction
 mConditionalActionsIndex = -1
+End Sub
+
+Private Sub Class_Terminate()
+gLogger.Log LogLevelHighDetail, "StudyValueHandler terminated"
+Debug.Print "StudyValueHandler terminated"
 End Sub
 
 '@================================================================================
@@ -186,15 +195,23 @@ Public Property Get Region() As ChartRegion
 Set Region = mRegion
 End Property
 
-Public Property Let updatePerTick(ByVal value As Boolean)
+Public Property Let UpdatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
+End Property
+
+Public Property Get ValueName() As String
+ValueName = mValueName
+End Property
+
+Public Property Get ValueSeries() As IGraphicObjectSeries
+Set ValueSeries = mValueSeries
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub addConditionalAction( _
+Public Sub AddConditionalAction( _
                 pConditionalAction As ConditionalAction)
 
 If mConditionalActionsIndex >= UBound(mConditionalActions) Then
@@ -206,47 +223,28 @@ mConditionalActions(mConditionalActionsIndex) = pConditionalAction
 
 End Sub
 
-Public Sub finish( _
-                ByVal removeSeries As Boolean)
-If Not mDataSeries Is Nothing Then
-    If removeSeries Then mRegion.RemoveGraphicObjectSeries mDataSeries
-    Set mDataSeries = Nothing
-End If
-If Not mBarSeries Is Nothing Then
-    If removeSeries Then mRegion.RemoveGraphicObjectSeries mBarSeries
-    Set mBarSeries = Nothing
-End If
-If Not mLineSeries Is Nothing Then
-    If removeSeries Then mRegion.RemoveGraphicObjectSeries mLineSeries
-    Set mLineSeries = Nothing
-End If
-If Not mTextSeries Is Nothing Then
-    If removeSeries Then mRegion.RemoveGraphicObjectSeries mTextSeries
-    Set mTextSeries = Nothing
-End If
-End Sub
-
 Friend Sub Initialise( _
                 ByVal chartMgr As ChartManager, _
                 ByVal Region As ChartRegion, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
-                ByVal updatePerTick As Boolean)
+                ByVal pUpdatePerTick As Boolean)
 
 Set mChartManagerRef = CreateWeakReference(chartMgr)
 Set mRegion = Region
                 
-mUpdatePerTick = updatePerTick
+mUpdatePerTick = pUpdatePerTick
+mValueName = studyValueConfig.ValueName
 
-If Not IsEmpty(studyValueDef.maximumValue) Or _
-    Not IsEmpty(studyValueDef.minimumValue) _
+If Not IsEmpty(studyValueDef.MaximumValue) Or _
+    Not IsEmpty(studyValueDef.MinimumValue) _
 Then
-    Region.Autoscale = False
-    Region.SetVerticalScale CSng(studyValueDef.minimumValue), _
-                            CSng(studyValueDef.maximumValue)
+    Region.Autoscaling = False
+    Region.SetVerticalScale CSng(studyValueDef.MinimumValue), _
+                            CSng(studyValueDef.MaximumValue)
 End If
 
-mValueMode = studyValueDef.valueMode
+mValueMode = studyValueDef.ValueMode
 mValueType = studyValueDef.valueType
 
 Select Case mValueMode
@@ -274,9 +272,9 @@ End Select
 
 End Sub
 
-Public Sub updatePreviousBar(ByVal timestamp As Date)
+Public Sub UpdatePreviousBar(ByVal timestamp As Date)
 If Not mCurrentDataPoint Is Nothing Then
-    If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
+    If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
     If mConditionalActionsIndex >= 0 Then processConditionalActions timestamp
 End If
 End Sub
@@ -285,34 +283,34 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addBarToChart( _
+Private Sub AddBarToChart( _
                 ByVal timestamp As Date)
 
 Set mPrevBar = mCurrentBar
 
-Set mCurrentBar = mBarSeries.add(timestamp)
+Set mCurrentBar = mBarSeries.Add(timestamp)
 End Sub
 
-Private Sub addDataPointToChart( _
+Private Sub AddDataPointToChart( _
                 ByVal timestamp As Date)
 
 Set mPrevDataPoint = mCurrentDataPoint
 
-Set mCurrentDataPoint = mDataSeries.add(timestamp)
-If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
+Set mCurrentDataPoint = mDataSeries.Add(timestamp)
+If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
 End Sub
 
-Private Sub addLineToChart()
+Private Sub AddLineToChart()
 
 Set mPrevLine = mCurrentLine
 
-Set mCurrentLine = mLineSeries.add
+Set mCurrentLine = mLineSeries.Add
 End Sub
 
-Private Sub addTextToChart()
+Private Sub AddTextToChart()
 Set mPrevText = mCurrentText
 
-Set mCurrentText = mTextSeries.add
+Set mCurrentText = mTextSeries.Add
 End Sub
 
 Private Function chartMgr() As ChartManager
@@ -329,21 +327,21 @@ If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
 Set lBar = ev.sVal.value
 
 If mCurrentBar Is Nothing Or _
-    ev.sVal.barNumber <> prevBarNumber _
+    ev.sVal.BarNumber <> prevBarNumber _
 Then
-    addBarToChart lBar.timestamp
+    AddBarToChart lBar.timestamp
     
     If Not lBar.Blank Then
         ' we may be processing a historical bar here, so make sure open, high
         ' low and close are all set
         
-        mCurrentBar.Tick lBar.openValue
-        mCurrentBar.Tick lBar.highValue
-        mCurrentBar.Tick lBar.lowValue
-        mCurrentBar.Tick lBar.closeValue
+        mCurrentBar.Tick lBar.OpenValue
+        mCurrentBar.Tick lBar.HighValue
+        mCurrentBar.Tick lBar.LowValue
+        mCurrentBar.Tick lBar.CloseValue
     End If
 Else
-    If Not lBar.Blank Then mCurrentBar.Tick lBar.closeValue
+    If Not lBar.Blank Then mCurrentBar.Tick lBar.CloseValue
 End If
 
 If Not lBar.Blank Then
@@ -351,7 +349,7 @@ If Not lBar.Blank Then
     If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar lBar, mCurrentBar
 End If
 
-prevBarNumber = ev.sVal.barNumber
+prevBarNumber = ev.sVal.BarNumber
 End Sub
 
 Private Function processConditionalAction( _
@@ -362,52 +360,52 @@ Dim value2 As Variant
 Dim conditionSatisfied As Boolean
 
 If pConditionalAction.isSpecial1 Then
-    value1 = chartMgr.getSpecialValue(pConditionalAction.value1)
+    value1 = chartMgr.GetSpecialValue(pConditionalAction.value1)
 Else
     value1 = pConditionalAction.value1
 End If
 
 If pConditionalAction.isSpecial2 Then
-    value2 = chartMgr.getSpecialValue(pConditionalAction.value2)
+    value2 = chartMgr.GetSpecialValue(pConditionalAction.value2)
 Else
     value2 = pConditionalAction.value2
 End If
 
 Select Case pConditionalAction.operator
 Case ConditionalOperators.OpAnd
-    conditionSatisfied = (mCurrentDataPoint.dataValue And value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue And value1)
 Case ConditionalOperators.OpBetween
-    conditionSatisfied = (mCurrentDataPoint.dataValue >= value1 And mCurrentDataPoint.dataValue <= value2)
+    conditionSatisfied = (mCurrentDataPoint.DataValue >= value1 And mCurrentDataPoint.DataValue <= value2)
 Case ConditionalOperators.OpContains
-    conditionSatisfied = (InStr(1, CStr(mCurrentDataPoint.dataValue), value1) <> 0)
+    conditionSatisfied = (InStr(1, CStr(mCurrentDataPoint.DataValue), value1) <> 0)
 Case ConditionalOperators.OpEndsWith
-    conditionSatisfied = (Right$(CStr(mCurrentDataPoint.dataValue), Len(value1)) = value1)
+    conditionSatisfied = (Right$(CStr(mCurrentDataPoint.DataValue), Len(value1)) = value1)
 Case ConditionalOperators.OpEqual
-    conditionSatisfied = (mCurrentDataPoint.dataValue = value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue = value1)
 Case ConditionalOperators.OpEqualPrevious
     If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.dataValue = mPrevDataPoint.dataValue)
+        conditionSatisfied = (mCurrentDataPoint.DataValue = mPrevDataPoint.DataValue)
     End If
 Case ConditionalOperators.OpGreaterThan
-    conditionSatisfied = (mCurrentDataPoint.dataValue > value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue > value1)
 Case ConditionalOperators.OpGreaterThanPrevious
     If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.dataValue > mPrevDataPoint.dataValue)
+        conditionSatisfied = (mCurrentDataPoint.DataValue > mPrevDataPoint.DataValue)
     End If
 Case ConditionalOperators.OpLessThan
-    conditionSatisfied = (mCurrentDataPoint.dataValue < value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue < value1)
 Case ConditionalOperators.OpLessThanPrevious
     If Not mPrevDataPoint Is Nothing Then
-        conditionSatisfied = (mCurrentDataPoint.dataValue < mPrevDataPoint.dataValue)
+        conditionSatisfied = (mCurrentDataPoint.DataValue < mPrevDataPoint.DataValue)
     End If
 Case ConditionalOperators.OpOr
-    conditionSatisfied = (mCurrentDataPoint.dataValue Or value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue Or value1)
 Case ConditionalOperators.OpStartsWith
-    conditionSatisfied = (Left$(CStr(mCurrentDataPoint.dataValue), Len(value1)) = value1)
+    conditionSatisfied = (Left$(CStr(mCurrentDataPoint.DataValue), Len(value1)) = value1)
 Case ConditionalOperators.OpTrue
-    conditionSatisfied = CBool(mCurrentDataPoint.dataValue)
+    conditionSatisfied = CBool(mCurrentDataPoint.DataValue)
 Case ConditionalOperators.OpXor
-    conditionSatisfied = (mCurrentDataPoint.dataValue Xor value1)
+    conditionSatisfied = (mCurrentDataPoint.DataValue Xor value1)
 End Select
 
 If pConditionalAction.not Then conditionSatisfied = (Not conditionSatisfied)
@@ -415,10 +413,10 @@ If pConditionalAction.not Then conditionSatisfied = (Not conditionSatisfied)
 If conditionSatisfied Then
     Select Case pConditionalAction.action
     Case StudyRenderingActions.SRActSetPeriodBackgroundColor
-        mRegion.SetPeriodBackgroundColor chartMgr.getPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
+        mRegion.SetPeriodBackgroundColor chartMgr.GetPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
     Case StudyRenderingActions.SRActSetValueColor
-        mCurrentDataPoint.upColor = CLng(pConditionalAction.actionValue)
-        mCurrentDataPoint.downColor = CLng(pConditionalAction.actionValue)
+        mCurrentDataPoint.UpColor = CLng(pConditionalAction.actionValue)
+        mCurrentDataPoint.DownColor = CLng(pConditionalAction.actionValue)
     End Select
 End If
 processConditionalAction = conditionSatisfied
@@ -443,13 +441,13 @@ Private Sub processDataPoint( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
 If mCurrentDataPoint Is Nothing Or _
-    ev.sVal.barNumber <> prevBarNumber _
+    ev.sVal.BarNumber <> prevBarNumber _
 Then
-    addDataPointToChart ev.sVal.BarStartTime
+    AddDataPointToChart ev.sVal.BarStartTime
 End If
-mCurrentDataPoint.dataValue = ev.sVal.value
+mCurrentDataPoint.DataValue = ev.sVal.value
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.barNumber
+prevBarNumber = ev.sVal.BarNumber
 mLatestValue = ev.sVal.value
 End Sub
 
@@ -461,20 +459,20 @@ Dim studyLine As studyLine
 If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
 
 If mCurrentLine Is Nothing Or _
-    ev.sVal.barNumber <> prevBarNumber _
+    ev.sVal.BarNumber <> prevBarNumber _
 Then
-    addLineToChart
+    AddLineToChart
 End If
 
 Set studyLine = ev.sVal.value
-mCurrentLine.SetPosition mRegion.newPoint( _
-                                chartMgr.getPeriod(studyLine.point1.X).periodNumber, _
-                                studyLine.point1.Y), _
-                        mRegion.newPoint( _
-                                chartMgr.getPeriod(studyLine.point2.X).periodNumber, _
-                                studyLine.point2.Y)
+mCurrentLine.SetPosition mRegion.NewPoint( _
+                                chartMgr.GetPeriod(studyLine.Point1.X).periodNumber, _
+                                studyLine.Point1.Y), _
+                        mRegion.NewPoint( _
+                                chartMgr.GetPeriod(studyLine.Point2.X).periodNumber, _
+                                studyLine.Point2.Y)
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.barNumber
+prevBarNumber = ev.sVal.BarNumber
 End Sub
 
 Private Sub processString( _
@@ -482,17 +480,17 @@ Private Sub processString( _
 Static prevBarNumber As Long
 
 If mCurrentText Is Nothing Or _
-    ev.sVal.barNumber <> prevBarNumber _
+    ev.sVal.BarNumber <> prevBarNumber _
 Then
-    addTextToChart
+    AddTextToChart
 End If
 
-mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(ev.sVal.BarStartTime).periodNumber, _
+mCurrentText.Position = mRegion.NewPoint( _
+                                chartMgr.GetPeriod(ev.sVal.BarStartTime).periodNumber, _
                                 0, CoordsCounterDistance, CoordsRelative)
 mCurrentText.Text = ev.sVal.value
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.barNumber
+prevBarNumber = ev.sVal.BarNumber
 End Sub
 
 Private Sub processText( _
@@ -501,25 +499,26 @@ Static prevBarNumber As Long
 Dim studyText As studyText
 
 If mCurrentText Is Nothing Or _
-    ev.sVal.barNumber <> prevBarNumber _
+    ev.sVal.BarNumber <> prevBarNumber _
 Then
-    addTextToChart
+    AddTextToChart
 End If
 
 Set studyText = ev.sVal.value
-mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(studyText.position.X).periodNumber, _
-                                studyText.position.Y)
+mCurrentText.Position = mRegion.NewPoint( _
+                                chartMgr.GetPeriod(studyText.Position.X).periodNumber, _
+                                studyText.Position.Y)
 mCurrentText.offset = mTextOffset
 mCurrentText.Text = studyText.Text
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
-prevBarNumber = ev.sVal.barNumber
+prevBarNumber = ev.sVal.BarNumber
 End Sub
 
 Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.layer)
-If Not studyValueConfig.barStyle Is Nothing Then mBarSeries.style = studyValueConfig.barStyle
+Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.Layer)
+Set mValueSeries = mBarSeries
+If Not studyValueConfig.BarStyle Is Nothing Then mBarSeries.Style = studyValueConfig.BarStyle
 If Not studyValueConfig.BarFormatterFactory Is Nothing Then
     Set mBarFormatter = studyValueConfig.BarFormatterFactory.CreateBarFormatter(studyValueConfig.Bars)
 End If
@@ -527,20 +526,23 @@ End Sub
 
 Private Sub setupDataSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.layer)
-If Not studyValueConfig.dataPointStyle Is Nothing Then mDataSeries.style = studyValueConfig.dataPointStyle
+Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.Layer)
+Set mValueSeries = mDataSeries
+If Not studyValueConfig.DataPointStyle Is Nothing Then mDataSeries.Style = studyValueConfig.DataPointStyle
 End Sub
 
 Private Sub setupLineSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.layer)
-If Not studyValueConfig.lineStyle Is Nothing Then mLineSeries.style = studyValueConfig.lineStyle
+Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.Layer)
+Set mValueSeries = mLineSeries
+If Not studyValueConfig.LineStyle Is Nothing Then mLineSeries.Style = studyValueConfig.LineStyle
 End Sub
 
 Private Sub setupTextSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.layer)
-If Not studyValueConfig.textStyle Is Nothing Then mTextSeries.style = studyValueConfig.textStyle
-Set mTextOffset = studyValueConfig.offset
+Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.Layer)
+Set mValueSeries = mTextSeries
+If Not studyValueConfig.TextStyle Is Nothing Then mTextSeries.Style = studyValueConfig.TextStyle
+Set mTextOffset = mRegion.NewDimension(studyValueConfig.OffsetX, studyValueConfig.OffsetY)
 End Sub
 

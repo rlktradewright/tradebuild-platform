@@ -80,14 +80,26 @@ Public Function AddAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal name As String, _
                 ByVal includeDefaultStudyLibrary As Boolean, _
-                Optional ByVal setAsDefault As Boolean = False) As ConfigurationSection
+                Optional ByVal setAsDefault As Boolean = False, _
+                Optional ByVal twsServer As String, _
+                Optional ByVal twsPort As Long = 7496, _
+                Optional ByVal clientId As Long = -1, _
+                Optional ByVal connectionRetryIntervalSecs As Long = 10, _
+                Optional ByVal twsLogLevel As String = "ERROR", _
+                Optional ByVal tickfilesPath As String) As ConfigurationSection
 Dim failpoint As Long
 On Error GoTo Err
 
 Set AddAppInstanceConfig = addNewAppConfig(pConfigFile, _
                                             name, _
                                             includeDefaultStudyLibrary, _
-                                            setAsDefault)
+                                            setAsDefault, _
+                                            twsServer, _
+                                            twsPort, _
+                                            clientId, _
+                                            connectionRetryIntervalSecs, _
+                                            twsLogLevel, _
+                                            tickfilesPath)
 
 Exit Function
 
@@ -263,7 +275,13 @@ Private Function addNewAppConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal newAppConfigName As String, _
                 ByVal includeDefaultStudyLibrary As Boolean, _
-                ByVal setAsDefault As Boolean) As ConfigurationSection
+                ByVal setAsDefault As Boolean, _
+                Optional ByVal twsServer As String, _
+                Optional ByVal twsPort As Long = 7496, _
+                Optional ByVal clientId As Long = -1, _
+                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal twsLogLevel As String = "ERROR", _
+                Optional ByVal tickfilesPath As String) As ConfigurationSection
 Dim newAppConfigSection As ConfigurationSection
 Dim newAppTradeBuildSection As ConfigurationSection
 
@@ -279,7 +297,13 @@ Set newAppConfigSection = pConfigFile.AddConfigurationSection(generateSectionPat
 If setAsDefault Then setDefault pConfigFile, newAppConfigSection
 
 Set newAppTradeBuildSection = newAppConfigSection.AddConfigurationSection(ConfigNameTradeBuild)
-TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection
+TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection, _
+                                                    twsServer, _
+                                                    twsPort, _
+                                                    clientId, _
+                                                    connectionRetryIntervalSecs, _
+                                                    twsLogLevel, _
+                                                    tickfilesPath
 
 If includeDefaultStudyLibrary Then
     SetDefaultStudyLibraryConfig newAppTradeBuildSection
@@ -335,7 +359,7 @@ Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
 
 If tradebuildEntry Is Nothing Then
     log "No service providers defined in this configuration", LogLevelNormal
-    setupServiceProviders = False
+    setupServiceProviders = True
 Else
     On Error GoTo Err
     TradeBuildAPI.ServiceProviders.LoadServiceProviderConfiguration tradebuildEntry
@@ -357,12 +381,18 @@ Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
 
 If tradebuildEntry Is Nothing Then
     log "No study libraries defined in this configuration", LogLevelNormal
-    setupStudyLibraries = False
+    setupStudyLibraries = True
 Else
+    On Error GoTo Err
     LoadStudyLibraryConfiguration tradebuildEntry
     setupStudyLibraries = True
 End If
 
+Exit Function
+
+Err:
+log "Study library configuration failed: " & Err.Description, LogLevelNormal
+setupStudyLibraries = False
 End Function
 
 Private Sub setDefault( _

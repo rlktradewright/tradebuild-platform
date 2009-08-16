@@ -3,12 +3,18 @@ Option Explicit
 
 Private Const AppName As String = "ChartDemo"
 
+Private mListener As LogListener
+
+Public Sub gKillLogging()
+GetLogger("").removeLogListener mListener
+End Sub
+
 Public Sub Main()
+InitialiseTWUtilities
 If getLog Then ChartForm.Show
 End Sub
 
 Private Function getLog() As Boolean
-Dim listener As LogListener
 Dim logFilename As String
 
 On Error GoTo Err
@@ -21,12 +27,12 @@ logFilename = GetSpecialFolderPath(FolderIdLocalAppdata) & _
                                     "\v" & _
                                     App.Major & "." & App.Minor & _
                                     "\log.txt"
-Set listener = CreateFileLogListener(logFilename, _
+Set mListener = CreateFileLogListener(logFilename, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
 ' ensure log entries of all infotypes get written to the log file
-GetLogger("").addLogListener listener
+GetLogger("").addLogListener mListener
 
 getLog = True
 Exit Function
@@ -39,6 +45,7 @@ Else
     Err.Raise Err.Number    ' unknown error so re-raise it
 End If
 End Function
+
 
 
 

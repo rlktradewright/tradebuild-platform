@@ -87,8 +87,8 @@ Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileW
 Set mWriter = value
 End Property
 
-Friend Property Get ready() As Boolean
-ready = mServiceProviderWriterReady
+Friend Property Get Ready() As Boolean
+Ready = mServiceProviderWriterReady
 End Property
 
 '@================================================================================
@@ -105,13 +105,13 @@ mServiceProviderWriterReady = False
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
-Dim item As Variant
+Dim Item As Variant
 Dim pendingTick As GenericTick
 
 mServiceProviderWriterReady = True
 
-For Each item In mPendingWrites
-    pendingTick = item
+For Each Item In mPendingWrites
+    pendingTick = Item
     mWriter.writeTick pendingTick
 Next
 
@@ -121,7 +121,7 @@ End Sub
 Friend Sub writeTick( _
                 pTick As GenericTick)
 If Not mServiceProviderWriterReady Then
-    mPendingWrites.add pTick
+    mPendingWrites.Add pTick
 Else
     mWriter.writeTick pTick
 End If

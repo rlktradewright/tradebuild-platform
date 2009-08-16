@@ -63,20 +63,20 @@ Private mText As String
 ' Properties
 '@================================================================================
 
-Friend Property Let position(ByVal value As StudyPoint)
+Friend Property Let Position(ByVal value As StudyPoint)
 mPosition = value
 End Property
 
-Public Property Get position() As StudyPoint
-position = mPosition
+Public Property Get Position() As StudyPoint
+Position = mPosition
 End Property
 
-Friend Property Let text(ByVal value As String)
+Friend Property Let Text(ByVal value As String)
 mText = value
 End Property
 
-Public Property Get text() As String
-text = mText
+Public Property Get Text() As String
+Text = mText
 End Property
 
 '@================================================================================

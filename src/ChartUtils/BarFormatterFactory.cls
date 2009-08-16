@@ -60,6 +60,10 @@ Private Const ModuleName                    As String = "BarFormatterFactory"
 ' Properties
 '@================================================================================
 
+Public Property Let ConfigurationSection(ByVal value As ConfigurationSection)
+
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -67,6 +71,10 @@ Private Const ModuleName                    As String = "BarFormatterFactory"
 Public Function CreateBarFormatter(ByVal pBars As TimeframeUtils26.Bars) As BarFormatter
 
 End Function
+
+Public Sub LoadFromConfig(ByVal config As ConfigurationSection)
+
+End Sub
 
 '@================================================================================
 ' Helper Functions

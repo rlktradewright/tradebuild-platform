@@ -70,12 +70,12 @@ Private Sub Task_run()
 Dim i As Long
 
 Do While mIndex <= mNumberToAppend And i < 100
-    mDestBars.add mSourceBars.Bar(mIndex), _
-                    mDestBars.currentBarNumber + 1, _
-                    mSourceBars.Bar(mIndex).timestamp
+    mDestBars.Add mSourceBars.Bar(mIndex), _
+                    mDestBars.CurrentBarNumber + 1, _
+                    mSourceBars.Bar(mIndex).Timestamp
     
     If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.progress 100 * mIndex / mNumberToAppend
+        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mNumberToAppend
     End If
     
     mIndex = mIndex + 1
@@ -83,8 +83,8 @@ Do While mIndex <= mNumberToAppend And i < 100
 Loop
 
 If mIndex > mNumberToAppend Then
-    mTaskContext.progress 100
-    mTaskContext.finish Empty, False
+    mTaskContext.Progress 100
+    mTaskContext.Finish Empty, False
     Exit Sub
 End If
     
@@ -110,7 +110,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal destBars As Bars, _
                 ByVal sourceBars As Bars, _
                 ByVal numberToAppend As Long)

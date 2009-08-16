@@ -82,7 +82,7 @@ Private mTickVolume As Long
 Private mTickVolumeChanged As Boolean
 
 Private mTimestamp As Date
-Private mBlank As Boolean   ' indicates that there were no ticks during the bar
+Private mBlank As Boolean   ' indicates that there were no Ticks during the Bar
 
 '@================================================================================
 ' Class Event Handlers
@@ -108,16 +108,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get barChanged() As Boolean
-barChanged = mBarChanged
+Public Property Get BarChanged() As Boolean
+BarChanged = mBarChanged
 End Property
 
-Friend Property Let barNumber(ByVal value As Long)
+Friend Property Let BarNumber(ByVal value As Long)
 mBarNumber = value
 End Property
 
-Public Property Get barNumber() As Long
-barNumber = mBarNumber
+Public Property Get BarNumber() As Long
+BarNumber = mBarNumber
 End Property
 
 Public Property Get Blank() As Boolean
@@ -128,33 +128,33 @@ Friend Property Let Blank(ByVal newvalue As Boolean)
 mBlank = newvalue
 End Property
 
-Public Property Get closeValue() As Double
-closeValue = mClose
+Public Property Get CloseValue() As Double
+CloseValue = mClose
 End Property
 
-Public Property Get closeChanged() As Boolean
-closeChanged = mCloseChanged
+Public Property Get CloseChanged() As Boolean
+CloseChanged = mCloseChanged
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mTimestamp
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
-Friend Property Let timestamp(ByVal newvalue As Date)
+Friend Property Let Timestamp(ByVal newvalue As Date)
 mTimestamp = newvalue
 End Property
 
-Public Property Get gain() As Double
-gain = mClose - mOpen
-If gain < 0 Then gain = 0
+Public Property Get Gain() As Double
+Gain = mClose - mOpen
+If Gain < 0 Then Gain = 0
 End Property
 
-Public Property Get highValue() As Double
-highValue = mHigh
+Public Property Get HighValue() As Double
+HighValue = mHigh
 End Property
 
-Public Property Get highChanged() As Boolean
-highChanged = mHighChanged
+Public Property Get HighChanged() As Boolean
+HighChanged = mHighChanged
 End Property
 
 Public Property Get HL2() As Double
@@ -173,78 +173,78 @@ Public Property Get IsUpBar() As Boolean
 IsUpBar = (mClose > mOpen)
 End Property
 
-Public Property Get loss() As Double
-loss = mOpen - mClose
-If loss < 0 Then loss = 0
+Public Property Get Loss() As Double
+Loss = mOpen - mClose
+If Loss < 0 Then Loss = 0
 End Property
 
-Public Property Get lowValue() As Double
-lowValue = mLow
+Public Property Get LowValue() As Double
+LowValue = mLow
 End Property
 
-Public Property Get lowChanged() As Boolean
-lowChanged = mLowChanged
+Public Property Get LowChanged() As Boolean
+LowChanged = mLowChanged
 End Property
 
 Public Property Get OHLC4() As Double
 OHLC4 = (mOpen + mHigh + mLow + mClose) / 4
 End Property
 
-Public Property Get openChanged() As Boolean
-openChanged = mOpenChanged
+Public Property Get OpenChanged() As Boolean
+OpenChanged = mOpenChanged
 End Property
 
-Public Property Get openInterest() As Long
-openInterest = mOpenInterest
+Public Property Get OpenInterest() As Long
+OpenInterest = mOpenInterest
 End Property
 
-Public Property Get openInterestChanged() As Long
-openInterestChanged = mOpenInterestChanged
+Public Property Get OpenInterestChanged() As Long
+OpenInterestChanged = mOpenInterestChanged
 End Property
 
-Public Property Get openValue() As Double
-openValue = mOpen
+Public Property Get OpenValue() As Double
+OpenValue = mOpen
 End Property
 
-Public Property Get tickVolume() As Long
-tickVolume = mTickVolume
+Public Property Get TickVolume() As Long
+TickVolume = mTickVolume
 End Property
 
-Public Property Get volume() As Long
-volume = mVolume
+Public Property Get Volume() As Long
+Volume = mVolume
 End Property
 
-Public Property Get volumeChanged() As Long
-volumeChanged = mVolumeChanged
+Public Property Get VolumeChanged() As Long
+VolumeChanged = mVolumeChanged
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub incrementTickVolume( _
+Friend Sub IncrementTickVolume( _
                 ByVal increment As Long)
 mTickVolume = mTickVolume + increment
 fireChange BarTickVolumeChanged
 End Sub
 
-Friend Sub initialise( _
-                ByVal timestamp As Date, _
-                ByVal openValue As Double, _
-                ByVal highValue As Double, _
-                ByVal lowValue As Double, _
-                ByVal closeValue As Double, _
-                Optional ByVal volume As Long, _
-                Optional ByVal tickVolume As Long, _
-                Optional ByVal openInterest As Long)
-mTimestamp = timestamp
-mOpen = openValue
-mHigh = highValue
-mLow = lowValue
-mClose = closeValue
-mVolume = volume
-mTickVolume = tickVolume
-mOpenInterest = openInterest
+Friend Sub Initialise( _
+                ByVal Timestamp As Date, _
+                ByVal OpenValue As Double, _
+                ByVal HighValue As Double, _
+                ByVal LowValue As Double, _
+                ByVal CloseValue As Double, _
+                Optional ByVal Volume As Long, _
+                Optional ByVal TickVolume As Long, _
+                Optional ByVal OpenInterest As Long)
+mTimestamp = Timestamp
+mOpen = OpenValue
+mHigh = HighValue
+mLow = LowValue
+mClose = CloseValue
+mVolume = Volume
+mTickVolume = TickVolume
+mOpenInterest = OpenInterest
 
 mBarChanged = True
 mOpenChanged = True
@@ -262,18 +262,18 @@ If mOpenInterest <> 0 Then fireChange BarOpenInterestChanged
 If mTickVolume <> 0 Then fireChange BarTickVolumeChanged
 End Sub
 
-Friend Sub notifyOpenInterest( _
-                ByVal openInterest As Long)
+Friend Sub NotifyOpenInterest( _
+                ByVal OpenInterest As Long)
 clean
-' note that we don't set mBlank to false because the bar is blank until
+' note that we don't set mBlank to false because the Bar is blank until
 ' the first value is notified
-mOpenInterest = openInterest
+mOpenInterest = OpenInterest
 mBarChanged = True
 mOpenInterestChanged = True
 fireChange BarOpenInterestChanged
 End Sub
 
-Friend Sub notifyValue(ByVal value As Double)
+Friend Sub NotifyValue(ByVal value As Double)
 clean
 
 If mBlank Then
@@ -305,18 +305,18 @@ mTickVolume = mTickVolume + 1
 If mBarChanged Then fireChange BarPriceChanged
 End Sub
 
-Friend Sub notifyVolume( _
-                ByVal volume As Long)
+Friend Sub NotifyVolume( _
+                ByVal Volume As Long)
 clean
-' note that we don't set mBlank to false because the bar is blank until
+' note that we don't set mBlank to false because the Bar is blank until
 ' the first value is notified
-mVolume = volume
+mVolume = Volume
 mBarChanged = True
 mVolumeChanged = True
 fireChange BarVolumeChanged
 End Sub
 
-Public Sub resetChangeIndicators()
+Public Sub ResetChangeIndicators()
 clean
 End Sub
 

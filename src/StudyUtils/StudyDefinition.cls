@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements StudyDefinition
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -62,73 +60,20 @@ Private mNeedsBars As Boolean
 
 Private mDefaultRegion As StudyDefaultRegions
 
-Private mStudyInputDefinitions As studyInputDefinitions
-Private mStudyValueDefinitions As studyValueDefinitions
-Private mStudyParameterDefinitions As studyParameterDefinitions
+Private mStudyInputDefinitions As StudyInputDefinitions
+Private mStudyValueDefinitions As StudyValueDefinitions
+Private mStudyParameterDefinitions As StudyParameterDefinitions
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mStudyInputDefinitions = New studyInputDefinitions
-Set mStudyValueDefinitions = New studyValueDefinitions
-Set mStudyParameterDefinitions = New studyParameterDefinitions
+Set mStudyInputDefinitions = New StudyInputDefinitions
+Set mStudyValueDefinitions = New StudyValueDefinitions
+Set mStudyParameterDefinitions = New StudyParameterDefinitions
 mNeedsBars = True
 End Sub
-
-'@================================================================================
-' IStudyDefinition Interface Members
-'@================================================================================
-
-'Private Function IStudyDefinition_Clone() As StudyDefinition
-'Set IStudyDefinition_Clone = clone
-'End Function
-'
-'Private Property Let IStudyDefinition_defaultRegion( _
-'                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
-'mDefaultRegion = RHS
-'End Property
-'
-'Private Property Get IStudyDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
-'IStudyDefinition_defaultRegion = mDefaultRegion
-'End Property
-'
-'Private Property Let IStudyDefinition_Description(ByVal RHS As String)
-'mDescription = RHS
-'End Property
-'
-'Private Property Get IStudyDefinition_Description() As String
-'IStudyDefinition_Description = mDescription
-'End Property
-'
-'Private Property Let IStudyDefinition_name(ByVal RHS As String)
-'mName = RHS
-'End Property
-'
-'Private Property Get IStudyDefinition_name() As String
-'IStudyDefinition_name = mName
-'End Property
-'
-'Private Property Let IStudyDefinition_shortName(ByVal RHS As String)
-'mShortName = RHS
-'End Property
-'
-'Private Property Get IStudyDefinition_shortName() As String
-'IStudyDefinition_shortName = mShortName
-'End Property
-'
-'Private Property Get IStudyDefinition_StudyInputDefinitions() As StudyInputDefinitions
-'Set IStudyDefinition_StudyInputDefinitions = mStudyInputDefinitions
-'End Property
-'
-'Private Property Get IStudyDefinition_StudyParameterDefinitions() As StudyParameterDefinitions
-'Set IStudyDefinition_StudyParameterDefinitions = mStudyParameterDefinitions
-'End Property
-'
-'Private Property Get IStudyDefinition_StudyValueDefinitions() As StudyValueDefinitions
-'Set IStudyDefinition_StudyValueDefinitions = mStudyValueDefinitions
-'End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -138,109 +83,121 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let defaultRegion(ByVal value As StudyDefaultRegions)
+Public Property Let DefaultRegion(ByVal value As StudyDefaultRegions)
 mDefaultRegion = value
 End Property
 
-Public Property Get defaultRegion() As StudyDefaultRegions
-defaultRegion = mDefaultRegion
+Public Property Get DefaultRegion() As StudyDefaultRegions
+DefaultRegion = mDefaultRegion
 End Property
 
-Public Property Let description(ByVal value As String)
+Public Property Get DefaultValueName() As String
+Dim svd As StudyValueDefinition
+For Each svd In mStudyValueDefinitions
+    If svd.isDefault Then
+        DefaultValueName = svd.Name
+        Exit Property
+    End If
+Next
+End Property
+
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get description() As String
-description = mDescription
+Public Property Get Description() As String
+Description = mDescription
 End Property
 
-Public Property Let name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Let needsBars(ByVal value As Boolean)
+Public Property Let NeedsBars(ByVal value As Boolean)
 mNeedsBars = value
 End Property
 
-Public Property Get needsBars() As Boolean
-needsBars = mNeedsBars
+Public Property Get NeedsBars() As Boolean
+NeedsBars = mNeedsBars
 End Property
 
-Public Property Let shortName(ByVal value As String)
+Public Property Let ShortName(ByVal value As String)
 mShortName = value
 End Property
 
-Public Property Get shortName() As String
-shortName = mShortName
+Public Property Get ShortName() As String
+ShortName = mShortName
 End Property
 
-Public Property Get studyInputDefinitions() As studyInputDefinitions
-Set studyInputDefinitions = mStudyInputDefinitions
+Public Property Get StudyInputDefinitions() As StudyInputDefinitions
+Set StudyInputDefinitions = mStudyInputDefinitions
 End Property
 
-Public Property Get studyParameterDefinitions() As studyParameterDefinitions
-Set studyParameterDefinitions = mStudyParameterDefinitions
+Public Property Get StudyParameterDefinitions() As StudyParameterDefinitions
+Set StudyParameterDefinitions = mStudyParameterDefinitions
 End Property
 
-Public Property Get studyValueDefinitions() As studyValueDefinitions
-Set studyValueDefinitions = mStudyValueDefinitions
+Public Property Get StudyValueDefinitions() As StudyValueDefinitions
+Set StudyValueDefinitions = mStudyValueDefinitions
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function clone() As StudyDefinition
-Dim newSIDs As studyInputDefinitions
+Public Function Clone() As StudyDefinition
+Dim newSIDs As StudyInputDefinitions
 Dim newSID As StudyInputDefinition
 Dim sid As StudyInputDefinition
-Dim newSPDs As studyParameterDefinitions
+Dim newSPDs As StudyParameterDefinitions
 Dim newSPD As StudyParameterDefinition
 Dim spd As StudyParameterDefinition
-Dim newSVDs As studyValueDefinitions
+Dim newSVDs As StudyValueDefinitions
 Dim newSVD As StudyValueDefinition
 Dim svd As StudyValueDefinition
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set clone = New StudyDefinition
-clone.defaultRegion = mDefaultRegion
-clone.description = mDescription
-clone.name = mName
-clone.needsBars = mNeedsBars
-clone.shortName = mShortName
+Set Clone = New StudyDefinition
+Clone.DefaultRegion = mDefaultRegion
+Clone.Description = mDescription
+Clone.Name = mName
+Clone.NeedsBars = mNeedsBars
+Clone.ShortName = mShortName
 
-Set newSIDs = clone.studyInputDefinitions
+Set newSIDs = Clone.StudyInputDefinitions
 For Each sid In mStudyInputDefinitions
-    Set newSID = newSIDs.add(sid.name)
-    newSID.description = sid.description
+    Set newSID = newSIDs.Add(sid.Name)
+    newSID.Description = sid.Description
     newSID.inputType = sid.inputType
 Next
 
-Set newSPDs = clone.studyParameterDefinitions
+Set newSPDs = Clone.StudyParameterDefinitions
 For Each spd In mStudyParameterDefinitions
-    Set newSPD = newSPDs.add(spd.name)
-    newSPD.description = spd.description
+    Set newSPD = newSPDs.Add(spd.Name)
+    newSPD.Description = spd.Description
     newSPD.maximumValue = spd.maximumValue
     newSPD.minimumValue = spd.minimumValue
     newSPD.parameterType = spd.parameterType
     newSPD.permittedValues = spd.permittedValues
 Next
 
-Set newSVDs = clone.studyValueDefinitions
+Set newSVDs = Clone.StudyValueDefinitions
 For Each svd In mStudyValueDefinitions
-    Set newSVD = newSVDs.add(svd.name)
-    newSVD.defaultRegion = svd.defaultRegion
-    newSVD.description = svd.description
+    Set newSVD = newSVDs.Add(svd.Name)
+    newSVD.DefaultRegion = svd.DefaultRegion
+    newSVD.Description = svd.Description
+    newSVD.IncludeInChart = svd.IncludeInChart
     newSVD.isDefault = svd.isDefault
     newSVD.maximumValue = svd.maximumValue
     newSVD.minimumValue = svd.minimumValue
     newSVD.valueMode = svd.valueMode
+    newSVD.valueStyle = svd.valueStyle
     newSVD.valueType = svd.valueType
 Next
 
@@ -248,9 +205,9 @@ Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "clone" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Function

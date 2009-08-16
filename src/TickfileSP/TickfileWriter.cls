@@ -130,8 +130,8 @@ Case TickTypes.TickTypeMarketDepth
         writeTickfileLine CDbl(tick.timestamp) & "," & _
                     FormatTimestamp(tick.timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                     TICK_MARKET_DEPTH & "," & _
-                    tick.Position & "," & _
-                    tick.marketMaker & "," & _
+                    tick.position & "," & _
+                    tick.marketmaker & "," & _
                     tick.operation & "," & _
                     tick.side & "," & _
                     format(tick.price, "Fixed") & "," & _
@@ -315,7 +315,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
-mCommonServiceConsumer.FatalServiceProviderError Number, _
+mCommonServiceConsumer.NotifyFatalError Number, _
                             Source, _
                             Description, _
                             mTickfileServiceProvider.handle

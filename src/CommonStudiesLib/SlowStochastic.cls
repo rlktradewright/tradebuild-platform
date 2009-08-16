@@ -88,7 +88,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(SStochValueK)
@@ -101,7 +101,7 @@ Private Sub customNotify( _
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
-customNumberOfBarsRequired = mKPeriods + mDPeriods + mKCache.cyclicSize
+customNumberOfBarsRequired = mKPeriods + mDPeriods + mKCache.CyclicSize
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
@@ -130,8 +130,8 @@ Next
 Set mStoch = New Stochastic
 Set mStochStudy = mStoch
 Set lparams = GStochastic.defaultParameters
-lparams.setParameterValue StochParamKPeriods, mKPeriods
-lparams.setParameterValue StochParamDPeriods, mKDPeriods
+lparams.SetParameterValue StochParamKPeriods, mKPeriods
+lparams.SetParameterValue StochParamDPeriods, mKDPeriods
 valueNames(0) = "Input"
 mStochStudy.initialise GenerateGUIDString, _
                         lparams, _
@@ -140,13 +140,13 @@ mStochStudy.initialise GenerateGUIDString, _
                         Nothing, _
                         Nothing
 
-mStochStudy.addStudyValueListener Me, StochValueD, 1
+mStochStudy.AddStudyValueListener Me, StochValueD, 1
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -166,23 +166,23 @@ Private Sub StudyValueListener_Notify( _
 Static sPrevVal As Variant
 Dim newEv As StudyValueEvent
 
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 
-If Not mStudyFoundation.isNewBar Then
+If Not mStudyFoundation.IsNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
     sPrevVal = ev.sVal.value
 End If
 
 mK = ev.sVal.value
-mMASmoothingStudy.notify ev
+mMASmoothingStudy.Notify ev
 mD = mMASmoothing.ma.value
 
-If mStudyFoundation.isNewBar Then
-    mKCache.addValue mK, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-    mDCache.addValue mD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+If mStudyFoundation.IsNewBar Then
+    mKCache.AddValue mK, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mDCache.AddValue mD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mKCache.updateValue mK, ev.sVal.barNumber, ev.sVal.timestamp
-    mDCache.updateValue mD, ev.sVal.barNumber, ev.sVal.timestamp
+    mKCache.UpdateValue mK, ev.sVal.barNumber, ev.sVal.timestamp
+    mDCache.UpdateValue mD, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
 newEv.sVal.barNumber = ev.sVal.barNumber
@@ -206,11 +206,11 @@ End Sub
 '@================================================================================
 
 Public Property Get percentD(Optional ByVal ref As Integer) As SValue
-percentD = mKCache.getSValue(ref)
+percentD = mKCache.GetSValue(ref)
 End Property
 
 Public Property Get percentK(Optional ByVal ref As Integer) As SValue
-percentK = mKCache.getSValue(ref)
+percentK = mKCache.GetSValue(ref)
 End Property
 
 '@================================================================================
@@ -238,7 +238,7 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Set Study_addStudy = mStudyFoundation.addStudy( _
+Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -252,7 +252,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -286,7 +286,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -305,21 +305,21 @@ customInitialise id, _
 End Sub
 
 Private Property Get Study_instanceName() As String
-Study_instanceName = mStudyFoundation.instanceName
+Study_instanceName = mStudyFoundation.InstanceName
 End Property
 
 Private Property Get Study_instancePath() As String
-Study_instancePath = mStudyFoundation.instancePath
+Study_instancePath = mStudyFoundation.InstancePath
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.notifyInput ev
+mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
-Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
 Private Function Study_numberOfCachedValues( _
@@ -333,7 +333,7 @@ End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mStudyFoundation.removeStudyValueListener listener
+mStudyFoundation.RemoveStudyValueListener listener
 End Sub
 
 Private Sub Study_setInputTicksize( _

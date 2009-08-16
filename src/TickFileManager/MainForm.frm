@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#88.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#166.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.6"
    ClientHeight    =   7875
@@ -77,7 +77,7 @@ Begin VB.Form MainForm
          Top             =   960
          Width           =   2415
          _ExtentX        =   4260
-         _ExtentY        =   5106
+         _ExtentY        =   6509
       End
       Begin VB.CommandButton ConfigureButton 
          Caption         =   "&Configure"
@@ -1423,46 +1423,13 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_Notification(ev As NotificationEvent)
-On Error GoTo err
-Select Case ev.eventCode
-Case ApiNotifyCodes.ApiNotifyNoContractDetails
-    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
-    
-Case Else
-    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
-End Select
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTicker_Notification"
-End Sub
-
-Private Sub mTicker_outputTickfileCreated( _
-                            ByVal timestamp As Date, _
-                            ByVal filename As String)
-writeStatusMessage "Created output tickfile: " & filename
+Private Sub mTicker_TickfileWriterNotification(ev As TradeBuild26.WriterEvent)
+If ev.Action = WriterFileCreated Then writeStatusMessage "Created output tickfile: " & ev.filename
 End Sub
 
 '================================================================================
 ' mTickfileManager Event Handlers
 '================================================================================
-
-Private Sub mTickfileManager_Notification( _
-                ev As NotificationEvent)
-On Error GoTo err
-Select Case ev.eventCode
-Case ApiNotifyCodes.ApiNotifyNoContractDetails
-    writeStatusMessage "Error " & ev.eventCode & ": " & ev.eventMessage
-    
-Case Else
-    writeStatusMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
-End Select
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTickfileManager_Notification"
-End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
@@ -1569,21 +1536,10 @@ End Sub
 
 Private Sub mTradeBuildAPI_Error( _
                 ev As ErrorEvent)
-Dim spError As ServiceProviderError
+writeStatusMessage "Fatal rrror " & ev.errorCode & ": " & ev.errorMessage
 
-On Error GoTo err
+End
 
-Select Case ev.errorCode
-Case ApiNotifyCodes.ApiNotifyServiceProviderError
-    Set spError = mTradeBuildAPI.GetServiceProviderError
-    writeStatusMessage "Error from " & _
-                        spError.serviceProviderName & _
-                        ": code " & spError.errorCode & _
-                        ": " & spError.message
-
-Case Else
-    writeStatusMessage "Error " & ev.errorCode & ": " & ev.errorMessage
-End Select
 Exit Sub
 
 err:

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#139.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#206.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -11,10 +11,40 @@ Begin VB.Form fChart
    ScaleHeight     =   6780
    ScaleWidth      =   12525
    StartUpPosition =   3  'Windows Default
+   Begin MSComctlLib.ImageList ImageList1 
+      Left            =   11400
+      Top             =   840
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      ImageWidth      =   16
+      ImageHeight     =   16
+      MaskColor       =   12632256
+      _Version        =   393216
+      BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
+         NumListImages   =   4
+         BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "fChart.frx":0000
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "fChart.frx":015A
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "fChart.frx":05AC
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "fChart.frx":0706
+            Key             =   ""
+         EndProperty
+      EndProperty
+   End
    Begin TradeBuildUI26.MultiChart MultiChart1 
       Height          =   5295
       Left            =   0
-      TabIndex        =   5
+      TabIndex        =   3
       Top             =   960
       Width           =   11175
       _ExtentX        =   19711
@@ -22,112 +52,77 @@ Begin VB.Form fChart
    End
    Begin ComCtl3.CoolBar CoolBar1 
       Align           =   1  'Align Top
-      Height          =   540
+      Height          =   330
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   12525
       _ExtentX        =   22093
-      _ExtentY        =   953
+      _ExtentY        =   582
+      BandCount       =   2
       _CBWidth        =   12525
-      _CBHeight       =   540
+      _CBHeight       =   330
       _Version        =   "6.7.9782"
       Child1          =   "ChartToolsToolbar"
-      MinWidth1       =   2880
-      MinHeight1      =   540
-      Width1          =   2880
+      MinWidth1       =   1710
+      MinHeight1      =   330
+      Width1          =   1710
       NewRow1         =   0   'False
       Child2          =   "ChartNavToolbar1"
+      MinWidth2       =   6585
       MinHeight2      =   330
-      Width2          =   6705
+      Width2          =   6585
       NewRow2         =   0   'False
-      Child3          =   "TimeframeToolbar"
-      MinHeight3      =   330
-      Width3          =   2835
-      NewRow3         =   0   'False
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   3330
-         TabIndex        =   4
-         Top             =   105
-         Width           =   6495
-         _ExtentX        =   11456
-         _ExtentY        =   582
-      End
-      Begin MSComctlLib.Toolbar TimeframeToolbar 
-         Height          =   330
-         Left            =   10095
+         Left            =   2160
          TabIndex        =   2
-         Top             =   105
-         Width           =   2370
-         _ExtentX        =   4180
+         Top             =   0
+         Width           =   10305
+         _ExtentX        =   18177
          _ExtentY        =   582
-         ButtonWidth     =   609
-         ButtonHeight    =   582
-         AllowCustomize  =   0   'False
-         Wrappable       =   0   'False
-         Style           =   1
-         _Version        =   393216
-         BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-            NumButtons      =   1
-            BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Key             =   "timeframe"
-               Object.ToolTipText     =   "Change the timeframe for the current chart"
-               Style           =   4
-               Object.Width           =   1700
-            EndProperty
-         EndProperty
-         Begin TradeBuildUI26.TimeframeSelector TimeframeSelector1 
-            Height          =   330
-            Left            =   0
-            TabIndex        =   3
-            ToolTipText     =   "Change the timeframe for the current chart"
-            Top             =   0
-            Width           =   1695
-            _ExtentX        =   2990
-            _ExtentY        =   582
-         End
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
-         Height          =   540
+         Height          =   330
          Left            =   180
          TabIndex        =   1
          Top             =   0
-         Width           =   2880
-         _ExtentX        =   5080
-         _ExtentY        =   953
-         ButtonWidth     =   1111
-         ButtonHeight    =   953
+         Width           =   1710
+         _ExtentX        =   3016
+         _ExtentY        =   582
+         ButtonWidth     =   609
+         ButtonHeight    =   582
          Appearance      =   1
          Style           =   1
+         ImageList       =   "ImageList1"
          _Version        =   393216
          BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
             NumButtons      =   6
             BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Caption         =   "Studies"
                Key             =   "studies"
                Object.ToolTipText     =   "Manage the studies displayed on the chart"
+               ImageIndex      =   1
             EndProperty
             BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Style           =   3
             EndProperty
             BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Caption         =   "Select"
                Key             =   "selection"
                Description     =   "Select a chart object"
+               ImageIndex      =   2
             EndProperty
             BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Style           =   3
             EndProperty
             BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Caption         =   "Lines"
                Key             =   "lines"
                Object.ToolTipText     =   "Draw lines"
+               ImageIndex      =   3
             EndProperty
             BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Caption         =   "Fib"
                Key             =   "fib"
                Object.ToolTipText     =   "Draw Fibonacci retracement lines"
+               ImageIndex      =   4
             EndProperty
          EndProperty
       End
@@ -167,6 +162,8 @@ Private Const ChartToolsCommandSelection        As String = "selection"
 Private Const ChartToolsCommandLines            As String = "lines"
 Private Const ChartToolsCommandFib              As String = "fib"
 
+Private Const ConfigSettingHistorical           As String = "&Historical"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -194,10 +191,12 @@ Private mPreviousClose As String
 
 Private mIsHistorical As Boolean
 
-Private WithEvents mController As chartController
-Attribute mController.VB_VarHelpID = -1
+Private WithEvents mChartController As ChartController
+Attribute mChartController.VB_VarHelpID = -1
 
 Private mCurrentTool As IChartTool
+
+Private mConfig As ConfigurationSection
 
 '================================================================================
 ' Class Event Handlers
@@ -209,17 +208,39 @@ End Sub
 
 Private Sub Form_Load()
 Resize
-TimeframeSelector1.initialise
+End Sub
+
+Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
+
+Select Case UnloadMode
+Case QueryUnloadConstants.vbFormControlMenu
+    ' the chart has been closed by the user so remove it from the config
+    If Not mConfig Is Nothing Then mConfig.Remove
+Case QueryUnloadConstants.vbFormCode, _
+        QueryUnloadConstants.vbAppWindows, _
+        QueryUnloadConstants.vbAppTaskManager, _
+        QueryUnloadConstants.vbFormMDIForm, _
+        QueryUnloadConstants.vbFormOwner
+    If Not mConfig Is Nothing Then updateSettings
+End Select
 End Sub
 
 Private Sub Form_Resize()
 Resize
 End Sub
 
+Private Sub Form_Terminate()
+gLogger.Log LogLevelDetail, "Chart form terminated"
+End Sub
+
 Private Sub Form_Unload(cancel As Integer)
-MultiChart1.Clear
-If mIsHistorical Then mTicker.stopTicker
-Set mTicker = Nothing
+MultiChart1.Finish
+If mIsHistorical Then
+    Dim lTicker As Ticker
+    Set lTicker = mTicker
+    Set mTicker = Nothing
+    lTicker.StopTicker
+End If
 gUnsyncStudyPicker
 End Sub
 
@@ -235,7 +256,7 @@ Select Case Button.Key
 Case ChartToolsCommandStudies
     gShowStudyPicker MultiChart1.ChartManager, _
                     mSymbol & _
-                    " (" & MultiChart1.timePeriod.toString & ")"
+                    " (" & MultiChart1.timePeriod.ToString & ")"
 Case ChartToolsCommandSelection
     setSelectionMode
 Case ChartToolsCommandLines
@@ -256,17 +277,15 @@ Select Case changeType
 Case MultiChartSelectionChanged
     If MultiChart1.Count > 0 Then
         ChartToolsToolbar.Enabled = True
-        TimeframeSelector1.Enabled = True
-        Set mController = MultiChart1.chartController
+        Set mChartController = MultiChart1.BaseChartController
+        
         setCaption
         setSelectionButton
-        setTimeframeSelector
         syncStudyPicker
     Else
         setCaption
         ChartToolsToolbar.Enabled = False
-        TimeframeSelector1.Enabled = False
-        Set mController = Nothing
+        Set mChartController = Nothing
     End If
     Set mCurrentTool = Nothing
 Case MultiChartAdd
@@ -274,26 +293,47 @@ Case MultiChartAdd
 Case MultiChartRemove
     gUnsyncStudyPicker
 Case MultiChartTimeframeChanged
-    If MultiChart1.Count > 0 Then Set mController = MultiChart1.chartController
+    If MultiChart1.Count > 0 Then Set mChartController = MultiChart1.BaseChartController
     setCaption
     setSelectionButton
-    setTimeframeSelector
     syncStudyPicker
 End Select
 End Sub
 
-Private Sub TimeframeSelector1_Click()
-If MultiChart1.Count > 0 Then
-    MultiChart1.ChangeTimeframe TimeframeSelector1.timeframeDesignator
-    setCaption
-End If
+Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities30.StateChangeEvent)
+Dim loadingText As Text
+
+Select Case ev.State
+Case ChartStateBlank
+
+Case ChartStateCreated
+
+Case ChartStateInitialised
+    Set loadingText = MultiChart1.loadingText(index)
+    loadingText.Box = True
+    loadingText.BoxFillWithBackgroundColor = True
+    loadingText.BoxThickness = 1
+    loadingText.BoxStyle = LineInvisible
+    loadingText.Color = vbYellow
+    loadingText.Font.Size = 16
+    loadingText.Font.Italic = True
+    loadingText.Align = AlignBottomCentre
+    loadingText.position = MultiChart1.PriceRegion(index).NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
+    loadingText.Text = "Fetching historical data"
+Case ChartStateLoading
+    Set loadingText = MultiChart1.loadingText(index)
+    loadingText.Color = vbGreen
+    loadingText.Text = "Loading historical data"
+Case ChartStateLoaded
+
+End Select
 End Sub
 
 '================================================================================
-' mController Event Handlers
+' mChartController Event Handlers
 '================================================================================
 
-Private Sub mController_PointerModeChanged()
+Private Sub mChartController_PointerModeChanged()
 setSelectionButton
 End Sub
 
@@ -331,6 +371,12 @@ Private Sub mTicker_stateChange( _
 If ev.State = TickerStates.TickerStateReady Then
     mSymbol = mTicker.Contract.specifier.localSymbol
     setCaption
+ElseIf ev.State = TickerStates.TickerStateStopped Then
+    ' the ticker has been stopped before the chart has been closed,
+    ' so remove the chart from the config and close it
+    mConfig.Remove
+    Set mConfig = Nothing
+    Unload Me
 End If
 End Sub
 
@@ -352,6 +398,26 @@ End Sub
 ' Methods
 '================================================================================
 
+Friend Function LoadFromConfig( _
+                ByVal config As ConfigurationSection) As Boolean
+Set mConfig = config
+mIsHistorical = CBool(mConfig.GetSetting(ConfigSettingHistorical, "False"))
+If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionMultiChart)) Then
+    LoadFromConfig = False
+    Exit Function
+End If
+
+ChartNavToolbar1.initialise , MultiChart1
+
+Set mTicker = MultiChart1.Ticker
+If Not mIsHistorical Then getInitialTickerValues
+
+setCaption
+setWindow
+
+LoadFromConfig = True
+End Function
+
 Friend Sub showChart( _
                 ByVal pTicker As Ticker, _
                 ByVal chartspec As ChartSpecifier)
@@ -359,16 +425,10 @@ Friend Sub showChart( _
 mIsHistorical = False
 
 Set mTicker = pTicker
-mSymbol = mTicker.Contract.specifier.localSymbol
-mCurrentBid = mTicker.BidPriceString
-mCurrentTrade = mTicker.TradePriceString
-mCurrentAsk = mTicker.AskPriceString
-mCurrentVolume = mTicker.Volume
-mCurrentHigh = mTicker.highPriceString
-mCurrentLow = mTicker.lowPriceString
-mPreviousClose = mTicker.closePriceString
 
-TimeframeSelector1.selectTimeframe chartspec.Timeframe
+getInitialTickerValues
+
+If Not mTicker.ReplayingTickfile Then setConfig
 
 MultiChart1.initialise mTicker, chartspec, , , New DunniganFactory
 MultiChart1.Add chartspec.Timeframe
@@ -388,7 +448,7 @@ mIsHistorical = True
 
 Set mTicker = pTicker
 
-TimeframeSelector1.selectTimeframe chartspec.Timeframe
+setConfig
 
 MultiChart1.initialise mTicker, chartspec, fromtime, totime, New DunniganFactory
 MultiChart1.Add chartspec.Timeframe
@@ -402,12 +462,12 @@ End Sub
 '================================================================================
 
 Private Sub createFibChartTool()
-Dim ls As lineStyle
+Dim ls As LineStyle
 Dim lineSpecs(4) As FibLineSpecifier
 
-Set ls = mController.DefaultLineStyle
-ls.extended = True
-ls.includeInAutoscale = False
+Set ls = New LineStyle
+ls.Extended = True
+ls.IncludeInAutoscale = False
 
 ls.Color = vbBlack
 Set lineSpecs(0).Style = ls.Clone
@@ -429,20 +489,33 @@ ls.Color = vbMagenta
 Set lineSpecs(4).Style = ls.Clone
 lineSpecs(4).Percentage = 61.8
 
-Set mCurrentTool = CreateFibRetracementTool(mController, lineSpecs, LayerNumbers.LayerHighestUser)
+Set mCurrentTool = CreateFibRetracementTool(mChartController, lineSpecs, LayerNumbers.LayerHighestUser)
 MultiChart1.SetFocus
 End Sub
 
 Private Sub createLineChartTool()
-Dim ls As lineStyle
+Dim ls As LineStyle
 
-Set ls = mController.DefaultLineStyle
-ls.extended = True
-ls.extendAfter = True
-ls.includeInAutoscale = False
+Set ls = New LineStyle
+ls.Extended = True
+ls.ExtendAfter = True
+ls.IncludeInAutoscale = False
 
-Set mCurrentTool = CreateLineTool(mController, ls, LayerBackground)
+Set mCurrentTool = CreateLineTool(mChartController, ls, LayerBackground)
 MultiChart1.SetFocus
+End Sub
+
+Private Sub getInitialTickerValues()
+If mTicker.State <> TickerStateRunning Then Exit Sub
+
+mSymbol = mTicker.Contract.specifier.localSymbol
+mCurrentBid = mTicker.BidPriceString
+mCurrentTrade = mTicker.TradePriceString
+mCurrentAsk = mTicker.AskPriceString
+mCurrentVolume = mTicker.Volume
+mCurrentHigh = mTicker.HighPriceString
+mCurrentLow = mTicker.LowPriceString
+mPreviousClose = mTicker.ClosePriceString
 End Sub
 
 Private Sub Resize()
@@ -461,7 +534,7 @@ Dim s As String
 If MultiChart1.Count = 0 Then
     s = mSymbol
 Else
-    s = mSymbol & " (" & MultiChart1.timePeriod.toString & ")"
+    s = mSymbol & " (" & MultiChart1.timePeriod.ToString & ")"
 End If
     
 If mIsHistorical Then
@@ -480,32 +553,69 @@ End If
 Me.caption = s
 End Sub
 
+Private Sub setConfig()
+Set mConfig = gAppInstanceConfig.GetConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+mConfig.SetSetting ConfigSettingHistorical, CStr(mIsHistorical)
+updateSettings
+MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMultiChart)
+End Sub
+
 Private Sub setSelectionMode()
-If mController.PointerMode <> PointerModeSelection Then
-    mController.SetPointerModeSelection
+If mChartController.PointerMode <> PointerModeSelection Then
+    mChartController.SetPointerModeSelection
     ChartToolsToolbar.buttons("selection").value = tbrPressed
 Else
-    mController.SetPointerModeDefault
+    mChartController.SetPointerModeDefault
     ChartToolsToolbar.buttons("selection").value = tbrUnpressed
 End If
 End Sub
 
 Private Sub setSelectionButton()
-If mController.PointerMode = PointerModeSelection Then
+If mChartController.PointerMode = PointerModeSelection Then
     ChartToolsToolbar.buttons("selection").value = tbrPressed
 Else
     ChartToolsToolbar.buttons("selection").value = tbrUnpressed
 End If
 End Sub
 
-Private Sub setTimeframeSelector()
-If MultiChart1.Count > 0 Then TimeframeSelector1.selectTimeframe MultiChart1.Object.Chart.timePeriod
+Private Sub setWindow()
+Me.Width = CLng(mConfig.GetSetting(ConfigSettingWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
+Me.Height = CLng(mConfig.GetSetting(ConfigSettingHeight, Me.Height / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+Me.left = CLng(mConfig.GetSetting(ConfigSettingLeft, Rnd * (Screen.Width - Me.Width) / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
+Me.Top = CLng(mConfig.GetSetting(ConfigSettingTop, Rnd * (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
+
+Select Case mConfig.GetSetting(ConfigSettingWindowstate, WindowStateNormal)
+Case WindowStateMaximized
+    Me.WindowState = FormWindowStateConstants.vbMaximized
+Case WindowStateMinimized
+    Me.WindowState = FormWindowStateConstants.vbMinimized
+Case WindowStateNormal
+    Me.WindowState = FormWindowStateConstants.vbNormal
+End Select
+
 End Sub
 
 Private Sub syncStudyPicker()
 If MultiChart1.Count = 0 Then Exit Sub
 gSyncStudyPicker MultiChart1.ChartManager, _
                 "Study picker for " & mSymbol & _
-                " (" & MultiChart1.timePeriod.toString & ")"
+                " (" & MultiChart1.timePeriod.ToString & ")"
 End Sub
+
+Private Sub updateSettings()
+Select Case Me.WindowState
+Case FormWindowStateConstants.vbMaximized
+    mConfig.SetSetting ConfigSettingWindowstate, WindowStateMaximized
+Case FormWindowStateConstants.vbMinimized
+    mConfig.SetSetting ConfigSettingWindowstate, WindowStateMinimized
+Case FormWindowStateConstants.vbNormal
+    mConfig.SetSetting ConfigSettingWindowstate, WindowStateNormal
+    mConfig.SetSetting ConfigSettingWidth, Me.Width / Screen.TwipsPerPixelX
+    mConfig.SetSetting ConfigSettingHeight, Me.Height / Screen.TwipsPerPixelY
+    mConfig.SetSetting ConfigSettingLeft, Me.left / Screen.TwipsPerPixelX
+    mConfig.SetSetting ConfigSettingTop, Me.Top / Screen.TwipsPerPixelY
+End Select
+
+End Sub
+
 

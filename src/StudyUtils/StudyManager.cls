@@ -33,6 +33,8 @@ Implements TaskCompletionListener
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyManager"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -42,10 +44,10 @@ Implements TaskCompletionListener
 '@================================================================================
 
 Public Type InputDescriptor
-    source              As study
+    source              As Study
     inputName           As String
-    description         As String
-    inputType           As StudyInputTypes
+    Description         As String
+    InputType           As StudyInputTypes
     isDefault           As Boolean
     tickSize            As Double
 End Type
@@ -53,13 +55,13 @@ End Type
 ' The following type is no longer used and is kept only to maintain binary
 ' compatibility. It has been superseded by StudyTableEntry
 Public Type studyEntry
-    study                   As study
+    Study                   As Study
     studyName               As String
     libName                 As String
     studyID                 As String
     underlyingStudyID       As String
     inputValueNames()       As String
-    numberOfCachedValues    As Long
+    NumberOfCachedValues    As Long
     studyStarted            As Boolean
 End Type
 
@@ -76,18 +78,18 @@ Public Type StudyTableEntry
     sessionBldr             As SessionBuilder
     
     ' the study itself
-    study                   As study
+    Study                   As Study
     
-    ' name of the study
+    ' Name of the study
     studyName               As String
     
-    ' study library name
+    ' study library Name
     libName                 As String
     
-    ' id of this study
+    ' Id of this study
     studyID                 As String
     
-    ' id of entry for study this study is to be
+    ' Id of entry for study this study is to be
     ' added to
     underlyingStudyID       As String
     
@@ -98,7 +100,7 @@ Public Type StudyTableEntry
     ' the number of study output values that
     ' should be available for access by higher
     ' level studies
-    numberOfCachedValues    As Long
+    NumberOfCachedValues    As Long
     
     ' set when this study has been added to the
     ' underlying study
@@ -136,13 +138,13 @@ Set mExchangeTimeZone = GetTimeZone("")
 End Sub
 
 Private Sub Class_Terminate()
-Dim lStudy As study
+Dim lStudy As Study
 Dim i As Long
 
-For i = mInputStudies.count To 1 Step -1
+For i = mInputStudies.Count To 1 Step -1
     Set lStudy = mInputStudies(i)
-    Globals.StudiesCollection.remove lStudy.id
-    mInputStudies.remove i
+    Globals.StudiesCollection.Remove lStudy.Id
+    mInputStudies.Remove i
 Next
 End Sub
 
@@ -175,226 +177,321 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Function addInput( _
-                ByVal source As study, _
+Public Function AddInput( _
+                ByVal source As Study, _
                 ByVal inputName As String, _
-                ByVal description As String, _
-                ByVal inputType As StudyInputTypes, _
+                ByVal Description As String, _
+                ByVal InputType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
                 ByVal tickSize As Double) As Long
 Dim inpStudy As InputStudy
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set inpStudy = source   ' check the right class
 
-inpStudy.addInput inputName, description, inputType, isDefault, tickSize
+inpStudy.AddInput inputName, Description, InputType, isDefault, tickSize
 
 If mNextInputIndex = UBound(mInputs) Then
     ReDim Preserve mInputs(2 * (UBound(mInputs) + 1) - 1) As InputDescriptor
 End If
 Set mInputs(mNextInputIndex).source = source
 mInputs(mNextInputIndex).inputName = inputName
-mInputs(mNextInputIndex).description = description
-mInputs(mNextInputIndex).inputType = inputType
+mInputs(mNextInputIndex).Description = Description
+mInputs(mNextInputIndex).InputType = InputType
 mInputs(mNextInputIndex).isDefault = isDefault
 mInputs(mNextInputIndex).tickSize = tickSize
-addInput = mNextInputIndex
+AddInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
-End Function
-
-Public Function addSource( _
-                ByVal name As String) As study
-Dim inpStudy As InputStudy
-Dim lStudy As study
-Dim studyEntry As StudyTableEntry
-
-On Error GoTo Err
-
-Set inpStudy = New InputStudy
-inpStudy.initialise name, _
-                    mSessionStartTime, _
-                    mSessionEndTime, _
-                    mExchangeTimeZone, _
-                    mUseLocalTimeForStudies
-Set addSource = inpStudy
-
-Set lStudy = inpStudy
-studyEntry.studyName = name
-Set studyEntry.study = lStudy
-
-studyEntry.studyID = lStudy.id
-Globals.StudiesCollection.add studyEntry, lStudy.id
-mInputStudies.add inpStudy, lStudy.id
 
 Exit Function
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    Globals.StudiesCollection.remove lStudy.id
-    mInputStudies.remove lStudy.id
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Function AddSource( _
+                ByVal Name As String) As Study
+Dim inpStudy As InputStudy
+Dim lStudy As Study
+Dim studyEntry As StudyTableEntry
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set inpStudy = New InputStudy
+inpStudy.initialise Name, _
+                    mSessionStartTime, _
+                    mSessionEndTime, _
+                    mExchangeTimeZone, _
+                    mUseLocalTimeForStudies
+Set AddSource = inpStudy
+
+Set lStudy = inpStudy
+studyEntry.studyName = Name
+Set studyEntry.Study = lStudy
+
+studyEntry.studyID = lStudy.Id
+Globals.StudiesCollection.Add studyEntry, lStudy.Id
+mInputStudies.Add inpStudy, lStudy.Id
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddSource" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+
+If errNumber = VBErrorCodes.VbErrElementAlreadyExists Then
+    Globals.StudiesCollection.Remove lStudy.Id
+    mInputStudies.Remove lStudy.Id
     Resume
 End If
 
-Err.Raise Err.Number
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
-Public Function addStudy(ByVal name As String, _
-                ByVal underlyingStudy As study, _
+''
+' Summary. Longer Description
+'
+' @remarks
+'   If one or more of the the inputValueNames argument entries is the
+'   value defined by the global <code>DefaultStudyValueName</code> property,
+'   then on exit from the method it will have been replaced by the
+'   corresponding default value Name for the underlying study.
+' @return
+'   Description
+' @param Name
+'   Description
+' @see
+'
+'@/
+Public Function AddStudy(ByVal Name As String, _
+                ByVal underlyingStudy As Study, _
                 ByRef inputValueNames() As String, _
-                Optional ByVal parameters As parameters, _
+                Optional ByVal Parameters As Parameters, _
                 Optional ByVal libraryName As String, _
-                Optional ByVal numberOfValuesToCache As Long) As study
+                Optional ByVal numberOfValuesToCache As Long) As Study
 
 Dim studyEntry As StudyTableEntry
 Dim underlyingStudyEntry As StudyTableEntry
-Dim lStudy As study
+Dim lStudy As Study
 Dim inValueNames() As String
 Dim i As Long
-Dim studyInputDefs As studyInputDefinitions
+Dim studyInputDefs As StudyInputDefinitions
 Dim se As StudyTableEntry
 Dim inStudy As InputStudy
-Dim params As parameters
+Dim params As Parameters
 Dim param As Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If underlyingStudy Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudyUtils25.StudyManager::addStudy", _
+                "StudyUtils25.StudyManager::AddStudy", _
                 "Underlying study must not be nothing"
 End If
 
 On Error Resume Next
-underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.id)
+underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.Id)
 If Err.Number <> 0 Then
     On Error GoTo 0
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudyUtils25.StudyManager::addStudy", _
-                "Underlying study id is invalid"
+                "StudyUtils25.StudyManager::AddStudy", _
+                "Underlying study Id is invalid"
 End If
 On Error GoTo 0
 
-Set params = mStudyLibraryManager.FetchStudyDefaultParameters(name, libraryName)
-If Not parameters Is Nothing Then
-    For Each param In parameters
-        params.setParameterValue param.name, param.value
+Set params = mStudyLibraryManager.FetchStudyDefaultParameters(Name, libraryName)
+If Not Parameters Is Nothing Then
+    For Each param In Parameters
+        params.SetParameterValue param.Name, param.value
     Next
 End If
     
-Set lStudy = findStudy(name, _
+For i = 0 To UBound(inputValueNames)
+    If UCase$(inputValueNames(i)) = DefaultStudyValueNameStr Then inputValueNames(i) = underlyingStudy.StudyDefinition.DefaultValueName
+Next
+
+Set lStudy = findStudy(Name, _
                         libraryName, _
-                        underlyingStudy.id, _
+                        underlyingStudy.Id, _
                         inputValueNames, _
                         numberOfValuesToCache, _
-                        parameters)
+                        Parameters)
 If Not lStudy Is Nothing Then
     ' study already added
-    Set addStudy = lStudy
+    Set AddStudy = lStudy
     Exit Function
 End If
 
-studyEntry.studyName = name
-studyEntry.libName = libraryName
-Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
+Set studyEntry.studyMgr = Me
+studyEntry.studyName = UCase$(Name)
+studyEntry.libName = UCase$(libraryName)
+Set lStudy = mStudyLibraryManager.CreateStudy(Name, libraryName)
 
 If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                                "StudyUtils25.StudyManager::AddStudy", _
-                                                "Can't create study " & name
+                                    ProjectName & "." & ModuleName & ":" & "AddStudy", _
+                                    "Can't create study " & Name
                                                 
-Set studyEntry.study = lStudy
-studyEntry.numberOfCachedValues = numberOfValuesToCache
+Set studyEntry.Study = lStudy
+studyEntry.NumberOfCachedValues = numberOfValuesToCache
 
-Set studyInputDefs = lStudy.StudyDefinition.studyInputDefinitions
+Set studyInputDefs = lStudy.StudyDefinition.StudyInputDefinitions
 
 ReDim inValueNames(UBound(inputValueNames)) As String
 For i = 0 To UBound(inputValueNames)
     inValueNames(i) = inputValueNames(i)
-    lStudy.setInputTicksize studyInputDefs.Item(i + 1).name, _
-                            underlyingStudy.getValueTicksize(inputValueNames(i))
+    lStudy.SetInputTicksize studyInputDefs.Item(i + 1).Name, _
+                            underlyingStudy.GetValueTicksize(inputValueNames(i))
 Next
 studyEntry.inputValueNames = inValueNames
-studyEntry.underlyingStudyID = underlyingStudy.id
+studyEntry.underlyingStudyID = underlyingStudy.Id
 
 studyEntry.studyID = GenerateGUIDString
 
-' find the relevant InputStudy object to get the session object
+' find the relevant InputStudy object to get the Session object
 se = underlyingStudyEntry
-Do While Not TypeOf se.study Is InputStudy
+Do While Not TypeOf se.Study Is InputStudy
     se = Globals.StudiesCollection(se.underlyingStudyID)
 Loop
-Set inStudy = se.study
+Set inStudy = se.Study
 
 Set studyEntry.inpStudy = inStudy
 
-'we give the new study its own session that will be used while replaying
-' historical data. When that is complete and startStudy is called, we'll
-' link that session object to the relevant input study object
+'we give the new study its own Session that will be used while replaying
+' historical data. When that is complete and StartStudy is called, we'll
+' link that Session object to the relevant input study object
 Set studyEntry.sessionBldr = New SessionBuilder
-studyEntry.sessionBldr.sessionStartTime = inStudy.session.sessionStartTime
-studyEntry.sessionBldr.sessionEndTime = inStudy.session.sessionEndTime
+studyEntry.sessionBldr.sessionStartTime = inStudy.Session.sessionStartTime
+studyEntry.sessionBldr.sessionEndTime = inStudy.Session.sessionEndTime
 
-underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.id)
+underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.Id)
 
-studyEntry.study.initialise studyEntry.studyID, _
-                            parameters, _
+studyEntry.Study.initialise studyEntry.studyID, _
+                            Parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
-                            underlyingStudyEntry.study, _
-                            studyEntry.sessionBldr.session
+                            underlyingStudyEntry.Study, _
+                            studyEntry.sessionBldr.Session
                             
-Globals.StudiesCollection.add studyEntry, studyEntry.studyID
-Set addStudy = lStudy
+Globals.StudiesCollection.Add studyEntry, studyEntry.studyID
+Set AddStudy = lStudy
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddStudy" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
-Public Function getInputDescriptor( _
+Public Function GetInputDescriptor( _
                 ByVal inputHandle As Long) As InputDescriptor
-getInputDescriptor = mInputs(inputHandle)
+Dim failpoint As Long
+On Error GoTo Err
+
+GetInputDescriptor = mInputs(inputHandle)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetInputDescriptor" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
-Public Sub moveStudy(ByVal studyToMove As BarStudy, _
+Public Function GetUnderlyingStudy( _
+                ByVal pStudy As Study) As Study
+Dim se As StudyTableEntry
+
+Dim failpoint As Long
+On Error GoTo Err
+
+se = Globals.StudiesCollection(pStudy.Id)
+se = Globals.StudiesCollection(se.underlyingStudyID)
+Set GetUnderlyingStudy = se.Study
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetUnderlyingStudy" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Sub MoveStudy(ByVal studyToMove As BarStudy, _
                 ByVal newInputStudy As InputStudy, _
                 ByRef inputValueNames() As String)
-Dim lStudy As study
+Dim lStudy As Study
 Dim lStudyEntry As StudyTableEntry
-Dim lInputStudy As study
+Dim lInputStudy As Study
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lStudy = studyToMove
-lStudyEntry = Globals.StudiesCollection(lStudy.id)
+lStudyEntry = Globals.StudiesCollection(lStudy.Id)
 
 Set lInputStudy = newInputStudy
 
-lStudyEntry.underlyingStudyID = lInputStudy.id
+lStudyEntry.underlyingStudyID = lInputStudy.Id
 
-lInputStudy.addStudy studyToMove, inputValueNames, 0
+lInputStudy.AddStudy studyToMove, inputValueNames, 0
 
-studyToMove.switchUnderlyingStudy lInputStudy
+studyToMove.SwitchUnderlyingStudy lInputStudy
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "MoveStudy" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
-' timestamp is in exchange timezone
-Public Sub notifyInput( _
+' Timestamp is in exchange timezone
+Public Sub NotifyInput( _
                 ByVal inputHandle As Long, _
                 ByVal inputValue As Variant, _
-                ByVal timestamp As Date)
+                ByVal Timestamp As Date)
 Dim ev As StudyValueEvent
 
-ev.sVal.timestamp = timestamp
+ev.sVal.Timestamp = Timestamp
 ev.sVal.value = inputValue
 ev.valueName = mInputs(inputHandle).inputName
-mInputs(inputHandle).source.notify ev
+mInputs(inputHandle).source.Notify ev
 End Sub
 
-Public Sub setInputTicksize( _
+Public Sub SetInputTicksize( _
                 ByVal inputHandle As Long, _
                 ByVal tickSize As Double)
 mInputs(inputHandle).tickSize = tickSize
-mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, tickSize
+mInputs(inputHandle).source.SetInputTicksize mInputs(inputHandle).inputName, tickSize
 End Sub
 
 ''
 '
-'   Sets the session start and end times. Note that this method can only be called once.
+'   Sets the Session start and end times. Note that this method can only be called once.
 '
-'   Any sources that have already been created have their session times set accordingly.
+'   Any sources that have already been created have their Session times set accordingly.
 '@/
-Public Sub setSessionTimes( _
+Public Sub SetSessionTimes( _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date, _
                 ByVal exchangeTimeZone As TimeZone, _
@@ -402,10 +499,14 @@ Public Sub setSessionTimes( _
 Dim lStudy As InputStudy
 Dim lVar As Variant
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mSessionTimesSet Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
+            ProjectName & "." & ModuleName & ":" & "SetSessionTimes", _
             "Session times have already been set"
+
 
 If Not exchangeTimeZone Is Nothing Then Set mExchangeTimeZone = exchangeTimeZone
 
@@ -420,22 +521,34 @@ mSessionTimesSet = True
 
 For Each lVar In mInputStudies
     Set lStudy = lVar
-    lStudy.setSessionTimes mSessionStartTime, _
+    lStudy.SetSessionTimes mSessionStartTime, _
                             mSessionEndTime, _
                             mExchangeTimeZone, _
                             useLocalTimeForStudies
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetSessionTimes" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
-Public Function startStudy( _
-                ByVal pStudy As study, _
+Public Function StartStudy( _
+                ByVal pStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 Dim studyEntry As StudyTableEntry
 Dim underlyingStudyEntry As StudyTableEntry
 
-studyEntry = Globals.StudiesCollection(pStudy.id)
+Dim failpoint As Long
+On Error GoTo Err
+
+studyEntry = Globals.StudiesCollection(pStudy.Id)
 If studyEntry.studyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
@@ -443,21 +556,30 @@ End If
 
 studyEntry.studyStarted = True
 
-Globals.StudiesCollection.remove pStudy.id
-Globals.StudiesCollection.add studyEntry, pStudy.id
+Globals.StudiesCollection.Remove pStudy.Id
+Globals.StudiesCollection.Add studyEntry, pStudy.Id
 
 underlyingStudyEntry = Globals.StudiesCollection(studyEntry.underlyingStudyID)
 
-Set startStudy = underlyingStudyEntry.study.addStudy(studyEntry.study, _
+Set StartStudy = underlyingStudyEntry.Study.AddStudy(studyEntry.Study, _
                                                     studyEntry.inputValueNames, _
                                                     numberOfValuesToReplay, _
                                                     taskName, _
                                                     taskData)
-If Not startStudy Is Nothing Then
-    startStudy.addTaskCompletionListener Me
+If Not StartStudy Is Nothing Then
+    StartStudy.AddTaskCompletionListener Me
 Else
     linkSession pStudy
 End If
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartStudy" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 '@================================================================================
@@ -469,23 +591,26 @@ Private Function findStudy(ByVal studyName As String, _
                 ByVal underlyingStudyID As String, _
                 ByRef inputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal parameters As parameters) As study
+                ByVal Parameters As Parameters) As Study
 Dim studyEntry As StudyTableEntry
 Dim var As Variant
 
 Set findStudy = Nothing
+
+studyName = UCase$(studyName)
+libName = UCase$(libName)
 For Each var In Globals.StudiesCollection
     studyEntry = var
     If studyEntry.studyMgr Is Me And _
-        UCase$(studyName) = UCase$(studyEntry.studyName) And _
-        UCase$(libName) = UCase$(studyEntry.libName) And _
+        studyName = studyEntry.studyName And _
+        libName = studyEntry.libName And _
         underlyingStudyID = studyEntry.underlyingStudyID And _
-        numberOfValuesToCache = studyEntry.numberOfCachedValues And _
+        numberOfValuesToCache = studyEntry.NumberOfCachedValues And _
         stringArraysEqual(inputValueNames, studyEntry.inputValueNames) And _
-        parameters.equals(studyEntry.study.parameters) _
+        Parameters.Equals(studyEntry.Study.Parameters) _
     Then
         ' this study has already been added
-        Set findStudy = studyEntry.study
+        Set findStudy = studyEntry.Study
         Exit For
     End If
 Next
@@ -493,13 +618,13 @@ Next
 End Function
 
 Private Sub linkSession( _
-                ByVal pStudy As study)
+                ByVal pStudy As Study)
 Dim studyEntry As StudyTableEntry
 
-studyEntry = Globals.StudiesCollection(pStudy.id)
+studyEntry = Globals.StudiesCollection(pStudy.Id)
 
-studyEntry.sessionBldr.setLinkable
-studyEntry.inpStudy.linkSession studyEntry.sessionBldr.session
+studyEntry.sessionBldr.SetLinkable
+studyEntry.inpStudy.linkSession studyEntry.sessionBldr.Session
 
 End Sub
 

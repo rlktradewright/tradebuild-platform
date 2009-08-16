@@ -80,15 +80,18 @@ If mStudyDefinition Is Nothing Then
                                     
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
+    
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(PsInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(PsValuePs)
     valueDef.Description = "The parabolic stop value"
+    valueDef.IncludeInChart = True
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
+    valueDef.valueStyle = gCreateDataPointStyle(&H618A55, DataPointDisplayModePoint, linethickness:=5, pointStyle:=PointSquare)
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(PsParamStartFactor)

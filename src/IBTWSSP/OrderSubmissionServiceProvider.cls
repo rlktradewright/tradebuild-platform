@@ -41,6 +41,8 @@ Implements TradeBuildSP.IOrderSubmissionSrvcProvider
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "OrderSubmissionSrvcProvider"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -52,6 +54,9 @@ Implements TradeBuildSP.IOrderSubmissionSrvcProvider
 '================================================================================
 ' Member variables
 '================================================================================
+
+Private WithEvents mTWSAPI As TWSAPI
+Attribute mTWSAPI.VB_VarHelpID = -1
 
 Private mServer As String
 Private mPort As Long
@@ -154,14 +159,13 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 On Error GoTo err
-logMessage "IBTWSSP:OrderSubmissionSrvcProvider:ICommonServiceProvider_Terminate terminating"
+logMessage "IBTWSSP:OrderSubmissionSrvcProvider terminating"
 finishSubmitters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 err:
-logMessage "IBTWSSP:OrderSubmissionSrvcProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                "ICommonServiceProvider_Terminate", _
                 err.Description
 End Sub
 
@@ -176,34 +180,118 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
 Dim OrderSubmitter As OrderSubmitter
 
 On Error GoTo err
-Set OrderSubmitter = New OrderSubmitter
-OrderSubmitter.OrderSubmissionServiceProvider = Me
-OrderSubmitter.commonServiceConsumer = mCommonServiceConsumer
-OrderSubmitter.serviceConsumer = serviceConsumer
-OrderSubmitter.Contract = pContract
-OrderSubmitter.server = mServer
-OrderSubmitter.port = mPort
-OrderSubmitter.clientID = mClientID
-OrderSubmitter.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-OrderSubmitter.keepConnection = mkeepConnection
-OrderSubmitter.providerKey = mProviderKey
-OrderSubmitter.TWSLogLevel = mTWSLogLevel
-mOrderSubmitters.add OrderSubmitter
 
-OrderSubmitter.start
+If mTWSAPI Is Nothing Then
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, _
+                                    mPort, _
+                                    mClientID, _
+                                    mProviderKey, _
+                                    mConnectionRetryIntervalSecs, _
+                                    mTWSLogLevel)
+End If
+
+Set OrderSubmitter = New OrderSubmitter
+OrderSubmitter.Initialise Me, _
+                        mCommonServiceConsumer, _
+                        serviceConsumer, _
+                        pContract, _
+                        mTWSAPI, _
+                        mHandle
+mOrderSubmitters.add OrderSubmitter
 
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = OrderSubmitter
 Exit Function
 err:
-logMessage "IBTWSSP:OrderSubmissionSrvcProvider:IOrderSubmissionSrvcProvider_CreateOrderSubmitter (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
-                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
+                "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
                 err.Description
 End Function
 
 '================================================================================
-' XXXX Event Handlers
+' mTWSAPI Event Handlers
 '================================================================================
+
+Private Sub mTWSAPI_Connected()
+On Error GoTo err
+
+notifyEvent StandardSPEventCodes.LOConnectedToBroker, _
+            "Connected to TWS " & mTWSAPI.connectionString
+Exit Sub
+
+err:
+handleFatalError err.number, _
+                "mTWSAPI_Connected", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+On Error GoTo err
+If Not retrying Then
+    notifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
+                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                ": " & Description
+Else
+    notifyEvent StandardSPEventCodes.LORetryConnectToBroker, _
+                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                ": " & Description
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToIBClosed()
+On Error GoTo err
+notifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
+            "Lost connection from TWS to IB servers"
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectionToIBClosed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToIBRecovered()
+On Error GoTo err
+notifyEvent StandardSPEventCodes.LOConnectedToBroker, _
+            "TWS connected to IB servers"
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectionToIBRecovered", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
+On Error GoTo err
+If Not reconnecting Then
+    notifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
+                "Lost connection to TWS (reconnecting) " & mTWSAPI.connectionString
+Else
+    notifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
+                "Lost connection to TWS " & mTWSAPI.connectionString
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_Disconnected(ByVal reason As String)
+On Error GoTo err
+notifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
+            "Disconnected from TWS " & mTWSAPI.connectionString & _
+            ": reason=: " & reason
+Exit Sub
+err:
+handleFatalError err.number, _
+                "mTWSAPI_Disconnected", _
+                err.Description
+End Sub
 
 '================================================================================
 ' Properties
@@ -219,10 +307,6 @@ End Property
 
 Friend Property Get connectionRetryIntervalSecs() As Long
 connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-End Property
-
-Friend Property Get handle() As Long
-handle = mHandle
 End Property
 
 Friend Property Let keepConnection(ByVal value As Boolean)
@@ -279,6 +363,13 @@ For Each submitter In mOrderSubmitters
     End If
     i = i + 1
 Next
+
+If mOrderSubmitters.Count = 0 And _
+    Not mkeepConnection _
+Then
+    gReleaseTWSAPIInstance mTWSAPI
+    Set mTWSAPI = Nothing
+End If
 End Sub
 
 '===============================================================================
@@ -290,17 +381,28 @@ Dim submitter As OrderSubmitter
 For Each submitter In mOrderSubmitters
     submitter.finish
 Next
+
+If Not mTWSAPI Is Nothing Then
+    Dim lTWSAPI As TWSAPI
+    Set lTWSAPI = mTWSAPI
+    Set mTWSAPI = Nothing   ' clear event handlers
+    gReleaseTWSAPIInstance lTWSAPI
+End If
 End Sub
 
 Private Sub handleFatalError( _
                 ByVal number As Long, _
                 ByVal source As String, _
                 ByVal Description As String)
-mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
 
-finishSubmitters
+logMessage "Error " & err.number & ": " & _
+            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
+            err.Description, _
+            LogLevelSevere
 
-Set mCommonServiceConsumer = Nothing
+gReleaseAllTWSAPIInstances
+
+mCommonServiceConsumer.NotifyFatalError number, source, Description, mHandle
 End Sub
 
 Private Sub logMessage( _
@@ -308,7 +410,16 @@ Private Sub logMessage( _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
 If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message
+            ProjectName & "." & ModuleName & ": " & message
+End Sub
+
+Private Sub notifyEvent( _
+                ByVal eventCode As StandardSPEventCodes, _
+                ByVal eventMessage As String)
+If mCommonServiceConsumer Is Nothing Then Exit Sub
+mCommonServiceConsumer.notifyEvent eventCode, _
+                                    eventMessage, _
+                                    mHandle
 End Sub
 
 

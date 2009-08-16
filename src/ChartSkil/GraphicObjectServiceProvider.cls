@@ -25,7 +25,7 @@ Option Explicit
 ' Member variables and constants
 '================================================================================
 
-Private mRegion As ChartRegion
+Private mRegionRef As WeakReference
 
 '================================================================================
 ' Enums
@@ -49,7 +49,7 @@ End Sub
 
 Friend Property Let Region( _
                 ByVal value As ChartRegion)
-Set mRegion = value
+Set mRegionRef = CreateWeakReference(value)
 End Property
 
 '================================================================================
@@ -57,38 +57,43 @@ End Property
 '================================================================================
 
 Friend Sub AddGraphicObject( _
-                ByVal graphObj As IGraphicObject, _
-                ByVal SeriesID As Long)
-mRegion.GOSP_AddGraphicObject graphObj, SeriesID
+                ByVal graphObj As IGraphicObject)
+regionObj.GOSP_AddGraphicObject graphObj
+End Sub
+
+Friend Sub Finish()
+Set mRegionRef = Nothing
 End Sub
 
 Friend Sub ObjectChanged(ByVal Handle As Long, _
                 ByRef areaToRedraw As TRectangle)
-mRegion.GOSP_ObjectChanged Handle, areaToRedraw
+regionObj.GOSP_ObjectChanged Handle, areaToRedraw
 End Sub
 
 Friend Sub ObjectUndrawn(ByVal Handle As Long, _
                 ByRef undrawnArea As TRectangle)
-mRegion.GOSP_ObjectUndrawn Handle, undrawnArea
+regionObj.GOSP_ObjectUndrawn Handle, undrawnArea
 End Sub
 
 Friend Sub PaintRegion( _
                 ByVal recalculate As Boolean)
-mRegion.GOSP_PaintRegion recalculate
+regionObj.GOSP_PaintRegion recalculate
 End Sub
 
 Friend Sub RecalcBoundary( _
                 ByVal SeriesID As Long)
-mRegion.GOSP_RecalcBoundary SeriesID
+regionObj.GOSP_RecalcBoundary SeriesID
 End Sub
 
 Friend Sub RemoveObject( _
                 ByVal Handle As Long)
-mRegion.GOSP_RemoveObject Handle
+regionObj.GOSP_RemoveObject Handle
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-
+Private Function regionObj() As ChartRegion
+Set regionObj = mRegionRef.Target
+End Function

@@ -32,8 +32,6 @@ Event KeyDown(KeyCode As Integer, Shift As Integer)
 Event KeyPress(KeyAscii As Integer)
 Event KeyUp(KeyCode As Integer, Shift As Integer)
 Event PointerModeChanged()
-Event RegionsChanged(ev As CollectionChangeEvent)
-Event PeriodsChanged(ev As CollectionChangeEvent)
 Event RegionSelected(ByVal Region As ChartRegion)
 
 '================================================================================
@@ -67,28 +65,12 @@ Attribute mChartRef.VB_VarHelpID = -1
 ' Properties
 '================================================================================
 
-Public Property Get AllowHorizontalMouseScrolling() As Boolean
-AllowHorizontalMouseScrolling = chartObj.AllowHorizontalMouseScrolling
+Public Property Get Autoscrolling() As Boolean
+Autoscrolling = chartObj.Autoscrolling
 End Property
 
-Public Property Let AllowHorizontalMouseScrolling(ByVal value As Boolean)
-chartObj.AllowHorizontalMouseScrolling = value
-End Property
-
-Public Property Get AllowVerticalMouseScrolling() As Boolean
-AllowVerticalMouseScrolling = chartObj.AllowVerticalMouseScrolling
-End Property
-
-Public Property Let AllowVerticalMouseScrolling(ByVal value As Boolean)
-chartObj.AllowVerticalMouseScrolling = value
-End Property
-
-Public Property Get Autoscroll() As Boolean
-Autoscroll = chartObj.Autoscroll
-End Property
-
-Public Property Let Autoscroll(ByVal value As Boolean)
-chartObj.Autoscroll = value
+Public Property Let Autoscrolling(ByVal value As Boolean)
+chartObj.Autoscrolling = value
 End Property
 
 Public Property Let BarTimePeriod( _
@@ -113,16 +95,6 @@ Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 chartObj.ChartBackColor = val
 End Property
 
-Public Property Get ChartBackGradientFillColors() As Long()
-ChartBackGradientFillColors = chartObj.ChartBackGradientFillColors
-End Property
-
-Public Property Let ChartBackGradientFillColors(ByRef value() As Long)
-Dim ar() As Long
-ar = value
-chartObj.ChartBackGradientFillColors = ar
-End Property
-
 Public Property Get ChartLeft() As Single
 ChartLeft = chartObj.ChartLeft
 End Property
@@ -131,8 +103,8 @@ Public Property Get ChartWidth() As Single
 ChartWidth = chartObj.ChartWidth
 End Property
 
-Public Property Get currentPeriodNumber() As Long
-currentPeriodNumber = chartObj.currentPeriodNumber
+Public Property Get CurrentPeriodNumber() As Long
+CurrentPeriodNumber = chartObj.CurrentPeriodNumber
 End Property
 
 Public Property Get CurrentSessionEndTime() As Date
@@ -149,6 +121,30 @@ End Property
 
 Public Property Let FirstVisiblePeriod(ByVal value As Long)
 chartObj.FirstVisiblePeriod = value
+End Property
+
+Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+HorizontalMouseScrollingAllowed = chartObj.HorizontalMouseScrollingAllowed
+End Property
+
+Public Property Let HorizontalMouseScrollingAllowed(ByVal value As Boolean)
+chartObj.HorizontalMouseScrollingAllowed = value
+End Property
+
+Public Property Get HorizontalScrollBarVisible() As Boolean
+HorizontalScrollBarVisible = chartObj.HorizontalScrollBarVisible
+End Property
+
+Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
+chartObj.HorizontalScrollBarVisible = val
+End Property
+
+Public Property Get IsDrawingEnabled() As Boolean
+IsDrawingEnabled = chartObj.IsDrawingEnabled
+End Property
+
+Public Property Get IsGridHidden() As Boolean
+IsGridHidden = chartObj.IsGridHidden
 End Property
 
 Public Property Get LastVisiblePeriod() As Long
@@ -199,6 +195,10 @@ Public Property Let PointerStyle(ByVal value As PointerStyles)
 chartObj.PointerStyle = value
 End Property
 
+Public Property Get Regions() As ChartRegions
+Set Regions = chartObj.Regions
+End Property
+
 Public Property Get SessionEndTime() As Date
 SessionEndTime = chartObj.SessionEndTime
 End Property
@@ -213,30 +213,6 @@ End Property
 
 Public Property Let SessionStartTime(ByVal val As Date)
 chartObj.SessionStartTime = val
-End Property
-
-Public Property Get ShowHorizontalScrollBar() As Boolean
-ShowHorizontalScrollBar = chartObj.ShowHorizontalScrollBar
-End Property
-
-Public Property Let ShowHorizontalScrollBar(ByVal val As Boolean)
-chartObj.ShowHorizontalScrollBar = val
-End Property
-
-Public Property Get ShowToolbar() As Boolean
-ShowToolbar = chartObj.ShowToolbar
-End Property
-
-Public Property Let ShowToolbar(ByVal val As Boolean)
-chartObj.ShowToolbar = val
-End Property
-
-Public Property Get SuppressDrawing() As Boolean
-SuppressDrawing = chartObj.SuppressDrawing
-End Property
-
-Public Property Let SuppressDrawing(ByVal val As Boolean)
-chartObj.SuppressDrawing = val
 End Property
 
 Public Property Get TwipsPerBar() As Long
@@ -256,6 +232,14 @@ Public Property Get VerticalGridTimePeriod() As TimePeriod
 Set VerticalGridTimePeriod = chartObj.VerticalGridTimePeriod
 End Property
 
+Public Property Get VerticalMouseScrollingAllowed() As Boolean
+VerticalMouseScrollingAllowed = chartObj.VerticalMouseScrollingAllowed
+End Property
+
+Public Property Let VerticalMouseScrollingAllowed(ByVal value As Boolean)
+chartObj.VerticalMouseScrollingAllowed = value
+End Property
+
 Public Property Get XAxisRegion() As ChartRegion
 Set XAxisRegion = chartObj.XAxisRegion
 End Property
@@ -266,6 +250,14 @@ End Property
 
 Public Property Let XAxisVisible(ByVal value As Boolean)
 chartObj.XAxisVisible = value
+End Property
+
+Public Property Let XCursorTextStyle(ByVal value As TextStyle)
+chartObj.XCursorTextStyle = value
+End Property
+
+Public Property Get XCursorTextStyle() As TextStyle
+Set XCursorTextStyle = chartObj.XCursorTextStyle
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -292,24 +284,24 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function AddChartRegion(ByVal percentheight As Double, _
-                    Optional ByVal minimumPercentHeight As Double, _
-                    Optional ByVal style As ChartRegionStyle, _
-                    Optional ByVal yAxisStyle As ChartRegionStyle, _
-                    Optional ByVal name As String) As ChartRegion
-Set AddChartRegion = chartObj.AddChartRegion(percentheight, minimumPercentHeight, style, yAxisStyle, name)
-End Function
-
-Public Function addPeriod(ByVal Timestamp As Date) As period
-Set addPeriod = chartObj.addPeriod(Timestamp)
-End Function
-
 Public Sub ClearChart()
 chartObj.ClearChart
 End Sub
 
-Public Sub DisplayGrid()
-chartObj.DisplayGrid
+Public Sub DisableDrawing()
+chartObj.DisableDrawing
+End Sub
+
+Public Sub EnableDrawing()
+chartObj.EnableDrawing
+End Sub
+
+Public Sub Finish()
+chartObj.Finish
+End Sub
+
+Friend Sub Finished()
+Set mChartRef = Nothing
 End Sub
 
 Friend Sub fireChartCleared()
@@ -332,39 +324,24 @@ Friend Sub firePointerModeChanged()
 RaiseEvent PointerModeChanged
 End Sub
 
-Friend Sub fireRegionsChanged(ev As CollectionChangeEvent)
-RaiseEvent RegionsChanged(ev)
-End Sub
-
-Friend Sub firePeriodsChanged(ev As CollectionChangeEvent)
-RaiseEvent PeriodsChanged(ev)
-End Sub
-
 Friend Sub fireRegionSelected(ByVal Region As ChartRegion)
 RaiseEvent RegionSelected(Region)
 End Sub
 
-Public Function GetChartRegion( _
-                ByVal name As String) As ChartRegion
-Set GetChartRegion = chartObj.GetChartRegion(name)
+Public Function GetXFromTimestamp( _
+                ByVal Timestamp As Date, _
+                Optional ByVal forceNewPeriod As Boolean, _
+                Optional ByVal duplicateNumber As Long) As Double
+GetXFromTimestamp = chartObj.GetXFromTimestamp(Timestamp, forceNewPeriod, duplicateNumber)
 End Function
 
 Public Sub HideGrid()
 chartObj.HideGrid
 End Sub
 
-Public Function IsGridHidden() As Boolean
-IsGridHidden = chartObj.IsGridHidden
-End Function
-
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 IsTimeInSession = chartObj.IsTimeInSession(Timestamp)
 End Function
-
-Public Sub RemoveChartRegion( _
-                    ByVal Region As ChartRegion)
-chartObj.RemoveChartRegion Region
-End Sub
 
 Public Sub ScrollX(ByVal value As Long)
 chartObj.ScrollX value
@@ -382,6 +359,10 @@ Public Sub SetPointerModeTool( _
                 Optional ByVal toolPointerStyle As PointerStyles = PointerTool, _
                 Optional ByVal icon As IPictureDisp)
 chartObj.SetPointerModeTool toolPointerStyle, icon
+End Sub
+
+Public Sub ShowGrid()
+chartObj.ShowGrid
 End Sub
 
 '================================================================================

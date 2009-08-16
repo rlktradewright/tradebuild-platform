@@ -71,21 +71,21 @@ Dim i As Long
 
 mIndex = mIndex + 1
 
-Do While mIndex <= mSourceValues.count And i < 100
-    val = mSourceValues.getSValue(mIndex)
-    mDestValues.addValue val.value, val.barNumber, val.timestamp, val.BarStartTime
+Do While mIndex <= mSourceValues.Count And i < 100
+    val = mSourceValues.GetSValue(mIndex)
+    mDestValues.AddValue val.value, val.BarNumber, val.Timestamp, val.BarStartTime
     
     If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.progress 100 * mIndex / mSourceValues.count
+        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mSourceValues.Count
     End If
     
     mIndex = mIndex + 1
     i = i + 1
 Loop
 
-If mIndex > mSourceValues.count Then
-    mTaskContext.progress 100
-    mTaskContext.finish Empty, False
+If mIndex > mSourceValues.Count Then
+    mTaskContext.Progress 100
+    mTaskContext.Finish Empty, False
     Exit Sub
 End If
     
@@ -111,12 +111,12 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal destValues As ValueCache, _
                 ByVal sourceValues As ValueCache)
 Set mSourceValues = sourceValues
 Set mDestValues = destValues
-If mSourceValues.count / 20 >= 200 Then mProgressModulus = mSourceValues.count / 20
+If mSourceValues.Count / 20 >= 200 Then mProgressModulus = mSourceValues.Count / 20
 End Sub
 
 '@================================================================================

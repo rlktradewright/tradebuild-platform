@@ -68,11 +68,11 @@ End Sub
 
 'Private Function IStudyInputDefinitions_Add( _
 '                ByVal inputName As String) As StudyInputDefinition
-'Set IStudyInputDefinitions_Add = add(inputName)
+'Set IStudyInputDefinitions_Add = Add(inputName)
 'End Function
 '
 'Private Property Get IStudyInputDefinitions_Count() As Long
-'IStudyInputDefinitions_Count = count
+'IStudyInputDefinitions_Count = Count
 'End Property
 '
 'Private Function IStudyInputDefinitions_Item( _
@@ -92,20 +92,20 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get count() As Long
-count = mStudyInputDefinitions.count
+Public Property Get Count() As Long
+Count = mStudyInputDefinitions.Count
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal inputName As String) As StudyInputDefinition
-Set add = New StudyInputDefinition
-add.name = inputName
-add.inputType = InputTypeReal
-mStudyInputDefinitions.add add, inputName
+Set Add = New StudyInputDefinition
+Add.Name = inputName
+Add.InputType = InputTypeReal
+mStudyInputDefinitions.Add Add, inputName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyInputDefinition

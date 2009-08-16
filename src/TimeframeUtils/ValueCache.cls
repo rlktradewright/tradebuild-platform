@@ -62,26 +62,26 @@ Private mCyclicSize As Long
 ' Properties
 '@================================================================================
 
-Public Property Get count() As Long
-count = mNumValues
+Public Property Get Count() As Long
+Count = mNumValues
 End Property
 
-Public Property Get cyclicSize() As Long
-cyclicSize = mCyclicSize
+Public Property Get CyclicSize() As Long
+CyclicSize = mCyclicSize
 End Property
 
-Public Property Get valueName() As String
-valueName = mValueName
+Public Property Get ValueName() As String
+ValueName = mValueName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub addValue( _
+Public Sub AddValue( _
                 ByVal value As Variant, _
-                ByVal barNumber As Long, _
-                ByVal timestamp As Date, _
+                ByVal BarNumber As Long, _
+                ByVal Timestamp As Date, _
                 ByVal BarStartTime As Date)
 
 If mCyclicSize > 0 Then
@@ -104,84 +104,88 @@ If IsObject(value) Then
 Else
     mValues(mNewest).value = value
 End If
-mValues(mNewest).barNumber = barNumber
-mValues(mNewest).timestamp = timestamp
+mValues(mNewest).BarNumber = BarNumber
+mValues(mNewest).Timestamp = Timestamp
 mValues(mNewest).BarStartTime = BarStartTime
 End Sub
 
-Public Sub appendValues( _
+Public Sub AppendValues( _
                 ByVal pValueCache As ValueCache)
 Dim i As Long
 Dim val As SValue
 
-For i = 1 To pValueCache.count
-    val = pValueCache.getSValue(i)
-    addValue val.value, val.barNumber, val.timestamp, val.BarStartTime
+For i = 1 To pValueCache.Count
+    val = pValueCache.GetSValue(i)
+    AddValue val.value, val.BarNumber, val.Timestamp, val.BarStartTime
 Next
 End Sub
 
-Public Function appendValuesAsync( _
+Public Function AppendValuesAsync( _
                 ByVal pValueCache As ValueCache) As TaskController
 Dim avt As New AppendValuesTask
 
-avt.initialise Me, pValueCache
+avt.Initialise Me, pValueCache
 
-Set appendValuesAsync = StartTask(avt, PriorityNormal)
+Set AppendValuesAsync = StartTask(avt, PriorityNormal)
 End Function
 
-Public Function getSValue(Optional ByVal ref As Long) As SValue
+Public Function GetSValue(Optional ByVal ref As Long) As SValue
 Dim valueEntry As SValue
 Dim failpoint As Long
+
 On Error GoTo Err
 
 valueEntry = mValues(refToIndex(ref))
-getSValue.barNumber = valueEntry.barNumber
-getSValue.timestamp = valueEntry.timestamp
-getSValue.BarStartTime = valueEntry.BarStartTime
+GetSValue.BarNumber = valueEntry.BarNumber
+GetSValue.Timestamp = valueEntry.Timestamp
+GetSValue.BarStartTime = valueEntry.BarStartTime
 If IsObject(valueEntry.value) Then
-    Set getSValue.value = valueEntry.value
+    Set GetSValue.value = valueEntry.value
 Else
-    getSValue.value = valueEntry.value
+    GetSValue.value = valueEntry.value
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "getSValue" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetSValue" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
-Public Function getValue(Optional ByVal ref As Long) As Variant
+Public Function GetValue(Optional ByVal ref As Long) As Variant
 Dim index As Long
 
 Dim failpoint As Long
+
 On Error GoTo Err
 
 index = refToIndex(ref)
 If IsObject(mValues(index).value) Then
-    Set getValue = mValues(index).value
+    Set GetValue = mValues(index).value
 Else
-    getValue = mValues(index).value
+    GetValue = mValues(index).value
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "getValue" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetValue" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
-Friend Sub initialise( _
-                ByVal cyclicSize As Long, _
-                ByVal valueName As String)
-If cyclicSize > 0 Then
-    mCyclicSize = cyclicSize
+Friend Sub Initialise( _
+                ByVal CyclicSize As Long, _
+                ByVal ValueName As String)
+If CyclicSize > 0 Then
+    mCyclicSize = CyclicSize
     ReDim mValues(mCyclicSize - 1) As SValue
 Else
     ReDim mValues(15) As SValue
@@ -189,13 +193,13 @@ Else
 End If
 mNewest = -1
 
-mValueName = valueName
+mValueName = ValueName
 End Sub
 
-Public Sub updateValue( _
+Public Sub UpdateValue( _
                 ByVal value As Variant, _
-                Optional ByVal barNumber As Long, _
-                Optional ByVal timestamp As Date, _
+                Optional ByVal BarNumber As Long, _
+                Optional ByVal Timestamp As Date, _
                 Optional ByVal BarStartTime As Date, _
                 Optional ByVal ref As Long)
 Dim i As Long
@@ -205,8 +209,8 @@ If IsObject(value) Then
 Else
     mValues(i).value = value
 End If
-If barNumber > 0 Then mValues(i).barNumber = barNumber
-If CDbl(timestamp) > 0 Then mValues(i).timestamp = timestamp
+If BarNumber > 0 Then mValues(i).BarNumber = BarNumber
+If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
 If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 End Sub
 
