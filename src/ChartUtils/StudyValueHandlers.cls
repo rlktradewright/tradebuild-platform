@@ -95,9 +95,9 @@ Add.Initialise chartMgr, _
 mStudyValueHandlers.Add Add, studyValueConfig.ValueName
 End Function
 
-Friend Function Clear()
+Friend Sub Clear()
 Set mStudyValueHandlers = New Collection
-End Function
+End Sub
 
 Public Function Item( _
                 ByVal index As Variant) As StudyValueHandler

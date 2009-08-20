@@ -651,7 +651,7 @@ Dim studyValueconfig  As StudyValueConfiguration
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
 If Not mDefaultConfiguration Is Nothing Then
-    Set studyValueconfig = mDefaultConfiguration.StudyValueConfigurations.item(Index + 1)
+    Set studyValueconfig = mDefaultConfiguration.StudyValueConfigurations.item(studyValueDef.name)
 End If
 
 Select Case studyValueDef.ValueMode
@@ -1067,6 +1067,7 @@ End Property
 '@================================================================================
 
 Public Sub Clear()
+Set mPrevSelectedBaseStudiesTreeNode = Nothing
 initialiseControls
 End Sub
 
@@ -1279,7 +1280,7 @@ For i = 0 To LineText.UBound
     LineColorLabel(i).BackColor = vbBlack
 Next
 
-
+BaseStudiesTree.Enabled = True
 End Sub
 
 Private Sub initialiseBarDisplayModeCombo( _
@@ -1626,7 +1627,7 @@ For i = 1 To studyInputDefinitions.Count
     If Not mDefaultConfiguration Is Nothing Then setComboSelection InputValueCombo(i - 1), _
                                                                     inputValueNames(i - 1)
     
-    If noInputModification Then InputValueCombo(i - 1).Enabled = False
+    InputValueCombo(i - 1).Enabled = Not noInputModification
     
 Next
 

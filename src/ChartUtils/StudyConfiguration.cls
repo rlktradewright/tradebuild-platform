@@ -277,6 +277,16 @@ Next
 
 Clone.UnderlyingStudy = mUnderlyingStudy
 
+Dim sc As StudyConfiguration
+Dim newSc As StudyConfiguration
+Dim newScs As StudyConfigurations
+
+Set newScs = Clone.StudyConfigurations
+For Each sc In mStudyConfigs
+    Set newSc = sc.Clone
+    newScs.Add newSc
+Next
+
 ' don't do a deep copy of the studyValueHandlers because it's
 ' immutable as far as non-Friend callers are concerned
 Clone.StudyValueHandlers = mStudyValueHandlers

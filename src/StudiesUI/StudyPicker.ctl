@@ -146,7 +146,6 @@ Option Explicit
 
 Private WithEvents mChartManager As ChartManager
 Attribute mChartManager.VB_VarHelpID = -1
-Private mChart As ChartController
 
 Private mAvailableStudies() As StudyListEntry
 
@@ -325,29 +324,24 @@ Public Sub Initialise( _
                 ByVal pChartManager As ChartManager)
 Dim i As Long
 Dim itemText As String
-Dim lLogger As Logger
-
-Set lLogger = GetLogger("diag.tradebuild.studiesui")
-lLogger.Log LogLevelMediumDetail, "Initialise"
 
 Set mChartManager = pChartManager
 
 DescriptionText = ""
 ChartStudiesTree.Nodes.Clear
-If Not mChartManager Is Nothing Then
-    Set mChart = mChartManager.Chart
-    addEntryToChartStudiesTree mChartManager.BaseStudyConfiguration, Nothing
-Else
-    lLogger.Log LogLevelMediumDetail, "Chart manager is Nothing"
-End If
-
 StudyList.Clear
-mAvailableStudies = AvailableStudies
 
-For i = 0 To UBound(mAvailableStudies)
-    itemText = mAvailableStudies(i).name & "  (" & mAvailableStudies(i).StudyLibrary & ")"
-    StudyList.AddItem itemText
-Next
+If mChartManager Is Nothing Then
+ElseIf mChartManager.BaseStudyConfiguration Is Nothing Then
+Else
+    addEntryToChartStudiesTree mChartManager.BaseStudyConfiguration, Nothing
+    
+    mAvailableStudies = AvailableStudies
+    For i = 0 To UBound(mAvailableStudies)
+        itemText = mAvailableStudies(i).name & "  (" & mAvailableStudies(i).StudyLibrary & ")"
+        StudyList.AddItem itemText
+    Next
+End If
 
 AddButton.Enabled = False
 ConfigureButton.Enabled = False

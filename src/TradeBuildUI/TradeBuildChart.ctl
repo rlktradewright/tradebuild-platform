@@ -136,8 +136,6 @@ Private mUpdatePerTick                                  As Boolean
 
 Private mState                                          As ChartStates
 
-Private mBarsStudyConfig                                As StudyConfiguration
-
 Private mIsHistoricChart                                As Boolean
 
 Private mChartSpec                                      As ChartSpecifier
@@ -598,8 +596,6 @@ Set mManager = Nothing
 Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 
-Set mBarsStudyConfig = Nothing
-
 Set mContract = Nothing
 
 Set mPriceRegion = Nothing
@@ -800,7 +796,7 @@ Dim studyConfig As StudyConfiguration
 
 Set studyConfig = New StudyConfiguration
 
-studyConfig.UnderlyingStudy = mTicker.InputStudy
+studyConfig.underlyingStudy = mTicker.InputStudy
 
 Set lStudy = mTimeframe.tradeStudy
 studyConfig.Study = lStudy

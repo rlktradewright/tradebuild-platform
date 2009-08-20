@@ -653,23 +653,23 @@ UserControl.Enabled = value
 PropertyChanged "Enabled"
 End Property
 
-Public Property Get isSelectedItemModifiable() As Boolean
+Public Property Get IsSelectedItemModifiable() As Boolean
 Dim selectedOrder As Order
 
 If mSelectedOrderIndex = 0 Then Exit Property
 
 Set selectedOrder = mSelectedOrderPlex.Order(mSelectedOrderIndex)
 If Not selectedOrder Is Nothing Then
-    isSelectedItemModifiable = selectedOrder.isModifiable
+    IsSelectedItemModifiable = selectedOrder.isModifiable
 End If
 End Property
 
-Public Property Get selectedItem() As OrderPlex
-Set selectedItem = mSelectedOrderPlex
+Public Property Get SelectedItem() As OrderPlex
+Set SelectedItem = mSelectedOrderPlex
 End Property
 
-Public Property Get selectedOrderIndex() As Long
-selectedOrderIndex = mSelectedOrderIndex
+Public Property Get SelectedOrderIndex() As Long
+SelectedOrderIndex = mSelectedOrderIndex
 End Property
 
 Public Property Let Simulated(ByVal value As Boolean)
@@ -738,7 +738,7 @@ gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & 
 
 End Sub
 
-Public Sub monitorWorkspace( _
+Public Sub MonitorWorkspace( _
                 ByVal pWorkspace As Workspace)
 If Not mInitialised Then setupOrderPlexGrid
 

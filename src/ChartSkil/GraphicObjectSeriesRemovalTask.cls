@@ -82,11 +82,14 @@ Do While mGraphObjSeries.Count <> 0
 
     failpoint = 200
 
-    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(1), False, False
+    ' we remove the latest object first, since later objects may have references to earlier
+    ' objects, so that remove the earliest first would mean they can't actually be
+    ' terminated
+    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
     
     failpoint = 400
     
-    mGraphObjSeries.Remove 1
+    mGraphObjSeries.Remove mGraphObjSeries.Count
     i = i + 1
     If i = 100 Then
         Exit Sub

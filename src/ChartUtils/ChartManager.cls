@@ -117,7 +117,9 @@ Set BaseStudy = mBaseStudy
 End Property
 
 Public Property Get BaseStudyConfiguration() As StudyConfiguration
-Set BaseStudyConfiguration = mBaseStudyConfig.Clone ' return a defensive copy
+If Not mBaseStudyConfig Is Nothing Then
+    Set BaseStudyConfiguration = mBaseStudyConfig.Clone ' return a defensive copy
+End If
 End Property
 
 Public Property Let BaseStudyConfiguration( _
@@ -132,7 +134,9 @@ If Not TypeOf studyConfig.Study Is BarStudy Then
             "Base Study must implement the BarStudy interface"
 End If
 
-setBaseStudyConfiguration studyConfig.Clone ' take a defensive copy
+Dim sc As StudyConfiguration
+Set sc = studyConfig.Clone ' take a defensive copy
+setBaseStudyConfiguration sc
 
 Exit Property
 
@@ -358,7 +362,7 @@ If Not mConfig Is Nothing Then
     
     setBaseStudyConfiguration studyConfig
     
-    AddDependentStudies studyConfig
+    'AddDependentStudies studyConfig
 End If
 
 Exit Sub
@@ -757,9 +761,9 @@ For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
     End If
     
     
-    AddStudy newChildStudyConfig
-    
     removeStudyValueListeners oldChildStudyConfig
+    
+    AddStudy newChildStudyConfig
     
     AddStudyConfig newChildStudyConfig
     
@@ -882,6 +886,7 @@ If mBaseStudy Is Nothing Then
     
     setupStudyValueListeners mBaseStudyConfig
     RaiseEvent StudyAdded(mBaseStudyConfig)
+    AddDependentStudies studyConfig
 
 ElseIf Not studyConfig.Study Is mBaseStudy Then
     AddStudyConfig studyConfig

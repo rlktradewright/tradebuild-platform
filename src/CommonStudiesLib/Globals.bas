@@ -126,6 +126,7 @@ Public Function gCreateDataPointStyle( _
                 Optional ByVal DisplayMode As DataPointDisplayModes = DataPointDisplayModeLine, _
                 Optional ByVal DownColor As Long = -1, _
                 Optional ByVal HistogramBarWidth As Single = 0.6, _
+                Optional ByVal IncludeInAutoscale As Boolean = True, _
                 Optional ByVal LineStyle As LineStyles = LineSolid, _
                 Optional ByVal Linethickness As Long = 1, _
                 Optional ByVal PointStyle As PointStyles = PointRound, _
@@ -136,6 +137,7 @@ style.Color = Color
 style.DisplayMode = DisplayMode
 style.DownColor = DownColor
 style.HistogramBarWidth = HistogramBarWidth
+style.IncludeInAutoscale = IncludeInAutoscale
 style.LineStyle = LineStyle
 style.Linethickness = Linethickness
 style.PointStyle = PointStyle
@@ -159,7 +161,7 @@ Case UCase$(EmaShortName)
     Set lEMA = New EMA
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
-    lparams.setParameterValue ParamPeriods, periods
+    lparams.SetParameterValue ParamPeriods, periods
     lStudy.initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
@@ -173,7 +175,7 @@ Case Else
     Set lSMA = New SMA
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
-    lparams.setParameterValue ParamPeriods, periods
+    lparams.SetParameterValue ParamPeriods, periods
     lStudy.initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
