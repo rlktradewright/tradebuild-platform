@@ -102,7 +102,7 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 
 Dim reader As HistDataReader
 
-On Error GoTo err
+On Error GoTo Err
 
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, _
@@ -123,10 +123,8 @@ reader.Initialise Me, _
                 mHandle
 mHistDataReaders.add reader
 Exit Function
-err:
-handleFatalError err.number, _
-                "IBarDataServiceProvider_CreateBarDataReader", _
-                err.Description
+Err:
+handleFatalError "IBarDataServiceProvider_CreateBarDataReader"
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -140,7 +138,7 @@ End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
                 ByVal period As TimePeriod) As Boolean
-Select Case period.units
+Select Case period.Units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -198,29 +196,29 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long, _
+                ByVal Handle As Long, _
                 ByVal params As Parameters)
 Dim param As Parameter
 
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
-mHandle = handle
+mHandle = Handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.HistoricalData
 For Each param In params
-    Select Case UCase$(param.name)
+    Select Case UCase$(param.Name)
     Case UCase$(ParamNameClientId)
         clientID = gParseClientId(param.value)
     Case UCase$(ParamNameConnectionRetryIntervalSecs)
-        connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
+        ConnectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
-        keepConnection = gParseKeepConnection(param.value)
+        KeepConnection = gParseKeepConnection(param.value)
     Case UCase$(ParamNamePort)
-        port = gParsePort(param.value)
+        Port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
-        providerKey = param.value
+        ProviderKey = param.value
     Case UCase$(ParamNameServer)
-        server = param.value
+        Server = param.value
     Case UCase$(ParamNameTwsLogLevel)
         TWSLogLevel = gParseTwsLogLevel(param.value)
     End Select
@@ -229,7 +227,7 @@ Next
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
-name = RHS
+Name = RHS
 End Property
 
 Private Property Get ICommonServiceProvider_Name() As String
@@ -238,17 +236,15 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 
-On Error GoTo err
+On Error GoTo Err
 
-logMessage "IBTWSSP:HistDataServiceProvider terminating"
+logMessage "Hist Data Service Provider terminating", "IBTWSSP:HistDataServiceProvider"
 finishReaders
 Set mCommonServiceConsumer = Nothing
 
 Exit Sub
-err:
-handleFatalError err.number, _
-                "ICommonServiceProvider_Terminate", _
-                err.Description
+Err:
+handleFatalError "ICommonServiceProvider_Terminate"
 End Sub
 
 '================================================================================
@@ -256,18 +252,16 @@ End Sub
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
-On Error GoTo err
+On Error GoTo Err
 notifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
             "Connected to TWS " & mTWSAPI.connectionString
 Exit Sub
-err:
-handleFatalError err.number, _
-                "mTWSAPI_Connected", _
-                err.Description
+Err:
+handleFatalError "mTWSAPI_Connected"
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If retrying Then
     notifyEvent StandardSPEventCodes.HDRetryConnectDataSource, _
                 "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
@@ -278,15 +272,13 @@ Else
                 ": " & Description
 End If
 Exit Sub
-err:
-handleFatalError err.number, _
-                "mTWSAPI_ConnectFailed", _
-                err.Description
+Err:
+handleFatalError "mTWSAPI_ConnectFailed"
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If reconnecting Then
     notifyEvent StandardSPEventCodes.HDReConnectingDataSource, _
                 "Lost connection to TWS (reconnecting) " & mTWSAPI.connectionString
@@ -295,23 +287,19 @@ Else
                 "Lost connection to TWS " & mTWSAPI.connectionString
 End If
 Exit Sub
-err:
-handleFatalError err.number, _
-                "mTWSAPI_ConnectionToTWSClosed", _
-                err.Description
+Err:
+handleFatalError "mTWSAPI_ConnectionToTWSClosed"
 End Sub
 
 Private Sub mTWSAPI_Disconnected( _
                 ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 notifyEvent StandardSPEventCodes.HDDisconnectedFromDataSource, _
             "Disconnected from TWS " & mTWSAPI.connectionString & _
             ": reason=: " & reason
 Exit Sub
-err:
-handleFatalError err.number, _
-                "mTWSAPI_Disconnected", _
-                err.Description
+Err:
+handleFatalError "mTWSAPI_Disconnected"
 End Sub
 
 '================================================================================
@@ -322,31 +310,31 @@ Friend Property Let clientID(ByVal value As Long)
 mClientID = value
 End Property
 
-Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)
+Friend Property Let ConnectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Friend Property Let keepConnection(ByVal value As Boolean)
+Friend Property Let KeepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
-Friend Property Let name(ByVal value As String)
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
-Friend Property Let port(ByVal value As Long)
+Friend Property Let Port(ByVal value As Long)
 mPort = value
 End Property
 
-Friend Property Let providerKey(ByVal value As String)
+Friend Property Let ProviderKey(ByVal value As String)
 mProviderKey = value
 End Property
 
-Friend Property Let server(ByVal value As String)
+Friend Property Let Server(ByVal value As String)
 mServer = value
 If mServer = "" Then
     mServer = "127.0.0.1"
@@ -361,7 +349,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select
@@ -376,6 +364,9 @@ Friend Sub dataReaderFinished( _
                 ByVal dataReader As HistDataReader)
 Dim i As Long
 Dim reader As HistDataReader
+Dim failpoint As Long
+On Error GoTo Err
+
 i = 1
 For Each reader In mHistDataReaders
     If reader Is dataReader Then
@@ -391,6 +382,11 @@ Then
     gReleaseTWSAPIInstance mTWSAPI
     Set mTWSAPI = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataReaderFinished", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '================================================================================
@@ -399,6 +395,9 @@ End Sub
 
 Private Sub finishReaders()
 Dim reader As HistDataReader
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each reader In mHistDataReaders
     reader.finish
 Next
@@ -409,38 +408,54 @@ If Not mTWSAPI Is Nothing Then
     Set mTWSAPI = Nothing   ' clear event handlers
     gReleaseTWSAPIInstance lTWSAPI
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishReaders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal number As Long, _
-                ByVal source As String, _
-                ByVal Description As String)
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.number
+Dim errSource As String: errSource = Err.source
+Dim errDesc As String: errDesc = Err.Description
 
-logMessage "Error " & err.number & ": " & _
-            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
-            err.Description, _
-            LogLevelSevere
+On Error GoTo Err
 
-gReleaseAllTWSAPIInstances
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
 
-mCommonServiceConsumer.NotifyFatalError number, source, Description, mHandle
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.number, Err.source, Err.Description, mHandle
 End Sub
 
 Private Sub logMessage( _
-                ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(logLevel) Then Exit Sub
-gLogger.Log logLevel, _
-            ProjectName & "." & ModuleName & ": " & message
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub notifyEvent( _
                 ByVal eventCode As StandardSPEventCodes, _
                 ByVal eventMessage As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mCommonServiceConsumer Is Nothing Then Exit Sub
 mCommonServiceConsumer.notifyEvent eventCode, _
                                     eventMessage, _
                                     mHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notifyEvent", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

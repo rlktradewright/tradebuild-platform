@@ -18,8 +18,8 @@ Begin VB.Form fConfig
       TabIndex        =   0
       Top             =   120
       Width           =   10095
-      _ExtentX        =   17806
-      _ExtentY        =   7223
+      _extentx        =   17806
+      _extenty        =   7223
    End
 End
 Attribute VB_Name = "fConfig"
@@ -82,6 +82,11 @@ If ConfigViewer1.Dirty Then
         ConfigViewer1.saveConfigFile
     End If
 End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+gKillLogging
+TerminateTWUtilities
 End Sub
 
 '@================================================================================

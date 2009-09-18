@@ -56,8 +56,6 @@ Attribute mTicker.VB_VarHelpID = -1
 Private WithEvents mTimeframe As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
 
-Private mPriceFormatString As String
-
 Private mFromDate As Date
 Private mToDate As Date
 Private mNumber As Long
@@ -66,7 +64,7 @@ Private mBarUnits As TimePeriodUnits
 Private mSessionOnly As Boolean
 
 Private mBarStudy As Study
-Private mBars As bars
+Private mBars As Bars
 
 Private mBar As Bar
 
@@ -154,7 +152,7 @@ Friend Sub startData( _
                 ByVal sessionOnly As Boolean)
                 
 Set mTicker = TradeBuildAPI.Tickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
-mTicker.loadTicker spec
+mTicker.LoadTicker spec
 
 mFromDate = fromDate
 mToDate = toDate
@@ -166,7 +164,7 @@ mSessionOnly = sessionOnly
 End Sub
 
 Friend Sub stopData()
-mTicker.stopTicker
+mTicker.StopTicker
 End Sub
 
 
@@ -176,17 +174,15 @@ End Sub
 
 Private Sub loaddata()
 
-mPriceFormatString = mTicker.Contract.priceFormatString
-
-Set mTimeframe = mTicker.Timeframes.addHistorical(GetTimePeriod(mBarLength, mBarUnits), _
+Set mTimeframe = mTicker.Timeframes.AddHistorical(GetTimePeriod(mBarLength, mBarUnits), _
                                         "", _
                                         mNumber, _
                                         mFromDate, _
                                         mToDate, _
                                         Not mSessionOnly)
 Set mBarStudy = mTimeframe.tradeStudy
-Set mBars = mTimeframe.tradeStudy.bars
-mBars.addCollectionChangeListener Me
+Set mBars = mTimeframe.tradeStudy.Bars
+mBars.AddCollectionChangeListener Me
 
 End Sub
 
@@ -197,18 +193,18 @@ If mBar Is Nothing Then Exit Sub
 
 gCon.writeString FormatTimestamp(mBar.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.writeString ","
-gCon.writeString Format(mBar.openValue, mPriceFormatString)
+gCon.writeString mTicker.FormatPrice(mBar.OpenValue)
 gCon.writeString ","
-gCon.writeString Format(mBar.highValue, mPriceFormatString)
+gCon.writeString mTicker.FormatPrice(mBar.HighValue)
 gCon.writeString ","
-gCon.writeString Format(mBar.lowValue, mPriceFormatString)
+gCon.writeString mTicker.FormatPrice(mBar.LowValue)
 gCon.writeString ","
-gCon.writeString Format(mBar.closeValue, mPriceFormatString)
+gCon.writeString mTicker.FormatPrice(mBar.CloseValue)
 gCon.writeString ","
-gCon.writeString mBar.volume
+gCon.writeString mBar.Volume
 gCon.writeString ","
-gCon.writeString mBar.tickVolume
+gCon.writeString mBar.TickVolume
 gCon.writeString ","
-gCon.writeLine mBar.openInterest
+gCon.writeLine mBar.OpenInterest
 End Sub
 

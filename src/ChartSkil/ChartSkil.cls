@@ -48,14 +48,6 @@ Public Enum BarDisplayModes
     BarDisplayModeLine
 End Enum
 
-Public Enum CanvasComparisonCodes
-    CantCompare = 1
-    GaugeChangedX = 2
-    GaugeChangedY = 4
-    BoundsChangedX = 8
-    BoundsChangedY = 16
-End Enum
-
 Public Enum GraphicObjectCapabilities
     ComplexBounding = 1
     PartialRedraw = 2
@@ -107,19 +99,19 @@ Public Enum FillStyles
 End Enum
 
 Public Enum LayerNumbers
-    LayerMin = MinLayer
-    LayerBackground = MinLayer
-    LayerGrid = MinLayer + 5
+    LayerMin = LayerNumberRange.MinLayer
+    LayerBackground = LayerNumberRange.MinLayer
+    LayerGrid = LayerNumberRange.MinLayer + 5
     LayerGridText = LayerGrid + 3
-    LayerLowestUser = MinLayer + 10
+    LayerLowestUser = LayerNumberRange.MinLayer + 10
 '    LayerDefaultBars
 '    LayerDefaultDataPoints
 '    LayerDefaultLines
 '    LayerDefaultTexts
-    LayerHighestUser = MaxLayer - 10
-    LayerTitle = MaxLayer - 5
-    LayerPointer = MaxLayer - 2
-    LayerMax = MaxLayer
+    LayerHighestUser = LayerNumberRange.MaxLayer - 10
+    LayerTitle = LayerNumberRange.MaxLayer - 5
+    LayerPointer = LayerNumberRange.MaxLayer - 2
+    LayerMax = LayerNumberRange.MaxLayer
 End Enum
 
 Public Enum LineStyles
@@ -151,6 +143,13 @@ End Enum
 Public Enum PointStyles
     PointRound
     PointSquare
+End Enum
+
+Public Enum Quadrants
+    NE
+    NW
+    SW
+    SE
 End Enum
 
 Public Enum TextAlignModes
@@ -199,11 +198,12 @@ Public Enum Verticals
     VerticalDown
 End Enum
 
-Public Enum Quadrants
-    NE
-    NW
-    SW
-    SE
+Public Enum ViewportComparisonCodes
+    CantCompare = 1
+    GaugeChangedX = 2
+    GaugeChangedY = 4
+    BoundsChangedX = 8
+    BoundsChangedY = 16
 End Enum
 
 '@================================================================================
@@ -214,6 +214,11 @@ Public Type TInterval
     isValid         As Boolean
     startValue      As Double
     endValue        As Double
+End Type
+
+Public Type TPoint
+    X               As Double
+    Y               As Double
 End Type
 
 Public Type TRectangle

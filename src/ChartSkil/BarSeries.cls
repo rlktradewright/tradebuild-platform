@@ -61,7 +61,7 @@ Private mFinished As Boolean
 
 Private mBars As Collection
 
-Private mCanvas As Canvas
+Private mViewport As Viewport
 Private mLayer As Long
 
 Private mGOSP As GraphObjServiceProvider
@@ -72,6 +72,8 @@ Attribute mStyle.VB_VarHelpID = -1
 Private mIncludeInAutoscale As Boolean
 
 Private mName As String
+
+Private mPrevBarRef As WeakReference
 
 ' these fields override corresponding items in the Style
 Private mColor As Long
@@ -104,10 +106,6 @@ End Sub
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
-Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
-Set mCanvas = value
-End Property
-
 Private Sub IGraphicObjectSeries_Click()
 RaiseEvent Click
 End Sub
@@ -123,22 +121,23 @@ End Property
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 Set mChartRef = Nothing
+Set mPrevBarRef = Nothing
 Set mGOSP = Nothing
-Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
-                ByVal Name As String, _
-                ByVal Canvas As Canvas, _
-                ByVal Layer As LayerNumbers, _
+                ByVal pName As String, _
+                ByVal pviewport As Viewport, _
+                ByVal pLayer As LayerNumbers, _
                 ByVal pChart As Chart, _
-                ByVal SeriesID As Long, _
-                ByVal GOSP As GraphObjServiceProvider)
-mName = Name
-mSeriesID = SeriesID
-Set mGOSP = GOSP
-mLayer = Layer
-Set mCanvas = Canvas
+                ByVal pSeriesID As Long, _
+                ByVal pGOSP As GraphObjServiceProvider)
+mName = pName
+mSeriesID = pSeriesID
+Set mGOSP = pGOSP
+mLayer = pLayer
+Set mViewport = pviewport
 Set mChartRef = CreateWeakReference(pChart)
 End Sub
 
@@ -453,13 +452,16 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
 
 Set Add = New Bar
 
-Add.X = chartObj.GetXFromTimestamp(Timestamp, True)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.Initialise Me, Timestamp, Key, mGOSP, mCanvas, LocalStyle
+Add.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
+Add.X = chartObj.GetXFromTimestamp(Timestamp, True)
+
+If Not mPrevBarRef Is Nothing Then Add.PreviousBar = prevBarObj
 mBars.Add Add, Key
+Set mPrevBarRef = CreateWeakReference(Add)
 mGOSP.AddGraphicObject Add
 End Function
 
@@ -470,7 +472,7 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
-Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Public Function Item(ByVal index As Variant) As Bar
@@ -518,6 +520,10 @@ End Sub
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As BarPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Function prevBarObj() As Bar
+Set prevBarObj = mPrevBarRef.Target
 End Function
 
 Private Sub repaintRegion( _

@@ -59,6 +59,13 @@ Public Enum LayerNumberRange
     MaxLayer = 255
 End Enum
 
+Public Enum RegionTypes
+    RegionTypeData
+    RegionTypeXAxis
+    RegionTypeYAxis
+    RegionTypeBackground
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -92,6 +99,12 @@ If lLogger Is Nothing Then Set lLogger = GetLogger("chartskil.log")
 Set gLogger = lLogger
 End Property
 
+Public Property Get gTracer() As Tracer
+Static lTracer As Tracer
+If lTracer Is Nothing Then Set lTracer = GetTracer("chartskil")
+Set gTracer = lTracer
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -117,6 +130,20 @@ Public Function gIsValidColor( _
 If value > &HFFFFFF Then Exit Function
 If value < 0 And value > MaxSystemColor Then Exit Function
 gIsValidColor = True
+End Function
+
+Public Function gRegionTypeToString( _
+                ByVal value As RegionTypes) As String
+Select Case value
+Case RegionTypeData
+    gRegionTypeToString = "data"
+Case RegionTypeXAxis
+    gRegionTypeToString = "x-axis"
+Case RegionTypeYAxis
+    gRegionTypeToString = "y-axis"
+Case RegionTypeBackground
+    gRegionTypeToString = "background"
+End Select
 End Function
 
 Public Sub Main()

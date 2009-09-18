@@ -375,7 +375,7 @@ End Type
 ' Member variables
 '================================================================================
 
-Private WithEvents mDataCollector As dataCollector
+Private WithEvents mDataCollector As DataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
 
 Private mTickers() As TickerTableEntry
@@ -409,9 +409,6 @@ Private mFormatter As LogFormatter
 
 Private mConfigManager As ConfigManager
 
-Private WithEvents mTaskInfoTimer  As IntervalTimer
-Attribute mTaskInfoTimer.VB_VarHelpID = -1
-
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -421,7 +418,7 @@ InitCommonControls
 Set mTimerList = GetGlobalTimerList
 ReDim mTickers(99) As TickerTableEntry
 Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
-gLogger.addLogListener Me
+gLogger.AddLogListener Me
 End Sub
 
 Private Sub Form_Load()
@@ -448,6 +445,7 @@ End Sub
 
 Private Sub Form_Resize()
 
+If Me.WindowState = vbMinimized Then Exit Sub
 If Me.Height <> mCurrentHeight Then resizeHeight
 If Me.Width <> mCurrentWidth Then resizeWidth
 
@@ -461,9 +459,10 @@ Private Sub Form_Unload(Cancel As Integer)
 TradeBuild.TradeBuildAPI.ServiceProviders.RemoveAll
 
 gLogger.Log LogLevelNormal, "Data Collector program exiting"
-gLogger.removeLogListener Me
+gLogger.RemoveLogListener Me
 
 gKillLogging
+TerminateTWUtilities
 End Sub
 
 '================================================================================
@@ -510,7 +509,7 @@ End If
 LogText.SelStart = Len(LogText.Text)
 LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
-LogText.SelText = mFormatter.formatRecord(logrec)
+LogText.SelText = mFormatter.FormatRecord(logrec)
 LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 End Sub
 
@@ -633,7 +632,7 @@ End Sub
 
 Private Sub StartStopButton_Click()
 If mCollectingData Then
-    stopCollecting "Data collection stopped by user"
+    stopCollecting "Data collection stopped by user", True
 Else
     startCollecting "Data collection started by user"
 End If
@@ -711,8 +710,25 @@ ConnectionStatusText.BackColor = vbRed
 StartStopButton.enabled = False
 End Sub
 
+Private Sub mDataCollector_Error(ev As TWUtilities30.ErrorEvent)
+gLogger.Log LogLevelSevere, _
+            "Error " & ev.errorCode & ": " & vbCrLf & _
+            ev.errorMessage
+stopCollecting "Closing due to error", False
+Unload Me
+End Sub
+
 Private Sub mDataCollector_ExitProgram()
 Unload Me
+End Sub
+
+Private Sub mDataCollector_FatalError(ev As TWUtilities30.ErrorEvent)
+On Error Resume Next
+gLogger.Log LogLevelSevere, _
+            "Fatal error " & ev.errorCode & vbCrLf & _
+            ev.errorMessage
+
+' TradeBuild will end the program abruptly if we exit back to it
 End Sub
 
 Private Sub mDataCollector_Reconnecting()
@@ -752,45 +768,25 @@ ShortNameText(index).ToolTipText = ticker.Contract.specifier.localSymbol
 ShortNameText(index).Visible = True
 DataLightLabel(index).Visible = True
 
-ticker.addQuoteListener Me
-ticker.addRawMarketDepthListener Me
-ticker.addTickfileWriterListener Me
-ticker.addBarWriterListener Me
+ticker.AddQuoteListener Me
+ticker.AddRawMarketDepthListener Me
+ticker.AddTickfileWriterListener Me
+ticker.AddBarWriterListener Me
 
 Me.Refresh
 
 End Sub
 
 '================================================================================
-' mTaskInfoTimer Event Handlers
-'================================================================================
-
-Private Sub mTaskInfoTimer_TimerExpired()
-gLogger.Log LogLevelDetail, "Running Tasks ----------------------------------------------" & vbCrLf & _
-                            TaskManager.getRunnableTaskSummary
-gLogger.Log LogLevelDetail, "Processed Tasks --------------------------------------------" & vbCrLf & _
-                            TaskManager.getProcessedTaskSummary
-gLogger.Log LogLevelDetail, "Restartable Tasks ------------------------------------------" & vbCrLf & _
-                            TaskManager.getRestartableTaskSummary
-gLogger.Log LogLevelDetail, "Pending Tasks ----------------------------------------------" & vbCrLf & _
-                            TaskManager.getPendingTaskSummary
-gLogger.Log LogLevelDetail, "Suspended Tasks --------------------------------------------" & vbCrLf & _
-                            TaskManager.getSuspendedTaskSummary
-End Sub
-
-'================================================================================
 ' Properties
 '================================================================================
-
-Public Property Let dataCollector(ByVal value As TBDataCollector)
-End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
 Friend Sub initialise( _
-                ByVal pDataCollector As dataCollector, _
+                ByVal pDataCollector As DataCollector, _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
@@ -948,10 +944,10 @@ End Sub
 Private Sub scrollTickers()
 If TickersPicture.Height <= TickersContainerPicture.Height Then
     TickersPicture.Top = 0
-ElseIf TickerScroll.value = TickerScrollMax Then
+ElseIf TickerScroll.Value = TickerScrollMax Then
     TickersPicture.Top = -mLinesToScroll * mLineSpacing
 Else
-    TickersPicture.Top = -Round((mLinesToScroll / TickerScrollMax) * TickerScroll.value, 0) * mLineSpacing
+    TickersPicture.Top = -Round((mLinesToScroll / TickerScrollMax) * TickerScroll.Value, 0) * mLineSpacing
 End If
 End Sub
 
@@ -964,14 +960,9 @@ mLastTickTime = GetTimestamp
 
 Set mClock = GetClock
 
-If gLogger.isLoggable(LogLevelDetail) Then
-    Set mTaskInfoTimer = CreateIntervalTimer(1000, ExpiryTimeUnitMilliseconds, 5000)
-    mTaskInfoTimer.StartTimer
-End If
 End Sub
 
 Private Sub setStopped()
-If Not mTaskInfoTimer Is Nothing Then mTaskInfoTimer.StopTimer
 
 mCollectingData = False
 StartStopButton.Caption = "Start"
@@ -1028,9 +1019,12 @@ mDataCollector.startCollection
 End Sub
 
 Private Sub stopCollecting( _
-                ByVal message As String)
-If MsgBox("Please confirm that you wish to stop data collection", _
-            vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
+                ByVal message As String, _
+                ByVal confirm As Boolean)
+If confirm Then
+    If MsgBox("Please confirm that you wish to stop data collection", _
+                vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
+End If
 
 gLogger.Log LogLevelNormal, message
 
@@ -1044,11 +1038,11 @@ If Not mActivityMonitorVisible Then Exit Sub
 
 If Not mTickers(index).tli Is Nothing Then
     mTimerList.Remove mTickers(index).tli
-    mTickers(index).tli.removeStateChangeListener Me
+    mTickers(index).tli.RemoveStateChangeListener Me
 End If
 
 Set mTickers(index).tli = mTimerList.Add(index, 200, ExpiryTimeUnitMilliseconds)
-mTickers(index).tli.addStateChangeListener Me
+mTickers(index).tli.AddStateChangeListener Me
 
 DataLightLabel(index).BackColor = vbGreen
 DataLightLabel(index).Refresh

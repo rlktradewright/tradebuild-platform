@@ -160,7 +160,7 @@ Private Sub processInput( _
 ' StdIn format:
 ' name,shortname,symbol,expiry,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]
 Dim validInput As Boolean
-Dim tokens() As String
+
 Dim sectype As SecurityTypes
 Dim sectypeStr As String
 Dim exchange As String
@@ -180,26 +180,26 @@ Dim tickValueStr As String
 Dim tickValue As Double
 Dim update As Boolean
 
+Dim parser As CommandLineParser
+
 Dim failpoint As Long
 On Error GoTo Err
 
 validInput = True
 
-tokens = Split(inString, InputSep)
+Set parser = CreateCommandLineParser(inString, ",")
 
-On Error Resume Next
-name = Trim$(tokens(0))
-shortname = Trim$(tokens(1))
-symbol = Trim$(tokens(2))
-expiry = Trim$(tokens(3))
-strikeStr = Trim$(tokens(4))
-optRightStr = Trim$(tokens(5))
-sectypeStr = Trim$(tokens(6))
-exchange = Trim$(tokens(7))
-currencyCode = Trim$(tokens(8))
-tickSizeStr = Trim$(tokens(9))
-tickValueStr = Trim$(tokens(10))
-On Error GoTo Err
+name = parser.Arg(0)
+shortname = parser.Arg(1)
+symbol = parser.Arg(2)
+expiry = parser.Arg(3)
+strikeStr = parser.Arg(4)
+optRightStr = parser.Arg(5)
+sectypeStr = parser.Arg(6)
+exchange = parser.Arg(7)
+currencyCode = parser.Arg(8)
+tickSizeStr = parser.Arg(9)
+tickValueStr = parser.Arg(10)
 
 If name = "" Then
     gCon.writeErrorLine "Line " & lineNumber & ": name must be supplied"
@@ -369,9 +369,9 @@ If validInput Then
     If lInstr.IsValid Then
         lInstr.ApplyEdit
         If update Then
-            gCon.writeLineToConsole "Updated: " & gInstrumentClass.exchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
+            gCon.writeLineToConsole "Updated: " & gInstrumentClass.exchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
         Else
-            gCon.writeLineToConsole "Added: " & gInstrumentClass.exchangeName & "/" & gInstrumentClass.name & "/" & name & "(" & shortname & ")"
+            gCon.writeLineToConsole "Added:   " & gInstrumentClass.exchangeName & "/" & gInstrumentClass.name & "/" & name & " (" & shortname & ")"
         End If
     Else
         Dim lErr As ErrorItem

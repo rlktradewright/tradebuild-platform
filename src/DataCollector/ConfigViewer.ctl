@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#207.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   13740
@@ -438,7 +438,7 @@ ConfigsTV_NodeClick ConfigsTV.SelectedItem
 End Sub
 
 Public Function initialise( _
-                ByVal pConfigManager As ConfigManager, _
+                ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
 Dim appConfig As ConfigurationSection
 Dim index As Long
@@ -446,7 +446,7 @@ Dim newnode As Node
 
 mReadOnly = readonly
 
-Set mConfigManager = pConfigManager
+Set mConfigManager = pconfigManager
 
 For Each appConfig In mConfigManager
     Set newnode = addConfigNode(appConfig)
@@ -538,7 +538,7 @@ Private Sub showParametersConfigDetails()
 hideConfigControls
 
 WriteBarDataCheck.value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
-WriteTickDataCheck.value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
+WriteTickDataCheck.value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteTickData, "False") = "True", vbChecked, vbUnchecked)
 
 ParametersPicture.Left = Box1.Left
 ParametersPicture.Top = Box1.Top

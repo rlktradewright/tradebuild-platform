@@ -237,7 +237,7 @@ mRegionsIndex = mRegionsIndex + 1
 Set Add = New ChartRegion
 Add.handle = mRegionsIndex
 
-Add.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(Add.handle)
+Add.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(Add.handle), RegionTypeData
 
 Add.MinimumPercentHeight = MinimumPercentHeight
 Add.PercentHeight = PercentHeight
@@ -258,9 +258,8 @@ End If
 Set YAxisRegion = New ChartRegion
 YAxisRegion.handle = mRegionsIndex
 
-YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(Add.handle)
+YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(Add.handle), RegionTypeYAxis
 
-YAxisRegion.IsYAxisRegion = True
 YAxisRegion.Style = yAxisStyle
 Add.YAxisRegion = YAxisRegion
 

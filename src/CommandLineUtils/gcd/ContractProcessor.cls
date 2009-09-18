@@ -50,10 +50,13 @@ Private Const OutputSep                     As String = ","
 '@================================================================================
 
 Private mContractSpec As ContractSpecifier
-Private WithEvents mContracts As Contracts
-Attribute mContracts.VB_VarHelpID = -1
+Private WithEvents mContractsTC As TaskController
+Attribute mContractsTC.VB_VarHelpID = -1
 Private WithEvents mTB As TradeBuildAPI
 Attribute mTB.VB_VarHelpID = -1
+
+Private mContracts As Contracts
+Attribute mContracts.VB_VarHelpID = -1
 
 Private mDone As Boolean
 Private mLineNumber As Long
@@ -64,8 +67,8 @@ Private mLineNumber As Long
 
 Private Sub Class_Initialize()
 Set mTB = TradeBuildAPI
-GetLogger("").addLogListener Me
-GetLogger("").logLevel = LogLevelNormal
+GetLogger("log").AddLogListener Me
+GetLogger("log").LogLevel = LogLevelNormal
 End Sub
 
 '@================================================================================
@@ -103,6 +106,17 @@ gCon.writeErrorLine "Line " & mLineNumber & ": Try later: " & reason
 mDone = True
 End Sub
 
+Private Sub mContractsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.cancelled Then
+    gCon.writeErrorLine "Line " & mLineNumber & ": Contract fetch cancelled"
+ElseIf ev.errorNumber <> 0 Then
+    gCon.writeErrorLine "Line " & mLineNumber & ": Error " & ev.errorNumber & ": " & ev.errorMessage
+Else
+    If Not IsEmpty(ev.result) Then Set mContracts = ev.result
+End If
+mDone = True
+End Sub
+
 '@================================================================================
 ' mTB Event Handlers
 '@================================================================================
@@ -137,9 +151,10 @@ Dim lContract As Contract
 
 mDone = False
 
+Set mContracts = Nothing
 Set mContractSpec = contractSpec
 mLineNumber = lineNumber
-Set mContracts = TradeBuildAPI.loadContracts(contractSpec)
+Set mContractsTC = TradeBuildAPI.loadContracts(contractSpec)
 
 ' now hang around until we've got the info, but don't exit this proc
 ' because we don't want to process the next line of input till this one's done
@@ -195,10 +210,11 @@ s.initialise nametemplate
 
 Set bldr = CreateStringBuilder
 
+bldr.Append """"
 Do While Not s.eos
     curr = s.nextChar
     If curr = "\" Then
-        bldr.append s.nextChar
+        bldr.Append s.nextChar
     ElseIf curr = "%" Then
         curr = s.nextChar
         Select Case curr
@@ -218,32 +234,33 @@ Do While Not s.eos
                     End If
                 Loop
             End If
-            If Not pContract.expiryDate = 0 Then bldr.append Format(pContract.expiryDate, formatString)
+            If Not pContract.expiryDate = 0 Then bldr.Append Format(pContract.expiryDate, formatString)
         Case "s"          'symbol
-            bldr.append pContract.specifier.symbol
+            bldr.Append pContract.specifier.symbol
         Case "S"          'shortname"
-            bldr.append pContract.specifier.localSymbol
+            bldr.Append pContract.specifier.localSymbol
         Case "e"          'exchange"
-            bldr.append pContract.specifier.exchange
+            bldr.Append pContract.specifier.exchange
         Case "c"          'currency"
-            bldr.append pContract.specifier.currencyCode
+            bldr.Append pContract.specifier.currencyCode
         Case "t"          'sectype (abbreviated)"
-            bldr.append SecTypeToShortString(pContract.specifier.sectype)
+            bldr.Append SecTypeToShortString(pContract.specifier.sectype)
         Case "T"          'sectype (in full)"
-            bldr.append SecTypeToString(pContract.specifier.sectype)
+            bldr.Append SecTypeToString(pContract.specifier.sectype)
         Case "p"          'strike price"
-            If pContract.specifier.strike <> 0 Then bldr.append pContract.specifier.strike
+            If pContract.specifier.strike <> 0 Then bldr.Append pContract.specifier.strike
         Case "r"          'right"
-            bldr.append OptionRightToString(pContract.specifier.Right)
+            bldr.Append OptionRightToString(pContract.specifier.Right)
         Case "n"          'supplied name"
-            bldr.append pContract.Description
+            bldr.Append pContract.Description
         Case Else
-            bldr.append "%" & curr
+            bldr.Append "%" & curr
         End Select
     Else
-        bldr.append curr
+        bldr.Append curr
     End If
 Loop
+bldr.Append """"
 
 formatName = bldr.ToString
 

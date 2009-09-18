@@ -6,6 +6,8 @@ Option Explicit
 '================================================================================
 
 Public Const ProjectName                    As String = "IBTWSSP26"
+Private Const ModuleName                As String = "Globals"
+
 
 Public Const MaxLong As Long = &H7FFFFFFF
 Public Const OneMicrosecond As Double = 1# / 86400000000#
@@ -17,7 +19,7 @@ Public Const HistoricDataSPName As String = "IB TWS Historic Data Service Provid
 Public Const RealtimeDataSPName As String = "IB TWS Realtime Data Service Provider"
 Public Const OrderSubmissionSPName As String = "IB TWS Order Submission Service Provider"
 
-Public Const providerKey As String = "TWS"
+Public Const ProviderKey As String = "TWS"
 
 Public Const ParamNameClientId As String = "Client Id"
 Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
@@ -177,12 +179,12 @@ End Enum
 '================================================================================
 
 Private Type TWSAPITableEntry
-    server          As String
-    port            As Long
+    Server          As String
+    Port            As Long
     clientID        As Long
-    providerKey     As String
-    connectionRetryIntervalSecs As Long
-'    keepConnection  As Boolean  ' once this flag is set, the TWSAPI instance
+    ProviderKey     As String
+    ConnectionRetryIntervalSecs As Long
+'    KeepConnection  As Boolean  ' once this flag is set, the TWSAPI instance
 '                                ' will only be disconnected by a call to
 '                                ' gReleaseTWSAPIInstance with <forceDisconnect>
 '                                ' set to true (and the usageCount is zero),
@@ -207,6 +209,8 @@ Private mRandomClientIds As Collection
 
 Private mLogger As Logger
 
+Private mLogTokens(9) As String
+
 '================================================================================
 ' Properties
 '================================================================================
@@ -215,6 +219,32 @@ Public Property Let gCommonServiceConsumer( _
                 ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
 Set mCommonServiceConsumer = RHS
 End Property
+
+Public Sub gLog(ByRef pMsg As String, _
+                ByRef pProjName As String, _
+                ByRef pModName As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
+mLogTokens(0) = "["
+mLogTokens(1) = pProjName
+mLogTokens(2) = "."
+mLogTokens(3) = pModName
+mLogTokens(4) = ":"
+mLogTokens(5) = pProcName
+mLogTokens(6) = "] "
+mLogTokens(7) = pMsg
+If Len(pMsgQualifier) <> 0 Then
+    mLogTokens(8) = ": "
+    mLogTokens(9) = pMsgQualifier
+Else
+    mLogTokens(8) = vbNullString
+    mLogTokens(9) = vbNullString
+End If
+
+gLogger.Log pLogLevel, Join(mLogTokens, "")
+End Sub
 
 Public Property Get gLogger() As Logger
 If mLogger Is Nothing Then Set mLogger = GetLogger("tradebuild.log.serviceprovider.ibtwssp")
@@ -226,34 +256,37 @@ End Property
 '================================================================================
 
 Public Function gGetTWSAPIInstance( _
-                ByVal server As String, _
-                ByVal port As Long, _
+                ByVal Server As String, _
+                ByVal Port As Long, _
                 ByVal clientID As Long, _
-                ByVal providerKey As String, _
-                ByVal connectionRetryIntervalSecs As Long, _
+                ByVal ProviderKey As String, _
+                ByVal ConnectionRetryIntervalSecs As Long, _
                 ByVal TWSLogLevel As TWSLogLevels) As TWSAPI
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mTWSAPITableNextIndex = 0 Then
     ReDim mTWSAPITable(1) As TWSAPITableEntry
 End If
 
-If clientID < 0 Then clientID = getRandomClientId(clientID & providerKey)
+If clientID < 0 Then clientID = getRandomClientId(clientID & ProviderKey)
 
-server = UCase$(server)
+Server = UCase$(Server)
 
 For i = 0 To mTWSAPITableNextIndex - 1
-    If mTWSAPITable(i).server = server And _
-        mTWSAPITable(i).port = port And _
+    If mTWSAPITable(i).Server = Server And _
+        mTWSAPITable(i).Port = Port And _
         mTWSAPITable(i).clientID = clientID And _
-        mTWSAPITable(i).providerKey = providerKey _
+        mTWSAPITable(i).ProviderKey = ProviderKey _
     Then
         Set gGetTWSAPIInstance = mTWSAPITable(i).TWSAPI
         mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount + 1
-        If connectionRetryIntervalSecs > 0 And _
-            connectionRetryIntervalSecs < mTWSAPITable(i).connectionRetryIntervalSecs _
+        If ConnectionRetryIntervalSecs > 0 And _
+            ConnectionRetryIntervalSecs < mTWSAPITable(i).ConnectionRetryIntervalSecs _
         Then
-            mTWSAPITable(i).connectionRetryIntervalSecs = connectionRetryIntervalSecs
+            mTWSAPITable(i).ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
         End If
         Exit Function
     End If
@@ -263,11 +296,11 @@ If mTWSAPITableNextIndex > UBound(mTWSAPITable) Then
     ReDim Preserve mTWSAPITable(2 * (UBound(mTWSAPITable) + 1) - 1) As TWSAPITableEntry
 End If
 
-mTWSAPITable(mTWSAPITableNextIndex).server = server
-mTWSAPITable(mTWSAPITableNextIndex).port = port
+mTWSAPITable(mTWSAPITableNextIndex).Server = Server
+mTWSAPITable(mTWSAPITableNextIndex).Port = Port
 mTWSAPITable(mTWSAPITableNextIndex).clientID = clientID
-mTWSAPITable(mTWSAPITableNextIndex).providerKey = providerKey
-mTWSAPITable(mTWSAPITableNextIndex).connectionRetryIntervalSecs = connectionRetryIntervalSecs
+mTWSAPITable(mTWSAPITableNextIndex).ProviderKey = ProviderKey
+mTWSAPITable(mTWSAPITableNextIndex).ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
 mTWSAPITable(mTWSAPITableNextIndex).usageCount = 1
 Set mTWSAPITable(mTWSAPITableNextIndex).TWSAPI = New TWSAPI
 Set gGetTWSAPIInstance = mTWSAPITable(mTWSAPITableNextIndex).TWSAPI
@@ -275,13 +308,18 @@ Set gGetTWSAPIInstance = mTWSAPITable(mTWSAPITableNextIndex).TWSAPI
 mTWSAPITableNextIndex = mTWSAPITableNextIndex + 1
 
 gGetTWSAPIInstance.commonServiceConsumer = mCommonServiceConsumer
-gGetTWSAPIInstance.server = server
-gGetTWSAPIInstance.port = port
+gGetTWSAPIInstance.Server = Server
+gGetTWSAPIInstance.Port = Port
 gGetTWSAPIInstance.clientID = clientID
-gGetTWSAPIInstance.providerKey = providerKey
-gGetTWSAPIInstance.connectionRetryIntervalSecs = connectionRetryIntervalSecs
+gGetTWSAPIInstance.ProviderKey = ProviderKey
+gGetTWSAPIInstance.ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
 gGetTWSAPIInstance.TWSLogLevel = TWSLogLevel
 gGetTWSAPIInstance.Connect
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gGetTWSAPIInstance", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -424,33 +462,49 @@ End Function
 
 Public Function gParseClientId( _
                 value As String) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = "" Then
     gParseClientId = -1
 ElseIf Not IsInteger(value) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Client Id' parameter: value must be an integer"
 Else
     gParseClientId = CLng(value)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseClientId", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gParseConnectionRetryInterval( _
                 value As String) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = "" Then
     gParseConnectionRetryInterval = 0
 ElseIf Not IsInteger(value, 0) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
 Else
     gParseConnectionRetryInterval = CLng(value)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseConnectionRetryInterval", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gParseKeepConnection( _
                 value As String) As Boolean
-On Error GoTo err
+On Error GoTo Err
 If value = "" Then
     gParseKeepConnection = False
 Else
@@ -458,27 +512,38 @@ Else
 End If
 Exit Function
 
-err:
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err:
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
         , _
         "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
 End Function
 
 Public Function gParsePort( _
                 value As String) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = "" Then
     gParsePort = 7496
 ElseIf Not IsInteger(value, 1024, 65535) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
 Else
     gParsePort = CLng(value)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParsePort", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gParseRole( _
                 value As String) As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case UCase$(value)
 Case "", "P", "PR", "PRIM", "PRIMARY"
@@ -486,15 +551,22 @@ Case "", "P", "PR", "PRIM", "PRIMARY"
 Case "S", "SEC", "SECOND", "SECONDARY"
     gParseRole = "SECONDARY"
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseRole", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gParseTwsLogLevel( _
                 value As String) As TWSLogLevels
-On Error GoTo err
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = "" Then
     gParseTwsLogLevel = TWSLogLevelError
 Else
@@ -502,15 +574,19 @@ Else
 End If
 Exit Function
 
-err:
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
-        , _
-        "Invalid 'Tws Log Level' parameter: value must be one of " & _
-        TWSLogLevelSystemString & ", " & _
-        TWSLogLevelErrorString & ", " & _
-        TWSLogLevelWarningString & ", " & _
-        TWSLogLevelInformationString & " or " & _
-        TWSLogLevelDetailString
+Err:
+If Err.number = ErrorCodes.ErrIllegalArgumentException Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Tws Log Level' parameter: value must be one of " & _
+            TWSLogLevelSystemString & ", " & _
+            TWSLogLevelErrorString & ", " & _
+            TWSLogLevelWarningString & ", " & _
+            TWSLogLevelInformationString & " or " & _
+            TWSLogLevelDetailString
+End If
+
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseTwsLogLevel", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gRealtimeDataCapabilities() As Long
@@ -525,18 +601,26 @@ Public Sub gReleaseAllTWSAPIInstances()
 
 Dim i As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = 0 To mTWSAPITableNextIndex - 1
     mTWSAPITable(i).usageCount = 0
     If Not mTWSAPITable(i).TWSAPI Is Nothing Then
-        mTWSAPITable(i).TWSAPI.disconnect "release all", True
+        mTWSAPITable(i).TWSAPI.Disconnect "release all", True
         Set mTWSAPITable(i).TWSAPI = Nothing
     End If
     mTWSAPITable(i).clientID = 0
-    mTWSAPITable(i).connectionRetryIntervalSecs = 0
-    mTWSAPITable(i).port = 0
-    mTWSAPITable(i).server = ""
-    mTWSAPITable(i).providerKey = ""
+    mTWSAPITable(i).ConnectionRetryIntervalSecs = 0
+    mTWSAPITable(i).Port = 0
+    mTWSAPITable(i).Server = ""
+    mTWSAPITable(i).ProviderKey = ""
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gReleaseAllTWSAPIInstances", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -546,6 +630,9 @@ Public Sub gReleaseTWSAPIInstance( _
 
 Dim i As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).TWSAPI Is instance Then
         mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount - 1
@@ -553,18 +640,23 @@ For i = 0 To mTWSAPITableNextIndex - 1
             forceDisconnect _
         Then
             If mTWSAPITable(i).TWSAPI.connectionState <> ConnNotConnected Then
-                mTWSAPITable(i).TWSAPI.disconnect "release", forceDisconnect
+                mTWSAPITable(i).TWSAPI.Disconnect "release", forceDisconnect
             End If
             Set mTWSAPITable(i).TWSAPI = Nothing
             mTWSAPITable(i).clientID = 0
-            mTWSAPITable(i).connectionRetryIntervalSecs = 0
-            mTWSAPITable(i).port = 0
-            mTWSAPITable(i).server = ""
-            mTWSAPITable(i).providerKey = ""
+            mTWSAPITable(i).ConnectionRetryIntervalSecs = 0
+            mTWSAPITable(i).Port = 0
+            mTWSAPITable(i).Server = ""
+            mTWSAPITable(i).ProviderKey = ""
         End If
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gReleaseTWSAPIInstance", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -648,6 +740,9 @@ End Function
 
 Public Function gTwsLogLevelFromString( _
                 ByVal value As String) As TWSLogLevels
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case UCase$(value)
 Case UCase$(TWSLogLevelDetailString)
     gTwsLogLevelFromString = TWSLogLevelDetail
@@ -660,8 +755,13 @@ Case UCase$(TWSLogLevelSystemString)
 Case UCase$(TWSLogLevelWarningString)
     gTwsLogLevelFromString = TWSLogLevelWarning
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException
+    Err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gTwsLogLevelFromString", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '================================================================================
@@ -671,18 +771,29 @@ End Function
 Private Function clientIdAlreadyInUse( _
                 ByVal value As Long) As Boolean
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).clientID = value Then
         clientIdAlreadyInUse = True
         Exit Function
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="clientIdAlreadyInUse", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Function
 
 Private Function getRandomClientId( _
                 ByVal designator As String) As Long
                 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mRandomClientIds Is Nothing Then
     Set mRandomClientIds = New Collection
     Randomize
@@ -692,7 +803,7 @@ End If
 
 On Error Resume Next
 getRandomClientId = mRandomClientIds(CStr(designator))
-On Error GoTo 0
+On Error GoTo Err
 
 If getRandomClientId <> 0 Then
     Exit Function   ' clientId already exists for this designator
@@ -705,6 +816,11 @@ Do While clientIdAlreadyInUse(getRandomClientId)
 Loop
 
 mRandomClientIds.add getRandomClientId, CStr(designator)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getRandomClientId", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 

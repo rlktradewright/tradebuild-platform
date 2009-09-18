@@ -139,7 +139,6 @@ Private Sub processInput( _
 ' sectype,exchange,shortname,symbol,currency,expiry,strike,right,nametemplate
 
 Dim validInput As Boolean
-Dim tokens() As String
 Dim sectype As SecurityTypes
 Dim sectypeStr As String
 Dim exchange As String
@@ -153,24 +152,24 @@ Dim optRight As OptionRights
 Dim optRightStr As String
 Dim nametemplate As String
 
+Dim parser As CommandLineParser
+
 Dim failpoint As Long
 On Error GoTo Err
 
 validInput = True
 
-tokens = Split(inString, InputSep)
+Set parser = CreateCommandLineParser(inString, ",")
 
-On Error Resume Next
-sectypeStr = Trim$(tokens(0))
-exchange = Trim$(tokens(1))
-shortname = Trim$(tokens(2))
-symbol = Trim$(tokens(3))
-currencyCode = Trim$(tokens(4))
-expiry = Trim$(tokens(5))
-strikeStr = Trim$(tokens(6))
-optRightStr = Trim$(tokens(7))
-nametemplate = Trim$(tokens(8))
-On Error GoTo Err
+sectypeStr = parser.Arg(0)
+exchange = parser.Arg(1)
+shortname = parser.Arg(2)
+symbol = parser.Arg(3)
+currencyCode = parser.Arg(4)
+expiry = parser.Arg(5)
+strikeStr = parser.Arg(6)
+optRightStr = parser.Arg(7)
+nametemplate = parser.Arg(8)
 
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then

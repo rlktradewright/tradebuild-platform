@@ -56,12 +56,20 @@ Private Const ModuleName                    As String = "DeferredCancelStatus"
 
 Private Sub DeferredAction_run(ByVal data As Variant)
 Dim mapEntry As OrderIdMapEntry
+Dim failpoint As Long
+On Error GoTo Err
+
 mapEntry = data
 If mapEntry.order.status <> OrderStatusCancelled And _
     mapEntry.order.status <> OrderStatusFilled _
 Then
     mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, OrderStatusCancelled
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="DeferredAction_run", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

@@ -23,12 +23,6 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
-'Event Click()
-'
-'Event DblCLick()
-'
-'Event SelectionStateChanged()
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -50,6 +44,7 @@ Private Const ModuleName                As String = "Bar"
 
 Private mSeries As BarSeries
 
+Private mViewport As Viewport
 Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
@@ -95,6 +90,8 @@ Private mBarSemiWidth As Single ' half the Width of the bar - this actually depe
                                 ' half of Width
 
 Private mPropertyOverrideFlags As BarPropertyOverrideFlags
+
+Private mPrevBarRef As WeakReference
 
 '================================================================================
 ' Enums
@@ -167,7 +164,9 @@ Dim failpoint As Long
 On Error GoTo Err
 
 For i = 0 To UBound(areas)
-    Draw areas(i)
+    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(i))
+    Draw
+    mCanvas.ClearClippingRegion
 Next
 
 Exit Sub
@@ -188,6 +187,7 @@ End Property
 
 Private Sub IGraphicObject_finish()
 Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
@@ -507,6 +507,15 @@ If Not mLocalStyle Is Nothing Then OutlineThickness = mLocalStyle.OutlineThickne
 If isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then OutlineThickness = mOutlineThickness
 End Property
 
+Public Property Get PreviousBar() As Bar
+If mPrevBarRef Is Nothing Then Exit Property
+Set PreviousBar = prevBarObj
+End Property
+
+Friend Property Let PreviousBar(ByVal value As Bar)
+Set mPrevBarRef = CreateWeakReference(value)
+End Property
+
 Public Property Let SolidUpBody(ByVal value As Boolean)
 If mSolidUpBody = value And isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then Exit Property
 mSolidUpBody = value
@@ -582,17 +591,18 @@ initiateRedraw True, True
 End Sub
 
 Friend Sub Initialise( _
-                ByVal series As BarSeries, _
-                ByVal Timestamp As Date, _
-                ByVal Key As String, _
-                ByVal GOSP As GraphObjServiceProvider, _
-                ByVal Canvas As Canvas, _
-                ByVal LocalStyle As BarStyle)
-Set mSeries = series
-mTimestamp = Timestamp
-mKey = Key
-Set mGOSP = GOSP
-Set mCanvas = Canvas
+                ByVal pSeries As BarSeries, _
+                ByVal pTimestamp As Date, _
+                ByVal pKey As String, _
+                ByVal pGOSP As GraphObjServiceProvider, _
+                ByVal pviewport As Viewport, _
+                ByVal pLocalStyle As BarStyle)
+Set mSeries = pSeries
+mTimestamp = pTimestamp
+mKey = pKey
+Set mGOSP = pGOSP
+Set mViewport = pviewport
+Set mCanvas = mViewport.Canvas
 Set mLocalStyle = LocalStyle
 
 setBarSemiWidth
@@ -633,78 +643,59 @@ End Sub
 
 Public Sub Tick(ByVal Price As Double)
 Dim clearRect As TRectangle
+Dim boundsChanged As Boolean
 
 If Price = mClose Then Exit Sub
 
-'If Not mBlank Then
-'    With clearRect
-'        .isValid = False
-'        If UpBar Then
-'            If Price < mOpen Then
-'                ' is now a downbar so redraw the whole thing
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = IIf(Price < mLow, Price, mLow)
-'                .Top = mHigh
-'                .isValid = True
-'            ElseIf Price < mClose Then
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = Price
-'                .Top = mClose
-'                .isValid = True
-'            ElseIf Price > mClose Then
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = mClose
-'                .Top = Price
-'                .isValid = True
-'            End If
-'        Else
-'            If Price >= mOpen Then
-'                ' now an upbar so redraw the whole thing
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = mLow
-'                .Top = IIf(Price > mHigh, Price, mHigh)
-'                .isValid = True
-'            ElseIf Price > mClose Then
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = mClose
-'                .Top = Price
-'                .isValid = True
-'            ElseIf Price < mClose Then
-'                .Left = mX - mBarSemiWidth
-'                .Right = mX + mBarSemiWidth
-'                .Bottom = Price
-'                .Top = mClose
-'                .isValid = True
-'            End If
-'        End If
-'        If .isValid Then undraw clearRect
-'    End With
-'End If
-
-undraw mBoundingRect
+clearRect = mBoundingRect
 
 If mBlank Then
     mBlank = False
     mOpen = Price
+Else
+    With clearRect
+        .isValid = False
+        If UpBar Then
+            If Price < mOpen Then
+                ' is now a downbar so redraw the whole thing
+                .isValid = True
+            ElseIf Price < mClose Then
+                .Bottom = Price
+                .Top = mClose
+                .isValid = True
+            ElseIf Price > mClose Then
+                .Bottom = mClose
+                .Top = Price
+                .isValid = True
+            End If
+        Else
+            If Price >= mOpen Then
+                ' now an upbar so redraw the whole thing
+                .isValid = True
+            ElseIf Price > mClose Then
+                .Bottom = mClose
+                .Top = Price
+                .isValid = True
+            ElseIf Price < mClose Then
+                .Bottom = Price
+                .Top = mClose
+                .isValid = True
+            End If
+        End If
+    End With
 End If
+
 If Price > mHigh Then
     mHigh = Price
-    mBoundingRect.Top = Price
+    boundsChanged = True
 End If
 If Price < mLow Then
     mLow = Price
-    mBoundingRect.Bottom = Price
+    boundsChanged = True
 End If
-mBoundingRect.isValid = True
 mClose = Price
 
-mGOSP.ObjectChanged mHandle, mBoundingRect
-'mGOSP.ObjectChanged mHandle, clearRect
+initiateRedraw True, boundsChanged
 
 End Sub
 
@@ -713,10 +704,40 @@ End Sub
 '================================================================================
 
 Private Sub calcBoundingRect()
-mBoundingRect.Left = mX - mBarSemiWidth
-mBoundingRect.Right = mX + mBarSemiWidth
-mBoundingRect.Bottom = mLow
-mBoundingRect.Top = mHigh
+Dim lRect As RECT
+Dim prevBar As Bar
+
+If mBlank Then
+    mBoundingRect.isValid = False
+    Exit Sub
+End If
+
+If DisplayMode = BarDisplayModeLine And Not mPrevBarRef Is Nothing Then
+    Set prevBar = prevBarObj
+    mBoundingRect.Left = prevBarObj.X
+    mBoundingRect.Right = mX
+    If prevBar.ClosePrice < mClose Then
+        mBoundingRect.Bottom = prevBar.ClosePrice
+        mBoundingRect.Top = mClose
+    Else
+        mBoundingRect.Bottom = mClose
+        mBoundingRect.Top = prevBar.ClosePrice
+    End If
+Else
+    mBoundingRect.Left = mX - mBarSemiWidth
+    mBoundingRect.Right = mX + mBarSemiWidth
+    mBoundingRect.Bottom = mLow
+    mBoundingRect.Top = mHigh
+End If
+
+' align to pixel boundaries
+lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
+
+If DisplayMode = BarDisplayModeLine Then InflateRect lRect, Int(Thickness / 2), Int(Thickness / 2)
+lRect.Right = lRect.Right + 1
+lRect.Bottom = lRect.Bottom + 1
+
+mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
 End Sub
 
 Private Sub clearPropertyOverrideFlag( _
@@ -724,20 +745,9 @@ Private Sub clearPropertyOverrideFlag( _
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
 
-Private Sub Draw(ByRef area As TRectangle)
-'If area.isValid And Not RectContainsRect(area, mBoundingRect) Then
-'    drawPartialBar area, _
-'                    IIf(UpBar, upColor, downColor), _
-'                    IIf(Color <> -1, _
-'                        Color, _
-'                        IIf(UpBar, upColor, downColor)), _
-'                    IIf(Color <> -1, _
-'                        Color, _
-'                        IIf(UpBar, upColor, downColor))
-'Else
-    drawBar IIf(UpBar, UpColor, DownColor), _
-            IIf(Color <> -1, Color, IIf(UpBar, UpColor, DownColor))
-'End If
+Private Sub Draw()
+drawBar IIf(UpBar, UpColor, DownColor), _
+        IIf(Color <> -1, Color, IIf(UpBar, UpColor, DownColor))
 End Sub
 
 
@@ -772,52 +782,65 @@ If DisplayMode = BarDisplayModeCandlestick Then
             drawTail mLow, mClose, outlineColor
         End If
     End If
+ElseIf DisplayMode = BarDisplayModeLine Then
+    mCanvas.SetPenAttributes outlineColor, _
+                            Thickness, _
+                            LineStyles.LineSolid, _
+                            DrawModes.DrawModeCopyPen
+    
+    If Not mPrevBarRef Is Nothing Then
+        Dim prevBar As Bar
+        Set prevBar = prevBarObj
+        mCanvas.DrawLine prevBar.X, prevBar.ClosePrice, mX, mClose
+    Else
+        mCanvas.DrawLine mX, mClose, mX, mClose
+    End If
 Else
     mCanvas.SetBrushAttributes outlineColor, FillStyles.FillSolid
     If Thickness = 1 Then
         Dim onePixel As Double
-        onePixel = mCanvas.ConvertPixelsToLogicalX(1)
+        onePixel = mViewport.ConvertPixelsToLogicalX(1)
         mCanvas.SetPenAttributes outlineColor, _
                                 1, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
-        mCanvas.DrawLine mCanvas.NewPoint(mX - mBarSemiWidth, mOpen), _
-                        mCanvas.NewPoint(mX, mOpen)
-        mCanvas.DrawLine mCanvas.NewPoint(mX, mLow), _
-                        mCanvas.NewPoint(mX, mHigh)
-        mCanvas.DrawLine mCanvas.NewPoint(mX, mClose), _
-                        mCanvas.NewPoint(mX + mBarSemiWidth + onePixel, mClose)
+        mCanvas.DrawLine mX - mBarSemiWidth, mOpen, _
+                        mX, mOpen
+        mCanvas.DrawLine mX, mLow, _
+                        mX, mHigh
+        mCanvas.DrawLine mX, mClose, _
+                        mX + mBarSemiWidth + onePixel, mClose
     Else
         mCanvas.SetPenAttributes outlineColor, _
                                 1, _
                                 LineStyles.LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
-        ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(Thickness - 1)
-        ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(Thickness - 1)
+        ThicknessScaleX = mViewport.ConvertPixelsToLogicalX(Thickness - 1)
+        ThicknessScaleY = mViewport.ConvertPixelsToLogicalY(Thickness - 1)
         
         If (mOpen - ThicknessScaleY / 2) < mLow Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mLow), _
-                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mLow), _
+                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
         ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
-                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
+                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
-                                    mCanvas.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
+                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
         End If
         
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
-                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
+        mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
         
         If (mClose - ThicknessScaleY / 2) < mLow Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
-                                    mCanvas.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+                                    mViewport.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
         ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
-                                    mCanvas.NewPoint(mX + mBarSemiWidth, mHigh)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
+                                    mViewport.NewPoint(mX + mBarSemiWidth, mHigh)
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
-                                    mCanvas.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
+                                    mViewport.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
         End If
     End If
 End If
@@ -848,8 +871,8 @@ End If
 lOutlineThickness = IIf(OutlineThickness = 0, 1, OutlineThickness)
 
 mCanvas.SetBrushAttributes Color, FillStyles.FillSolid
-barOutlineScaleX = mCanvas.ConvertPixelsToLogicalX(lOutlineThickness - 1)
-barOutlineScaleY = mCanvas.ConvertPixelsToLogicalY(lOutlineThickness - 1)
+barOutlineScaleX = mViewport.ConvertPixelsToLogicalX(lOutlineThickness - 1)
+barOutlineScaleY = mViewport.ConvertPixelsToLogicalY(lOutlineThickness - 1)
 
 If wholeBody Then
     ' draw the whole of the body
@@ -857,18 +880,18 @@ If wholeBody Then
                             lOutlineThickness, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
-    mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Top)
+    mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
+                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
 Else
-    
+
     mCanvas.SetPenAttributes Color, _
                             1, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
-    
-    mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                    mCanvas.NewPoint(mX + mBarSemiWidth, Top)
-    
+
+    mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
+                    mViewport.NewPoint(mX + mBarSemiWidth, Top)
+
     mCanvas.SetPenAttributes outlineColor, _
                             1, _
                             LineStyles.LineInsideSolid, _
@@ -876,144 +899,144 @@ Else
     ' we'll draw the outlines of the bar as filled boxes
     ' so set the fill color to the outline color
     mCanvas.SetBrushAttributes Color, FillStyles.FillSolid
-    
+
     If Bottom = mOpen Then
         ' draw the base of the body
         If lOutlineThickness = 1 Then
-            mCanvas.DrawLine mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Bottom)
+            mCanvas.DrawLine mX - mBarSemiWidth, Bottom, _
+                            mX + mBarSemiWidth, Bottom
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Bottom + barOutlineScaleY)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
+                            mViewport.NewPoint(mX + mBarSemiWidth, Bottom + barOutlineScaleY)
         End If
     End If
     If Top = mClose Then
         ' draw the Top of the body
         If lOutlineThickness = 1 Then
-            mCanvas.DrawLine mCanvas.NewPoint(mX - mBarSemiWidth, Top), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Top)
+            mCanvas.DrawLine mX - mBarSemiWidth, Top, _
+                            mX + mBarSemiWidth, Top
         Else
-            mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, Top - barOutlineScaleY), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Top)
+            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Top - barOutlineScaleY), _
+                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
         End If
     End If
     If lOutlineThickness = 1 Then
-        mCanvas.DrawLine mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                        mCanvas.NewPoint(mX - mBarSemiWidth, Top)
-        mCanvas.DrawLine mCanvas.NewPoint(mX + mBarSemiWidth, Bottom), _
-                        mCanvas.NewPoint(mX + mBarSemiWidth, Top)
+        mCanvas.DrawLine mX - mBarSemiWidth, Bottom, _
+                        mX - mBarSemiWidth, Top
+        mCanvas.DrawLine mX + mBarSemiWidth, Bottom, _
+                        mX + mBarSemiWidth, Top
     Else
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mCanvas.NewPoint(mX - mBarSemiWidth + barOutlineScaleX, Top)
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX + mBarSemiWidth - barOutlineScaleX, Bottom), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth, Top)
+        mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
+                            mViewport.NewPoint(mX - mBarSemiWidth + barOutlineScaleX, Top)
+        mCanvas.DrawRectangle mViewport.NewPoint(mX + mBarSemiWidth - barOutlineScaleX, Bottom), _
+                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
     End If
 End If
 End Sub
 
-Private Sub drawPartialBar( _
-                ByRef area As TRectangle, _
-                ByVal Color As Long, _
-                ByVal outlineColor As Long, _
-                ByVal tailColor As Long)
-Dim ThicknessScaleX As Double
-Dim ThicknessScaleY As Double
-If Not mVisible Then Exit Sub
-If Blank Then Exit Sub
-
-If DisplayMode = BarDisplayModeCandlestick Then
-    If DownBar Then
-        If area.Top < mClose Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), area.Top, tailColor
-        ElseIf area.Top >= mClose And area.Top <= mOpen And area.Bottom < mClose Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), mClose, tailColor
-            drawBody mClose, area.Top, Color, outlineColor
-        ElseIf area.Top > mOpen And area.Bottom < mClose Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), mClose, tailColor
-            drawBody mClose, mOpen, Color, outlineColor
-            drawTail mOpen, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-        ElseIf area.Top <= mOpen And area.Bottom >= mClose Then
-            drawBody area.Bottom, area.Top, Color, outlineColor
-        ElseIf area.Top > mOpen And area.Bottom <= mOpen And area.Bottom >= mClose Then
-            drawTail mOpen, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-            drawBody area.Bottom, mOpen, Color, outlineColor
-        Else
-            drawTail area.Bottom, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-        End If
-    Else
-        If area.Top < mOpen Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), area.Top, tailColor
-        ElseIf area.Top >= mOpen And area.Top <= mClose And area.Bottom < mOpen Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), mOpen, tailColor
-            drawBody mOpen, area.Top, Color, outlineColor
-        ElseIf area.Top > mClose And area.Bottom < mOpen Then
-            drawTail IIf(mLow < area.Bottom, area.Bottom, mLow), mOpen, tailColor
-            drawBody mOpen, mClose, Color, outlineColor
-            drawTail mClose, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-        ElseIf area.Top <= mClose And area.Bottom >= mOpen Then
-            drawBody area.Bottom, area.Top, Color, outlineColor
-        ElseIf area.Top > mClose And area.Bottom <= mClose And area.Bottom >= mOpen Then
-            drawTail mClose, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-            drawBody area.Bottom, mClose, Color, outlineColor
-        Else
-            drawTail area.Bottom, IIf(mHigh > area.Top, area.Top, mHigh), tailColor
-        End If
-    End If
-Else
-    mCanvas.SetPenAttributes outlineColor, _
-                            1, _
-                            LineStyles.LineInsideSolid, _
-                            DrawModes.DrawModeCopyPen
-    If Thickness = 1 Then
-        Dim onePixel As Double
-        onePixel = mCanvas.ConvertPixelsToLogicalX(1)
-        If mOpen >= area.Bottom And mOpen <= area.Top Then
-            mCanvas.DrawLine mCanvas.NewPoint(mX - mBarSemiWidth, mOpen), _
-                            mCanvas.NewPoint(mX, mOpen)
-        End If
-        If mClose >= area.Bottom And mClose <= area.Top Then
-            mCanvas.DrawLine mCanvas.NewPoint(mX, mClose), _
-                            mCanvas.NewPoint(mX + mBarSemiWidth + onePixel, mClose)
-        End If
-        mCanvas.DrawLine mCanvas.NewPoint(mX, IIf(area.Bottom > mLow, area.Bottom, mLow)), _
-                        mCanvas.NewPoint(mX, IIf(area.Top < mHigh, area.Top, mHigh))
-    Else
-        mCanvas.SetBrushAttributes outlineColor, FillStyles.FillSolid
-        ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(Thickness - 1)
-        ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(Thickness - 1)
-        
-        If mOpen >= area.Bottom And mOpen <= area.Top Then
-            If (mOpen - ThicknessScaleY / 2) < mLow Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mLow), _
-                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
-            ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
-                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mHigh)
-            Else
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
-                                mCanvas.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
-            End If
-        End If
-        
-        If mClose >= area.Bottom And mClose <= area.Top Then
-            If (mClose - ThicknessScaleY / 2) < mLow Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mLow), _
-                                mCanvas.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
-            ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
-                                mCanvas.NewPoint(mX + mBarSemiWidth, mHigh)
-            Else
-                mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
-                                mCanvas.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
-            End If
-        End If
-        
-        mCanvas.DrawRectangle mCanvas.NewPoint(mX - ThicknessScaleX / 2, IIf(area.Bottom > mLow, area.Bottom, mLow)), _
-                        mCanvas.NewPoint(mX + ThicknessScaleX / 2, IIf(area.Top < mHigh, area.Top, mHigh))
-    End If
-End If
-
-End Sub
+'Private Sub drawPartialBar( _
+'                ByRef Area As TRectangle, _
+'                ByVal Color As Long, _
+'                ByVal outlineColor As Long, _
+'                ByVal tailColor As Long)
+'Dim ThicknessScaleX As Double
+'Dim ThicknessScaleY As Double
+'If Not mVisible Then Exit Sub
+'If Blank Then Exit Sub
+'
+'If DisplayMode = BarDisplayModeCandlestick Then
+'    If DownBar Then
+'        If Area.Top < mClose Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), Area.Top, tailColor
+'        ElseIf Area.Top >= mClose And Area.Top <= mOpen And Area.Bottom < mClose Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), mClose, tailColor
+'            drawBody mClose, Area.Top, Color, outlineColor
+'        ElseIf Area.Top > mOpen And Area.Bottom < mClose Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), mClose, tailColor
+'            drawBody mClose, mOpen, Color, outlineColor
+'            drawTail mOpen, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'        ElseIf Area.Top <= mOpen And Area.Bottom >= mClose Then
+'            drawBody Area.Bottom, Area.Top, Color, outlineColor
+'        ElseIf Area.Top > mOpen And Area.Bottom <= mOpen And Area.Bottom >= mClose Then
+'            drawTail mOpen, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'            drawBody Area.Bottom, mOpen, Color, outlineColor
+'        Else
+'            drawTail Area.Bottom, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'        End If
+'    Else
+'        If Area.Top < mOpen Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), Area.Top, tailColor
+'        ElseIf Area.Top >= mOpen And Area.Top <= mClose And Area.Bottom < mOpen Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), mOpen, tailColor
+'            drawBody mOpen, Area.Top, Color, outlineColor
+'        ElseIf Area.Top > mClose And Area.Bottom < mOpen Then
+'            drawTail IIf(mLow < Area.Bottom, Area.Bottom, mLow), mOpen, tailColor
+'            drawBody mOpen, mClose, Color, outlineColor
+'            drawTail mClose, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'        ElseIf Area.Top <= mClose And Area.Bottom >= mOpen Then
+'            drawBody Area.Bottom, Area.Top, Color, outlineColor
+'        ElseIf Area.Top > mClose And Area.Bottom <= mClose And Area.Bottom >= mOpen Then
+'            drawTail mClose, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'            drawBody Area.Bottom, mClose, Color, outlineColor
+'        Else
+'            drawTail Area.Bottom, IIf(mHigh > Area.Top, Area.Top, mHigh), tailColor
+'        End If
+'    End If
+'Else
+'    mCanvas.SetPenAttributes outlineColor, _
+'                            1, _
+'                            LineStyles.LineInsideSolid, _
+'                            DrawModes.DrawModeCopyPen
+'    If Thickness = 1 Then
+'        Dim onePixel As Double
+'        onePixel = mViewport.ConvertPixelsToLogicalX(1)
+'        If mOpen >= Area.Bottom And mOpen <= Area.Top Then
+'            mCanvas.DrawLine mViewport.NewPoint(mX - mBarSemiWidth, mOpen), _
+'                            mViewport.NewPoint(mX, mOpen)
+'        End If
+'        If mClose >= Area.Bottom And mClose <= Area.Top Then
+'            mCanvas.DrawLine mViewport.NewPoint(mX, mClose), _
+'                            mViewport.NewPoint(mX + mBarSemiWidth + onePixel, mClose)
+'        End If
+'        mCanvas.DrawLine mViewport.NewPoint(mX, IIf(Area.Bottom > mLow, Area.Bottom, mLow)), _
+'                        mViewport.NewPoint(mX, IIf(Area.Top < mHigh, Area.Top, mHigh))
+'    Else
+'        mCanvas.SetBrushAttributes outlineColor, FillStyles.FillSolid
+'        ThicknessScaleX = mViewport.ConvertPixelsToLogicalX(Thickness - 1)
+'        ThicknessScaleY = mViewport.ConvertPixelsToLogicalY(Thickness - 1)
+'
+'        If mOpen >= Area.Bottom And mOpen <= Area.Top Then
+'            If (mOpen - ThicknessScaleY / 2) < mLow Then
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mLow), _
+'                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
+'            ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
+'                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
+'            Else
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
+'                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
+'            End If
+'        End If
+'
+'        If mClose >= Area.Bottom And mClose <= Area.Top Then
+'            If (mClose - ThicknessScaleY / 2) < mLow Then
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+'                                mViewport.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
+'            ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
+'                                mViewport.NewPoint(mX + mBarSemiWidth, mHigh)
+'            Else
+'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
+'                                mViewport.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
+'            End If
+'        End If
+'
+'        mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, IIf(Area.Bottom > mLow, Area.Bottom, mLow)), _
+'                        mViewport.NewPoint(mX + ThicknessScaleX / 2, IIf(Area.Top < mHigh, Area.Top, mHigh))
+'    End If
+'End If
+'
+'End Sub
 
 Private Sub drawTail(ByVal Bottom As Double, ByVal Top As Double, ByVal Color As Long)
 Dim tailThicknessScaleX As Double
@@ -1023,28 +1046,39 @@ mCanvas.SetPenAttributes Color, _
                         DrawModes.DrawModeCopyPen
 If TailThickness > 1 Then
     mCanvas.SetBrushAttributes Color, FillStyles.FillSolid
-    tailThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(TailThickness - 1)
-    mCanvas.DrawRectangle mCanvas.NewPoint(mX - tailThicknessScaleX / 2, Bottom), _
-                    mCanvas.NewPoint(mX + tailThicknessScaleX / 2, Top)
+    tailThicknessScaleX = mViewport.ConvertPixelsToLogicalX(TailThickness - 1)
+    mCanvas.DrawRectangle mViewport.NewPoint(mX - tailThicknessScaleX / 2, Bottom), _
+                    mViewport.NewPoint(mX + tailThicknessScaleX / 2, Top)
 Else
-    mCanvas.DrawLine mCanvas.NewPoint(mX, Bottom), mCanvas.NewPoint(mX, Top)
+    mCanvas.DrawLine mX, Bottom, mX, Top
 End If
+End Sub
+
+Private Sub initiatePartialRedraw( _
+                ByRef areaToUndraw As TRectangle, _
+                ByVal undrawCurrentImage As Boolean, _
+                ByVal recalcBoundaries As Boolean)
+If undrawCurrentImage Then undraw areaToUndraw
+If recalcBoundaries Then
+    setBarSemiWidth
+    calcBoundingRect
+End If
+mGOSP.ObjectChanged mHandle, areaToUndraw
 End Sub
 
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
-If undrawCurrentImage Then undraw mBoundingRect
-If recalcBoundaries Then
-    setBarSemiWidth
-    calcBoundingRect
-End If
-mGOSP.ObjectChanged mHandle, mBoundingRect
+initiatePartialRedraw mBoundingRect, undrawCurrentImage, recalcBoundaries
 End Sub
 
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As BarPropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Function prevBarObj() As Bar
+Set prevBarObj = mPrevBarRef.Target
 End Function
 
 Private Sub setBarSemiWidth()
@@ -1063,12 +1097,12 @@ Private Sub setPropertyOverrideFlag( _
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 End Sub
 
-Private Sub undraw(ByRef area As TRectangle)
+Private Sub undraw(ByRef Area As TRectangle)
 If Not mVisible Then Exit Sub
-If Not area.isValid Then
+If Not Area.isValid Then
     mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Else
-    mGOSP.ObjectUndrawn mHandle, area
+    mGOSP.ObjectUndrawn mHandle, Area
 End If
 End Sub
 

@@ -398,7 +398,7 @@ Case ChartNavCommandShowBars
 Case ChartNavCommandShowCandlesticks
     mBarSeries.Style.DisplayMode = BarDisplayModeCandlestick
 Case ChartNavCommandShowLine
-    ' not yet implemented in ChartSkil
+    mBarSeries.Style.DisplayMode = BarDisplayModeLine
 Case ChartNavCommandShowCrosshair
     mController.PointerStyle = PointerCrosshairs
 Case ChartNavCommandShowDiscCursor
@@ -419,12 +419,21 @@ Case ChartNavCommandThinnerBars
         If mBarSeries.Thickness = 1 Then
             Button.Enabled = False
         End If
+    Case BarDisplayModeLine
+        If mBarSeries.Thickness > 1 Then
+            mBarSeries.Style.Thickness = mBarSeries.Thickness - 1
+        End If
+        If mBarSeries.Thickness = 1 Then
+            Button.Enabled = False
+        End If
     End Select
 Case ChartNavCommandThickerBars
     Select Case mBarSeries.DisplayMode
     Case BarDisplayModeCandlestick
         mBarSeries.Style.Width = mBarSeries.Width + 0.1
     Case BarDisplayModeBar
+        mBarSeries.Style.Thickness = mBarSeries.Thickness + 1
+    Case BarDisplayModeLine
         mBarSeries.Style.Thickness = mBarSeries.Thickness + 1
     End Select
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = True
@@ -561,11 +570,18 @@ Private Sub setupDisplayModeButtons()
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
     Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
-Else
+ElseIf mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick Then
     Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Width > 0.1)
+Else
+    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
 End If
 End Sub
 

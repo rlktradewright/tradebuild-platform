@@ -68,7 +68,7 @@ If Not pInt.isValid Then Exit Function
 IntContains = (X >= pInt.startValue) And (X <= pInt.endValue)
 End Function
 
-Public Function intIntersection( _
+Public Function IntIntersection( _
                 ByRef int1 As TInterval, _
                 ByRef int2 As TInterval) As TInterval
 Dim startValue1 As Double
@@ -83,7 +83,7 @@ endValue1 = int1.endValue
 startValue2 = int2.startValue
 endValue2 = int2.endValue
 
-With intIntersection
+With IntIntersection
     If startValue1 >= startValue2 And startValue1 <= endValue2 Then
         .startValue = startValue1
         If endValue1 >= startValue2 And endValue1 <= endValue2 Then
@@ -109,11 +109,11 @@ With intIntersection
 End With
 End Function
 
-Public Function intOverlaps( _
+Public Function IntOverlaps( _
                 ByRef int1 As TInterval, _
                 ByRef int2 As TInterval) As Boolean
                         
-intOverlaps = True
+IntOverlaps = True
 
 If int1.startValue >= int2.startValue And int1.startValue <= int2.endValue Then
     Exit Function
@@ -124,18 +124,68 @@ End If
 If int1.startValue < int2.startValue And int1.endValue > int2.endValue Then
     Exit Function
 End If
-intOverlaps = False
+IntOverlaps = False
+End Function
+
+Public Function PointAdd( _
+                ByRef pPoint1 As TPoint, _
+                ByRef pPoint2 As TPoint) As TPoint
+PointAdd.X = pPoint1.X + pPoint2.X
+PointAdd.Y = pPoint1.Y + pPoint2.Y
+End Function
+
+Public Function PointSubtract( _
+                ByRef pPoint1 As TPoint, _
+                ByRef pPoint2 As TPoint) As TPoint
+PointSubtract.X = pPoint1.X - pPoint2.X
+PointSubtract.Y = pPoint1.Y - pPoint2.Y
+End Function
+
+Public Function RectBottomCentre( _
+                ByRef pRect As TRectangle) As TPoint
+RectBottomCentre.X = (pRect.Right + pRect.Left) / 2
+RectBottomCentre.Y = pRect.Bottom
+End Function
+
+Public Function RectBottomLeft( _
+                ByRef pRect As TRectangle) As TPoint
+RectBottomLeft.X = pRect.Left
+RectBottomLeft.Y = pRect.Bottom
+End Function
+
+Public Function RectBottomRight( _
+                ByRef pRect As TRectangle) As TPoint
+RectBottomRight.X = pRect.Right
+RectBottomRight.Y = pRect.Bottom
+End Function
+
+Public Function RectCentreCentre( _
+                ByRef pRect As TRectangle) As TPoint
+RectCentreCentre.X = (pRect.Right + pRect.Left) / 2
+RectCentreCentre.Y = (pRect.Top + pRect.Bottom) / 2
+End Function
+
+Public Function RectCentreLeft( _
+                ByRef pRect As TRectangle) As TPoint
+RectCentreLeft.X = pRect.Left
+RectCentreLeft.Y = (pRect.Top + pRect.Bottom) / 2
+End Function
+
+Public Function RectCentreRight( _
+                ByRef pRect As TRectangle) As TPoint
+RectCentreRight.X = pRect.Right
+RectCentreRight.Y = (pRect.Top + pRect.Bottom) / 2
 End Function
 
 Public Function RectContainsPoint( _
-                ByRef rect As TRectangle, _
+                ByRef pRect As TRectangle, _
                 ByVal X As Double, _
                 ByVal Y As Double) As Boolean
-If Not rect.isValid Then Exit Function
-If X < rect.Left Then Exit Function
-If X > rect.Right Then Exit Function
-If Y < rect.Bottom Then Exit Function
-If Y > rect.Top Then Exit Function
+If Not pRect.isValid Then Exit Function
+If X < pRect.Left Then Exit Function
+If X > pRect.Right Then Exit Function
+If Y < pRect.Bottom Then Exit Function
+If Y > pRect.Top Then Exit Function
 RectContainsPoint = True
 End Function
 
@@ -151,7 +201,7 @@ If rect2.Top > rect1.Top Then Exit Function
 RectContainsRect = True
 End Function
 
-Public Function rectEquals( _
+Public Function RectEquals( _
                 ByRef rect1 As TRectangle, _
                 ByRef rect2 As TRectangle) As Boolean
 With rect1
@@ -161,12 +211,49 @@ With rect1
     If .Top <> rect2.Top Then Exit Function
     If .Right <> rect2.Right Then Exit Function
 End With
-rectEquals = True
+RectEquals = True
 End Function
 
-Public Sub rectInitialise( _
-                ByRef rect As TRectangle)
-With rect
+Public Sub RectExpand( _
+                ByRef pRect As TRectangle, _
+                ByVal xIncrement As Double, _
+                ByVal yIncrement As Double)
+With pRect
+    If Not .isValid Then Exit Sub
+    .Left = .Left - xIncrement
+    .Right = .Right + xIncrement
+    .Top = .Top + yIncrement
+    .Bottom = .Bottom - yIncrement
+End With
+End Sub
+
+Public Sub RectExpandDim( _
+                ByRef pRect As TRectangle, _
+                ByVal pDim As Dimension)
+RectExpand pRect, pDim.XLogical, pDim.YLogical
+End Sub
+
+Public Function RectGetXInterval( _
+                ByRef pRect As TRectangle) As TInterval
+With RectGetXInterval
+.startValue = pRect.Left
+.endValue = pRect.Right
+.isValid = pRect.isValid
+End With
+End Function
+
+Public Function RectGetYInterval( _
+                ByRef pRect As TRectangle) As TInterval
+With RectGetYInterval
+    .startValue = pRect.Bottom
+    .endValue = pRect.Top
+    .isValid = pRect.isValid
+End With
+End Function
+
+Public Sub RectInitialise( _
+                ByRef pRect As TRectangle)
+With pRect
     .isValid = False
     .Left = PlusInfinityDouble
     .Right = MinusInfinityDouble
@@ -175,14 +262,14 @@ With rect
 End With
 End Sub
 
-Public Function rectIntersection( _
+Public Function RectIntersection( _
                 ByRef rect1 As TRectangle, _
                 ByRef rect2 As TRectangle) As TRectangle
 Dim xInt As TInterval
 Dim yint As TInterval
-xInt = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
-yint = intIntersection(rectGetYInterval(rect1), rectGetYInterval(rect2))
-With rectIntersection
+xInt = IntIntersection(RectGetXInterval(rect1), RectGetXInterval(rect2))
+yint = IntIntersection(RectGetYInterval(rect1), RectGetYInterval(rect2))
+With RectIntersection
     .Left = xInt.startValue
     .Right = xInt.endValue
     .Bottom = yint.startValue
@@ -192,77 +279,91 @@ End With
 End Function
 
 
-Public Function rectOverlaps( _
+Public Function RectOverlaps( _
                 ByRef rect1 As TRectangle, _
                 ByRef rect2 As TRectangle) As Boolean
-rectOverlaps = intOverlaps(rectGetXInterval(rect1), rectGetXInterval(rect2)) And _
-            intOverlaps(rectGetYInterval(rect1), rectGetYInterval(rect2))
+RectOverlaps = IntOverlaps(RectGetXInterval(rect1), RectGetXInterval(rect2)) And _
+            IntOverlaps(RectGetYInterval(rect1), RectGetYInterval(rect2))
             
 End Function
 
-Public Function rectXIntersection( _
-                ByRef rect1 As TRectangle, _
-                ByRef rect2 As TRectangle) As TInterval
-rectXIntersection = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
-End Function
+Public Sub RectOffsetDim( _
+                ByRef pRect As TRectangle, _
+                ByRef pOffset As Dimension)
+Dim p As TPoint
 
-Public Function rectYIntersection( _
-                ByRef rect1 As TRectangle, _
-                ByRef rect2 As TRectangle) As TInterval
-rectYIntersection = intIntersection(rectGetYInterval(rect1), rectGetYInterval(rect2))
-End Function
+If Not pRect.isValid Then Exit Sub
 
-Public Function rectGetXInterval( _
-                ByRef rect As TRectangle) As TInterval
-With rectGetXInterval
-.startValue = rect.Left
-.endValue = rect.Right
-.isValid = rect.isValid
+p.X = pOffset.XLogical
+p.Y = pOffset.YLogical
+RectOffsetPoint pRect, p
+End Sub
+
+Public Sub RectOffsetPoint( _
+                ByRef pRect As TRectangle, _
+                ByRef pOffset As TPoint)
+
+If Not pRect.isValid Then Exit Sub
+
+With pRect
+    .Left = .Left + pOffset.X
+    .Right = .Right + pOffset.X
+    .Bottom = .Bottom + pOffset.Y
+    .Top = .Top + pOffset.Y
 End With
-End Function
+End Sub
 
-Public Function rectGetYInterval( _
-                ByRef rect As TRectangle) As TInterval
-With rectGetYInterval
-    .startValue = rect.Bottom
-    .endValue = rect.Top
-    .isValid = rect.isValid
-End With
-End Function
-
-Public Sub rectSetXInterval( _
-                ByRef rect As TRectangle, _
+Public Sub RectSetXInterval( _
+                ByRef pRect As TRectangle, _
                 ByRef interval As TInterval)
-With rect
+With pRect
     .Left = interval.startValue
     .Right = interval.endValue
     .isValid = interval.isValid
 End With
 End Sub
 
-Public Sub rectSetYInterval( _
-                ByRef rect As TRectangle, _
+Public Sub RectSetYInterval( _
+                ByRef pRect As TRectangle, _
                 ByRef interval As TInterval)
-With rect
+With pRect
     .Bottom = interval.startValue
     .Top = interval.endValue
     .isValid = interval.isValid
 End With
 End Sub
 
-Public Function rectUnion( _
+Public Function RectTopCentre( _
+                ByRef pRect As TRectangle) As TPoint
+RectTopCentre.X = (pRect.Right + pRect.Left) / 2
+RectTopCentre.Y = pRect.Top
+End Function
+
+Public Function RectTopLeft( _
+                ByRef pRect As TRectangle) As TPoint
+RectTopLeft.X = pRect.Left
+RectTopLeft.Y = pRect.Top
+End Function
+
+Public Function RectTopRight( _
+                ByRef pRect As TRectangle) As TPoint
+RectTopRight.X = pRect.Right
+RectTopRight.Y = pRect.Top
+End Function
+
+Public Function RectUnion( _
                 ByRef rect1 As TRectangle, _
                 ByRef rect2 As TRectangle) As TRectangle
 If Not (rect1.isValid And rect2.isValid) Then
     If rect1.isValid Then
-        rectUnion = rect1
+        RectUnion = rect1
     ElseIf rect2.isValid Then
-        rectUnion = rect2
+        RectUnion = rect2
     End If
     Exit Function
 End If
 
-With rectUnion
+With RectUnion
     .isValid = False
     
     If rect1.Left < rect2.Left Then
@@ -289,10 +390,10 @@ With rectUnion
 End With
 End Function
 
-Public Sub rectValidate( _
-                ByRef rect As TRectangle, _
+Public Sub RectValidate( _
+                ByRef pRect As TRectangle, _
                 Optional allowZeroDimensions As Boolean = False)
-With rect
+With pRect
     If allowZeroDimensions Then
         If .Left <= .Right And .Bottom <= .Top Then .isValid = True
     Else
@@ -300,6 +401,18 @@ With rect
     End If
 End With
 End Sub
+
+Public Function RectXIntersection( _
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TInterval
+RectXIntersection = IntIntersection(RectGetXInterval(rect1), RectGetXInterval(rect2))
+End Function
+
+Public Function RectYIntersection( _
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TInterval
+RectYIntersection = IntIntersection(RectGetYInterval(rect1), RectGetYInterval(rect2))
+End Function
 
 
 '@================================================================================

@@ -83,7 +83,6 @@ Public gStop                                            As Boolean
 Public gLogger                                          As Logger
 
 Private mCLParser                                       As CommandLineParser
-Private mForm                                           As fDataCollectorUI
 
 Private mConfig                                         As ConfigurationSection
 
@@ -132,12 +131,27 @@ AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
                     AppTitle
 End Property
 
-Public Property Get LogFileName() As String
-If mCLParser.Switch(SwitchLogFilename) Then LogFileName = mCLParser.SwitchValue(SwitchLogFilename)
-
-If LogFileName = "" Then
-    LogFileName = AppSettingsFolder & "\log.txt"
+Public Property Get configFilename() As String
+Dim fn As String
+If fn = "" Then
+    fn = mCLParser.Arg(0)
+    If fn = "" Then
+        fn = AppSettingsFolder & "\settings.xml"
+    End If
 End If
+configFilename = fn
+End Property
+
+Public Property Get LogFileName() As String
+Dim fn As String
+If fn = "" Then
+    If mCLParser.Switch(SwitchLogFilename) Then fn = mCLParser.SwitchValue(SwitchLogFilename)
+    
+    If fn = "" Then
+        fn = AppSettingsFolder & "\log.txt"
+    End If
+End If
+LogFileName = fn
 End Property
 
 '@================================================================================
@@ -145,7 +159,7 @@ End Property
 '@================================================================================
 
 Public Sub gKillLogging()
-gLogger.removeLogListener mListener
+gLogger.RemoveLogListener mListener
 End Sub
 
 Public Sub Main()
@@ -181,11 +195,7 @@ If Not getConfig Then
     Exit Sub
 End If
 
-If setup Then
-    gKillLogging
-    TerminateTWUtilities
-    Exit Sub
-End If
+If setup Then Exit Sub
 
 mNoUI = getNoUi
 
@@ -234,7 +244,7 @@ Else
                                             mExitTimeDescriptor)
     
     gLogger.Log LogLevelNormal, "Creating form"
-    Set mForm = createForm
+    showMainForm
 End If
 
 
@@ -242,7 +252,7 @@ Exit Sub
 
 Err:
 MsgBox "Error " & Err.Number & ": " & Err.description & vbCrLf & _
-        "At " & "TBQuoteServerUI" & "." & "MainModule" & "::" & "Main" & _
+        "At " & "DataCollector26" & "." & "MainModule" & "::" & "Main" & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         , _
         "Error"
@@ -273,72 +283,17 @@ Err:
 configure = False
 End Function
 
-Private Function createForm() As fDataCollectorUI
-Dim posnValue As String
-
-Set createForm = New fDataCollectorUI
-
-If mCLParser.Switch("posn") Then
-    posnValue = mCLParser.SwitchValue("posn")
-    
-    If InStr(1, posnValue, ",") = 0 Then
-        MsgBox "Error - posn value must be 'n,m'"
-        Set createForm = Nothing
-        Exit Function
-    End If
-    
-    If Not IsNumeric(Left$(posnValue, InStr(1, posnValue, ",") - 1)) Then
-        MsgBox "Error - offset from left is not numeric"
-        Set createForm = Nothing
-        Exit Function
-    End If
-    
-    mPosX = Left$(posnValue, InStr(1, posnValue, ",") - 1)
-    
-    If Not IsNumeric(Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))) Then
-        MsgBox "Error - offset from top is not numeric"
-        Set createForm = Nothing
-        Exit Function
-    End If
-    
-    mPosY = Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))
-Else
-    mPosX = Int(Int(Screen.Width / createForm.Width) * Rnd)
-    mPosY = Int(Int(Screen.Height / createForm.Height) * Rnd)
-End If
-
-gLogger.Log LogLevelNormal, "Form position: " & mPosX & "," & mPosY
-
-createForm.initialise mDataCollector, _
-                mConfigManager, _
-                getConfigName, _
-                getNoAutostart, _
-                CBool(mCLParser.Switch("showMonitor"))
-
-createForm.Left = mPosX * createForm.Width
-createForm.Top = mPosY * createForm.Height
-
-createForm.Visible = True
-End Function
-
 Private Function getConfig() As Boolean
 Set mConfigManager = New ConfigManager
-If mConfigManager.initialise(getConfigFilename) Then
-    gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Configuration file: " & getConfigFilename
+If mConfigManager.initialise(configFilename) Then
+    logConfigFileDetails
     getConfig = True
 Else
     notifyError "The configuration file (" & _
-                    getConfigFilename & _
+                    configFilename & _
                     ") is not the correct format for this program"
 End If
 
-End Function
-
-Private Function getConfigFilename() As String
-getConfigFilename = mCLParser.Arg(0)
-If getConfigFilename = "" Then
-    getConfigFilename = AppSettingsFolder & "\settings.xml"
-End If
 End Function
 
 Private Function getConfigName() As String
@@ -387,10 +342,9 @@ Set mListener = CreateFileLogListener(LogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
-GetLogger("").addLogListener mListener
+GetLogger("").AddLogListener mListener
 
-gLogger.Log LogLevelNormal, "Log file: " & LogFileName
-gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
+logLogFileDetails
 End Sub
 
 Private Function getNamedConfig() As ConfigurationSection
@@ -425,6 +379,15 @@ If mCLParser.Switch("startAt") Then
 End If
 gLogger.Log LogLevelNormal, "Start at: " & getStartTimeDescriptor
 End Function
+
+Private Sub logConfigFileDetails()
+gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Configuration file: " & configFilename
+End Sub
+
+Private Sub logLogFileDetails()
+gLogger.Log LogLevelNormal, "Log file: " & LogFileName
+gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
+End Sub
 
 Private Sub notifyError( _
                 ByVal message As String)
@@ -470,7 +433,7 @@ Private Sub showConfig()
 Dim f As fConfig
 Set f = New fConfig
 f.initialise mConfigManager, False
-f.Show vbModal
+f.Show vbModeless
 End Sub
 
 Private Function showHelp() As Boolean
@@ -522,4 +485,53 @@ If mCLParser.Switch("?") Then
     showHelp = True
 End If
 End Function
+
+Private Sub showMainForm()
+Dim posnValue As String
+Dim f As New fDataCollectorUI
+
+If mCLParser.Switch("posn") Then
+    posnValue = mCLParser.SwitchValue("posn")
+    
+    If InStr(1, posnValue, ",") = 0 Then
+        MsgBox "Error - posn value must be 'n,m'"
+        Exit Sub
+    End If
+    
+    If Not IsNumeric(Left$(posnValue, InStr(1, posnValue, ",") - 1)) Then
+        MsgBox "Error - offset from left is not numeric"
+        Exit Sub
+    End If
+    
+    mPosX = Left$(posnValue, InStr(1, posnValue, ",") - 1)
+    
+    If Not IsNumeric(Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))) Then
+        MsgBox "Error - offset from top is not numeric"
+        Exit Sub
+    End If
+    
+    mPosY = Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))
+Else
+    mPosX = Int(Int(Screen.Width / f.Width) * Rnd)
+    mPosY = Int(Int(Screen.Height / f.Height) * Rnd)
+End If
+
+gLogger.Log LogLevelNormal, "Form position: " & mPosX & "," & mPosY
+
+f.initialise mDataCollector, _
+                mConfigManager, _
+                getConfigName, _
+                getNoAutostart, _
+                CBool(mCLParser.Switch("showMonitor"))
+
+f.Left = mPosX * f.Width
+f.Top = mPosY * f.Height
+
+f.Visible = True
+
+logLogFileDetails
+logConfigFileDetails
+End Sub
+
+
 

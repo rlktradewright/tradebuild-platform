@@ -507,7 +507,7 @@ mYCursorTextStyle.BoxFillColor = vbWhite
 mYCursorTextStyle.BoxFillStyle = FillSolid
 mYCursorTextStyle.BoxThickness = 1
 mYCursorTextStyle.Color = vbBlack
-mYCursorTextStyle.PaddingX = 0
+mYCursorTextStyle.PaddingX = 1
 mYCursorTextStyle.PaddingY = 0
     
 Set aFont = New StdFont

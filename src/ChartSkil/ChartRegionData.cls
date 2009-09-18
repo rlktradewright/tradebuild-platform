@@ -23,6 +23,8 @@ Implements Task
 ' Events
 '================================================================================
 
+Event PeriodAdded(ByVal pPeriodNumber As Long, ByVal pTimestamp As Date)
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -83,7 +85,13 @@ Private mFirstGraphicObjectIndex As Long    ' the index of the first table entry
                                             ' merely list start and end entries
 Private mNextGraphicObjectIndex As Long
 
+Private mNumberOfObjects As Long
+
+Private mGraphObjSeriesCollection As GraphObjSeriesCollection
+
 Private mMaxPeriodNumber As Long
+
+Private mViewportRect As TRectangle
 
 Private mInScopeCycle As Long
 Private mFirstInScopeIndex As Long
@@ -141,7 +149,10 @@ Static i As Long
 Dim j As Long
 
 Do While i < mNextGraphicObjectIndex
-    If Not mGraphicObjects(i).graphObj Is Nothing Then Set mGraphicObjects(i).graphObj = Nothing
+    If Not mGraphicObjects(i).graphObj Is Nothing Then
+        Set mGraphicObjects(i).graphObj = Nothing
+        mNumberOfObjects = mNumberOfObjects + 1
+    End If
     i = i + 1
     j = j + 1
     If j = 100 Then Exit Sub
@@ -167,6 +178,10 @@ End Property
 
 Friend Property Get MaxPeriodNumber() As Long
 MaxPeriodNumber = mMaxPeriodNumber
+End Property
+
+Friend Property Get NumberOfObjects() As Long
+NumberOfObjects = mNumberOfObjects
 End Property
 
 Friend Property Let PeriodBackColor( _
@@ -215,15 +230,18 @@ If graphicObjectIsInScope(handle) Then
         addEntryToVisibleList handle
     End If
 End If
+mNumberOfObjects = mNumberOfObjects + 1
 AddGraphicObject = handle
 End Function
 
-Friend Sub AddPeriod(ByVal PeriodNumber As Long)
+Friend Sub AddPeriod( _
+                ByVal pPeriodNumber As Long, _
+                ByVal pTimestamp As Date)
 Dim failpoint As Long
 On Error GoTo Err
 
-addNewPeriod PeriodNumber
-
+addNewPeriod pPeriodNumber
+RaiseEvent PeriodAdded(pPeriodNumber, pTimestamp)
 Exit Sub
 
 Err:
@@ -241,8 +259,8 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
      With mGraphicObjects(index)
         If .graphObj.GaugeDependent Then
-            Dim boundingRect As TRectangle
-            boundingRect = .graphObj.BoundingRectangle
+            'Dim boundingRect As TRectangle
+            'boundingRect = .graphObj.BoundingRectangle
             If graphicObjectIsVisible(index) Then
                 addEntryToVisibleList index
             End If
@@ -268,11 +286,12 @@ Do While index <> mLastInScopeIndex
             .graphObj.IncludeInAutoscale And _
             .graphObj.GaugeDependent _
         Then
-            Dim boundingRect As TRectangle
-            boundingRect = .graphObj.BoundingRectangle
+            'Dim boundingRect As TRectangle
+            'boundingRect = .graphObj.BoundingRectangle
 
-            calculateObjectHighAndLowInInterval index, _
-                                            rectGetXInterval(mCanvas.Boundary), _
+            calculateObjectHighAndLowInPeriodRange index, _
+                                            mViewportRect.Left, _
+                                            mViewportRect.Right, _
                                             objMax, _
                                             objMin
             If objMax > scaleMax Then
@@ -306,10 +325,11 @@ Do While index <> mLastInScopeIndex
                 CalcVerticalBoundsForNonGaugeDependentObjects = True
             Else
 
-                calculateObjectHighAndLowInInterval index, _
-                                                rectGetXInterval(mCanvas.Boundary), _
-                                                objMax, _
-                                                objMin
+                calculateObjectHighAndLowInPeriodRange index, _
+                                                        mViewportRect.Left, _
+                                                        mViewportRect.Right, _
+                                                        objMax, _
+                                                        objMin
                 If objMax > scaleMax Then
                     scaleMax = objMax
                 End If
@@ -345,9 +365,7 @@ Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
-Friend Sub DetermineInScopeObjects( _
-                ByVal minPeriod As Long, _
-                ByVal maxPeriod As Long)
+Friend Sub DetermineInScopeObjects()
 Dim i As Long
 Dim index As Long
 Dim et As New ElapsedTimer
@@ -359,7 +377,7 @@ et.StartTiming
 
 clearInScopeObjectList
 
-For i = minPeriod To maxPeriod
+For i = Int(IIf(mViewportRect.Left < 1, 1, Int(mViewportRect.Left))) To Int(IIf(mViewportRect.Right > mMaxPeriodNumber, mMaxPeriodNumber, Int(mViewportRect.Right)))
     index = mGraphicObjects(mPeriodTable(i).firstIndex).nextPeriodIndex
     Do While index <> mPeriodTable(i).lastindex
         numberExamined = numberExamined + 1
@@ -373,16 +391,15 @@ For i = minPeriod To maxPeriod
     Loop
 Next
 
-Debug.Print "DetermineInScopeObjects: nonextended=" & numberExamined & " time=" & 1000 * (Timer - timerIn) & "ms"
-timerIn = Timer
+Debug.Print "DetermineInScopeObjects: nonextended=" & numberExamined & " time=" & et.ElapsedTimeMicroseconds / 1000 & "ms"
 
+et.StartTiming
 index = mGraphicObjects(mFirstExtendedIndex).nextExtendedIndex
 Do While index <> mLastExtendedIndex
     numberExamined = numberExamined + 1
-    numberExtended = numberExtended + 1
     With mGraphicObjects(index)
-        Dim boundingRect As TRectangle
-        boundingRect = .graphObj.BoundingRectangle
+'        Dim boundingRect As TRectangle
+'        boundingRect = .graphObj.BoundingRectangle
         If graphicObjectIsInScope(index) Then
             addEntryToInScopeList index
             numberInScope = numberInScope + 1
@@ -427,34 +444,86 @@ Friend Function GetGraphicObject( _
 Set GetGraphicObject = mGraphicObjects(handle).graphObj
 End Function
 
+Friend Function GetNextSelectableObjectOrSeriesAtPoint( _
+                ByVal currObject As IGraphicObject, _
+                ByVal X As Single, _
+                ByVal Y As Single) As IGraphicObject
+Dim startLayer As Long
+Dim currLayer As Long
+Dim i As Long
+Dim index As Long
+Dim currObjStillSelectable As Boolean
+
+If currObject Is Nothing Then
+    startLayer = MaxLayer
+Else
+    startLayer = currObject.Layer
+End If
+
+For i = MinLayer To MaxLayer
+    currLayer = (startLayer - i + MaxLayer + 1) Mod (MaxLayer + 1)
+    index = mGraphicObjects(mVisibleTable(currLayer).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(currLayer).lastindex
+        With mGraphicObjects(index)
+            If isObjectOrSeriesSelectable(.graphObj) Then
+                If .graphObj.HitTest(X, Y) Then
+                    If .graphObj Is currObject Then
+                        currObjStillSelectable = True
+                    Else
+                        Set GetNextSelectableObjectOrSeriesAtPoint = .graphObj
+                        ' we've found an object/series to select
+                        
+                        ' NB we can't use Exit For, because we are
+                        ' within a With statement, and it causes the table lock
+                        ' not to be released - see http://support.microsoft.com/kb/187553
+                        GoTo ExitFor
+                        
+                    End If
+                End If
+            End If
+            index = .nextVisibleIndex
+        End With
+    Loop
+Next
+
+ExitFor:
+
+If GetNextSelectableObjectOrSeriesAtPoint Is Nothing And _
+    currObjStillSelectable _
+Then
+    Set GetNextSelectableObjectOrSeriesAtPoint = currObject
+End If
+End Function
+
 Friend Function GetNextUserLayer(Optional ByVal Layer As Long = -1) As Long
 Static lNextLayer As Long
 
 If lNextLayer = 0 Then lNextLayer = LayerNumbers.LayerLowestUser
 
 If Layer = -1 Then
-    GetLayer = lNextLayer
+    GetNextUserLayer = lNextLayer
     If lNextLayer <> LayerNumbers.LayerHighestUser Then
         lNextLayer = lNextLayer + 1
     End If
 Else
     If Layer < MinLayer Or Layer > MaxLayer Then
-        GetLayer = GetLayer()
+        GetNextUserLayer = GetNextUserLayer(-1)
     Else
-        GetLayer = Layer
+        GetNextUserLayer = Layer
     End If
 End If
 End Function
 
 Friend Sub Initialise( _
                 ByVal pChart As Chart, _
-                ByVal pRegion As ChartRegion)
+                ByVal pRegion As ChartRegion, _
+                ByVal pGraphObjSeriesCollection As GraphObjSeriesCollection)
 Set mChartRef = CreateWeakReference(pChart)
 Set mRegionRef = CreateWeakReference(pRegion)
-
+Set mGraphObjSeriesCollection = pGraphObjSeriesCollection
 End Sub
 
-Friend Sub PaintAllObjects()
+Friend Function PaintAllVisibleObjects() As Long
 Dim i As Long
 Dim counter As Long
 Dim index As Long
@@ -463,12 +532,12 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Dim drawAreas(0) As TRectangle
-drawAreas(0) = .Boundary
-drawAreas(0).Right = drawAreas(0).Right + 1
+
 For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
+            drawAreas(0) = RectIntersection(.graphObj.BoundingRectangle, mViewportRect)
             .graphObj.Draw drawAreas
             index = .nextVisibleIndex
             counter = counter + 1
@@ -476,15 +545,17 @@ For i = MinLayer To MaxLayer
     Loop
 Next
 
-Exit Sub
+PaintAllVisibleObjects = counter
+
+Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "PaintAllObjects" & "." & failpoint
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "PaintAllVisibleObjects" & "." & failpoint
 Dim errDescription As String: errDescription = Err.Description
 Err.Raise errNumber, errSource, errDescription
 
-End Sub
+End Function
 
 Friend Sub RecalcBoundaryForObjectsInSeries( _
                 ByVal SeriesID As Long)
@@ -500,7 +571,7 @@ For i = MinLayer To MaxLayer
         With mGraphicObjects(index)
             If .graphObj.SeriesID = SeriesID Then
                 Dim boundingRect As TRectangle
-                ' force recalculation of the bounding rect
+                ' force recalculation of the bounding RECT
                 boundingRect = .graphObj.BoundingRectangle
             End If
             index = .nextVisibleIndex
@@ -535,8 +606,6 @@ failpoint = 100
 
 Dim rects(0) As TRectangle
 
-rects(0) = areaToRedraw
-
 For Layer = startLayer To MaxLayer
 
     failpoint = 400
@@ -548,7 +617,10 @@ For Layer = startLayer To MaxLayer
             failpoint = 500
 
             If Not .graphObj Is objToExclude Then
-                If rectOverlaps(.graphObj.BoundingRectangle, areaToRedraw) Then
+                rects(0) = RectIntersection(areaToRedraw, .graphObj.BoundingRectangle)
+
+                If rects(0).isValid Then
+                'If RectOverlaps(.graphObj.BoundingRectangle, areaToRedraw) Then
 
                     failpoint = 600
 
@@ -595,7 +667,7 @@ End If
 
 If graphicObjectIsInScope(handle) Then
 
-failpoint = 600
+    failpoint = 600
 
     removeEntryFromInScopeList handle
     If graphicObjectIsVisible(handle) Then
@@ -611,6 +683,7 @@ failpoint = 800
 Set mGraphicObjects(handle).graphObj = Nothing
 graphObj.handle = -1
 
+mNumberOfObjects = mNumberOfObjects - 1
 Exit Sub
 
 Err:
@@ -622,6 +695,11 @@ Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
+Friend Sub SetViewport( _
+                ByRef viewportRect As TRectangle)
+mViewportRect = viewportRect
+End Sub
+                
 ' returns true if the object is in scope
 Friend Function UpdateGraphicObject( _
                 ByVal graphObj As IGraphicObject) As Boolean
@@ -774,75 +852,6 @@ End If
 
 End Sub
 
-Private Sub addVerticalGridLine(ByVal PeriodNumber As Long, _
-                                ByVal Key As String, _
-                                ByVal label As String, _
-                                ByVal coarseKey As String, _
-                                ByVal coarseLabel As String)
-Dim vGridLine As ChartSkil26.Line
-Dim vGridText As Text
-Dim vGridTextCoarse As Text
-
-If HasGrid Then
-    On Error Resume Next
-    Set vGridLine = mXGridLines.Item(Key)
-    On Error GoTo 0
-    If vGridLine Is Nothing Then
-        Set vGridLine = mXGridLines.Add(Key)
-        vGridLine.SetPosition NewPoint(PeriodNumber - 0.5, _
-                                    0, _
-                                    CoordsLogical, _
-                                    CoordsRelative), _
-                                NewPoint(PeriodNumber - 0.5, _
-                                    100, _
-                                    CoordsLogical, _
-                                    CoordsRelative)
-    Else
-        If vGridLine.Point1.XLogical > PeriodNumber Then
-            vGridLine.SetPosition NewPoint(PeriodNumber - 0.5, _
-                                        0, _
-                                        CoordsLogical, _
-                                        CoordsRelative), _
-                                    NewPoint(PeriodNumber - 0.5, _
-                                        100, _
-                                        CoordsLogical, _
-                                        CoordsRelative)
-        End If
-    End If
-End If
-
-If HasGridText Then
-    On Error Resume Next
-    Set vGridText = mXGridTexts.Item(Key)
-    On Error GoTo 0
-    If vGridText Is Nothing Then
-        Set vGridText = mXGridTexts.Add(Key)
-        vGridText.FixedX = False
-        vGridText.FixedY = True
-        vGridText.position = NewPoint(PeriodNumber - 0.5, _
-                                    0#, _
-                                    CoordsLogical, _
-                                    CoordsDistance)
-        vGridText.Text = label
-    End If
-
-    On Error Resume Next
-    Set vGridTextCoarse = mXGridTextsCoarse.Item(coarseKey)
-    On Error GoTo 0
-    If vGridTextCoarse Is Nothing Then
-        Set vGridTextCoarse = mXGridTextsCoarse.Add(coarseKey)
-        vGridTextCoarse.FixedX = False
-        vGridTextCoarse.FixedY = True
-        vGridTextCoarse.position = NewPoint(PeriodNumber - 0.5, _
-                                    0#, _
-                                    CoordsLogical, _
-                                    CoordsCounterDistance)
-        vGridTextCoarse.Text = coarseLabel
-    End If
-End If
-
-End Sub
-
 Private Function allocateGraphicObjectTableEntry() As Long
 On Error GoTo Err
 allocateGraphicObjectTableEntry = mNextGraphicObjectIndex
@@ -856,17 +865,19 @@ Err:
 Stop
 End Function
 
-Private Sub calculateObjectHighAndLowInInterval( _
-                            ByVal index As Long, _
-                            ByRef interval As TInterval, _
-                            ByRef high As Double, _
-                            ByRef low As Double)
+Private Sub calculateObjectHighAndLowInPeriodRange( _
+                ByVal index As Long, _
+                ByVal minPeriod As Long, _
+                ByVal maxPeriod As Long, _
+                ByRef high As Double, _
+                ByRef low As Double)
 
 Dim j As Long
 Dim k As Long
 Dim rects() As TRectangle
 Dim numrects As Long
 Dim overlapXInterval As TInterval
+Dim periodRange As TInterval
 
 high = MinusInfinityDouble
 low = PlusInfinityDouble
@@ -875,7 +886,12 @@ With mGraphicObjects(index)
     Dim boundingRect As TRectangle
     boundingRect = .graphObj.BoundingRectangle
     If (.graphObj.Capabilities And GraphicObjectCapabilities.ComplexBounding) Then
-        overlapXInterval = intIntersection(interval, rectGetXInterval(boundingRect))
+        periodRange.startValue = minPeriod
+        periodRange.endValue = maxPeriod
+        periodRange.isValid = True
+        
+        overlapXInterval = IntIntersection(periodRange, RectGetXInterval(boundingRect))
+        
         For j = Int(overlapXInterval.startValue + 0.9) To _
                 Int(overlapXInterval.endValue)
             rects = .graphObj.BoundingRectanglesAt(j)
@@ -899,41 +915,6 @@ With mGraphicObjects(index)
         low = boundingRect.Bottom
     End If
 End With
-End Sub
-
-Private Sub calculateVerticalBounds()
-Dim scaleMax As Double
-Dim scaleMin As Double
-
-Dim failpoint As Long
-On Error GoTo Err
-
-If Not Autoscaling Then Exit Sub
-
-scaleMax = MinusInfinityDouble
-scaleMin = PlusInfinityDouble
-
-If CalcVerticalBoundsForNonGaugeDependentObjects(scaleMin, scaleMax) Then
-    ' there are gauge-dependent objects that may affect the max and min scales.
-    ' We need to recalculate their bounds with the new gauge determined from
-    ' the other objects to get a better estimate of their sizes.
-    setCanvasVerticalBounds scaleMin, scaleMax
-    CalcVerticalBoundsForGaugeDependentObjects scaleMin, scaleMax
-End If
-
-If scaleMin = PlusInfinityDouble Or scaleMax = MinusInfinityDouble Then Exit Sub
-
-setCanvasVerticalBounds scaleMin - (scaleMax - scaleMin) * 0.025, _
-                        scaleMax + (scaleMax - scaleMin) * 0.025
-
-Exit Sub
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "calculateVerticalBounds" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource & vbCrLf & ".Bottom=" & CStr(scaleMin - (scaleMax - scaleMin) * 0.025)
-Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function chartObj() As Chart
@@ -994,15 +975,15 @@ Dim j As Long
 Dim k As Long
 
 Set graphobj1 = mGraphicObjects(index1).graphObj
-obj1Rect = rectIntersection(graphobj1.BoundingRectangle, clippingRect)
+obj1Rect = RectIntersection(graphobj1.BoundingRectangle, clippingRect)
 complexBounding1 = (graphobj1.Capabilities And GraphicObjectCapabilities.ComplexBounding)
 
 Set graphobj2 = mGraphicObjects(index2).graphObj
-obj2Rect = rectIntersection(graphobj2.BoundingRectangle, clippingRect)
+obj2Rect = RectIntersection(graphobj2.BoundingRectangle, clippingRect)
 complexBounding2 = (graphobj2.Capabilities And GraphicObjectCapabilities.ComplexBounding)
 
 ReDim overlaps(0) As TRectangle
-overlaps(0) = rectIntersection(obj1Rect, obj2Rect)
+overlaps(0) = RectIntersection(obj1Rect, obj2Rect)
 If Not overlaps(0).isValid Then
     getObjectOverlaps = 0
     Exit Function
@@ -1018,7 +999,7 @@ Then
     Exit Function
 End If
 
-XInterval = rectGetXInterval(rectIntersection(obj1Rect, obj2Rect))
+XInterval = RectGetXInterval(RectIntersection(obj1Rect, obj2Rect))
 
 If complexBounding1 And complexBounding2 And useComplexBounding1 And useComplexBounding2 Then
     ReDim overlaps(5 * (Int(XInterval.endValue - XInterval.startValue) + 1)) As TRectangle
@@ -1048,7 +1029,7 @@ If complexBounding1 And complexBounding2 And useComplexBounding1 And useComplexB
                                 ReDim Preserve overlaps(UBound(overlaps) + 5 * (Int(XInterval.endValue - XInterval.startValue) + 1)) As TRectangle
                             End If
                             overlaps(getObjectOverlaps) = _
-                                rectIntersection(boundingRects1(j), boundingRects2(k))
+                                RectIntersection(boundingRects1(j), boundingRects2(k))
                             If overlaps(getObjectOverlaps).isValid Then
                                 getObjectOverlaps = getObjectOverlaps + 1
                             End If
@@ -1080,7 +1061,7 @@ ElseIf complexBounding1 Then
                 If getObjectOverlaps > UBound(overlaps) Then
                     ReDim Preserve overlaps(UBound(overlaps) + 5 * (Int(XInterval.endValue - XInterval.startValue) + 1)) As TRectangle
                 End If
-                overlaps(getObjectOverlaps) = rectIntersection(boundingRects1(j), obj2Rect)
+                overlaps(getObjectOverlaps) = RectIntersection(boundingRects1(j), obj2Rect)
                 If overlaps(getObjectOverlaps).isValid Then
                     getObjectOverlaps = getObjectOverlaps + 1
                 End If
@@ -1109,7 +1090,7 @@ Else
                 If getObjectOverlaps > UBound(overlaps) Then
                     ReDim Preserve overlaps(UBound(overlaps) + 5 * (Int(XInterval.endValue - XInterval.startValue) + 1)) As TRectangle
                 End If
-                overlaps(getObjectOverlaps) = rectIntersection(boundingRects2(j), obj1Rect)
+                overlaps(getObjectOverlaps) = RectIntersection(boundingRects2(j), obj1Rect)
                 If overlaps(getObjectOverlaps).isValid Then
                     getObjectOverlaps = getObjectOverlaps + 1
                 End If
@@ -1128,10 +1109,10 @@ Private Function graphicObjectIsInScope(ByVal index As Long) As Boolean
 With mGraphicObjects(index)
     If Not .graphObj.BoundingRectangle.isValid Then Exit Function
     If .graphObj.ExtendedObject Then
-        graphicObjectIsInScope = intOverlaps(rectGetXInterval(mCanvas.Boundary), rectGetXInterval(.graphObj.BoundingRectangle))
+        graphicObjectIsInScope = IntOverlaps(RectGetXInterval(mViewportRect), RectGetXInterval(.graphObj.BoundingRectangle))
     Else
-        graphicObjectIsInScope = (.PeriodNumber >= mMinInViewPeriod And _
-                                .PeriodNumber <= mMaxInViewPeriod)
+        graphicObjectIsInScope = (.PeriodNumber >= Int(mViewportRect.Left) And _
+                                .PeriodNumber <= Int(mViewportRect.Right))
     End If
 End With
 End Function
@@ -1146,7 +1127,7 @@ Dim j As Long
 With mGraphicObjects(index).graphObj
     If Not .BoundingRectangle.isValid Or .NoDraw Then Exit Function
     If .ExtendedObject And (.Capabilities And GraphicObjectCapabilities.ComplexBounding) Then
-        overlapXInterval = intIntersection(rectGetXInterval(mCanvas.Boundary), rectGetXInterval(.BoundingRectangle))
+        overlapXInterval = IntIntersection(RectGetXInterval(mViewportRect), RectGetXInterval(.BoundingRectangle))
         For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
             boundingRects = .BoundingRectanglesAt(i)
@@ -1156,7 +1137,7 @@ With mGraphicObjects(index).graphObj
             On Error GoTo 0
             If numrects >= 0 Then
                 For j = 0 To numrects
-                    If rectOverlaps(boundingRects(j), mCanvas.Boundary) Then
+                    If RectOverlaps(boundingRects(j), mViewportRect) Then
                         graphicObjectIsVisible = True
                         Exit Function
                     End If
@@ -1164,7 +1145,7 @@ With mGraphicObjects(index).graphObj
             End If
         Next
     Else
-        graphicObjectIsVisible = rectOverlaps(.BoundingRectangle, mCanvas.Boundary)
+        graphicObjectIsVisible = RectOverlaps(.BoundingRectangle, mViewportRect)
     End If
 End With
 End Function
@@ -1198,6 +1179,16 @@ For i = MinLayer To MaxLayer
 Next
 
 End Sub
+
+Private Function isObjectOrSeriesSelectable(ByVal graphObj As IGraphicObject) As Boolean
+If graphObj.IsSelectable Then
+    isObjectOrSeriesSelectable = True
+ElseIf mGraphObjSeriesCollection.Item(graphObj.SeriesID).IsSelectable Then
+    isObjectOrSeriesSelectable = True
+Else
+    isObjectOrSeriesSelectable = False
+End If
+End Function
 
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
 With mGraphicObjects(index)
@@ -1241,17 +1232,6 @@ With mGraphicObjects(index)
         .prevVisibleIndex = 0
     End If
 End With
-End Sub
-
-Private Sub undrawCrosshairsPointer()
-
-If Not mIsDrawingEnabled Then Exit Sub
-
-mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
-mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
-
 End Sub
 
 

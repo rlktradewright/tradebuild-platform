@@ -115,21 +115,19 @@ Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
-On Error GoTo err
+On Error GoTo Err
 If mRequestId <> -1 And Not mTWSAPI Is Nothing Then mTWSAPI.CancelHistoricalData mRequestId
 Exit Sub
-err:
-logMessage "IBTWSSP:HistDataReader:IBarDataReader_CancelFetch (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
-                err.Description
+Err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_CancelFetch (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError "IBarDataReader_CancelFetch"
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             ByVal barSpecifier As BarDataSpecifier)
 
-On Error GoTo err
-If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
+On Error GoTo Err
+If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
@@ -172,27 +170,23 @@ If mTWSAPI.connectionState = ConnConnected Then
     DeferAction Me
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:HistDataReader:IBarDataReader_FetchBars (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
-                err.Description
+Err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_FetchBars (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError "IBarDataReader_FetchBars"
 
 End Sub
 
 Private Sub IBarDataReader_FireNextBar()
-On Error GoTo err
+On Error GoTo Err
 If mWaitingForBarData Then
     mBarRequested = True
 Else
     ProcessBar
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:HistDataReader:IBarDataReader_FireNextBar (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
-                err.Description
+Err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_FireNextBar (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError "IBarDataReader_FireNextBar"
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
@@ -200,17 +194,15 @@ Private Property Get IBarDataReader_NumberOfBars() As Long
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
-On Error GoTo err
+On Error GoTo Err
 
 mHistDataServiceProvider.dataReaderFinished Me
 finish
 
 Exit Sub
-err:
-logMessage "IBTWSSP:HistDataReader:IBarDataReader_ReleaseDataStore (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
-                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
-                err.Description
+Err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_ReleaseDataStore (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError "IBarDataReader_ReleaseDataStore"
 End Sub
 
 Private Function IBarDataReader_Supports( _
@@ -223,16 +215,14 @@ End Function
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
-On Error GoTo err
+On Error GoTo Err
 If mRequestInProgress Then
     mServiceConsumer.Ready
     mRequestId = mTWSAPI.RequestHistoricalData(mBarDataSpecifier, Me)
 End If
 Exit Sub
-err:
-handleFatalError err.number, _
-                "mTWSAPI_Connected", _
-                err.Description
+Err:
+handleFatalError "mTWSAPI_Connected"
 End Sub
 
 '================================================================================
@@ -244,14 +234,25 @@ End Sub
 '================================================================================
 
 Friend Sub finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mHistDataServiceProvider = Nothing
 Set mCommonServiceConsumer = Nothing
 Set mServiceConsumer = Nothing
 Set mTWSAPI = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub historicalDataAvailable( _
                 ByVal numberOfBars As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 mWaitingForBarData = False
 mNumBarsFetched = numberOfBars
 mNumBarsProcessed = 0
@@ -260,6 +261,11 @@ If mBarRequested Then
      mServiceConsumer.Progress 0, 0
     ProcessBar
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataAvailable", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -268,27 +274,43 @@ Friend Sub Initialise( _
                 ByVal histDataInputServiceConsumer As IBarDataInputServiceConsumer, _
                 ByVal dataConsumer As IBarDataConsumer, _
                 ByVal pTWSAPI As TWSAPI, _
-                ByVal handle As Long)
+                ByVal Handle As Long)
 Set mHistDataServiceProvider = histDataServiceProvider
 Set mCommonServiceConsumer = commonServiceConsumer
 Set mServiceConsumer = histDataInputServiceConsumer
 Set mDataConsumer = dataConsumer
 Set mTWSAPI = pTWSAPI
-mHandle = handle
+mHandle = Handle
 End Sub
 
 Friend Sub historicalDataRequestFailed( _
                 ByVal reason As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestFailed, _
                         reason, _
                         mHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataRequestFailed", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub historicalDataRequestInvalid( _
                 ByVal reason As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestInvalid, _
                         reason, _
                         mHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataRequestInvalid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '================================================================================
@@ -296,35 +318,37 @@ End Sub
 '================================================================================
 
 Private Sub handleFatalError( _
-                ByVal number As Long, _
-                ByVal source As String, _
-                ByVal Description As String)
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.number
+Dim errSource As String: errSource = Err.source
+Dim errDesc As String: errDesc = Err.Description
 
-logMessage "Error " & err.number & ": " & _
-            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
-            err.Description, _
-            LogLevelSevere
+On Error GoTo Err
 
-gReleaseAllTWSAPIInstances
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
 
-mCommonServiceConsumer.NotifyFatalError number, _
-                            source, _
-                            Description, _
-                            mHandle
+' NB: will never get to here so no need for Exit Sub
 
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.number, Err.source, Err.Description, mHandle
 End Sub
 
 Private Sub logMessage( _
-                ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(logLevel) Then Exit Sub
-gLogger.Log logLevel, _
-            ProjectName & "." & ModuleName & ": " & message
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub ProcessBar()
 Dim lBar As Bar
 Dim barTimePeriod As TimePeriod
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mTWSAPI.ReadHistoricalBar(mRequestId, lBar, barTimePeriod) Then
         mDataConsumer.Bar lBar, barTimePeriod
@@ -336,6 +360,11 @@ End If
 mServiceConsumer.BarDataComplete
 mRequestInProgress = False
 mRequestId = -1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ProcessBar", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 

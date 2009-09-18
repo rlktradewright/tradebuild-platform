@@ -51,6 +51,7 @@ Private Const ModuleName                    As String = "Line"
 Private mSeries As LineSeries
 Private mSeriesUpdateNumber As Long
 
+Private mViewport As Viewport
 Private mCanvas  As Canvas
 Private mLayer As Long
 Private mHandle As Long
@@ -69,7 +70,9 @@ Private mGOSP As GraphObjServiceProvider
 Private mBoundingRect As TRectangle
 Private mStartArrowRect As TRectangle
 Private mEndArrowRect As TRectangle
-Private mRegionRect As TRectangle
+
+Private mViewportBoundary As TRectangle
+Private mTruncatedViewportBoundary As TRectangle
 
 Private mEndArrowX1Offset As Double   ' horiz Offset from apex of upper Arrow endpoint
 Private mEndArrowY1Offset As Double   ' vert Offset from apex of upper Arrow endpoint
@@ -142,7 +145,7 @@ mBlank = True
 mBoundingRect.isValid = False
 mStartArrowRect.isValid = False
 mEndArrowRect.isValid = False
-mRegionRect.isValid = False
+mTruncatedViewportBoundary.isValid = False
 
 mColor = vbBlack
 mThickness = 1
@@ -174,21 +177,22 @@ End Sub
 
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 
-Dim canvasChanges As Long
+Dim viewportChanges As Long
 
 Dim failpoint As Long
 On Error GoTo Err
 
-canvasChanges = mCanvas.CompareTo(mGaugeX, mGaugeY, mRegionRect)
+viewportChanges = mViewport.CompareTo(mGaugeX, mGaugeY, mViewportBoundary)
 
-mRegionRect = mCanvas.Boundary
-mGaugeX = mCanvas.GaugeX
-mGaugeY = mCanvas.GaugeY
+mViewportBoundary = mViewport.Boundary
+mTruncatedViewportBoundary = getTruncatedViewportBoundary
+mGaugeX = mViewport.GaugeX
+mGaugeY = mViewport.GaugeY
 
-If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
-    (canvasChanges And CanvasComparisonCodes.BoundsChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.BoundsChangedY) Or _
+If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
+    (viewportChanges And ViewportComparisonCodes.GaugeChangedY) Or _
+    (viewportChanges And ViewportComparisonCodes.BoundsChangedX) Or _
+    (viewportChanges And ViewportComparisonCodes.BoundsChangedY) Or _
     mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
     mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
@@ -223,15 +227,15 @@ If mBlank Then Exit Property
 With periodrect
     .Left = PeriodNumber
     .Right = PeriodNumber + 1
-    .Bottom = mRegionRect.Bottom
-    .Top = mRegionRect.Top
+    .Bottom = mTruncatedViewportBoundary.Bottom
+    .Top = mTruncatedViewportBoundary.Top
     .isValid = True
 End With
 
 If mVertical <> VerticalNot Then
     Dim vertRect As TRectangle
     
-    vertRect = rectIntersection(mBoundingRect, periodrect)
+    vertRect = RectIntersection(mBoundingRect, periodrect)
     If vertRect.isValid Then
         
         ReDim rects(0) As TRectangle
@@ -239,7 +243,7 @@ If mVertical <> VerticalNot Then
         rects(0) = vertRect
     End If
 Else
-    If PeriodNumber = Int(mRegionRect.Right) Or _
+    If PeriodNumber = Int(mTruncatedViewportBoundary.Right) Or _
         (Not mLeftToRight And PeriodNumber = mPoint2.X And Not ExtendAfter) Or _
         (Not mLeftToRight And PeriodNumber = mPoint1.X And Not ExtendBefore) _
     Then
@@ -265,7 +269,7 @@ Else
         End If
         If mLeftToRight Then
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Or _
-                PeriodNumber = Int(mRegionRect.Right) _
+                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
             Then
                 .Right = .Left
             Else
@@ -273,7 +277,7 @@ Else
             End If
         Else
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Or _
-                PeriodNumber = Int(mRegionRect.Right) _
+                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
             Then
                 .Right = .Left
             Else
@@ -291,14 +295,14 @@ Else
         If mLeftToRight Then
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Then .Left = .Left - mThicknessOffsetX
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Or _
-                PeriodNumber = Int(mRegionRect.Right) _
+                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
             Then
                 .Right = .Right + mThicknessOffsetX
             End If
         Else
             If (Not ExtendAfter And PeriodNumber = mPoint2.X) Then .Left = .Left - mThicknessOffsetX
             If (Not ExtendBefore And PeriodNumber = mPoint1.X) Or _
-                PeriodNumber = Int(mRegionRect.Right) _
+                PeriodNumber = Int(mTruncatedViewportBoundary.Right) _
             Then
                 .Right = .Right + mThicknessOffsetX
             End If
@@ -308,13 +312,13 @@ Else
 End If
 
 If Not ArrowEndStyle = ArrowNone Then
-    If rectOverlaps(mEndArrowRect, periodrect) Then
-        rects(0) = rectUnion(rects(0), mEndArrowRect)
+    If RectOverlaps(mEndArrowRect, periodrect) Then
+        rects(0) = RectUnion(rects(0), mEndArrowRect)
     End If
 End If
 If Not ArrowStartStyle = ArrowNone Then
-    If rectOverlaps(mStartArrowRect, periodrect) Then
-        rects(0) = rectUnion(rects(0), mStartArrowRect)
+    If RectOverlaps(mStartArrowRect, periodrect) Then
+        rects(0) = RectUnion(rects(0), mStartArrowRect)
     End If
 End If
 IGraphicObject_BoundingRectanglesAt = rects
@@ -359,8 +363,8 @@ ReDim areasToRedraw(UBound(areas)) As TRectangle
 ' amalagamate any adjacent areas
 areasToRedraw(0) = areas(0)
 For i = 1 To UBound(areas)
-    If rectOverlaps(areasToRedraw(j), areas(i)) Then
-        areasToRedraw(j) = rectUnion(areasToRedraw(j), areas(i))
+    If RectOverlaps(areasToRedraw(j), areas(i)) Then
+        areasToRedraw(j) = RectUnion(areasToRedraw(j), areas(i))
     Else
         j = j + 1
         areasToRedraw(j) = areas(i)
@@ -368,7 +372,9 @@ For i = 1 To UBound(areas)
 Next
 
 For i = j To 0 Step -1
+    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areasToRedraw(i))
     Draw areasToRedraw(i)
+    mCanvas.ClearClippingRegion
 Next
 
 Exit Sub
@@ -408,19 +414,19 @@ Dim lineY As Double
 Dim hitTestRect As TRectangle
 
 hitTestRect = mBoundingRect
-hitTestRect.Left = hitTestRect.Left - mCanvas.ConvertPixelsToLogicalX(HitTestTolerancePixels)
-hitTestRect.Right = hitTestRect.Right + mCanvas.ConvertPixelsToLogicalX(HitTestTolerancePixels)
-hitTestRect.Bottom = hitTestRect.Bottom - mCanvas.ConvertPixelsToLogicalY(HitTestTolerancePixels)
-hitTestRect.Top = hitTestRect.Top + mCanvas.ConvertPixelsToLogicalY(HitTestTolerancePixels)
+hitTestRect.Left = hitTestRect.Left - mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels)
+hitTestRect.Right = hitTestRect.Right + mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels)
+hitTestRect.Bottom = hitTestRect.Bottom - mViewport.ConvertPixelsToLogicalY(HitTestTolerancePixels)
+hitTestRect.Top = hitTestRect.Top + mViewport.ConvertPixelsToLogicalY(HitTestTolerancePixels)
 
 If Not RectContainsPoint(hitTestRect, X, Y) Then Exit Function
 
 If mA <= 1 Then
     lineY = mA * X + mB
-    If Abs(Y - lineY) <= mCanvas.ConvertPixelsToLogicalY(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
+    If Abs(Y - lineY) <= mViewport.ConvertPixelsToLogicalY(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
 Else
     lineX = (Y - mB) / mA
-    If Abs(X - lineX) <= mCanvas.ConvertPixelsToLogicalX(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
+    If Abs(X - lineX) <= mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
 End If
 
 End Function
@@ -892,7 +898,9 @@ ElseIf Not value.IsAssigned Then
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPoint1 Is Nothing Then
-    If value.Equals(mPoint1) Then Exit Property
+    If value.Equals(mPoint1) Then
+        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical Then Exit Property
+    End If
 End If
 
 Set mPoint1 = value
@@ -922,7 +930,9 @@ ElseIf Not value.IsAssigned Then
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPoint2 Is Nothing Then
-    If value.Equals(mPoint2) Then Exit Property
+    If value.Equals(mPoint2) Then
+        If mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then Exit Property
+    End If
 End If
 
 Set mPoint2 = value
@@ -967,17 +977,18 @@ initiateRedraw True, True
 End Sub
 
 Friend Sub Initialise( _
-                ByVal series As LineSeries, _
-                ByVal Key As String, _
-                ByVal GOSP As GraphObjServiceProvider, _
-                ByVal Canvas As Canvas, _
-                ByVal LocalStyle As LineStyle)
+                ByVal pSeries As LineSeries, _
+                ByVal pKey As String, _
+                ByVal pGOSP As GraphObjServiceProvider, _
+                ByVal pviewport As Viewport, _
+                ByVal pLocalStyle As LineStyle)
                 
-Set mSeries = series
-mKey = Key
-Set mGOSP = GOSP
-Set mCanvas = Canvas
-Set mLocalStyle = LocalStyle
+Set mSeries = pSeries
+mKey = pKey
+Set mGOSP = pGOSP
+Set mViewport = pviewport
+Set mCanvas = mViewport.Canvas
+Set mLocalStyle = pLocalStyle
 
 calcCurrentBoundingRect
 End Sub
@@ -1019,7 +1030,9 @@ ElseIf (Not mPoint1 Is Nothing) And (Not mPoint2 Is Nothing) Then
 
     failpoint = 400
     
-    If Point1.Equals(mPoint1) And Point2.Equals(mPoint2) Then Exit Sub
+    If Point1.Equals(mPoint1) And Point2.Equals(mPoint2) Then
+        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical And mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then Exit Sub
+    End If
 End If
 
 failpoint = 500
@@ -1065,8 +1078,8 @@ Dim y2 As Double
 
 If mBlank Then Exit Sub
 
-mGaugeX = mCanvas.GaugeX
-mGaugeY = mCanvas.GaugeY
+mGaugeX = mViewport.GaugeX
+mGaugeY = mViewport.GaugeY
 
 mThicknessOffsetX = mGaugeX * Thickness / 2
 mThicknessOffsetY = mGaugeY * Thickness / 2
@@ -1110,6 +1123,7 @@ End Sub
 Private Sub calcCurrentBoundingRect()
 Dim lineInt As TInterval
 Dim regionInt As TInterval
+Dim lRect As RECT
 
 Dim x1 As Double
 Dim x2 As Double
@@ -1128,102 +1142,60 @@ With mPoint2
     y2 = .YLogical
 End With
 
-With mBoundingRect
-    If mVertical <> VerticalNot Then
-        If mBottomToTop Then
-            If ExtendBefore Then
-                lineInt.startValue = MinusInfinityDouble
-            Else
-                lineInt.startValue = y1
-            End If
-            If ExtendAfter Then
-                lineInt.endValue = PlusInfinityDouble
-            Else
-                lineInt.endValue = y2
-            End If
-        Else
-            If ExtendAfter Then
-                lineInt.startValue = MinusInfinityDouble
-            Else
-                lineInt.startValue = y2
-            End If
-            If ExtendBefore Then
-                lineInt.endValue = PlusInfinityDouble
-            Else
-                lineInt.endValue = y1
-            End If
-        End If
-        lineInt.isValid = True
-        regionInt = rectGetYInterval(mRegionRect)
-        rectSetYInterval mBoundingRect, intIntersection(regionInt, lineInt)
-        
-        .Left = x1 - mThicknessOffsetX
-        .Right = x1 + mThicknessOffsetX
-        .Bottom = .Bottom - mThicknessOffsetY
-        .Top = .Top + mThicknessOffsetY
-        .isValid = True
-    Else
-        If mLeftToRight Then
-            If ExtendBefore Then
-                lineInt.startValue = MinusInfinityDouble
-            Else
-                lineInt.startValue = x1
-            End If
-            If ExtendAfter Then
-                lineInt.endValue = PlusInfinityDouble
-            Else
-                lineInt.endValue = x2
-            End If
-        Else
-            If ExtendAfter Then
-                lineInt.startValue = MinusInfinityDouble
-            Else
-                lineInt.startValue = x2
-            End If
-            If ExtendBefore Then
-                lineInt.endValue = PlusInfinityDouble
-            Else
-                lineInt.endValue = x1
-            End If
-        End If
-        lineInt.isValid = True
-        regionInt = rectGetXInterval(mRegionRect)
-        rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
-        
-        If Not .isValid Then
-            .Bottom = MinusInfinityDouble
-            .Top = PlusInfinityDouble
-            .Left = MinusInfinityDouble
-            .Right = PlusInfinityDouble
-            Exit Sub
-        End If
-            
-        Select Case mDirection
-        Case NE
-            .Top = mA * .Right + mB + mThicknessOffsetY
-            .Bottom = mA * .Left + mB - mThicknessOffsetY
-        Case NW
-            .Top = mA * .Left + mB + mThicknessOffsetY
-            .Bottom = mA * .Right + mB - mThicknessOffsetY
-        Case SW
-            .Bottom = mA * .Left + mB - mThicknessOffsetY
-            .Top = mA * .Right + mB + mThicknessOffsetY
-        Case SE
-            .Bottom = mA * .Right + mB - mThicknessOffsetY
-            .Top = mA * .Left + mB + mThicknessOffsetY
-        End Select
-        
-        If Thickness > 1 Then
-            .Right = .Right + mThicknessOffsetX
-            .Left = .Left - mThicknessOffsetX
-        End If
-        .isValid = True
-    End If
-'Debug.Print "Calc bounds : (" & .Left & "," & (mA * .Left + mB) & ")-(" & .Right & "," & (mA * .Right + mB) & ")"
-End With
+If isVertical Then
+    RectSetYInterval mBoundingRect, getYIntervalInViewport
+    mBoundingRect.Left = x1
+    mBoundingRect.Right = x1
+    mBoundingRect.isValid = True
+    
+    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
+    
+    With lRect
+        .Left = .Left - Int(mThickness / 2)
+        .Right = .Right + mThickness - Int(mThickness / 2)
+        .Bottom = .Bottom + Int(mThickness / 2)
+        .Top = .Top - Int(mThickness / 2)
+    End With
+    
+    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
+    
+ElseIf isHorizontal Then
+    RectSetXInterval mBoundingRect, getXIntervalInViewport
+    mBoundingRect.Bottom = y1
+    mBoundingRect.Top = y1
+    mBoundingRect.isValid = True
+    
+    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
+    
+    With lRect
+        .Left = .Left - Int(mThickness / 2)
+        .Right = .Right + Int(mThickness / 2)
+        .Bottom = .Bottom + mThickness - Int(mThickness / 2)
+        .Top = .Top - Int(mThickness / 2)
+    End With
+    
+    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
+    
+Else
+    RectSetXInterval mBoundingRect, getXIntervalInViewport
+    RectSetYInterval mBoundingRect, getYIntervalInViewport
+    mBoundingRect.isValid = True
+    
+    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
+    
+    With lRect
+        .Left = .Left - Int((mThickness - 1) / 2)
+        .Right = .Right + Int((mThickness - 1) / 2)
+        .Bottom = .Bottom + Int((mThickness - 1) / 2)
+        .Top = .Top - Int((mThickness - 1) / 2)
+    End With
+    
+    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
+    
+End If
 
-If ArrowEndStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mEndArrowRect)
-If ArrowStartStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mStartArrowRect)
+If ArrowEndStyle <> ArrowNone Then mBoundingRect = RectUnion(mBoundingRect, mEndArrowRect)
+If ArrowStartStyle <> ArrowNone Then mBoundingRect = RectUnion(mBoundingRect, mStartArrowRect)
 
 End Sub
 
@@ -1399,19 +1371,65 @@ Else
 End If
 End Sub
 
-Private Sub Draw(ByRef area As TRectangle)
-Dim Right As Double
-Dim Left As Double
-Dim Bottom As Double
-Dim Top As Double
-Dim x1 As Double
-Dim y1 As Double
-Dim x2 As Double
-Dim y2 As Double
-Dim vertices(3) As Point
-Dim slopeThicknessY As Double
-Dim xBottom As Double
-Dim xTop As Double
+Private Function convertHorizontalLineToTInterval() As TInterval
+With convertHorizontalLineToTInterval
+    If mLeftToRight Then
+        If ExtendBefore Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint1.XLogical
+        End If
+        If ExtendAfter Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint2.XLogical
+        End If
+    Else
+        If ExtendAfter Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint2.XLogical
+        End If
+        If ExtendBefore Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint1.XLogical
+        End If
+    End If
+    .isValid = True
+End With
+End Function
+
+Private Function convertVerticalLineToTInterval() As TInterval
+With convertVerticalLineToTInterval
+    If mBottomToTop Then
+        If ExtendBefore Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint1.YLogical
+        End If
+        If ExtendAfter Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint2.YLogical
+        End If
+    Else
+        If ExtendAfter Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint2.YLogical
+        End If
+        If ExtendBefore Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint1.YLogical
+        End If
+    End If
+    .isValid = True
+End With
+End Function
+
+Private Sub Draw(ByRef Area As TRectangle)
 Dim includeStartArrow As Boolean
 Dim includeEndArrow As Boolean
 
@@ -1423,285 +1441,31 @@ If Not mVisible Then
     Exit Sub
 End If
 
-failpoint = 100
+includeStartArrow = RectContainsPoint(mTruncatedViewportBoundary, Point1.XLogical, Point1.YLogical)
+includeEndArrow = RectContainsPoint(mTruncatedViewportBoundary, Point2.XLogical, Point2.YLogical)
 
-If Thickness = 1 Then
-    mCanvas.SetPenAttributes Color, _
-                            Thickness, _
-                            LineStyle, _
-                            DrawModes.DrawModeCopyPen
+If isVertical Then
+    drawVerticalLine
+ElseIf isHorizontal Then
+    DrawLine
 Else
-    mCanvas.SetPenAttributes Color, _
-                            Thickness, _
-                            LineStyles.LineSolid, _
-                            DrawModes.DrawModeCopyPen
-End If
-
-failpoint = 200
-
-With mPoint1
-    x1 = .XLogical
-    y1 = .YLogical
-End With
-
-With mPoint2
-    x2 = .XLogical
-    y2 = .YLogical
-End With
-
-If mVertical <> VerticalNot Then
-
-    failpoint = 300
-
-    With area
-        If mBottomToTop Then
-            If ExtendAfter Then
-                Top = .Top
-            Else
-                If .Top >= y2 Then
-                    Top = y2
-                    If .Bottom <= y2 Then includeEndArrow = True
-                Else
-                    Top = .Top
-                End If
-            End If
-            If ExtendBefore Then
-                Bottom = .Bottom
-            Else
-                If .Bottom <= y1 Then
-                    Bottom = y1
-                    If .Top >= y1 Then includeStartArrow = True
-                Else
-                    Bottom = .Bottom
-                End If
-            End If
-        Else
-            If ExtendAfter Then
-                Bottom = .Bottom
-            Else
-                If .Bottom <= y2 Then
-                    Bottom = y2
-                    If .Top >= y2 Then includeEndArrow = True
-                Else
-                    Bottom = .Bottom
-                End If
-            End If
-            If ExtendBefore Then
-                Top = .Top
-            Else
-                If .Top >= y1 Then
-                    Top = y1
-                    If .Bottom <= y1 Then includeStartArrow = True
-                Else
-                    Top = .Top
-                End If
-            End If
-        End If
-    End With
-
-    failpoint = 400
-
-    mCanvas.DrawLine mCanvas.NewPoint(x1, Bottom), mCanvas.NewPoint(x1, Top)
-
-    failpoint = 500
-
-    mCanvas.DrawPoint mCanvas.NewPoint(x1, Top)
-Else
-    With area
-        
-        failpoint = 600
-
-        Left = .Left
-        Right = .Right
-        
-        If mLeftToRight And Not ExtendBefore Then
-            If Left < x1 Then Left = x1
-            If Right < x1 Then Right = x1
-            If Left <= x1 And Right >= x1 Then includeStartArrow = True
-        ElseIf Not mLeftToRight And Not ExtendAfter Then
-            If Left < x2 Then Left = x2
-            If Right < x2 Then Right = x2
-            If Left <= x2 And Right >= x2 Then includeEndArrow = True
-        End If
-            
-        failpoint = 700
-
-        If mLeftToRight And Not ExtendAfter Then
-            If Left > x2 Then Left = x2
-            If Right > x2 Then Right = x2
-            If Left <= x2 And Right >= x2 Then includeEndArrow = True
-        ElseIf Not mLeftToRight And Not ExtendBefore Then
-            If Left > x1 Then Left = x1
-            If Right > x1 Then Right = x1
-            If Left <= x1 And Right >= x1 Then includeStartArrow = True
-        End If
-    
-        failpoint = 800
-
-        If Left > Int(mRegionRect.Right) Then
-            Left = Int(mRegionRect.Right)
-        End If
-        
-        failpoint = 900
-
-        If Right > Int(mRegionRect.Right) Then
-            Right = Int(mRegionRect.Right)
-        End If
-    
-    End With
-    
-    With mCanvas
-
-        failpoint = 1000
-
-        Debug.Assert Left <= Right
-        If Left <> Right Then
-            If Thickness = 1 Then
-
-                failpoint = 1100
-
-                ' now calculate the X coordinates that ensure the line
-                ' does not go outside the Top or Bottom of the area
-                ' to be drawn
-                If mA = 0 Then
-                    xBottom = MinusInfinityDouble
-                Else
-                    xBottom = (area.Bottom - mB) / mA
-                End If
-                If mA = 0 Then
-                    xTop = PlusInfinityDouble
-                Else
-                    xTop = (area.Top - mB) / mA
-                End If
-                If xBottom > Left And xBottom < Right Then
-                    If mA >= 0 Then
-                        Left = xBottom
-                    Else
-                        Right = xBottom
-                    End If
-                End If
-                If xTop > Left And xTop < Right Then
-                    If mA >= 0 Then
-                        Right = xTop
-                    Else
-                        Left = xTop
-                    End If
-                End If
-
-                failpoint = 1200
-
-                .DrawLine mCanvas.NewPoint(Left, mA * Left + mB), mCanvas.NewPoint(Right, mA * Right + mB)
-            Else
-
-                failpoint = 1300
-
-                If Left = x1 Then
-                    .DrawPoint mCanvas.NewPoint(Left, y1)
-                ElseIf Left = x2 Then
-                    .DrawPoint mCanvas.NewPoint(Left, y2)
-                End If
-                
-                slopeThicknessY = Abs(Thickness / mLineAngleCos)
-                                
-                failpoint = 1400
-
-                If Left = x1 Or Left = x2 Then
-                    Set vertices(0) = .NewPoint(Left + .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
-                                            mA * Left + mB - .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                Else
-                    Set vertices(0) = .NewPoint(Left, _
-                                            mA * Left + mB - .ConvertPixelsToLogicalY(slopeThicknessY) / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                End If
-                
-                If Left = x1 Or Left = x2 Then
-                    Set vertices(1) = .NewPoint(Left - .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
-                                            mA * Left + mB + .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                Else
-                    Set vertices(1) = .NewPoint(Left, _
-                                            mA * Left + mB + .ConvertPixelsToLogicalY(slopeThicknessY) / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                End If
-                
-                If Right = x1 Or Right = x2 Then
-                    Set vertices(2) = .NewPoint(Right - .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
-                                            mA * Right + mB + .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                Else
-                    Set vertices(2) = .NewPoint(Right, _
-                                            mA * Right + mB + .ConvertPixelsToLogicalY(slopeThicknessY) / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                End If
-                
-                If Right = x1 Or Right = x2 Then
-                    Set vertices(3) = .NewPoint(Right + .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
-                                            mA * Right + mB - .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                Else
-                    Set vertices(3) = .NewPoint(Right, _
-                                            mA * Right + mB - .ConvertPixelsToLogicalY(slopeThicknessY) / 2, _
-                                            CoordsLogical, _
-                                            CoordsLogical)
-                End If
-
-                failpoint = 1500
-
-                .SetPenAttributes Color, _
-                                1, _
-                                LineStyles.LineSolid, _
-                                DrawModes.DrawModeCopyPen
-
-                failpoint = 1600
-
-                .SetBrushAttributes Color, _
-                                FillStyles.FillSolid
-                
-
-                failpoint = 1700
-
-                .DrawPolygon vertices
-                
-                failpoint = 1800
-
-                .SetPenAttributes Color, _
-                                Thickness, _
-                                LineStyles.LineSolid, _
-                                DrawModes.DrawModeCopyPen
-
-                failpoint = 1900
-
-                If Right = x1 Then
-                    .DrawPoint mCanvas.NewPoint(Right, y1)
-                ElseIf Right = x2 Then
-                    .DrawPoint mCanvas.NewPoint(Right, y2)
-                End If
-                
-                Debug.Assert IIf(mLeftToRight, Right <= x2, True)
-                Debug.Assert IIf(mLeftToRight, True, Right <= x1)
-            End If
-        End If
-    End With
+    If Thickness = 1 Then
+        DrawLine
+    Else
+        drawGeometricLine
+    End If
 End If
 
 failpoint = 2000
 
 If ArrowEndStyle <> ArrowNone And includeEndArrow Then
-    drawArrowEnd area
+    drawArrowEnd Area
 End If
 
 failpoint = 2100
 
 If ArrowStartStyle <> ArrowNone And includeStartArrow Then
-    drawArrowStart area
+    drawArrowStart Area
 End If
 
 Exit Sub
@@ -1717,7 +1481,7 @@ Err.Raise errNumber, errSource, errDescription
     
 End Sub
 
-Private Sub drawArrowEnd(ByRef area As TRectangle)
+Private Sub drawArrowEnd(ByRef Area As TRectangle)
 Dim X As Double
 Dim Y As Double
 Dim vertices(2) As Point
@@ -1727,7 +1491,7 @@ With mPoint2
     Y = .YLogical
 End With
 
-If Not rectOverlaps(mEndArrowRect, area) Then Exit Sub
+If Not RectOverlaps(mEndArrowRect, Area) Then Exit Sub
 
 Select Case ArrowEndStyle
 Case ArrowNone
@@ -1738,8 +1502,8 @@ Case ArrowSingleOpen
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    mCanvas.DrawLine mCanvas.NewPoint(X, Y), mCanvas.NewPoint(X + mEndArrowX1Offset, Y + mEndArrowY1Offset)
-    mCanvas.DrawLine mCanvas.NewPoint(X, Y), mCanvas.NewPoint(X + mEndArrowX2Offset, Y + mEndArrowY2Offset)
+    mCanvas.DrawLine X, Y, X + mEndArrowX1Offset, Y + mEndArrowY1Offset
+    mCanvas.DrawLine X, Y, X + mEndArrowX2Offset, Y + mEndArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
@@ -1748,15 +1512,15 @@ Case ArrowClosed
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    With mCanvas
-        .SetBrushAttributes ArrowEndFillColor, ArrowEndFillStyle
+    With mViewport
+        .Canvas.SetBrushAttributes ArrowEndFillColor, ArrowEndFillStyle
         
         Set vertices(0) = .NewPoint(X, Y)
         Set vertices(1) = .NewPoint(X + mEndArrowX1Offset, _
                                     Y + mEndArrowY1Offset)
         Set vertices(2) = .NewPoint(X + mEndArrowX2Offset, _
                                     Y + mEndArrowY2Offset)
-        .DrawPolygon vertices
+        .Canvas.DrawPolygon .ConvertPointsToWin32Points(vertices)
     End With
 Case ArrowSingleBar
 
@@ -1772,7 +1536,7 @@ End Select
 
 End Sub
 
-Private Sub drawArrowStart(ByRef area As TRectangle)
+Private Sub drawArrowStart(ByRef Area As TRectangle)
 Dim X As Double
 Dim Y As Double
 Dim vertices(2) As Point
@@ -1782,7 +1546,7 @@ With mPoint1
     Y = .YLogical
 End With
 
-If Not rectOverlaps(mStartArrowRect, area) Then Exit Sub
+If Not RectOverlaps(mStartArrowRect, Area) Then Exit Sub
 
 Select Case ArrowStartStyle
 Case ArrowNone
@@ -1793,8 +1557,8 @@ Case ArrowSingleOpen
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    mCanvas.DrawLine mCanvas.NewPoint(X, Y), mCanvas.NewPoint(X + mStartArrowX1Offset, Y + mStartArrowY1Offset)
-    mCanvas.DrawLine mCanvas.NewPoint(X, Y), mCanvas.NewPoint(X + mStartArrowX2Offset, Y + mStartArrowY2Offset)
+    mCanvas.DrawLine X, Y, X + mStartArrowX1Offset, Y + mStartArrowY1Offset
+    mCanvas.DrawLine X, Y, X + mStartArrowX2Offset, Y + mStartArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
@@ -1803,15 +1567,15 @@ Case ArrowClosed
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    With mCanvas
-        .SetBrushAttributes ArrowStartFillColor, ArrowStartFillStyle
+    With mViewport
+        .Canvas.SetBrushAttributes ArrowStartFillColor, ArrowStartFillStyle
         
         Set vertices(0) = .NewPoint(X, Y)
         Set vertices(1) = .NewPoint(X + mStartArrowX1Offset, _
                                     Y + mStartArrowY1Offset)
         Set vertices(2) = .NewPoint(X + mStartArrowX2Offset, _
                                     Y + mStartArrowY2Offset)
-        .DrawPolygon vertices
+        .Canvas.DrawPolygon .ConvertPointsToWin32Points(vertices)
     End With
 Case ArrowSingleBar
 
@@ -1826,6 +1590,180 @@ Case ArrowBarb
 End Select
 
 End Sub
+
+Private Sub drawGeometricLine()
+Dim x1 As Double
+Dim x2 As Double
+Dim vertices(3) As Point
+
+setDrawingAttributes
+
+x1 = getStartX
+x2 = getEndX
+
+mViewport.Canvas.DrawLine x1, mapPoint(x1), _
+                        x2, mapPoint(x2)
+
+'With mViewport
+'    .Canvas.DrawPoint .NewPoint(x1, mapPoint(x1))
+'
+'    Set vertices(0) = .NewPoint(x1 + .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
+'                            mapPoint(x1) - .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
+'                            CoordsLogical, _
+'                            CoordsLogical)
+'
+'    Set vertices(1) = .NewPoint(x1 - .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
+'                            mapPoint(x1) + .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
+'                            CoordsLogical, _
+'                            CoordsLogical)
+'
+'    Set vertices(2) = .NewPoint(x2 - .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
+'                            mapPoint(x2) + .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
+'                            CoordsLogical, _
+'                            CoordsLogical)
+'
+'    Set vertices(3) = .NewPoint(x2 + .ConvertPixelsToLogicalX(Thickness) * mLineAngleSin / 2, _
+'                            mapPoint(x2) - .ConvertPixelsToLogicalY(Thickness) * mLineAngleCos / 2, _
+'                            CoordsLogical, _
+'                            CoordsLogical)
+'
+'    .Canvas.SetPenAttributes Color, _
+'                            1, _
+'                            LineStyles.LineSolid, _
+'                            DrawModes.DrawModeCopyPen
+'
+'    .Canvas.SetBrushAttributes Color, _
+'                                FillStyles.FillSolid
+'
+'
+'    .Canvas.DrawPolygon .ConvertPointsToWin32Points(vertices)
+'
+'    .Canvas.SetPenAttributes Color, _
+'                            Thickness, _
+'                            LineStyles.LineSolid, _
+'                            DrawModes.DrawModeCopyPen
+'
+'    .Canvas.DrawPoint .NewPoint(x2, mapPoint(x2))
+'
+'End With
+End Sub
+
+Private Sub DrawLine()
+Dim x1 As Double
+Dim x2 As Double
+
+setDrawingAttributes
+
+x1 = getStartX
+x2 = getEndX
+
+mViewport.Canvas.DrawLine x1, mapPoint(x1), _
+                        x2, mapPoint(x2)
+End Sub
+
+Private Sub drawVerticalLine()
+Dim y1 As Double
+Dim y2 As Double
+
+If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), Point1.XLogical) Then Exit Sub
+
+setDrawingAttributes
+
+If ExtendBefore Then
+    If mVertical = VerticalUp Then
+        y1 = mTruncatedViewportBoundary.Bottom
+    Else
+        y1 = mTruncatedViewportBoundary.Top
+    End If
+Else
+    y1 = Point1.YLogical
+End If
+
+If ExtendAfter Then
+    If mVertical = VerticalUp Then
+        y2 = mTruncatedViewportBoundary.Top
+    Else
+        y2 = mTruncatedViewportBoundary.Bottom
+    End If
+Else
+    y2 = Point2.YLogical
+End If
+
+mViewport.Canvas.DrawLine Point1.XLogical, y1, _
+                        Point1.XLogical, y2
+End Sub
+
+Private Function getDomainInViewport( _
+                ByRef Area As TRectangle) As TInterval
+Dim yRange As TInterval
+
+getDomainInViewport.isValid = False
+If Vertical Then
+    If IntContains(RectXIntersection(Area, mTruncatedViewportBoundary), Point1.XLogical) Then
+        getDomainInViewport.startValue = Point1.XLogical
+        getDomainInViewport.endValue = Point1.XLogical
+        getDomainInViewport.isValid = True
+    End If
+Else
+    yRange = mapDomainInterval(RectXIntersection(Area, mTruncatedViewportBoundary))
+    getDomainInViewport = inverseMapRangeInterval(IntIntersection(yRange, RectGetYInterval(Area)))
+End If
+End Function
+
+Private Function getEndX() As Double
+If ExtendAfter Then
+    If mLeftToRight Then
+        getEndX = mTruncatedViewportBoundary.Right
+    Else
+        getEndX = mTruncatedViewportBoundary.Left
+    End If
+Else
+    If mLeftToRight And Point2.XLogical > mTruncatedViewportBoundary.Right Then
+        getEndX = mTruncatedViewportBoundary.Right
+    Else
+        getEndX = Point2.XLogical
+    End If
+End If
+End Function
+
+Private Function getStartX() As Double
+If ExtendBefore Then
+    If mLeftToRight Then
+        getStartX = mTruncatedViewportBoundary.Left
+    Else
+        getStartX = mTruncatedViewportBoundary.Right
+    End If
+Else
+    If Not mLeftToRight And Point1.XLogical > mTruncatedViewportBoundary.Right Then
+        getStartX = mTruncatedViewportBoundary.Right
+    Else
+        getStartX = Point1.XLogical
+    End If
+End If
+End Function
+
+Private Function getTruncatedViewportBoundary() As TRectangle
+getTruncatedViewportBoundary = mViewport.Boundary
+getTruncatedViewportBoundary.Right = Int(getTruncatedViewportBoundary.Right)
+End Function
+
+Private Function getXIntervalInViewport() As TInterval
+getXIntervalInViewport = IntIntersection(RectGetXInterval(mTruncatedViewportBoundary), _
+                                        convertHorizontalLineToTInterval)
+End Function
+
+Private Function getYIntervalInViewport() As TInterval
+getYIntervalInViewport = IntIntersection(RectGetYInterval(mTruncatedViewportBoundary), _
+                                        convertVerticalLineToTInterval)
+End Function
+
+Private Function isHorizontal() As Boolean
+isHorizontal = (mA = 0)
+End Function
+
+Private Function isVertical() As Boolean
+isVertical = (mVertical <> VerticalNot)
+End Function
 
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
@@ -1844,6 +1782,25 @@ End If
 mGOSP.ObjectChanged mHandle, mBoundingRect
 End Sub
 
+Private Function InverseMapPoint( _
+                ByVal Y As Double) As Double
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            ProjectName & "." & ModuleName & ":" & "mapPoint", _
+                            "Invalid for vertical line"
+                 
+InverseMapPoint = (Y - mB) / mA
+End Function
+
+Private Function inverseMapRangeInterval( _
+                ByRef yRange As TInterval) As TInterval
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            ProjectName & "." & ModuleName & ":" & "mapDomainInterval", _
+                            "Invalid for vertical line"
+                 
+inverseMapRangeInterval.startValue = InverseMapPoint(yRange.startValue)
+inverseMapRangeInterval.endValue = InverseMapPoint(yRange.endValue)
+End Function
+
 Private Function isExtended() As Boolean
 isExtended = Extended Or FixedX
 End Function
@@ -1852,6 +1809,39 @@ Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As LinePropertyOverrideFlags) As Boolean
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
 End Function
+
+Private Function mapDomainInterval( _
+                ByRef xDomain As TInterval) As TInterval
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            ProjectName & "." & ModuleName & ":" & "mapDomainInterval", _
+                            "Invalid for vertical line"
+                 
+mapDomainInterval.startValue = mapPoint(xDomain.startValue)
+mapDomainInterval.endValue = mapPoint(xDomain.endValue)
+End Function
+
+Private Function mapPoint( _
+                ByVal X As Double) As Double
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            ProjectName & "." & ModuleName & ":" & "mapPoint", _
+                            "Invalid for vertical line"
+                 
+mapPoint = mA * X + mB
+End Function
+
+Private Sub setDrawingAttributes()
+If Thickness = 1 Then
+    mCanvas.SetPenAttributes Color, _
+                            Thickness, _
+                            LineStyle, _
+                            DrawModes.DrawModeCopyPen
+Else
+    mCanvas.SetPenAttributes Color, _
+                            Thickness, _
+                            LineStyles.LineSolid, _
+                            DrawModes.DrawModeCopyPen
+End If
+End Sub
 
 Private Sub setDirection()
 Dim x1 As Double

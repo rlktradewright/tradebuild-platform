@@ -102,12 +102,12 @@ Public Sub Finish()
 End Sub
 
 Public Sub Initialise( _
-                ByVal Name As String, _
-                ByVal Canvas As Canvas, _
-                ByVal Layer As LayerNumbers, _
+                ByVal pName As String, _
+                ByVal pViewport As Viewport, _
+                ByVal pLayer As LayerNumbers, _
                 ByVal pChart As Chart, _
-                ByVal SeriesID As Long, _
-                ByVal GOSP As GraphObjServiceProvider)
+                ByVal pSeriesID As Long, _
+                ByVal pGOSP As GraphObjServiceProvider)
 
 End Sub
 

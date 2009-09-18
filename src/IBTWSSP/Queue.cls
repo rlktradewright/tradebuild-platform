@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "Queue"
+
 Private Const S_OK = 0
 
 '================================================================================
@@ -110,14 +112,14 @@ capacity = UBound(mEntries) + 1
 End Property
 
 Friend Property Let capacityIncrement(ByVal value As Long)
-If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value < 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "IBTWSSP.Queue::capacityIncrement", _
                             "Capaciy increment must be >0"
 mCapacityIncrement = value
 End Property
 
 Friend Property Get frontKey() As String
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::frontKey", _
                                 "Queue empty"
 
@@ -129,7 +131,7 @@ frontKey = mEntries(mFirstEntry).itemKey
 End Property
 
 Friend Property Let initialCapacity(ByVal value As Long)
-If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value < 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "IBTWSSP.Queue::initialCapacity", _
                             "Initial capaciy must be >0"
 ReDim mEntries(value - 1) As QueueEntry
@@ -146,7 +148,10 @@ End Property
 '================================================================================
 
 Friend Function addToEnd(ByVal Entry As Variant) As String
-If Not mInitialised Then err.Raise ErrorCodes.ErrIllegalStateException, _
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not mInitialised Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::addToEnd", _
                                 "Queue not initialised"
 If mNextEntry = mFirstEntry And mSize <> 0 Then resize
@@ -155,13 +160,21 @@ mEntries(mNextEntry).item = Entry
 mEntries(mNextEntry).itemKey = addToEnd
 mNextEntry = (mNextEntry + 1) Mod (UBound(mEntries) + 1)
 mSize = mSize + 1
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="addToEnd", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub remove(ByVal itemRef As Variant)
 Dim i As Long
 Dim maxIndex As Long
 
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+Dim failpoint As Long
+On Error GoTo Err
+
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::remove", _
                                 "Queue empty"
 
@@ -190,24 +203,28 @@ ElseIf VarType(itemRef) = vbObject Then
         End If
     Next
 Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "Queue::remove", _
                 "Argument type must be string or object"
 End If
 
-If i > maxIndex Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If i > maxIndex Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "Queue::remove", _
                                 "Specified item not in queue"
 
 mSize = mSize - 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="remove", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function removeFromFront() As Variant
 Dim failpoint As Long
+On Error GoTo Err
 
-On Error GoTo err
-
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::removeFromFront", _
                                 "Queue empty"
 
@@ -226,40 +243,14 @@ mSize = mSize - 1
 
 Exit Function
 
-err:
-err.Raise err.Number, , "Queue::removeFromFront(failpoint=" & failpoint & "): " & err.Description
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="removeFromFront", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Function generateGUID() As GUID
-Dim lReturn As Long
-
-lReturn = CoCreateGuid(generateGUID)
-
-If (lReturn <> S_OK) Then
-    err.Raise ErrorCodes.ErrRuntimeException, _
-                "Queue::generateGUID", _
-                "Can't create GUID"
-End If
-
-End Function
-
-Private Function generateGUIDString() As String
-generateGUIDString = GUIDToString(generateGUID)
-End Function
-
-Private Function GUIDToString(ByRef pGUID As GUID) As String
-Dim GUIDString As GUIDString
-Dim iChars As Integer
-
-' convert binary GUID to string form
-iChars = StringFromGUID2(pGUID, GUIDString, Len(GUIDString))
-' convert string to ANSI
-GUIDToString = StrConv(GUIDString.GUIDProper, vbFromUnicode)
-End Function
 
 Private Sub resize()
 Dim i As Long

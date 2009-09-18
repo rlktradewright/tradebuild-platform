@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#114.2#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#122.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -28,7 +28,6 @@ Begin VB.Form ChartForm
       _ExtentX        =   21378
       _ExtentY        =   11298
       ChartBackColor  =   6566450
-      ShowToobar      =   -1  'True
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -556,6 +555,8 @@ mPriceRegion.YScaleQuantum = mTickSize  ' the region needs to know this so that 
 mPriceRegion.Title.Text = "Randomly generated data"
                                         ' set the title text.
 mPriceRegion.Title.Color = vbBlue
+mPriceRegion.Title.BoxFillColor = &HFFD0D0
+mPriceRegion.Title.BoxFillStyle = FillDiagonalCross
                                         
 mPriceRegion.CursorSnapsToTickBoundaries = True
 
@@ -631,6 +632,7 @@ With lTextStyle
     .BoxStyle = LineSolid                   ' ...and a solid line that is centred on the
                                             ' boundary of the text
     .BoxColor = vbBlack                     ' the box is to be black...
+    .BoxFillColor = vbYellow                ' with a yellow blackground
     .PaddingX = 0.5                         ' and there should be half a millimetre of space
                                             ' between the text and the surrounding box
     .Color = vbRed                          ' the text is to be red
@@ -722,7 +724,7 @@ mMovAvg3Series.Style = lDataPointStyle
 Set lLineStyle = New LineStyle
 With lLineStyle
     .Color = vbRed                          ' show the lines red...
-    .Thickness = 1                          ' ...with a thickness of 1 pixel...
+    .Thickness = 2                          ' ...with a thickness of 1 pixel...
     .ArrowEndStyle = ArrowClosed            ' ...and a closed arrowhead at the end...
     .ArrowEndWidth = 10                     ' ...10 pixels wide at the base...
     .ArrowEndFillColor = vbYellow           ' ...filled yellow...
@@ -1194,7 +1196,7 @@ mDataRegionStyle.BackGradientFillColors = GradientFillColors
                                     ' of the chart - but each separate region can
                                     ' have its own background color
 mDataRegionStyle.GridLineStyle.Color = &HC0C0C0    ' sets the colour of the gridlines
-mDataRegionStyle.GridLineStyle.LineStyle = LineDashDot   ' sets the style of the gridlines
+mDataRegionStyle.GridLineStyle.LineStyle = LineSolid   ' sets the style of the gridlines
 mDataRegionStyle.GridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
 mDataRegionStyle.HasGrid = True          ' indicate that there is a grid
 mDataRegionStyle.YAxisTextStyle.Font.Name = "Lucida Console"

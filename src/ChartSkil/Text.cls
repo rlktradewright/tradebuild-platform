@@ -51,6 +51,7 @@ Private Const ModuleName                As String = "Text"
 Private mSeries As TextSeries
 Private mSeriesUpdateNumber As Long
 
+Private mViewport As Viewport
 Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
@@ -135,31 +136,31 @@ Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Static prevGaugeX As Double
 Static prevGaugeY As Double
 Static prevRect As TRectangle
-Dim canvasChanges As Long
+Dim viewportChanges As Long
 
 Dim failpoint As Long
 On Error GoTo Err
 
-canvasChanges = mCanvas.CompareTo(prevGaugeX, prevGaugeY, prevRect)
-If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
+viewportChanges = mViewport.CompareTo(prevGaugeX, prevGaugeY, prevRect)
+If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
+    (viewportChanges And ViewportComparisonCodes.GaugeChangedY) _
 Then
     calcRawBoundingRect
 End If
 
-If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
-    (mFixedX And (canvasChanges And CanvasComparisonCodes.BoundsChangedX)) Or _
-    (mFixedY And (canvasChanges And CanvasComparisonCodes.BoundsChangedY)) Or _
+If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
+    (viewportChanges And ViewportComparisonCodes.GaugeChangedY) Or _
+    (mFixedX And (viewportChanges And ViewportComparisonCodes.BoundsChangedX)) Or _
+    (mFixedY And (viewportChanges And ViewportComparisonCodes.BoundsChangedY)) Or _
     mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
     mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     calcCurrentBoundingRect
 End If
 
-prevGaugeX = mCanvas.GaugeX
-prevGaugeY = mCanvas.GaugeY
-prevRect = mCanvas.Boundary
+prevGaugeX = mViewport.GaugeX
+prevGaugeY = mViewport.GaugeY
+prevRect = mViewport.Boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 
@@ -193,7 +194,10 @@ End Sub
 
 Private Sub IGraphicObject_draw( _
                 ByRef areas() As TRectangle)
+' note that
+mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(0))
 Draw
+mCanvas.ClearClippingRegion
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -202,6 +206,7 @@ End Property
 
 Private Sub IGraphicObject_finish()
 Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
@@ -624,11 +629,11 @@ If Not mLocalStyle Is Nothing Then PaddingY = mLocalStyle.PaddingY
 If isPropertyOverrideFlagSet(TextIsSetPaddingY) Then PaddingY = mPaddingY
 End Property
 
-Public Property Get Position() As Point
-Set Position = mPosition
+Public Property Get position() As Point
+Set position = mPosition
 End Property
 
-Public Property Let Position(ByVal value As Point)
+Public Property Let position(ByVal value As Point)
 If value Is Nothing Then
     Set mPosition = Nothing
     mBoundingRect.isValid = False
@@ -642,7 +647,9 @@ ElseIf Not value.IsAssigned Then
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPosition Is Nothing Then
-    If value.Equals(mPosition) Then Exit Property
+    If value.Equals(mPosition) Then
+        If mPosition.CoordinateSystemX = CoordsLogical And mPosition.CoordinateSystemY = CoordsLogical Then Exit Property
+    End If
 End If
 
 Set mPosition = value
@@ -716,20 +723,21 @@ Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Friend Sub Initialise( _
-                ByVal series As TextSeries, _
-                ByVal Key As String, _
-                ByVal GOSP As GraphObjServiceProvider, _
-                ByVal Canvas As Canvas, _
-                ByVal LocalStyle As TextStyle)
+                ByVal pSeries As TextSeries, _
+                ByVal pKey As String, _
+                ByVal pGOSP As GraphObjServiceProvider, _
+                ByVal pviewport As Viewport, _
+                ByVal pLocalStyle As TextStyle)
                 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set mSeries = series
-mKey = Key
-Set mGOSP = GOSP
-Set mCanvas = Canvas
-Set mLocalStyle = LocalStyle
+Set mSeries = pSeries
+mKey = pKey
+Set mGOSP = pGOSP
+Set mViewport = pviewport
+Set mCanvas = mViewport.Canvas
+Set mLocalStyle = pLocalStyle
 
 calcCurrentBoundingRect
 
@@ -768,14 +776,10 @@ End With
 End Sub
 
 Private Sub calcCurrentBoundingRect()
-Dim xshift As Double
-Dim yshift As Double
-Dim xOffset As Double
-Dim yOffset As Double
-Dim XIncrement As Double
-Dim YIncrement As Double
-Dim XLineThickness As Double
-Dim YLineThickness As Double
+Dim alignmentOffset As TPoint
+Dim lTextRect As RECT
+Dim lBoxRect As RECT
+Dim lBoundingRect As RECT
 
 If mPosition Is Nothing Then
     mBoundingRect.isValid = False
@@ -792,183 +796,57 @@ With mTextRect
     .Right = .Left + mRawBoundingRect.Right
     .Top = mPosition.YLogical
     .Bottom = .Top - mRawBoundingRect.Top
-    
-    ' now Add the Offset if any
-    
-    If Not mOffset Is Nothing Then
-        xOffset = mOffset.XLogical
-        yOffset = mOffset.YLogical
-        .Left = .Left + xOffset
-        .Right = .Right + xOffset
-        .Bottom = .Bottom + yOffset
-        .Top = .Top + yOffset
-    End If
+    .isValid = True
 End With
+    
+If Not mOffset Is Nothing Then
+    RectOffsetDim mTextRect, mOffset
+End If
+    
+lTextRect = mViewport.ConvertTRectangleToRect(mTextRect)
 
 If Box Then
-    ' make the inside of the box 1mm wider and taller than the Text, plus the thickness of the lines
     
-    Dim padding As Dimension
-    Set padding = mCanvas.NewDimension((mPaddingX + 0.5) / 10, (IIf(mPaddingY > 0.5, mPaddingY - 0.5, 0)) / 10)
-    XIncrement = padding.XLogical
-    YIncrement = padding.YLogical
+    lBoxRect = lTextRect
     
-    If BoxThickness > 1 Then
-        XLineThickness = mCanvas.ConvertPixelsToLogicalX(mBoxThickness - 1)
-        YLineThickness = mCanvas.ConvertPixelsToLogicalY(mBoxThickness - 1)
-        If BoxStyle = LineInsideSolid Then
-            XIncrement = XIncrement + XLineThickness
-            YIncrement = YIncrement + YLineThickness
-        Else
-            XIncrement = XIncrement + XLineThickness / 2
-            YIncrement = YIncrement + YLineThickness / 2
-        End If
-    End If
+    TWWin32API.InflateRect lBoxRect, _
+                            mViewport.ConvertDistanceToPixelsX(PaddingX / 10), _
+                            mViewport.ConvertDistanceToPixelsY(PaddingY / 10)
     
-    With mBoxRect
-        .Left = mTextRect.Left - XIncrement
-        .Right = mTextRect.Right + XIncrement
-        .Bottom = mTextRect.Bottom - YIncrement
-        .Top = mTextRect.Top + YIncrement
-    End With
-    
-    If BoxThickness > 1 And BoxStyle <> LineInsideSolid Then
-        With mBoundingRect
-            .Left = mBoxRect.Left - XLineThickness / 2
-            .Right = mBoxRect.Right + XLineThickness / 2
-            .Bottom = mBoxRect.Bottom - YLineThickness / 2
-            .Top = mBoxRect.Top + YLineThickness / 2
-        End With
+    Dim lBoxThickness As Long
+    lBoxThickness = BoxThickness
+    If (lBoxThickness > 1 And BoxStyle = LineInsideSolid) Or lBoxThickness = 1 Then
+        TWWin32API.InflateRect lBoxRect, lBoxThickness, lBoxThickness
+        lBoundingRect = lBoxRect
+        TWWin32API.InflateRect lBoundingRect, 1, 1
     Else
-        mBoundingRect = mBoxRect
+        TWWin32API.InflateRect lBoxRect, _
+                                lBoxThickness - Int(lBoxThickness / 2), _
+                                lBoxThickness - Int(lBoxThickness / 2)
+        lBoundingRect = lBoxRect
+        TWWin32API.InflateRect lBoundingRect, Int(lBoxThickness / 2) + 1, Int(lBoxThickness / 2) + 1
     End If
-    ' now adjust the rectangle to take account of alignment
-
-    Select Case Align
-    Case AlignTopLeft
-        xshift = 0
-        yshift = 0
-    Case AlignCentreLeft
-        xshift = 0
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBottomLeft
-        xshift = 0
-        yshift = mTextRect.Top - mTextRect.Bottom
-    Case AlignTopCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = 0
-    Case AlignCentreCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBottomCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = mTextRect.Top - mTextRect.Bottom
-    Case AlignTopRight
-        xshift = mTextRect.Left - mTextRect.Right
-        yshift = 0
-    Case AlignCentreRight
-        xshift = mTextRect.Left - mTextRect.Right
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBottomRight
-        xshift = mTextRect.Left - mTextRect.Right
-        yshift = mTextRect.Top - mTextRect.Bottom
-    Case AlignBoxTopLeft
-        xshift = mTextRect.Left - mBoundingRect.Left
-        yshift = mTextRect.Top - mBoundingRect.Top
-    Case AlignBoxCentreLeft
-        xshift = mTextRect.Left - mBoundingRect.Left
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBoxBottomLeft
-        xshift = mTextRect.Left - mBoundingRect.Left
-        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
-    Case AlignBoxTopCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = mTextRect.Top - mBoundingRect.Top
-    Case AlignBoxCentreCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBoxBottomCentre
-        xshift = (mTextRect.Left - mTextRect.Right) / 2
-        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
-    Case AlignBoxTopRight
-        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
-        yshift = mTextRect.Top - mBoundingRect.Top
-    Case AlignBoxCentreRight
-        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
-        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
-    Case AlignBoxBottomRight
-        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
-        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
-    End Select
-
-    With mTextRect
-        .Left = .Left + xshift
-        .Right = .Right + xshift
-        .Bottom = .Bottom + yshift
-        .Top = .Top + yshift
-    End With
-
-    With mBoxRect
-        .Left = .Left + xshift
-        .Right = .Right + xshift
-        .Bottom = .Bottom + yshift
-        .Top = .Top + yshift
-    End With
-
-    With mBoundingRect
-        .Left = .Left + xshift
-        .Right = .Right + xshift
-        .Bottom = .Bottom + yshift
-        .Top = .Top + yshift
-    End With
-
 Else
-    ' now adjust the rectangle to take account of alignment
-    
-    With mTextRect
-        Select Case Align
-        Case AlignTopLeft, AlignBoxTopLeft
-            xshift = 0
-            yshift = 0
-        Case AlignCentreLeft, AlignBoxCentreLeft
-            xshift = 0
-            yshift = (.Top - .Bottom) / 2
-        Case AlignBottomLeft, AlignBoxBottomLeft
-            xshift = 0
-            yshift = .Top - .Bottom
-        Case AlignTopCentre, AlignBoxTopCentre
-            xshift = (.Left - .Right) / 2
-            yshift = 0
-        Case AlignCentreCentre, AlignBoxCentreCentre
-            xshift = (.Left - .Right) / 2
-            yshift = (.Top - .Bottom) / 2
-        Case AlignBottomCentre, AlignBoxBottomCentre
-            xshift = (.Left - .Right) / 2
-            yshift = .Top - .Bottom
-        Case AlignTopRight, AlignBoxTopRight
-            xshift = .Left - .Right
-            yshift = 0
-        Case AlignCentreRight, AlignBoxCentreRight
-            xshift = .Left - .Right
-            yshift = (.Top - .Bottom) / 2
-        Case AlignBottomRight, AlignBoxBottomRight
-            xshift = .Left - .Right
-            yshift = .Top - .Bottom
-        End Select
-    
-        .Left = .Left + xshift
-        .Right = .Right + xshift
-        .Bottom = .Bottom + yshift
-        .Top = .Top + yshift
-    End With
-    
-    mBoxRect = mTextRect
-    mBoundingRect = mTextRect
+    lBoxRect = lTextRect
+    lBoundingRect = lTextRect
 End If
 
-mTextRect.isValid = True
-mBoxRect.isValid = True
-mBoundingRect.isValid = True
+mTextRect = mViewport.ConvertRectToTRectangle(lTextRect)
+mBoxRect = mViewport.ConvertRectToTRectangle(lBoxRect)
+alignmentOffset = getAlignmentOffset(mTextRect, mBoxRect)
+
+Dim alignmentOffsetPixelsX As Long
+Dim alignmentOffsetPixelsY As Long
+alignmentOffsetPixelsX = mViewport.ConvertLogicalToPixelsX(alignmentOffset.X)
+alignmentOffsetPixelsY = mViewport.ConvertLogicalToPixelsY(alignmentOffset.Y)
+
+TWWin32API.OffsetRect lTextRect, alignmentOffsetPixelsX, -alignmentOffsetPixelsY
+TWWin32API.OffsetRect lBoxRect, alignmentOffsetPixelsX, -alignmentOffsetPixelsY
+TWWin32API.OffsetRect lBoundingRect, alignmentOffsetPixelsX, -alignmentOffsetPixelsY
+
+mTextRect = mViewport.ConvertRectToTRectangle(lTextRect)
+mBoxRect = mViewport.ConvertRectToTRectangle(lBoxRect)
+mBoundingRect = mViewport.ConvertRectToTRectangle(lBoundingRect)
 
 End Sub
 
@@ -1025,29 +903,76 @@ End Sub
 
 Private Sub drawBoxWithSpecifiedFillStyle( _
                 ByVal pFillStyle As FillStyles)
-With mCanvas
-    .SetPenAttributes BoxColor, _
+With mViewport
+    .Canvas.SetPenAttributes BoxColor, _
                     BoxThickness, _
                     BoxStyle, _
                     DrawModes.DrawModeCopyPen
-    .SetBrushAttributes BoxFillColor, pFillStyle
-    .DrawRectangle .NewPoint(mBoxRect.Left, mBoxRect.Bottom), .NewPoint(mBoxRect.Right, mBoxRect.Top)
+    .Canvas.SetBrushAttributes BoxFillColor, pFillStyle
+    .Canvas.DrawRectangle .NewPoint(mBoxRect.Left, mBoxRect.Bottom), .NewPoint(mBoxRect.Right, mBoxRect.Top)
 End With
 End Sub
 
 Private Sub drawBoxWithBackgroundFillColor()
-With mCanvas
-    .PaintBackground
-    drawBoxWithSpecifiedFillStyle FillTransparent
-End With
+mViewport.PaintBackground
+drawBoxWithSpecifiedFillStyle FillTransparent
 End Sub
 
 Private Sub DrawText()
-With mCanvas
-    .SetTextAttributes Color, Font, True
-    .DrawText mText, .NewPoint(mTextRect.Left, mTextRect.Top)
+With mViewport
+    .Canvas.SetTextAttributes Color, Font, True
+    .Canvas.DrawText mText, .NewPoint(mTextRect.Left, mTextRect.Top)
 End With
 End Sub
+
+Private Function getAlignmentOffset( _
+                ByRef pTextBoundary As TRectangle, _
+                ByRef pBoxBoundary As TRectangle) As TPoint
+Dim textTopLeft As TPoint
+Dim alignPoint As TPoint
+
+textTopLeft = RectTopLeft(pTextBoundary)
+Select Case Align
+Case AlignTopLeft
+    alignPoint = textTopLeft
+Case AlignCentreLeft
+    alignPoint = RectCentreLeft(pTextBoundary)
+Case AlignBottomLeft
+    alignPoint = RectBottomLeft(pTextBoundary)
+Case AlignTopCentre
+    alignPoint = RectTopCentre(pTextBoundary)
+Case AlignCentreCentre
+    alignPoint = RectCentreCentre(pTextBoundary)
+Case AlignBottomCentre
+    alignPoint = RectBottomCentre(pTextBoundary)
+Case AlignTopRight
+    alignPoint = RectTopRight(pTextBoundary)
+Case AlignCentreRight
+    alignPoint = RectCentreRight(pTextBoundary)
+Case AlignBottomRight
+    alignPoint = RectBottomRight(pTextBoundary)
+Case AlignBoxTopLeft
+    alignPoint = RectTopLeft(pBoxBoundary)
+Case AlignBoxCentreLeft
+    alignPoint = RectCentreLeft(pBoxBoundary)
+Case AlignBoxBottomLeft
+    alignPoint = RectBottomLeft(pBoxBoundary)
+Case AlignBoxTopCentre
+    alignPoint = RectTopCentre(pBoxBoundary)
+Case AlignBoxCentreCentre
+    alignPoint = RectCentreCentre(pBoxBoundary)
+Case AlignBoxBottomCentre
+    alignPoint = RectBottomCentre(pBoxBoundary)
+Case AlignBoxTopRight
+    alignPoint = RectTopRight(pBoxBoundary)
+Case AlignBoxCentreRight
+    alignPoint = RectCentreRight(pBoxBoundary)
+Case AlignBoxBottomRight
+    alignPoint = RectBottomRight(pBoxBoundary)
+End Select
+
+getAlignmentOffset = PointSubtract(textTopLeft, alignPoint)
+End Function
 
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _

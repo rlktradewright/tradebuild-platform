@@ -61,7 +61,7 @@ Private mFinished           As Boolean
 
 Private mDataPoints         As Collection
 
-Private mCanvas             As Canvas
+Private mViewport           As Viewport
 Private mLayer              As Long
 
 Private mGOSP               As GraphObjServiceProvider
@@ -106,7 +106,7 @@ End Sub
 '================================================================================
 
 Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
-Set mCanvas = value
+Set mViewport = value
 End Property
 
 Private Sub IGraphicObjectSeries_Click()
@@ -126,21 +126,21 @@ mFinished = True
 Set mChartRef = Nothing
 Set mPrevDataPointRef = Nothing
 Set mGOSP = Nothing
-Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
-                ByVal Name As String, _
-                ByVal Canvas As Canvas, _
-                ByVal Layer As LayerNumbers, _
+                ByVal pName As String, _
+                ByVal pviewport As Viewport, _
+                ByVal pLayer As LayerNumbers, _
                 ByVal pChart As Chart, _
-                ByVal SeriesID As Long, _
-                ByVal GOSP As GraphObjServiceProvider)
-mName = Name
-mSeriesID = SeriesID
-Set mGOSP = GOSP
-mLayer = Layer
-Set mCanvas = Canvas
+                ByVal pSeriesID As Long, _
+                ByVal pGOSP As GraphObjServiceProvider)
+mName = pName
+mSeriesID = pSeriesID
+Set mGOSP = pGOSP
+mLayer = pLayer
+Set mViewport = pviewport
 Set mChartRef = CreateWeakReference(pChart)
 End Sub
 
@@ -472,9 +472,9 @@ If CDbl(Timestamp) <> 0 Then Add.X = chartObj.GetXFromTimestamp(Timestamp, False
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.Initialise Me, Timestamp, Key, mGOSP, mCanvas, LocalStyle
+Add.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
-If Not mPrevDataPointRef Is Nothing Then Add.PrevDataPoint = prevDataPointObj
+If Not mPrevDataPointRef Is Nothing Then Add.PreviousDataPoint = prevDataPointObj
 mDataPoints.Add Add, Key
 Set mPrevDataPointRef = CreateWeakReference(Add)
 prevTimestamp = Timestamp
@@ -488,7 +488,7 @@ End Sub
 
 Friend Sub Finish()
 mFinished = True
-Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Public Function Item(ByVal index As Variant) As DataPoint
@@ -547,6 +547,7 @@ Private Sub repaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 If mDataPoints.Count <> 0 Then
     If recalcBoundaries Then
+        mSeriesUpdateNumber = mSeriesUpdateNumber + 1
         mGOSP.RecalcBoundary mSeriesID
         mGOSP.PaintRegion True
     Else

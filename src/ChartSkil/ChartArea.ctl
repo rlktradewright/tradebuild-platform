@@ -78,9 +78,9 @@ Begin VB.UserControl Chart
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   375
+      Height          =   420
       Left            =   0
-      ScaleHeight     =   375
+      ScaleHeight     =   420
       ScaleWidth      =   9390
       TabIndex        =   1
       Top             =   6960
@@ -271,7 +271,7 @@ Private mReferenceTime As Date
 
 Private mAutoscrolling As Boolean
 
-Private mBackGroundCanvas As Canvas
+Private mBackGroundViewport As Viewport
 Private mChartBackColor As Long
 
 '================================================================================
@@ -296,6 +296,8 @@ mChartBackGradientFillColors(0) = PropDfltChartBackColor
 Set mController = New ChartController
 mController.Chart = Me
 
+mTwipsPerBar = PropDfltTwipsPerBar
+
 createXAxisRegion
 
 Exit Sub
@@ -311,6 +313,8 @@ End Sub
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
+Initialise
+
 HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
 VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
 Autoscrolling = PropDfltAutoscrolling
@@ -325,7 +329,6 @@ XAxisVisible = PropDfltXAxisVisible
 YAxisWidthCm = PropDfltYAxisWidthCm
 YAxisVisible = PropDfltYAxisVisible
 
-Initialise
 End Sub
 
 Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
@@ -368,6 +371,8 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
 On Error Resume Next
 
+Initialise
+
 Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
 
 Set mBarTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNamePeriodLength, PropDfltPeriodLength), _
@@ -400,8 +405,6 @@ YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 
 YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
 
-Initialise
-
 End Sub
 
 Private Sub UserControl_Resize()
@@ -409,12 +412,13 @@ Private Sub UserControl_Resize()
 Dim failpoint As Long
 On Error GoTo Err
 
-gLogger.Log LogLevelHighDetail, "ChartSkil: Resize: width=" & UserControl.Width & "; height=" & UserControl.Height
+gTracer.EnterProcedure pInfo:="width=" & UserControl.Width & "; height=" & UserControl.Height, pProcedureName:="UserControl_Resize", pProjectName:=ProjectName, pModuleName:=ModuleName
 
-Resize (UserControl.Width <> mPrevWidth), (UserControl.Height <> mPrevHeight)
+If UserControl.Width <> 0 And UserControl.Height <> 0 Then Resize (UserControl.Width <> mPrevWidth), (UserControl.Height <> mPrevHeight)
 mPrevHeight = UserControl.Height
 mPrevWidth = UserControl.Width
 
+gTracer.ExitProcedure pInfo:="", pProcedureName:="UserControl_Resize", pProjectName:=ProjectName, pModuleName:=ModuleName
 Exit Sub
 
 Err:
@@ -1369,12 +1373,12 @@ End Function
 
 Friend Function CreateDataRegionCanvas(ByVal index As Long) As Canvas
 Load ChartRegionPicture(index)
-Set CreateDataRegionCanvas = CreateCanvas(ChartRegionPicture(index), "data")
+Set CreateDataRegionCanvas = CreateCanvas(ChartRegionPicture(index), RegionTypeData)
 End Function
 
 Friend Function CreateYAxisRegionCanvas(ByVal index As Long) As Canvas
 Load YAxisPicture(index)
-Set CreateYAxisRegionCanvas = CreateCanvas(YAxisPicture(index), "Y-Axis")
+Set CreateYAxisRegionCanvas = CreateCanvas(YAxisPicture(index), RegionTypeYAxis)
 End Function
 
 Public Sub DisableDrawing()
@@ -1472,7 +1476,12 @@ Dim Region As ChartRegion
 Dim failpoint As Long
 On Error GoTo Err
 
-If value = 0 Then Exit Sub
+gTracer.EnterProcedure pInfo:="value=" & CStr(value), pProcedureName:="ScrollX", pProjectName:=ProjectName, pModuleName:=ModuleName
+
+If value = 0 Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ScrollX", pProjectName:=ProjectName, pModuleName:=ModuleName
+    Exit Sub
+End If
 
 If (LastVisiblePeriod + value) > _
         (mPeriods.CurrentPeriodNumber + ChartWidth - 1) Then
@@ -1485,15 +1494,19 @@ mYAxisPosition = mYAxisPosition + value
 mScaleLeft = calcScaleLeft
 XAxisPicture.ScaleLeft = mScaleLeft
 
-If Not IsDrawingEnabled Then Exit Sub
+If Not IsDrawingEnabled Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ScrollX", pProjectName:=ProjectName, pModuleName:=ModuleName
+    Exit Sub
+End If
 
 For Each Region In mRegions
-    Region.PeriodsInView mScaleLeft, mYAxisPosition - 1
+    Region.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 Next
 
-mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
+mXAxisRegion.SetPeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
 setHorizontalScrollBar
 
+gTracer.ExitProcedure pInfo:="", pProcedureName:="ScrollX", pProjectName:=ProjectName, pModuleName:=ModuleName
 Exit Sub
 
 Err:
@@ -1852,7 +1865,7 @@ End Function
 
 Private Function CreateCanvas( _
                 ByVal Surface As PictureBox, _
-                ByVal pRegionType As String) As Canvas
+                ByVal pRegionType As RegionTypes) As Canvas
 Set CreateCanvas = New Canvas
 CreateCanvas.Surface = Surface
 CreateCanvas.RegionType = pRegionType
@@ -1863,9 +1876,8 @@ Dim aFont As StdFont
 
 Set mXAxisRegion = New ChartRegion
 
-mXAxisRegion.Initialise "", Me, CreateCanvas(XAxisPicture, "X-Axis")
+mXAxisRegion.Initialise "", Me, CreateCanvas(XAxisPicture, RegionTypeXAxis), RegionTypeXAxis
                         
-mXAxisRegion.IsXAxisRegion = True
 mXAxisRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
 mXAxisRegion.Bottom = 0
 mXAxisRegion.Top = 1
@@ -1874,7 +1886,7 @@ mXAxisRegion.HasGrid = False
 mXAxisRegion.HasGridText = True
 
 Set mXCursorText = mXAxisRegion.AddText(LayerNumbers.LayerPointer)
-mXCursorText.Align = AlignTopCentre
+mXCursorText.Align = AlignBoxTopCentre
 
 Dim txtStyle As New TextStyle
 txtStyle.Color = vbBlack
@@ -1882,6 +1894,7 @@ txtStyle.Box = True
 txtStyle.BoxFillColor = vbWhite
 txtStyle.BoxStyle = LineSolid
 txtStyle.BoxColor = vbBlack
+txtStyle.PaddingX = 1
 Set aFont = New StdFont
 aFont.Name = "Arial"
 aFont.size = 8
@@ -1907,7 +1920,7 @@ If thisPeriod Is Nothing Then
     Exit Sub
 End If
 
-mXCursorText.Position = mXAxisRegion.NewPoint( _
+mXCursorText.position = mXAxisRegion.NewPoint( _
                             PeriodNumber, _
                             0, _
                             CoordsLogical, _
@@ -1930,8 +1943,8 @@ End Sub
 
 Private Sub finishBackgroundCanvas()
 gLogger.Log LogLevelHighDetail, "Finish background canvas"
-If Not mBackGroundCanvas Is Nothing Then mBackGroundCanvas.Finish
-Set mBackGroundCanvas = Nothing
+If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.Finish
+Set mBackGroundViewport = Nothing
 End Sub
 
 Private Function getDataRegionFromPictureIndex( _
@@ -1953,7 +1966,7 @@ mPrevHeight = UserControl.Height
 Set mPeriods = New Periods
 mPeriods.Chart = Me
 
-setupBackgroundCanvas
+setupBackgroundViewport
 
 mBarTimePeriodSet = False
 mVerticalGridTimePeriodSet = False
@@ -2007,7 +2020,7 @@ End Select
 pRegion.Left = mScaleLeft
 pRegion.Bottom = 0
 pRegion.Top = 1
-pRegion.PeriodsInView mScaleLeft, mYAxisPosition - 1
+pRegion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 pRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
 pRegion.SessionStartTime = mSessionStartTime
 
@@ -2135,13 +2148,13 @@ If mRegions.Count > 0 Then Exit Sub
 XAxisPicture.Visible = False
 ChartRegionPicture(0).Visible = False
 ChartRegionPicture(0).Move 0, 0, UserControl.Width, UserControl.Height
-mBackGroundCanvas.BackColor = mChartBackColor
-mBackGroundCanvas.Left = 0
-mBackGroundCanvas.Right = 1
-mBackGroundCanvas.Bottom = 0
-mBackGroundCanvas.Top = 1
-mBackGroundCanvas.PaintBackground
-mBackGroundCanvas.ZOrder 1
+mBackGroundViewport.BackColor = mChartBackColor
+mBackGroundViewport.Left = 0
+mBackGroundViewport.Right = 1
+mBackGroundViewport.Bottom = 0
+mBackGroundViewport.Top = 1
+mBackGroundViewport.PaintBackground
+mBackGroundViewport.Canvas.ZOrder 1
 ChartRegionPicture(0).Visible = True
 End Sub
 
@@ -2176,13 +2189,13 @@ Next
 failpoint = 600
 
 For Each Region In mRegionMap
-    Region.PeriodsInView mScaleLeft, mYAxisPosition - 1
+    Region.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
 Next
 
 failpoint = 700
 
 If Not mXAxisRegion Is Nothing Then
-    mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
+    mXAxisRegion.SetPeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
 End If
 
 
@@ -2292,7 +2305,7 @@ ChartRegionPicture(pRegion.handle).Height = pRegion.ActualHeight
 YAxisPicture(pRegion.handle).Height = pRegion.ActualHeight
 ChartRegionPicture(pRegion.handle).Top = currTop
 YAxisPicture(pRegion.handle).Top = currTop
-pRegion.resizedY
+pRegion.ResizedY
 setRegionViewSizeAndLocation = pRegion.ActualHeight
 End Function
 
@@ -2310,11 +2323,14 @@ For Each lRegion In mRegionMap
 Next
 End Sub
 
-Private Sub setupBackgroundCanvas()
-Set mBackGroundCanvas = New Canvas
-mBackGroundCanvas.Surface = ChartRegionPicture(0)
-mBackGroundCanvas.RegionType = "background"
-mBackGroundCanvas.MousePointer = vbDefault
+Private Sub setupBackgroundViewport()
+Dim lcanvas As New Canvas
+lcanvas.Surface = ChartRegionPicture(0)
+lcanvas.RegionType = RegionTypeBackground
+lcanvas.MousePointer = vbDefault
+Set mBackGroundViewport = New Viewport
+mBackGroundViewport.Canvas = lcanvas
+mBackGroundViewport.RegionType = RegionTypeBackground
 End Sub
 
 Private Sub setSession( _

@@ -154,13 +154,13 @@ End Sub
 
 Private Sub mTFManager_ReplayCompleted()
 gCon.writeLineToConsole "Replay completed"
-mTicker.removeQuoteListener Me
+mTicker.RemoveQuoteListener Me
 Set gProcessor = Nothing
 End Sub
 
 Private Sub mTFManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
 Set mTicker = pTicker
-mTicker.addQuoteListener Me
+mTicker.AddQuoteListener Me
 End Sub
 '@================================================================================
 ' Properties
@@ -206,7 +206,7 @@ If toDate < 1 Then toDate = Date + toDate
 tfs.toDate = toDate
 inFormats = mTB.SupportedInputTickfileFormats
 tfs.TickfileFormatID = inFormats(0).FormalID
-Set mTFManager = TradeBuildAPI.Tickers.createTickFileManager( _
+Set mTFManager = TradeBuildAPI.Tickers.CreateTickFileManager( _
                                 TickerOptions.TickerOptUseExchangeTimeZone + _
                                 IIf(raw, TickerOptions.TickerOptNoImpliedTrades + _
                                     TickerOptions.TickerOptNoVolumeAdjustments, _
@@ -232,10 +232,10 @@ gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.writeString ","
 gCon.writeString tickType
 gCon.writeString ","
-gCon.writeString ev.priceString
+gCon.writeString GetFormattedPriceFromQuoteEvent(ev)
 gCon.writeString ","
 
-Select Case ev.priceChange
+Select Case ev.PriceChange
 Case ValueChanges.ValueChangeDown
     gCon.writeString PriceDown
 Case ValueChanges.ValueChangeUp
@@ -254,12 +254,12 @@ gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.writeString ","
 gCon.writeString tickType
 gCon.writeString ","
-gCon.writeString ev.priceString
+gCon.writeString GetFormattedPriceFromQuoteEvent(ev)
 gCon.writeString ","
 gCon.writeString CStr(ev.Size)
 gCon.writeString ","
 
-Select Case ev.priceChange
+Select Case ev.PriceChange
 Case ValueChanges.ValueChangeDown
     gCon.writeString PriceDown
 Case ValueChanges.ValueChangeUp

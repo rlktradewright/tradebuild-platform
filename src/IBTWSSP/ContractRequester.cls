@@ -71,23 +71,21 @@ Private mContractsBuilder As ContractsBuilder
 Public Sub ContractDetailsRequester_cancelRequest( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 mContractsBuilder.unableToLoad reason, mName
 checkIfFinished
 Exit Sub
 
-err:
-handleFatalError err.number, _
-                "ContractDetailsRequester_cancelRequest", _
-                err.Description
+Err:
+handleFatalError "ContractDetailsRequester_cancelRequest"
 End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
 Dim lContractWrapper As ContractWrapper
 
-On Error GoTo err
+On Error GoTo Err
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 For Each lContractWrapper In request.contractWrappers
     mContractsBuilder.AddContract lContractWrapper.tradeBuildContract
@@ -95,16 +93,14 @@ Next
 If mNumOutstandingRequests = 0 Then mContractInfoServiceConsumer.LoadComplete mHandle
 checkIfFinished
 Exit Sub
-err:
-handleFatalError err.number, _
-                "ContractDetailsRequester_contractsLoaded", _
-                err.Description
+Err:
+handleFatalError "ContractDetailsRequester_contractsLoaded"
 End Sub
 
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 If mNumOutstandingRequests = 0 Then
     If mContractsBuilder.Contracts.Count <> 0 Then
@@ -118,10 +114,8 @@ End If
 checkIfFinished
 Exit Sub
 
-err:
-handleFatalError err.number, _
-                "ContractDetailsRequester_contractSpecifierInvalid", _
-                err.Description
+Err:
+handleFatalError "ContractDetailsRequester_contractSpecifierInvalid"
 End Sub
 
 '================================================================================
@@ -137,11 +131,19 @@ End Sub
 '@================================================================================
 
 Friend Sub finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mContractInfoServiceProvider = Nothing
 Set mCommonServiceConsumer = Nothing
 Set mContractInfoServiceConsumer = Nothing
 Set mContractsBuilder = Nothing
 Set mTWSAPI = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -150,13 +152,16 @@ Friend Sub Initialise( _
                 ByVal ContractInfoServiceConsumer As IContractInfoServiceConsumer, _
                 ByVal pTWSAPI As TWSAPI, _
                 ByVal pContractsBuilder As ContractsBuilder, _
-                ByVal name As String, _
-                ByVal handle As Long)
+                ByVal Name As String, _
+                ByVal Handle As Long)
 
 Dim contractSpec As ContractSpecifier
 
-mName = name
-mHandle = handle
+Dim failpoint As Long
+On Error GoTo Err
+
+mName = Name
+mHandle = Handle
 
 Set mContractInfoServiceProvider = pContractInfoServiceProvider
 Set mCommonServiceConsumer = commonServiceConsumer
@@ -224,6 +229,11 @@ Else
                             Me
     mNumOutstandingRequests = 1
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Initialise", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -231,36 +241,44 @@ End Sub
 '@================================================================================
 
 Private Sub checkIfFinished()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mNumOutstandingRequests = 0 Then
     mContractInfoServiceProvider.contractRequesterFinished Me
     finish
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkIfFinished", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal number As Long, _
-                ByVal source As String, _
-                ByVal Description As String)
-logMessage "Error " & err.number & ": " & _
-            ProjectName & "." & ModuleName & ":" & source & vbCrLf & _
-            err.Description, _
-            LogLevelSevere
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.number
+Dim errSource As String: errSource = Err.source
+Dim errDesc As String: errDesc = Err.Description
 
-gReleaseAllTWSAPIInstances
+On Error GoTo Err
 
-mCommonServiceConsumer.NotifyFatalError number, _
-                            source, _
-                            Description, _
-                            mHandle
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
 
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.number, Err.source, Err.Description, mHandle
 End Sub
 
 Private Sub logMessage( _
-                ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(logLevel) Then Exit Sub
-gLogger.Log logLevel, _
-            ProjectName & "." & ModuleName & ": " & message
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 

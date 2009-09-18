@@ -49,6 +49,7 @@ Private Const ModuleName                As String = "DataPoint"
 
 Private mSeries As DataPointSeries
 
+Private mViewport As Viewport
 Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
@@ -106,23 +107,23 @@ Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Static prevGaugeX As Double
 Static prevGaugeY As Double
 Static prevRect As TRectangle
-Dim canvasChanges As Long
+Dim viewportChanges As Long
 
 Dim failpoint As Long
 On Error GoTo Err
 
-canvasChanges = mCanvas.CompareTo(prevGaugeX, prevGaugeY, prevRect)
-If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
-    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
+viewportChanges = mViewport.CompareTo(prevGaugeX, prevGaugeY, prevRect)
+If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
+    (viewportChanges And ViewportComparisonCodes.GaugeChangedY) Or _
     mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
     mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
     calcBoundingRect
 End If
 
-prevGaugeX = mCanvas.GaugeX
-prevGaugeY = mCanvas.GaugeY
-prevRect = mCanvas.Boundary
+prevGaugeX = mViewport.GaugeX
+prevGaugeY = mViewport.GaugeY
+prevRect = mViewport.Boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 
@@ -156,7 +157,9 @@ End Sub
 
 Private Sub IGraphicObject_draw( _
                 ByRef areas() As TRectangle)
+mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(0))
 Draw
+mCanvas.ClearClippingRegion
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -165,6 +168,7 @@ End Property
 
 Private Sub IGraphicObject_finish()
 Set mCanvas = Nothing
+Set mViewport = Nothing
 End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
@@ -515,12 +519,12 @@ If Not mLocalStyle Is Nothing Then PointStyle = mLocalStyle.PointStyle
 If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then PointStyle = getProperties.PointStyle
 End Property
 
-Public Property Get PrevDataPoint() As DataPoint
+Public Property Get PreviousDataPoint() As DataPoint
 If mPrevDataPointRef Is Nothing Then Exit Property
-Set PrevDataPoint = prevDataPointObj
+Set PreviousDataPoint = prevDataPointObj
 End Property
 
-Public Property Let PrevDataPoint(ByVal value As DataPoint)
+Friend Property Let PreviousDataPoint(ByVal value As DataPoint)
 Set mPrevDataPointRef = CreateWeakReference(value)
 End Property
 
@@ -569,19 +573,20 @@ initiateRedraw True, True
 End Sub
 
 Friend Sub Initialise( _
-                ByVal series As DataPointSeries, _
-                ByVal Timestamp As Date, _
-                ByVal Key As String, _
-                ByVal GOSP As GraphObjServiceProvider, _
-                ByVal Canvas As Canvas, _
-                ByVal LocalStyle As DataPointStyle)
+                ByVal pSeries As DataPointSeries, _
+                ByVal pTimestamp As Date, _
+                ByVal pKey As String, _
+                ByVal pGOSP As GraphObjServiceProvider, _
+                ByVal pviewport As Viewport, _
+                ByVal pLocalStyle As DataPointStyle)
                 
-Set mSeries = series
-mTimestamp = Timestamp
-mKey = Key
-Set mGOSP = GOSP
-Set mCanvas = Canvas
-Set mLocalStyle = LocalStyle
+Set mSeries = pSeries
+mTimestamp = pTimestamp
+mKey = pKey
+Set mGOSP = pGOSP
+Set mViewport = pviewport
+Set mCanvas = mViewport.Canvas
+Set mLocalStyle = pLocalStyle
 
 calcBoundingRect
 End Sub
@@ -591,79 +596,108 @@ End Sub
 '================================================================================
 
 Private Sub calcBoundingRect()
-Dim boundingRect As TRectangle
-Dim ThicknessScaleX As Double
-Dim ThicknessScaleY As Double
-Dim prevX As Long
-Dim prevValue As Double
-
-ThicknessScaleX = mCanvas.ConvertPixelsToLogicalX(LineThickness + 2)
-ThicknessScaleY = mCanvas.ConvertPixelsToLogicalY(LineThickness + 2)
 
 If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
-    With boundingRect
-        .Left = mX - HistogramBarWidth / 2
-        .Right = mX + HistogramBarWidth / 2
-        If mDataValue >= 0 Then
-            .Bottom = 0
-            .Top = mDataValue
-        Else
-            .Bottom = mDataValue
-            .Top = 0
-        End If
-    End With
+    calcBoundingRectForHistogram
 ElseIf drawAsPoint Then
-    With boundingRect
-        .Left = mX - ThicknessScaleX / 2
-        .Right = mX + ThicknessScaleX / 2
-        .Bottom = mDataValue - ThicknessScaleY / 2
-        .Top = mDataValue + ThicknessScaleY / 2
-    End With
+    calcBoundingRectForPoint
 ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
-    With prevDataPointObj
-        prevX = .X
-        prevValue = .DataValue
-    End With
-    With boundingRect
-        If prevX <= mX Then
-            .Left = prevX - ThicknessScaleX / 2
-            .Right = mX + ThicknessScaleX / 2
-        Else
-            .Left = mX - ThicknessScaleX / 2
-            .Right = prevX + ThicknessScaleX / 2
-        End If
-        If mDataValue > prevValue Then
-            .Bottom = prevValue - ThicknessScaleY / 2
-            .Top = mDataValue + ThicknessScaleY / 2
-        Else
-            .Bottom = mDataValue - ThicknessScaleY / 2
-            .Top = prevValue + ThicknessScaleY / 2
-        End If
-    End With
+    calcBoundingRectForLineOrSteppedLine
 ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
-    With prevDataPointObj
-        prevX = .X
-        prevValue = .DataValue
-    End With
-    With boundingRect
-        If prevX <= mX Then
-            .Left = prevX - ThicknessScaleX / 2
-            .Right = mX + ThicknessScaleX / 2
-        Else
-            .Left = mX - ThicknessScaleX / 2
-            .Right = prevX + ThicknessScaleX / 2
-        End If
-        If mDataValue > prevValue Then
-            .Bottom = prevValue - ThicknessScaleY / 2
-            .Top = mDataValue + ThicknessScaleY / 2
-        Else
-            .Bottom = mDataValue - ThicknessScaleY / 2
-            .Top = prevValue + ThicknessScaleY / 2
-        End If
+    calcBoundingRectForLineOrSteppedLine
+End If
+End Sub
+
+Private Sub calcBoundingRectForHistogram()
+Dim boundingRect As TRectangle
+Dim pixelRect As RECT
+    
+With boundingRect
+    .Left = mX - HistogramBarWidth / 2
+    .Right = mX + HistogramBarWidth / 2
+    If mDataValue >= 0 Then
+        .Bottom = 0
+        .Top = mDataValue
+    Else
+        .Bottom = mDataValue
+        .Top = 0
+    End If
+End With
+pixelRect = mViewport.ConvertTRectangleToRect(boundingRect)
+mBoundingRect = mViewport.ConvertRectToTRectangle(pixelRect)
+End Sub
+
+Private Sub calcBoundingRectForLineOrSteppedLine()
+Dim boundingRect As TRectangle
+Dim pixelRect As RECT
+Dim prevX As Double
+Dim prevValue As Double
+
+prevX = prevDataPointObj.X
+prevValue = prevDataPointObj.DataValue
+
+With boundingRect
+    If prevX <= mX Then
+        .Left = prevX
+        .Right = mX
+    Else
+        .Left = mX
+        .Right = prevX
+    End If
+    If mDataValue > prevValue Then
+        .Bottom = prevValue
+        .Top = mDataValue
+    Else
+        .Bottom = mDataValue
+        .Top = prevValue
+    End If
+End With
+
+pixelRect = mViewport.ConvertTRectangleToRect(boundingRect)
+
+With pixelRect
+    .Left = .Left - Int(LineThickness / 2)
+    .Right = .Right + Int(LineThickness / 2)
+    .Top = .Top - Int(LineThickness / 2)
+    .Bottom = .Bottom + Int(LineThickness / 2)
+End With
+
+mBoundingRect = mViewport.ConvertRectToTRectangle(pixelRect)
+End Sub
+
+Private Sub calcBoundingRectForPoint()
+Dim boundingRect As TRectangle
+Dim pixelRect As RECT
+
+With boundingRect
+    .Left = mX
+    .Right = mX
+    .Bottom = mDataValue
+    .Top = mDataValue
+End With
+
+pixelRect = mViewport.ConvertTRectangleToRect(boundingRect)
+
+If PointStyle = PointRound Then
+    If LineThickness <> 1 Then
+        With pixelRect
+            ' these offsets were discovered by measuring points drawn using PSet
+            .Left = .Left - Int(LineThickness / 2)
+            .Right = .Left + LineThickness - 1
+            .Bottom = .Top + Int((LineThickness + 1) / 2)
+            .Top = .Top - Int((LineThickness - 1) / 2)
+        End With
+    End If
+Else
+    With pixelRect
+        .Left = .Left - Int(LineThickness / 2)
+        .Right = .Left + LineThickness - 1
+        .Top = .Top - Int(LineThickness / 2)
+        .Bottom = .Top + LineThickness - 1
     End With
 End If
-boundingRect.isValid = True
-mBoundingRect = boundingRect
+
+mBoundingRect = mViewport.ConvertRectToTRectangle(pixelRect)
 End Sub
 
 Private Sub clearPropertyOverrideFlag( _
@@ -699,47 +733,47 @@ End If
 End Function
 
 Private Sub DrawPoint(ByVal Color As Long)
-Dim PrevDataPoint As DataPoint
+Dim PreviousDataPoint As DataPoint
 
 If Blank Then Exit Sub
 If Not mVisible Then Exit Sub
 
 If DisplayMode = 0 Then Exit Sub
 
-With mCanvas
-    .SetPenAttributes Color, _
+With mViewport
+    .Canvas.SetPenAttributes Color, _
                             LineThickness, _
                             LineStyle, _
                             DrawModes.DrawModeCopyPen
     
     If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
-        .SetBrushAttributes Color, FillStyles.FillSolid
-        .DrawRectangle .NewPoint(mX - HistogramBarWidth / 2, 0), .NewPoint(mX + HistogramBarWidth / 2, mDataValue)
+        .Canvas.SetBrushAttributes Color, FillStyles.FillSolid
+        .Canvas.DrawRectangle .NewPoint(mX - HistogramBarWidth / 2, 0), .NewPoint(mX + HistogramBarWidth / 2, mDataValue)
     ElseIf drawAsPoint Then
         If PointStyle = PointRound Then
-            .DrawPoint .NewPoint(mX, mDataValue)
+            .Canvas.DrawPoint .NewPoint(mX, mDataValue)
         Else
             Dim ThicknessScaleX As Double
             Dim ThicknessScaleY As Double
             
             ThicknessScaleX = .ConvertPixelsToLogicalX(LineThickness)
             ThicknessScaleY = .ConvertPixelsToLogicalY(LineThickness)
-            .SetPenAttributes Color, _
+            .Canvas.SetPenAttributes Color, _
                                     1, _
                                     LineInsideSolid, _
                                     DrawModes.DrawModeCopyPen
-            .SetBrushAttributes Color, FillSolid
-            .DrawRectangle .NewPoint(mX - ThicknessScaleX / 2, mDataValue - ThicknessScaleY / 2), _
+            .Canvas.SetBrushAttributes Color, FillSolid
+            .Canvas.DrawRectangle .NewPoint(mX - ThicknessScaleX / 2, mDataValue - ThicknessScaleY / 2), _
                             .NewPoint(mX + ThicknessScaleX / 2, mDataValue + ThicknessScaleY / 2)
         End If
     ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
-        Set PrevDataPoint = prevDataPointObj
-        .DrawLine .NewPoint(prevDataPointObj.X, prevDataPointObj.DataValue), .NewPoint(mX, mDataValue)
+        Set PreviousDataPoint = prevDataPointObj
+        .Canvas.DrawLine prevDataPointObj.X, prevDataPointObj.DataValue, mX, mDataValue
     ElseIf DisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
-        Set PrevDataPoint = prevDataPointObj
-        .DrawLine .NewPoint(prevDataPointObj.X, prevDataPointObj.DataValue), .NewPoint(mX - 0.5, prevDataPointObj.DataValue)
-        .DrawLine .NewPoint(mX - 0.5, prevDataPointObj.DataValue), .NewPoint(mX - 0.5, mDataValue)
-        .DrawLine .NewPoint(mX - 0.5, mDataValue), .NewPoint(mX, mDataValue)
+        Set PreviousDataPoint = prevDataPointObj
+        .Canvas.DrawLine prevDataPointObj.X, prevDataPointObj.DataValue, mX - 0.5, prevDataPointObj.DataValue
+        .Canvas.DrawLine mX - 0.5, prevDataPointObj.DataValue, mX - 0.5, mDataValue
+        .Canvas.DrawLine mX - 0.5, mDataValue, mX, mDataValue
     End If
 End With
 End Sub

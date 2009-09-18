@@ -51,9 +51,16 @@ Private Const ModuleName                    As String = "ConfigManager"
 Private Const ConfigNameAppConfig           As String = "AppConfig"
 Private Const ConfigNameAppConfigs          As String = "AppConfigs"
 
-Private Const DefaultAppInstanceConfigName          As String = "Default Config"
+Private Const DefaultAppInstanceConfigName  As String = "Default Config"
 
 Private Const NewConfigNameStub             As String = "New config"
+
+Private Const TWSClientId                   As Long = 414552987
+Private Const TWSConnectRetryInterval       As Long = 10
+Private Const TWSPort                       As Long = 7496
+Private Const TWSServer                     As String = ""
+
+Private Const TickfilesPath                 As String = "C:\Data\Tickfiles"
 
 '@================================================================================
 ' Member variables
@@ -155,9 +162,17 @@ End If
 
 Set mCurrAppConfig = AddAppInstanceConfig(mConfigFile, _
                                     configName, _
-                                    True)
+                                    includeDefaultStudyLibrary:=False, _
+                                    setAsDefault:=False, _
+                                    TWSServer:=TWSServer, _
+                                    TWSPort:=TWSPort, _
+                                    clientId:=TWSClientId, _
+                                    connectionRetryIntervalSecs:=TWSConnectRetryInterval, _
+                                    TickfilesPath:=TickfilesPath)
 mCurrAppConfig.addConfigurationSection ConfigSectionCollectionControl
 mCurrAppConfig.addConfigurationSection ConfigSectionContracts
+
+mConfigNames.Add configName, configName
 
 Set addNew = mCurrAppConfig
 End Function
@@ -187,9 +202,17 @@ If baseConfigFile Is Nothing Then
     Set appConfig = AddAppInstanceConfig(mConfigFile, _
                         DefaultAppInstanceConfigName, _
                         includeDefaultStudyLibrary:=False, _
-                        setAsDefault:=True)
+                        setAsDefault:=True, _
+                        TWSServer:=TWSServer, _
+                        TWSPort:=TWSPort, _
+                        clientId:=TWSClientId, _
+                        connectionRetryIntervalSecs:=TWSConnectRetryInterval, _
+                        TickfilesPath:=TickfilesPath)
     appConfig.addConfigurationSection ConfigSectionCollectionControl
     appConfig.addConfigurationSection ConfigSectionContracts
+
+    mConfigNames.Add DefaultAppInstanceConfigName, DefaultAppInstanceConfigName
+
 Else
     Set mConfigFile = CreateConfigurationFile(baseConfigFile, _
                                             mConfigFilename)
@@ -202,7 +225,7 @@ Else
     End If
 End If
 
-mConfigFile.addChangeListener Me
+mConfigFile.AddChangeListener Me
 
 Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
 
