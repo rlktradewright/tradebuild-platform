@@ -680,7 +680,7 @@ End Sub
 
 Friend Sub NotifyExecution(ByVal quantity As Long, _
                             ByVal price As Double, _
-                            ByVal Handle As Long, _
+                            ByVal handle As Long, _
                             ByVal closedOut As Boolean)
 
 If mQuantityOutstanding = 0 Then mTradeStartTime = mTicker.Timestamp
@@ -728,7 +728,7 @@ Else
     mProfitLastFlat = mProfit
 End If
 
-With mPlexTable(Handle)
+With mPlexTable(handle)
     .closedOut = closedOut
     If .QuantityOutstanding = 0 Then .StartTime = mTicker.Timestamp
     
@@ -748,16 +748,16 @@ With mPlexTable(Handle)
         
     If .QuantityOutstanding < 0 Then
         If mLastAsk <> 0 Then
-            calcPlexProfit Handle, mLastAsk
+            calcPlexProfit handle, mLastAsk
         End If
     ElseIf .QuantityOutstanding > 0 Then
         If mLastBid <> 0 Then
-            calcPlexProfit Handle, mLastBid
+            calcPlexProfit handle, mLastBid
         End If
     Else
         .endTime = mTicker.Timestamp
-        calcPlexProfit Handle
-        notifyPlexProfileListeners Handle
+        calcPlexProfit handle
+        notifyPlexProfileListeners handle
         
         ' Remove the relevant entry from the plex table
         mPlexTable(.PrevActiveIndex).NextActiveIndex = .NextActiveIndex
@@ -905,11 +905,11 @@ For i = mProfitListeners.Count To 1 Step -1
 Next
 End Sub
 
-Friend Function SetPlexReason(ByVal Handle As Long, _
+Friend Function SetPlexReason(ByVal handle As Long, _
                             ByVal reasonType As ReasonTypes, _
                             ByVal reason As String)
 
-With mPlexTable(Handle)
+With mPlexTable(handle)
     Select Case reasonType
     Case ReasonNone
     Case ReasonEntry
@@ -922,9 +922,9 @@ With mPlexTable(Handle)
 End With
 End Function
 
-Friend Sub SetPlexRisk(ByVal Handle As Long, _
+Friend Sub SetPlexRisk(ByVal handle As Long, _
                             ByVal Risk As Currency)
-mPlexTable(Handle).Risk = Risk
+mPlexTable(handle).Risk = Risk
 End Sub
 
 Friend Sub StartOfSession(ByVal Timestamp As Date)
@@ -954,10 +954,10 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub calcPlexProfit(ByVal Handle As Long, _
+Private Sub calcPlexProfit(ByVal handle As Long, _
                             Optional ByVal price As Double)
 
-With mPlexTable(Handle)
+With mPlexTable(handle)
     If .QuantityOutstanding <> 0 Then
         .Profit = mTickValue * .QuantityOutstanding * (price - .TotalEntryPrice / .QuantityOutstanding) / mTickSize
         .ExitPrice = price
@@ -1153,7 +1153,7 @@ End Sub
 
 Private Sub placeBalancingOrder()
 gTB.notifyListeners _
-        "Close positions: (" & mTicker.TradePriceString & ") at market", _
+        "Close positions: (" & mTicker.FormatPrice(mTicker.TradePrice) & ") at market", _
         IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
         Me
 

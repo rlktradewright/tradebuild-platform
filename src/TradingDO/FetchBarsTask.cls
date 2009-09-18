@@ -90,7 +90,7 @@ mTaskContext.finish Empty, True
 End Sub
 
 Private Sub Task_run()
-If mTaskContext.cancelPending Then
+If mTaskContext.CancelPending Then
     mTaskContext.finish Empty, True
     Exit Sub
 End If
@@ -101,7 +101,7 @@ If mInstrument Is Nothing Then
                                             mSpecifier, _
                                             , _
                                             "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
-    mTaskContext.suspend -1
+    mTaskContext.Suspend -1
 Else
     Set mFetchTaskController = mInstrument.fetchbarsAsync(mbarTimePeriod, _
                                                         mMaxNumberOfBars, _
@@ -111,7 +111,7 @@ Else
                                                         mCustomSessionEndTime, _
                                                         mIncludeBarsOutsideSession, _
                                                         mBarType)
-    mTaskContext.suspend -1
+    mTaskContext.Suspend -1
 End If
 End Sub
 
@@ -128,6 +128,9 @@ End Property
 '@================================================================================
 
 Private Sub mFetchTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
@@ -142,6 +145,11 @@ Else
     mTaskContext.finish ev.result, False
 End If
 Set mFetchTaskController = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mFetchTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -149,6 +157,9 @@ End Sub
 '@================================================================================
 
 Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
@@ -159,9 +170,14 @@ ElseIf IsEmpty(ev.result) Then
 Else
     Set mInstrument = ev.result
     gLogger.Log LogLevelDetail, "FetchBarsTask retrieved instrument object for " & mSpecifier.ToString
-    mTaskContext.continue
+    mTaskContext.Continue
 End If
 Set mInstrumentTaskController = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

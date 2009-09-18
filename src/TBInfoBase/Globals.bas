@@ -51,6 +51,8 @@ End Enum
 
 Private mLogger As Logger
 
+Private mLogTokens(9) As String
+
 '================================================================================
 ' Properties
 '================================================================================
@@ -83,6 +85,32 @@ Public Function gHistDataSupports( _
                 ByVal mode As AccessModes) As Boolean
 gHistDataSupports = (gHistDataCapabilities(mode) And capabilities)
 End Function
+
+Public Sub gLog(ByRef pMsg As String, _
+                ByRef pProjName As String, _
+                ByRef pModName As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
+mLogTokens(0) = "["
+mLogTokens(1) = pProjName
+mLogTokens(2) = "."
+mLogTokens(3) = pModName
+mLogTokens(4) = ":"
+mLogTokens(5) = pProcName
+mLogTokens(6) = "] "
+mLogTokens(7) = pMsg
+If Len(pMsgQualifier) <> 0 Then
+    mLogTokens(8) = ": "
+    mLogTokens(9) = pMsgQualifier
+Else
+    mLogTokens(8) = vbNullString
+    mLogTokens(9) = vbNullString
+End If
+
+gLogger.Log pLogLevel, Join(mLogTokens, "")
+End Sub
 
 Public Function gSQLDBCapabilitiesReadWrite() As Long
 gSQLDBCapabilitiesReadWrite = _

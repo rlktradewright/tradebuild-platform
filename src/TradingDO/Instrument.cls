@@ -167,13 +167,13 @@ End Property
 
 Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
-Dim instrmnt As Instrument
+Dim instrmnt As instrument
 If mDataObj.ruleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If name <> "" Then
-    Set instrmnt = mDB.InstrumentFactory.loadByName(value.exchangeName & "/" & _
-                                                    value.name & "/" & _
-                                                    name)
+    Set instrmnt = mDB.InstrumentFactory.loadByName("""" & value.exchangeName & """/""" & _
+                                                    value.name & """/""" & _
+                                                    name & """")
     If Not instrmnt Is Nothing Then mDataObj.ruleBroken getBusRuleNameValidId, instrmnt.id <> id
 End If
 mDataObj.columnValue(InstrumentColumnInstrumentClassID) = value.id
@@ -231,7 +231,7 @@ If Not mDataObj.ruleBroken(getBusRuleNameValidId, _
     If instrumentClassName = "" Then
         mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
     ElseIf Not mDataObj.ruleBroken(getBusRuleNameValidId, _
-                                    Not mDB.InstrumentFactory.loadByName(exchangeName & "/" & instrumentClassName & "/" & name) Is Nothing) Then
+                                    Not mDB.InstrumentFactory.loadByName(exchangeName & "/" & instrumentClassName & "/" & value) Is Nothing) Then
         mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
     End If
 End If
@@ -397,14 +397,30 @@ End Property
 Public Function createTickStream( _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date) As TickStream
+Dim failpoint As Long
+On Error GoTo Err
+
 Set createTickStream = New TickStream
 createTickStream.initialise mDB, id, fromDate, toDate
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTickStream", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function createTickWriter( _
                 ByVal useAsynchronousWrites As Boolean) As TickWriter
+Dim failpoint As Long
+On Error GoTo Err
+
 Set createTickWriter = New TickWriter
 createTickWriter.initialise mDB, Me, useAsynchronousWrites
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTickWriter", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function fetchBars( _
@@ -422,7 +438,7 @@ Dim specifier As BarDataSpecifier
 Dim failpoint As Long
 On Error GoTo Err
 
-Select Case barTimePeriod.units
+Select Case barTimePeriod.Units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -445,7 +461,7 @@ specifier.fromDate = fromDate
 specifier.includeBarsOutsideSession = includeBarsOutsideSession
 specifier.maxNumberOfBars = maxNumberOfBars
 specifier.toDate = toDate
-specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
+specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
 Set bf = New BarFetcher
 bf.initialise mDB, Me
@@ -456,10 +472,7 @@ Set bf = Nothing
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchBars" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fetchBars", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -477,7 +490,10 @@ Public Function fetchbarsAsync( _
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
-Select Case barTimePeriod.units
+Dim failpoint As Long
+On Error GoTo Err
+
+Select Case barTimePeriod.Units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -500,18 +516,26 @@ specifier.fromDate = fromDate
 specifier.includeBarsOutsideSession = includeBarsOutsideSession
 specifier.maxNumberOfBars = maxNumberOfBars
 specifier.toDate = toDate
-specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
+specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
 Set bf = New BarFetcher
 bf.initialise mDB, Me
 
 Set fetchbarsAsync = bf.fetchbarsAsync(specifier, cookie, taskName)
 Set bf = Nothing
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fetchbarsAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 genericInitialise db, rs
 
@@ -520,6 +544,11 @@ mMaxShortNameLength = mDataObj.columnMaxLength(InstrumentColumnShortName)
 mMaxSymbolLength = mDataObj.columnMaxLength(InstrumentColumnSymbol)
 mMaxOptRightLength = mDataObj.columnMaxLength(InstrumentColumnOptionRight)
 mMaxCurrencyCodeLength = mDataObj.columnMaxLength(InstrumentColumnCurrency)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -555,11 +584,7 @@ lBarWriter.WriteBar timestamp, _
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "WriteBar" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function WriteBarAsync( _
@@ -577,6 +602,9 @@ Public Function WriteBarAsync( _
                 Optional ByVal taskName As String) As TaskController
 Dim lBarWriter As New BarWriter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 lBarWriter.initialise mDB, id, shortName
 
 Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
@@ -591,6 +619,11 @@ Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
                                             openInterest, _
                                             cookie, _
                                             taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBarAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================
@@ -602,7 +635,15 @@ getBusRuleNameValidId = BusRuleInstrumentNameValid
 End Function
 
 Private Function getFactory() As DataObjectFactory
+Dim failpoint As Long
+On Error GoTo Err
+
 Set getFactory = mDB.InstrumentFactory
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getFactory", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub setInitialErrors()
@@ -615,6 +656,9 @@ End Sub
 
 Private Sub validateOptionRight( _
                 ByVal value As OptionRights)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case value
 Case OptNone
@@ -630,14 +674,27 @@ mDataObj.ruleBroken BusRuleInstrumentOptionRightvalid, _
                         secType = SecTypeFuturesOption) And _
                     value = OptNone)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="validateOptionRight", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub validateStrikePrice( _
                 ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.ruleBroken BusRuleInstrumentStrikePriceValid, _
                     (secType = SecTypeOption Or _
                         secType = SecTypeFuturesOption) And _
                     value <= 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="validateStrikePrice", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -672,7 +729,7 @@ Set BusinessDataObject_ErrorList = mDataObj.ErrorList
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
-Set BusinessDataObject_EventSource = mDataObj.EventSource
+Set BusinessDataObject_EventSource = mDataObj.eventSource
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long
@@ -764,39 +821,95 @@ End Property
 '@================================================================================
 
 Public Sub ApplyEdit()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.ApplyEdit
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ApplyEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub CancelEdit()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.CancelEdit
 If mDataObj.IsNew Then setInitialErrors
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CancelEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub Delete()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.Delete
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Delete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub genericInitialise( _
                 ByVal db As Variant, _
                 Optional ByVal rs As ADODB.Recordset)
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mDB = db
 If Not rs Is Nothing Then
     Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.connectionString)
     mDataObj.initialiseRs rs
     If mDataObj.IsNew Then setInitialErrors
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="genericInitialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function getName() As String
+Dim failpoint As Long
+On Error GoTo Err
+
 getName = mDataObj.name
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub refresh()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="refresh", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub setName(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.name = value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

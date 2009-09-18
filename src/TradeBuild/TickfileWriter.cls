@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "TickfileWriter"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -50,7 +52,7 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mWriter As TradeBuildSP.ITickfileWriter
+Private mWriter                         As TradeBuildSP.ITickfileWriter
 Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
@@ -87,8 +89,8 @@ Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileW
 Set mWriter = value
 End Property
 
-Friend Property Get Ready() As Boolean
-Ready = mServiceProviderWriterReady
+Friend Property Get ready() As Boolean
+ready = mServiceProviderWriterReady
 End Property
 
 '@================================================================================
@@ -96,6 +98,7 @@ End Property
 '@================================================================================
 
 Public Sub closeOutputFile()
+gLog pMsg:="Closing output tickfile", pProcName:="closeOutputFile", pProjName:=ProjectName, pModName:=ModuleName
 Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
 mWriter.closeOutputFile
 End Sub

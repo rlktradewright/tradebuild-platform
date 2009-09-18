@@ -111,7 +111,7 @@ Dim connectionString As String
 
 On Error GoTo Err
 
-gLogger.Log LogLevelDetail, "HistDataServiceProvider: creating bar data reader"
+logMessage pMsg:="Creating bar data reader", pProcName:="IBarDataServiceProvider_CreateBarDataReader", pLogLevel:=LogLevelDetail
 
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
@@ -137,9 +137,7 @@ reader.initialise mName & " (reader)", _
 mHistDataReaders.Add reader, CStr(ObjPtr(reader))
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
-                Err.Description
+handleFatalError "IBarDataServiceProvider_CreateBarDataReader"
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -153,7 +151,7 @@ Dim connectionString As String
 
 On Error GoTo Err
 
-gLogger.Log LogLevelDetail, "HistDataServiceProvider: creating bar data writer"
+logMessage pMsg:="Creating bar data writer", pProcName:="IBarDataServiceProvider_CreateBarDataWriter", pLogLevel:=LogLevelDetail
 
 Set writer = New HistDataWriter
 Set IBarDataServiceProvider_CreateBarDataWriter = writer
@@ -180,14 +178,12 @@ writer.initialise mName & " (writer)", _
 mHistDataWriters.Add writer, CStr(ObjPtr(writer))
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "IBarDataServiceProvider_CreateBarDataWriter", _
-                Err.Description
+handleFatalError "IBarDataServiceProvider_CreateBarDataWriter"
 End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
                 ByVal period As TimePeriod) As Boolean
-Select Case period.units
+Select Case period.Units
 Case TimePeriodMinute, _
     TimePeriodHour, _
     TimePeriodDay, _
@@ -305,9 +301,7 @@ finishWriters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ICommonServiceProvider_Terminate", _
-                Err.Description
+handleFatalError "ICommonServiceProvider_Terminate"
 End Sub
 
 '@===============================================================================
@@ -371,12 +365,28 @@ End Property
 
 Friend Sub dataReaderFinished( _
                 ByVal dataReader As HistDataReader)
+Dim failpoint As Long
+On Error GoTo Err
+
 mHistDataReaders.Remove CStr(ObjPtr(dataReader))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataReaderFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As HistDataWriter)
+Dim failpoint As Long
+On Error GoTo Err
+
 mHistDataWriters.Remove CStr(ObjPtr(dataWriter))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataWriterFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -386,36 +396,66 @@ End Sub
 Private Sub finishReaders()
 Dim i As Long
 Dim reader As HistDataReader
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mHistDataReaders.Count To 1 Step -1
     Set reader = mHistDataReaders(i)
     reader.finish
     mHistDataReaders.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishReaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub finishWriters()
 Dim i As Long
 Dim writer As HistDataWriter
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mHistDataWriters.Count To 1 Step -1
     Set writer = mHistDataWriters(i)
     writer.finish
     mHistDataWriters.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishWriters", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
+On Error GoTo Err
 
-finishReaders
-finishWriters
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
 
-Set mCommonServiceConsumer = Nothing
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+End Sub
+
+
 
 
 

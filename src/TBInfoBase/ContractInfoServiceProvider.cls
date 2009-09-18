@@ -172,12 +172,7 @@ createDatabase
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ICommonServiceProvider_Link" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ICommonServiceProvider_Link", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -203,13 +198,16 @@ Dim contractSpec As ContractSpecifier
 Dim tc As TaskController
 Dim index As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 index = allocateRequestEntry
 Set mRequests(index).serviceConsumer = serviceConsumer
 Set mRequests(index).builder = pContractsBuilder
 
 Set contractSpec = pContractsBuilder.Contracts.ContractSpecifier
 
-gLogger.Log LogLevelNormal, ProjectName & "." & ModuleName & ": requesting contract data for " & contractSpec.toString
+logMessage pMsg:="Requesting contract data for " & contractSpec.ToString, pProcName:="IContractInfoServiceProvider_RequestContractDetails"
 
 If contractSpec.secType = SecTypeNone Then
     ' no sectype supplied, so we'll place a separate request for each of the following:
@@ -275,6 +273,10 @@ Else
     incrementrequestcount index
 End If
 
+Exit Sub
+
+Err:
+handleFatalError pProcName:="IContractInfoServiceProvider_RequestContractDetails"
 End Sub
 
 Private Sub IContractInfoServiceProvider_StoreContractDetails( _
@@ -303,6 +305,9 @@ Dim lContract As Contract
 Dim index As Long
 
 
+Dim failpoint As Long
+On Error GoTo Err
+
 index = CLng(ev.cookie)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
@@ -316,13 +321,18 @@ Else
         Next
     End If
     If decrementRequestCount(index) = 0 Then
-        gLogger.Log LogLevelNormal, ProjectName & "." & ModuleName & _
-                                    ": received contract data for " & _
-                                    mRequests(index).builder.Contracts.ContractSpecifier.toString
+        logMessage pMsg:="received contract data for " & _
+                        mRequests(index).builder.Contracts.ContractSpecifier.ToString, _
+                        pProcName:="TaskCompletionListener_taskCompleted"
         mRequests(index).serviceConsumer.LoadComplete mHandle
         releaseRequestEntry index
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TaskCompletionListener_taskCompleted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -404,11 +414,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "createDatabase" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createDatabase", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function decrementRequestCount( _
@@ -418,19 +424,34 @@ decrementRequestCount = mRequests(index).numberOfRequests
 End Function
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
+On Error GoTo Err
 
-Set mCommonServiceConsumer = Nothing
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
 
 Private Sub incrementrequestcount( _
                 ByVal index As Long)
 mRequests(index).numberOfRequests = mRequests(index).numberOfRequests + 1
+End Sub
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub registerSP()
@@ -448,11 +469,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "registerSP" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="registerSP", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub releaseRequestEntry( _

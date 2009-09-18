@@ -179,11 +179,10 @@ Private Sub ICommonServiceConsumer_NotifyFatalError( _
                 ByVal spHandle As Long)
 Dim spName As String
 spName = NameFromHandle(spHandle)
-RemoveSP spHandle
 
 gTB.NotifyFatalError errorCode, _
                     errorMessage, _
-                    spName & ":" & source
+                    source & IIf(spName <> "", vbCrLf & spName, "")
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
@@ -714,14 +713,14 @@ Friend Function CreateLiveOrderSubmitter( _
                 ) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim OrderSubmitter As TradeBuildSP.IOrderSubmitter
+Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
             
 Set lOrderSimulatorSp = getLiveOrderSubmissionSP
 If lOrderSimulatorSp Is Nothing Then Exit Function
 
-Set OrderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
+Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
 
-Set CreateLiveOrderSubmitter = OrderSubmitter
+Set CreateLiveOrderSubmitter = orderSubmitter
 
                             
 End Function
@@ -754,7 +753,7 @@ Friend Function CreateSimulatedOrderSubmitter( _
                 ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim OrderSubmitter As TradeBuildSP.IOrderSubmitter
+Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -773,9 +772,9 @@ If lOrderSimulatorSp Is Nothing Then
     AddSP lOrderSimulatorSp, Nothing, ""
 End If
 
-Set OrderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
+Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
 
-Set CreateSimulatedOrderSubmitter = OrderSubmitter
+Set CreateSimulatedOrderSubmitter = orderSubmitter
 
                             
 End Function
@@ -893,9 +892,9 @@ loadContracts = True
 If contractInfoSP Is Nothing Then
     ' there doesn't seem to be a primary contract service provider configured,
     ' so let's try the secondary
-    gLogLogger.Log LogLevelDetail, "No primary contract info service provider configured - trying secondary"
+    gLog pMsg:="No primary contract info service provider configured - trying secondary", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
     If Not loadContractsFromSecondarySP(-1, serviceConsumer, pContractsBuilder) Then
-        gLogLogger.Log LogLevelDetail, "No secondary contract info service provider configured - can't load contracts"
+        gLog pMsg:="No secondary contract info service provider configured - can't load contracts", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
         loadContracts = False
     End If
 Else

@@ -93,7 +93,7 @@ If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     RaiseEvent Error(ev.errorNumber, ev.errorMessage)
 Else
-    If gLogger.isLoggable(LogLevelMediumDetail) Then
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then
         gLogger.Log LogLevelMediumDetail, _
                     "TickWriter: successfully wrote data for " & mInstrument.shortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601)
     End If
@@ -151,7 +151,15 @@ startWriteTimer
 End Sub
 
 Public Sub finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 writePeriodData
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeAsk( _
@@ -169,11 +177,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeAsk" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeAsk", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeBid( _
@@ -191,11 +195,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeBid" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeBid", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeClose( _
@@ -212,11 +212,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeClose" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeClose", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeHigh( _
@@ -233,11 +229,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeHigh" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeHigh", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeLow( _
@@ -254,11 +246,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeLow" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeLow", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeMarketDepthData( _
@@ -280,11 +268,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeMarketDepthData" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeMarketDepthData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeMarketDepthReset( _
@@ -299,11 +283,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeMarketDepthReset" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeMarketDepthReset", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeOpen( _
@@ -319,11 +299,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeOpen" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeOpen", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeOpenInterest( _
@@ -339,11 +315,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeOpenInterest" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeOpenInterest", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeTick( _
@@ -377,14 +349,11 @@ With tick
         writeVolume .timestamp, .size
     End Select
 End With
+
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeTick" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeTick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeTrade( _
@@ -402,11 +371,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeTrade" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeTrade", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub writeVolume( _
@@ -422,11 +387,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "writeVolume" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeVolume", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -435,6 +396,9 @@ End Sub
 
 Private Sub checkIfNewPeriod(ByVal timestamp As Date)
 Dim barTime As Date
+Dim failpoint As Long
+On Error GoTo Err
+
 barTime = gTruncateTimeToMinute(timestamp)
 If barTime = mOpeningTimestamp Then Exit Sub
 
@@ -449,15 +413,31 @@ startWriteTimer
 
 mOpeningTimestamp = barTime
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkIfNewPeriod", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub startWriteTimer()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mWriteTimer Is Nothing Then Set mWriteTimer = CreateIntervalTimer(4000 + (Int(2000 * Rnd) + 1), ExpiryTimeUnitMilliseconds)
 mWriteTimer.StartTimer
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="startWriteTimer", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub writePeriodData()
 Dim tc As TaskController
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mTde Is Nothing Then Exit Sub
 If Not mDataAdded Then Exit Sub
@@ -471,7 +451,7 @@ If mUseAsynchronousWrites Then
                                         IIf(mTde.BasePrice = MaxDouble, 0#, mTde.BasePrice), _
                                         mTde.tickSize, _
                                         mTde.encodedData)
-    tc.addTaskCompletionListener Me
+    tc.AddTaskCompletionListener Me
     Set mTickWriter = Nothing
 Else
     mTickWriter.WriteData mTde.encodingFormatIdentifier, _
@@ -482,6 +462,11 @@ Else
 End If
 
 mDataAdded = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writePeriodData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 

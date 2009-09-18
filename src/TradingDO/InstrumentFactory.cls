@@ -783,7 +783,7 @@ If clp.NumberOfArgs <> 3 Then
             "Name must be of the form exchangename/instrumentclassname/instrumentname"
 End If
 
-Set instrClass = mDB.InstrumentClassFactory.loadByName(clp.Arg(0) & "/" & clp.Arg(1))
+Set instrClass = mDB.InstrumentClassFactory.loadByName("""" & clp.Arg(0) & """/""" & clp.Arg(1) & """")
 If instrClass Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "getNameWhereCondition", _

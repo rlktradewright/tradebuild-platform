@@ -1004,6 +1004,11 @@ enableApplyButton True
 enableCancelButton True
 End Sub
 
+Private Sub TickfilePathText_Change()
+enableApplyButton True
+enableCancelButton True
+End Sub
+
 Private Sub TWSClientIdText_Change()
 enableApplyButton isValidTwsProperties
 enableCancelButton True
@@ -1080,9 +1085,9 @@ Dim da As DataAdapter
 If mCustomParams Is Nothing Then
     Set mCustomParams = New Parameters
     Set da = New DataAdapter
-    Set da.Object = mCustomParams
+    Set da.object = mCustomParams
     Set ParamsGrid.DataSource = da
-    mCustomParams.addCollectionChangeListener Me
+    mCustomParams.AddCollectionChangeListener Me
 End If
 
 loadConfig configdata
@@ -1596,22 +1601,22 @@ On Error Resume Next
 CustomEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 ProgIdText = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 
-mCustomParams.removeCollectionChangeListener Me
+mCustomParams.RemoveCollectionChangeListener Me
 
 Set mCustomParams = New Parameters
 
 For Each prop In mCurrProps
-    mCustomParams.setParameterValue prop.InstanceQualifier, _
+    mCustomParams.SetParameterValue prop.InstanceQualifier, _
                                     prop.value
 Next
 
 On Error GoTo 0
 
 Set da = New DataAdapter
-Set da.Object = mCustomParams
+Set da.object = mCustomParams
 Set ParamsGrid.DataSource = da
 
-mCustomParams.addCollectionChangeListener Me
+mCustomParams.AddCollectionChangeListener Me
 
 End Sub
 

@@ -222,7 +222,8 @@ End Sub
 '@================================================================================
 
 Private Sub ChartSelector_Click()
-switchToChart ChartSelector.selectedItem.index
+switchToChart ChartSelector.SelectedItem.index
+fireChange MultiChartSelectionChanged
 End Sub
 
 Private Sub ControlToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
@@ -468,6 +469,11 @@ Set lSpec = mSpec.Clone
 lSpec.Timeframe = pTimeframe
 
 Set lTab = addTab(pTimeframe)
+
+' we notify the add before calling ShowChart or ShowHistoric chart so that it's before
+' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
+fireChange MultiChartAdd
+
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts).AddConfigurationSection(ConfigSectionTradeBuildChart & "(" & GenerateGUIDString & ")")
 End If
@@ -477,8 +483,6 @@ If mIsHistoric Then
 Else
     lChart.showChart mTicker, lSpec, mBarFormatterFactory
 End If
-
-fireChange MultiChartAdd
 
 lTab.Selected = True
 fireChange MultiChartSelectionChanged
@@ -630,7 +634,12 @@ End If
 nxtIndex = nextIndex(index)
 closeChart index
 If index = mCurrentIndex Then mCurrentIndex = 0
-If nxtIndex <> 0 Then SelectChart nxtIndex
+
+If nxtIndex <> 0 Then
+    SelectChart nxtIndex
+Else
+    If Not mConfig Is Nothing Then mConfig.RemoveSetting (ConfigSettingCurrentChart)
+End If
 
 fireChange MultiChartRemove
 fireChange MultiChartSelectionChanged
@@ -831,7 +840,7 @@ ChartSelector.Top = UserControl.Height - ChartSelector.Height
 ControlToolbar.ZOrder 0
 ChartSelector.ZOrder 0
 If Count > 0 Then
-    TBChart(getChartControlIndexFromIndex(ChartSelector.selectedItem.index)).Height = ChartSelector.Top
+    TBChart(getChartControlIndexFromIndex(ChartSelector.SelectedItem.index)).Height = ChartSelector.Top
 Else
     TBChart(0).Height = ChartSelector.Top
 End If
@@ -853,6 +862,8 @@ TBChart(getChartControlIndexFromIndex(index)).Visible = True
 TBChart(getChartControlIndexFromIndex(index)).Top = 0
 TBChart(getChartControlIndexFromIndex(index)).Height = ChartSelector.Top
 mCurrentIndex = index
+
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 
 Set showChart = lChart
 End Function
@@ -897,14 +908,12 @@ For i = 1 To TBChart.UBound
 Next
 End Sub
 
-Private Function switchToChart( _
-                ByVal index As Long) As TradeBuildChart
-If index = mCurrentIndex Then Exit Function
+Private Sub switchToChart( _
+                ByVal index As Long)
+If index = mCurrentIndex Then Exit Sub
 
 hideChart mCurrentIndex
-Set switchToChart = showChart(index)
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
-fireChange MultiChartSelectionChanged
+showChart index
 
-End Function
+End Sub
 

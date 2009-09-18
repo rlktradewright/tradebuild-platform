@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "HistoricDataWriter"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -103,6 +105,7 @@ End Property
 '@================================================================================
 
 Friend Sub ReleaseDataStore()
+gLog pMsg:="Releasing data store", pProcName:="ReleaseDataStore", pProjName:=ProjectName, pModName:=ModuleName
 mWriter.ReleaseDataStore
 
 Set mSelfRef = Me
@@ -115,13 +118,13 @@ mServiceProviderWriterReady = False
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
-Dim item As Variant
+Dim Item As Variant
 Dim pendingWrite As PendingBarWrite
 
 mServiceProviderWriterReady = True
 
-For Each item In mPendingWrites
-    pendingWrite = item
+For Each Item In mPendingWrites
+    pendingWrite = Item
     WriteBar pendingWrite.Bar, _
             pendingWrite.barType, _
             pendingWrite.barTimePeriod

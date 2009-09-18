@@ -67,11 +67,11 @@ Private Sub Task_Cancel()
 End Sub
 
 Private Sub Task_run()
-gLogLogger.Log LogLevelDetail, "Loading contracts for " & mContractsBuilder.Contracts.contractSpecifier.toString
+gLog pMsg:="Loading contracts", pMsgQualifier:=mContractsBuilder.Contracts.contractSpecifier.ToString, pProcName:="Task_run", pProjName:=ProjectName, pModName:=ModuleName
 If Not gTB.ServiceProviders.loadContracts(Me, mContractsBuilder) Then
     mTaskContext.notify ApiNotifyCodes.ApiNotifyTryLater, _
                         "No contract info service provider has been configured"
-    mTaskContext.finish mContracts, False
+    mTaskContext.Finish mContracts, False
 Else
     mTaskContext.suspend -1
 End If
@@ -100,10 +100,10 @@ Private Sub IContractInfoServiceConsumer_LoadComplete( _
 If mContracts.Count = 0 Then
     ' try the secondary contract service provider if any
     If Not gTB.ServiceProviders.loadContractsFromSecondarySP(handle, Me, mContractsBuilder) Then
-        mTaskContext.finish mContracts, False
+        mTaskContext.Finish mContracts, False
     End If
 Else
-    mTaskContext.finish mContracts, False
+    mTaskContext.Finish mContracts, False
 End If
 End Sub
 
@@ -118,7 +118,7 @@ Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
     mTaskContext.notify ApiNotifyCodes.ApiNotifyInvalidRequest, _
                         eventMessage
-    mTaskContext.finish mContracts, False
+    mTaskContext.Finish mContracts, False
 End Select
 
 gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle

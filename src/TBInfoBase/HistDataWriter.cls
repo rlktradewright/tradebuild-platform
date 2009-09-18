@@ -120,9 +120,7 @@ finish
 mHistDataServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "IBarDataWriter_ReleaseDataStore", _
-                Err.Description
+handleFatalError "IBarDataWriter_ReleaseDataStore"
 End Sub
 
 Private Sub IBarDataWriter_WriteBar( _
@@ -132,35 +130,36 @@ Private Sub IBarDataWriter_WriteBar( _
 Dim index As Long
 Dim tc As TaskController
 
+Dim failpoint As Long
 On Error GoTo Err
 
 With data
     If mUseSynchronousWrites Then
         mInstrument.WriteBar .TimeStamp, _
                             barType, _
-                            barTimePeriod.length, _
-                            .openValue, _
-                            .highValue, _
-                            .lowValue, _
-                            .closeValue, _
-                            .volume, _
-                            .tickVolume, _
-                            .openInterest
+                            barTimePeriod.Length, _
+                            .OpenValue, _
+                            .HighValue, _
+                            .LowValue, _
+                            .CloseValue, _
+                            .Volume, _
+                            .TickVolume, _
+                            .OpenInterest
     Else
         Set tc = mInstrument.WriteBarAsync(.TimeStamp, _
                                             barType, _
-                                            barTimePeriod.length, _
-                                            .openValue, _
-                                            .highValue, _
-                                            .lowValue, _
-                                            .closeValue, _
-                                            .volume, _
-                                            .tickVolume, _
-                                            .openInterest)
+                                            barTimePeriod.Length, _
+                                            .OpenValue, _
+                                            .HighValue, _
+                                            .LowValue, _
+                                            .CloseValue, _
+                                            .Volume, _
+                                            .TickVolume, _
+                                            .OpenInterest)
         tc.AddTaskCompletionListener Me
     End If
     For index = 0 To UBound(mTimeframeTable)
-        If mTimeframeTable(index).timeframe.length = barTimePeriod.length Then
+        If mTimeframeTable(index).timeframe.Length = barTimePeriod.Length Then
             With mTimeframeTable(index)
                 If .prevTimestamp <> data.TimeStamp Then
                     .barsWritten = .barsWritten + 1
@@ -175,11 +174,9 @@ With data
 End With
 
 Exit Sub
+
 Err:
-gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":IBarDataWriter_WriteBar: error (" & Err.Number & "): " & Err.Description
-mCommonServiceConsumer.NotifyRecoverableError Err.Number, _
-                                            Err.Description, _
-                                            mHistDataServiceProvider.handle
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataWriter_WriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -188,12 +185,20 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TWUtilities30.TaskCompletionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.errorNumber <> 0 Then
-    gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":TaskCompletionListener_taskCompleted: error (" & Err.Number & "): " & Err.Description
+    logMessage pMsg:="error (" & ev.errorNumber & "): " & ev.errorMessage, pProcName:="TaskCompletionListener_taskCompleted", pLogLevel:=LogLevelHighDetail
     mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
                                         ev.errorMessage, _
                                         mHistDataServiceProvider.handle
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TaskCompletionListener_taskCompleted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -201,6 +206,9 @@ End Sub
 '@===============================================================================
 
 Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
@@ -208,7 +216,7 @@ ElseIf ev.errorNumber <> 0 Then
                                 mHistDataServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error: specified instrument does not exist: " & mContract.specifier.toString, _
+                                "Error: specified instrument does not exist: " & mContract.specifier.ToString, _
                                 mHistDataServiceProvider.handle
 Else
     Set mInstrument = ev.result
@@ -219,49 +227,12 @@ Else
     mServiceConsumer.OutputBarfileCreated mConnectionString
 End If
 Set mInstrumentTC = Nothing
-End Sub
 
-''@===============================================================================
-'' mTradingDB Event Handlers
-''@===============================================================================
-'
-'Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
-'On Error GoTo Err
-'mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
-'                        "error " & errorCode & ": " & errorDesc, _
-'                        mHistDataServiceProvider.handle
-'mServiceConsumer.NotReady
-'Exit Sub
-'Err:
-'handleFatalError Err.Number, _
-'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
-'                Err.Description
-'End Sub
-'
-'Private Sub mTradingDB_ConnectSucceeded()
-'Dim i As Long
-'
-'On Error GoTo Err
-'
-'mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
-'                        "Connected to data source", _
-'                        mHistDataServiceProvider.handle
-'
-'gLogger.Log LogLevelDetail, "HistDataWriter: requesting " & (UBound(mTimeframeTable) + 1) & " timeframes"
-'
-'For i = 0 To UBound(mTimeframeTable)
-'    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
-'                                        mTimeframeTable(i).saveIntervalSeconds
-'Next
-'
-'Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContractSpec)
-'
-'Exit Sub
-'Err:
-'handleFatalError Err.Number, _
-'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
-'                Err.Description
-'End Sub
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
 
 '@===============================================================================
 ' Properties
@@ -295,24 +266,17 @@ End If
 s = mServiceProviderName & " (" & mContract.specifier.localSymbol & ")"
 For i = 0 To UBound(mTimeframeTable)
     s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
-            mTimeframeTable(i).timeframe.toString & _
+            mTimeframeTable(i).timeframe.ToString & _
             ") written in " & _
             mTimeframeTable(i).writes & " database writes"
 Next
-gLogger.Log LogLevelNormal, _
-            s, _
-            Me
+logMessage pMsg:=s, pProcName:="finish"
 Set mServiceConsumer = Nothing
 
 Exit Sub
 
 Err:
-gLogger.Log LogLevelSevere, _
-        "Error " & Err.Number & " at " & _
-        ProjectName & "." & ModuleName & ":" & "finish" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub initialise( _
@@ -324,6 +288,9 @@ Friend Sub initialise( _
                 ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
                 ByVal pContract As Contract, _
                 ByVal useSynchronousWrites As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 mServiceProviderName = Name
 
 Set mCommonServiceConsumer = CommonServiceConsumer
@@ -331,7 +298,7 @@ Set mServiceConsumer = barDataOutputServiceConsumer
 
 mUseSynchronousWrites = useSynchronousWrites
 
-gLogger.Log LogLevelDetail, "HistDataWriter: connecting to database"
+logMessage pMsg:="Connecting to database", pProcName:="initialise", pLogLevel:=LogLevelDetail
 
 mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
@@ -339,10 +306,14 @@ Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 Set mHistDataServiceProvider = HistDataServiceProvider
 Set mContract = pContract
 
-If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, "HistDataWriter: retrieving instrument object for " & mContract.specifier.toString
+If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
 
 Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -350,29 +321,48 @@ End Sub
 '@===============================================================================
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, _
-                            Source, _
-                            Description, _
-                            mHistDataServiceProvider.handle
+On Error GoTo Err
 
-finish
-mHistDataServiceProvider.dataWriterFinished Me
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHistDataServiceProvider.handle
+End Sub
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub requestTimeframes()
 Dim i As Long
 
-gLogger.Log LogLevelDetail, "HistDataWriter: requesting " & (UBound(mTimeframeTable) + 1) & " timeframes"
+Dim failpoint As Long
+On Error GoTo Err
+
+logMessage pMsg:="requesting " & (UBound(mTimeframeTable) + 1) & " timeframes", pProcName:="requestTimeframes", pLogLevel:=LogLevelDetail
 
 For i = 0 To UBound(mTimeframeTable)
     mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
                                         mTimeframeTable(i).saveIntervalSeconds
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="requestTimeframes", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 

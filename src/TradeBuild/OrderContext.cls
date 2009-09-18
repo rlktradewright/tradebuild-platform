@@ -581,8 +581,8 @@ Public Function Buy(ByRef number As Long, _
 Dim failpoint As Long
 On Error GoTo Err
 
-gLogLogger.Log LogLevelNormal, _
-                "Buy " & mTicker.Contract.specifier.localSymbol & _
+gLog pMsg:="Buy", _
+    pMsgQualifier:=mTicker.Contract.specifier.localSymbol & _
                 " number=" & number & _
                 "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
                 "; buyPrice=" & buyPrice & _
@@ -602,7 +602,8 @@ gLogLogger.Log LogLevelNormal, _
                 "; targetTIF=" & gOrderTIFToString(targetTIF) & _
                 "; stopStrategy=" & TypeName(stopStrategy) & _
                 "; exitStrategy=" & TypeName(exitStrategy) & _
-                "; scalingStrategy=" & TypeName(scalingStrategy)
+                "; scalingStrategy=" & TypeName(scalingStrategy), _
+    pProcName:="Buy", pProjName:=ProjectName, pModName:=ModuleName
                 
 Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 number, _
@@ -1236,8 +1237,8 @@ Public Function Sell(ByRef number As Long, _
 Dim failpoint As Long
 On Error GoTo Err
 
-gLogLogger.Log LogLevelNormal, _
-                "Sell " & mTicker.Contract.specifier.localSymbol & _
+gLog pMsg:="Sell", _
+    pMsgQualifier:=mTicker.Contract.specifier.localSymbol & _
                 " number=" & number & _
                 "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
                 "; sellPrice=" & sellPrice & _
@@ -1257,7 +1258,8 @@ gLogLogger.Log LogLevelNormal, _
                 "; targetTIF=" & gOrderTIFToString(targetTIF) & _
                 "; stopStrategy=" & TypeName(stopStrategy) & _
                 "; exitStrategy=" & TypeName(exitStrategy) & _
-                "; scalingStrategy=" & TypeName(scalingStrategy)
+                "; scalingStrategy=" & TypeName(scalingStrategy), _
+    pProcName:="Sell", pProjName:=ProjectName, pModName:=ModuleName
                 
 Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 number, _

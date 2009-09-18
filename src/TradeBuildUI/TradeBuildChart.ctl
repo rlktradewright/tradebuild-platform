@@ -796,7 +796,7 @@ Dim studyConfig As StudyConfiguration
 
 Set studyConfig = New StudyConfiguration
 
-studyConfig.underlyingStudy = mTicker.InputStudy
+studyConfig.UnderlyingStudy = mTicker.InputStudy
 
 Set lStudy = mTimeframe.tradeStudy
 studyConfig.Study = lStudy
@@ -963,6 +963,7 @@ If Not mTimeframe.historicDataLoaded Then
     Chart1.DisableDrawing
 Else
     Chart1.EnableDrawing
+    setState ChartStates.ChartStateInitialised
     setState ChartStates.ChartStateLoaded
 End If
 

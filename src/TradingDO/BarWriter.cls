@@ -106,13 +106,13 @@ ElseIf Not mConnection Is Nothing Then
         mConnection.cancel
     End If
 End If
-If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": cancelled"
+If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": cancelled"
 mTaskContext.finish Empty, True
 End Sub
 
 Private Sub Task_run()
 connectToDB
-mTaskContext.suspend -1
+mTaskContext.Suspend -1
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -135,13 +135,31 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.connection)
 Dim s As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     If mDB.databaseType = DbMySQL5 And _
         pError.SQLState = "S1000" And _
         pError.NativeError = 1213 _
     Then
         ' a deadlock has been detected - retry the command
-        If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": deadlock detected - retrying"
+        logMessage pMsg:="Deadlock detected while writing bar - retrying", pProcName:="mConnection_ExecuteComplete"
+        Execute
+        Exit Sub
+    End If
+    
+    If (mDB.databaseType = DbSQLServer Or _
+        mDB.databaseType = DbSQLServer2000 Or _
+        mDB.databaseType = DbSQLServer2005 Or _
+        mDB.databaseType = DbSQLServer7) And _
+        pError.Number = -2147217871 _
+    Then
+        ' this occurs occasionally while running under Hyper-V Server, when the OS
+        ' has for some reason not been able to complete a write to the SQL Server
+        ' transaction log within 15 seconds. It's not clear whether the database
+        ' write has completed, so we retry it
+        logMessage pMsg:="OS timeout while writing to transaction log detected - retrying", pProcName:="mConnection_ExecuteComplete"
         Execute
         Exit Sub
     End If
@@ -158,7 +176,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     s = "Bar Writer: execution error " & vbCrLf & _
         gGenerateErrorMessage(pError) & _
         gGenerateConnectionErrorMessages(pConnection)
-    gLogger.Log LogLevelNormal, taskName & ": " & s
+    logMessage pMsg:=taskName & ": " & s, pProcName:="mConnection_ExecuteComplete"
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
         Debug.Print "BarWriter: close connection(error)"
@@ -173,7 +191,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     s
     End If
 Else
-    If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, taskName & ": data written"
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, taskName & ": data written"
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
@@ -184,6 +202,11 @@ Else
         mTaskContext.finish 0, False
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="mConnection_ExecuteComplete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -238,6 +261,9 @@ Friend Sub WriteBar( _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 mAsynchronous = False
 mTimestamp = timestamp
 mBarType = barType
@@ -256,6 +282,11 @@ doWriteBar
 
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Friend Function WriteBarAsync( _
@@ -271,6 +302,9 @@ Friend Function WriteBarAsync( _
                 ByVal openInterest As Long, _
                 ByVal cookie As Variant, _
                 ByVal pTaskName As String) As TaskController
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mAsynchronous = True
 mTimestamp = timestamp
@@ -291,6 +325,11 @@ Set WriteBarAsync = StartTask(Me, _
                             taskName, _
                             cookie)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBarAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 '@===============================================================================
@@ -298,14 +337,25 @@ End Function
 '@===============================================================================
 
 Private Sub connectToDB()
+Dim failpoint As Long
+On Error GoTo Err
+
 Debug.Print "BarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 If mConnector Is Nothing Then Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
 mConnector.connect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="connectToDB", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub doWriteBar()
 
 Dim param As ADODB.Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
@@ -401,9 +451,17 @@ Set param = mCmd.CreateParameter(, _
 mCmd.Parameters.Append param
 
 Execute
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="doWriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub Execute()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCmd.ActiveConnection = mConnection
 If mAsynchronous Then
     mCmd.Execute , _
@@ -414,6 +472,19 @@ Else
                 , _
                 ExecuteOptionEnum.adExecuteNoRecords
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Execute", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Function taskName() As String

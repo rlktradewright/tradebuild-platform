@@ -864,23 +864,23 @@ End Sub
 '@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
-AskText = ev.priceString
+AskText = GetFormattedPriceFromQuoteEvent(ev)
 AskSizeText = ev.size
 setPriceFields
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
-BidText = ev.priceString
+BidText = GetFormattedPriceFromQuoteEvent(ev)
 BidSizeText = ev.size
 setPriceFields
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
-HighText = ev.priceString
+HighText = GetFormattedPriceFromQuoteEvent(ev)
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
-LowText = ev.priceString
+LowText = GetFormattedPriceFromQuoteEvent(ev)
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
@@ -891,12 +891,12 @@ Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_sessionOpen(ev As tradebuild26.QuoteEvent)
 
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
-LastText = ev.priceString
+LastText = GetFormattedPriceFromQuoteEvent(ev)
 LastSizeText = ev.size
 setPriceFields
 End Sub
@@ -914,7 +914,7 @@ setAction index
 End Sub
 
 Private Sub BracketTabStrip_Click()
-mCurrentBrackerOrderIndex = BracketTabStrip.selectedItem.index - 1
+mCurrentBrackerOrderIndex = BracketTabStrip.SelectedItem.index - 1
 showOrderFields mCurrentBrackerOrderIndex
 End Sub
 
@@ -1620,7 +1620,7 @@ field.Enabled = False
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.BackColor = SystemColorConstants.vbButtonFace
+field.backColor = SystemColorConstants.vbButtonFace
 End Sub
 
 Private Sub disableOrderFields(ByVal index As Long)
@@ -1655,7 +1655,7 @@ field.Enabled = True
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.BackColor = SystemColorConstants.vbWindowBackground
+field.backColor = SystemColorConstants.vbWindowBackground
 End Sub
 
 Private Sub enableOrderFields(ByVal index As Long)
@@ -1706,7 +1706,7 @@ End Function
 Private Function isValidOrder( _
                 ByVal index As Long) As Boolean
 
-If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).BackColor = vbButtonFace
+If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).backColor = vbButtonFace
 
 If comboItemData(ActionCombo(index)) = OrderActions.ActionNone Then
     isValidOrder = True
@@ -1894,7 +1894,7 @@ Private Sub setInvalidControl( _
                 ByVal index As Long)
 Set mInvalidControls(index) = pControl
 If BracketTabStrip.Visible Then BracketTabStrip.Tabs(index + 1).Selected = True
-pControl.BackColor = ErroredFieldColor
+pControl.backColor = ErroredFieldColor
 End Sub
 
 '/**
@@ -2468,15 +2468,15 @@ Next
 End Sub
 
 Private Sub showTickerValues()
-AskText.Text = mTicker.AskPriceString
+AskText.Text = mTicker.FormatPrice(mTicker.AskPrice)
 AskSizeText.Text = mTicker.AskSize
-BidText.Text = mTicker.BidPriceString
+BidText.Text = mTicker.FormatPrice(mTicker.BidPrice)
 BidSizeText.Text = mTicker.BidSize
-LastText.Text = mTicker.TradePriceString
+LastText.Text = mTicker.FormatPrice(mTicker.TradePrice)
 LastSizeText.Text = mTicker.TradeSize
 VolumeText.Text = mTicker.Volume
-HighText.Text = mTicker.HighPriceString
-LowText.Text = mTicker.LowPriceString
+HighText.Text = mTicker.FormatPrice(mTicker.HighPrice)
+LowText.Text = mTicker.FormatPrice(mTicker.LowPrice)
 setPriceFields
 End Sub
 

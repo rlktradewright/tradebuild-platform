@@ -490,7 +490,6 @@ End Type
 Public Type QuoteEvent
     source          As Object
     price           As Double
-    priceString     As String
     size            As Long
     PriceChange     As ValueChanges
     sizeChange      As ValueChanges
@@ -530,7 +529,7 @@ End Type
 Public Type WriterEvent
     source          As Object
     action          As WriterNotifications
-    filename        As String
+    Filename        As String
 End Type
 
 '@================================================================================
@@ -588,6 +587,13 @@ End Function
 Public Function EntryOrderTypeToShortString( _
                 ByVal value As EntryOrderTypes) As String
 EntryOrderTypeToShortString = gEntryOrderTypeToShortString(value)
+End Function
+
+Public Function GetFormattedPriceFromQuoteEvent( _
+                ByRef ev As QuoteEvent) As String
+Dim lTicker As Ticker
+Set lTicker = ev.source
+GetFormattedPriceFromQuoteEvent = lTicker.FormatPrice(ev.price)
 End Function
 
 Public Function LegOpenCloseFromString( _

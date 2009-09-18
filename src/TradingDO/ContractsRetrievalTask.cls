@@ -87,7 +87,7 @@ If mInstrEnumerator Is Nothing Then
                                                 mBuilder.Contracts.ContractSpecifier, _
                                                 , _
                                                 "LoadBySpecifier/" & mBuilder.Contracts.ContractSpecifier.ToString & "(" & gGetSequenceNumber & ")")
-    mTaskContext.suspend -1
+    mTaskContext.Suspend -1
 Else
     If Not mInstrEnumerator.MoveNext Then
         mTaskContext.finish mBuilder.Contracts, False
@@ -100,10 +100,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-If errNumber = 3265 Then
+If Err.Number = 3265 Then
     ' This error is 'Item cannot be found in the collection corresponding
     ' to the requested name or ordinal'. It occurs the first time this object
     ' runs after the database has not been used for some time (hours?). The
@@ -112,14 +109,14 @@ If errNumber = 3265 Then
     '
     ' So just try it again!
     
-    gLogger.Log LogLevelNormal, "ContractsRetrievalTask restarted after receiving the following error:" & vbCrLf & _
-                                "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+    logMessage pMsg:="ContractsRetrievalTask restarted after receiving the following error", _
+                pMsgQualifier:="Error " & Err.Number & ": " & Err.Description, _
+                pProcName:="Task_run"
     Set mInstrEnumerator = Nothing
     Exit Sub
 End If
     
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Task_run", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let Task_TaskContext( _
@@ -139,6 +136,9 @@ Private Sub mFetchInstrumentsTC_Completed( _
                 ev As TWUtilities30.TaskCompletionEvent)
 Dim instruments As DataObjects
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
@@ -147,8 +147,13 @@ Else
     Set instruments = ev.result
     Set mInstrEnumerator = instruments.Enumerator
     
-    mTaskContext.continue
+    mTaskContext.Continue
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mFetchInstrumentsTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -169,6 +174,15 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+End Sub
+
 
 
 

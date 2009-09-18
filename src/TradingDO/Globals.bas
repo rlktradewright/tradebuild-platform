@@ -96,7 +96,7 @@ Public Const FieldWidthTickSize                 As Long = 65
 Public Const FieldWidthTickValue                As Long = 65
 Public Const FieldWidthTimeZone                 As Long = 150
 
-Public Const InfoTypeTradingDO                  As String = "tradebuild.tradingdo"
+Public Const InfoTypeTradingDO                  As String = "tradebuild.log.tradingdo"
 
 Public Const InstrumentColumnCurrency           As String = "CURRENCY"
 Public Const InstrumentColumnCurrencyE          As String = "EFFECTIVECURRENCY"
@@ -157,6 +157,8 @@ Public Const TimeZoneColumnName                 As String = GenericColumnName
 Private mSqlBadWords()                          As Variant
 
 Private mLogger                                 As Logger
+
+Private mLogTokens(9)                           As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -317,7 +319,7 @@ If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!
         Set providerIDs = New TWUtilities30.Parameters
 
         For Each localSymbol In instrument.localSymbols
-            providerIDs.setParameterValue localSymbol.providerKey, localSymbol.localSymbol
+            providerIDs.SetParameterValue localSymbol.providerKey, localSymbol.localSymbol
         Next
         .providerIDs = providerIDs
     End If
@@ -391,6 +393,32 @@ Public Function gIsStateSet( _
                 ByVal stateToTest As ADODB.ObjectStateEnum) As Boolean
 gIsStateSet = ((value And stateToTest) = stateToTest)
 End Function
+
+Public Sub gLog(ByRef pMsg As String, _
+                ByRef pProjName As String, _
+                ByRef pModName As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
+mLogTokens(0) = "["
+mLogTokens(1) = pProjName
+mLogTokens(2) = "."
+mLogTokens(3) = pModName
+mLogTokens(4) = ":"
+mLogTokens(5) = pProcName
+mLogTokens(6) = "] "
+mLogTokens(7) = pMsg
+If Len(pMsgQualifier) <> 0 Then
+    mLogTokens(8) = ": "
+    mLogTokens(9) = pMsgQualifier
+Else
+    mLogTokens(8) = vbNullString
+    mLogTokens(9) = vbNullString
+End If
+
+gLogger.Log pLogLevel, Join(mLogTokens, "")
+End Sub
 
 Public Function gRoundTimeToSecond( _
                 ByVal timestamp As Date) As Date

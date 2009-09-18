@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#197.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#210.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -106,9 +106,9 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":166C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(0)=   "LiveExecutionsSummary"
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(2)=   "LiveExecutionsSummary"
+      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1688
@@ -317,51 +317,51 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":16C0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(2)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(3)=   "NumHistoryBarsText"
-      Tab(1).Control(4)=   "SessionOnlyCheck"
-      Tab(1).Control(5)=   "ChartButton"
+      Tab(1).Control(0)=   "ChartButton"
+      Tab(1).Control(1)=   "SessionOnlyCheck"
+      Tab(1).Control(2)=   "NumHistoryBarsText"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(4)=   "Label22"
+      Tab(1).Control(5)=   "Label18"
       Tab(1).ControlCount=   6
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":16DC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "FromDatePicker"
-      Tab(2).Control(5)=   "ToDatePicker"
-      Tab(2).Control(6)=   "HistTimeframeSelector"
-      Tab(2).Control(7)=   "NumHistBarsText"
-      Tab(2).Control(8)=   "HistSessionOnlyCheck"
-      Tab(2).Control(9)=   "HistContractSearch"
+      Tab(2).Control(0)=   "HistContractSearch"
+      Tab(2).Control(1)=   "HistSessionOnlyCheck"
+      Tab(2).Control(2)=   "NumHistBarsText"
+      Tab(2).Control(3)=   "HistTimeframeSelector"
+      Tab(2).Control(4)=   "ToDatePicker"
+      Tab(2).Control(5)=   "FromDatePicker"
+      Tab(2).Control(6)=   "Label3"
+      Tab(2).Control(7)=   "Label2"
+      Tab(2).Control(8)=   "Label4"
+      Tab(2).Control(9)=   "Label5"
       Tab(2).ControlCount=   10
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":16F8
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(3)=   "ReplayProgressBar"
-      Tab(3).Control(4)=   "TickfileList"
-      Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "ClearTickfileListButton"
-      Tab(3).Control(6)=   "SelectTickfilesButton"
-      Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(8)=   "StopReplayButton"
-      Tab(3).Control(9)=   "PauseReplayButton"
-      Tab(3).Control(10)=   "PlayTickFileButton"
-      Tab(3).Control(11)=   "SkipReplayButton"
+      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(4)=   "ReplaySpeedCombo"
+      Tab(3).Control(5)=   "SelectTickfilesButton"
+      Tab(3).Control(6)=   "ClearTickfileListButton"
+      Tab(3).Control(7)=   "TickfileList"
+      Tab(3).Control(7).Enabled=   0   'False
+      Tab(3).Control(8)=   "ReplayProgressBar"
+      Tab(3).Control(9)=   "ReplayProgressLabel"
+      Tab(3).Control(10)=   "ReplayContractLabel"
+      Tab(3).Control(11)=   "Label20"
       Tab(3).ControlCount=   12
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1714
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ConfigEditorButton"
+      Tab(4).Control(0)=   "Label6"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "Label6"
+      Tab(4).Control(2)=   "ConfigEditorButton"
       Tab(4).ControlCount=   3
       Begin TradeBuildUI26.ContractSearch HistContractSearch 
          Height          =   5055
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67895299
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67895299
+         Format          =   20774915
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -876,7 +876,6 @@ Set mTickers = mTradeBuildAPI.Tickers
 End Sub
 
 Private Sub Form_Load()
-
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -897,23 +896,31 @@ gLogger.Log LogLevelDetail, "Main form loaded successfully"
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Form_Load" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Load", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub Form_QueryUnload( _
                 cancel As Integer, _
                 UnloadMode As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 updateInstanceSettings
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_QueryUnload", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub Form_Resize()
 Static prevHeight As Long
 Static prevWidth As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 
@@ -926,6 +933,12 @@ prevWidth = Me.Width
 prevHeight = Me.Height
 
 Resize
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Resize", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub Form_Terminate()
@@ -935,6 +948,9 @@ End Sub
 Private Sub Form_Unload(cancel As Integer)
 Dim lTicker As Ticker
 Dim f As Form
+
+Dim failpoint As Long
+On Error GoTo Err
 
 logMessage "Unloading program"
 
@@ -956,6 +972,12 @@ saveSettings
 mTradeBuildAPI.ServiceProviders.RemoveAll
 
 killLogging
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Unload", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -967,6 +989,8 @@ Private Sub LogListener_finish()
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Dim failpoint As Long
+On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
     ' clear some space at the start of the textbox
@@ -980,6 +1004,12 @@ LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
 LogText.SelText = formatLogRecord(logrec)
 LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="LogListener_Notify", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -989,7 +1019,10 @@ End Sub
 Private Sub CancelOrderPlexButton_Click()
 Dim op As OrderPlex
 
-If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+Dim failpoint As Long
+On Error GoTo Err
+
+If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
     Set op = LiveOrdersSummary.SelectedItem
 Else
     Set op = SimulatedOrdersSummary.SelectedItem
@@ -998,29 +1031,56 @@ If Not op Is Nothing Then op.cancel True
 
 CancelOrderPlexButton.Enabled = False
 ModifyOrderPlexButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="CancelOrderPlexButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ChartButton_Click()
 Dim lTicker As Ticker
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each lTicker In TickerGrid1.SelectedTickers
     createChart lTicker
 Next
 
 clearSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ChartButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub Chart1Button_Click()
 Dim lTicker As Ticker
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each lTicker In TickerGrid1.SelectedTickers
     createChart lTicker
 Next
 
 clearSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Chart1Button_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 TickfileList.Clear
 ClearTickfileListButton.Enabled = False
 mTickfileManager.ClearTickfileSpecifiers
@@ -1030,11 +1090,20 @@ SkipReplayButton.Enabled = False
 StopReplayButton.Enabled = False
 ChartButton.Enabled = False
 Chart1Button.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ClearTickfileListButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ClosePositionsButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mTradeBuildAPI.ClosingPositions Then
-    If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+    If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
         mTradeBuildAPI.CloseAllPositions PositionTypeLive, _
                                         ClosePositionCancelOrders Or ClosePositionWaitForCancel
     Else
@@ -1042,13 +1111,31 @@ If Not mTradeBuildAPI.ClosingPositions Then
                                         ClosePositionCancelOrders Or ClosePositionWaitForCancel
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ClosePositionsButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ConfigEditorButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 showConfigEditor
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ConfigEditorButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ControlsSSTab_Click(PreviousTab As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case ControlsSSTab.Tab
 Case ControlsTabIndexNumbers.ControlsTabIndexConfig
     ConfigEditorButton.SetFocus
@@ -1072,14 +1159,31 @@ Case ControlsTabIndexNumbers.ControlsTabIndexTickfileReplay
     End If
 End Select
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ControlsSSTab_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ControlsTabStrip_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 ControlsSSTab.SetFocus
-ControlsSSTab.Tab = ControlsTabStrip.SelectedItem.Index - 1
+ControlsSSTab.Tab = ControlsTabStrip.SelectedItem.index - 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ControlsTabStrip_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub FeaturesSSTAB_Click(PreviousTab As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case FeaturesSSTAB.Tab
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexLog
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
@@ -1090,81 +1194,197 @@ Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
     End If
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexExecutions
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="FeaturesSSTAB_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub HideControlsPicture_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 hideControls
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="HideControlsPicture_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub HideFeaturesPicture_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 hideFeatures
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="HideFeaturesPicture_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub HistContractSearch_Action()
+Dim failpoint As Long
+On Error GoTo Err
+
 createHistoricCharts HistContractSearch.SelectedContracts
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="HistContractSearch_Action", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub HistContractSearch_NoContracts()
+Dim failpoint As Long
+On Error GoTo Err
+
 MsgBox "No contracts found", vbExclamation, "Attention"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="HistContractSearch_NoContracts", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub LiveContractSearch_Action()
-mTickers.startTickersFromContracts TickerOptOrdersAreLive + TickerOptUseExchangeTimeZone, _
+Dim failpoint As Long
+On Error GoTo Err
+
+mTickers.StartTickersFromContracts TickerOptOrdersAreLive + TickerOptUseExchangeTimeZone, _
                                     LiveContractSearch.SelectedContracts
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="LiveContractSearch_Action", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub LiveContractSearch_NoContracts()
+Dim failpoint As Long
+On Error GoTo Err
+
 MsgBox "No contracts found", vbExclamation, "Attention"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="LiveContractSearch_NoContracts", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub LiveChartTimeframeSelector_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 setChartButtonTooltip
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="LiveChartTimeframeSelector_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub LiveOrdersSummary_SelectionChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 setLiveOrdersSelection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="LiveOrdersSummary_SelectionChanged", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub MarketDepthButton_Click()
 Dim lTicker As Ticker
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each lTicker In TickerGrid1.SelectedTickers
     showMarketDepthForm lTicker
 Next
 
 clearSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="MarketDepthButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ModifyOrderPlexButton_Click()
-If OrdersSummaryTabStrip.SelectedItem.Index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
+Dim failpoint As Long
+On Error GoTo Err
+
+If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
     If LiveOrdersSummary.SelectedItem Is Nothing Then
         ModifyOrderPlexButton.Enabled = False
-    ElseIf LiveOrdersSummary.isSelectedItemModifiable Then
-        getOrderTicket.showOrderPlex LiveOrdersSummary.SelectedItem, LiveOrdersSummary.selectedOrderIndex
+    ElseIf LiveOrdersSummary.IsSelectedItemModifiable Then
+        getOrderTicket.showOrderPlex LiveOrdersSummary.SelectedItem, LiveOrdersSummary.SelectedOrderIndex
     End If
 Else
     If SimulatedOrdersSummary.SelectedItem Is Nothing Then
         ModifyOrderPlexButton.Enabled = False
-    ElseIf SimulatedOrdersSummary.isSelectedItemModifiable Then
-        getOrderTicket.showOrderPlex SimulatedOrdersSummary.SelectedItem, SimulatedOrdersSummary.selectedOrderIndex
+    ElseIf SimulatedOrdersSummary.IsSelectedItemModifiable Then
+        getOrderTicket.showOrderPlex SimulatedOrdersSummary.SelectedItem, SimulatedOrdersSummary.SelectedOrderIndex
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ModifyOrderPlexButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub NumHistBarsText_Validate(cancel As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="NumHistBarsText_Validate", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub NumHistoryBarsText_Validate(cancel As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then cancel = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="NumHistoryBarsText_Validate", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub OrdersSummaryTabStrip_Click()
 Static currIndex As Long
 
-If OrdersSummaryTabStrip.SelectedItem.Index = currIndex Then Exit Sub
+Dim failpoint As Long
+On Error GoTo Err
 
-Select Case OrdersSummaryTabStrip.SelectedItem.Index
+If OrdersSummaryTabStrip.SelectedItem.index = currIndex Then Exit Sub
+
+Select Case OrdersSummaryTabStrip.SelectedItem.index
 Case OrdersTabIndexNumbers.OrdersTabIndexLive
     LiveOrdersSummary.Visible = True
     SimulatedOrdersSummary.Visible = False
@@ -1174,32 +1394,68 @@ Case OrdersTabIndexNumbers.OrdersTabIndexSimulated
     SimulatedOrdersSummary.Visible = True
     setSimulatedOrdersSelection
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="OrdersSummaryTabStrip_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub OrderTicket1Button_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 If getSelectedTicker Is Nothing Then
     MsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
 Else
     getOrderTicket.Ticker = getSelectedTicker
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="OrderTicket1Button_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub OrderTicketButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 If getSelectedTicker Is Nothing Then
     MsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
 Else
     getOrderTicket.Ticker = getSelectedTicker
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="OrderTicketButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub PauseReplayButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 logMessage "Tickfile replay paused"
 mTickfileManager.PauseReplay
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="PauseReplayButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub PlayTickFileButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 PlayTickFileButton.Enabled = False
 SelectTickfilesButton.Enabled = False
 ClearTickfileListButton.Enabled = False
@@ -1217,12 +1473,27 @@ End If
 mTickfileManager.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
 
 mTickfileManager.StartReplay
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="PlayTickFileButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ReplaySpeedCombo_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mTickfileManager Is Nothing Then
     mTickfileManager.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ReplaySpeedCombo_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
@@ -1231,10 +1502,13 @@ Dim tickfiles As TickFileSpecifiers
 Dim tfs As TickfileSpecifier
 Dim userCancelled As Boolean
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set tickfiles = SelectTickfiles(userCancelled)
 If userCancelled Then Exit Sub
 
-Set mTickfileManager = mTickers.createTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone)
+Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone)
 
 mTickfileManager.TickFileSpecifiers = tickfiles
 
@@ -1245,26 +1519,70 @@ Next
 checkOkToStartReplay
 ClearTickfileListButton.Enabled = True
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="SelectTickfilesButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub ShowControlsPicture_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 showControls
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ShowControlsPicture_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub showFeaturesPicture_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 showFeatures
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="showFeaturesPicture_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub SimulatedOrdersSummary_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 setSimulatedOrdersSelection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="SimulatedOrdersSummary_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub SkipReplayButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 logMessage "Tickfile skipped"
 mTickfileManager.SkipTickfile
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="SkipReplayButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub StopReplayButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 SkipReplayButton.Enabled = True
@@ -1274,20 +1592,53 @@ ClearTickfileListButton.Enabled = True
 ChartButton.Enabled = False
 Chart1Button.Enabled = False
 mTickfileManager.Ticker.StopTicker
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="StopReplayButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub StopTickerButton_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid1.stopSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="StopTickerButton_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub TickerGrid1_SelectionChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 handleSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="TickerGrid1_SelectionChanged", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub TickerGrid1_TickerStarted(ByVal row As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid1.deselectSelectedTickers
 TickerGrid1.selectTicker row
 handleSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="TickerGrid1_TickerStarted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -1295,7 +1646,16 @@ End Sub
 '================================================================================
 
 Private Sub mCurrentClock_Tick()
+Dim failpoint As Long
+On Error GoTo Err
+
 displayTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mCurrentClock_Tick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -1306,6 +1666,7 @@ Private Sub mTickers_StateChange( _
                 ev As StateChangeEvent)
 Dim lTicker As Ticker
 
+Dim failpoint As Long
 On Error GoTo Err
 
 OrderTicketButton.Enabled = Not (getSelectedTicker Is Nothing)
@@ -1345,7 +1706,8 @@ End Select
 Exit Sub
 
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTickers_TickerStateEvent"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTickers_StateChange", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -1358,6 +1720,7 @@ Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal TickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 continueMode As ReplayContinueModes)
+Dim failpoint As Long
 On Error GoTo Err
 
 If tickfileIndex <> 0 Then setCurrentClock getDefaultClock
@@ -1369,11 +1732,14 @@ TickfileList.ListIndex = tickfileIndex - 1
 ReplayContractLabel.caption = Replace(pContract.specifier.ToString, vbCrLf, "; ")
 
 Exit Sub
+
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTickfileManager_QueryReplayNextTickfile"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTickfileManager_QueryReplayNextTickfile", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
+Dim failpoint As Long
 On Error GoTo Err
 
 MarketDepthButton.Enabled = False
@@ -1392,15 +1758,19 @@ ReplayProgressLabel.caption = ""
 logMessage "Tickfile replay completed"
 
 Exit Sub
+
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayCompleted"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTickfileManager_ReplayCompleted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub mTickfileManager_ReplayProgress( _
                 ByVal tickfileTimestamp As Date, _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
+Dim failpoint As Long
 On Error GoTo Err
+
 ReplayProgressBar.value = percentComplete
 ReplayProgressLabel.caption = tickfileTimestamp & _
                                 "  Processed " & _
@@ -1408,36 +1778,36 @@ ReplayProgressLabel.caption = tickfileTimestamp & _
                                 " events"
 
 Exit Sub
+
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayProgress"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTickfileManager_ReplayProgress", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
+Dim failpoint As Long
 On Error GoTo Err
 
 pTicker.DOMEventsRequired = DOMProcessedEvents
 
 Exit Sub
+
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTickfileManager_TickerAllocated"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTickfileManager_TickerAllocated", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-' fires when an unrecoverable error has occurred in TradeBuild
+' fires when an unrecoverable error has occurred in TradeBuild.
 Private Sub mTradeBuildAPI_Error( _
                 ByRef ev As ErrorEvent)
-On Error GoTo Err
+On Error Resume Next    ' ignore any further errors
 
-gHandleFatalError ev.errorCode, ev.errorMessage, "mTradeBuildAPI_Error"
-
-Exit Sub
-Err:
-
-' an error has occurred in the fatal error handler!! All we can do is terminate abruptly
-End
+' TradeBuild will have already logged the error so no need for us to do it
+gHandleFatalError
 
 End Sub
 
@@ -1445,6 +1815,7 @@ Private Sub mTradeBuildAPI_Notification( _
                 ByRef ev As NotificationEvent)
 Dim spError As ServiceProviderError
 
+Dim failpoint As Long
 On Error GoTo Err
 
 Select Case ev.eventCode
@@ -1465,8 +1836,10 @@ Case ApiNotifyCodes.ApiNotifyServiceProviderError
 End Select
 
 Exit Sub
+
 Err:
-gHandleFatalError Err.Number, Err.Description, "mTradeBuildAPI_notification"
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTradeBuildAPI_Notification", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -1479,7 +1852,6 @@ End Sub
 
 Public Sub initialise( _
                 ByVal editConfig As Boolean)
-
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1496,16 +1868,14 @@ loadAppInstanceConfig
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function LoadConfig( _
                 ByVal configToLoad As TWUtilities30.ConfigurationSection) As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 updateInstanceSettings
 saveSettings
@@ -1529,11 +1899,24 @@ Else
             vbExclamation, _
             "Attention!"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="LoadConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub MakeVisible()
+Dim failpoint As Long
+On Error GoTo Err
+
 Me.Show
 If Not mControlsHidden Then ControlsTabStrip.Tabs(1).Selected = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="MakeVisible", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '================================================================================
@@ -1541,6 +1924,9 @@ End Sub
 '================================================================================
 
 Private Sub applyInstanceSettings()
+Dim failpoint As Long
+On Error GoTo Err
+
 logMessage "Loading configuration: positioning main form"
 Select Case gAppInstanceConfig.GetSetting(ConfigSettingMainFormWindowstate, WindowStateNormal)
 Case WindowStateMaximized
@@ -1580,31 +1966,62 @@ For Each chartConfig In gAppInstanceConfig.AddPrivateConfigurationSection(Config
     createChartFromConfig chartConfig
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="applyInstanceSettings", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub checkOkToStartReplay()
+Dim failpoint As Long
+On Error GoTo Err
+
 If TickfileList.ListCount <> 0 Then
     PlayTickFileButton.Enabled = True
 Else
     PlayTickFileButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkOkToStartReplay", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub clearSelectedTickers()
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid1.deselectSelectedTickers
 handleSelectedTickers
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="clearSelectedTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub closeChartsAndMarketDepthForms()
 Dim f As Form
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each f In Forms
     If TypeOf f Is fChart Or TypeOf f Is fMarketDepth Then Unload f
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="closeChartsAndMarketDepthForms", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
 Dim chartForm As fChart
 Dim tp As timePeriod
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not pTicker.State = TickerStateRunning Then Exit Sub
 
@@ -1613,17 +2030,30 @@ Set chartForm = New fChart
 chartForm.showChart pTicker, _
                     createChartSpec(tp, CLng(NumHistoryBarsText.Text), SessionOnlyCheck = vbChecked)
 chartForm.Show vbModeless
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createChart", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub createChartFromConfig( _
                 ByVal chartConfig As ConfigurationSection)
 Dim chartForm As fChart
+Dim failpoint As Long
+On Error GoTo Err
+
 Set chartForm = New fChart
 If chartForm.LoadFromConfig(chartConfig) Then
     chartForm.Show vbModeless
 Else
     Unload chartForm
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createChartFromConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function createChartSpec( _
@@ -1636,6 +2066,9 @@ Static xAxisRegionStyle As ChartRegionStyle
 Static defaultYAxisRegionStyle As ChartRegionStyle
 Static defaultBarsStyle As BarStyle
 Static defaultVolumeStyle As DataPointStyle
+Dim failpoint As Long
+On Error GoTo Err
+
 ReDim GradientFillColors(1) As Long
 
 If defaultRegionStyle Is Nothing Then
@@ -1716,6 +2149,10 @@ createChartSpec.TwipsPerBar = 100
 
 createChartSpec.ChartBackColor = &H7F7FFF
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createChartSpec", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub createHistoricCharts( _
@@ -1725,6 +2162,9 @@ Dim fromDate As Date
 Dim toDate As Date
 Dim chartForm As fChart
 Dim lContract As Contract
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each lContract In pContracts
     Set lTicker = mTickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
@@ -1754,55 +2194,118 @@ For Each lContract In pContracts
 
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createHistoricCharts", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function createTicker() As Ticker
+Dim failpoint As Long
+On Error GoTo Err
+
 Set createTicker = mTickers.Add(TickerOptions.TickerOptOrdersAreLive + _
                                 TickerOptions.TickerOptUseExchangeTimeZone)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub displayTime()
 Dim theTime As Date
+Dim failpoint As Long
+On Error GoTo Err
+
 theTime = mCurrentClock.TimeStamp
 StatusBar1.Panels("datetime") = FormatDateTime(theTime, vbShortDate) & _
                 Format(theTime, " hh:mm:ss")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="displayTime", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub finishUIControls()
+Dim failpoint As Long
+On Error GoTo Err
+
 LiveOrdersSummary.Finish
 SimulatedOrdersSummary.Finish
 LiveExecutionsSummary.Finish
 SimulatedExecutionsSummary.Finish
 TickerGrid1.Finish
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishUIControls", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function formatLogRecord(ByVal logrec As LogRecord) As String
 Static formatter As LogFormatter
+Dim failpoint As Long
+On Error GoTo Err
+
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
-formatLogRecord = formatter.formatRecord(logrec)
+formatLogRecord = formatter.FormatRecord(logrec)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="formatLogRecord", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function getDefaultClock() As Clock
 Static lClock As Clock
+Dim failpoint As Long
+On Error GoTo Err
+
 If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
 Set getDefaultClock = lClock
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getDefaultClock", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function getOrderTicket() As fOrderTicket
 Static lOrderTicket As fOrderTicket
+Dim failpoint As Long
+On Error GoTo Err
+
 If lOrderTicket Is Nothing Then
     Set lOrderTicket = New fOrderTicket
 End If
 lOrderTicket.Show vbModeless
 Set getOrderTicket = lOrderTicket
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getOrderTicket", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function getSelectedTicker() As Ticker
+Dim failpoint As Long
+On Error GoTo Err
+
 If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedTicker = TickerGrid1.SelectedTickers.Item(1)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getSelectedTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub handleSelectedTickers()
 Dim lTicker As Ticker
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
     StopTickerButton.Enabled = False
@@ -1846,9 +2349,16 @@ Else
     End If
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="handleSelectedTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub hideControls()
+Dim failpoint As Long
+On Error GoTo Err
+
 ControlsSSTab.Visible = False
 ControlsTabStrip.Visible = False
 ShowControlsPicture.Visible = True
@@ -1856,23 +2366,47 @@ HideControlsPicture.Visible = False
 mControlsHidden = True
 Resize
 Me.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="hideControls", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub hideFeatures()
+Dim failpoint As Long
+On Error GoTo Err
+
 FeaturesSSTAB.Visible = False
 ShowFeaturesPicture.Visible = True
 HideFeaturesPicture.Visible = False
 mFeaturesHidden = True
 Resize
 Me.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="hideFeatures", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub killLogging()
-gLogger.removeLogListener Me
+Dim failpoint As Long
+On Error GoTo Err
+
+gLogger.RemoveLogListener Me
 gKillLogging
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="killLogging", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub loadAppInstanceConfig()
+
+Dim failpoint As Long
+On Error GoTo Err
 
 logMessage "Loading configuration: " & gAppInstanceConfig.InstanceQualifier
 
@@ -1896,14 +2430,30 @@ logMessage "Loaded configuration: " & gAppInstanceConfig.InstanceQualifier
 CurrentConfigNameText = gAppInstanceConfig.InstanceQualifier
 Me.caption = gAppTitle & _
             " - " & gAppInstanceConfig.InstanceQualifier
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="loadAppInstanceConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub logMessage(message As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 gLogger.Log LogLevelNormal, message
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="logMessage", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub Resize()
 Dim left As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mControlsHidden Then
     left = ShowControlsPicture.Width + 60
@@ -1950,17 +2500,33 @@ End If
 LogText.Width = FeaturesSSTAB.Width - 120 - 120
 LiveExecutionsSummary.Width = FeaturesSSTAB.Width - 120 - 120
 SimulatedExecutionsSummary.Width = FeaturesSSTAB.Width - 120 - 120
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Resize", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub saveSettings()
+Dim failpoint As Long
+On Error GoTo Err
+
 If gConfigFile.dirty Then
     logMessage "Saving configuration"
     gConfigFile.save
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="saveSettings", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setChartButtonTooltip()
 Dim tp As timePeriod
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set tp = LiveChartTimeframeSelector.timeframeDesignator
 
@@ -1968,17 +2534,33 @@ ChartButton.ToolTipText = "Show " & _
                         tp.ToString & _
                         " chart"
 Chart1Button.ToolTipText = ChartButton.ToolTipText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setChartButtonTooltip", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setCurrentClock( _
                 ByVal pClock As Clock)
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCurrentClock = pClock
 StatusBar1.Panels("timezone") = mCurrentClock.TimeZone.standardName
 displayTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setCurrentClock", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setLiveOrdersSelection()
 Dim selection As OrderPlex
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set selection = LiveOrdersSummary.SelectedItem
 
@@ -1986,21 +2568,29 @@ If selection Is Nothing Then
     CancelOrderPlexButton.Enabled = False
     ModifyOrderPlexButton.Enabled = False
 Else
-    If LiveOrdersSummary.selectedOrderIndex = 0 Then
+    If LiveOrdersSummary.SelectedOrderIndex = 0 Then
         CancelOrderPlexButton.Enabled = True
     Else
         CancelOrderPlexButton.Enabled = False
     End If
-    If LiveOrdersSummary.isSelectedItemModifiable Then
+    If LiveOrdersSummary.IsSelectedItemModifiable Then
         ModifyOrderPlexButton.Enabled = True
     Else
         ModifyOrderPlexButton.Enabled = False
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setLiveOrdersSelection", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setSimulatedOrdersSelection()
 Dim selection As OrderPlex
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set selection = SimulatedOrdersSummary.SelectedItem
 
@@ -2008,20 +2598,28 @@ If selection Is Nothing Then
     CancelOrderPlexButton.Enabled = False
     ModifyOrderPlexButton.Enabled = False
 Else
-    If SimulatedOrdersSummary.selectedOrderIndex = 0 Then
+    If SimulatedOrdersSummary.SelectedOrderIndex = 0 Then
         CancelOrderPlexButton.Enabled = True
     Else
         CancelOrderPlexButton.Enabled = False
     End If
-    If SimulatedOrdersSummary.isSelectedItemModifiable Then
+    If SimulatedOrdersSummary.IsSelectedItemModifiable Then
         ModifyOrderPlexButton.Enabled = True
     Else
         ModifyOrderPlexButton.Enabled = False
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setSimulatedOrdersSelection", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupExecutionSummaries()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTradeBuildAPI.AllOrdersSimulated Then
     SimulatedExecutionsSummary.Simulated = True
     SimulatedExecutionsSummary.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
@@ -2043,17 +2641,33 @@ Else
     ExecutionsSummaryTabStrip.Visible = True
     ExecutionsSummaryTabStrip.Tabs.Item(ExecutionsTabIndexLive).Selected = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupExecutionSummaries", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupLogging()
-gLogger.addLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
+Dim failpoint As Long
+On Error GoTo Err
+
+gLogger.AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
 gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Log file: " & gLogFileName
 gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupLogging", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupOrderSummaries()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTradeBuildAPI.AllOrdersSimulated Then
     SimulatedOrdersSummary.Finish
     SimulatedOrdersSummary.Simulated = True
@@ -2079,9 +2693,17 @@ Else
     OrdersSummaryTabStrip.Visible = True
     OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexLive).Selected = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupOrderSummaries", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupReplaySpeedCombo()
+Dim failpoint As Long
+On Error GoTo Err
+
 ReplaySpeedCombo.AddItem "10 Second intervals"
 ReplaySpeedCombo.ItemData(0) = -10000
 ReplaySpeedCombo.AddItem "5 Second intervals"
@@ -2103,29 +2725,60 @@ ReplaySpeedCombo.ItemData(8) = 8
 
 ReplaySpeedCombo.Text = "Actual speed"
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupReplaySpeedCombo", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupTickerGrid()
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid1.Finish
 TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupTickerGrid", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupTimeframeSelectors()
 ' now set up the timeframe selectors, which depends on what timeframes the historical data service
 ' provider supports (it obtains this info from TradeBuild)
+Dim failpoint As Long
+On Error GoTo Err
+
 LiveChartTimeframeSelector.initialise   ' use the default settings built-in to the control
 LiveChartTimeframeSelector.selectTimeframe GetTimePeriod(5, TimePeriodMinute)
 HistTimeframeSelector.initialise
 HistTimeframeSelector.selectTimeframe GetTimePeriod(5, TimePeriodMinute)
 
 setChartButtonTooltip
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupTimeframeSelectors", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub showConfigEditor()
+Dim failpoint As Long
+On Error GoTo Err
+
 mConfigEditor.Show vbModeless
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showConfigEditor", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub showControls()
+Dim failpoint As Long
+On Error GoTo Err
+
 mControlsHidden = False
 Resize
 Me.Refresh
@@ -2133,19 +2786,35 @@ ControlsTabStrip.Visible = True
 ControlsSSTab.Visible = True
 ShowControlsPicture.Visible = False
 HideControlsPicture.Visible = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showControls", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub showFeatures()
+Dim failpoint As Long
+On Error GoTo Err
+
 mFeaturesHidden = False
 Resize
 Me.Refresh
 FeaturesSSTAB.Visible = True
 ShowFeaturesPicture.Visible = False
 HideFeaturesPicture.Visible = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showFeatures", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
 Dim mktDepthForm As fMarketDepth
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not pTicker.State = TickerStateRunning Then Exit Sub
 
@@ -2153,9 +2822,17 @@ Set mktDepthForm = New fMarketDepth
 mktDepthForm.numberOfRows = 100
 mktDepthForm.Ticker = pTicker
 mktDepthForm.Show vbModeless
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showMarketDepthForm", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub updateInstanceSettings()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not gAppInstanceConfig Is Nothing Then
     gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionMainForm
     Select Case Me.WindowState
@@ -2175,6 +2852,11 @@ If Not gAppInstanceConfig Is Nothing Then
     gAppInstanceConfig.SetSetting ConfigSettingMainFormFeaturesHidden, CStr(mFeaturesHidden)
     
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="updateInstanceSettings", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

@@ -110,13 +110,13 @@ ElseIf Not mConnection Is Nothing Then
         mConnection.cancel
     End If
 End If
-If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": cancelled"
+If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": cancelled"
 mTaskContext.finish Empty, True
 End Sub
 
 Private Sub Task_run()
 connectToDB
-mTaskContext.suspend -1
+mTaskContext.Suspend -1
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -139,13 +139,31 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.connection)
 Dim errorMsg As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     If mDB.databaseType = DbMySQL5 And _
         pError.SQLState = "S1000" And _
         pError.NativeError = 1213 _
     Then
         ' a deadlock has been detected - retry the command
-        If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": deadlock detected - retrying"
+        logMessage pMsg:="Deadlock detected while writing tick data - retrying", pProcName:="mConnection_ExecuteComplete"
+        Execute
+        Exit Sub
+    End If
+    
+    If (mDB.databaseType = DbSQLServer Or _
+        mDB.databaseType = DbSQLServer2000 Or _
+        mDB.databaseType = DbSQLServer2005 Or _
+        mDB.databaseType = DbSQLServer7) And _
+        pError.Number = -2147217871 _
+    Then
+        ' this occurs occasionally while running under Hyper-V Server, when the OS
+        ' has for some reason not been able to complete a write to the SQL Server
+        ' transaction log within 15 seconds. It's not clear whether the database
+        ' write has completed, so we retry it
+        logMessage pMsg:="OS timeout while writing to transaction log detected - retrying", pProcName:="mConnection_ExecuteComplete"
         Execute
         Exit Sub
     End If
@@ -162,7 +180,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     errorMsg = "TickDataWriter: execution error " & vbCrLf & _
                 gGenerateErrorMessage(pError) & _
                 gGenerateConnectionErrorMessages(pConnection)
-    gLogger.Log LogLevelNormal, taskName & ": " & errorMsg
+    logMessage pMsg:=taskName & ": " & errorMsg, pProcName:="mConnection_ExecuteComplete"
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
         Debug.Print "TickDataWriter: close connection(error)"
@@ -174,7 +192,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         RaiseEvent Error(pError.Number, errorMsg)
     End If
 Else
-    If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, taskName & ": data written"
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, taskName & ": data written"
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
@@ -187,6 +205,11 @@ Else
         RaiseEvent DataWritten
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="mConnection_ExecuteComplete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -232,6 +255,9 @@ Friend Sub WriteData( _
                         ByVal BasePrice As Double, _
                         ByVal tickSize As Double, _
                         ByRef Data() As Byte)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mCmd Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":WriteData", _
@@ -249,6 +275,11 @@ mData = Data
 connectToDB
 DoWriteTickData
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function WriteDataAsync( _
@@ -257,6 +288,9 @@ Friend Function WriteDataAsync( _
                         ByVal BasePrice As Double, _
                         ByVal tickSize As Double, _
                         ByRef Data() As Byte) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mCmd Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":WriteData", _
@@ -278,6 +312,11 @@ Set WriteDataAsync = StartTask(Me, _
                                 taskName, _
                                 mPeriodStartTime)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteDataAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 '@===============================================================================
@@ -285,14 +324,25 @@ End Function
 '@===============================================================================
 
 Private Sub connectToDB()
+Dim failpoint As Long
+On Error GoTo Err
+
 Debug.Print "TickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 If mConnector Is Nothing Then Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
 mConnector.connect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="connectToDB", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub DoWriteTickData()
 
 Dim param As ADODB.Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
@@ -348,9 +398,17 @@ Set param = mCmd.CreateParameter(, _
 mCmd.Parameters.Append param
 
 Execute
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DoWriteTickData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub Execute()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCmd.ActiveConnection = mConnection
 If mAsynchronous Then
     mCmd.Execute , _
@@ -361,6 +419,19 @@ Else
                 , _
                 ExecuteOptionEnum.adExecuteNoRecords
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Execute", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Function taskName() As String

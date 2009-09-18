@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#37.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#39.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -336,7 +336,7 @@ TickerGrid.AllowUserReordering = PropBag.ReadProperty("AllowUserReordering", TwG
 TickerGrid.BackColorSel = PropBag.ReadProperty("BackColorSel", -2147483635)
 TickerGrid.BackColorFixed = PropBag.ReadProperty("BackColorFixed", -2147483633)
 TickerGrid.BackColorBkg = PropBag.ReadProperty("BackColorBkg", -2147483636)
-TickerGrid.BackColor = PropBag.ReadProperty("BackColor", &H80000005)
+TickerGrid.backColor = PropBag.ReadProperty("BackColor", &H80000005)
 TickerGrid.SelectionMode = PropBag.ReadProperty("SelectionMode", 2)
 TickerGrid.ScrollBars = PropBag.ReadProperty("ScrollBars", 3)
 TickerGrid.RowSizingMode = PropBag.ReadProperty("RowSizingMode", TwGridRowSizeAll)
@@ -352,7 +352,7 @@ TickerGrid.FontFixed = PropBag.ReadProperty("FontFixed", UserControl.Ambient.Fon
 TickerGrid.Font = PropBag.ReadProperty("Font", UserControl.Ambient.Font)
 TickerGrid.ForeColorSel = PropBag.ReadProperty("ForeColorSel", -2147483634)
 TickerGrid.ForeColorFixed = PropBag.ReadProperty("ForeColorFixed", -2147483630)
-TickerGrid.ForeColor = PropBag.ReadProperty("ForeColor", &H80000008)
+TickerGrid.foreColor = PropBag.ReadProperty("ForeColor", &H80000008)
 TickerGrid.FocusRect = PropBag.ReadProperty("FocusRect", TwGridFocusNone)
 TickerGrid.FixedRows = PropBag.ReadProperty("FixedRows", 1)
 TickerGrid.FixedCols = PropBag.ReadProperty("FixedCols", 1)
@@ -379,7 +379,7 @@ Call PropBag.WriteProperty("AllowUserReordering", TickerGrid.AllowUserReordering
 Call PropBag.WriteProperty("BackColorSel", TickerGrid.BackColorSel, -2147483635)
 Call PropBag.WriteProperty("BackColorFixed", TickerGrid.BackColorFixed, -2147483633)
 Call PropBag.WriteProperty("BackColorBkg", TickerGrid.BackColorBkg, -2147483636)
-Call PropBag.WriteProperty("BackColor", TickerGrid.BackColor, &H80000005)
+Call PropBag.WriteProperty("BackColor", TickerGrid.backColor, &H80000005)
 Call PropBag.WriteProperty("SelectionMode", TickerGrid.SelectionMode, 2)
 Call PropBag.WriteProperty("ScrollBars", TickerGrid.ScrollBars, 3)
 Call PropBag.WriteProperty("RowSizingMode", TickerGrid.RowSizingMode, 0)
@@ -393,7 +393,7 @@ Call PropBag.WriteProperty("GridColorFixed", TickerGrid.GridColorFixed, 12632256
 Call PropBag.WriteProperty("GridColor", TickerGrid.GridColor, -2147483631)
 Call PropBag.WriteProperty("ForeColorSel", TickerGrid.ForeColorSel, -2147483634)
 Call PropBag.WriteProperty("ForeColorFixed", TickerGrid.ForeColorFixed, -2147483630)
-Call PropBag.WriteProperty("ForeColor", TickerGrid.ForeColor, &H80000008)
+Call PropBag.WriteProperty("ForeColor", TickerGrid.foreColor, &H80000008)
 Call PropBag.WriteProperty("FontFixed", TickerGrid.FontFixed)
 Call PropBag.WriteProperty("Font", TickerGrid.Font)
 Call PropBag.WriteProperty("FocusRect", TickerGrid.FocusRect, 1)
@@ -410,6 +410,9 @@ End Sub
 
 Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As Ticker
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lTicker = ev.Source
 
 TickerGrid.row = getTickerGridRow(lTicker)
@@ -435,6 +438,11 @@ Else
 End If
 
 incrementEventCount
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="PriceChangeListener_Change", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -443,58 +451,130 @@ End Sub
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.Ask)
 displaySize ev, mColumnMap(TickerGridColumns.AskSize)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_ask", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.Bid)
 displaySize ev, mColumnMap(TickerGridColumns.BidSize)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_bid", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.HighPrice)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_high", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.LowPrice)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_Low", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displaySize ev, mColumnMap(TickerGridColumns.OpenInterest)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_openInterest", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.ClosePrice)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_previousClose", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.OpenPrice)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_sessionOpen", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displayPrice ev, mColumnMap(TickerGridColumns.Trade)
 displaySize ev, mColumnMap(TickerGridColumns.TradeSize)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_trade", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 displaySize ev, mColumnMap(TickerGridColumns.Volume)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_volume", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -506,6 +586,9 @@ Private Sub TickerGrid_ColMoved( _
                 ByVal fromCol As Long, _
                 ByVal toCol As Long)
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If fromCol < toCol Then
     For i = fromCol To toCol
@@ -520,10 +603,23 @@ End If
 storeColumnMap
 
 RaiseEvent ColMoved(fromCol, toCol)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_ColMoved", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_ColMoving(ByVal fromCol As Long, ByVal toCol As Long, Cancel As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
     RaiseEvent ColMoving(fromCol, toCol, Cancel)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_ColMoving", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_Click()
@@ -531,6 +627,9 @@ Dim row As Long
 Dim rowSel As Long
 Dim col As Long
 Dim colSel As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 row = TickerGrid.row
 rowSel = TickerGrid.rowSel
 col = TickerGrid.col
@@ -559,22 +658,59 @@ End If
 mSelectedTickers.EndChange
 
 RaiseEvent Click
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_Click", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_DblClick()
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent DblClick
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_DblClick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_KeyDown(KeyCode As Integer, Shift As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent KeyDown(KeyCode, Shift)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_KeyDown", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_KeyPress(KeyAscii As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent KeyPress(KeyAscii)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_KeyPress", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_KeyUp(KeyCode As Integer, Shift As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent KeyUp(KeyCode, Shift)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_KeyUp", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_MouseDown( _
@@ -582,14 +718,30 @@ Private Sub TickerGrid_MouseDown( _
                 Shift As Integer, _
                 X As Single, _
                 Y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mShiftDown = (Shift And KeyDownShift)
 mControlDown = (Shift And KeyDownCtrl)
 mAltDown = (Shift And KeyDownAlt)
 RaiseEvent MouseDown(Button, Shift, X, Y)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_MouseDown", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent MouseMove(Button, Shift, X, Y)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_MouseMove", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_MouseUp( _
@@ -597,10 +749,18 @@ Private Sub TickerGrid_MouseUp( _
                 Shift As Integer, _
                 X As Single, _
                 Y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mShiftDown = (Shift And KeyDownShift)
 mControlDown = (Shift And KeyDownCtrl)
 mAltDown = (Shift And KeyDownAlt)
 RaiseEvent MouseUp(Button, Shift, X, Y)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_MouseUp", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_RowMoved( _
@@ -608,6 +768,9 @@ Private Sub TickerGrid_RowMoved( _
                 ByVal toRow As Long)
 Dim i As Long
 Dim lTicker As Ticker
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lTicker = mTickerTable(TickerGrid.rowdata(toRow)).theTicker
 
@@ -624,17 +787,30 @@ Else
 End If
 
 RaiseEvent RowMoved(fromRow, toRow)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_RowMoved", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub TickerGrid_RowMoving( _
                 ByVal fromRow As Long, _
                 ByVal toRow As Long, _
                 Cancel As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 If toRow > mNextGridRowIndex Then
     Cancel = True
 Else
     RaiseEvent RowMoving(fromRow, toRow, Cancel)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TickerGrid_RowMoving", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -651,7 +827,15 @@ End Sub
 '@================================================================================
 
 Private Sub mSelectedTickers_SelectionChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent SelectionChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mSelectedTickers_SelectionChanged", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -663,6 +847,9 @@ Dim lTicker As Ticker
 Dim index As Long
 Dim lContract As Contract
     
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lTicker = ev.Source
 
@@ -761,6 +948,11 @@ Case TickerStateStopped
         removeTicker index
     End If
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mTickers_StateChange", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -974,15 +1166,15 @@ Public Property Let ForeColorFixed(ByVal New_ForeColorFixed As OLE_COLOR)
     PropertyChanged "ForeColorFixed"
 End Property
 
-Public Property Get ForeColor() As OLE_COLOR
-Attribute ForeColor.VB_Description = "Specifies the foreground color for non-header cells."
-Attribute ForeColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
-Attribute ForeColor.VB_UserMemId = -513
-    ForeColor = TickerGrid.ForeColor
+Public Property Get foreColor() As OLE_COLOR
+Attribute foreColor.VB_Description = "Specifies the foreground color for non-header cells."
+Attribute foreColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute foreColor.VB_UserMemId = -513
+    foreColor = TickerGrid.foreColor
 End Property
 
-Public Property Let ForeColor(ByVal New_ForeColor As OLE_COLOR)
-    TickerGrid.ForeColor = New_ForeColor
+Public Property Let foreColor(ByVal New_ForeColor As OLE_COLOR)
+    TickerGrid.foreColor = New_ForeColor
     PropertyChanged "ForeColor"
 End Property
 
@@ -1071,14 +1263,14 @@ Public Property Let BackColorBkg(ByVal New_BackColorBkg As OLE_COLOR)
     PropertyChanged "BackColorBkg"
 End Property
 
-Public Property Get BackColor() As OLE_COLOR
-Attribute BackColor.VB_UserMemId = -501
-Attribute BackColor.VB_MemberFlags = "400"
-    BackColor = TickerGrid.BackColor
+Public Property Get backColor() As OLE_COLOR
+Attribute backColor.VB_UserMemId = -501
+Attribute backColor.VB_MemberFlags = "400"
+    backColor = TickerGrid.backColor
 End Property
 
-Public Property Let BackColor(ByVal New_BackColor As OLE_COLOR)
-    TickerGrid.BackColor = New_BackColor
+Public Property Let backColor(ByVal New_BackColor As OLE_COLOR)
+    TickerGrid.backColor = New_BackColor
     PropertyChanged "BackColor"
 End Property
 
@@ -1111,6 +1303,7 @@ End Property
 Public Sub deselectSelectedTickers()
 Dim index As Long
 Dim i As Long
+
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1126,11 +1319,7 @@ mSelectedTickers.Clear
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "deselectSelectedTickers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="deselectSelectedTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub deselectTicker( _
@@ -1143,11 +1332,7 @@ deselectATicker index
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "deselectTicker" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="deselectTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 'Public Sub ExtendSelection(ByVal row As Long, ByVal col As Long)
@@ -1176,11 +1361,27 @@ Err:
 End Sub
 
 Public Function GetColFromX(ByVal X As Long) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
     GetColFromX = TickerGrid.GetColFromX(X)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="GetColFromX", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetRowFromY(ByVal Y As Long) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
     GetRowFromY = TickerGrid.GetRowFromY(Y)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="GetRowFromY", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub InvertCellColors()
@@ -1192,11 +1393,7 @@ TickerGrid.InvertCellColors
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "InvertCellColors" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="InvertCellColors", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub LoadFromConfig( _
@@ -1269,15 +1466,11 @@ For Each tickerConfigSection In tickersConfigSection
 Next
 
 gLogger.Log LogLevels.LogLevelNormal, ProjectName & "." & ModuleName & ": Ticker grid loaded from config"
+
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadFromConfig" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="LoadFromConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub monitorWorkspace( _
@@ -1299,16 +1492,19 @@ mCountTimer.StartTimer
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "monitorWorkspace" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="monitorWorkspace", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveFromConfig()
+Dim failpoint As Long
+On Error GoTo Err
+
 mConfig.Remove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveFromConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub selectAllTickers()
@@ -1325,11 +1521,7 @@ mSelectedTickers.EndChange
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "selectAllTickers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="selectAllTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub selectTicker( _
@@ -1342,11 +1534,7 @@ selectATicker row
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "selectTicker" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="selectTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub setCellAlignment(ByVal row As Long, ByVal col As Long, pAlign As TWControls10.AlignmentSettings)
@@ -1358,11 +1546,7 @@ TickerGrid.setCellAlignment row, col, pAlign
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setCellAlignment" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setCellAlignment", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub stopAllTickers()
@@ -1384,12 +1568,7 @@ TickerGrid.Redraw = True
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "stopAllTickers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="stopAllTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub stopSelectedTickers()
@@ -1409,12 +1588,7 @@ TickerGrid.Redraw = True
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "stopSelectedTickers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="stopSelectedTickers", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -1426,6 +1600,9 @@ Private Sub addTickerToConfig( _
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
 Dim contractSpec As contractSpecifier
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mConfig Is Nothing Then
     If Not pTicker.ReplayingTickfile And _
@@ -1451,32 +1628,56 @@ If Not mConfig Is Nothing Then
         gLogger.Log LogLevels.LogLevelNormal, ProjectName & "." & ModuleName & ": Added Ticker to config " & pTicker.Key & "={" & pTicker.Contract.specifier.toString & "}"
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="addTickerToConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub calcAverageCharacterWidths( _
                 ByVal afont As StdFont)
+Dim failpoint As Long
+On Error GoTo Err
+
 mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", afont)
 mDigitWidth = getAverageCharacterWidth(".0123456789", afont)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="calcAverageCharacterWidths", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub deselectATicker( _
                 ByVal row As Long)
 Dim index As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 index = TickerGrid.rowdata(row)
 If isTickerSelected(index) Then
     mSelectedTickers.Remove mTickerTable(index).theTicker
     highlightRow mTickerTable(index).tickerGridRow
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="deselectATicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub displayPrice( _
                 ev As QuoteEvent, _
                 ByVal col As Long)
 Dim lTicker As Ticker
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lTicker = ev.Source
 TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = col
-TickerGrid.Text = ev.priceString
+TickerGrid.Text = GetFormattedPriceFromQuoteEvent(ev)
 
 If ev.PriceChange = ValueChangeNone Or (Not mHighlightPriceChanges) Then
     If ev.recentPriceChange = ValueChangeUp Then
@@ -1499,12 +1700,20 @@ Else
 End If
 
 incrementEventCount
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="displayPrice", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub displaySize( _
                 ev As QuoteEvent, _
                 ByVal col As Long)
 Dim lTicker As Ticker
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lTicker = ev.Source
 TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = col
@@ -1527,25 +1736,54 @@ Else
 End If
 
 incrementEventCount
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="displaySize", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function getAverageCharacterWidth( _
                 ByVal widthString As String, _
                 ByVal pFont As StdFont) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 Set FontPicture.Font = pFont
 getAverageCharacterWidth = FontPicture.TextWidth(widthString) / Len(widthString)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getAverageCharacterWidth", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function getTickerGridRow( _
                 ByVal pTicker As Ticker) As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 getTickerGridRow = mTickerTable(getTickerIndex(pTicker)).tickerGridRow
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getTickerGridRow", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function getTickerIndex( _
                 ByVal pTicker As Ticker) As Long
 ' allow for the fact that the first tickertable entry is not used - it is the
 ' terminator of the selected entries chain
+Dim failpoint As Long
+On Error GoTo Err
+
 getTickerIndex = pTicker.Handle + 1
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getTickerIndex", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub incrementEventCount()
@@ -1554,6 +1792,9 @@ End Sub
 
 Private Sub highlightRow(ByVal rowNumber As Long)
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If rowNumber < 0 Then Exit Sub
 
@@ -1586,21 +1827,45 @@ TickerGrid.InvertCellColors
 TickerGrid.col = mColumnMap(TickerGridColumns.symbol)
 TickerGrid.InvertCellColors
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="highlightRow", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Function isRowSelected( _
                 ByVal row As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 isRowSelected = isTickerSelected(TickerGrid.rowdata(row))
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="isRowSelected", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function isTickerSelected( _
                 ByVal index As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 isTickerSelected = mSelectedTickers.Contains(mTickerTable(index).theTicker)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="isTickerSelected", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub loadColumnMap()
 Dim ar() As String
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
@@ -1616,12 +1881,20 @@ Else
         mColumnMap(i) = CLng(ar(i))
     Next
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="loadColumnMap", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub moveRowDownInConfig( _
                 ByVal pTicker As Ticker)
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mConfig Is Nothing Then
     If Not pTicker.ReplayingTickfile And _
@@ -1632,6 +1905,11 @@ If Not mConfig Is Nothing Then
         If Not tickerConfigSection Is Nothing Then tickerConfigSection.MoveDown
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="moveRowDownInConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -1639,6 +1917,9 @@ Private Sub moveRowUpInConfig( _
                 ByVal pTicker As Ticker)
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mConfig Is Nothing Then
     If Not pTicker.ReplayingTickfile And _
@@ -1649,6 +1930,11 @@ If Not mConfig Is Nothing Then
         If Not tickerConfigSection Is Nothing Then tickerConfigSection.MoveUp
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="moveRowUpInConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -1658,6 +1944,9 @@ Dim gridRowIndex As Long
 Dim i As Long
 Dim rowdata As Long
 Dim lTicker As Ticker
+
+Dim failpoint As Long
+On Error GoTo Err
 
 gridRowIndex = mTickerTable(index).tickerGridRow
 
@@ -1676,12 +1965,20 @@ For i = gridRowIndex To mNextGridRowIndex - 1
 Next
 
 mSelectedTickers.Remove lTicker
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="removeTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub removeTickerFromConfig( _
                 ByVal pTicker As Ticker)
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mConfig Is Nothing Then
     If Not pTicker.ReplayingTickfile And _
@@ -1692,27 +1989,51 @@ If Not mConfig Is Nothing Then
         If Not tickerConfigSection Is Nothing Then tickersConfigSection.RemoveConfigurationSection ConfigSectionTicker & "(" & pTicker.Key & ")"
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="removeTickerFromConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub selectATicker( _
                 ByVal row As Long)
 Dim index As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 index = TickerGrid.rowdata(row)
 
 If Not mTickerTable(index).theTicker Is Nothing Then
     mSelectedTickers.Add mTickerTable(index).theTicker
     highlightRow row
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="selectATicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setColumnWidth( _
                 ByVal col As Long, _
                 ByVal widthChars As Long, _
                 ByVal isLetters As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid.colWidth(mColumnMap(col)) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setColumnWidth", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setColumnWidths()
+Dim failpoint As Long
+On Error GoTo Err
+
 TickerGrid.Redraw = False
 setColumnWidth TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, True
 setColumnWidth TickerGridColumns.TickerName, TickerGridColumnWidths.NameWidth, True
@@ -1740,18 +2061,34 @@ setColumnWidth TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRight
 setColumnWidth TickerGridColumns.strike, TickerGridColumnWidths.StrikeWidth, False
 TickerGrid.Redraw = True
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setColumnWidths", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupColumnMap( _
                     ByVal maxIndex As Long)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 ReDim mColumnMap(maxIndex) As Long
 For i = 0 To UBound(mColumnMap)
     mColumnMap(i) = i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupColumnMap", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupDefaultTickerGridColumns()
+
+Dim failpoint As Long
+On Error GoTo Err
 
 setupColumnMap TickerGridColumns.MaxColumn
 
@@ -1780,9 +2117,17 @@ setupTickerGridColumn TickerGridColumns.exchange, TickerGridColumnWidths.Exchang
 setupTickerGridColumn TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.strike, TickerGridColumnWidths.StrikeWidth, False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupDefaultTickerGridColumns", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupDefaultTickerGridHeaders()
+
+Dim failpoint As Long
+On Error GoTo Err
 
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Selector)) = ""
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TickerName)) = "Name"
@@ -1809,9 +2154,17 @@ TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.exchange)) = "Exchange"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.OptionRight)) = "Right"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.strike)) = "Strike"
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupDefaultTickerGridHeaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupSummaryTickerGridColumns()
+Dim failpoint As Long
+On Error GoTo Err
+
 With TickerGrid
     .RowBackColorEven = CRowBackColorEven
     .RowBackColorOdd = CRowBackColorOdd
@@ -1844,9 +2197,17 @@ setupTickerGridColumn TickerGridSummaryColumns.Change, TickerGridSummaryColumnWi
 setupTickerGridColumn TickerGridSummaryColumns.ChangePercent, TickerGridSummaryColumnWidths.ChangePercentWidth, False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridSummaryColumns.OpenInterest, TickerGridSummaryColumnWidths.openInterestWidth, False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupSummaryTickerGridColumns", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupSummaryTickerGridHeaders()
+
+Dim failpoint As Long
+On Error GoTo Err
 
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Selector)) = ""
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TickerName)) = "Name"
@@ -1861,6 +2222,11 @@ TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Change)) = "Chg"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.ChangePercent)) = "Chg %"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.OpenInterest)) = "Open interest"
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupSummaryTickerGridHeaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupTickerGridColumn( _
@@ -1869,6 +2235,9 @@ Private Sub setupTickerGridColumn( _
                 ByVal isLetters As Boolean, _
                 ByVal align As TWControls10.AlignmentSettings)
     
+Dim failpoint As Long
+On Error GoTo Err
+
 With TickerGrid
     
     If (columnNumber + 1) > .Cols Then
@@ -1883,11 +2252,19 @@ With TickerGrid
     .ColAlignment(columnNumber) = align
     .ColAlignmentFixed(columnNumber) = TwGridAlignCenterCenter
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupTickerGridColumn", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub stopTicker( _
                 ByVal index As Long)
 Dim lTicker As Ticker
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lTicker = mTickerTable(index).theTicker
 lTicker.RemoveQuoteListener Me
@@ -1896,11 +2273,19 @@ lTicker.RemovePriceChangeListener Me
 removeTicker index
 
 lTicker.stopTicker
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="stopTicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub storeColumnMap()
 Dim i As Long
 Dim s As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
@@ -1909,14 +2294,27 @@ For i = 0 To UBound(mColumnMap)
 Next
 
 mConfig.SetSetting ConfigSettingColumnMap, s
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="storeColumnMap", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub toggleRowSelection( _
                 ByVal row As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 If isRowSelected(row) Then
     deselectATicker row
 Else
     selectATicker row
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="toggleRowSelection", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 

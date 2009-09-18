@@ -125,6 +125,9 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -137,10 +140,9 @@ For Each param In params
     Case UCase$(ParamNameDatabaseType)
         databaseType = DatabaseTypeFromString(param.value)
         If databaseType = DbNone Then
-            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
-                            "ICommonServiceProvider_Link", _
-                            "Invalid database type parameter"
-            Exit Sub
+            Err.Raise ErrorCodes.ErrIllegalStateException, _
+                    ProjectName & "." & ModuleName & ":" & "ICommonServiceProvider_Link", _
+                    "Invalid database type parameter"
         End If
     Case UCase$(ParamNameDatabaseName)
         databaseName = param.value
@@ -171,6 +173,10 @@ For Each param In params
     End Select
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ICommonServiceProvider_Link", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -189,9 +195,7 @@ finishWriters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ICommonServiceProvider_Terminate", _
-                Err.Description
+handleFatalError "ICommonServiceProvider_Terminate"
 End Sub
 
 '@===============================================================================
@@ -233,9 +237,7 @@ reader.initialise mName & " (reader)", _
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
-                Err.Description
+handleFatalError "ITickfileServiceProvider_CreateTickfileReader"
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -272,9 +274,7 @@ writer.initialise mName & " (writer)", _
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
-                Err.Description
+handleFatalError "ITickfileServiceProvider_CreateTickfileWriter"
 End Function
 
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
@@ -372,6 +372,9 @@ Friend Sub dataReaderFinished( _
                 ByVal dataReader As TickfileReader)
 Dim i As Long
 Dim reader As TickfileReader
+Dim failpoint As Long
+On Error GoTo Err
+
 i = 1
 For Each reader In mTickfileDataReaders
     If reader Is dataReader Then
@@ -380,12 +383,20 @@ For Each reader In mTickfileDataReaders
     End If
     i = i + 1
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataReaderFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As TickfileWriter)
 Dim i As Long
 Dim writer As TickfileWriter
+Dim failpoint As Long
+On Error GoTo Err
+
 i = 1
 For Each writer In mTickfileDataWriters
     If writer Is dataWriter Then
@@ -394,6 +405,11 @@ For Each writer In mTickfileDataWriters
     End If
     i = i + 1
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataWriterFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================
@@ -415,35 +431,55 @@ End Function
 Private Sub finishReaders()
 Dim i As Long
 Dim reader As TickfileReader
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mTickfileDataReaders.Count To 1 Step -1
     Set reader = mTickfileDataReaders(i)
     reader.finish
     mTickfileDataReaders.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishReaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub finishWriters()
 Dim i As Long
 Dim writer As TickfileWriter
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mTickfileDataWriters.Count To 1 Step -1
     Set writer = mTickfileDataWriters(i)
     writer.finish
     mTickfileDataWriters.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishWriters", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
+On Error GoTo Err
 
-finishReaders
-finishWriters
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
 
-Set mCommonServiceConsumer = Nothing
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
 
 

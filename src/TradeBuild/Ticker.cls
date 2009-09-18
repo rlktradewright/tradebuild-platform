@@ -69,6 +69,7 @@ Event Volume(ByRef ev As QuoteEvent)
 '@================================================================================
 
 Private Const ModuleName As String = "Ticker"
+Private Const ProjectModuleName As String = ProjectName & "." & ModuleName & ":"
 
 '@================================================================================
 ' Enums
@@ -133,34 +134,27 @@ Private mNumberOfTimeframesLoading  As Long
 Private mCurrTickfileIndex          As Long
 
 Private mAskPrice                   As Double
-Private mAskPriceString             As String
 Private mAskSize                    As Long
 Private mRecentAskPriceChange       As ValueChanges
 Private mRecentAskSizeChange        As ValueChanges
 
 Private mBidPrice                   As Double
-Private mBidPriceString             As String
 Private mBidSize                    As Long
 Private mRecentBidPriceChange       As ValueChanges
 Private mRecentBidSizeChange        As ValueChanges
 
 Private mTradePrice                 As Double
-Private mTradePriceString           As String
 Private mTradeSize                  As Long
 Private mRecentTradePriceChange     As ValueChanges
 Private mRecentTradeSizeChange      As ValueChanges
 
 Private mHighPrice                  As Double
-Private mHighPriceString            As String
 
 Private mLowPrice                   As Double
-Private mLowPriceString             As String
 
 Private mOpenPrice                  As Double
-Private mOpenPriceString            As String
 
 Private mClosePrice                 As Double
-Private mClosePriceString           As String
 
 Private mVolume                     As Long
 Private mOpenInterest               As Long
@@ -198,6 +192,10 @@ Private mOutputTickfilePath         As String
 
 Private mTickWriter                 As TickfileWriter
 Private mBarWriter                  As HistoricDataWriter
+
+Private WithEvents mTickWriterReleaseTimer  As IntervalTimer
+Attribute mTickWriterReleaseTimer.VB_VarHelpID = -1
+Private mSelfRef                    As Ticker
 
 Private mClock                      As Clock
 
@@ -240,10 +238,6 @@ Private mStateChangeListeners       As Collection
 Private mDataConsumers              As Collection
 
 Private mTickNumber                 As Long
-
-Private WithEvents mTickWriterReleaseTimer As IntervalTimer
-Attribute mTickWriterReleaseTimer.VB_VarHelpID = -1
-Private mSelfRef                    As Ticker
 
 Private mPositionManager            As PositionManager
 Private mPositionManagerSimulated       As PositionManager
@@ -317,6 +311,9 @@ Private Sub IBarDataOutputServiceConsumer_NotifyEvent( _
                 ByVal spHandle As Long)
 Dim ev As NotificationEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 
 Select Case eventCode
@@ -328,22 +325,46 @@ Case Else
                         gTB.ServiceProviders.NameFromHandle(spHandle)
 End Select
 gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataOutputServiceConsumer_NotifyEvent", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_NotReady()
+Dim failpoint As Long
+On Error GoTo Err
+
 mBarWriter.ServiceProviderWriterNotReady
 
 fireBarWriterNotify WriterNotifications.WriterNotReady, ""
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataOutputServiceConsumer_NotReady", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
                             ByVal Filename As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 fireBarWriterNotify WriterNotifications.WriterFileCreated, _
                                 Filename
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataOutputServiceConsumer_OutputBarfileCreated", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Ready()
+Dim failpoint As Long
+On Error GoTo Err
+
 mBarWriter.ServiceProviderWriterReady
 
 fireBarWriterNotify WriterNotifications.WriterReady, ""
@@ -353,12 +374,20 @@ If ReadyToReplay Then
     State = TickerStates.TickerStateRunning
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataOutputServiceConsumer_Ready", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
                 ByVal tp As TimePeriod, _
                 ByVal saveIntervalSeconds As Long)
 Dim tf As Timeframe
+Dim failpoint As Long
+On Error GoTo Err
+
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26.Ticker::IBarDataOutputServiceConsumer_RequiredTimePeriod", _
@@ -377,6 +406,11 @@ Set tf = mTimeframes.AddTimeframe(tp, _
                         saveIntervalSeconds, _
                         mWriteBidAskBarData)
 tf.AddStateChangeListener Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataOutputServiceConsumer_RequiredTimePeriod", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -388,9 +422,10 @@ Private Sub IRealtimeDataInputServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 
-mInEventHandler = True
-
+Dim failpoint As Long
 On Error GoTo Err
+
+mInEventHandler = True
 
 Select Case eventCode
 'Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
@@ -412,10 +447,8 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "IRealtimeDataInputServiceConsumer_NotifyEvent"
 mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IRealtimeDataInputServiceConsumer_NotifyEvent", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -423,6 +456,9 @@ End Sub
 '@================================================================================
 
 Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
+Dim failpoint As Long
+On Error GoTo Err
+
 mInEventHandler = True
 
 mTickNumber = mTickNumber + 1
@@ -444,10 +480,11 @@ Case TickTypes.TickTypeAsk, _
         Tick.operation = DOMDelete Then
         ' price is always zero
     ElseIf Not validPrice(Tick.price) Then
-        gLogLogger.Log LogLevels.LogLevelNormal, "Invalid price rejected: " & _
-                        "tick={" & GenericTickToString(Tick) & _
+        gLog pMsg:="Invalid price rejected", _
+            pMsgQualifier:="tick={" & GenericTickToString(Tick) & _
                         "}; contract={" & mContract.specifier.ToString & _
-                        "}"
+                        "}", _
+            pProcName:="IStreamingDataConsumer_Tick", pProjName:=ProjectName, pModName:=ModuleName
         mInputStudy.SetSessionCurrentTime Tick.Timestamp    ' notify the time anyway, even though
                                                             ' the price is invalid
         mInEventHandler = False
@@ -493,6 +530,12 @@ Case TickTypes.TickTypeVolume
 End Select
 
 mInEventHandler = False
+
+Exit Sub
+
+Err:
+mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IStreamingDataConsumer_Tick", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -506,9 +549,10 @@ Private Sub ITickfileOutputServiceConsumer_NotifyEvent( _
 
 Dim ev As NotificationEvent
 
-mInEventHandler = True
-
+Dim failpoint As Long
 On Error GoTo Err
+
+mInEventHandler = True
 
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
@@ -522,59 +566,59 @@ End Select
 gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
 
 mInEventHandler = False
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_Error"
 mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ITickfileOutputServiceConsumer_NotifyEvent", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_NotReady()
 
-mInEventHandler = True
-
+Dim failpoint As Long
 On Error GoTo Err
+
+mInEventHandler = True
 
 mTickWriter.ServiceProviderWriterNotReady
 fireTickfileWriterNotify WriterNotReady, ""
 
 mInEventHandler = False
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_NotReady"
 mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ITickfileOutputServiceConsumer_NotReady", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
                             ByVal Filename As String)
 
-mInEventHandler = True
-
+Dim failpoint As Long
 On Error GoTo Err
+
+mInEventHandler = True
 
 fireTickfileWriterNotify WriterNotifications.WriterFileCreated, _
                         Filename
 
 
 mInEventHandler = False
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ITickfileOutputServiceConsumer_OutputTickfileCreated", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_Ready()
-mInEventHandler = True
-
+Dim failpoint As Long
 On Error GoTo Err
+
+mInEventHandler = True
 
 mTickWriter.ServiceProviderWriterReady
 If mState = TickerStates.TickerStateStopped Then
@@ -597,13 +641,12 @@ If ReadyToReplay Then
 End If
 
 mInEventHandler = False
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ITickfileOutputServiceConsumer_Ready", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -612,6 +655,9 @@ End Sub
 
 Private Sub StateChangeListener_Change( _
                 ev As TWUtilities30.StateChangeEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If TypeOf ev.source Is Timeframe Then
     If ev.State = TimeframeStates.TimeframeStateLoaded Then
         If Not mState = TickerStateRunning Then
@@ -623,6 +669,11 @@ If TypeOf ev.source Is Timeframe Then
         End If
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="StateChangeListener_Change", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -630,12 +681,20 @@ End Sub
 '@================================================================================
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.errorNumber <> 0 Then
     handleContractLoadError ev.errorNumber, ev.errorMessage
 Else
     Set mContracts = ev.result
     handleContractLoadComplete
 End If
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mContractsLoadTC_Completed", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -653,9 +712,7 @@ MarketDepthNotAvailable "Can't start market depth replay during tickfile replay"
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mNoMarketDepthNotifyTimer_TimerExpired" & "." & failpoint
+gHandleFatalError pProcName:="mNoMarketDepthNotifyTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -663,14 +720,29 @@ End Sub
 '@================================================================================
 
 Private Sub mSession_sessionEnded(ev As SessionEvent)
+On Error GoTo Err
+
 RaiseEvent TradingSessionEnded
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mSession_sessionEnded", pModuleName:=ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 mReceivedFirstVolumeInSession = False
 mPrevSessionAccumulatedVolume = mAccumulatedVolume
 mAccumulatedVolume = 0
 RaiseEvent TradingSessionStarted
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mSession_SessionStarted", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -687,9 +759,7 @@ StopTicker
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStopTickerTimer_TimerExpired" & "." & failpoint
+gHandleFatalError pProcName:="mStopTickerTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -703,6 +773,8 @@ On Error GoTo Err
 
 mInEventHandler = True
 
+gLog pMsg:="Stopping tick data writer", pProcName:="mTickWriterReleaseTimer_TimerExpired", pProjName:=ProjectName, pModName:=ModuleName
+
 mTickWriter.closeOutputFile
 Set mTickWriter = Nothing
 Set mSelfRef = Nothing
@@ -712,11 +784,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mTickWriterReleaseTimer_TimerExpired" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
+gHandleFatalError pProcName:="mTickWriterReleaseTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -727,20 +795,12 @@ Public Property Get AskPrice() As Double
 AskPrice = mAskPrice
 End Property
 
-Public Property Get AskPriceString() As String
-AskPriceString = mAskPriceString
-End Property
-
 Public Property Get AskSize() As Long
 AskSize = mAskSize
 End Property
 
 Public Property Get BidPrice() As Double
 BidPrice = mBidPrice
-End Property
-
-Public Property Get BidPriceString() As String
-BidPriceString = mBidPriceString
 End Property
 
 Public Property Get BidSize() As Long
@@ -764,6 +824,9 @@ Set Clock = mClock
 End Property
 
 Friend Property Let ClockRate(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 If value < 0 Then value = 0
 If Not mClock Is Nothing Then
     If value <> mClock.Rate Then
@@ -771,14 +834,15 @@ If Not mClock Is Nothing Then
         mClock.Rate = mClockRate
     End If
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ClockRate", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get ClosePrice() As Double
 ClosePrice = mClosePrice
-End Property
-
-Public Property Get ClosePriceString() As String
-ClosePriceString = mClosePriceString
 End Property
 
 Public Property Get Contract() As Contract
@@ -786,9 +850,17 @@ Set Contract = mContract
 End Property
 
 Friend Property Let Contracts(ByVal value As Contracts)
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mContracts = value
 State = TickerStateStarting
 handleContractLoadComplete
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Contracts", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get Contracts() As Contracts
@@ -808,16 +880,32 @@ Set DefaultOrderContext = mDefaultOrderContext
 End Property
 
 Public Property Get Description() As String
+Dim failpoint As Long
+On Error GoTo Err
+
 Description = mContract.Description
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Description", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)DOMEventsRequired", _
             "Ticker is alReady in use"
 End If
 mDOMEventsRequired = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DOMEventsRequired", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get DOMEventsRequired() As DOMEvents
@@ -842,10 +930,6 @@ End Property
 
 Public Property Get HighPrice() As Double
 HighPrice = mHighPrice
-End Property
-
-Public Property Get HighPriceString() As String
-HighPriceString = mHighPriceString
 End Property
 
 Public Property Get IncludeMarketDepthInTickfile() As Boolean
@@ -877,11 +961,19 @@ InputNameVolume = VolumeInputName
 End Property
 
 Public Property Get InputStudy() As InputStudy
+Dim failpoint As Long
+On Error GoTo Err
+
 If mInputStudy Is Nothing Then
     setupInputStudy
 End If
         
 Set InputStudy = mInputStudy
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="InputStudy", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get IsHistorical() As Boolean
@@ -898,10 +990,6 @@ End Property
 
 Public Property Get LowPrice() As Double
 LowPrice = mLowPrice
-End Property
-
-Public Property Get LowPriceString() As String
-LowPriceString = mLowPriceString
 End Property
 
 Public Property Get NoImpliedTrades() As Boolean
@@ -921,12 +1009,20 @@ OrdersAreLive = Not mSimulatedOrders
 End Property
 
 Public Property Let OutputTickfileFormat(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickfileFormat", _
             "Ticker is alReady in use"
 End If
 mOutputTickfileFormat = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="OutputTickfileFormat", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get OutputTickfileFormat() As String
@@ -934,12 +1030,20 @@ OutputTickfileFormat = mOutputTickfileFormat
 End Property
 
 Public Property Let outputTickfilePath(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickFilePath", _
             "Ticker is alReady in use"
 End If
 mOutputTickfilePath = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="outputTickfilePath", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get outputTickfilePath() As String
@@ -969,10 +1073,18 @@ End Property
 
 Private Property Let State(ByVal value As TickerStates)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = mState Then Exit Property
 mState = value
 
 fireStateChange mState
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="State", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Property
 
@@ -997,6 +1109,9 @@ Set Timeframes = mTimeframes
 End Property
 
 Friend Property Let Timestamp(ByVal value As Date)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mClock.Simulated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "Timestamp", _
@@ -1004,18 +1119,27 @@ If Not mClock.Simulated Then
 End If
 
 setTime value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Timestamp", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Timestamp() As Date
+Dim failpoint As Long
+On Error GoTo Err
+
 Timestamp = mClock.Timestamp
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Timestamp", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TradePrice() As Double
 TradePrice = mTradePrice
-End Property
-
-Public Property Get TradePriceString() As String
-TradePriceString = mTradePriceString
 End Property
 
 Public Property Get TradeSize() As Long
@@ -1044,11 +1168,27 @@ End Property
 
 Friend Property Let Workspace( _
                 ByVal pWorkspace As Workspace)
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mWorkspaceRef = CreateWeakReference(pWorkspace)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Workspace", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Workspace() As Workspace
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Workspace = mWorkspaceRef.Target
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Workspace", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -1057,23 +1197,50 @@ End Property
 
 Public Sub AddBarWriterListener( _
                 ByVal value As BarWriterListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mBarWriterListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddBarWriterListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub AddDataConsumer( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataConsumers.Add consumer
 If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddDataConsumer", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddPriceChangeListener( _
                 ByVal value As PriceChangeListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mPriceChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddPriceChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddMarketDepthListener( _
                 ByVal value As MarketDepthListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mMarketDepthListeners.Add value
 
 ' send all the current DOM values to the new listener
@@ -1100,38 +1267,86 @@ For i = 0 To mMaxBidPricesIndex
     End If
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddMarketDepthListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Sub AddQuoteListener(ByVal value As QuoteListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mQuoteListeners.Add value
 
 ' send all the current quote values to the new listener
 RefreshQuotes value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddQuoteListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddRawMarketDepthListener(ByVal value As RawMarketDepthListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRawMarketDepthListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddRawMarketDepthListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddStateChangeListener( _
                 ByVal value As StateChangeListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mStateChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddStateChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddTickfileWriterListener(ByVal value As TickfileWriterListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mTickfileWriterListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddTickfileWriterListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function AddTimer(ByVal expiryTime As Variant, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal data As Variant) As TimerListItem
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTimerList Is Nothing Then
     Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
 End If
 Set AddTimer = mTimerList.Add(data, expiryTime, expiryTimeUnits)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddTimer", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub CancelMarketDepth(Optional ByVal forceCancel As Boolean = False)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState = TickerStates.TickerStateStopped Or _
     mState = TickerStates.TickerStateClosing Then Exit Sub
 If Not mReceivingMarketDepth Then Exit Sub
@@ -1149,23 +1364,39 @@ If Not mReplayingTickfile Then
         End If
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CancelMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function FormatPrice( _
                 ByVal price As Double, _
                 Optional ByVal blankIfZero As Boolean) As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If blankIfZero And price = 0# Then Exit Function
 If mDisplayThirtySeconds Then
     FormatPrice = Int(price) & " ' " & Format(Int((price - Int(price)) / 0.03125), "00")
 Else
     FormatPrice = Format(price, mPriceFormatString)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="FormatPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal Handle As Long, _
                 ByVal pTickers As Tickers, _
                 ByVal Options As TickerOptions)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mHandle = Handle
 mOptions = Options
@@ -1190,14 +1421,30 @@ Then
 End If
                 
 State = TickerStates.TickerStateCreated
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Initialise", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 If mSession Is Nothing Then Exit Function
 IsTimeInSession = mSession.IsTimeInSession(Timestamp)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IsTimeInSession", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub LoadTicker(ByVal pContractSpecifier As contractSpecifier)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::LoadTicker", _
                         "Ticker is alReady in use"
@@ -1207,28 +1454,60 @@ Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
 
 Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="LoadTicker", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyCurrentVolume()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mVolume <> 0 Then
     Debug.Print "Ticker: NotifyCurrentVolume: " & mVolume
     mStudyManager.NotifyInput mVolumeInputHandle, mVolume, Timestamp
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="NotifyCurrentVolume", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function ParsePrice( _
                 ByVal priceString As String, _
                 ByRef price As Double) As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 ParsePrice = mContract.ParsePrice(priceString, price)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ParsePrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub PauseTicker()
+Dim failpoint As Long
+On Error GoTo Err
+
 State = TickerStates.TickerStatePaused
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="PauseTicker", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RefreshPriceChange( _
                 ByVal listener As PriceChangeListener)
 Dim ev As PriceChangeEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If State = TickerStateRunning Or State = TickerStatePaused Then
     Set ev.source = Me
@@ -1237,17 +1516,24 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     ev.ChangePercent = 100 * ev.Change / mClosePrice
     listener.Change ev
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RefreshPriceChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RefreshQuotes( _
                 ByVal listener As QuoteListener)
 Dim ev As QuoteEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If State = TickerStateRunning Or State = TickerStatePaused Then
     Set ev.source = Me
     
     ev.price = mAskPrice
-    ev.priceString = mAskPriceString
     ev.size = mAskSize
     ev.PriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
     ev.sizeChange = calcValueChange(mAskSize, mPrevAskSize)
@@ -1256,7 +1542,6 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     listener.Ask ev
     
     ev.price = mBidPrice
-    ev.priceString = mBidPriceString
     ev.size = mBidSize
     ev.PriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
     ev.sizeChange = calcValueChange(mBidSize, mPrevBidSize)
@@ -1265,32 +1550,26 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     listener.Bid ev
     
     ev.price = mHighPrice
-    ev.priceString = mHighPriceString
     ev.size = 0
     listener.High ev
     
     ev.price = mLowPrice
-    ev.priceString = mLowPriceString
     ev.size = 0
     listener.Low ev
     
     ev.price = mOpenPrice
-    ev.priceString = mOpenPriceString
     ev.size = 0
     listener.sessionOpen ev
     
     ev.price = 0
-    ev.priceString = ""
     ev.size = mOpenInterest
     listener.OpenInterest ev
     
     ev.price = mClosePrice
-    ev.priceString = mClosePriceString
     ev.size = 0
     listener.PreviousClose ev
     
     ev.price = mTradePrice
-    ev.priceString = mTradePriceString
     ev.size = mTradeSize
     ev.PriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
     ev.sizeChange = calcValueChange(mTradeSize, mPrevTradeSize)
@@ -1299,49 +1578,88 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     listener.Trade ev
     
     ev.price = 0
-    ev.priceString = ""
     ev.size = mVolume
     listener.Volume ev
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RefreshQuotes", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveBarWriterListener( _
                 ByVal value As BarWriterListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mBarWriterListeners.Count To 1 Step -1
-    If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.Remove i
+    If mBarWriterListeners.Item(i) Is value Then mBarWriterListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveBarWriterListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub RemoveDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDataConsumers Is Nothing Then Exit Sub
 For i = mDataConsumers.Count To 1 Step -1
-    If mDataConsumers.item(i) Is consumer Then mDataConsumers.Remove i
+    If mDataConsumers.Item(i) Is consumer Then mDataConsumers.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveDataConsumer", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemovePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mPriceChangeListeners Is Nothing Then Exit Sub
 For i = mPriceChangeListeners.Count To 1 Step -1
-    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.Remove i
+    If mPriceChangeListeners.Item(i) Is value Then mPriceChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemovePriceChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal value As StateChangeListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mStateChangeListeners Is Nothing Then Exit Sub
 For i = mStateChangeListeners.Count To 1 Step -1
-    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.Remove i
+    If mStateChangeListeners.Item(i) Is value Then mStateChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveStateChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveMarketDepthListener(ByVal value As MarketDepthListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mMarketDepthListeners Is Nothing Then Exit Sub
 For i = mMarketDepthListeners.Count To 1 Step -1
-    If mMarketDepthListeners.item(i) Is value Then mMarketDepthListeners.Remove i
+    If mMarketDepthListeners.Item(i) Is value Then mMarketDepthListeners.Remove i
 Next
 If mMarketDepthListeners.Count = 0 And mWaitingToCancelMktDepth Then
     mWaitingToCancelMktDepth = False
@@ -1350,40 +1668,80 @@ If mMarketDepthListeners.Count = 0 And mWaitingToCancelMktDepth Then
         mReceivingMarketDepth = False
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveMarketDepthListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mQuoteListeners Is Nothing Then Exit Sub
 For i = mQuoteListeners.Count To 1 Step -1
-    If mQuoteListeners.item(i) Is value Then
+    If mQuoteListeners.Item(i) Is value Then
         mQuoteListeners.Remove i
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveQuoteListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mRawMarketDepthListeners Is Nothing Then Exit Sub
 For i = mRawMarketDepthListeners.Count To 1 Step -1
-    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.Remove i
+    If mRawMarketDepthListeners.Item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveRawMarketDepthListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveTickfileWriterListener(ByVal value As TickfileWriterListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTickfileWriterListeners Is Nothing Then Exit Sub
 For i = mTickfileWriterListeners.Count To 1 Step -1
-    If mTickfileWriterListeners.item(i) Is value Then mTickfileWriterListeners.Remove i
+    If mTickfileWriterListeners.Item(i) Is value Then mTickfileWriterListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveTickfileWriterListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub RemoveTimer(ByVal theTimer As TimerListItem)
+Dim failpoint As Long
+On Error GoTo Err
+
 mTimerList.Remove theTimer
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveTimer", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
                             ByVal writeToTickFile As Boolean)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mState = TickerStates.TickerStateClosing Then Exit Sub
 
@@ -1444,9 +1802,17 @@ Else
         notifyDOMPrices mAskPrices, DOMAsk
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RequestMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTicker", _
@@ -1457,9 +1823,17 @@ State = TickerStates.TickerStateStarting
 
 Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="StartTicker", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Sub StartTickerFromContract(ByVal pContract As Contract)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTickerFromContract", _
@@ -1468,16 +1842,27 @@ If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllega
 State = TickerStateStarting
 Set mContract = pContract
 processContract
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="StartTickerFromContract", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub StopTicker()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
+    gLog pMsg:="Deferring stop ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     Set mStopTickerTimer = CreateIntervalTimer(1)
     mStopTickerTimer.StartTimer
     Exit Sub
 End If
+
+gLog pMsg:="Stopping ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
 
 ' NB: we don't do the following because the app may want to look at the contract(s)
 ' after being notified of a duplicate contract spec or for some other reason
@@ -1486,12 +1871,14 @@ End If
 
 If Not mTickWriter Is Nothing Then
     If mTickWriter.numberOfPendingWrites = 0 Then
+        gLog pMsg:="Stopping tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
         mTickWriter.closeOutputFile
         Set mTickWriter = Nothing
     Else
         ' we've Finished processing the input data before the service provider
         ' writer is Ready - so delay releasing the writer until the
         ' service provider writer has had a chance to Finish initialising
+        gLog pMsg:="Deferring stop tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
         Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
         mTickWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this Ticker isn't released
@@ -1508,26 +1895,31 @@ Then
         Set mTickfileManager = Nothing
     ElseIf Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StopData
+        gLog pMsg:="Stopping realtime data reader", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
         Set mRealtimeDataReader = Nothing
     End If
 Else
     State = TickerStates.TickerStateClosing
 End If
 
-mTimeframes.finish
+gLog pMsg:="Finishing timeframes", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+mTimeframes.Finish
 Set mTimeframes = Nothing
 
 If Not mBarWriter Is Nothing Then
+    gLog pMsg:="Stopping bar data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
 
 If Not mPositionManager Is Nothing Then
-    mPositionManager.finish
+    gLog pMsg:="Finishing position manager (live)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    mPositionManager.Finish
     Set mPositionManager = Nothing
 End If
 If Not mPositionManagerSimulated Is Nothing Then
-    mPositionManagerSimulated.finish
+    gLog pMsg:="Finishing position manager (simulated)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    mPositionManagerSimulated.Finish
     Set mPositionManagerSimulated = Nothing
 End If
 
@@ -1558,7 +1950,13 @@ Set mStudyManager = Nothing
 Set mInputStudy = Nothing
 
 
+gLog pMsg:="Ticker is stopped", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
 State = TickerStates.TickerStateStopped
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="StopTicker", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -1570,6 +1968,9 @@ Private Function calculateSpDomRequirement() As TradeBuildSP.DOMEventTypes
 Dim DOMEventsReqd As TradeBuildSP.DOMEventTypes
 Dim supportsDomByPosition As Boolean
 Dim supportsDomByPrice As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mRealtimeDataReader.Supports(TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition) Then
     supportsDomByPosition = True
@@ -1615,11 +2016,19 @@ Case DOMBothEvents
     End If
 End Select
 calculateSpDomRequirement = DOMEventsReqd
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="calculateSpDomRequirement", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function calcValueChange( _
                 ByVal newValue As Variant, _
                 ByVal oldValue As Variant) As ValueChanges
+Dim failpoint As Long
+On Error GoTo Err
+
 If oldValue = 0 Or newValue = 0 Then
     calcValueChange = ValueChangeNone
 ElseIf newValue > oldValue Then
@@ -1629,10 +2038,18 @@ ElseIf newValue < oldValue Then
 Else
     calcValueChange = ValueChangeNone
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="calcValueChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub createBarWriter()
 Dim ev As NotificationEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 gTraceLogger.Log LogLevelDetail, "Ticker: creating bar writer for " & mContract.specifier.localSymbol
 Set mBarWriter = gTB.ServiceProviders.CreateHistoricalDataWriter(Me, _
@@ -1647,10 +2064,18 @@ If mBarWriter Is Nothing Then
     gTB.notify ev
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createBarWriter", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub CreateOutputTickfile()
 Dim ev As NotificationEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mTickWriter = gTB.ServiceProviders.CreateTickfileWriter(Me, _
                                                         mContract, _
@@ -1666,15 +2091,28 @@ If mTickWriter Is Nothing Then
     gTB.notify ev
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CreateOutputTickfile", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub DOMClearCell( _
                 ByVal side As DOMUpdateTypes, _
                 ByVal price As Double)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
 fireSetMarketDepthCell side, price, 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DOMClearCell", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                 
 Private Sub DOMRawUpdate( _
@@ -1684,25 +2122,41 @@ Private Sub DOMRawUpdate( _
                         ByVal side As DOMSides, _
                         ByVal price As Double, _
                         ByVal size As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDOMEventsRequired = DOMRawEvents Or _
     mDOMEventsRequired = DOMBothEvents _
 Then
-    updateMarketDepth position, _
-                        marketMaker, _
-                        operation, _
-                        side, _
-                        price, _
-                        size
+    fireUpdateMarketDepth position, _
+                            marketMaker, _
+                            operation, _
+                            side, _
+                            price, _
+                            size
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DOMRawUpdate", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Private Sub DOMReset()
 
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDOMEventsRequired = DOMNoEvents Then Exit Sub
 
 fireResetMarketDepth
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DOMReset", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                 
 Private Sub DOMSetCell( _
@@ -1710,17 +2164,27 @@ Private Sub DOMSetCell( _
                 ByVal price As Double, _
                 ByVal size As Long)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
 fireSetMarketDepthCell side, price, size
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DOMSetCell", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                 
 Private Sub fireAsk()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = mAskPrice
-quote.priceString = mAskPriceString
 quote.size = mAskSize
 quote.PriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
 quote.sizeChange = calcValueChange(mAskSize, mPrevAskSize)
@@ -1730,6 +2194,11 @@ For Each listener In mQuoteListeners
     listener.Ask quote
 Next
 RaiseEvent Ask(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireAsk", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireBarWriterNotify( _
@@ -1737,6 +2206,9 @@ Private Sub fireBarWriterNotify( _
                 ByVal Filename As String)
 Dim listener As BarWriterListener
 Dim ev As WriterEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.action = action
 ev.Filename = Filename
@@ -1744,14 +2216,21 @@ For Each listener In mBarWriterListeners
     listener.notify ev
 Next
 RaiseEvent BarWriterNotification(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireBarWriterNotify", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                                 
 Private Sub fireBid()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = mBidPrice
-quote.priceString = mBidPriceString
 quote.size = mBidSize
 quote.PriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
 quote.sizeChange = calcValueChange(mBidSize, mPrevBidSize)
@@ -1761,42 +2240,62 @@ For Each listener In mQuoteListeners
     listener.Bid quote
 Next
 RaiseEvent Bid(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireBid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireHigh( _
-                ByVal price As Double, _
-                ByVal priceString As String)
+                ByVal price As Double)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = price
-quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
     listener.High quote
 Next
 RaiseEvent High(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireHigh", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireLow( _
-                ByVal price As Double, _
-                ByVal priceString As String)
+                ByVal price As Double)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = price
-quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
     listener.Low quote
 Next
 RaiseEvent Low(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireLow", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireMarketDepthNotAvailable( _
                 ByVal reason As String)
 Dim listener As MarketDepthListener
 Dim ev As MarketDepthEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set ev.source = Me
 For Each listener In mMarketDepthListeners
@@ -1812,27 +2311,41 @@ For Each rawListener In mRawMarketDepthListeners
     rawListener.MarketDepthNotAvailable reason
 Next
 RaiseEvent MarketDepthNotAvailable(reason)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireMarketDepthNotAvailable", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireOpen( _
-                ByVal price As Double, _
-                ByVal priceString As String)
+                ByVal price As Double)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = price
-quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
     listener.sessionOpen quote
 Next
 RaiseEvent Low(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireOpen", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireOpenInterest( _
                 ByVal size As Long)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = 0
 quote.size = size
@@ -1840,21 +2353,32 @@ For Each listener In mQuoteListeners
     listener.OpenInterest quote
 Next
 RaiseEvent OpenInterest(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireOpenInterest", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub firePreviousClose( _
-                ByVal price As Double, _
-                ByVal priceString As String)
+                ByVal price As Double)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = price
-quote.priceString = priceString
 quote.size = 0
 For Each listener In mQuoteListeners
     listener.PreviousClose quote
 Next
 RaiseEvent PreviousClose(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="firePreviousClose", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub firePriceChange(ByVal Change As Double, _
@@ -1862,6 +2386,9 @@ Private Sub firePriceChange(ByVal Change As Double, _
                 ByVal ChangePercent As Double)
 Dim listener As PriceChangeListener
 Dim ev As PriceChangeEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.Change = Change
 ev.ChangeString = ChangeString
@@ -1870,11 +2397,19 @@ For Each listener In mPriceChangeListeners
     listener.Change ev
 Next
 RaiseEvent PriceChange(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="firePriceChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireResetMarketDepth()
 Dim listener As MarketDepthListener
 Dim ev As MarketDepthEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set ev.source = Me
 For Each listener In mMarketDepthListeners
@@ -1889,6 +2424,11 @@ Set evRaw.source = Me
 For Each rawListener In mRawMarketDepthListeners
     rawListener.resetMarketDepth evRaw
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireResetMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireSetMarketDepthCell( _
@@ -1897,6 +2437,9 @@ Private Sub fireSetMarketDepthCell( _
                 ByVal size As Long)
 Dim listener As MarketDepthListener
 Dim processedMarketDepth As MarketDepthEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set processedMarketDepth.source = Me
 processedMarketDepth.price = price
 processedMarketDepth.type = updateType
@@ -1905,11 +2448,19 @@ For Each listener In mMarketDepthListeners
     listener.setMarketDepthCell processedMarketDepth
 Next
 RaiseEvent DOMSetCell(processedMarketDepth)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireSetMarketDepthCell", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireStateChange(ByVal newState As TickerStates)
 Dim listener As StateChangeListener
 Dim ev As StateChangeEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.State = newState
 For Each listener In mStateChangeListeners
@@ -1917,6 +2468,11 @@ For Each listener In mStateChangeListeners
 Next
 RaiseEvent StateChange(ev)
 getTickers.StateChange ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireStateChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireTickfileWriterNotify( _
@@ -1924,6 +2480,9 @@ Private Sub fireTickfileWriterNotify( _
                 ByVal Filename As String)
 Dim listener As TickfileWriterListener
 Dim ev As WriterEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.action = action
 ev.Filename = Filename
@@ -1931,14 +2490,21 @@ For Each listener In mTickfileWriterListeners
     listener.notify ev
 Next
 RaiseEvent TickfileWriterNotification(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireTickfileWriterNotify", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                                 
 Private Sub fireTrade()
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = mTradePrice
-quote.priceString = mTradePriceString
 quote.size = mTradeSize
 quote.PriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
 quote.sizeChange = calcValueChange(mTradeSize, mPrevTradeSize)
@@ -1948,6 +2514,11 @@ For Each listener In mQuoteListeners
     listener.Trade quote
 Next
 RaiseEvent Trade(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireTrade", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireUpdateMarketDepth( _
@@ -1959,6 +2530,9 @@ Private Sub fireUpdateMarketDepth( _
                 ByVal size As Long)
 Dim listener As RawMarketDepthListener
 Dim rawMarketDepth As RawMarketDepthEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set rawMarketDepth.source = Me
 rawMarketDepth.position = position
 rawMarketDepth.marketMaker = marketMaker
@@ -1970,12 +2544,20 @@ For Each listener In mRawMarketDepthListeners
     listener.updateMarketDepth rawMarketDepth
 Next
 RaiseEvent RawMarketDepthUpdate(rawMarketDepth)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireUpdateMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireVolume( _
                 ByVal size As Long)
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set quote.source = Me
 quote.price = 0
 quote.size = size
@@ -1983,6 +2565,11 @@ For Each listener In mQuoteListeners
     listener.Volume quote
 Next
 RaiseEvent Volume(quote)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireVolume", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleContractLoadComplete()
@@ -2020,9 +2607,7 @@ processContract
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "handleContractLoadComplete" & "." & failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="handleContractLoadComplete", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub handleContractLoadError( _
@@ -2055,31 +2640,53 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "handleContractLoadError" & "." & failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="handleContractLoadError", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub InitialisePriceTables()
+Dim failpoint As Long
+On Error GoTo Err
+
 ReDim mAskPrices(15) As PriceTableEntry
 ReDim mBidPrices(15) As PriceTableEntry
 mMaxAskPricesIndex = 0
 mMaxBidPricesIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="InitialisePriceTables", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub MarketDepthNotAvailable( _
                 ByVal reason As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 fireMarketDepthNotAvailable reason
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="MarketDepthNotAvailable", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub notifyConsumers( _
                 ByRef pTick As GenericTick)
 Dim var As Variant
 Dim consumer As TradeBuildSP.IStreamingDataConsumer
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each var In mDataConsumers
     Set consumer = var
     consumer.Tick pTick
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notifyConsumers", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub notifyDOMPrices( _
@@ -2087,10 +2694,13 @@ Private Sub notifyDOMPrices( _
                 ByVal side As DOMSides)
 Dim i As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = 0 To UBound(prices)
     If prices(i).size <> 0 Then
         
-        updateMarketDepth i, _
+        fireUpdateMarketDepth i, _
                             prices(i).marketMaker, _
                             DOMOperations.DOMInsert, _
                             side, _
@@ -2103,14 +2713,21 @@ For i = 0 To UBound(prices)
 
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notifyDOMPrices", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub notifyTrade( _
                 pTick As GenericTick)
 Dim volTick As GenericTick
 
+Dim failpoint As Long
+On Error GoTo Err
+
 mTradePrice = pTick.price
-mTradePriceString = FormatPrice(pTick.price)
 mTradeSize = pTick.size
 
 If mTradePrice <> mPrevTradePrice Then mRecentTradePriceChange = calcValueChange(mTradePrice, mPrevTradePrice)
@@ -2147,10 +2764,18 @@ If Not mNoVolumeAdjustments And mGotFirstVolume Then
     volTick.Timestamp = pTick.Timestamp
     notifyVolume volTick
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notifyTrade", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub notifyVolume( _
                 pTick As GenericTick)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mVolume = pTick.size
 
@@ -2159,10 +2784,18 @@ notifyConsumers pTick
 mStudyManager.NotifyInput mVolumeInputHandle, mVolume, pTick.Timestamp
 
 fireVolume mVolume
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notifyVolume", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub prepare()
 Dim orderSubmitter As IOrderSubmitter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mReplayingTickfile Then
 Else
@@ -2211,10 +2844,18 @@ If mDOMEventsRequired <> DOMNoEvents Or mIncludeMarketDepthInTickfile Then
     InitialisePriceTables
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="prepare", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub processContract()
 Dim ev As NotificationEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mInputStudy Is Nothing Then
     mInputStudy.name = mContract.specifier.localSymbol
@@ -2271,10 +2912,16 @@ Else
         End If
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processContract", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickAsk( _
                             pTick As GenericTick)
+Dim failpoint As Long
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -2283,7 +2930,6 @@ mPrevAskPrice = mAskPrice
 mPrevAskSize = mAskSize
 
 mAskPrice = pTick.price
-mAskPriceString = FormatPrice(mAskPrice)
 mAskSize = pTick.size
 
 If mAskPrice <> mPrevAskPrice Then mRecentAskPriceChange = calcValueChange(mAskPrice, mPrevAskPrice)
@@ -2309,16 +2955,13 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickAsk"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickAsk", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 
 Private Sub processTickBid( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -2327,7 +2970,6 @@ mPrevBidPrice = mBidPrice
 mPrevBidSize = mBidSize
 
 mBidPrice = pTick.price
-mBidPriceString = FormatPrice(mBidPrice)
 mBidSize = pTick.size
 
 If mBidPrice <> mPrevBidPrice Then mRecentBidPriceChange = calcValueChange(mBidPrice, mPrevBidPrice)
@@ -2353,57 +2995,46 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickBid"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickBid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickHigh( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
 
 mHighPrice = pTick.price
-mHighPriceString = FormatPrice(mHighPrice)
 
-fireHigh mHighPrice, mHighPriceString
+fireHigh mHighPrice
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickHigh"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickHigh", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickLow( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
 
 mLowPrice = pTick.price
-mLowPriceString = FormatPrice(mLowPrice)
 
-fireLow mLowPrice, mLowPriceString
+fireLow mLowPrice
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickLow"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickLow", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickMarketDepth( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -2442,36 +3073,29 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickMarketDepth"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickOpen( _
                 pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
 
 mOpenPrice = pTick.price
-mOpenPriceString = FormatPrice(mOpenPrice)
 
-fireOpen mOpenPrice, mOpenPriceString
+fireOpen mOpenPrice
 
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickOpen"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickOpen", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickOpenInterest( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -2483,23 +3107,19 @@ mPrevOpenInterest = mOpenInterest
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickOpenInterest"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickOpenInterest", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickPreviousClose( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
 
 mClosePrice = pTick.price
-mClosePriceString = FormatPrice(mClosePrice)
 
-firePreviousClose mClosePrice, mClosePriceString
+firePreviousClose mClosePrice
 
 If mTradePrice <> 0 Then
     mChange = mTradePrice - mClosePrice
@@ -2511,33 +3131,27 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickPreviousClose"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickPreviousClose", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickResetMarketDepth( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 notifyConsumers pTick
 
 DOMReset
-    
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickResetMarketDepth"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickResetMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickTrade( _
                             pTick As GenericTick)
-
+Dim failpoint As Long
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -2548,19 +3162,16 @@ mPrevTradeSize = mTradeSize
 notifyTrade pTick
 
 mInEventHandler = False
+
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickTrade"
-mInEventHandler = False
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickTrade", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub processTickVolume( _
                             pTick As GenericTick)
 Dim failpoint As Long
-
 On Error GoTo Err
 
 If pTick.size <= 0 Then
@@ -2590,10 +3201,12 @@ End If
 
 If pTick.size < 0 Then
     ' tickfile encoding can't cope with negative volumes, so just log it
-    gLogLogger.Log LogLevelWarning, ProjectName & "." & ModuleName & "." & "Corrected Volume tick is negative: " & vbCrLf & _
-                                    "Corrected size: " & pTick.size & vbCrLf & _
+    gLog pMsg:="Corrected Volume tick is negative", _
+        pMsgQualifier:=vbCrLf & "Corrected size: " & pTick.size & vbCrLf & _
                                     "mPrevSessionAccumulatedVolume: " & mPrevSessionAccumulatedVolume & vbCrLf & _
-                                    "mVolumeCorrectionIncrement: " & mVolumeCorrectionIncrement
+                                    "mVolumeCorrectionIncrement: " & mVolumeCorrectionIncrement, _
+        pLogLevel:=LogLevelWarning, _
+        pProcName:="processTickVolume", pProjName:=ProjectName, pModName:=ModuleName
 
     mInEventHandler = False
     Exit Sub
@@ -2654,14 +3267,13 @@ mPrevVolume = mVolume
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "processTickVolume:" & failpoint
-mInEventHandler = False
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processTickVolume", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function ReadyToReplay() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mReplayingTickfile Then Exit Function
 
 If Not mBarWriter Is Nothing Then
@@ -2675,19 +3287,35 @@ End If
 If mNumberOfTimeframesLoading <> 0 Then Exit Function
 
 ReadyToReplay = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ReadyToReplay", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub setTime( _
                 ByVal pTime As Date)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mReplayingTickfile Then Exit Sub
 
 If Not mTimerList Is Nothing Then mTimerList.setTime pTime
 mClock.setTime pTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setTime", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupInputStudy()
 Dim sourceName As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If mContract Is Nothing Then
     ' we don't yet have the contract details, so we can't generate a proper
     ' name for this source, so do the best we can
@@ -2775,27 +3403,24 @@ Else
                             False, _
                             1)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupInputStudy", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function getTickers() As Tickers
+Dim failpoint As Long
+On Error GoTo Err
+
 Set getTickers = mTickersRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getTickers", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
-
-Private Sub updateMarketDepth( _
-                ByVal position As Long, _
-                ByVal marketMaker As String, _
-                ByVal operation As DOMOperations, _
-                ByVal side As DOMSides, _
-                ByVal price As Double, _
-                ByVal size As Long)
-
-fireUpdateMarketDepth position, _
-                        marketMaker, _
-                        operation, _
-                        side, _
-                        price, _
-                        size
-End Sub
 
 Private Sub updatePrices(ByRef prices() As PriceTableEntry, _
                     ByRef maxIndex As Long, _
@@ -2813,6 +3438,9 @@ Dim i As Long
 ' passed earlier via the notifyBid and notifyAsk methods. Except for deletions
 ' (for example if the Bid drops, the current entry 0 must be deleted - though
 ' it could just be updated, TWS doesn't seem to work this way)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case operation
 Case DOMOperations.DOMInsert
@@ -2909,14 +3537,27 @@ Case DOMOperations.DOMDelete
     maxIndex = maxIndex - 1
 End Select
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="updatePrices", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Function validPrice( _
                 ByVal price As Double) As Boolean
 Static prevValidPrice As Double
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mContract.IsValidPrice(price, prevValidPrice) Then Exit Function
 prevValidPrice = price
 validPrice = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="validPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
                 
 

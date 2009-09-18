@@ -191,7 +191,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set mHistoricBar = data
-If mTaskContext.State = TaskStateSuspended Then mTaskContext.continue
+If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
@@ -271,7 +271,7 @@ Private Sub IBarDataInputServiceConsumer_Ready()
 Dim failpoint As Long
 On Error GoTo Err
 
-mTaskContext.continue
+mTaskContext.Continue
 
 Exit Sub
 
@@ -505,7 +505,7 @@ fireStateChange TimeframeStateFinished
 Set mTickerRef = Nothing
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal pContract As Contract, _
                 ByVal Key As String, _
                 ByVal pTicker As Ticker, _
@@ -579,7 +579,7 @@ Public Sub RemoveStateChangeListener( _
 Dim i As Long
 If mStateChangeListeners Is Nothing Then Exit Sub
 For i = mStateChangeListeners.Count To 1 Step -1
-    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.Remove i
+    If mStateChangeListeners.Item(i) Is value Then mStateChangeListeners.Remove i
 Next
 End Sub
 
@@ -628,7 +628,7 @@ Dim s As String
 If newState = mState Then Exit Sub
 mState = newState
 
-If gLogLogger.isLoggable(LogLevelDetail) Then
+If gLogLogger.IsLoggable(LogLevelDetail) Then
     s = "Timeframe (" & getName & ") "
     Select Case newState
     Case TimeframeStateCreated
@@ -640,7 +640,7 @@ If gLogLogger.isLoggable(LogLevelDetail) Then
     Case TimeframeStateFinished
         s = s & "Finished " & mTradeBars.Count & " bars"
     End Select
-    gLogLogger.Log LogLevelDetail, s
+    gLog pMsg:=s, pLogLevel:=LogLevelDetail, pProcName:="fireStateChange", pProjName:=ProjectName, pModName:=ModuleName
 End If
 
 Set ev.source = Me
@@ -730,7 +730,7 @@ If mBarReader Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
     ev.eventMessage = "Timeframe: Can't create historic data reader (" & getName & ")"
-    gLogLogger.Log LogLevelWarning, ev.eventMessage
+    gLog pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:="setupBarReader", pProjName:=ProjectName, pModName:=ModuleName
     gTB.notify ev
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded

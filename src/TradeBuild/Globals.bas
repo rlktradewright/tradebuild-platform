@@ -158,6 +158,8 @@ Private mOrderDetailLogger As Logger
 
 Private mOrderDetailLoggerSimulated As Logger
 
+Private mLogTokens(9) As String
+
 '@================================================================================
 ' Procedures
 '@================================================================================
@@ -372,6 +374,21 @@ Case EntryOrderTypeStopLimit
     gEntryOrderTypeToShortString = "STPLMT"
 End Select
 End Function
+
+Public Sub gHandleFatalError( _
+                ByRef pProcName As String, _
+                ByRef pModuleName As String, _
+                Optional ByVal pFailpoint As Long)
+On Error GoTo Err
+
+' re-raise the error to get the calling procedure's procName into the source info
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=pModuleName, pFailpoint:=pFailpoint
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, Err.source
+End Sub
 
 Public Function gIsValidTIF(ByVal value As OrderTifs) As Boolean
 Select Case value
@@ -746,6 +763,32 @@ Else
 End If
 End Function
 
+Public Sub gLog(ByRef pMsg As String, _
+                ByRef pProjName As String, _
+                ByRef pModName As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+If Not gLogLogger.IsLoggable(pLogLevel) Then Exit Sub
+mLogTokens(0) = "["
+mLogTokens(1) = pProjName
+mLogTokens(2) = "."
+mLogTokens(3) = pModName
+mLogTokens(4) = ":"
+mLogTokens(5) = pProcName
+mLogTokens(6) = "] "
+mLogTokens(7) = pMsg
+If Len(pMsgQualifier) <> 0 Then
+    mLogTokens(8) = ": "
+    mLogTokens(9) = pMsgQualifier
+Else
+    mLogTokens(8) = vbNullString
+    mLogTokens(9) = vbNullString
+End If
+
+gLogLogger.Log pLogLevel, Join(mLogTokens, "")
+End Sub
+
 Public Property Get gLogLogger() As Logger
 If mLogLogger Is Nothing Then
     Set mLogLogger = GetLogger("tradebuild.log")
@@ -784,7 +827,7 @@ End Property
 Public Property Get gProfitProfileLogger() As Logger
 If mProfitProfileLogger Is Nothing Then
     Set mProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
-    mProfitProfileLogger.logToParent = False
+    mProfitProfileLogger.LogToParent = False
 End If
 Set gProfitProfileLogger = mProfitProfileLogger
 End Property
@@ -792,7 +835,7 @@ End Property
 Public Property Get gProfitProfileLoggerSimulated() As Logger
 If mProfitProfileLoggerSimulated Is Nothing Then
     Set mProfitProfileLoggerSimulated = GetLogger("tradebuild.ProfitProfileSimulated")
-    mProfitProfileLoggerSimulated.logToParent = False
+    mProfitProfileLoggerSimulated.LogToParent = False
 End If
 Set gProfitProfileLoggerSimulated = mProfitProfileLoggerSimulated
 End Property
@@ -807,7 +850,7 @@ End Property
 Public Property Get gOrderPlexProfileStructLogger() As Logger
 If mOrderPlexProfileStructLogger Is Nothing Then
     Set mOrderPlexProfileStructLogger = GetLogger("tradebuild.OrderPlexProfileStruct")
-    mOrderPlexProfileStructLogger.logToParent = False
+    mOrderPlexProfileStructLogger.LogToParent = False
 End If
 Set gOrderPlexProfileStructLogger = mOrderPlexProfileStructLogger
 End Property
@@ -815,7 +858,7 @@ End Property
 Public Property Get gOrderPlexProfileStructLoggerSimulated() As Logger
 If mOrderPlexProfileStructLoggerSimulated Is Nothing Then
     Set mOrderPlexProfileStructLoggerSimulated = GetLogger("tradebuild.SimulatedOrderPlexProfileStructSimulated")
-    mOrderPlexProfileStructLoggerSimulated.logToParent = False
+    mOrderPlexProfileStructLoggerSimulated.LogToParent = False
 End If
 Set gOrderPlexProfileStructLoggerSimulated = mOrderPlexProfileStructLoggerSimulated
 End Property
@@ -823,7 +866,7 @@ End Property
 Public Property Get gOrderPlexProfileStringLogger() As Logger
 If mOrderPlexProfileStringLogger Is Nothing Then
     Set mOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
-    mOrderPlexProfileStringLogger.logToParent = False
+    mOrderPlexProfileStringLogger.LogToParent = False
 End If
 Set gOrderPlexProfileStringLogger = mOrderPlexProfileStringLogger
 End Property
@@ -831,7 +874,7 @@ End Property
 Public Property Get gOrderPlexProfileStringLoggerSimulated() As Logger
 If mOrderPlexProfileStringLoggerSimulated Is Nothing Then
     Set mOrderPlexProfileStringLoggerSimulated = GetLogger("tradebuild.OrderPlexProfileStringSimulated")
-    mOrderPlexProfileStringLoggerSimulated.logToParent = False
+    mOrderPlexProfileStringLoggerSimulated.LogToParent = False
 End If
 Set gOrderPlexProfileStringLoggerSimulated = mOrderPlexProfileStringLoggerSimulated
 End Property
@@ -853,7 +896,7 @@ End Property
 Public Property Get gPositionLogger() As Logger
 If mPositionLogger Is Nothing Then
     Set mPositionLogger = GetLogger("tradebuild.position")
-    mPositionLogger.logToParent = False
+    mPositionLogger.LogToParent = False
 End If
 Set gPositionLogger = mPositionLogger
 End Property
@@ -861,7 +904,7 @@ End Property
 Public Property Get gPositionLoggerSimulated() As Logger
 If mPositionLoggerSimulated Is Nothing Then
     Set mPositionLoggerSimulated = GetLogger("tradebuild.positionSimulated")
-    mPositionLoggerSimulated.logToParent = False
+    mPositionLoggerSimulated.LogToParent = False
 End If
 Set gPositionLoggerSimulated = mPositionLoggerSimulated
 End Property
@@ -869,7 +912,7 @@ End Property
 Public Property Get gTradeProfileLogger() As Logger
 If mTradeProfileLogger Is Nothing Then
     Set mTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
-    mTradeProfileLogger.logToParent = False
+    mTradeProfileLogger.LogToParent = False
 End If
 Set gTradeProfileLogger = mTradeProfileLogger
 End Property
@@ -877,7 +920,7 @@ End Property
 Public Property Get gTradeProfileLoggerSimulated() As Logger
 If mTradeProfileLoggerSimulated Is Nothing Then
     Set mTradeProfileLoggerSimulated = GetLogger("tradebuild.TradeProfileSimulated")
-    mTradeProfileLoggerSimulated.logToParent = False
+    mTradeProfileLoggerSimulated.LogToParent = False
 End If
 Set gTradeProfileLoggerSimulated = mTradeProfileLoggerSimulated
 End Property
@@ -885,7 +928,7 @@ End Property
 Public Property Get gProfitLogger() As Logger
 If mProfitLogger Is Nothing Then
     Set mProfitLogger = GetLogger("tradebuild.Profit")
-    mProfitLogger.logToParent = False
+    mProfitLogger.LogToParent = False
 End If
 Set gProfitLogger = mProfitLogger
 End Property
@@ -893,7 +936,7 @@ End Property
 Public Property Get gProfitLoggerSimulated() As Logger
 If mProfitLoggerSimulated Is Nothing Then
     Set mProfitLoggerSimulated = GetLogger("tradebuild.profitSimulated")
-    mProfitLoggerSimulated.logToParent = False
+    mProfitLoggerSimulated.LogToParent = False
 End If
 Set gProfitLoggerSimulated = mProfitLoggerSimulated
 End Property
@@ -901,7 +944,7 @@ End Property
 Public Property Get gDrawdownLogger() As Logger
 If mDrawdownLogger Is Nothing Then
     Set mDrawdownLogger = GetLogger("tradebuild.Drawdown")
-    mDrawdownLogger.logToParent = False
+    mDrawdownLogger.LogToParent = False
 End If
 Set gDrawdownLogger = mDrawdownLogger
 End Property
@@ -909,7 +952,7 @@ End Property
 Public Property Get gDrawdownLoggerSimulated() As Logger
 If mDrawdownLoggerSimulated Is Nothing Then
     Set mDrawdownLoggerSimulated = GetLogger("tradebuild.drawdownSimulated")
-    mDrawdownLoggerSimulated.logToParent = False
+    mDrawdownLoggerSimulated.LogToParent = False
 End If
 Set gDrawdownLoggerSimulated = mDrawdownLoggerSimulated
 End Property
@@ -917,7 +960,7 @@ End Property
 Public Property Get gMaxProfitLogger() As Logger
 If mMaxProfitLogger Is Nothing Then
     Set mMaxProfitLogger = GetLogger("tradebuild.MaxProfit")
-    mMaxProfitLogger.logToParent = False
+    mMaxProfitLogger.LogToParent = False
 End If
 Set gMaxProfitLogger = mMaxProfitLogger
 End Property
@@ -925,7 +968,7 @@ End Property
 Public Property Get gMaxProfitLoggerSimulated() As Logger
 If mMaxProfitLoggerSimulated Is Nothing Then
     Set mMaxProfitLoggerSimulated = GetLogger("tradebuild.MaxProfitSimulated")
-    mMaxProfitLoggerSimulated.logToParent = False
+    mMaxProfitLoggerSimulated.LogToParent = False
 End If
 Set gMaxProfitLoggerSimulated = mMaxProfitLoggerSimulated
 End Property
@@ -933,7 +976,7 @@ End Property
 Public Property Get gOrderDetailLogger() As Logger
 If mOrderDetailLogger Is Nothing Then
     Set mOrderDetailLogger = GetLogger("tradebuild.orderdetail")
-    mOrderDetailLogger.logToParent = False
+    mOrderDetailLogger.LogToParent = False
 End If
 Set gOrderDetailLogger = mOrderDetailLogger
 End Property
@@ -941,7 +984,7 @@ End Property
 Public Property Get gOrderDetailLoggerSimulated() As Logger
 If mOrderDetailLoggerSimulated Is Nothing Then
     Set mOrderDetailLoggerSimulated = GetLogger("tradebuild.orderdetailSimulated")
-    mOrderDetailLoggerSimulated.logToParent = False
+    mOrderDetailLoggerSimulated.LogToParent = False
 End If
 Set gOrderDetailLoggerSimulated = mOrderDetailLoggerSimulated
 End Property

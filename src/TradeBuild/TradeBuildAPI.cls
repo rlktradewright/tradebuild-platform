@@ -67,7 +67,7 @@ InitialiseTWUtilities
 
 Set mServiceProviders = New ServiceProviders
 
-initialise
+Initialise
 End Sub
 
 Private Sub Class_Terminate()
@@ -159,7 +159,7 @@ If Not mClosePositionsTC Is Nothing Then
 End If
 
 Dim t As New ClosePositionsTask
-t.initialise types, flags
+t.Initialise types, flags
 Set mClosePositionsTC = StartTask(t, PriorityHigh)
 Set CloseAllPositions = mClosePositionsTC
 
@@ -477,7 +477,7 @@ Set GetServiceProviderError = mServiceProviderError
 'Set mServiceProviderError = Nothing
 End Function
 
-Friend Sub initialise()
+Friend Sub Initialise()
 Set mWorkSpaces = New WorkSpaces
 
 Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
@@ -522,41 +522,39 @@ Err.Raise errNumber, errSource, errDescription
 End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
-gLogLogger.Log LogLevels.LogLevelNormal, _
-                "Notification (" & gApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage
+gLog pMsg:="Notification", _
+    pMsgQualifier:="(" & gApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
+    pProcName:="notify", pProjName:=ProjectName, pModName:=ModuleName
 RaiseEvent Notification(ev)
 End Sub
 
 Friend Sub NotifyFatalError( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _
-                ByVal source As String)
+                ByVal errorSource As String)
 Dim ev As ErrorEvent
 
 On Error Resume Next
 
-gErrorLogger.Log LogLevelSevere, "Fatal error " & errorCode & vbCrLf & _
+logMessage pMsg:="Fatal error " & errorCode & vbCrLf & _
                                 errorMessage & vbCrLf & _
                                 "Occurred at:" & vbCrLf & _
-                                source
-
-' kill all the service providers
-mServiceProviders.RemoveAll
-
-' calling END in a dll is not allowed, so we must expect the application to
-' do this. (Note that it is not feasible to exit back to the caller of this
-' procedure because another error of some sort will almost certainly occur.)
+                                errorSource, _
+            pProcName:="NotifyFatalError", _
+            pLogLevel:=LogLevelSevere
 
 Set ev.source = Me
 ev.errorCode = errorCode
-ev.errorMessage = errorMessage & vbCrLf & _
-                "Occurred at:" & vbCrLf & _
-                source
-Do
-    ' do this in a loop because we can't go anywhere else!
-    RaiseEvent Error(ev)
-    Wait 5000
-Loop
+ev.errorMessage = errorMessage
+ev.errorSource = errorSource
+
+RaiseEvent Error(ev)
+
+' calling END in a dll is not allowed, so we call the Win32 APIs to kill the
+' process. (Note that it is not feasible to exit back to the caller of this
+' procedure because another error of some sort will almost certainly occur.)
+
+TerminateProcess GetCurrentProcess, 1
 
 End Sub
 
@@ -661,5 +659,14 @@ lContractBuilder.sessionEndTime = sessionEndTime
 lContractBuilder.sessionStartTime = sessionStartTime
 Set editContractSessionTimes = lContractBuilder.Contract
 End Function
+
+Private Sub logMessage( _
+                ByRef pMsg As String, _
+                ByRef pProcName As String, _
+                Optional ByRef pMsgQualifier As String = vbNullString, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+End Sub
+
 
 

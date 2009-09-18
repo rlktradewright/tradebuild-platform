@@ -89,31 +89,63 @@ setName value
 End Property
 
 Public Property Get notes() As String
+Dim failpoint As Long
+On Error GoTo Err
+
 notes = mDataObj.getColumnValue(ExchangeColumnNotes, "")
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notes", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let notes(ByVal val As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.columnValue(ExchangeColumnNotes) = val
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="notes", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let TimeZone( _
                 ByVal value As TimeZone)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.ruleBroken BusRuleExchangeTimezoneValid, value Is Nothing
 
 If Not value Is Nothing Then mDataObj.columnValue(ExchangeColumnTimeZoneID) = value.id
-'If Not mDataObj.IsNew Then
-'    mDataObj.columnValue(ExchangeColumnTimeZoneName) = value.canonicalName
-'End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TimeZone", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeZone() As TimeZone
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0) = 0 Then Exit Property
 Set TimeZone = mDB.TimeZoneFactory.loadByID(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TimeZone", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let TimeZoneName( _
                 ByVal value As String)
 Dim tz As TimeZone
+Dim failpoint As Long
+On Error GoTo Err
+
 Set tz = mDB.TimeZoneFactory.loadByName(value)
 If tz Is Nothing Then
     mDataObj.ruleBroken BusRuleExchangeTimezoneValid, True
@@ -124,14 +156,27 @@ If tz Is Nothing Then
 Else
     TimeZone = tz
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TimeZoneName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeZoneName() As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mDataObj.IsNew Then
     TimeZoneName = mDataObj.getColumnValue(ExchangeColumnTimeZoneName, "")
 ElseIf CLng(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0)) <> 0 Then
     TimeZoneName = mDB.TimeZoneFactory.loadByID(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0)).name
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TimeZoneName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -141,7 +186,15 @@ End Property
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
+Dim failpoint As Long
+On Error GoTo Err
+
 genericInitialise db, rs
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -284,39 +337,95 @@ End Property
 '@================================================================================
 
 Public Sub ApplyEdit()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.ApplyEdit
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ApplyEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub CancelEdit()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.CancelEdit
 If mDataObj.IsNew Then setInitialErrors
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CancelEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub Delete()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.Delete
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Delete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub genericInitialise( _
                 ByVal db As Variant, _
                 Optional ByVal rs As ADODB.Recordset)
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mDB = db
 If Not rs Is Nothing Then
     Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.connectionString)
     mDataObj.initialiseRs rs
     If mDataObj.IsNew Then setInitialErrors
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="genericInitialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function getName() As String
+Dim failpoint As Long
+On Error GoTo Err
+
 getName = mDataObj.name
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub refresh()
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="refresh", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub setName(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mDataObj.name = value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

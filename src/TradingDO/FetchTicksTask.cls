@@ -78,7 +78,7 @@ mTaskContext.finish Empty, True
 End Sub
 
 Private Sub Task_run()
-If mTaskContext.cancelPending Then
+If mTaskContext.CancelPending Then
     mTaskContext.finish Empty, True
     Exit Sub
 End If
@@ -87,7 +87,7 @@ Set mInstrumentTaskController = mDB.InstrumentFactory.loadBySpecifierAsync( _
                                                 mSpecifier, _
                                                 , _
                                                 "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
-mTaskContext.suspend -1
+mTaskContext.Suspend -1
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -105,6 +105,9 @@ End Property
 Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
 Dim lInstrument As instrument
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
@@ -116,6 +119,11 @@ Else
     Set lInstrument = ev.result
     mTaskContext.finish lInstrument.createTickStream(mFromDate, mToDate), False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

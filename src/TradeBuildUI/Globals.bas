@@ -96,31 +96,31 @@ End Property
 '@================================================================================
 
 
-Public Sub filterNonNumericKeyPress(ByRef KeyAscii As Integer)
+Public Sub gFilterNonNumericKeyPress(ByRef KeyAscii As Integer)
 If (KeyAscii < 48 Or KeyAscii > 57) Then
     KeyAscii = 0
 End If
 End Sub
 
-Public Function loadDefaultStudyConfiguration( _
+Public Function gLoadDefaultStudyConfiguration( _
                 ByVal name As String, _
                 ByVal spName As String) As StudyConfiguration
 Dim sc As StudyConfiguration
 If mDefaultStudyConfigurations Is Nothing Then
-    Set loadDefaultStudyConfiguration = Nothing
+    Set gLoadDefaultStudyConfiguration = Nothing
 Else
     On Error Resume Next
     Set sc = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
     On Error GoTo 0
-    If Not sc Is Nothing Then Set loadDefaultStudyConfiguration = sc.Clone
+    If Not sc Is Nothing Then Set gLoadDefaultStudyConfiguration = sc.Clone
 End If
 End Function
 
-Public Sub notImplemented()
+Public Sub gNotImplemented()
 MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
-Public Sub updateDefaultStudyConfiguration( _
+Public Sub gUpdateDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)
 Dim sc As StudyConfiguration
 
@@ -128,12 +128,12 @@ If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 On Error Resume Next
-mDefaultStudyConfigurations.remove calcDefaultStudyKey(value.name, value.StudyLibraryName)
+mDefaultStudyConfigurations.Remove calcDefaultStudyKey(value.name, value.StudyLibraryName)
 On Error GoTo 0
 
 Set sc = value.Clone
-sc.underlyingStudy = Nothing
-mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(value.name, value.StudyLibraryName)
+sc.UnderlyingStudy = Nothing
+mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(value.name, value.StudyLibraryName)
 End Sub
 
 '@================================================================================

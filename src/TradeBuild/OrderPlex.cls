@@ -244,11 +244,27 @@ IOrderPlex_Key = mKey
 End Property
 
 Private Property Get IOrderPlex_numberOfOrders() As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 IOrderPlex_numberOfOrders = mOrders.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IOrderPlex_numberOfOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Private Property Get IOrderPlex_Order(ByVal index As Long) As TradeBuildSP.IOrder
+Dim failpoint As Long
+On Error GoTo Err
+
 Set IOrderPlex_Order = order(index)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IOrderPlex_Order", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Private Property Get IOrderPlex_stoporder() As TradeBuildSP.IOrder
@@ -264,11 +280,27 @@ End Property
 '@================================================================================
 
 Private Sub QuoteListener_Ask(ev As QuoteEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not longPosition Then calcProfitLoss ev.price
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_Ask", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub QuoteListener_Bid(ev As QuoteEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
 If longPosition Then calcProfitLoss ev.price
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_Bid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub QuoteListener_High(ev As QuoteEvent)
@@ -293,6 +325,9 @@ End Sub
 
 Private Sub QuoteListener_Trade(ev As QuoteEvent)
 Dim cancelPriceHit As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mCancelPrice = 0 Then Exit Sub
 
@@ -326,6 +361,11 @@ If cancelPriceHit Then
     fireChange OrderPlexSelfCancelled
     RaiseEvent SelfCancelled
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="QuoteListener_Trade", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub QuoteListener_Volume(ev As QuoteEvent)
@@ -363,13 +403,19 @@ RaiseEvent CloseoutOrderPartiallyFilled
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mCloseoutOrder_Fill" & "." & failpoint
+gHandleFatalError pProcName:="mCloseoutOrder_Fill", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mCloseoutOrder_PropertyChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexCloseoutOrderChanged
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mCloseoutOrder_PropertyChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mCloseoutOrder_StatusChanged()
@@ -412,9 +458,7 @@ End Select
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mCloseoutOrder_StatusChanged" & "." & failpoint
+gHandleFatalError pProcName:="mCloseoutOrder_StatusChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -422,7 +466,15 @@ End Sub
 '@================================================================================
 
 Private Sub mEntryOrder_Dirty()
+Dim failpoint As Long
+On Error GoTo Err
+
 setDirty
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mEntryOrder_Dirty", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mEntryOrder_Fill(ByVal quantityFilled As Long, _
@@ -500,13 +552,19 @@ handleStimulus StateTransitionStimuli.StimEntryOrderFill
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mEntryOrder_Fill" & "." & failpoint
+gHandleFatalError pProcName:="mEntryOrder_Fill", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mEntryOrder_PropertyChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexEntryOrderChanged
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mEntryOrder_PropertyChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mEntryOrder_StatusChanged()
@@ -562,9 +620,7 @@ End Select
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mEntryOrder_StatusChanged" & "." & failpoint
+gHandleFatalError pProcName:="mEntryOrder_StatusChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -572,7 +628,15 @@ End Sub
 '@================================================================================
 
 Private Sub mStateTimeoutTimer_TimerExpired()
+Dim failpoint As Long
+On Error GoTo Err
+
 handleStimulus StateTransitionStimuli.StimTimeoutExpired
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mStateTimeoutTimer_TimerExpired", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -580,7 +644,15 @@ End Sub
 '@================================================================================
 
 Private Sub mStopOrder_Dirty()
+Dim failpoint As Long
+On Error GoTo Err
+
 setDirty
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mStopOrder_Dirty", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mStopOrder_Fill(ByVal quantityFilled As Long, _
@@ -619,13 +691,19 @@ RaiseEvent StopOrderPartiallyFilled
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStopOrder_Fill" & "." & failpoint
+gHandleFatalError pProcName:="mStopOrder_Fill", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mStopOrder_PropertyChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexStopOrderChanged
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mStopOrder_PropertyChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mStopOrder_StatusChanged()
@@ -677,9 +755,7 @@ End Select
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStopOrder_StatusChanged" & "." & failpoint
+gHandleFatalError pProcName:="mStopOrder_StatusChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -687,7 +763,15 @@ End Sub
 '@================================================================================
 
 Private Sub mTargetOrder_Dirty()
+Dim failpoint As Long
+On Error GoTo Err
+
 setDirty
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mTargetOrder_Dirty", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mTargetOrder_Fill(ByVal quantityFilled As Long, _
@@ -725,13 +809,19 @@ RaiseEvent TargetOrderPartiallyFilled
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mTargetOrder_Fill" & "." & failpoint
+gHandleFatalError pProcName:="mTargetOrder_Fill", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mTargetOrder_PropertyChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexTargetOrderChanged
+
+Exit Sub
+
+Err:
+gHandleFatalError pProcName:="mTargetOrder_PropertyChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mTargetOrder_StatusChanged()
@@ -783,9 +873,7 @@ End Select
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mTargetOrder_StatusChanged" & "." & failpoint
+gHandleFatalError pProcName:="mTargetOrder_StatusChanged", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -808,9 +896,7 @@ cancelAfter = 0
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mTimerEntry_Expired" & "." & failpoint
+gHandleFatalError pProcName:="mTimerEntry_Expired", pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -818,16 +904,32 @@ End Sub
 '@================================================================================
 
 Public Property Let cancelAfter(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 If value <> 0 Then
     Set mTimerEntry = mTicker.AddTimer(value, expiryTimeUnits.ExpiryTimeUnitSeconds, Nothing)
 ElseIf Not mTimerEntry Is Nothing Then
     mTicker.RemoveTimer mTimerEntry
     Set mTimerEntry = Nothing
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelAfter", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get closedOut() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 closedOut = (mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="closedOut", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get closeoutOrder() As order
@@ -835,7 +937,15 @@ Set closeoutOrder = mCloseoutOrder
 End Property
 
 Public Property Get Contract() As Contract
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Contract = mTicker.Contract
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Contract", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get creationTime() As Date
@@ -863,10 +973,18 @@ Set entryOrder = mEntryOrder
 End Property
 
 Public Property Let entryReason(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mEntryReason = value
 If mHandle > 0 Then
     mPositionManager.SetPlexReason mHandle, ReasonTypes.ReasonEntry, mEntryReason
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="entryReason", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get entryReason() As String
@@ -883,7 +1001,15 @@ IndexApplication = mIndexApplication
 End Property
 
 Public Property Get IsRiskUnlimited() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 IsRiskUnlimited = (Risk = MaxCurrency)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IsRiskUnlimited", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let IsSimulated(ByVal value As Boolean)
@@ -903,7 +1029,15 @@ Key = mKey
 End Property
 
 Public Property Get longPosition() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 longPosition = (mEntryOrder.action = ActionBuy)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="longPosition", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let lossNotificationThreshold(ByVal value As Currency)
@@ -911,6 +1045,9 @@ mLossNotificationThreshold = value
 End Property
 
 Public Property Let newEntryPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -942,9 +1079,17 @@ If value <> mEntryOrder.limitPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newEntryPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newEntryTriggerPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -975,12 +1120,20 @@ If value <> mEntryOrder.triggerPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newEntryTriggerPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newOrderPrice( _
                 ByVal orderIndex As Long, _
                 ByVal value As Double)
 Dim lOrder As order
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lOrder = mOrders(orderIndex)
 
@@ -1004,12 +1157,20 @@ If Not mTargetOrder Is Nothing Then
         Exit Property
     End If
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newOrderPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newOrderTriggerPrice( _
                 ByVal orderIndex As Long, _
                 ByVal value As Double)
 Dim lOrder As order
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set lOrder = mOrders(orderIndex)
 
@@ -1033,9 +1194,17 @@ If Not mTargetOrder Is Nothing Then
         Exit Property
     End If
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newOrderTriggerPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newQuantity(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1056,9 +1225,17 @@ If value <> mEntryOrder.quantity Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newQuantity", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newStopOffset(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
@@ -1087,9 +1264,17 @@ If value <> mStopOrder.offset Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newStopOffset", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newStopPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1118,9 +1303,17 @@ If value <> mStopOrder.limitPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newStopPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newStopQuantity(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1141,9 +1334,17 @@ If value <> mStopOrder.quantity Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newStopQuantity", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newStopTriggerPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1173,9 +1374,17 @@ If value <> mStopOrder.triggerPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newStopTriggerPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newTargetPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case OrderPlexStateCodes.OrderPlexStateCancelling
@@ -1205,9 +1414,17 @@ If value <> mTargetOrder.limitPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newTargetPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newTargetOffset(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
@@ -1236,9 +1453,17 @@ If value <> mTargetOrder.offset Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newTargetOffset", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newTargetQuantity(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1259,9 +1484,17 @@ If value <> mTargetOrder.quantity Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newTargetQuantity", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let newTargetTriggerPrice(ByVal value As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
@@ -1291,33 +1524,70 @@ If value <> mTargetOrder.triggerPrice Then
     fireChange OrderPlexChangeTypes.OrderPlexChangesPending
     RaiseEvent Dirty
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="newTargetTriggerPrice", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get pendingSize() As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If mEntryOrder Is Nothing Then pendingSize = 0: Exit Property
 If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed Then pendingSize = 0: Exit Property
 pendingSize = IIf(longPosition, mEntryOrder.quantityRemaining, -mEntryOrder.quantityRemaining)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="pendingSize", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get order(ByVal index As Long) As order
+Dim failpoint As Long
+On Error GoTo Err
+
 Set order = mOrders(index)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="order", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get OrderContext() As OrderContext
+Dim failpoint As Long
+On Error GoTo Err
+
 Set OrderContext = mOrderContext
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="OrderContext", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let OrderContext(ByVal value As OrderContext)
 Set mOrderContext = value
 End Property
 
-Friend Property Let OrderSubmitter( _
+Friend Property Let orderSubmitter( _
                 ByVal value As TradeBuildSP.IOrderSubmitter)
 Set mOrderSubmitter = value
 End Property
 
 Public Property Get numberOfOrders() As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 numberOfOrders = mOrders.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="numberOfOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PositionManager() As PositionManager
@@ -1330,6 +1600,9 @@ End Property
 
 Public Property Let PreventUnprotectedPosition( _
                 ByVal value As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 If State <> OrderPlexStateCreated And _
     mStopOrder Is Nothing _
 Then
@@ -1344,10 +1617,23 @@ If mPreventUnprotectedPosition Then
 Else
     mStateEngine.clearConditions Conditions.CondProtected
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="PreventUnprotectedPosition", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 PreventUnprotectedPosition = mPreventUnprotectedPosition
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="PreventUnprotectedPosition", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let profitNotificationThreshold(ByVal value As Currency)
@@ -1358,6 +1644,9 @@ Public Property Get Risk() As Currency
 Dim stopTotalPrice As Double
 Dim pendingTotalPrice As Double
 Dim filledTotalPrice As Double
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mStopOrder Is Nothing Then
     Risk = MaxCurrency
@@ -1413,6 +1702,11 @@ Else
     Risk = mTickSize * mTickValue * (stopTotalPrice - filledTotalPrice - pendingTotalPrice) / mTickSize
 End If
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Risk", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Property
 
 Friend Property Let scalingStrategy( _
@@ -1425,7 +1719,15 @@ size = mSize
 End Property
 
 Public Property Get State() As OrderPlexStateCodes
+Dim failpoint As Long
+On Error GoTo Err
+
 State = mStateEngine.State
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="State", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get stoporder() As order
@@ -1433,10 +1735,18 @@ Set stoporder = mStopOrder
 End Property
 
 Public Property Let stopReason(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mStopReason = value
 If mHandle > 0 Then
     mPositionManager.SetPlexReason mHandle, ReasonTypes.ReasonStop, mStopReason
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="stopReason", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get stopReason() As String
@@ -1453,10 +1763,18 @@ Set targetOrder = mTargetOrder
 End Property
 
 Public Property Let targetReason(ByVal value As String)
+Dim failpoint As Long
+On Error GoTo Err
+
 mTargetReason = value
 If mHandle > 0 Then
     mPositionManager.SetPlexReason mHandle, ReasonTypes.ReasonTarget, mTargetReason
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="targetReason", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get targetReason() As String
@@ -1465,12 +1783,20 @@ End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
 Dim lContract As Contract
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTicker = value
 Set lContract = mTicker.Contract
 mTickSize = lContract.TickSize
 mTickValue = lContract.tickValue
 mValueFactor = lContract.multiplier
 mcurrencyCode = lContract.specifier.currencyCode
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Ticker", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Ticker() As Ticker
@@ -1482,6 +1808,9 @@ End Property
 '@================================================================================
 
 Public Sub AddChangeListener(ByVal value As ChangeListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mChangeListeners.Add value
 
 ' notify this new listenener that we are alReady created
@@ -1489,18 +1818,42 @@ Dim ev As ChangeEvent
 Set ev.source = Me
 ev.changeType = OrderPlexChangeTypes.OrderPlexCreated
 value.Change ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddStateChangeListener(ByVal value As StateChangeListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mStateChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddStateChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddProfitListener(ByVal value As ProfitListener)
+Dim failpoint As Long
+On Error GoTo Err
+
 mProfitListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="AddProfitListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub adjustStop(ByVal stopPrice As Double, _
                     Optional ByVal quantity As Long = -1)
+Dim failpoint As Long
+On Error GoTo Err
+
 gTB.notifyListeners _
                             "Adjust stop: (" & mTicker.TradePrice & ") " & _
                             " stop " & stopPrice & _
@@ -1512,10 +1865,18 @@ newStopTriggerPrice = stopPrice
 If quantity <> -1 Then newStopQuantity = quantity
 update
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="adjustStop", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Sub adjustTarget(ByVal targetPrice As Double, _
                     Optional ByVal quantity As Long = -1)
+Dim failpoint As Long
+On Error GoTo Err
+
 gTB.notifyListeners _
                             "Adjust target: (" & mTicker.TradePrice & ") " & _
                             " target " & targetPrice & _
@@ -1527,9 +1888,17 @@ newTargetPrice = targetPrice
 If quantity <> -1 Then newTargetQuantity = quantity
 update
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="adjustTarget", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If evenIfFilled Then
     mStateEngine.clearConditions Conditions.CondNoFillCancellation
@@ -1538,6 +1907,11 @@ Else
     mStateEngine.setConditions Conditions.CondNoFillCancellation
     Cancel = handleStimulus(StateTransitionStimuli.StimCancelIfNoFill)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Cancel", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 ''
@@ -1545,6 +1919,9 @@ End Function
 ' been actioned.
 '@/
 Public Sub cancelChanges()
+Dim failpoint As Long
+On Error GoTo Err
+
 mNewQuantity = -1
 mNewEntryPrice = -1
 mNewEntryTriggerPrice = -1
@@ -1571,12 +1948,20 @@ mDirty = False
 fireChange OrderPlexChangeTypes.OrderPlexChangesCancelled
 RaiseEvent ChangesCancelled
 RaiseEvent Clean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelChanges", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 ''
 ' Copies the current state of the member orders for use by cancelChanges
 '@/
 Friend Sub checkpoint()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mEntryOrderCopy = mEntryOrder.clone
 mEntryOrder.setClean
 
@@ -1589,9 +1974,17 @@ If Not mTargetOrder Is Nothing Then
     Set mTargetOrderCopy = mTargetOrder.clone
     mTargetOrder.setClean
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkpoint", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub CloseOut(ByVal method As String)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If UCase(method) <> "MKT" Then
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, "OrderPlex::closeout", "method " & method & " not implemented"
@@ -1606,9 +1999,17 @@ gTB.notifyListeners _
 
 handleStimulus StateTransitionStimuli.StimCloseout
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CloseOut", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Friend Function createEntryOrder() As order
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mEntryOrder Is Nothing Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createEntryOrder", _
@@ -1623,9 +2024,17 @@ If mOrders.Count >= 1 Then
 Else
     mOrders.Add mEntryOrder
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createEntryOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function createStopOrder() As order
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStopOrder Is Nothing Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createStopOrder", _
@@ -1644,9 +2053,17 @@ ElseIf Not mTargetOrder Is Nothing Then
 Else
     mOrders.Add mStopOrder
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createStopOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function createTargetOrder() As order
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mTargetOrder Is Nothing Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createTargetOrder", _
@@ -1669,9 +2086,17 @@ ElseIf mStopOrder Is Nothing Then
 Else
     mOrders.Add mTargetOrder, , , 2
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTargetOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub execute(Optional ByVal cancelPrice As Double = 0)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mPreventUnprotectedPosition And mStopOrder Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "execute", _
@@ -1681,9 +2106,17 @@ End If
 mCancelPrice = cancelPrice
 fireChange OrderPlexChangeTypes.OrderPlexCreated
 handleStimulus StateTransitionStimuli.StimExecute
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="execute", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTicker = Nothing
 Set mPositionManager = Nothing
 Set mOrderContext = Nothing
@@ -1695,33 +2128,65 @@ If Not mCloseoutOrder Is Nothing Then mCloseoutOrder.Finish
 Set mStopStrategy = Nothing
 Set mScalingStrategy = Nothing
 Set mExitStrategy = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveChangeListener(ByVal value As ChangeListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal value As StateChangeListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mStateChangeListeners.Count To 1 Step -1
     If mStateChangeListeners.Item(i) Is value Then mStateChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveStateChangeListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveProfitListener(ByVal value As ProfitListener)
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mProfitListeners.Count To 1 Step -1
     If mProfitListeners.Item(i) Is value Then mProfitListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RemoveProfitListener", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub update()
 Dim updateEntry As Boolean
 Dim updateStop As Boolean
 Dim updateTarget As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateCreated
@@ -1760,6 +2225,11 @@ If updateTarget Then
 End If
 fireChange OrderPlexChangeTypes.OrderPlexChangesApplied
 RaiseEvent Clean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="update", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -1771,6 +2241,9 @@ Dim Profit As Currency
 Dim notifyProfit As Boolean
 Dim notifyMaxProfit As Boolean
 Dim notifyDrawdown As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Profit = size * (value - mEntryOrder.averagePrice) * mValueFactor
 
@@ -1821,11 +2294,19 @@ If notifyProfit Then
         mDrawdownNotificationThreshold = 0
     End If
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="calcProfitLoss", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function cancelOrders() As Boolean
 Dim stopOrderID As String
 Dim targetOrderID As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 cancelAfter = 0
 mCancelPrice = 0
@@ -1867,13 +2348,29 @@ If mOrderSubmitter.cancelOrderPlex(Me) Then
                     Me
 End If
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Private Function cancelStateTimeout()
+Dim failpoint As Long
+On Error GoTo Err
+
 mStateTimeoutTimer.StopTimer
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelStateTimeout", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function cancelStopOrder()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mStopOrder Is Nothing Then Exit Function
 Select Case mStopOrder.status
 Case OrderStatuses.OrderStatusCreated
@@ -1889,9 +2386,17 @@ Case Else
                 Me
     mOrderSubmitter.cancelStopOrder Me
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelStopOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function cancelTargetOrder()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTargetOrder Is Nothing Then Exit Function
 Select Case mTargetOrder.status
 Case OrderStatuses.OrderStatusCreated
@@ -1907,9 +2412,17 @@ Case Else
                 Me
     mOrderSubmitter.cancelTargetOrder Me
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelTargetOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub checkAllOrdersComplete()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed Then Exit Sub
 If mEntryOrderFinished And _
     mStopOrderFinished And _
@@ -1918,12 +2431,20 @@ Then
     handleStimulus StateTransitionStimuli.StimAllOrdersComplete
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkAllOrdersComplete", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub checkForPendingUpdates( _
                 ByRef updateEntry As Boolean, _
                 ByRef updateStop As Boolean, _
                 ByRef updateTarget As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mEntryOrder Is Nothing Then
     If mEntryOrder.isDirty Then updateEntry = True
     If mNewQuantity >= 0 And _
@@ -2052,9 +2573,17 @@ If Not mTargetOrder Is Nothing Then
     End If
     mNewTargetTriggerPrice = -1
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkForPendingUpdates", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function completionActions()
+Dim failpoint As Long
+On Error GoTo Err
+
 mOrderContext.orderPlexClosed Me
 fireChange OrderPlexCompleted
 RaiseEvent Completed
@@ -2062,10 +2591,18 @@ Set mStopStrategy = Nothing
 Set mScalingStrategy = Nothing
 Set mExitStrategy = Nothing
 If size = 0 Then mTicker.RemoveQuoteListener Me
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="completionActions", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function doActions(ByRef pActions() As Long) As Variant
 Dim action As Variant
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each action In pActions
     Select Case CLng(action)
@@ -2100,30 +2637,51 @@ For Each action In pActions
                     "Invalid action " & action
     End Select
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="doActions", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub fireChange( _
                 ByVal changeType As OrderPlexChangeTypes)
 Dim listener As ChangeListener
 Dim ev As ChangeEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent Change(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireStateChange( _
                 ByVal State As OrderPlexStateCodes)
 Dim listener As StateChangeListener
 Dim ev As StateChangeEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.State = State
 For Each listener In mStateChangeListeners
     listener.Change ev
 Next
 RaiseEvent StateChange(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireStateChange", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireProfit( _
@@ -2131,6 +2689,9 @@ Private Sub fireProfit( _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
 Dim Profit As ProfitEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Profit.source = Me
 Profit.profitAmount = profitAmount
 Profit.profitType = profitType
@@ -2138,10 +2699,18 @@ Profit.currencyCode = mcurrencyCode
 For Each listener In mProfitListeners
     listener.profitAmount Profit
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fireProfit", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function handleStimulus(ByVal stimulus As StateTransitionStimuli) As Variant
 Dim currState As OrderPlexStateCodes
+
+Dim failpoint As Long
+On Error GoTo Err
 
 currState = mStateEngine.State
 handleStimulus = doActions(mStateEngine.notifyStimulus(stimulus))
@@ -2149,10 +2718,18 @@ If mStateEngine.State <> currState Then
     fireChange OrderPlexChangeTypes.OrderPlexStateChanged
     fireStateChange mStateEngine.State
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="handleStimulus", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function placeCloseoutOrder()
 ' place an order to closeout the filled part
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCloseoutOrder = mOrderContext.newOrder
 mCloseoutOrder.action = IIf(longPosition, OrderActions.ActionSell, OrderActions.ActionBuy)
 mCloseoutOrder.quantity = Abs(size)
@@ -2165,9 +2742,17 @@ fireChange OrderPlexCloseoutOrderCreated
 mOrderSubmitter.modifyOrderPlex Me, False, False, False, True
                                 
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="placeCloseoutOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Private Function placeOrders()
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mCreationTime = mTicker.Timestamp
 
@@ -2179,9 +2764,17 @@ mOrderSubmitter.executeOrderPlex Me
 mTicker.AddQuoteListener Me
 
 checkpoint
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="placeOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub placePeggedOrders()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStopOrder Is Nothing Then
     If mStopOrder.status = OrderStatuses.OrderStatusCreated Then
         If mStopOrder.orderType = OrderTypes.OrderTypeAutoStop Then
@@ -2207,9 +2800,17 @@ If Not mTargetOrder Is Nothing Then
     End If
 End If
 update
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="placePeggedOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function resubmitStopOrder()
+Dim failpoint As Long
+On Error GoTo Err
+
 mOrderSubmitter.resubmitStopOrder Me
 gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
@@ -2218,9 +2819,17 @@ gTB.notifyListeners _
             Me
 mStateEngine.clearConditions Conditions.CondStopOrderCancelled
 mStopOrderFinished = False
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="resubmitStopOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function resubmitStopAndTargetOrders()
+Dim failpoint As Long
+On Error GoTo Err
+
 mOrderSubmitter.resubmitStopAndTargetOrders Me
 gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
@@ -2237,9 +2846,17 @@ mStopOrderFinished = False
 mStateEngine.clearConditions Conditions.CondTargetOrderCancelled
 mTargetOrderFinished = False
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="resubmitStopAndTargetOrders", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Private Function resubmitTargetOrder()
+Dim failpoint As Long
+On Error GoTo Err
+
 mOrderSubmitter.resubmitTargetOrder Me
 gTB.notifyListeners _
             "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
@@ -2248,6 +2865,11 @@ gTB.notifyListeners _
             Me
 mStateEngine.clearConditions Conditions.CondTargetOrderCancelled
 mTargetOrderFinished = False
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="resubmitTargetOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 ''
@@ -2255,15 +2877,26 @@ End Function
 ' been raised.
 '@/
 Private Sub setDirty()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mDirty Then
     mDirty = True
     RaiseEvent Dirty
 Else
     mDirty = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setDirty", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setSize(ByVal value As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 mSize = value
 If mSize <> 0 Then
     mStateEngine.setConditions Conditions.CondSizeNonZero
@@ -2271,10 +2904,23 @@ Else
     mStateEngine.clearConditions Conditions.CondSizeNonZero
 End If
 fireChange OrderPlexChangeTypes.OrderPlexSizeChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setSize", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function setStateTimeout()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mStateTimeoutTimer = CreateIntervalTimer(1000)
 mStateTimeoutTimer.StartTimer
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setStateTimeout", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 

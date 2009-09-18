@@ -29,13 +29,11 @@ Event CollectionStopped()
 Event Connected()
 Event ConnectFailed(ByVal description As String)
 Event ConnectionClosed()
-Event ErrorMessage( _
-                ByVal errorCode As Long, _
-                ByVal errorMsg As String)
+Event Error(ev As ErrorEvent)
 Event ExitProgram()
-Event NotifyMessage( _
-                ByVal eventCode As ApiNotifyCodes, _
-                ByVal eventMsg As String)
+Event FatalError(ev As ErrorEvent)
+Event Notification( _
+                ev As NotificationEvent)
 Event Reconnecting()
 Event ServiceProviderError( _
                 ByVal errorCode As Long, _
@@ -176,7 +174,7 @@ If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     gLogger.Log LogLevelSevere, _
                 "Error " & ev.errorNumber & " starting tickers: " & _
-                ev.ErrorMessage & vbCrLf & _
+                ev.errorMessage & vbCrLf & _
                 ev.errorSource
 Else
     gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
@@ -191,7 +189,7 @@ Private Sub mTickers_CollectionChanged(ev As TWUtilities30.CollectionChangeEvent
 Dim lTicker As ticker
 If ev.changeType = CollItemAdded Then
     Set lTicker = ev.affectedItem
-    lTicker.Timeframes.addCollectionChangeListener Me
+    lTicker.Timeframes.AddCollectionChangeListener Me
 End If
 End Sub
 
@@ -206,9 +204,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
-gLogger.Log LogLevelSevere, "Error " & ev.errorCode & ": " & ev.ErrorMessage
-RaiseEvent ErrorMessage(ev.errorCode, _
-                    ev.ErrorMessage)
+RaiseEvent FatalError(ev)
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
@@ -238,8 +234,7 @@ ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     End With
 Else
     gLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
-    RaiseEvent NotifyMessage(ev.eventCode, _
-                        ev.eventMessage)
+    RaiseEvent Notification(ev)
 End If
 End Sub
 
@@ -312,6 +307,8 @@ Dim failpoint As Long
 On Error GoTo Err
 
 processConfig
+
+TaskSummaryLoggingIntervalSecs = 5
 
 If Not mStartCollectionTimer Is Nothing Then
     ' startCollection may have been called as a result of user action, so
@@ -476,8 +473,10 @@ If mWriteticks Then
             End If
         Next
         If mOutputFormat = "" Then
-            RaiseEvent ErrorMessage(ErrorCodes.ErrIllegalArgumentException, _
-                                    "Invalid tickfile output format specified in config file")
+            Dim ev As ErrorEvent
+            ev.errorCode = ErrorCodes.ErrIllegalArgumentException
+            ev.errorMessage = "Invalid tickfile output format specified in config file"
+            RaiseEvent Error(ev)
             Exit Sub
         End If
     End If
@@ -539,6 +538,8 @@ Private Sub stopAll( _
                 ByVal allowNextStart As Boolean)
 Dim lTicker As ticker
 Dim startTime As Date
+
+TaskSummaryLoggingIntervalSecs = 0
 
 gLogger.Log LogLevelNormal, "Data collection stopped"
 mTradeBuildAPI.StopAllTickers
