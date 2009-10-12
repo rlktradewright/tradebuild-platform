@@ -88,23 +88,63 @@ End Sub
 '@================================================================================
 
 Public Property Get AllOrdersSimulated() As Boolean
+Const ProcName As String = "AllOrdersSimulated"
+Dim failpoint As Long
+On Error GoTo Err
+
 AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get ClosingPositions() As Boolean
+Const ProcName As String = "ClosingPositions"
+Dim failpoint As Long
+On Error GoTo Err
+
 ClosingPositions = Not (mClosePositionsTC Is Nothing)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get defaultWorkSpace() As Workspace
+Const ProcName As String = "defaultWorkSpace"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set defaultWorkSpace = mDefaultWorkSpace
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Executions() As Executions
+Const ProcName As String = "Executions"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Executions = mExecutions
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let PermittedServiceProviderRoles( _
                 ByVal value As ServiceProviderRoles)
+Const ProcName As String = "PermittedServiceProviderRoles"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mServiceProviders.IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
@@ -112,34 +152,102 @@ If mServiceProviders.IsAnyServiceProviderConfigured Then
 End If
 
 mServiceProviders.PermittedServiceProviderRoles = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
+Const ProcName As String = "PermittedServiceProviderRoles"
+Dim failpoint As Long
+On Error GoTo Err
+
 PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
+Const ProcName As String = "ServiceProviders"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ServiceProviders = mServiceProviders
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
+Const ProcName As String = "SupportedHistoricalDataPeriods"
+Dim failpoint As Long
+On Error GoTo Err
+
 SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriods
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedInputTickfileFormats"
+Dim failpoint As Long
+On Error GoTo Err
+
 SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedOutputTickfileFormats"
+Dim failpoint As Long
+On Error GoTo Err
+
 SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Tickers() As Tickers
+Const ProcName As String = "Tickers"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Tickers = mTickers
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get WorkSpaces() As WorkSpaces
+Const ProcName As String = "WorkSpaces"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set WorkSpaces = mWorkSpaces
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -149,6 +257,7 @@ End Property
 Public Function CloseAllPositions( _
                 Optional ByVal types As PositionTypes = PositionTypeAll, _
                 Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
+Const ProcName As String = "CloseAllPositions"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -166,11 +275,7 @@ Set CloseAllPositions = mClosePositionsTC
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CloseAllPositions" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub ConfigureDefaults( _
@@ -180,6 +285,7 @@ Public Sub ConfigureDefaults( _
                 Optional ByVal connectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal twsLogLevel As String = "ERROR", _
                 Optional ByVal tickfilesPath As String)
+Const ProcName As String = "ConfigureDefaults"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -195,12 +301,7 @@ AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ConfigureDefaults" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function GenerateTickfileSpecifiers( _
@@ -235,6 +336,8 @@ Dim replayFromDate As Date
 Dim replayToDate As Date
 
 Dim failpoint As Long
+Const ProcName As String = "GenerateTickfileSpecifiers"
+
 On Error GoTo Err
 
 If (customSessionStartTime = 0 And customSessionEndTime <> 0) Or _
@@ -464,30 +567,45 @@ Set GenerateTickfileSpecifiers = lTickfileSpecifiers
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
 Public Function GetServiceProviderError() As ServiceProviderError
+Const ProcName As String = "GetServiceProviderError"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set GetServiceProviderError = mServiceProviderError
 'Set mServiceProviderError = Nothing
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub Initialise()
+Const ProcName As String = "Initialise"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mWorkSpaces = New WorkSpaces
 
 Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
 Set mTickers = defaultWorkSpace.Tickers
 Set mExecutions = defaultWorkSpace.Executions
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Function IsSupportedHistoricalDataPeriod( _
                 ByVal period As TimePeriod) As Boolean
+Const ProcName As String = "IsSupportedHistoricalDataPeriod"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -496,15 +614,12 @@ IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPer
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IsSupportedHistoricalDataPeriod" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function loadContracts( _
                 ByVal pContractSpec As contractSpecifier) As TaskController
+Const ProcName As String = "loadContracts"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -514,18 +629,23 @@ Set loadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContrac
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "loadContracts" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
+Const ProcName As String = "notify"
+Dim failpoint As Long
+On Error GoTo Err
+
 gLog pMsg:="Notification", _
     pMsgQualifier:="(" & gApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
     pProcName:="notify", pProjName:=ProjectName, pModName:=ModuleName
 RaiseEvent Notification(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyFatalError( _
@@ -542,6 +662,12 @@ logMessage pMsg:="Fatal error " & errorCode & vbCrLf & _
                                 errorSource, _
             pProcName:="NotifyFatalError", _
             pLogLevel:=LogLevelSevere
+
+logMessage pMsg:="Killing program", _
+            pProcName:="NotifyFatalError", _
+            pLogLevel:=LogLevelSevere
+
+TerminateTWUtilities    ' to stop any outstanding tasks and timers
 
 Set ev.source = Me
 ev.errorCode = errorCode
@@ -562,6 +688,10 @@ Friend Sub notifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
                             ByVal source As Object)
+Const ProcName As String = "notifyListeners"
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case valueType
 Case VTLog
     gLogLogger.Log LogLevelNormal, value
@@ -612,6 +742,11 @@ Case VTOrderDetail
 Case VTOrderDetailSimulated
     gOrderDetailLoggerSimulated.Log LogLevelNormal, value, source
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
                             
 Friend Sub SetServiceProviderError( _
@@ -619,6 +754,10 @@ Friend Sub SetServiceProviderError( _
                 ByVal errorMessage As String, _
                 ByVal serviceProviderName As String)
 Dim ev As NotificationEvent
+
+Const ProcName As String = "SetServiceProviderError"
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mServiceProviderError = New ServiceProviderError
 mServiceProviderError.errorCode = errorCode
@@ -630,6 +769,11 @@ Set ev.source = Me
 ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
 ev.eventMessage = "A Service Provider error has occurred"
 notify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                     
 End Sub
 
@@ -637,11 +781,20 @@ Public Sub StopAllTickers()
 Dim ws As Workspace
 Dim t As Ticker
 
+Const ProcName As String = "StopAllTickers"
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each ws In mWorkSpaces
     For Each t In ws.Tickers
         t.StopTicker
     Next
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -654,10 +807,19 @@ Private Function editContractSessionTimes( _
                 ByVal sessionEndTime As Date) As Contract
 Dim lContractBuilder As ContractBuilder
 
+Const ProcName As String = "editContractSessionTimes"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lContractBuilder = CreateContractBuilderFromContract(pContract)
 lContractBuilder.sessionEndTime = sessionEndTime
 lContractBuilder.sessionStartTime = sessionStartTime
 Set editContractSessionTimes = lContractBuilder.Contract
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub logMessage( _

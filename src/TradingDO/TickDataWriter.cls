@@ -91,8 +91,9 @@ Private mData()                         As Byte
 '@===============================================================================
 
 Private Sub Class_Terminate()
+Const ProcName As String = "Class_Terminate"
 Debug.Print "TickDataWriter terminated"
-gLogger.Log LogLevelHighDetail, taskName & ": terminated"
+If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
 '@===============================================================================
@@ -100,6 +101,11 @@ End Sub
 '@===============================================================================
 
 Private Sub Task_cancel()
+Const ProcName As String = "Task_cancel"
+
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mCmd Is Nothing Then
     mCmd.cancel
     mConnection.Close
@@ -110,13 +116,27 @@ ElseIf Not mConnection Is Nothing Then
         mConnection.cancel
     End If
 End If
-If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, taskName & ": cancelled"
+If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 mTaskContext.finish Empty, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub Task_run()
+Const ProcName As String = "Task_run"
+Dim failpoint As Long
+On Error GoTo Err
+
 connectToDB
 mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -138,6 +158,7 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.connection)
+Const ProcName As String = "mConnection_ExecuteComplete"
 Dim errorMsg As String
 Dim failpoint As Long
 On Error GoTo Err
@@ -148,7 +169,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         pError.NativeError = 1213 _
     Then
         ' a deadlock has been detected - retry the command
-        logMessage pMsg:="Deadlock detected while writing tick data - retrying", pProcName:="mConnection_ExecuteComplete"
+        logMessage pMsg:="Deadlock detected while writing tick data - retrying", pProcName:=ProcName
         Execute
         Exit Sub
     End If
@@ -160,18 +181,23 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         pError.Number = -2147217871 _
     Then
         ' this occurs occasionally while running under Hyper-V Server, when the OS
-        ' has for some reason not been able to complete a write to the SQL Server
-        ' transaction log within 15 seconds. It's not clear whether the database
-        ' write has completed, so we retry it
-        logMessage pMsg:="OS timeout while writing to transaction log detected - retrying", pProcName:="mConnection_ExecuteComplete"
-        Execute
+        ' has for some reason taken more than 15 seconds to complete a write to the
+        ' SQL Server transaction log. We assume that the write has actually
+        ' completed, so ignore this error
+        logMessage pMsg:="OS timeout while writing to transaction log detected", pProcName:=ProcName
+        
+        If mAsynchronous Then
+            If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+            mTaskContext.finish 0, False
+        End If
+       
         Exit Sub
     End If
     
     If pError.Number = 3712 Then
         ' this error is "Operation has been cancelled by the user"
         ' This occurs occasionally when running async, but I've no idea why
-        gLogger.Log LogLevelHighDetail, taskName & ": Error 3712 Operation cancelled by user"
+        logMessage taskName & ": Error 3712 returned from ADO: operation cancelled by user: retrying", pProcName:=ProcName
         connectToDB
         If Not mAsynchronous Then DoWriteTickData
         Exit Sub
@@ -180,19 +206,19 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     errorMsg = "TickDataWriter: execution error " & vbCrLf & _
                 gGenerateErrorMessage(pError) & _
                 gGenerateConnectionErrorMessages(pConnection)
-    logMessage pMsg:=taskName & ": " & errorMsg, pProcName:="mConnection_ExecuteComplete"
+    logMessage pMsg:=taskName & ": " & errorMsg, pProcName:=ProcName
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
         Debug.Print "TickDataWriter: close connection(error)"
         mConnection.Close
     End If
     If mAsynchronous Then
-        mTaskContext.Error pError.Number, ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete" & vbCrLf & errorMsg
+        mTaskContext.Error pError.Number, ProjectName & "." & ModuleName & ":" & ProcName & vbCrLf & errorMsg
     Else
         RaiseEvent Error(pError.Number, errorMsg)
     End If
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, taskName & ": data written"
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
@@ -209,7 +235,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:="mConnection_ExecuteComplete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -219,17 +245,35 @@ End Sub
 
 Private Sub mConnector_Connected( _
                 ByVal pConnection As ADODB.connection)
+Const ProcName As String = "mConnector_Connected"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mConnection = pConnection
 If mAsynchronous Then DoWriteTickData
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
                 ByVal errorCode As Long, ByVal errorDesc As String)
+Const ProcName As String = "mConnector_ConnectFailed"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mAsynchronous Then
     mTaskContext.Error errorCode, errorDesc
 Else
     RaiseEvent ConnectFailed(errorCode, errorDesc)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@===============================================================================

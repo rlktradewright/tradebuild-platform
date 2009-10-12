@@ -264,11 +264,11 @@ Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As
 On Error GoTo Err
 If retrying Then
     notifyEvent StandardSPEventCodes.HDRetryConnectDataSource, _
-                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (retrying) " & mTWSAPI.connectionString & _
                 ": " & Description
 Else
     notifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
-                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (no retry) " & mTWSAPI.connectionString & _
                 ": " & Description
 End If
 Exit Sub

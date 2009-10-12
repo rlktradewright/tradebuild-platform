@@ -195,8 +195,6 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
         vbCritical, _
         "Fatal error"
 
-gLogger.Log LogLevelSevere, "Killing program due to fatal error"
-
 ' At this point, we don't know what state things are in, so it's not feasible to return to
 ' the caller. All we can do is terminate abruptly. Note that normally one would use the
 ' END statement to terminate a VB6 program abruptly. However the TWUtilities module interferes

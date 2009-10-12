@@ -40,6 +40,8 @@ Implements ITickfileReader
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "TickfileReader"
+
 Private Const NUM_RECORD_TABLE_ENTRIES As Long = 16
 
 '================================================================================
@@ -117,7 +119,7 @@ Private Sub Class_Initialize()
 Set mFileSys = CreateObject("scripting.filesystemobject")
 mCurrentRecordTableEntry = -1
 mNextFreeRecordTableEntry = 0
-mReplayProgressEventFrequency = 1
+mReplayProgressEventFrequency = 10
 End Sub
 
 Private Sub Class_Terminate()
@@ -156,6 +158,11 @@ Dim percentComplete As Single
 Dim pendingTick As GenericTick
 
 On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_FireNextTick", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
     percentComplete = 100 * (mTickdataReadBytes / mTickdataSizeBytes)
@@ -171,10 +178,14 @@ If mPendingImpliedVolumeTick Then
     pendingTick.size = mVolume
     mDataConsumer.tick pendingTick
 Else
-    Do While ReadNextTickRecord
+    Do While ReadNextFilteredTickRecord
         If processTickData Then Exit Do
     Loop
 End If
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_FireNextTick", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -192,7 +203,7 @@ End Property
 
 Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
 If RHS = 0 Then
-    mReplayProgressEventFrequency = 1
+    mReplayProgressEventFrequency = 10
 Else
     mReplayProgressEventFrequency = RHS
 End If
@@ -205,6 +216,12 @@ End Property
 Private Sub ITickfileReader_ReplayTickfile( _
                 ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
 On Error GoTo Err
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_ReplayTickfile", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+
+
 Set mInputTickfileSpecifier = tickfileSpecifier
 getFile mInputTickfileSpecifier.filename, _
             mInputTickfileFormat, _
@@ -213,6 +230,10 @@ getFile mInputTickfileSpecifier.filename, _
             mTickdataSizeBytes, _
             mContract, _
             mFirstTickFileTime
+
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ITickfileReader_ReplayTickfile", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -263,6 +284,15 @@ Else
 End If
 End Property
 
+Private Function fromFilterRecord() As Boolean
+fromFilterRecord = True
+If mInputTickfileSpecifier.FromDate <> 0 And _
+    mRecordTable(mCurrentRecordTableEntry).timestamp < mInputTickfileSpecifier.FromDate Then
+    fromFilterRecord = False
+    Exit Function
+End If
+End Function
+
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
 Set InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
@@ -309,6 +339,9 @@ Dim bytesRead As Long
 Dim f As File
 Dim dataFields() As String
 
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 logMessage "Opening file " & filename
     
 On Error Resume Next
@@ -317,6 +350,9 @@ If Err.Number <> 0 Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFTickfileDoesntExist, _
                         "Tickfile does not exist: " & filename, _
                         mTickfileServiceProvider.handle
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 On Error GoTo 0
@@ -331,6 +367,9 @@ If ts.AtEndOfStream Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFTickfileInvalid, _
                         "Tickfile format cannot be determined: " & filename, _
                         mTickfileServiceProvider.handle
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
@@ -345,8 +384,9 @@ If UCase$(dataFields(UBound(dataFields))) = "EPF" Then
                         "Connected to tickfile", _
                         mTickfileServiceProvider.handle
     mServiceConsumer.Ready mInputTickfileSpecifier, filesize
-'    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
-'                        "Tickfile contains no contract details: " & filename
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
@@ -397,8 +437,6 @@ Case TickFileVersions.CrescendoV1
     Set ts = mFileSys.OpenTextFile(filename, ForReading, False)
     bytesRead = 0
 
-'    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
-'                        "Tickfile contains no contract details: " & filename
 Case TickFileVersions.CrescendoV2
     
     Set mContractSpecifier = CreateContractSpecifier( _
@@ -411,8 +449,6 @@ Case TickFileVersions.CrescendoV2
     
     FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.startTime))
     
-'    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
-'                        "Tickfile contains no contract details: " & filename
 
 Case TickFileVersions.TradeBuildV3, _
         TickFileVersions.TradeBuildV4, _
@@ -464,6 +500,10 @@ Set f = mFileSys.getFile(filename)
 filesize = f.size - bytesRead
 
 mServiceConsumer.Ready mInputTickfileSpecifier, filesize
+
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 End Sub
 
 Private Sub handleFatalError( _
@@ -560,7 +600,7 @@ End Function
 Private Sub logMessage( _
                 ByVal message As String, _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(logLevel) Then Exit Sub
+If Not gLogger.IsLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
             message, _
             Me
@@ -887,29 +927,71 @@ Loop
 mPendingImpliedVolumeTick = True
 End Sub
 
+Private Function ReadNextFilteredTickRecord() As Boolean
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ReadNextFilteredTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Do While ReadNextTickRecord
+    If fromFilterRecord Then
+        If toFilterRecord Then
+            ReadNextFilteredTickRecord = True
+            Exit Do
+        Else
+            mServiceConsumer.ReplayProgress mCurrentTimestamp, mRecordsRead, 100#
+            mServiceConsumer.TickfileReplayComplete
+            mCurrentTimestamp = 0
+            Exit Do
+        End If
+    End If
+    mCurrentRecordTableEntry = -1
+Loop
+
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextFilteredTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+End Function
+
 Private Function ReadNextTickRecord() As Boolean
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 
 ReadNextTickRecord = True
 
 If mCurrentRecordTableEntry = -1 Then
     If mTsIn Is Nothing Then
         ReadNextTickRecord = False
+        #If trace Then
+            gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+        #End If
         Exit Function
     End If
 ElseIf mCurrentRecordTableEntry <> mNextFreeRecordTableEntry Then
     ' this means one or more look-ahead records are waiting to be processed
     ReadNextTickRecord = True
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Function
 End If
     
 If Not readRecord(mCurrentRecordTableEntry) Then
     Set mTsIn = Nothing
+    mServiceConsumer.ReplayProgress mCurrentTimestamp, mRecordsRead, 100#
     mServiceConsumer.TickfileReplayComplete
     mCurrentTimestamp = 0
     ReadNextTickRecord = False
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Function
 End If
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 End Function
 
 Private Function readRecord(ByRef index As Long) As Boolean
@@ -918,21 +1000,37 @@ Dim dataFields() As String
 Dim ticktypeStr As String
 Dim anotherRecord As Long
 
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
 If mTickFileVersion = TickFileVersions.ESignal Then
     ' may need to create two new records
     If (mNextFreeRecordTableEntry + 1) Mod NUM_RECORD_TABLE_ENTRIES = mCurrentRecordTableEntry Then
         readRecord = False
+        
+        #If trace Then
+            gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+        #End If
         Exit Function
     End If
 Else
     If mNextFreeRecordTableEntry = mCurrentRecordTableEntry Then
         readRecord = False
+        
+        #If trace Then
+            gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+        #End If
         Exit Function
     End If
 End If
 
 If mTsIn.AtEndOfStream Then
     readRecord = False
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Function
 End If
 
@@ -944,6 +1042,10 @@ Do While ((mInputTickfileFormat = TickfileCrescendo Or mInputTickfileFormat = Ti
         (mInputTickfileFormat = TickfileESignal And Left$(buffer, 1) = ";") Or buffer = ""
     If mTsIn.AtEndOfStream Then
         readRecord = False
+        
+        #If trace Then
+            gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+        #End If
         Exit Function
     End If
     buffer = mTsIn.ReadLine
@@ -1138,5 +1240,19 @@ With mRecordTable(index)
     End Select
 End With
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 End Function
+
+Private Function toFilterRecord() As Boolean
+toFilterRecord = True
+If mInputTickfileSpecifier.ToDate <> 0 And _
+    mRecordTable(mCurrentRecordTableEntry).timestamp >= mInputTickfileSpecifier.ToDate Then
+    toFilterRecord = False
+    Exit Function
+End If
+End Function
+
+
 

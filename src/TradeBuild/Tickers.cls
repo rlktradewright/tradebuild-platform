@@ -80,21 +80,57 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Const ProcName As String = "Count"
+Dim failpoint As Long
+On Error GoTo Err
+
 Count = mTickers.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Item(ByVal index As Variant) As Ticker
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Item = mTickers.Item(index)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let Workspace( _
                 ByVal pWorkspace As Workspace)
+Const ProcName As String = "Workspace"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mWorkspaceRef = CreateWeakReference(pWorkspace)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Workspace() As Workspace
+Const ProcName As String = "Workspace"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Workspace = mWorkspaceRef.Target
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -104,27 +140,54 @@ End Property
 Public Function Add( _
                 ByVal pTickerOptions As TickerOptions, _
                 Optional ByVal Key As String) As Ticker
+Const ProcName As String = "Add"
+Dim failpoint As Long
+On Error GoTo Err
+
 If Key = "" Then Key = GenerateGUIDString
 Set Add = New Ticker
 Add.Key = Key
 Add.Workspace = Me.Workspace
-Add.initialise AllocateTickerHandle, _
+Add.Initialise AllocateTickerHandle, _
                 Me, _
                 pTickerOptions
 mTickers.Add Add, Key
 fireChange CollItemAdded, Add
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
 mChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function CreateTickFileManager( _
                 ByVal pTickerOptions As Long) As TickFileManager
+Const ProcName As String = "CreateTickFileManager"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set CreateTickFileManager = New TickFileManager
 CreateTickFileManager.TickerOptions = pTickerOptions
 CreateTickFileManager.Tickers = Me
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -136,21 +199,43 @@ End Function
 Public Function RefreshPriceChange( _
                 ByVal listener As PriceChangeListener) As TaskController
 Dim pcrt As New PriceChangeRefreshTask
+Const ProcName As String = "RefreshPriceChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTickers.Count = 0 Then Exit Function
-pcrt.initialise Me, listener
+pcrt.Initialise Me, listener
 Set RefreshPriceChange = StartTask(pcrt, PriorityNormal)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
                 
 Public Function RefreshQuotes( _
                 ByVal listener As PriceChangeListener) As TaskController
 Dim qrt As New QuotesRefreshTask
+Const ProcName As String = "RefreshQuotes"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mTickers.Count = 0 Then Exit Function
-qrt.initialise Me, listener
+qrt.Initialise Me, listener
 Set RefreshQuotes = StartTask(qrt, PriorityNormal)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
                 
 Public Sub Remove(ByVal pTicker As Ticker)
 Dim i As Long
+
+Const ProcName As String = "Remove"
+Dim failpoint As Long
+On Error GoTo Err
 
 If pTicker.State <> TickerStates.TickerStateClosing Then
     pTicker.StopTicker
@@ -163,20 +248,43 @@ For i = 1 To mTickers.Count
         Exit For
     End If
 Next
-mTickerHandleTable(pTicker.Handle) = False
+mTickerHandleTable(pTicker.handle) = False
 fireChange CollItemRemoved, pTicker
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub StateChange( _
                 ByRef ev As StateChangeEvent)
+Const ProcName As String = "StateChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent StateChange(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function StartTickers( _
@@ -188,10 +296,11 @@ Public Function StartTickers( _
                 Optional ByVal interval As Long = 50) As TaskController
 Dim lTickersStarter As New TickersStarter
 
+Const ProcName As String = "StartTickers"
 Dim failpoint As Long
 On Error GoTo Err
 
-lTickersStarter.initialise Me, _
+lTickersStarter.Initialise Me, _
                             pTickerOptions, _
                             pDOMEventsRequired, _
                             poutputTickfileFormat, _
@@ -202,12 +311,7 @@ Set StartTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartTickers" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function StartTickersFromContracts( _
@@ -219,10 +323,11 @@ Public Function StartTickersFromContracts( _
                 Optional ByVal interval As Long = 50) As TaskController
 Dim lTickersStarter As New TickersStarter
 
+Const ProcName As String = "StartTickersFromContracts"
 Dim failpoint As Long
 On Error GoTo Err
 
-lTickersStarter.initialise Me, _
+lTickersStarter.Initialise Me, _
                             pTickerOptions, _
                             pDOMEventsRequired, _
                             poutputTickfileFormat, _
@@ -233,11 +338,7 @@ Set StartTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "Star
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartTickersFromContracts" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================
@@ -246,6 +347,10 @@ End Function
 
 Private Function AllocateTickerHandle() As Long
 Dim i As Long
+
+Const ProcName As String = "AllocateTickerHandle"
+Dim failpoint As Long
+On Error GoTo Err
 
 AllocateTickerHandle = -1
 
@@ -263,6 +368,11 @@ End If
 
 mTickerHandleTable(AllocateTickerHandle) = True
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Private Sub fireChange( _
@@ -270,6 +380,10 @@ Private Sub fireChange( _
                 ByVal affectedObject As Ticker)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -277,6 +391,11 @@ For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

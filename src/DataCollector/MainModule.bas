@@ -93,7 +93,7 @@ Private mRightOffset                                    As Long
 Private mPosX                                           As Single
 Private mPosY                                           As Single
 
-Private mDataCollector                                  As dataCollector
+Private mDataCollector                                  As DataCollector
 
 Private mStartTimeDescriptor                            As String
 Private mEndTimeDescriptor                              As String
@@ -341,7 +341,7 @@ Set gLogger = GetLogger("log")
 Set mListener = CreateFileLogListener(LogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
-                                        False)
+                                        True)
 GetLogger("").AddLogListener mListener
 
 logLogFileDetails

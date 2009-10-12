@@ -80,7 +80,7 @@ Private mHandle As Long
 '================================================================================
 
 Private Sub Class_Terminate()
-finish
+Finish
 Debug.Print "IBTWSSP.OrderSubmitter terminated"
 End Sub
 
@@ -298,10 +298,10 @@ Err:
 handleFatalError "IOrderSubmitter_executeOrderPlex"
 End Sub
 
-Private Sub IOrderSubmitter_finish()
+Private Sub IOrderSubmitter_Finish()
 
 mOrderSubmissionServiceProvider.orderSubmitterFinished Me
-finish
+Finish
 
 End Sub
 
@@ -330,7 +330,7 @@ If pOrderPlex.entryOrder.quantityRemaining = 0 Then parentId = "0"
 
 If Not pOrderPlex.stopOrder Is Nothing Then ocaGroup = pOrderPlex.stopOrder.providerProperties.GetParameterValue("OCA group")
 If ocaGroup = "" And Not pOrderPlex.targetOrder Is Nothing Then ocaGroup = pOrderPlex.targetOrder.providerProperties.GetParameterValue("OCA group")
-If ocaGroup = "" Then ocaGroup = generateGUIDString
+If ocaGroup = "" Then ocaGroup = GenerateGUIDString
 
 If entryOrderChanged Then
     placeOrder pOrderPlex.entryOrder, True, "0", "", OrderModeEntry
@@ -371,7 +371,7 @@ Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
 
 On Error GoTo Err
-ocaGroup = generateGUIDString
+ocaGroup = GenerateGUIDString
 
 Set stopOrder = pOrderPlex.stopOrder
 stopOrder.brokerId = ""   ' force a new id to be allocated
@@ -397,7 +397,7 @@ stopOrder.brokerId = ""     ' force a new id to be allocated
 If targetOrder Is Nothing Then
     placeOrder stopOrder, True, "0", "", OrderModeStop
 Else
-    ocaGroup = generateGUIDString
+    ocaGroup = GenerateGUIDString
     placeOrder stopOrder, False, "0", ocaGroup, OrderModeStop
     placeOrder targetOrder, True, "0", ocaGroup, OrderModeTarget
 End If
@@ -418,7 +418,7 @@ targetOrder.brokerId = ""   ' force a new id to be allocated
 If stopOrder Is Nothing Then
     placeOrder targetOrder, True, "0", "", OrderModeTarget
 Else
-    ocaGroup = generateGUIDString
+    ocaGroup = GenerateGUIDString
     placeOrder stopOrder, False, "0", ocaGroup, OrderModeStop
     placeOrder targetOrder, True, "0", ocaGroup, OrderModeTarget
 End If
@@ -528,7 +528,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="executionDetails", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Friend Sub finish()
+Friend Sub Finish()
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -541,7 +541,7 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _

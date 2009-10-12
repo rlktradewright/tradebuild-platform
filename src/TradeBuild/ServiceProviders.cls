@@ -169,7 +169,16 @@ Private Sub ICommonServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal serviceProviderHandle As Long)
 
+Const ProcName As String = "ICommonServiceConsumer_NotifyEvent"
+Dim failpoint As Long
+On Error GoTo Err
+
 CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyFatalError( _
@@ -178,26 +187,48 @@ Private Sub ICommonServiceConsumer_NotifyFatalError( _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
 Dim spName As String
+Const ProcName As String = "ICommonServiceConsumer_NotifyFatalError"
+Dim failpoint As Long
+On Error GoTo Err
+
 spName = NameFromHandle(spHandle)
 
 gTB.NotifyFatalError errorCode, _
                     errorMessage, _
                     source & IIf(spName <> "", vbCrLf & spName, "")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
                             ByVal errorCode As Long, _
                             ByVal errorMessage As String, _
                             ByVal spHandle As Long)
+Const ProcName As String = "ICommonServiceConsumer_NotifyRecoverableError"
+Dim failpoint As Long
+On Error GoTo Err
+
 gTB.SetServiceProviderError errorCode, _
                 errorMessage, _
                 NameFromHandle(spHandle)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal Handle As Long, _
                             ByVal spType As TradeBuildSP.ServiceProviderTypes)
 Dim regOk As Boolean
+Const ProcName As String = "ICommonServiceConsumer_RegisterServiceProvider"
+Dim failpoint As Long
+On Error GoTo Err
+
 mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
 Select Case spType
 Case TradeBuildSP.ServiceProviderTypes.ContractInfo
@@ -205,7 +236,7 @@ Case TradeBuildSP.ServiceProviderTypes.ContractInfo
     
     On Error Resume Next
     Set contractInfoSP = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not contractInfoSP Is Nothing Then
         regOk = True
     End If
@@ -214,7 +245,7 @@ Case TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo
     
     On Error Resume Next
     Set secContractInfoSP = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not secContractInfoSP Is Nothing Then
         regOk = True
     End If
@@ -223,7 +254,7 @@ Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
     
     On Error Resume Next
     Set exchangeSimulatorSp = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not exchangeSimulatorSp Is Nothing Then
         regOk = True
     End If
@@ -232,7 +263,7 @@ Case TradeBuildSP.ServiceProviderTypes.HistoricalData
     
     On Error Resume Next
     Set histDataSp = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not histDataSp Is Nothing Then
         regOk = True
     End If
@@ -241,7 +272,7 @@ Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
     
     On Error Resume Next
     Set liveOrderSp = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not liveOrderSp Is Nothing Then
         regOk = True
     End If
@@ -251,7 +282,7 @@ Case TradeBuildSP.ServiceProviderTypes.RealtimeData
     
     On Error Resume Next
     Set realtimeDataSp = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not realtimeDataSp Is Nothing Then
         regOk = True
     End If
@@ -260,7 +291,7 @@ Case TradeBuildSP.ServiceProviderTypes.Tickfile
     
     On Error Resume Next
     Set tickfileSp = mServiceProviders(Handle).SPObject
-    On Error GoTo 0
+    On Error GoTo Err
     If Not tickfileSp Is Nothing Then regOk = True
 End Select
 
@@ -271,6 +302,11 @@ If Not regOk Then
 End If
     
 mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -282,15 +318,37 @@ End Sub
 '@================================================================================
 
 Friend Property Get IsLiveOrderSubmitterConfigured() As Boolean
+Const ProcName As String = "IsLiveOrderSubmitterConfigured"
+Dim failpoint As Long
+On Error GoTo Err
+
 IsLiveOrderSubmitterConfigured = (Not getLiveOrderSubmissionSP Is Nothing)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get IsAnyServiceProviderConfigured() As Boolean
+Const ProcName As String = "IsAnyServiceProviderConfigured"
+Dim failpoint As Long
+On Error GoTo Err
+
 IsAnyServiceProviderConfigured = mMaxSPIndex >= 0
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let PermittedServiceProviderRoles( _
                 ByVal value As ServiceProviderRoles)
+Const ProcName As String = "PermittedServiceProviderRoles"
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
@@ -298,99 +356,306 @@ If IsAnyServiceProviderConfigured Then
 End If
 
 mPermittedServiceProviderRoles = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
+Const ProcName As String = "PermittedServiceProviderRoles"
+Dim failpoint As Long
+On Error GoTo Err
+
 PermittedServiceProviderRoles = mPermittedServiceProviderRoles
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameRealtimeData() As String
+Const ProcName As String = "SPNameRealtimeData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameRealtimeData = SrvcProviderNameRealtimeData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNamePrimaryContractData() As String
+Const ProcName As String = "SPNamePrimaryContractData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNamePrimaryContractData = SrvcProviderNamePrimaryContractData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameSecondryContractData() As String
+Const ProcName As String = "SPNameSecondryContractData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameSecondryContractData = SrvcProviderNameSecondaryContractData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameHistoricalDataInput() As String
+Const ProcName As String = "SPNameHistoricalDataInput"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameHistoricalDataInput = SrvcProviderNameHistoricalDataInput
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameHistoricalDataOutput() As String
+Const ProcName As String = "SPNameHistoricalDataOutput"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameHistoricalDataOutput = SrvcProviderNameHistoricalDataOutput
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameBrokerLive() As String
+Const ProcName As String = "SPNameBrokerLive"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameBrokerLive = SrvcProviderNameBrokerLive
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameBrokerSimulated() As String
+Const ProcName As String = "SPNameBrokerSimulated"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameBrokerSimulated = SrvcProviderNameBrokerSimulated
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameTickfileInput() As String
+Const ProcName As String = "SPNameTickfileInput"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameTickfileInput = SrvcProviderNameTickfileInput
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPNameTickfileOutput() As String
+Const ProcName As String = "SPNameTickfileOutput"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPNameTickfileOutput = SrvcProviderNameTickfileOutput
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdQtBarData() As String
+Const ProcName As String = "SPProgIdQtBarData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdQtBarData = ProgIdQtBarData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdQtRealtimeData() As String
+Const ProcName As String = "SPProgIdQtRealtimeData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdQtRealtimeData = ProgIdQtRealtimeData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdQtTickData() As String
+Const ProcName As String = "SPProgIdQtTickData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdQtTickData = ProgIdQtTickData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTbBarData() As String
+Const ProcName As String = "SPProgIdTbBarData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTbBarData = ProgIdTbBarData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTbContractData() As String
+Const ProcName As String = "SPProgIdTbContractData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTbContractData = ProgIdTbContractData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTbOrders() As String
+Const ProcName As String = "SPProgIdTbOrders"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTbOrders = ProgIdTbOrders
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTbTickData() As String
+Const ProcName As String = "SPProgIdTbTickData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTbTickData = ProgIdTbTickData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdFileTickData() As String
+Const ProcName As String = "SPProgIdFileTickData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdFileTickData = ProgIdFileTickData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTwsBarData() As String
+Const ProcName As String = "SPProgIdTwsBarData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTwsBarData = ProgIdTwsBarData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTwsContractData() As String
+Const ProcName As String = "SPProgIdTwsContractData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTwsContractData = ProgIdTwsContractData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTwsOrders() As String
+Const ProcName As String = "SPProgIdTwsOrders"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTwsOrders = ProgIdTwsOrders
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SPProgIdTwsRealtimeData() As String
+Const ProcName As String = "SPProgIdTwsRealtimeData"
+Dim failpoint As Long
+On Error GoTo Err
+
 SPProgIdTwsRealtimeData = ProgIdTwsRealtimeData
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get SupportedHistoricalDataPeriods() As TimePeriod()
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
+
+Const ProcName As String = "SupportedHistoricalDataPeriods"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -401,14 +666,37 @@ For i = 0 To mMaxSPIndex
         Exit For
     End If
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedInputTickfileFormats"
+Dim failpoint As Long
+On Error GoTo Err
+
 SupportedInputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Replay)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedOutputTickfileFormats"
+Dim failpoint As Long
+On Error GoTo Err
+
 SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -425,6 +713,7 @@ Public Function Add( _
 Dim params As parameters
 Dim spindex As Long
 
+Const ProcName As String = "Add"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -448,17 +737,21 @@ Set mServiceProviders(spindex).SpConfig = AddEntryToConfig(progId, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Add" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
 mChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub CommonServiceConsumerNotifyEvent( _
@@ -467,6 +760,10 @@ Friend Sub CommonServiceConsumerNotifyEvent( _
                 ByVal serviceProviderHandle As Long)
 
 Dim ev As NotificationEvent
+
+Const ProcName As String = "CommonServiceConsumerNotifyEvent"
+Dim failpoint As Long
+On Error GoTo Err
 
 If serviceProviderHandle >= 0 Then Set ev.source = mServiceProviders(serviceProviderHandle).SPObject
 ev.eventMessage = NameFromHandle(serviceProviderHandle) & vbCrLf & _
@@ -570,6 +867,11 @@ Case Else
 End Select
 gTB.notify ev
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Friend Sub ConfigureDefaultServiceProviders( _
@@ -579,6 +881,10 @@ Friend Sub ConfigureDefaultServiceProviders( _
                 Optional ByVal connectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal twsLogLevel As String = "ERROR", _
                 Optional ByVal tickfilesPath As String)
+
+Const ProcName As String = "ConfigureDefaultServiceProviders"
+Dim failpoint As Long
+On Error GoTo Err
 
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
     Add "IBTWSSP26.RealtimeDataServiceProvider", _
@@ -641,6 +947,11 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
         "Access Mode=Write only" & _
         ";Tickfile Path=" & tickfilesPath
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function CreateHistoricalDataReader( _
@@ -651,6 +962,10 @@ Friend Function CreateHistoricalDataReader( _
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 Dim histDataSPReader As TradeBuildSP.IBarDataReader
 Dim i As Long
+
+Const ProcName As String = "CreateHistoricalDataReader"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -668,6 +983,11 @@ Set histDataSPReader = histDataSp.CreateBarDataReader(dataConsumer, _
 
 Set CreateHistoricalDataReader = histDataSPReader
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
                             
 Friend Function CreateHistoricalDataWriter( _
@@ -680,6 +1000,10 @@ Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 Dim histDataSPWriter As TradeBuildSP.IBarDataWriter
 Dim histDataWriter As HistoricDataWriter
 Dim i As Long
+
+Const ProcName As String = "CreateHistoricalDataWriter"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -705,6 +1029,11 @@ Set histDataWriter = New HistoricDataWriter
 histDataWriter.ServiceProviderWriter = histDataSPWriter
 Set CreateHistoricalDataWriter = histDataWriter
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Friend Function CreateLiveOrderSubmitter( _
@@ -715,6 +1044,10 @@ Friend Function CreateLiveOrderSubmitter( _
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
             
+Const ProcName As String = "CreateLiveOrderSubmitter"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lOrderSimulatorSp = getLiveOrderSubmissionSP
 If lOrderSimulatorSp Is Nothing Then Exit Function
 
@@ -722,6 +1055,11 @@ Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pCo
 
 Set CreateLiveOrderSubmitter = orderSubmitter
 
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                             
 End Function
 
@@ -731,6 +1069,10 @@ Friend Function CreateRealtimeDataReader( _
 Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
 Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
 Dim i As Long
+
+Const ProcName As String = "CreateRealtimeDataReader"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -746,6 +1088,11 @@ Set realtimeSPReader = realtimeSp.CreateRealtimeDataReader(pTicker, _
                                                     serviceConsumer)
 
 Set CreateRealtimeDataReader = realtimeSPReader
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function CreateSimulatedOrderSubmitter( _
@@ -755,6 +1102,10 @@ Friend Function CreateSimulatedOrderSubmitter( _
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
 Dim i As Long
+
+Const ProcName As String = "CreateSimulatedOrderSubmitter"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -776,6 +1127,11 @@ Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pCo
 
 Set CreateSimulatedOrderSubmitter = orderSubmitter
 
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
                             
 End Function
 
@@ -787,6 +1143,10 @@ Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPReader As TradeBuildSP.ITickfileReader
 Dim tfReader As TickfileReader
 Dim i As Long
+
+Const ProcName As String = "CreateTickfileReader"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -814,6 +1174,11 @@ Set tickfileSPReader = tickfileSp.CreateTickfileReader(tfReader, _
 tfReader.ServiceProviderReader = tickfileSPReader
 
 Set CreateTickfileReader = tfReader
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function CreateTickfileWriter( _
@@ -826,6 +1191,10 @@ Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
 Dim tfWriter As TickfileWriter
 Dim i As Long
+
+Const ProcName As String = "CreateTickfileWriter"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -854,12 +1223,21 @@ tfWriter.ServiceProviderWriter = tickfileSPWriter
 
 Set CreateTickfileWriter = tfWriter
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Friend Function IsSupportedHistoricalDataPeriod( _
                 ByRef period As TimePeriod) As Boolean
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
+
+Const ProcName As String = "IsSupportedHistoricalDataPeriod"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -870,6 +1248,11 @@ For i = 0 To mMaxSPIndex
         End If
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function loadContracts( _
@@ -877,6 +1260,10 @@ Friend Function loadContracts( _
                 ByVal pContractsBuilder As ContractsBuilder) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
+
+Const ProcName As String = "loadContracts"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -901,6 +1288,11 @@ Else
     contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
 End If
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Friend Function loadContractsFromSecondarySP( _
@@ -910,6 +1302,10 @@ Friend Function loadContractsFromSecondarySP( _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
+
+Const ProcName As String = "loadContractsFromSecondarySP"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -928,10 +1324,16 @@ If contractInfoSP Is Nothing Then Exit Function
 
 contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
 loadContractsFromSecondarySP = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub LoadServiceProviderConfiguration( _
                 ByVal config As ConfigurationSection)
+Const ProcName As String = "LoadServiceProviderConfiguration"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -941,7 +1343,7 @@ RemoveAll
 
 On Error Resume Next
 Set mServiceProviderConfigList = mConfig.GetConfigurationSection(ConfigNameServiceProviders)
-On Error GoTo 0
+On Error GoTo Err
 
 If Not mServiceProviderConfigList Is Nothing Then
     loadConfiguration
@@ -950,23 +1352,31 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadServiceProviderConfiguration" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function NameFromHandle( _
                 ByVal Handle As Long) As String
+Const ProcName As String = "NameFromHandle"
+Dim failpoint As Long
+On Error GoTo Err
+
 If Handle < 0 Then Exit Function
 NameFromHandle = mServiceProviders(Handle).name
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub Remove( _
                 ByVal sp As TradeBuildSP.ICommonServiceProvider)
 Dim i As Long
+
+Const ProcName As String = "Remove"
+Dim failpoint As Long
+On Error GoTo Err
 
 If sp Is Nothing Then Exit Sub
 
@@ -977,11 +1387,20 @@ For i = 0 To mMaxSPIndex
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveAll()
 Dim i As Long
 Dim sp As TradeBuildSP.ICommonServiceProvider
+
+Const ProcName As String = "RemoveAll"
+Dim failpoint As Long
+On Error GoTo Err
 
 gTB.StopAllTickers
 
@@ -995,14 +1414,28 @@ Next
 
 mMaxSPIndex = -1
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Public Sub RemoveCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub SetDefaultSPConfig( _
@@ -1017,9 +1450,13 @@ Dim currSPsList As ConfigurationSection
 Dim currSP As ConfigurationSection
 Dim currProps As ConfigurationSection
 
+Const ProcName As String = "SetDefaultSPConfig"
+Dim failpoint As Long
+On Error GoTo Err
+
 On Error Resume Next
 Set currSPsList = configdata.GetConfigurationSection(ConfigNameServiceProviders)
-On Error GoTo 0
+On Error GoTo Err
 
 If Not currSPsList Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1130,6 +1567,11 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
     setProperty currProps, PropertyNameTbAccessMode, AccessModeWriteOnly
     setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -1147,6 +1589,10 @@ Dim sp As ConfigurationSection
 Dim props As ConfigurationSection
 Dim prop As ConfigurationSection
 Dim param As Parameter
+
+Const ProcName As String = "AddEntryToConfig"
+Dim failpoint As Long
+On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Function
 
@@ -1173,6 +1619,11 @@ For Each param In params
 Next
 
 Set AddEntryToConfig = sp
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function AddSP( _
@@ -1183,6 +1634,8 @@ Private Function AddSP( _
 Dim i As Long
 
 Dim failpoint As Long
+Const ProcName As String = "AddSP"
+
 On Error GoTo Err
 
 If name <> "" Then serviceProvider.name = name
@@ -1226,11 +1679,7 @@ End If
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddSP" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub fireChange( _
@@ -1238,6 +1687,10 @@ Private Sub fireChange( _
                 ByVal affectedObject As TradeBuildSP.ICommonServiceProvider)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -1245,10 +1698,19 @@ For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function getLiveOrderSubmissionSP() As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim i As Long
+
+Const ProcName As String = "getLiveOrderSubmissionSP"
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -1258,6 +1720,11 @@ For i = 0 To mMaxSPIndex
         End If
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -1269,6 +1736,10 @@ Dim j As Long
 Dim k As Long
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim supportedFormats() As TickfileFormatSpecifier
+Const ProcName As String = "GetSupportedTickfileFormats"
+Dim failpoint As Long
+On Error GoTo Err
+
 ReDim allSupportedFormats(9) As TickfileFormatSpecifier
 
 k = -1
@@ -1296,6 +1767,11 @@ If k >= 0 Then
 Else
     Erase allSupportedFormats
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub loadConfiguration()
@@ -1310,6 +1786,7 @@ Dim spObj As Object
 Dim spindex As Long
 Dim params As parameters
 
+Const ProcName As String = "loadConfiguration"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1366,16 +1843,17 @@ Next
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "loadConfiguration" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub RemoveSP( _
                 ByVal Handle As Long, _
                 Optional ByVal RemoveFromConfig As Boolean)
 Dim sp As ICommonServiceProvider
+
+Const ProcName As String = "RemoveSP"
+Dim failpoint As Long
+On Error GoTo Err
 
 If Handle < 0 Then Exit Sub
 
@@ -1390,6 +1868,11 @@ Set mServiceProviders(Handle).SpConfig = Nothing
 mServiceProviders(Handle).SPTypes = 0
 mServiceProviders(Handle).name = ""
 fireChange CollItemRemoved, sp
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setProperty( _
@@ -1397,9 +1880,18 @@ Private Sub setProperty( _
                 ByVal name As String, _
                 ByVal value As String)
 'Dim prop As ConfigurationSection
+Const ProcName As String = "setProperty"
+Dim failpoint As Long
+On Error GoTo Err
+
 props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value
 'prop.setAttribute AttributeNamePropertyName, name
 'prop.setAttribute AttributeNamePropertyValue, value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

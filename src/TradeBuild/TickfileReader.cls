@@ -310,7 +310,6 @@ Do While mUnProcessed And _
     mReader.FireNextTick
     mTickReceivedSynchronously = False
 
-    'DoEvents
 Loop
 
 If mUnProcessed And _

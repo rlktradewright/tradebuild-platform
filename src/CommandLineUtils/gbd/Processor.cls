@@ -23,6 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements CollectionChangeListener
+Implements LogListener
 
 '@================================================================================
 ' Events
@@ -50,11 +51,11 @@ Private Const ModuleName                    As String = "Processor"
 Private WithEvents mTB As TradeBuildAPI
 Attribute mTB.VB_VarHelpID = -1
 
-Private WithEvents mTicker As Ticker
+Private mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 
-Private WithEvents mTimeframe As Timeframe
-Attribute mTimeframe.VB_VarHelpID = -1
+Private WithEvents mTickfileManager As TickFileManager
+Attribute mTickfileManager.VB_VarHelpID = -1
 
 Private mFromDate As Date
 Private mToDate As Date
@@ -74,6 +75,7 @@ Private mBar As Bar
 
 Private Sub Class_Initialize()
 Set mTB = TradeBuildAPI
+If gLogToConsole Then GetLogger("").AddLogListener Me
 End Sub
 
 '@================================================================================
@@ -88,28 +90,17 @@ Set mBar = ev.affectedItem
 End Sub
 
 '@================================================================================
-' mTicker Event Handlers
+' LogListener Interface Members
 '@================================================================================
 
-Private Sub mTicker_Notification(ev As TWUtilities30.NotificationEvent)
-gCon.writeLineToConsole "Notification " & ev.eventCode & _
-                        ": " & ev.eventMessage
+Private Sub LogListener_Finish()
+
 End Sub
 
-Private Sub mTicker_stateChange(ev As TWUtilities30.StateChangeEvent)
-If ev.state = TickerStates.TickerStateReady Then
-    loaddata
-End If
-End Sub
-
-'@================================================================================
-' mTimeframe Event Handlers
-'@================================================================================
-
-Private Sub mTimeframe_BarsLoaded()
-outputBar
-Set gProcessor = Nothing
-gCon.writeLineToConsole "Completed"
+Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
+Static formatter As LogFormatter
+If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter
+gCon.writeLineToConsole formatter.FormatRecord(Logrec)
 End Sub
 
 '@================================================================================
@@ -117,7 +108,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
-gCon.writeLineToConsole "Error " & ev.errorCode & _
+gCon.writeErrorLine "Error " & ev.errorCode & _
                         ": " & ev.errorMessage
 End Sub
 
@@ -129,8 +120,7 @@ If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
                             ": " & spe.message & _
                             " (" & spe.serviceProviderName & ")"
 Else
-    gCon.writeLineToConsole "Notification " & ev.eventCode & _
-                            ": " & ev.eventMessage
+    gCon.writeLineToConsole ev.eventMessage
 End If
 End Sub
 
@@ -138,53 +128,36 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Let Ticker( _
+                ByVal value As Ticker)
+Set mTicker = value
+End Property
+
+Friend Property Let Timeframe( _
+                ByVal value As Timeframe)
+Set mBars = value.tradeStudy.Bars
+mBars.AddCollectionChangeListener Me
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub startData( _
-                ByVal spec As ContractSpecifier, _
-                ByVal fromDate As Date, _
-                ByVal toDate As Date, _
-                ByVal number As Long, _
-                ByVal barLength As Long, _
-                ByVal barUnits As TimePeriodUnits, _
-                ByVal sessionOnly As Boolean)
-                
-Set mTicker = TradeBuildAPI.Tickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
-mTicker.LoadTicker spec
-
-mFromDate = fromDate
-mToDate = toDate
-mNumber = number
-mBarLength = barLength
-mBarUnits = barUnits
-mSessionOnly = sessionOnly
-                
+Friend Sub Finish()
+outputBar
+mBars.RemoveCollectionChangeListener Me
+GetLogger("").RemoveLogListener Me
 End Sub
 
-Friend Sub stopData()
-mTicker.StopTicker
+Friend Sub StopData()
+If Not mTicker Is Nothing Then mTicker.StopTicker
+If Not mBars Is Nothing Then mBars.RemoveCollectionChangeListener Me
 End Sub
 
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub loaddata()
-
-Set mTimeframe = mTicker.Timeframes.AddHistorical(GetTimePeriod(mBarLength, mBarUnits), _
-                                        "", _
-                                        mNumber, _
-                                        mFromDate, _
-                                        mToDate, _
-                                        Not mSessionOnly)
-Set mBarStudy = mTimeframe.tradeStudy
-Set mBars = mTimeframe.tradeStudy.Bars
-mBars.AddCollectionChangeListener Me
-
-End Sub
 
 Private Sub outputBar()
 Dim sv As SValue

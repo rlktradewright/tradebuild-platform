@@ -198,6 +198,11 @@ End If
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
+If mReplaySpeed = 0 Or mReplayProgressEventFrequency = 0 Then
+    RaiseEvent ReplayProgress(mTicker.Timestamp, _
+                            mEventsPlayed, _
+                            mPercentComplete)
+End If
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
                             mTickfileSpecifiers(mCurrTickfileIndex).Filename)
 mTicker.StopTicker
@@ -494,7 +499,7 @@ End Sub
 Private Sub setReplayAttributes()
 If mReader Is Nothing Then Exit Sub
 If mReplaySpeed = 0 Or mReplayProgressEventFrequency = 0 Then
-    mReader.ReplayProgressEventFrequency = 10
+    mReader.ReplayProgressEventFrequency = 100
 Else
     mReader.ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End If
@@ -530,7 +535,6 @@ Do
     mReader.ReplayTickfile lTickfileSpecifier
     
     If Not mReader Is Nothing Then Exit Sub
-    DoEvents
 Loop
 
 End Sub

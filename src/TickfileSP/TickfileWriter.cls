@@ -41,6 +41,8 @@ Implements ITickfileWriter
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "TickfileWriter"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -327,7 +329,7 @@ End Sub
 Private Sub logMessage( _
                 ByVal message As String, _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(logLevel) Then Exit Sub
+If Not gLogger.IsLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
             message, _
             Me

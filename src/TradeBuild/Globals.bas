@@ -160,6 +160,8 @@ Private mOrderDetailLoggerSimulated As Logger
 
 Private mLogTokens(9) As String
 
+Private mTracer As Tracer
+
 '@================================================================================
 ' Procedures
 '@================================================================================
@@ -987,5 +989,10 @@ If mOrderDetailLoggerSimulated Is Nothing Then
     mOrderDetailLoggerSimulated.LogToParent = False
 End If
 Set gOrderDetailLoggerSimulated = mOrderDetailLoggerSimulated
+End Property
+
+Public Property Get gTracer() As Tracer
+If mTracer Is Nothing Then Set mTracer = GetTracer("tradebuild")
+Set gTracer = mTracer
 End Property
 

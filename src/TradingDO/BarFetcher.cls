@@ -558,7 +558,7 @@ On Error GoTo Err
 If mBuilder Is Nothing Then Set mBuilder = CreateBarsBuilder(mSpecifier.barTimePeriod, _
                                                             mSession, _
                                                             mInstrument.tickSize, _
-                                                            mSpecifier.maxNumberOfBars)
+                                                            IIf(mSpecifier.maxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.maxNumberOfBars))
 Set builder = mBuilder
 
 Exit Function

@@ -222,11 +222,11 @@ Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As
 On Error GoTo Err
 If Not retrying Then
     notifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
-                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (retrying) " & mTWSAPI.connectionString & _
                 ": " & Description
 Else
     notifyEvent StandardSPEventCodes.LORetryConnectToBroker, _
-                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (no retry) " & mTWSAPI.connectionString & _
                 ": " & Description
 End If
 Exit Sub

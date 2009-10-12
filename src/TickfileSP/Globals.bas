@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const ProjectName               As String = "TickfileSP26"
+
 Public Const ServiceProviderName As String = "TickfileSP"
 Public Const ProviderKey As String = "TickfileSP"
 
@@ -160,6 +162,7 @@ End Enum
 '================================================================================
 
 Private mLogger As Logger
+Private mTracer As Tracer
 
 '================================================================================
 ' Properties
@@ -168,6 +171,11 @@ Private mLogger As Logger
 Public Property Get gLogger() As Logger
 If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.tickfilesp")
 Set gLogger = mLogger
+End Property
+
+Public Property Get gTracer() As Tracer
+If mTracer Is Nothing Then Set mTracer = GetTracer("tickfilesp")
+Set gTracer = mTracer
 End Property
 
 '================================================================================

@@ -289,40 +289,36 @@ End Function
 
 Private Function setupTwsServiceProvider( _
                 ByVal switchValue As String) As Boolean
-Dim tokens() As String
+Dim clp As CommandLineParser
 Dim server As String
 Dim port As String
 Dim clientId As String
 
-Dim failpoint As Long
 On Error GoTo Err
 
-setupTwsServiceProvider = True
+Set clp = CreateCommandLineParser(switchValue, ",")
 
-tokens = Split(switchValue, ",")
+setupTwsServiceProvider = True
 
 port = 7496
 clientId = -1
 
 On Error Resume Next
-server = tokens(0)
-port = tokens(1)
-clientId = tokens(2)
+server = clp.Arg(0)
+port = clp.Arg(1)
+clientId = clp.Arg(2)
 On Error GoTo 0
 
 If port <> "" Then
-    If Not IsNumeric(port) Then
-        gCon.writeErrorLine "Error: port must be numeric"
-        setupTwsServiceProvider = False
-    ElseIf port <= 0 Then
-        gCon.writeErrorLine "Error: port must be > 0"
+    If Not IsInteger(port, 0) Then
+        gCon.writeErrorLine "Error: port must be a positive integer"
         setupTwsServiceProvider = False
     End If
 End If
     
 If clientId <> "" Then
-    If Not IsNumeric(clientId) Then
-        gCon.writeErrorLine "Error: clientId must be numeric"
+    If Not IsInteger(clientId) Then
+        gCon.writeErrorLine "Error: clientId must be an integer"
         setupTwsServiceProvider = False
     End If
 End If

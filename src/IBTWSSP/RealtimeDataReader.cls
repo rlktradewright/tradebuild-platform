@@ -135,7 +135,7 @@ End Sub
 Private Sub IRealtimeDataReader_StopData()
 On Error GoTo Err
 mRealtimeDataServiceProvider.dataReaderFinished Me
-finish
+Finish
 Exit Sub
 Err:
 handleFatalError "IRealtimeDataReader_StopData"
@@ -197,7 +197,7 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub finish()
+Friend Sub Finish()
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -214,7 +214,7 @@ Set mContract = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _

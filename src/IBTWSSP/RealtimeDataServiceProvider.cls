@@ -230,11 +230,11 @@ Private Sub mTWSAPI_ConnectFailed( _
 On Error GoTo Err
 If retrying Then
     notifyEvent StandardSPEventCodes.RTRetryConnectDataSource, _
-                "Connected to TWS failed (retrying) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (retrying) " & mTWSAPI.connectionString & _
                 ": " & Description
 Else
     notifyEvent StandardSPEventCodes.RTCantConnectDataSource, _
-                "Connected to TWS failed (no retry) " & mTWSAPI.connectionString & _
+                "Connection to TWS failed (no retry) " & mTWSAPI.connectionString & _
                 ": " & Description
 End If
 Exit Sub

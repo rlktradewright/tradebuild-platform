@@ -105,8 +105,17 @@ End Sub
 '@================================================================================
 
 Private Sub mTickWriter_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
+Const ProcName As String = "mTickWriter_ConnectFailed"
+Dim failpoint As Long
+On Error GoTo Err
+
 RaiseEvent ConnectFailed(errorCode, errorDesc)
 Set mTickWriter = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mTickWriter_DataWritten()
@@ -123,8 +132,17 @@ End Sub
 '@================================================================================
 
 Private Sub mWriteTimer_TimerExpired()
+Const ProcName As String = "mWriteTimer_TimerExpired"
+Dim failpoint As Long
+On Error GoTo Err
+
 writePeriodData
 startWriteTimer
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -143,11 +161,20 @@ Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 ByVal pInstrument As instrument, _
                 ByVal useAsynchronousWrites As Boolean)
+Const ProcName As String = "initialise"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mDB = db
 Set mInstrument = pInstrument
 mTickSize = mInstrument.tickSize
 mUseAsynchronousWrites = useAsynchronousWrites
 startWriteTimer
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub finish()

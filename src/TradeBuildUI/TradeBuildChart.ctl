@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#116.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#123.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -303,6 +303,10 @@ End Sub
 '@================================================================================
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
+Const ProcName As String = "mTicker_StateChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 If ev.State = TickerStates.TickerStateReady Then
     ' this means that the Ticker object has retrieved the contract info, so we can
     ' now start the chart
@@ -313,6 +317,11 @@ If ev.State = TickerStates.TickerStateReady Then
         showStudies createBarsStudyConfig
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -320,14 +329,27 @@ End Sub
 '@================================================================================
 
 Private Sub mTimeframe_BarsLoaded()
+Const ProcName As String = "mTimeframe_BarsLoaded"
+Dim failpoint As Long
+On Error GoTo Err
+
 LoadingProgressBar.Visible = False
 mLoadingText.Text = ""
 Chart1.EnableDrawing
 
 setState ChartStates.ChartStateLoaded
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub mTimeframe_BarLoadProgress(ByVal barsRetrieved As Long, ByVal percentComplete As Single)
+Const ProcName As String = "mTimeframe_BarLoadProgress"
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not LoadingProgressBar.Visible Then
     LoadingProgressBar.Top = UserControl.Height - LoadingProgressBar.Height
     LoadingProgressBar.Width = UserControl.Width
@@ -340,6 +362,11 @@ If Not LoadingProgressBar.Visible Then
     Chart1.DisableDrawing
 End If
 LoadingProgressBar.value = percentComplete
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -348,176 +375,536 @@ End Sub
 
 Public Property Let Autoscrolling( _
                 ByVal value As Boolean)
+Const ProcName As String = "Autoscrolling"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.Autoscrolling = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Autoscrolling() As Boolean
+Const ProcName As String = "Autoscrolling"
+Dim failpoint As Long
+On Error GoTo Err
+
 Autoscrolling = Chart1.Autoscrolling
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get BaseChartController() As ChartController
+Const ProcName As String = "BaseChartController"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set BaseChartController = Chart1.Controller
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
+Const ProcName As String = "ChartBackColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 ChartBackColor = Chart1.ChartBackColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
+Const ProcName As String = "ChartBackColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.ChartBackColor = val
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get ChartManager() As ChartManager
+Const ProcName As String = "ChartManager"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ChartManager = mManager
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+Dim failpoint As Long
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
 
 If Not mManager Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
+Const ProcName As String = "Enabled"
+Dim failpoint As Long
+On Error GoTo Err
+
 Enabled = UserControl.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As Long
+On Error GoTo Err
+
 UserControl.Enabled = value
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let HorizontalMouseScrollingAllowed( _
                 ByVal value As Boolean)
+Const ProcName As String = "HorizontalMouseScrollingAllowed"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.HorizontalMouseScrollingAllowed = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+Const ProcName As String = "HorizontalMouseScrollingAllowed"
+Dim failpoint As Long
+On Error GoTo Err
+
 HorizontalMouseScrollingAllowed = Chart1.HorizontalMouseScrollingAllowed
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
+Const ProcName As String = "HorizontalScrollBarVisible"
+Dim failpoint As Long
+On Error GoTo Err
+
 HorizontalScrollBarVisible = Chart1.HorizontalScrollBarVisible
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
+Const ProcName As String = "HorizontalScrollBarVisible"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.HorizontalScrollBarVisible = val
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get InitialNumberOfBars() As Long
 Attribute InitialNumberOfBars.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Const ProcName As String = "InitialNumberOfBars"
+Dim failpoint As Long
+On Error GoTo Err
+
 InitialNumberOfBars = mChartSpec.InitialNumberOfBars
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get LoadingText() As Text
+Const ProcName As String = "LoadingText"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set LoadingText = mLoadingText
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get MinimumTicksHeight() As Double
 Attribute MinimumTicksHeight.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Const ProcName As String = "MinimumTicksHeight"
+Dim failpoint As Long
+On Error GoTo Err
+
 MinimumTicksHeight = mChartSpec.MinimumTicksHeight
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PointerCrosshairsColor() As OLE_COLOR
+Const ProcName As String = "PointerCrosshairsColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 PointerCrosshairsColor = Chart1.PointerCrosshairsColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "PointerCrosshairsColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.PointerCrosshairsColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
+Const ProcName As String = "PointerDiscColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 PointerDiscColor = Chart1.PointerDiscColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "PointerDiscColor"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.PointerDiscColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
+Const ProcName As String = "PointerStyle"
+Dim failpoint As Long
+On Error GoTo Err
+
 PointerStyle = Chart1.PointerStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let PointerStyle(ByVal value As PointerStyles)
+Const ProcName As String = "PointerStyle"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.PointerStyle = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get PriceRegion() As ChartRegion
+Const ProcName As String = "PriceRegion"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set PriceRegion = mPriceRegion
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get RegionNames() As String()
+Const ProcName As String = "RegionNames"
+Dim failpoint As Long
+On Error GoTo Err
+
 RegionNames = mManager.RegionNames
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get State() As ChartStates
+Const ProcName As String = "State"
+Dim failpoint As Long
+On Error GoTo Err
+
 State = mState
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Ticker() As Ticker
+Const ProcName As String = "Ticker"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Ticker = mTicker
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeframeCaption() As String
+Const ProcName As String = "TimeframeCaption"
+Dim failpoint As Long
+On Error GoTo Err
+
 TimeframeCaption = mChartSpec.Timeframe.toString
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeframeShortCaption() As String
+Const ProcName As String = "TimeframeShortCaption"
+Dim failpoint As Long
+On Error GoTo Err
+
 TimeframeShortCaption = mChartSpec.Timeframe.ToShortString
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Timeframe() As Timeframe
+Const ProcName As String = "Timeframe"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set Timeframe = mTimeframe
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimePeriod() As TimePeriod
+Const ProcName As String = "TimePeriod"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set TimePeriod = mChartSpec.Timeframe
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Get TradeBarSeries() As BarSeries
+Const ProcName As String = "TradeBarSeries"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set TradeBarSeries = mTradeBarSeries
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TwipsPerBar() As Long
+Const ProcName As String = "TwipsPerBar"
+Dim failpoint As Long
+On Error GoTo Err
+
 TwipsPerBar = Chart1.TwipsPerBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let TwipsPerBar(ByVal val As Long)
+Const ProcName As String = "TwipsPerBar"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.TwipsPerBar = val
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let UpdatePerTick(ByVal value As Boolean)
 Attribute UpdatePerTick.VB_ProcData.VB_Invoke_PropertyPut = ";Behavior"
+Const ProcName As String = "UpdatePerTick"
+Dim failpoint As Long
+On Error GoTo Err
+
 mUpdatePerTick = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let VerticalMouseScrollingAllowed( _
                 ByVal value As Boolean)
+Const ProcName As String = "VerticalMouseScrollingAllowed"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.VerticalMouseScrollingAllowed = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
+Const ProcName As String = "VerticalMouseScrollingAllowed"
+Dim failpoint As Long
+On Error GoTo Err
+
 VerticalMouseScrollingAllowed = Chart1.VerticalMouseScrollingAllowed
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get VolumeRegion() As ChartRegion
+Const ProcName As String = "VolumeRegion"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set VolumeRegion = mVolumeRegion
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get VolumeRegionStyle() As ChartRegionStyle
+Const ProcName As String = "VolumeRegionStyle"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set VolumeRegionStyle = mChartSpec.VolumeRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get YAxisWidthCm() As Single
+Const ProcName As String = "YAxisWidthCm"
+Dim failpoint As Long
+On Error GoTo Err
+
 YAxisWidthCm = Chart1.YAxisWidthCm
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let YAxisWidthCm(ByVal value As Single)
+Const ProcName As String = "YAxisWidthCm"
+Dim failpoint As Long
+On Error GoTo Err
+
 Chart1.YAxisWidthCm = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -527,6 +914,7 @@ End Property
 Public Sub ChangeTimeframe(ByVal Timeframe As TimePeriod)
 Dim baseStudyConfig As StudyConfiguration
 
+Const ProcName As String = "ChangeTimeframe"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -565,28 +953,45 @@ RaiseEvent TimeframeChange
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ChangeTimeframe" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub DisableDrawing()
-Chart1.DisableDrawing
-End Sub
-
-Public Sub EnableDrawing()
-Chart1.EnableDrawing
-End Sub
-
-Public Sub Finish()
+Const ProcName As String = "DisableDrawing"
 Dim failpoint As Long
 On Error GoTo Err
 
+Chart1.DisableDrawing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Public Sub EnableDrawing()
+Const ProcName As String = "EnableDrawing"
+Dim failpoint As Long
+On Error GoTo Err
+
+Chart1.EnableDrawing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Public Sub Finish()
 ' update the number of bars in case this chart is reloaded from the config
+Const ProcName As String = "Finish"
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mChartSpec Is Nothing Then
-    If mChartSpec.InitialNumberOfBars < Chart1.Periods.Count Then mChartSpec.InitialNumberOfBars = Chart1.Periods.Count
+    If mChartSpec.InitialNumberOfBars < Chart1.Periods.Count Then
+        mChartSpec.InitialNumberOfBars = Chart1.Periods.Count
+    End If
 End If
 
 If Not mManager Is Nothing Then mManager.Finish
@@ -609,17 +1014,14 @@ mLoadedFromConfig = False
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Finish" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
 Dim cs As ConfigurationSection
 
+Const ProcName As String = "LoadFromConfig"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -643,15 +1045,11 @@ prepareChart
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadFromConfig" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -661,14 +1059,11 @@ Set mConfig = Nothing
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "RemoveFromConfig" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub ScrollToTime(ByVal pTime As Date)
+Const ProcName As String = "ScrollToTime"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -677,18 +1072,14 @@ mManager.ScrollToTime pTime
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ScrollToTime" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub showChart( _
                 ByVal pTicker As Ticker, _
                 ByVal chartSpec As ChartSpecifier, _
                 Optional ByVal BarFormatterFactory As BarFormatterFactory)
-
+Const ProcName As String = "showChart"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -720,12 +1111,7 @@ prepareChart
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "showChart" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub showHistoricChart( _
@@ -734,7 +1120,7 @@ Public Sub showHistoricChart( _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date, _
                 Optional ByVal BarFormatterFactory As BarFormatterFactory)
-
+Const ProcName As String = "showHistoricChart"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -769,12 +1155,7 @@ prepareChart
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "showHistoricChart" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -784,6 +1165,10 @@ End Sub
 Private Function createBarsStudyConfig() As StudyConfiguration
 Dim lStudy As Study
 Dim studyDef As StudyDefinition
+
+Const ProcName As String = "createBarsStudyConfig"
+Dim failpoint As Long
+On Error GoTo Err
 
 ReDim inputValueNames(3) As String
 Dim params As New Parameters
@@ -853,9 +1238,18 @@ Then
 End If
 
 Set createBarsStudyConfig = studyConfig
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub createTimeframe()
+Const ProcName As String = "createTimeframe"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTimeframes = mTicker.Timeframes
 
 If mIsHistoricChart Then
@@ -873,10 +1267,19 @@ Else
                                 IIf(mTicker.ReplayingTickfile, True, False))
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub initialiseChart()
 Static notFirstTime As Boolean
+
+Const ProcName As String = "initialiseChart"
+Dim failpoint As Long
+On Error GoTo Err
 
 Chart1.DisableDrawing
 
@@ -902,10 +1305,19 @@ setLoadingText
 Chart1.EnableDrawing
 
 setState ChartStates.ChartStateCreated
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub loadchart()
 Dim volRegionStyle As ChartRegionStyle
+
+Const ProcName As String = "loadchart"
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mContract = mTicker.Contract
 
@@ -940,7 +1352,7 @@ Then
     
     On Error Resume Next
     Set mVolumeRegion = Chart1.Regions.item(ChartRegionNameVolume)
-    On Error GoTo 0
+    On Error GoTo Err
     
     If mVolumeRegion Is Nothing Then
         Set mVolumeRegion = Chart1.Regions.Add(20 _
@@ -967,14 +1379,32 @@ Else
     setState ChartStates.ChartStateLoaded
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub loadStudiesFromConfig()
+Const ProcName As String = "loadStudiesFromConfig"
+Dim failpoint As Long
+On Error GoTo Err
+
 mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.tradeStudy
 setTradeBarSeries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub prepareChart()
+
+Const ProcName As String = "prepareChart"
+Dim failpoint As Long
+On Error GoTo Err
 
 createTimeframe
 initialiseChart
@@ -990,9 +1420,18 @@ Then
     End If
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setLoadingText()
+Const ProcName As String = "setLoadingText"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mLoadingText = mPriceRegion.AddText(, ChartSkil26.LayerNumbers.LayerHighestUser)
 Dim Font As New stdole.StdFont
 Font.size = 18
@@ -1005,28 +1444,64 @@ mLoadingText.Position = mPriceRegion.NewPoint(50, 50, CoordinateSystems.CoordsRe
 mLoadingText.align = TextAlignModes.AlignBoxCentreCentre
 mLoadingText.FixedX = True
 mLoadingText.FixedY = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setState(ByVal value As ChartStates)
 Dim stateEv As StateChangeEvent
+Const ProcName As String = "setState"
+Dim failpoint As Long
+On Error GoTo Err
+
 mState = value
 stateEv.State = mState
 Set stateEv.Source = Me
 RaiseEvent StateChange(stateEv)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setTradeBarSeries()
+Const ProcName As String = "setTradeBarSeries"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub showStudies( _
                 ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "showStudies"
+Dim failpoint As Long
+On Error GoTo Err
+
 mManager.BaseStudyConfiguration = studyConfig
 setTradeBarSeries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub storeSettings()
 Dim cs As ConfigurationSection
+
+Const ProcName As String = "storeSettings"
+Dim failpoint As Long
+On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
     
@@ -1044,4 +1519,9 @@ If Not mBarFormatterFactory Is Nothing Then
     cs.SetSetting ConfigSettingProgId, GetProgIdFromObject(mBarFormatterFactory)
     mBarFormatterFactory.ConfigurationSection = cs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub

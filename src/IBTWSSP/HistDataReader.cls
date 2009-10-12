@@ -197,7 +197,7 @@ Private Sub IBarDataReader_ReleaseDataStore()
 On Error GoTo Err
 
 mHistDataServiceProvider.dataReaderFinished Me
-finish
+Finish
 
 Exit Sub
 Err:
@@ -233,7 +233,7 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub finish()
+Friend Sub Finish()
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -245,10 +245,10 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Friend Sub historicalDataAvailable( _
+Friend Sub HistoricalDataAvailable( _
                 ByVal numberOfBars As Long)
 Dim failpoint As Long
 On Error GoTo Err
@@ -265,7 +265,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataAvailable", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="HistoricalDataAvailable", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -283,7 +283,7 @@ Set mTWSAPI = pTWSAPI
 mHandle = Handle
 End Sub
 
-Friend Sub historicalDataRequestFailed( _
+Friend Sub HistoricalDataRequestFailed( _
                 ByVal reason As String)
 Dim failpoint As Long
 On Error GoTo Err
@@ -295,10 +295,10 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestFailed, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataRequestFailed", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="HistoricalDataRequestFailed", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Friend Sub historicalDataRequestInvalid( _
+Friend Sub HistoricalDataRequestInvalid( _
                 ByVal reason As String)
 Dim failpoint As Long
 On Error GoTo Err
@@ -310,7 +310,7 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestInvalid, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="historicalDataRequestInvalid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="HistoricalDataRequestInvalid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '================================================================================

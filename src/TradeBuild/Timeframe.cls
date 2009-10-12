@@ -174,9 +174,18 @@ End Sub
 Private Sub DeferredAction_run(ByVal data As Variant)
 Dim bar2Write As BarToWrite
 
+Const ProcName As String = "DeferredAction_run"
+Dim failpoint As Long
+On Error GoTo Err
+
 bar2Write = data
 
 WriteBar bar2Write.theBar, bar2Write.barType
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -187,6 +196,7 @@ End Sub
 Private Sub IBarDataConsumer_Bar( _
                 ByVal data As Bar, _
                 ByVal barTimePeriod As TimePeriod)
+Const ProcName As String = "IBarDataConsumer_Bar"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -196,11 +206,7 @@ If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 Exit Sub
 
 Err:
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "IBarDataConsumer_Bar" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -208,6 +214,10 @@ End Sub
 '@================================================================================
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
+Const ProcName As String = "IBarDataInputServiceConsumer_BarDataComplete"
+Dim failpoint As Long
+On Error GoTo Err
+
 Debug.Print "Timeframe bars loaded: " & getName
 'Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.Timestamp
 
@@ -223,6 +233,11 @@ fireStateChange TimeframeStateLoaded
 RaiseEvent BarsLoaded
 Set mInputStudy = Nothing
 Set mSession = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_NotifyEvent( _
@@ -230,6 +245,10 @@ Private Sub IBarDataInputServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 Dim ev As NotificationEvent
+
+Const ProcName As String = "IBarDataInputServiceConsumer_NotifyEvent"
+Dim failpoint As Long
+On Error GoTo Err
 
 ev.eventCode = eventCode
 ev.eventMessage = eventMessage
@@ -258,6 +277,11 @@ Case Else
     Set mSession = Nothing
 End Select
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_Progress( _
@@ -268,6 +292,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
 ' unwind the stack
+Const ProcName As String = "IBarDataInputServiceConsumer_Ready"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -276,11 +301,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "IBarDataInputServiceConsumer_Ready" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -291,6 +312,10 @@ Private Sub StudyValueListener_notify(ev As StudyUtils26.StudyValueEvent)
 Static currAskBarNumber As Long
 Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
+
+Const ProcName As String = "StudyValueListener_notify"
+Dim failpoint As Long
+On Error GoTo Err
 
 If ev.source Is mTradeBarsStudy Then
     If ev.sVal.BarNumber = currTradeBarNumber Then Exit Sub
@@ -321,6 +346,11 @@ ElseIf ev.source Is mBidBarsStudy Then
     currBidBarNumber = ev.sVal.BarNumber
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 '@================================================================================
@@ -334,6 +364,11 @@ End Sub
 Private Sub Task_run()
 Dim failpoint As Long
 
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+
 On Error GoTo Err
 
 failpoint = 100
@@ -342,12 +377,20 @@ If mState = TimeframeStateFinished Then
     ' this can happen between starttask being called
     ' and getting here
     mTaskContext.Finish Empty, False
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
 If mBarReader Is Nothing Then
     setupBarReader
     mTaskContext.suspend -1
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
@@ -359,6 +402,10 @@ If mHistoricBar Is Nothing Then
     If mHistoricBar Is Nothing Then
         ' the bar has not been fired synchronously, so wait for it
         mTaskContext.suspend -1
+        
+        #If trace Then
+            gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+        #End If
         Exit Sub
     End If
 End If
@@ -368,6 +415,9 @@ failpoint = 300
 
 ProcessHistoricBar
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 Exit Sub
 
 Err:
@@ -454,6 +504,14 @@ End Property
 
 ' only gets called if contract was not available when Initialise was called
 Friend Property Let Contract(ByVal value As Contract)
+Const ProcName As String = "Contract"
+Dim failpoint As Long
+On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
 
 Set mContract = value
 
@@ -464,6 +522,14 @@ studyMgr.SetInputTicksize mTradeInputHandle, mContract.TickSize
 
 startHistDataFetch
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get historicDataLoaded() As Boolean
@@ -500,9 +566,18 @@ mStateChangeListeners.Add value
 End Sub
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
+Dim failpoint As Long
+On Error GoTo Err
+
 Clear
 fireStateChange TimeframeStateFinished
 Set mTickerRef = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -518,6 +593,10 @@ Friend Sub Initialise( _
                 ByVal barWriter As HistoricDataWriter, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean)
+
+Const ProcName As String = "Initialise"
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mContract = pContract
 mKey = Key
@@ -572,6 +651,11 @@ If Not mContract Is Nothing Then
 End If
 
 fireStateChange TimeframeStateCreated
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveStateChangeListener( _
@@ -588,6 +672,10 @@ End Sub
 '@================================================================================
 
 Private Sub Clear()
+
+Const ProcName As String = "Clear"
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mWriteTimer Is Nothing Then
     mWriteTimer.StopTimer
@@ -610,20 +698,38 @@ If Not mBarReader Is Nothing Then
     mTaskContext.Finish Empty, True
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Function getName() As String
+Const ProcName As String = "getName"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mContract Is Nothing Then
     getName = "????/" & mKey
 Else
     getName = mContract.specifier.localSymbol & "/" & mKey
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub fireStateChange(ByVal newState As TimeframeStates)
 Dim listener As StateChangeListener
 Dim ev As StateChangeEvent
 Dim s As String
+
+Const ProcName As String = "fireStateChange"
+Dim failpoint As Long
+On Error GoTo Err
 
 If newState = mState Then Exit Sub
 mState = newState
@@ -649,10 +755,24 @@ For Each listener In mStateChangeListeners
     listener.Change ev
 Next
 RaiseEvent StateChange(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub ProcessHistoricBar()
 Static firstVolumeSent As Boolean
+
+Const ProcName As String = "ProcessHistoricBar"
+Dim failpoint As Long
+On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
 
 With mHistoricBar
 
@@ -704,12 +824,29 @@ End With
 
 Set mHistoricBar = Nothing
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupBarReader()
 Dim barSpecifier As New BarDataSpecifier
 Dim ev As NotificationEvent
     
+Const ProcName As String = "setupBarReader"
+Dim failpoint As Long
+On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+
 fireStateChange TimeframeStateLoading
 If mNumberOfBarsToFetch = 0 Then
     mHistoricDataLoaded = True
@@ -717,6 +854,10 @@ If mNumberOfBarsToFetch = 0 Then
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     mTaskContext.Finish 0, False
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
@@ -735,6 +876,10 @@ If mBarReader Is Nothing Then
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     mTaskContext.Finish 0, False
+    
+    #If trace Then
+        gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    #End If
     Exit Sub
 End If
 
@@ -762,9 +907,21 @@ mBarReader.FetchBars barSpecifier
 
 ' other bar types ????????????????????????????????????????
 
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub setupBarStudies()
+
+Const ProcName As String = "setupBarStudies"
+Dim failpoint As Long
+On Error GoTo Err
 
 setupInputStudies
 
@@ -793,11 +950,20 @@ If Not mBarWriter Is Nothing Then
     End If
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupConstantMomentumBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
+
+Const ProcName As String = "setupConstantMomentumBarsStudies"
+Dim failpoint As Long
+On Error GoTo Err
 
 params.SetParameterValue ConstMomentumBarsParamTicksPerBar, mBarTimePeriod.length
 
@@ -843,11 +1009,20 @@ If mWriteBidAndAskBars Then
 
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupConstantTimeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
+
+Const ProcName As String = "setupConstantTimeBarsStudies"
+Dim failpoint As Long
+On Error GoTo Err
 
 params.SetParameterValue ConstTimeBarsParamBarLength, mBarTimePeriod.length
 params.SetParameterValue ConstTimeBarsParamTimeUnits, _
@@ -895,11 +1070,20 @@ If mWriteBidAndAskBars Then
 
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupConstantVolumeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
+
+Const ProcName As String = "setupConstantVolumeBarsStudies"
+Dim failpoint As Long
+On Error GoTo Err
 
 params.SetParameterValue ConstTimeBarsParamVolPerBar, mBarTimePeriod.length
 
@@ -945,11 +1129,20 @@ If mWriteBidAndAskBars Then
 
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Sub
 
 Private Sub setupInputStudies()
 Dim sourceName As String
 Dim TickSize As Double
+
+Const ProcName As String = "setupInputStudies"
+Dim failpoint As Long
+On Error GoTo Err
 
 If mContract Is Nothing Then
     sourceName = GenerateGUIDString
@@ -997,19 +1190,50 @@ mVolumeInputHandle = studyMgr.AddInput(mInputStudy, _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
                         1)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub startHistDataFetch()
+Const ProcName As String = "startHistDataFetch"
+Dim failpoint As Long
+On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+
 ' ensure that fetching the historical data occurs after the current call has completed,
 ' since this is within the Timeframes.Add call, otherwise the caller may miss the
 ' BarsLoaded event.
 
 StartTask Me, PriorityNormal, "Timeframe (" & getName & "): start bar fetch"
+
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub StartStudies()
 Dim lInputStudy As InputStudy
 Dim lStudy As BarStudy
+
+Const ProcName As String = "StartStudies"
+Dim failpoint As Long
+On Error GoTo Err
+
+#If trace Then
+    gTracer.EnterProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
 
 ' for historical timeframes, don't want to switch to the Ticker
 If mIsHistorical Then Exit Sub
@@ -1044,6 +1268,15 @@ If mWriteBidAndAskBars Then
     studyMgr.MoveStudy lStudy, lInputStudy, inputValueNames
     
 End If
+
+#If trace Then
+    gTracer.ExitProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+#End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function studyMgr() As StudyManager
@@ -1059,6 +1292,10 @@ Private Sub WriteABar( _
                 ByVal barType As BarTypes, _
                 ByVal prevTickVolume)
 Dim bar2Write As BarToWrite
+
+Const ProcName As String = "WriteABar"
+Dim failpoint As Long
+On Error GoTo Err
 
 If mBarWriter Is Nothing Then Exit Sub
 
@@ -1078,6 +1315,11 @@ Then
                     ExpiryTimeUnitMilliseconds
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub WriteBar( _
@@ -1086,6 +1328,10 @@ Private Sub WriteBar( _
         
 ' because of the delayed writes, the Timeframe may have been Finished between
 ' initiating the write timer and getting here, so check for this
+Const ProcName As String = "WriteBar"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mBarWriter Is Nothing Then Exit Sub
 
 Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
@@ -1098,6 +1344,11 @@ Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSy
             "; close=" & theBar.CloseValue & _
             "; vol=" & theBar.Volume
 mBarWriter.WriteBar theBar, barType, mBarTimePeriod
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

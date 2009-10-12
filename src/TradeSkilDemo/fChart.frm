@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#209.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#210.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -233,6 +233,15 @@ Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Dim failpoint As Long
 On Error GoTo Err
 
+MultiChart1.Finish
+If mIsHistorical Then
+    Dim lTicker As Ticker
+    Set lTicker = mTicker
+    Set mTicker = Nothing
+    lTicker.StopTicker
+End If
+gUnsyncStudyPicker
+
 Select Case UnloadMode
 Case QueryUnloadConstants.vbFormControlMenu
     ' the chart has been closed by the user so remove it from the config
@@ -267,25 +276,6 @@ End Sub
 
 Private Sub Form_Terminate()
 gLogger.Log LogLevelDetail, "Chart form terminated"
-End Sub
-
-Private Sub Form_Unload(cancel As Integer)
-Dim failpoint As Long
-On Error GoTo Err
-
-MultiChart1.Finish
-If mIsHistorical Then
-    Dim lTicker As Ticker
-    Set lTicker = mTicker
-    Set mTicker = Nothing
-    lTicker.StopTicker
-End If
-gUnsyncStudyPicker
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Unload", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '================================================================================
@@ -502,6 +492,7 @@ If ev.State = TickerStates.TickerStateReady Then
 ElseIf ev.State = TickerStates.TickerStateStopped Then
     ' the ticker has been stopped before the chart has been closed,
     ' so remove the chart from the config and close it
+    MultiChart1.Finish
     mConfig.Remove
     Set mConfig = Nothing
     Unload Me

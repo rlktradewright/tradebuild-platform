@@ -55,7 +55,7 @@ Private Const ReqdServerVersion As Long = 38
 
 Private Const ContractDataReqIdBase As Long = &H1000000
 
-Private Const ErrHistGenerationFailed = vbObjectError
+Private Const ErrHistGenerationFailed = vbObjectError + &H7FFF
 
 Private Const HistoricalDataReqIdBase As Long = &H410000
 Private Const HistoricalDataReqIdIncrement As Long = &H100
@@ -133,7 +133,7 @@ Private Type HistoricalDataRequestTableEntry
     historicalDataReader    As HistDataReader
     nextBarIndex            As Long
     bars                    As LinkedList
-    requestKeys()           As String
+    requestKey              As String
 End Type
 
 Private Type StatsEntry
@@ -664,7 +664,6 @@ End Property
 '================================================================================
 
 Friend Sub CancelHistoricalData(ByVal requestHandle As Long)
-Dim i As Long
 Dim key As String
 
 On Error GoTo Err
@@ -679,43 +678,41 @@ Else
     If mServerVersion < 24 Then
         ' cancel not supported by TWS - we'll complete the cancel when
         ' the data arrives
-        mHistoricalDataTable(i).cancelling = True
+        mHistoricalDataTable(requestHandle).cancelling = True
     Else
-        For i = 0 To UBound(mHistoricalDataTable(requestHandle).requestKeys)
-            key = mHistoricalDataTable(requestHandle).requestKeys(i)
-            If key = "" Then
-                ' data has already been retrieved for this TWS request, so
-                ' nothing to do
-                
+        key = mHistoricalDataTable(requestHandle).requestKey
+        If key = "" Then
+            ' data has already been retrieved for this TWS request, so
+            ' nothing to do
+            
+        Else
+            On Error Resume Next
+            mTwsHistDataRequestQueue.remove key
+            If Err.number = 0 Then
+                ' request was still in queue - no further action required
+                On Error GoTo Err
+            ElseIf Err.number <> ErrorCodes.ErrIllegalArgumentException Then
+                On Error GoTo Err
+                Err.Raise Err.number
             Else
-                On Error Resume Next
-                mTwsHistDataRequestQueue.remove key
-                If Err.number = 0 Then
-                    ' request was still in queue - no further action required
-                    On Error GoTo Err
-                ElseIf Err.number <> ErrorCodes.ErrIllegalArgumentException Then
-                    On Error GoTo Err
-                    Err.Raise Err.number
-                Else
-                    On Error GoTo Err
-                    
-                    ' request is with TWS so cancel it
-                    
-                    If mConnectionState = ConnConnected Then
-                        Const version As Long = 1
+                On Error GoTo Err
                 
-                        addMsgId CANCEL_HISTORICAL_DATA
-                        addData version, "Version"
-                        addData requestHandle + HistoricalDataReqIdBase + i * HistoricalDataReqIdIncrement, "Request id"
-                        send
-                    End If
-                    
-                    mHistoricalDataTable(requestHandle).cancelling = True
-                    
-                    processNextHistDataRequest
+                ' request is with TWS so cancel it
+                
+                If mConnectionState = ConnConnected Then
+                    Const version As Long = 1
+            
+                    addMsgId CANCEL_HISTORICAL_DATA
+                    addData version, "Version"
+                    addData generateHistDataRequestId(requestHandle), "Request id"
+                    send
                 End If
+                
+                mHistoricalDataTable(requestHandle).cancelling = True
+                
+                processNextHistDataRequest
             End If
-        Next
+        End If
 
         If mHistoricalDataTable(requestHandle).cancelling Then
             ' it's possible that TWS has just sent the data for one or more of the cancelled
@@ -1185,12 +1182,12 @@ Friend Function RequestHistoricalData( _
                 barSpecifier As BarDataSpecifier, _
                 ByVal historicalDataReader As HistDataReader) As Long
 
-Dim requestID As Long
+Dim index As Long
 Dim i As Long
 Dim ignoreTimestamps As Boolean
 
 On Error GoTo Err
-requestID = -1
+index = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1264,7 +1261,7 @@ Case TimePeriodUnits.TimePeriodYear
 Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
     ' nothing to do
 Case Else
-    historicalDataReader.historicalDataRequestInvalid barSpecifier.MaxNumberOfBars & "specified timeframe not supported"
+    historicalDataReader.HistoricalDataRequestInvalid barSpecifier.MaxNumberOfBars & "specified timeframe not supported"
     Exit Function
 End Select
 
@@ -1272,38 +1269,44 @@ For i = 0 To UBound(mHistoricalDataTable)
     If Not mHistoricalDataTable(i).inUse And _
         Not (mHistoricalDataTable(i).cancelling And Now < mHistoricalDataTable(i).earliestReuseTime) _
     Then
-        requestID = i
+        index = i
         Exit For
     End If
 Next
 
-If requestID = -1 Then
-    requestID = UBound(mHistoricalDataTable) + 1
+If index = -1 Then
+    index = UBound(mHistoricalDataTable) + 1
     ReDim Preserve mHistoricalDataTable(2 * (UBound(mHistoricalDataTable) + 1) - 1) As HistoricalDataRequestTableEntry
 End If
 
-mHistoricalDataTable(requestID).inUse = True
-mHistoricalDataTable(requestID).cancelling = False
-Set mHistoricalDataTable(requestID).barSpecifier = barSpecifier
-mHistoricalDataTable(requestID).ignoreTimestamps = ignoreTimestamps
-Set mHistoricalDataTable(requestID).SessionBuilder = New SessionBuilder
-mHistoricalDataTable(requestID).SessionBuilder.SessionStartTime = barSpecifier.Contract.SessionStartTime
-mHistoricalDataTable(requestID).SessionBuilder.SessionEndTime = barSpecifier.Contract.SessionEndTime
-Set mHistoricalDataTable(requestID).Session = mHistoricalDataTable(requestID).SessionBuilder.Session
-mHistoricalDataTable(requestID).nextBarIndex = 0
-mHistoricalDataTable(requestID).barType = barSpecifier.barType
-mHistoricalDataTable(requestID).nextBarIndex = -1
-Set mHistoricalDataTable(requestID).historicalDataReader = historicalDataReader
-Set mHistoricalDataTable(requestID).bars = New LinkedList
-mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.MaxNumberOfBars <> 0, barSpecifier.MaxNumberOfBars, 50)
+mHistoricalDataTable(index).inUse = True
+mHistoricalDataTable(index).cancelling = False
+Set mHistoricalDataTable(index).barSpecifier = barSpecifier
+mHistoricalDataTable(index).ignoreTimestamps = ignoreTimestamps
+Set mHistoricalDataTable(index).SessionBuilder = New SessionBuilder
+mHistoricalDataTable(index).SessionBuilder.SessionStartTime = barSpecifier.Contract.SessionStartTime
+mHistoricalDataTable(index).SessionBuilder.SessionEndTime = barSpecifier.Contract.SessionEndTime
+Set mHistoricalDataTable(index).Session = mHistoricalDataTable(index).SessionBuilder.Session
+mHistoricalDataTable(index).barType = barSpecifier.barType
+mHistoricalDataTable(index).nextBarIndex = -1
+Set mHistoricalDataTable(index).historicalDataReader = historicalDataReader
 
-generateTwsHistoricalDataRequest requestID
-RequestHistoricalData = requestID
+Set mHistoricalDataTable(index).bars = New LinkedList
+If barSpecifier.MaxNumberOfBars = 0 Then
+    mHistoricalDataTable(index).bars.initialCapacity = 128
+ElseIf barSpecifier.MaxNumberOfBars > 512 Then
+    mHistoricalDataTable(index).bars.initialCapacity = 512
+Else
+    mHistoricalDataTable(index).bars.initialCapacity = barSpecifier.MaxNumberOfBars
+End If
+
+generateTwsHistoricalDataRequest index
+RequestHistoricalData = index
 Exit Function
 Err:
 
 If Err.number = ErrHistGenerationFailed Then
-    releaseHistoricalDataTableEntry requestID
+    releaseHistoricalDataTableEntry index
     RequestHistoricalData = -1
     Exit Function
 End If
@@ -1828,6 +1831,10 @@ Loop
 formatBuffer = s.ToString
 End Function
 
+Private Function generateHistDataRequestId(ByVal index As Long) As Long
+generateHistDataRequestId = index + HistoricalDataReqIdBase + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataReqIdIncrement
+End Function
+
 ' Raises an ErrHistGenerationFailed error if IB cannot satisfy the request because
 ' it would start more than a year and a day ago.
 Private Sub generateTwsHistoricalDataRequest(ByVal index As Long)
@@ -1838,9 +1845,7 @@ Dim numBarsInsession As Long
 reqNum = mHistoricalDataTable(index).numberOfTwsRequests + 1
 mHistoricalDataTable(index).numberOfTwsRequests = reqNum
 
-TwsRequest.id = index + HistoricalDataReqIdBase + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataReqIdIncrement
-
-ReDim mHistoricalDataTable(index).requestKeys(reqNum - 1) As String
+TwsRequest.id = generateHistDataRequestId(index)
 
 Set TwsRequest.Contract = mHistoricalDataTable(index).barSpecifier.Contract
 
@@ -2062,7 +2067,7 @@ Case BarTypes.BarTypeTrade
 Case Else
 End Select
 
-mHistoricalDataTable(index).requestKeys(reqNum - 1) = queueTWSHistoricalDataRequest(TwsRequest)
+mHistoricalDataTable(index).requestKey = queueTWSHistoricalDataRequest(TwsRequest)
 
 End Sub
 
@@ -2523,6 +2528,8 @@ Dim index As Long
 Dim mapEntry As OrderIdMapEntry
 
 Dim failpoint As Long
+Const ProcName As String = "getErrorMsg"
+
 On Error GoTo Err
 
 failpoint = 100
@@ -2564,16 +2571,30 @@ Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
 Case 162    ' historical data request problem
     failpoint = 500
 
-    index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
-
-    If mHistoricalDataTable(index).bars.size <> 0 Then
+    index = getHistDataTableIndexFromRequestId(id)
+    
+    If mHistoricalDataTable(index).bars Is Nothing Then
+        ' might get here if the request has already been cancelled
+    ElseIf mHistoricalDataTable(index).bars.size <> 0 Then
+        
+        failpoint = 505
+        
         Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
         mHistoricalDataTable(index).dataRetrievedFromTWS = True
         mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-        mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
+        
+        failpoint = 510
+        
+        mHistoricalDataTable(index).historicalDataReader.HistoricalDataAvailable mHistoricalDataTable(index).bars.size
     Else
+        
+        failpoint = 515
+        
         logMessage "Error " & errorCode & " from TWS: " & errorMsg, pProcName:="getErrorMsg"
-        mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
+        
+        failpoint = 520
+        
+        mHistoricalDataTable(index).historicalDataReader.HistoricalDataRequestFailed errorMsg
         releaseHistoricalDataTableEntry index
     End If
     
@@ -2606,10 +2627,10 @@ Case 200    ' security definition not known
     Case IdTypeHistoricalData
         failpoint = 720
 
-        index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
+        index = getHistDataTableIndexFromRequestId(id)
     
         logMessage "Error " & errorCode & " from TWS: " & errorMsg, pProcName:="getErrorMsg"
-        mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
+        mHistoricalDataTable(index).historicalDataReader.HistoricalDataRequestFailed errorMsg
         releaseHistoricalDataTableEntry index
         
         processNextHistDataRequest
@@ -2668,16 +2689,16 @@ Case 321    ' invalid request
     Case IdTypeRealtimeData
     Case IdTypeMarketDepth
     Case IdTypeHistoricalData
-        index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
+        index = getHistDataTableIndexFromRequestId(id)
     
         If mHistoricalDataTable(index).bars.size <> 0 Then
             Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
             mHistoricalDataTable(index).dataRetrievedFromTWS = True
             mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-            mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
+            mHistoricalDataTable(index).historicalDataReader.HistoricalDataAvailable mHistoricalDataTable(index).bars.size
         Else
             logMessage "Error " & errorCode & " from TWS: " & errorMsg, pProcName:="getErrorMsg"
-            mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
+            mHistoricalDataTable(index).historicalDataReader.HistoricalDataRequestFailed errorMsg
             releaseHistoricalDataTableEntry index
         End If
         processNextHistDataRequest
@@ -2763,7 +2784,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getErrorMsg", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pFailpoint:=failpoint
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
@@ -2789,7 +2810,9 @@ Dim lContractSpecifier As ContractSpecifier
 
 Dim exec As Execution
 
+Const ProcName As String = "getExecutionData"
 Dim failpoint As Long
+
 On Error GoTo Err
 
 id = getLong("Id")
@@ -2888,7 +2911,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getExecutionData", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pFailpoint:=failpoint
 End Sub
 
 Private Sub getFAData(ByVal version As Long)
@@ -2940,6 +2963,8 @@ If checkPointNumber = 0 Then
         lCustomSessionBuilder.SessionStartTime = mHistoricalDataTable(index).barSpecifier.CustomSessionStartTime
         lCustomSessionBuilder.SessionEndTime = mHistoricalDataTable(index).barSpecifier.CustomSessionEndTime
         lCustomSessionBuilder.TimeZone = mHistoricalDataTable(index).barSpecifier.Contract.TimeZone
+    Else
+        Set lCustomSessionBuilder = Nothing
     End If
     
     checkpointBuffer
@@ -3050,7 +3075,9 @@ If checkPointNumber >= 200 Then
         
         If Not mHistoricalDataTable(index).cancelling Then
             mHistoricalDataTable(index).SessionBuilder.SetSessionCurrentTime Bar.timestamp
-            If Not lCustomSessionBuilder Is Nothing Then
+            If Bar.timestamp < mHistoricalDataTable(index).barSpecifier.FromDate Then
+                ' ignore this bar
+            ElseIf Not lCustomSessionBuilder Is Nothing Then
                 lCustomSessionBuilder.SetSessionCurrentTime Bar.timestamp
                 If lCustomSessionBuilder.Session.IsTimeInSession(Bar.timestamp) Then
                     If mHistoricalDataTable(index).barSpecifier.IncludeBarsOutsideSession Or _
@@ -3079,7 +3106,7 @@ logSocketInputMessage
 
 If mHistoricalDataTable(index).cancelling Then Exit Sub
 
-mHistoricalDataTable(index).requestKeys(reqNo) = ""
+mHistoricalDataTable(index).requestKey = ""
 
 processNextHistDataRequest
 
@@ -3097,7 +3124,7 @@ If mHistoricalDataTable(index).barSpecifier.MaxNumberOfBars <= 0 Then
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
+    mHistoricalDataTable(index).historicalDataReader.HistoricalDataAvailable mHistoricalDataTable(index).bars.size
 Else
     
     failpoint = 700
@@ -3115,7 +3142,7 @@ If Err.number = ErrHistGenerationFailed Then
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
-    mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable mHistoricalDataTable(index).bars.size
+    mHistoricalDataTable(index).historicalDataReader.HistoricalDataAvailable mHistoricalDataTable(index).bars.size
     Exit Sub
 End If
 
@@ -3123,6 +3150,10 @@ If Err.number = DataIncomplete Then Err.Raise DataIncomplete
 
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getHistoricalData", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description
 End Sub
+
+Private Function getHistDataTableIndexFromRequestId(ByVal id As Long) As Long
+getHistDataTableIndexFromRequestId = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
+End Function
 
 Private Function getIdType( _
                 ByVal id As Long) As IdTypes
@@ -3997,12 +4028,15 @@ On Error GoTo Err
 If ignoreLogLevel Then
     If Not mInMessageBuilder Is Nothing Then
         mSocketLogger.Log LogLevelNormal, mInMessageBuilder.ToString
+        Set prevMessageBuilder = mInMessageBuilder
     ElseIf Not prevMessageBuilder Is Nothing Then
         mSocketLogger.Log LogLevelNormal, prevMessageBuilder.ToString
         Set prevMessageBuilder = Nothing
     End If
 ElseIf mSocketLogger.IsLoggable(LogLevelHighDetail) Then
     mSocketLogger.Log LogLevelHighDetail, mInMessageBuilder.ToString
+    Set prevMessageBuilder = mInMessageBuilder
+Else
     Set prevMessageBuilder = mInMessageBuilder
 End If
 Set mInMessageBuilder = Nothing
@@ -4318,10 +4352,9 @@ Private Sub processNextHistDataRequest()
 Dim failpoint As Long
 On Error GoTo Err
 
-mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
-    Dim requestKey As String
     request = mTwsHistDataRequestQueue.removeFromFront
     reqHistoricalData request
     mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
@@ -4397,7 +4430,7 @@ On Error GoTo Err
 
 With mHistoricalDataTable(index)
     Set .bars = Nothing
-    Erase .requestKeys
+    .requestKey = ""
     Set .historicalDataReader = Nothing
     .numberOfTwsRequests = 0
     .nextBarIndex = -1

@@ -41,7 +41,6 @@ Implements ITickfileServiceProvider
 ' Constants
 '================================================================================
 
-Private Const ProjectName               As String = "TickfileSP26"
 Private Const ModuleName                As String = "TickfileServiceProvider"
 
 '================================================================================
