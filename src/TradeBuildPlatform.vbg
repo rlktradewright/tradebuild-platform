@@ -1,9 +1,0 @@
-VBGROUP 5.0
-StartupProject=ChartSkil\ChartSkil.vbp
-Project=QuoteTrackerSP\QuoteTrackerSP.vbp
-Project=TBDataCollector\TBDataCollector.vbp
-Project=TBInfoBase\TBInfoBase.vbp
-Project=TickFileManager\TickFileManager.vbp
-Project=TickfileSP\TickfileSP.vbp
-Project=TradeBuild\TradeBuild.vbp
-Project=TradeSkilDemo\TradeSkilDemo.vbp
