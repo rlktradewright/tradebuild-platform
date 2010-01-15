@@ -50,23 +50,24 @@ Private Const ModuleName                As String = "OrderContext"
 
 Private mName As String
 
-Private mTicker As Ticker
+Private WithEvents mTicker As Ticker
+Attribute mTicker.VB_VarHelpID = -1
 Private mPositionManager As PositionManager
 
 Private mTickSize As Double
 
 Private mIsSimulated As Boolean
 
-Private mActiveOrderPlexes As orderPlexes
+Private mActiveOrderPlexes As OrderPlexes
     ' this contains all order plexes for which one or more orders are
     ' not yet complete (or not yet cancelled)
     
-Private mClosedOrderPlexes As orderPlexes
+Private mClosedOrderPlexes As OrderPlexes
     ' this contains all order plexes for which all orders have completed (or
     ' been cancelled)
     
 Private mCompletedSize As Long
-    ' the total size for all completed order plexes (may be non-zero if one
+    ' the total Size for all completed order plexes (may be non-zero if one
     ' or more completed order plexes has no target or stop orders)
     
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
@@ -112,8 +113,8 @@ Private mPreventUnprotectedPositions As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mActiveOrderPlexes = New orderPlexes
-Set mClosedOrderPlexes = New orderPlexes
+Set mActiveOrderPlexes = New OrderPlexes
+Set mClosedOrderPlexes = New OrderPlexes
 End Sub
 
 Private Sub Class_Terminate()
@@ -125,152 +126,302 @@ End Sub
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mTicker Event Handlers
 '@================================================================================
+
+Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEvent)
+Const ProcName As String = "mTicker_StateChange"
+Dim failpoint As String
+On Error GoTo Err
+
+If ev.State = TickerStates.TickerStateReady Then
+    mTickSize = mTicker.Contract.TickSize
+End If
+
+Exit Sub
+
+Err:
+GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get activeOrderPlexes() As orderPlexes
-Set activeOrderPlexes = mActiveOrderPlexes
+Public Property Get ActiveOrderPlexes() As OrderPlexes
+Set ActiveOrderPlexes = mActiveOrderPlexes
 End Property
 
 Public Property Get ActiveSize() As Long
-Dim orderPlex As orderPlex
+Dim lOrderPlex As orderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    ActiveSize = ActiveSize + orderPlex.size
+Const ProcName As String = "ActiveSize"
+Dim failpoint As Long
+On Error GoTo Err
+
+For Each lOrderPlex In mActiveOrderPlexes
+    ActiveSize = ActiveSize + lOrderPlex.size
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Let allOrNone(ByVal value As Boolean)
+Public Property Let AllOrNone(ByVal value As Boolean)
+Const ProcName As String = "AllOrNone"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttAllOrNone
 mAllOrNone = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get allOrNone() As Boolean
-allOrNone = mAllOrNone
+Public Property Get AllOrNone() As Boolean
+AllOrNone = mAllOrNone
 End Property
 
-Public Property Let blockOrder(ByVal value As Boolean)
+Public Property Let BlockOrder(ByVal value As Boolean)
+Const ProcName As String = "BlockOrder"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttBlockOrder
 mBlockOrder = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get blockOrder() As Boolean
-blockOrder = mBlockOrder
+Public Property Get BlockOrder() As Boolean
+BlockOrder = mBlockOrder
 End Property
 
-Public Property Get closedOrderPlexes() As orderPlexes
-Set closedOrderPlexes = mClosedOrderPlexes
+Public Property Get ClosedOrderPlexes() As OrderPlexes
+Set ClosedOrderPlexes = mClosedOrderPlexes
 End Property
 
 Public Property Get Complete() As Boolean
 Dim op As orderPlex
+Const ProcName As String = "Complete"
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each op In mActiveOrderPlexes
     If Not op.IsSimulated Then Complete = False: Exit Property
 Next
 Complete = True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get CompletedSize() As Long
 CompletedSize = mCompletedSize
 End Property
 
-Public Property Let displaySize(ByVal value As Long)
+Public Property Let DisplaySize(ByVal value As Long)
+Const ProcName As String = "DisplaySize"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttDisplaySize
 mDisplaySize = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get displaySize() As Long
-displaySize = mDisplaySize
+Public Property Get DisplaySize() As Long
+DisplaySize = mDisplaySize
 End Property
 
-Friend Property Let enabled(ByVal value As Boolean)
+Friend Property Let Enabled(ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As Long
+On Error GoTo Err
+
 mEnabled = value
 checkReady
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Let eTradeOnly(ByVal value As Boolean)
+Public Property Let ETradeOnly(ByVal value As Boolean)
+Const ProcName As String = "ETradeOnly"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttETradeOnly
 mETradeOnly = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get eTradeOnly() As Boolean
-eTradeOnly = mETradeOnly
+Public Property Get ETradeOnly() As Boolean
+ETradeOnly = mETradeOnly
 End Property
 
-Public Property Let firmQuoteOnly(ByVal value As Boolean)
+Public Property Let FirmQuoteOnly(ByVal value As Boolean)
+Const ProcName As String = "FirmQuoteOnly"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttFirmQuoteOnly
 mFirmQuoteOnly = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get firmQuoteOnly() As Boolean
-firmQuoteOnly = mFirmQuoteOnly
+Public Property Get FirmQuoteOnly() As Boolean
+FirmQuoteOnly = mFirmQuoteOnly
 End Property
 
-Public Property Let goodAfterTime(ByVal value As Date)
+Public Property Let GoodAfterTime(ByVal value As Date)
+Const ProcName As String = "GoodAfterTime"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTime
 mGoodAfterTime = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodAfterTime() As Date
-goodAfterTime = mGoodAfterTime
+Public Property Get GoodAfterTime() As Date
+GoodAfterTime = mGoodAfterTime
 End Property
 
-Public Property Let goodAfterTimeTZ(ByVal value As String)
+Public Property Let GoodAfterTimeTZ(ByVal value As String)
+Const ProcName As String = "GoodAfterTimeTZ"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTimeTZ
 mGoodAfterTimeTZ = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodAfterTimeTZ() As String
-goodAfterTimeTZ = mGoodAfterTimeTZ
+Public Property Get GoodAfterTimeTZ() As String
+GoodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
-Public Property Let goodTillDate(ByVal value As Date)
+Public Property Let GoodTillDate(ByVal value As Date)
+Const ProcName As String = "GoodTillDate"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDate
 mGoodTillDate = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodTillDate() As Date
-goodTillDate = mGoodTillDate
+Public Property Get GoodTillDate() As Date
+GoodTillDate = mGoodTillDate
 End Property
 
-Public Property Let goodTillDateTZ(ByVal value As String)
+Public Property Let GoodTillDateTZ(ByVal value As String)
+Const ProcName As String = "GoodTillDateTZ"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDateTZ
 mGoodTillDateTZ = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodTillDateTZ() As String
-goodTillDateTZ = mGoodTillDateTZ
+Public Property Get GoodTillDateTZ() As String
+GoodTillDateTZ = mGoodTillDateTZ
 End Property
 
-Public Property Let hidden(ByVal value As Boolean)
+Public Property Let Hidden(ByVal value As Boolean)
+Const ProcName As String = "Hidden"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttHidden
 mHidden = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get hidden() As Boolean
-hidden = mHidden
+Public Property Get Hidden() As Boolean
+Hidden = mHidden
 End Property
 
-Public Property Let ignoreRegularTradingHours(ByVal value As Boolean)
+Public Property Let IgnoreRegularTradingHours(ByVal value As Boolean)
+Const ProcName As String = "IgnoreRegularTradingHours"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttIgnoreRTH
 mIgnoreRegularTradingHours = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get ignoreRegularTradingHours() As Boolean
-ignoreRegularTradingHours = mIgnoreRegularTradingHours
+Public Property Get IgnoreRegularTradingHours() As Boolean
+IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
-Friend Property Let isReady(ByVal value As Boolean)
+Friend Property Let IsReady(ByVal value As Boolean)
+Const ProcName As String = "IsReady"
+Dim failpoint As Long
+On Error GoTo Err
+
 mIsReady = value
 checkReady
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get isReady() As Boolean
-isReady = (mIsReady And mEnabled)
+Public Property Get IsReady() As Boolean
+IsReady = (mIsReady And mEnabled)
 End Property
 
 Friend Property Let IsSimulated(ByVal value As Boolean)
@@ -281,22 +432,40 @@ Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
 
-Public Property Let limitPrice(ByVal value As Double)
+Public Property Let LimitPrice(ByVal value As Double)
+Const ProcName As String = "LimitPrice"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttLimitPrice
 mLimitPrice = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get limitPrice() As Double
-limitPrice = mLimitPrice
+Public Property Get LimitPrice() As Double
+LimitPrice = mLimitPrice
 End Property
 
-Public Property Let minimumQuantity(ByVal value As Long)
+Public Property Let MinimumQuantity(ByVal value As Long)
+Const ProcName As String = "MinimumQuantity"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttMinimumQuantity
 mMinimumQuantity = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get minimumQuantity() As Long
-minimumQuantity = mMinimumQuantity
+Public Property Get MinimumQuantity() As Long
+MinimumQuantity = mMinimumQuantity
 End Property
 
 Friend Property Let name(ByVal value As String)
@@ -308,31 +477,58 @@ name = mName
 End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
+Const ProcName As String = "NbboPriceCap"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttNBBOPriceCap
 mNBBOPriceCap = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
 End Property
 
-Public Property Let orderType(ByVal value As OrderTypes)
+Public Property Let OrderType(ByVal value As OrderTypes)
+Const ProcName As String = "OrderType"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttOrderType
-If Not isOrderTypeValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttOrderType, value
+If Not IsOrderTypeValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttOrderType, value
 mOrderType = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get orderType() As OrderTypes
-orderType = mOrderType
+Public Property Get OrderType() As OrderTypes
+OrderType = mOrderType
 End Property
 
-Public Property Let origin(ByVal value As OrderOrigins)
+Public Property Let Origin(ByVal value As OrderOrigins)
+Const ProcName As String = "Origin"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttOrigin
 mOrigin = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get origin() As OrderOrigins
-origin = mOrigin
+Public Property Get Origin() As OrderOrigins
+Origin = mOrigin
 End Property
 
 Friend Property Let orderSubmitter( _
@@ -340,33 +536,60 @@ Friend Property Let orderSubmitter( _
 Set mOrderSubmitter = value
 End Property
 
-Public Property Let overrideConstraints(ByVal value As Boolean)
+Public Property Let OverrideConstraints(ByVal value As Boolean)
+Const ProcName As String = "OverrideConstraints"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttOverrideConstraints
 mOverrideConstraints = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get overrideConstraints() As Boolean
-overrideConstraints = mOverrideConstraints
+Public Property Get OverrideConstraints() As Boolean
+OverrideConstraints = mOverrideConstraints
 End Property
 
-Public Property Get pendingSize() As Long
-Dim orderPlex As orderPlex
-For Each orderPlex In mActiveOrderPlexes
-    pendingSize = pendingSize + orderPlex.pendingSize
+Public Property Get PendingSize() As Long
+Dim lOrderPlex As orderPlex
+Const ProcName As String = "PendingSize"
+Dim failpoint As Long
+On Error GoTo Err
+
+For Each lOrderPlex In mActiveOrderPlexes
+    PendingSize = PendingSize + lOrderPlex.PendingSize
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Let percentOffset(ByVal value As Double)
+Public Property Let PercentOffset(ByVal value As Double)
+Const ProcName As String = "PercentOffset"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttPercentOffset
 mPercentOffset = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get percentOffset() As Double
-percentOffset = mPercentOffset
+Public Property Get PercentOffset() As Double
+PercentOffset = mPercentOffset
 End Property
 
-Public Property Get permittedOrderTifs() As Long
-permittedOrderTifs = mPermittedOrderTifs
+Public Property Get PermittedOrderTifs() As Long
+PermittedOrderTifs = mPermittedOrderTifs
 End Property
 
 Public Property Get permittedOrderTypes() As Long
@@ -390,45 +613,94 @@ Public Property Get PreventUnprotectedPositions() As Boolean
 PreventUnprotectedPositions = mPreventUnprotectedPositions
 End Property
 
-Public Property Let quantity(ByVal value As Long)
+Public Property Let Quantity(ByVal value As Long)
+Const ProcName As String = "Quantity"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttQuantity
 mQuantity = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get quantity() As Long
-quantity = mQuantity
+Public Property Get Quantity() As Long
+Quantity = mQuantity
 End Property
 
 Public Property Get Risk() As Currency
-Dim orderPlex As orderPlex
-For Each orderPlex In mActiveOrderPlexes
-    Risk = Risk + orderPlex.Risk
+Dim lOrderPlex As orderPlex
+Const ProcName As String = "Risk"
+Dim failpoint As Long
+On Error GoTo Err
+
+For Each lOrderPlex In mActiveOrderPlexes
+    If lOrderPlex.Risk = MaxCurrency Then
+        Risk = MaxCurrency
+        Exit For
+    End If
+    Risk = Risk + lOrderPlex.Risk
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Let settlingFirm(ByVal value As String)
+Public Property Let SettlingFirm(ByVal value As String)
+Const ProcName As String = "SettlingFirm"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttSettlingFirm
 mSettlingFirm = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get settlingFirm() As String
-settlingFirm = mSettlingFirm
+Public Property Get SettlingFirm() As String
+SettlingFirm = mSettlingFirm
 End Property
 
 Public Property Get size() As Long
-Dim orderPlex As orderPlex
+Dim lOrderPlex As orderPlex
+
+Const ProcName As String = "Size"
+Dim failpoint As Long
+On Error GoTo Err
 
 size = mCompletedSize
 
-For Each orderPlex In mActiveOrderPlexes
-    size = size + orderPlex.size
+For Each lOrderPlex In mActiveOrderPlexes
+    size = size + lOrderPlex.size
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
+Const ProcName As String = "StopTriggerMethod"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttStopTriggerMethod
-If Not isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttStopTriggerMethod, value
+If Not IsStopTriggerMethodValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttStopTriggerMethod, value
 mStopTriggerMethod = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get StopTriggerMethod() As StopTriggerMethods
@@ -436,8 +708,17 @@ StopTriggerMethod = mStopTriggerMethod
 End Property
 
 Public Property Let SweepToFill(ByVal value As Boolean)
+Const ProcName As String = "SweepToFill"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttSweepToFill
 mSweepToFill = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -445,43 +726,87 @@ SweepToFill = mSweepToFill
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
-If value Is Nothing Then Exit Property
+Const ProcName As String = "Ticker"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTicker = value
-mTickSize = mTicker.Contract.TickSize
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Let timeInForce(ByVal value As OrderTifs)
-If Not gIsValidTIF(value) Then
+Public Property Let TimeInForce(ByVal value As OrderTifs)
+Const ProcName As String = "TimeInForce"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not GIsValidTIF(value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "timeInForce", _
             "Value must be a member of the OrderTifs enum"
 End If
 
 checkAttributeSupported OrderAttributeIds.OrderAttTimeInForce
-If Not isOrderTifValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttTimeInForce, value
+If Not IsOrderTifValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttTimeInForce, value
 mTimeInForce = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get timeInForce() As OrderTifs
-timeInForce = mTimeInForce
+Public Property Get TimeInForce() As OrderTifs
+TimeInForce = mTimeInForce
 End Property
 
-Public Property Let triggerPrice(ByVal value As Double)
+Public Property Let TriggerPrice(ByVal value As Double)
+Const ProcName As String = "TriggerPrice"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeSupported OrderAttributeIds.OrderAttTriggerPrice
 mTriggerPrice = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get triggerPrice() As Double
-triggerPrice = mTriggerPrice
+Public Property Get TriggerPrice() As Double
+TriggerPrice = mTriggerPrice
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub ActivateOrderPlex( _
+                ByVal pOrderPlex As orderPlex)
+Const ProcName As String = "ActivateOrderPlex"
+Dim failpoint As String
+On Error GoTo Err
+
+pOrderPlex.Ticker = mTicker
+pOrderPlex.orderSubmitter = mOrderSubmitter
+mActiveOrderPlexes.Add pOrderPlex
+
+pOrderPlex.Activate
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
+End Sub
 
 ''
 ' Creates a buy<code>OrderPlex</code>
@@ -561,7 +886,7 @@ Public Function Buy(ByRef number As Long, _
                     ByVal EntryOrderType As EntryOrderTypes, _
                     ByVal buyPrice As Double, _
                     ByVal buyOffset As Long, _
-                    ByVal triggerPrice As Double, _
+                    ByVal TriggerPrice As Double, _
                     ByVal StopOrderType As StopOrderTypes, _
                     ByVal stopPrice As Double, _
                     ByVal stopOffset As Long, _
@@ -574,35 +899,36 @@ Public Function Buy(ByRef number As Long, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
-                    Optional ByVal stopStrategy As StopManagementStrategy, _
-                    Optional ByVal exitStrategy As PositionManagementStrategy, _
-                    Optional ByVal scalingStrategy As PositionManagementStrategy) As orderPlex
+                    Optional ByVal StopStrategy As StopManagementStrategy, _
+                    Optional ByVal ExitStrategy As PositionManagementStrategy, _
+                    Optional ByVal ScalingStrategy As PositionManagementStrategy) As orderPlex
 
+Const ProcName As String = "Buy"
 Dim failpoint As Long
 On Error GoTo Err
 
-gLog pMsg:="Buy", _
-    pMsgQualifier:=mTicker.Contract.specifier.localSymbol & _
+GLog pMsg:="Buy", _
+    pMsgQualifier:=mTicker.Contract.specifier.LocalSymbol & _
                 " number=" & number & _
-                "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
+                "; EntryOrderType=" & GEntryOrderTypeToShortString(EntryOrderType) & _
                 "; buyPrice=" & buyPrice & _
                 "; buyOffset=" & buyOffset & _
-                "; triggerPrice=" & triggerPrice & _
-                "; StopOrderType=" & gStopOrderTypeToShortString(StopOrderType) & _
+                "; triggerPrice=" & TriggerPrice & _
+                "; StopOrderType=" & GStopOrderTypeToShortString(StopOrderType) & _
                 "; stopPrice=" & stopPrice & _
                 "; stopOffset=" & stopOffset & _
                 "; stopLimitPrice=" & stopLimitPrice & _
-                "; TargetOrderType=" & gTargetOrderTypeToShortString(TargetOrderType) & _
+                "; TargetOrderType=" & GTargetOrderTypeToShortString(TargetOrderType) & _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
                 "; cancelPrice=" & cancelPrice & _
-                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
-                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
-                "; targetTIF=" & gOrderTIFToString(targetTIF) & _
-                "; stopStrategy=" & TypeName(stopStrategy) & _
-                "; exitStrategy=" & TypeName(exitStrategy) & _
-                "; scalingStrategy=" & TypeName(scalingStrategy), _
+                "; entryTIF=" & GOrderTIFToString(entryTIF) & _
+                "; stopTIF=" & GOrderTIFToString(stopTIF) & _
+                "; targetTIF=" & GOrderTIFToString(targetTIF) & _
+                "; stopStrategy=" & TypeName(StopStrategy) & _
+                "; exitStrategy=" & TypeName(ExitStrategy) & _
+                "; scalingStrategy=" & TypeName(ScalingStrategy), _
     pProcName:="Buy", pProjName:=ProjectName, pModName:=ModuleName
                 
 Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
@@ -610,7 +936,7 @@ Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 EntryOrderType, _
                                 buyPrice, _
                                 buyOffset, _
-                                triggerPrice, _
+                                TriggerPrice, _
                                 StopOrderType, _
                                 stopPrice, _
                                 stopOffset, _
@@ -620,70 +946,67 @@ Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 targetOffset, _
                                 targetTriggerPrice)
                                 
-Buy.entryOrder.timeInForce = entryTIF
-If Not Buy.stoporder Is Nothing Then Buy.stoporder.timeInForce = stopTIF
-If Not Buy.targetOrder Is Nothing Then Buy.targetOrder.timeInForce = targetTIF
+Buy.EntryOrder.TimeInForce = entryTIF
+If Not Buy.stoporder Is Nothing Then Buy.stoporder.TimeInForce = stopTIF
+If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = targetTIF
 
-executeOrderPlex Buy, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
+ExecuteOrderPlex Buy, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Buy" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function Cancel() As Boolean
-Dim orderPlex As orderPlex
+Dim lOrderPlex As orderPlex
 
+Const ProcName As String = "Cancel"
 Dim failpoint As Long
 On Error GoTo Err
 
-For Each orderPlex In mActiveOrderPlexes
-    If orderPlex.Cancel(evenIfFilled:=True) Then Cancel = True
+For Each lOrderPlex In mActiveOrderPlexes
+    If lOrderPlex.Cancel(evenIfFilled:=True) Then Cancel = True
 Next
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Cancel" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function CancelPending() As Boolean
-Dim orderPlex As orderPlex
+Dim lOrderPlex As orderPlex
 
+Const ProcName As String = "CancelPending"
 Dim failpoint As Long
 On Error GoTo Err
 
-For Each orderPlex In mActiveOrderPlexes
-    If orderPlex.Cancel(evenIfFilled:=False) Then CancelPending = True
+For Each lOrderPlex In mActiveOrderPlexes
+    If lOrderPlex.Cancel(evenIfFilled:=False) Then CancelPending = True
 Next
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CancelPending" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub CloseOut(ByVal method As String)
-Dim orderPlex As orderPlex
+Dim lOrderPlex As orderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    orderPlex.CloseOut method
+Const ProcName As String = "CloseOut"
+Dim failpoint As Long
+On Error GoTo Err
+
+For Each lOrderPlex In mActiveOrderPlexes
+    lOrderPlex.CloseOut method
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
@@ -692,7 +1015,7 @@ Public Function CreateBuyOrderPlex( _
                 ByVal EntryOrderType As EntryOrderTypes, _
                 ByVal buyPrice As Double, _
                 ByVal buyOffset As Long, _
-                ByVal triggerPrice As Double, _
+                ByVal TriggerPrice As Double, _
                 ByVal StopOrderType As StopOrderTypes, _
                 ByVal stopPrice As Double, _
                 ByVal stopOffset As Long, _
@@ -701,6 +1024,7 @@ Public Function CreateBuyOrderPlex( _
                 ByVal targetPrice As Double, _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
+Const ProcName As String = "CreateBuyOrderPlex"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -709,7 +1033,7 @@ Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
                                         EntryOrderType, _
                                         buyPrice, _
                                         buyOffset, _
-                                        triggerPrice, _
+                                        TriggerPrice, _
                                         StopOrderType, _
                                         stopPrice, _
                                         stopOffset, _
@@ -722,19 +1046,15 @@ Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CreateBuyOrderPlex" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function CreateOrderPlex(ByVal action As OrderActions, _
                     ByRef number As Long, _
                     ByVal EntryOrderType As EntryOrderTypes, _
                     ByVal price As Double, _
-                    ByVal offset As Long, _
-                    ByVal triggerPrice As Double, _
+                    ByVal Offset As Long, _
+                    ByVal TriggerPrice As Double, _
                     ByVal StopOrderType As StopOrderTypes, _
                     ByVal stopTriggerPrice As Double, _
                     ByVal stopOffset As Long, _
@@ -744,16 +1064,20 @@ Friend Function CreateOrderPlex(ByVal action As OrderActions, _
                     ByVal targetOffset As Long, _
                     ByVal targetTriggerPrice As Double) As orderPlex
                     
-Dim orderPlex As orderPlex
-Dim entryOrder As order
-Dim stoporder As order
-Dim targetOrder As order
+Dim lOrderPlex As orderPlex
+Dim EntryOrder As Order
+Dim stoporder As Order
+Dim TargetOrder As Order
 Dim lEntryPrice As Double
 Dim lTriggerPrice As Double
 Dim lStopPrice As Double
 Dim lTargetPrice As Double
 
-If Not isReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+Const ProcName As String = "CreateOrderPlex"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not IsReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "OrderContext::CreateOrderPlex", _
                             "The service provider is not Ready"
 
@@ -811,97 +1135,97 @@ Case Else
     "Invalid target type"
 End Select
 
-Set orderPlex = New orderPlex
-orderPlex.OrderContext = Me
-orderPlex.Key = nextPlexKey
-orderPlex.PositionManager = mPositionManager
-orderPlex.Ticker = mTicker
-orderPlex.orderSubmitter = mOrderSubmitter
-orderPlex.IsSimulated = mIsSimulated
-orderPlex.PreventUnprotectedPosition = mPreventUnprotectedPositions
+Set lOrderPlex = New orderPlex
+lOrderPlex.OrderContext = Me
+lOrderPlex.Key = nextPlexKey
+lOrderPlex.PositionManager = mPositionManager
+lOrderPlex.Ticker = mTicker
+lOrderPlex.orderSubmitter = mOrderSubmitter
+lOrderPlex.IsSimulated = mIsSimulated
+lOrderPlex.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
-Set entryOrder = orderPlex.createEntryOrder
-entryOrder.action = action
-entryOrder.quantity = number
+Set EntryOrder = lOrderPlex.CreateEntryOrder
+EntryOrder.action = action
+EntryOrder.Quantity = number
 
-entryOrder.orderType = gEntryOrderTypeToOrderType(EntryOrderType)
+EntryOrder.OrderType = GEntryOrderTypeToOrderType(EntryOrderType)
 Select Case EntryOrderType
 Case EntryOrderTypeMarket
 Case EntryOrderTypeMarketOnOpen
 Case EntryOrderTypeMarketOnClose
 Case EntryOrderTypeMarketIfTouched
-    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
-    entryOrder.triggerPrice = triggerPrice
+    EntryOrder.TriggerPrice = TriggerPrice
 Case EntryOrderTypeMarketToLimit
 Case EntryOrderTypeBid
-    entryOrder.limitPrice = mTicker.BidPrice + offset * mTickSize
+    EntryOrder.LimitPrice = mTicker.BidPrice + Offset * mTickSize
 Case EntryOrderTypeAsk
-    entryOrder.limitPrice = mTicker.AskPrice + offset * mTickSize
+    EntryOrder.LimitPrice = mTicker.AskPrice + Offset * mTickSize
 Case EntryOrderTypeLast
-    entryOrder.limitPrice = mTicker.TradePrice + offset * mTickSize
+    EntryOrder.LimitPrice = mTicker.TradePrice + Offset * mTickSize
 Case EntryOrderTypeLimit
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
-    entryOrder.limitPrice = price + offset * mTickSize
+    EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitOnOpen
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
-    entryOrder.limitPrice = price + offset * mTickSize
+    EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitOnClose
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
-    entryOrder.limitPrice = price + offset * mTickSize
+    EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitIfTouched
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
-    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
 
-    entryOrder.limitPrice = price + offset * mTickSize
-    entryOrder.triggerPrice = triggerPrice
+    EntryOrder.LimitPrice = price + Offset * mTickSize
+    EntryOrder.TriggerPrice = TriggerPrice
 Case EntryOrderTypeStop
-    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
-    entryOrder.triggerPrice = triggerPrice
+    EntryOrder.TriggerPrice = TriggerPrice
 Case EntryOrderTypeStopLimit
-    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
-    entryOrder.limitPrice = price + offset * mTickSize
-    entryOrder.triggerPrice = triggerPrice
+    EntryOrder.LimitPrice = price + Offset * mTickSize
+    EntryOrder.TriggerPrice = TriggerPrice
 End Select
 
-entryOrder.offset = offset
-lEntryPrice = entryOrder.limitPrice
-lTriggerPrice = entryOrder.triggerPrice
+EntryOrder.Offset = Offset
+lEntryPrice = EntryOrder.LimitPrice
+lTriggerPrice = EntryOrder.TriggerPrice
 
 If StopOrderType <> StopOrderTypeNone Then
-    Set stoporder = orderPlex.createStopOrder
+    Set stoporder = lOrderPlex.createStopOrder
     stoporder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
-    stoporder.quantity = number
+    stoporder.Quantity = number
     
-    stoporder.orderType = gStopOrderTypeToOrderType(StopOrderType)
+    stoporder.OrderType = GStopOrderTypeToOrderType(StopOrderType)
     Select Case StopOrderType
     Case StopOrderTypeStop
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The stopTrigger price must not be zero for this order type"
         
-        stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
     Case StopOrderTypeStopLimit
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
@@ -910,34 +1234,34 @@ If StopOrderType <> StopOrderTypeNone Then
                                     "OrderContext::CreateOrderPlex", _
                                     "The stopLimit price must not be zero for this order type"
         
-        stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
-        stoporder.limitPrice = stopLimitPrice
+        stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        stoporder.LimitPrice = stopLimitPrice
     Case StopOrderTypeBid
-        stoporder.triggerPrice = mTicker.BidPrice + stopOffset * mTickSize
+        stoporder.TriggerPrice = mTicker.BidPrice + stopOffset * mTickSize
         
     Case StopOrderTypeAsk
-        stoporder.triggerPrice = mTicker.AskPrice + stopOffset * mTickSize
+        stoporder.TriggerPrice = mTicker.AskPrice + stopOffset * mTickSize
     Case StopOrderTypeLast
-        stoporder.triggerPrice = mTicker.TradePrice + stopOffset * mTickSize
+        stoporder.TriggerPrice = mTicker.TradePrice + stopOffset * mTickSize
     Case StopOrderTypeAuto
-        stoporder.offset = stopOffset * mTickSize
+        stoporder.Offset = stopOffset * mTickSize
     End Select
-    lStopPrice = stoporder.triggerPrice
+    lStopPrice = stoporder.TriggerPrice
 End If
 
 If TargetOrderType <> TargetOrderTypeNone Then
-    Set targetOrder = orderPlex.createTargetOrder
-    targetOrder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
-    targetOrder.quantity = number
+    Set TargetOrder = lOrderPlex.createTargetOrder
+    TargetOrder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
+    TargetOrder.Quantity = number
     
-    targetOrder.orderType = gTargetOrderTypeToOrderType(TargetOrderType)
+    TargetOrder.OrderType = GTargetOrderTypeToOrderType(TargetOrderType)
     Select Case TargetOrderType
     Case TargetOrderTypeLimit
         If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target price must not be zero for this order type"
         
-        targetOrder.limitPrice = targetPrice + targetOffset * mTickSize
+        TargetOrder.LimitPrice = targetPrice + targetOffset * mTickSize
     Case TargetOrderTypeLimitIfTouched
         If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
@@ -946,41 +1270,46 @@ If TargetOrderType <> TargetOrderTypeNone Then
                                     "OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
     
-        targetOrder.limitPrice = targetPrice + offset * mTickSize
-        targetOrder.triggerPrice = targetTriggerPrice
+        TargetOrder.LimitPrice = targetPrice + Offset * mTickSize
+        TargetOrder.TriggerPrice = targetTriggerPrice
     Case TargetOrderTypeMarketIfTouched
         If targetTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
         
-        targetOrder.triggerPrice = targetTriggerPrice
+        TargetOrder.TriggerPrice = targetTriggerPrice
     Case TargetOrderTypeBid
-        targetOrder.limitPrice = mTicker.BidPrice + targetOffset * mTickSize
+        TargetOrder.LimitPrice = mTicker.BidPrice + targetOffset * mTickSize
     Case TargetOrderTypeAsk
-        targetOrder.limitPrice = mTicker.AskPrice + targetOffset * mTickSize
+        TargetOrder.LimitPrice = mTicker.AskPrice + targetOffset * mTickSize
     Case TargetOrderTypeLast
-        targetOrder.limitPrice = mTicker.TradePrice + targetOffset * mTickSize
+        TargetOrder.LimitPrice = mTicker.TradePrice + targetOffset * mTickSize
     Case TargetOrderTypeAuto
-        targetOrder.offset = targetOffset * mTickSize
+        TargetOrder.Offset = targetOffset * mTickSize
     End Select
 
-    lTargetPrice = targetOrder.limitPrice
+    lTargetPrice = TargetOrder.LimitPrice
 End If
 
-orderPlex.checkpoint
+lOrderPlex.Checkpoint
 
-Set CreateOrderPlex = orderPlex
+Set CreateOrderPlex = lOrderPlex
 
-gTB.notifyListeners _
-            "Create order plex: (" & mTicker.TradePrice & ") " & _
-            orderPlex.Key & ": " & _
-            gOrderActionToString(action) & " " & number & " at " & _
-            gOrderTypeToString(entryOrder.orderType) & " " & lEntryPrice & _
+GLogOrder "Create order plex: " & _
+            GOrderActionToString(action) & " " & number & " at " & _
+            GOrderTypeToString(EntryOrder.OrderType) & " " & lEntryPrice & _
             IIf(lTriggerPrice <> 0, "(" & lTriggerPrice & ")", "") & _
             ", stop " & IIf(StopOrderType = StopOrderTypeAuto, "AUTO(" & stopOffset * mTickSize & ")", lStopPrice) & _
-            ", target " & IIf(TargetOrderType = TargetOrderTypeAuto, "AUTO(" & targetOffset * mTickSize & ")", lTargetPrice), _
-            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+            ", target " & IIf(TargetOrderType = TargetOrderTypeAuto, "AUTO(" & targetOffset * mTickSize & ")", lTargetPrice) & _
+            "(Curr price=" & mTicker.FormatPrice(mTicker.TradePrice) & _
+            "; id=" & lOrderPlex.Key & ")", _
+            mIsSimulated, _
             Me
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -989,7 +1318,7 @@ Public Function CreateSellOrderPlex( _
                 ByVal EntryOrderType As EntryOrderTypes, _
                 ByVal buyPrice As Double, _
                 ByVal buyOffset As Long, _
-                ByVal triggerPrice As Double, _
+                ByVal TriggerPrice As Double, _
                 ByVal StopOrderType As StopOrderTypes, _
                 ByVal stopPrice As Double, _
                 ByVal stopOffset As Long, _
@@ -998,6 +1327,7 @@ Public Function CreateSellOrderPlex( _
                 ByVal targetPrice As Double, _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
+Const ProcName As String = "CreateSellOrderPlex"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1006,7 +1336,7 @@ Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
                                     EntryOrderType, _
                                     buyPrice, _
                                     buyOffset, _
-                                    triggerPrice, _
+                                    TriggerPrice, _
                                     StopOrderType, _
                                     stopPrice, _
                                     stopOffset, _
@@ -1019,94 +1349,92 @@ Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "CreateSellOrderPlex" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Sub executeOrderPlex(ByVal orderPlex As orderPlex, _
+Public Sub ExecuteOrderPlex(ByVal pOrderPlex As orderPlex, _
                     Optional checkMoneyManagement As Boolean, _
                     Optional cancelPrice As Double, _
-                    Optional stopStrategy As StopManagementStrategy, _
-                    Optional exitStrategy As PositionManagementStrategy, _
-                    Optional scalingStrategy As PositionManagementStrategy)
+                    Optional StopStrategy As StopManagementStrategy, _
+                    Optional ExitStrategy As PositionManagementStrategy, _
+                    Optional ScalingStrategy As PositionManagementStrategy)
                     
 Dim msg As String
 Dim origQuantity As Long
-Dim newQuantity As Long
+Dim NewQuantity As Long
 
+Const ProcName As String = "ExecuteOrderPlex"
 Dim failpoint As Long
 On Error GoTo Err
 
-If orderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If pOrderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "OrderContext::executeOrderPlex", _
                             "No order plex supplied"
 
 If checkMoneyManagement And Not mIsSimulated Then
-    origQuantity = orderPlex.entryOrder.quantity
-    newQuantity = origQuantity
+    origQuantity = pOrderPlex.EntryOrder.Quantity
+    NewQuantity = origQuantity
     If Not mPositionManager.AllowOrder( _
-                            IIf(orderPlex.entryOrder.action = ActionBuy, True, False), _
-                            newQuantity, _
-                            orderPlex.Risk, _
+                            IIf(pOrderPlex.EntryOrder.action = ActionBuy, True, False), _
+                            NewQuantity, _
+                            pOrderPlex.Risk, _
                             msg) _
     Then
-        gTB.notifyListeners "Rejected: " & msg, _
-                            TradeBuildListenValueTypes.VTOrder, _
+        GLogOrder "Rejected by money management: " & msg & " " & _
+                            "(Curr price=" & mTicker.FormatPrice(mTicker.TradePrice) & _
+                            "; id=" & pOrderPlex.Key & ")", _
+                            mIsSimulated, _
                             Me
-        Set orderPlex = Nothing
+        Set pOrderPlex = Nothing
         Exit Sub
     End If
-    If newQuantity <> origQuantity Then
-        orderPlex.newQuantity = newQuantity
-        orderPlex.update
+    If NewQuantity <> origQuantity Then
+        pOrderPlex.NewQuantity = NewQuantity
+        pOrderPlex.Update
     End If
 End If
 
-If Not stopStrategy Is Nothing Then
-    stopStrategy.Ticker = mTicker
-    stopStrategy.orderPlex = orderPlex
-    orderPlex.stopStrategy = stopStrategy
+If Not StopStrategy Is Nothing Then
+    StopStrategy.Ticker = mTicker
+    StopStrategy.orderPlex = pOrderPlex
+    pOrderPlex.StopStrategy = StopStrategy
 End If
 
-If Not exitStrategy Is Nothing Then
-    exitStrategy.Ticker = mTicker
-    exitStrategy.orderPlex = orderPlex
-    exitStrategy.OrderContext = Me
-    exitStrategy.OrderContext = Me
+If Not ExitStrategy Is Nothing Then
+    ExitStrategy.Ticker = mTicker
+    ExitStrategy.orderPlex = pOrderPlex
+    ExitStrategy.OrderContext = Me
+    ExitStrategy.OrderContext = Me
 End If
 
-If Not scalingStrategy Is Nothing Then
-    scalingStrategy.Ticker = mTicker
-    scalingStrategy.orderPlex = orderPlex
-    scalingStrategy.OrderContext = Me
-    orderPlex.scalingStrategy = scalingStrategy
+If Not ScalingStrategy Is Nothing Then
+    ScalingStrategy.Ticker = mTicker
+    ScalingStrategy.orderPlex = pOrderPlex
+    ScalingStrategy.OrderContext = Me
+    pOrderPlex.ScalingStrategy = ScalingStrategy
 End If
 
-gTB.notifyListeners _
-            "Execute order plex: (" & mTicker.TradePrice & ") " & _
-            orderPlex.Key, _
-            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+GLogOrder "Execute order plex " & _
+            "(Curr price=" & mTicker.FormatPrice(mTicker.TradePrice) & _
+            "; id=" & pOrderPlex.Key & ")", _
+            mIsSimulated, _
             Me
 
-mActiveOrderPlexes.Add orderPlex
-orderPlex.execute cancelPrice
+mActiveOrderPlexes.Add pOrderPlex
+pOrderPlex.Execute cancelPrice
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "executeOrderPlex" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Function Finish()
 Dim op As orderPlex
+
+Const ProcName As String = "Finish"
+Dim failpoint As Long
+On Error GoTo Err
 
 Set mTicker = Nothing
 Set mPositionManager = Nothing
@@ -1121,103 +1449,171 @@ Next
 Set mClosedOrderPlexes = Nothing
 
 Set mOrderSubmitter = Nothing
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Function getAccountBalance() As Double
-getAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need to fix this up
+Public Function GetAccountBalance() As Double
+Const ProcName As String = "GetAccountBalance"
+Dim failpoint As Long
+On Error GoTo Err
+
+GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need to fix this up
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Function isAttributeSupported( _
+Public Function IsAttributeSupported( _
                 ByVal attributeId As OrderAttributeIds) As Boolean
-isAttributeSupported = (mPermittedOrderAttributes And attributeId)
+IsAttributeSupported = (mPermittedOrderAttributes And attributeId)
 End Function
 
-Public Function isOrderTifValueSupported( _
+Public Function IsOrderTifValueSupported( _
                 ByVal value As OrderTifs) As Boolean
-isOrderTifValueSupported = (mPermittedOrderTifs And value)
+IsOrderTifValueSupported = (mPermittedOrderTifs And value)
 End Function
 
-Public Function isOrderTypeValueSupported( _
+Public Function IsOrderTypeValueSupported( _
                 ByVal value As OrderTypes) As Boolean
 If value = OrderTypeAutoLimit Or _
     value = OrderTypeAutoStop _
 Then
-    isOrderTypeValueSupported = True
+    IsOrderTypeValueSupported = True
 Else
-    isOrderTypeValueSupported = (mPermittedOrderTypes And value)
+    IsOrderTypeValueSupported = (mPermittedOrderTypes And value)
 End If
 End Function
 
-Public Function isStopTriggerMethodValueSupported( _
+Public Function IsStopTriggerMethodValueSupported( _
                 ByVal value As StopTriggerMethods) As Boolean
-isStopTriggerMethodValueSupported = (mPermittedStopTriggerMethods And value)
+IsStopTriggerMethodValueSupported = (mPermittedStopTriggerMethods And value)
 End Function
 
-Friend Function newOrder() As order
-Dim lOrder As order
-Set lOrder = New order
+Friend Function NewOrder() As Order
+Dim lOrder As Order
+Const ProcName As String = "NewOrder"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set lOrder = New Order
 With lOrder
-    .id = GenerateGUIDString
+    .Id = GenerateGUIDString
     .IsSimulated = mIsSimulated
     .OrderContext = Me
     .Ticker = mTicker
-    If isAttributeSupported(OrderAttributeIds.OrderAttAllOrNone) Then .allOrNone = mAllOrNone
-    If isAttributeSupported(OrderAttributeIds.OrderAttBlockOrder) Then .blockOrder = mBlockOrder
-    If isAttributeSupported(OrderAttributeIds.OrderAttDiscretionaryAmount) Then .discretionaryAmount = mDiscretionaryAmount
-    If isAttributeSupported(OrderAttributeIds.OrderAttDisplaySize) Then .displaySize = mDisplaySize
-    If isAttributeSupported(OrderAttributeIds.OrderAttETradeOnly) Then .eTradeOnly = mETradeOnly
-    If isAttributeSupported(OrderAttributeIds.OrderAttFirmQuoteOnly) Then .firmQuoteOnly = mFirmQuoteOnly
-    If isAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTime) Then .goodAfterTime = mGoodAfterTime
-    If isAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then .goodAfterTimeTZ = mGoodAfterTimeTZ
-    If isAttributeSupported(OrderAttributeIds.OrderAttGoodTillDate) Then .goodTillDate = mGoodTillDate
-    If isAttributeSupported(OrderAttributeIds.OrderAttGoodTillDateTZ) Then .goodTillDateTZ = mGoodTillDateTZ
-    If isAttributeSupported(OrderAttributeIds.OrderAttHidden) Then .hidden = mHidden
-    If isAttributeSupported(OrderAttributeIds.OrderAttIgnoreRTH) Then .ignoreRegularTradingHours = mIgnoreRegularTradingHours
-    If isAttributeSupported(OrderAttributeIds.OrderAttLimitPrice) Then .limitPrice = mLimitPrice
-    If isAttributeSupported(OrderAttributeIds.OrderAttMinimumQuantity) Then .minimumQuantity = mMinimumQuantity
-    If isAttributeSupported(OrderAttributeIds.OrderAttNBBOPriceCap) Then .NbboPriceCap = mNBBOPriceCap
+    If IsAttributeSupported(OrderAttributeIds.OrderAttAllOrNone) Then .AllOrNone = mAllOrNone
+    If IsAttributeSupported(OrderAttributeIds.OrderAttBlockOrder) Then .BlockOrder = mBlockOrder
+    If IsAttributeSupported(OrderAttributeIds.OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = mDiscretionaryAmount
+    If IsAttributeSupported(OrderAttributeIds.OrderAttDisplaySize) Then .DisplaySize = mDisplaySize
+    If IsAttributeSupported(OrderAttributeIds.OrderAttETradeOnly) Then .ETradeOnly = mETradeOnly
+    If IsAttributeSupported(OrderAttributeIds.OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = mFirmQuoteOnly
+    If IsAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTime) Then .GoodAfterTime = mGoodAfterTime
+    If IsAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = mGoodAfterTimeTZ
+    If IsAttributeSupported(OrderAttributeIds.OrderAttGoodTillDate) Then .GoodTillDate = mGoodTillDate
+    If IsAttributeSupported(OrderAttributeIds.OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = mGoodTillDateTZ
+    If IsAttributeSupported(OrderAttributeIds.OrderAttHidden) Then .Hidden = mHidden
+    If IsAttributeSupported(OrderAttributeIds.OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = mIgnoreRegularTradingHours
+    If IsAttributeSupported(OrderAttributeIds.OrderAttLimitPrice) Then .LimitPrice = mLimitPrice
+    If IsAttributeSupported(OrderAttributeIds.OrderAttMinimumQuantity) Then .MinimumQuantity = mMinimumQuantity
+    If IsAttributeSupported(OrderAttributeIds.OrderAttNBBOPriceCap) Then .NbboPriceCap = mNBBOPriceCap
     If mOrderType <> OrderTypes.OrderTypeNone Then
-        If isAttributeSupported(OrderAttributeIds.OrderAttOrderType) Then .orderType = mOrderType
+        If IsAttributeSupported(OrderAttributeIds.OrderAttOrderType) Then .OrderType = mOrderType
     End If
-    If isAttributeSupported(OrderAttributeIds.OrderAttOrigin) Then .origin = mOrigin
-    If isAttributeSupported(OrderAttributeIds.OrderAttOverrideConstraints) Then .overrideConstraints = mOverrideConstraints
-    If isAttributeSupported(OrderAttributeIds.OrderAttPercentOffset) Then .percentOffset = mPercentOffset
-    If isAttributeSupported(OrderAttributeIds.OrderAttQuantity) Then .quantity = mQuantity
-    If isAttributeSupported(OrderAttributeIds.OrderAttSettlingFirm) Then .settlingFirm = mSettlingFirm
+    If IsAttributeSupported(OrderAttributeIds.OrderAttOrigin) Then .Origin = mOrigin
+    If IsAttributeSupported(OrderAttributeIds.OrderAttOverrideConstraints) Then .OverrideConstraints = mOverrideConstraints
+    If IsAttributeSupported(OrderAttributeIds.OrderAttPercentOffset) Then .PercentOffset = mPercentOffset
+    If IsAttributeSupported(OrderAttributeIds.OrderAttQuantity) Then .Quantity = mQuantity
+    If IsAttributeSupported(OrderAttributeIds.OrderAttSettlingFirm) Then .SettlingFirm = mSettlingFirm
     
     If mStopTriggerMethod <> StopTriggerMethods.StopTriggerNone Then
-        If isAttributeSupported(OrderAttributeIds.OrderAttStopTriggerMethod) Then .StopTriggerMethod = mStopTriggerMethod
+        If IsAttributeSupported(OrderAttributeIds.OrderAttStopTriggerMethod) Then .StopTriggerMethod = mStopTriggerMethod
     End If
-    If isAttributeSupported(OrderAttributeIds.OrderAttSweepToFill) Then .SweepToFill = mSweepToFill
-    .Ticker = mTicker
+    If IsAttributeSupported(OrderAttributeIds.OrderAttSweepToFill) Then .SweepToFill = mSweepToFill
     If mTimeInForce <> OrderTifs.TIFNone Then
-        If isAttributeSupported(OrderAttributeIds.OrderAttTimeInForce) Then .timeInForce = mTimeInForce
+        If IsAttributeSupported(OrderAttributeIds.OrderAttTimeInForce) Then .TimeInForce = mTimeInForce
     End If
-    If isAttributeSupported(OrderAttributeIds.OrderAttTriggerPrice) Then .triggerPrice = mTriggerPrice
+    If IsAttributeSupported(OrderAttributeIds.OrderAttTriggerPrice) Then .TriggerPrice = mTriggerPrice
 End With
 
 mPositionManager.Orders.Add lOrder
 
-Set newOrder = lOrder
+Set NewOrder = lOrder
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
+Friend Sub NotifyEndOfTradingSession( _
+                ByVal pTimestamp As Date)
+Const ProcName As String = "NotifyEndOfTradingSession"
+Dim failpoint As String
+On Error GoTo Err
+
+Dim op As orderPlex
+
+For Each op In mActiveOrderPlexes
+    op.NotifyEndOfTradingSession pTimestamp
+Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Friend Sub NotifyPositionCloseout( _
+                ByVal pPrice As Double, _
+                ByVal pTimestamp As Date)
+Const ProcName As String = "NotifyCloseout"
+Dim failpoint As String
+On Error GoTo Err
+
+Dim op As orderPlex
+
+For Each op In mClosedOrderPlexes
+    op.NotifyCloseout pPrice, pTimestamp
+Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
 Friend Function orderPlexClosed( _
-                ByVal orderPlex As orderPlex)
-mClosedOrderPlexes.Add orderPlex
-mActiveOrderPlexes.Remove orderPlex
-mCompletedSize = mCompletedSize + orderPlex.size
+                ByVal pOrderPlex As orderPlex)
+Const ProcName As String = "orderPlexClosed"
+Dim failpoint As Long
+On Error GoTo Err
+
+mClosedOrderPlexes.Add pOrderPlex
+mActiveOrderPlexes.Remove pOrderPlex
+mCompletedSize = mCompletedSize + pOrderPlex.size
 ' now check if there are any active order plexes left -
 ' if not, need to tell the Position Manager
 If mActiveOrderPlexes.Count = 0 Then
-    mPositionManager.OrderContextInactive Me
+    mPositionManager.NotifyOrderContextInactive Me
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function Sell(ByRef number As Long, _
                     ByVal EntryOrderType As EntryOrderTypes, _
                     ByVal sellPrice As Double, _
                     ByVal sellOffset As Long, _
-                    ByVal triggerPrice As Double, _
+                    ByVal TriggerPrice As Double, _
                     ByVal StopOrderType As StopOrderTypes, _
                     ByVal stopPrice As Double, _
                     ByVal stopOffset As Long, _
@@ -1230,35 +1626,36 @@ Public Function Sell(ByRef number As Long, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
-                    Optional ByVal stopStrategy As StopManagementStrategy, _
-                    Optional ByVal exitStrategy As PositionManagementStrategy, _
-                    Optional ByVal scalingStrategy As PositionManagementStrategy) As orderPlex
+                    Optional ByVal StopStrategy As StopManagementStrategy, _
+                    Optional ByVal ExitStrategy As PositionManagementStrategy, _
+                    Optional ByVal ScalingStrategy As PositionManagementStrategy) As orderPlex
 
+Const ProcName As String = "Sell"
 Dim failpoint As Long
 On Error GoTo Err
 
-gLog pMsg:="Sell", _
-    pMsgQualifier:=mTicker.Contract.specifier.localSymbol & _
+GLog pMsg:="Sell", _
+    pMsgQualifier:=mTicker.Contract.specifier.LocalSymbol & _
                 " number=" & number & _
-                "; EntryOrderType=" & gEntryOrderTypeToShortString(EntryOrderType) & _
+                "; EntryOrderType=" & GEntryOrderTypeToShortString(EntryOrderType) & _
                 "; sellPrice=" & sellPrice & _
                 "; sellOffset=" & sellOffset & _
-                "; triggerPrice=" & triggerPrice & _
-                "; StopOrderType=" & gStopOrderTypeToShortString(StopOrderType) & _
+                "; triggerPrice=" & TriggerPrice & _
+                "; StopOrderType=" & GStopOrderTypeToShortString(StopOrderType) & _
                 "; stopPrice=" & stopPrice & _
                 "; stopOffset=" & stopOffset & _
                 "; stopLimitPrice=" & stopLimitPrice & _
-                "; TargetOrderType=" & gTargetOrderTypeToShortString(TargetOrderType) & _
+                "; TargetOrderType=" & GTargetOrderTypeToShortString(TargetOrderType) & _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
                 "; cancelPrice=" & cancelPrice & _
-                "; entryTIF=" & gOrderTIFToString(entryTIF) & _
-                "; stopTIF=" & gOrderTIFToString(stopTIF) & _
-                "; targetTIF=" & gOrderTIFToString(targetTIF) & _
-                "; stopStrategy=" & TypeName(stopStrategy) & _
-                "; exitStrategy=" & TypeName(exitStrategy) & _
-                "; scalingStrategy=" & TypeName(scalingStrategy), _
+                "; entryTIF=" & GOrderTIFToString(entryTIF) & _
+                "; stopTIF=" & GOrderTIFToString(stopTIF) & _
+                "; targetTIF=" & GOrderTIFToString(targetTIF) & _
+                "; stopStrategy=" & TypeName(StopStrategy) & _
+                "; exitStrategy=" & TypeName(ExitStrategy) & _
+                "; scalingStrategy=" & TypeName(ScalingStrategy), _
     pProcName:="Sell", pProjName:=ProjectName, pModName:=ModuleName
                 
 Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
@@ -1266,7 +1663,7 @@ Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 EntryOrderType, _
                                 sellPrice, _
                                 sellOffset, _
-                                triggerPrice, _
+                                TriggerPrice, _
                                 StopOrderType, _
                                 stopPrice, _
                                 stopOffset, _
@@ -1276,20 +1673,16 @@ Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 targetOffset, _
                                 targetTriggerPrice)
 
-Sell.entryOrder.timeInForce = entryTIF
-If Not Sell.stoporder Is Nothing Then Sell.stoporder.timeInForce = stopTIF
-If Not Sell.targetOrder Is Nothing Then Sell.targetOrder.timeInForce = targetTIF
+Sell.EntryOrder.TimeInForce = entryTIF
+If Not Sell.stoporder Is Nothing Then Sell.stoporder.TimeInForce = stopTIF
+If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = targetTIF
 
-executeOrderPlex Sell, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
+ExecuteOrderPlex Sell, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Sell" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================
@@ -1299,35 +1692,71 @@ End Function
 Private Sub attributeValueNotSupported( _
                 ByVal pAttribute As OrderAttributeIds, _
                 ByVal value As Variant)
+Const ProcName As String = "attributeValueNotSupported"
+Dim failpoint As Long
+On Error GoTo Err
+
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
-            "Value " & CStr(value) & " for attribute " & gOrderAttributeToString(pAttribute) & " is not supported by the service provider"
+            "Value " & CStr(value) & " for attribute " & GOrderAttributeToString(pAttribute) & " is not supported by the service provider"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub checkAttributeSupported( _
                 ByVal pAttribute As OrderAttributeIds)
-If Not isAttributeSupported(pAttribute) Then
+Const ProcName As String = "checkAttributeSupported"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not IsAttributeSupported(pAttribute) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 , _
-                "The " & gOrderAttributeToString(pAttribute) & " attribute is not supported by the service provider"
+                "The " & GOrderAttributeToString(pAttribute) & " attribute is not supported by the service provider"
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub checkReady()
-If isReady Then
+Const ProcName As String = "checkReady"
+Dim failpoint As Long
+On Error GoTo Err
+
+If IsReady Then
     mPermittedOrderAttributes = mOrderSubmitter.permittedOrderAttributes
-    mPermittedOrderTifs = mOrderSubmitter.permittedOrderTifs
+    mPermittedOrderTifs = mOrderSubmitter.PermittedOrderTifs
     mPermittedOrderTypes = mOrderSubmitter.permittedOrderTypes
     mPermittedStopTriggerMethods = mOrderSubmitter.permittedStopTriggerMethods
     RaiseEvent ready
 Else
     RaiseEvent NotReady
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function nextPlexKey() As String
 Static currID As Long
+Const ProcName As String = "nextPlexKey"
+Dim failpoint As Long
+On Error GoTo Err
+
 currID = currID + 1
-nextPlexKey = mTicker.Key & "/" & mName & "/" & currID
+nextPlexKey = gTB.SessionID & "/" & currID
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 

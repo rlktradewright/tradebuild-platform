@@ -79,53 +79,53 @@ End Sub
 '@================================================================================
 
 Private Function IOrderSubmitter_cancelOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex) As Boolean
-Dim entryOrder As order
-Dim stoporder As order
-Dim targetOrder As order
+Dim EntryOrder As Order
+Dim stoporder As Order
+Dim TargetOrder As Order
 
-Set entryOrder = pOrderPlex.entryOrder
-Select Case entryOrder.status
+Set EntryOrder = pOrderPlex.EntryOrder
+Select Case EntryOrder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    mSimulator.cancelOrder entryOrder.brokerId  ' should automatically cancel the other orders
+    mSimulator.CancelOrder EntryOrder.BrokerId  ' should automatically cancel the other orders
                                                     ' if they have parentid set
     IOrderSubmitter_cancelOrderPlex = True
 End Select
 
 Set stoporder = pOrderPlex.stoporder
 If Not stoporder Is Nothing Then
-    Select Case stoporder.status
+    Select Case stoporder.Status
     Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusFilled, _
         OrderStatuses.OrderStatusCancelling, _
         OrderStatuses.OrderStatusCancelled
     Case Else
-        Select Case entryOrder.status
+        Select Case EntryOrder.Status
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled
-            mSimulator.cancelOrder stoporder.brokerId
+            mSimulator.CancelOrder stoporder.BrokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
     End Select
 End If
 
-Set targetOrder = pOrderPlex.targetOrder
-If Not targetOrder Is Nothing Then
-    Select Case targetOrder.status
+Set TargetOrder = pOrderPlex.TargetOrder
+If Not TargetOrder Is Nothing Then
+    Select Case TargetOrder.Status
     Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusFilled, _
         OrderStatuses.OrderStatusCancelling, _
         OrderStatuses.OrderStatusCancelled
     Case Else
-        Select Case entryOrder.status
+        Select Case EntryOrder.Status
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled
-            mSimulator.cancelOrder targetOrder.brokerId
+            mSimulator.CancelOrder TargetOrder.BrokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
     End Select
@@ -136,14 +136,14 @@ End If
 End Function
 
 Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As order
+Dim stoporder As Order
 
 Set stoporder = pOrderPlex.stoporder
 If stoporder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Order plex has no stop order"
 
-Select Case stoporder.status
+Select Case stoporder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
@@ -152,20 +152,20 @@ Case OrderStatuses.OrderStatusCreated, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
 Case Else
-    mSimulator.cancelOrder stoporder.brokerId
+    mSimulator.CancelOrder stoporder.BrokerId
 End Select
 End Sub
 
 Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim targetOrder As order
+Dim TargetOrder As Order
 
-Set targetOrder = pOrderPlex.targetOrder
-If targetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+Set TargetOrder = pOrderPlex.TargetOrder
+If TargetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Order plex has no target order"
 
 
-Select Case targetOrder.status
+Select Case TargetOrder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
@@ -173,7 +173,7 @@ Case OrderStatuses.OrderStatusCreated, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
 Case Else
-    mSimulator.cancelOrder targetOrder.brokerId
+    mSimulator.CancelOrder TargetOrder.BrokerId
 End Select
 End Sub
 
@@ -182,44 +182,44 @@ mSimulator.ClockRate(mMarketIndex) = RHS
 End Property
 
 Private Sub IOrderSubmitter_executeOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim entryOrder As order
-Dim stoporder As order
-Dim targetOrder As order
+Dim EntryOrder As Order
+Dim stoporder As Order
+Dim TargetOrder As Order
 Dim transmit As Boolean
 Dim ocaGroup As String
 
-Set entryOrder = pOrderPlex.entryOrder
+Set EntryOrder = pOrderPlex.EntryOrder
 Set stoporder = pOrderPlex.stoporder
-Set targetOrder = pOrderPlex.targetOrder
+Set TargetOrder = pOrderPlex.TargetOrder
 
-If Not entryOrder Is Nothing Then
+If Not EntryOrder Is Nothing Then
     transmit = True
     If Not stoporder Is Nothing Then
-        If stoporder.orderType <> OrderTypes.OrderTypeAutoStop Then transmit = False
+        If stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
-    If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
+    If Not TargetOrder Is Nothing Then
+        If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
     End If
         
-    placeOrder entryOrder, "", "", transmit
+    placeOrder EntryOrder, "", "", transmit
     
     ocaGroup = GenerateTextID
 
     If Not stoporder Is Nothing Then
         transmit = True
-        If Not targetOrder Is Nothing Then
-            If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
+        If Not TargetOrder Is Nothing Then
+            If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
         End If
         
-        If stoporder.orderType <> OrderTypes.OrderTypeAutoStop Then
+        If stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
-            placeOrder stoporder, entryOrder.id, ocaGroup, transmit
+            placeOrder stoporder, EntryOrder.Id, ocaGroup, transmit
         End If
     End If
     
-    If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then
-            placeOrder targetOrder, entryOrder.id, ocaGroup, True
+    If Not TargetOrder Is Nothing Then
+        If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
+            placeOrder TargetOrder, EntryOrder.Id, ocaGroup, True
         End If
     End If
     
@@ -241,10 +241,10 @@ Private Sub IOrderSubmitter_modifyOrderPlex( _
                 ByVal stopOrderChanged As Boolean, _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
-Dim lOrder As order
+Dim lOrder As Order
 
 If entryOrderChanged Then
-    placeOrder pOrderPlex.entryOrder, "", "", True
+    placeOrder pOrderPlex.EntryOrder, "", "", True
 End If
 If stopOrderChanged Then
     Set lOrder = pOrderPlex.stoporder
@@ -255,7 +255,7 @@ If targetOrderChanged Then
     placeOrder lOrder, "", "", True
 End If
 If closeoutOrderChanged Then
-    placeOrder pOrderPlex.closeoutOrder, "", "", True
+    placeOrder pOrderPlex.CloseoutOrder, "", "", True
 End If
     
 End Sub
@@ -295,45 +295,45 @@ End Property
 
 Private Sub IOrderSubmitter_resubmitStopAndTargetOrders(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
 Dim ocaGroup As String
-Dim stoporder As order
-Dim targetOrder As order
+Dim stoporder As Order
+Dim TargetOrder As Order
 
 ocaGroup = GenerateTextID
 
 Set stoporder = pOrderPlex.stoporder
-stoporder.brokerId = ""    ' force a new id to be allocated
+stoporder.BrokerId = ""    ' force a new id to be allocated
 placeOrder stoporder, "", ocaGroup, False
 
-Set targetOrder = pOrderPlex.targetOrder
-targetOrder.brokerId = "" ' force a new id to be allocated
-placeOrder targetOrder, "", ocaGroup, True
+Set TargetOrder = pOrderPlex.TargetOrder
+TargetOrder.BrokerId = "" ' force a new id to be allocated
+placeOrder TargetOrder, "", ocaGroup, True
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As order
-Dim targetOrder As order
+Dim stoporder As Order
+Dim TargetOrder As Order
 
 Set stoporder = pOrderPlex.stoporder
-Set targetOrder = pOrderPlex.targetOrder
-stoporder.brokerId = ""     ' force a new id to be allocated
-If Not pOrderPlex.targetOrder Is Nothing Then
-    placeOrder stoporder, "", mSimulator.getOrder(targetOrder.id), True
+Set TargetOrder = pOrderPlex.TargetOrder
+stoporder.BrokerId = ""     ' force a new id to be allocated
+If Not pOrderPlex.TargetOrder Is Nothing Then
+    placeOrder stoporder, "", mSimulator.GetOrder(TargetOrder.Id), True
 Else
     placeOrder stoporder, "", "", True
 End If
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As order
-Dim targetOrder As order
+Dim stoporder As Order
+Dim TargetOrder As Order
 
 Set stoporder = pOrderPlex.stoporder
-Set targetOrder = pOrderPlex.targetOrder
-targetOrder.brokerId = ""   ' force a new id to be allocated
+Set TargetOrder = pOrderPlex.TargetOrder
+TargetOrder.BrokerId = ""   ' force a new id to be allocated
 If Not pOrderPlex.stoporder Is Nothing Then
-    placeOrder targetOrder, "", mSimulator.getOrder(stoporder.id), True
+    placeOrder TargetOrder, "", mSimulator.GetOrder(stoporder.Id), True
 Else
-    placeOrder targetOrder, "", "", True
+    placeOrder TargetOrder, "", "", True
 End If
 End Sub
 
@@ -347,7 +347,7 @@ Case TickTypes.TickTypeAsk
     mFirstAskReceived = True
     If mFirstBidReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.Ready
+        mServiceConsumer.ready
     End If
         
     mSimulator.Ask Tick.Timestamp, mMarketIndex, Tick.price
@@ -355,7 +355,7 @@ Case TickTypes.TickTypeBid
     mFirstBidReceived = True
     If mFirstAskReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.Ready
+        mServiceConsumer.ready
     End If
         
     mSimulator.Bid Tick.Timestamp, mMarketIndex, Tick.price
@@ -405,11 +405,11 @@ End Property
 '@================================================================================
 
 Private Sub placeOrder( _
-                ByVal pOrder As order, _
+                ByVal pOrder As Order, _
                 ByVal parentId As String, _
                 ByVal ocaGroup As String, _
                 ByVal transmit As Boolean)
 mSimulator.placeOrder pOrder, parentId, ocaGroup, mMarketIndex, transmit
-If pOrder.status = OrderStatusCreated Then mServiceConsumer.OrderStatus pOrder.id, OrderStatusPendingSubmit
+If pOrder.Status = OrderStatusCreated Then mServiceConsumer.OrderStatusReport gCreateOrderStatusReport(pOrder.Id, OrderStatusPendingSubmit)
 End Sub
 

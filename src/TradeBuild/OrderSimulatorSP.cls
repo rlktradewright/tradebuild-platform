@@ -41,6 +41,8 @@ Implements TradeBuildSP.IOrderSubmissionSrvcProvider
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "OrderSimulatorSP"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -96,12 +98,12 @@ ICommonServiceProvider_Details = details
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long, _
-                ByVal params As parameters)
-Set mCommonServiceConsumer = commonServiceConsumer
-mSimulator.commonServiceConsumer = mCommonServiceConsumer
-mHandle = handle
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal Handle As Long, _
+                ByVal params As Parameters)
+Set mCommonServiceConsumer = CommonServiceConsumer
+mSimulator.CommonServiceConsumer = mCommonServiceConsumer
+mHandle = Handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.ExchangeSimulator
 
@@ -128,13 +130,28 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
                 ByVal Contract As Contract) As TradeBuildSP.IOrderSubmitter
 Dim orderSubmitter As SimulatedOrderSubmitter
 
+Const ProcName As String = "IOrderSubmissionSrvcProvider_CreateOrderSubmitter"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set orderSubmitter = New SimulatedOrderSubmitter
 orderSubmitter.serviceConsumer = serviceConsumer
 orderSubmitter.Contract = Contract
 orderSubmitter.simulator = mSimulator
 
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
+
+Private Sub IOrderSubmissionSrvcProvider_StartOrderRecovery( _
+                ByVal pOrderRecoveryServiceConsumer As TradeBuildSP.IOrderRecoveryServiceConsumer, _
+                ByVal pStartFrom As Date)
+
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers

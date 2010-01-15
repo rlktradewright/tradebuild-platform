@@ -40,6 +40,8 @@ Implements CollectionChangeListener
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "WorkSpace"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -55,10 +57,12 @@ Implements CollectionChangeListener
 Private mName                       As String
 
 Private mTickers                    As Tickers
-Private mOrderPlexes                As orderPlexes
-Private mOrderPlexesSimulated       As orderPlexes
+Private mOrderPlexes                As OrderPlexes
+Private mOrderPlexesSimulated       As OrderPlexes
 Private mExecutions                 As Executions
 Private mExecutionsSimulated        As Executions
+
+Private mInihibitOrderRecovery      As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,8 +73,8 @@ Set mTickers = New Tickers
 mTickers.AddCollectionChangeListener Me
 mTickers.Workspace = Me
 
-Set mOrderPlexes = New orderPlexes
-Set mOrderPlexesSimulated = New orderPlexes
+Set mOrderPlexes = New OrderPlexes
+Set mOrderPlexesSimulated = New OrderPlexes
 
 Set mExecutions = New Executions
 Set mExecutionsSimulated = New Executions
@@ -85,6 +89,10 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
+Const ProcName As String = "CollectionChangeListener_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 If TypeOf ev.affectedItem Is Ticker Then
     Dim lTicker As Ticker
     Set lTicker = ev.affectedItem
@@ -102,9 +110,9 @@ ElseIf TypeOf ev.affectedItem Is OrderContext Then
     Set lOrderContext = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        lOrderContext.activeOrderPlexes.AddCollectionChangeListener Me
+        lOrderContext.ActiveOrderPlexes.AddCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
-        lOrderContext.activeOrderPlexes.RemoveCollectionChangeListener Me
+        lOrderContext.ActiveOrderPlexes.RemoveCollectionChangeListener Me
     End Select
 ElseIf TypeOf ev.affectedItem Is orderPlex Then
     Dim lOrderPlex As orderPlex
@@ -132,11 +140,13 @@ ElseIf TypeOf ev.affectedItem Is Execution Then
         End If
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
-        gTB.NotifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
-                                        "Unexpected execution deletion", _
-                                        "TradeBuild26.Workspace::CollectionChangeListener_Change"
     End Select
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -155,6 +165,10 @@ Public Property Get ExecutionsSimulated() As Executions
 Set ExecutionsSimulated = mExecutionsSimulated
 End Property
 
+Public Property Let InihibitOrderRecovery(ByVal value As Boolean)
+mInihibitOrderRecovery = value
+End Property
+
 Public Property Let name(ByVal value As String)
 mName = value
 End Property
@@ -163,12 +177,12 @@ Public Property Get name() As String
 name = mName
 End Property
 
-Public Property Get orderPlexes() As orderPlexes
-Set orderPlexes = mOrderPlexes
+Public Property Get OrderPlexes() As OrderPlexes
+Set OrderPlexes = mOrderPlexes
 End Property
 
-Public Property Get orderPlexesSimulated() As orderPlexes
-Set orderPlexesSimulated = mOrderPlexesSimulated
+Public Property Get OrderPlexesSimulated() As OrderPlexes
+Set OrderPlexesSimulated = mOrderPlexesSimulated
 End Property
 
 Public Property Get Tickers() As Tickers

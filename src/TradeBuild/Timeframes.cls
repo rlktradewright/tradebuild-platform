@@ -106,11 +106,20 @@ Friend Property Let Contract(ByVal value As Contract)
 Dim tte As TimeframeTableEntry
 Dim i As Long
 
+Const ProcName As String = "Contract"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mContract = value
 For i = 0 To mNextTimeframeTableIndex - 1
     tte = mTimeframeTable(i)
     tte.theTimeFrame.Contract = mContract
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Count() As Long
@@ -131,6 +140,10 @@ Public Function Add( _
                 ByVal numberOfBarsToFetch As Long, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal excludeCurrentbar As Boolean) As Timeframe
+
+Const ProcName As String = "Add"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case barTimePeriod.Units
 Case TimePeriodSecond, _
@@ -159,11 +172,27 @@ Set Add = AddTimeframe(barTimePeriod, _
                     0, _
                     False)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 mChangeListeners.Add value
+
+'gNotifyExistingCollectionMembers mTimeframes, value, Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -197,6 +226,10 @@ Public Function AddHistorical( _
                 Optional ByVal fromTime As Date, _
                 Optional ByVal toTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean) As Timeframe
+
+Const ProcName As String = "AddHistorical"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case barTimePeriod.Units
 Case TimePeriodSecond, _
@@ -232,6 +265,11 @@ Set AddHistorical = AddTimeframe(barTimePeriod, _
                     0, _
                     False)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
 Friend Function AddTimeframe( _
@@ -248,6 +286,10 @@ Friend Function AddTimeframe( _
 
 Dim tte As TimeframeTableEntry
 Dim timeframeIndex As Long
+
+Const ProcName As String = "AddTimeframe"
+Dim failpoint As String
+On Error GoTo Err
 
 timeframeIndex = getTimeframeIndex(barTimePeriod, _
                                 numberOfBarsToFetch, _
@@ -303,15 +345,33 @@ mTimeframeTable(mNextTimeframeTableIndex) = tte
 mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
 fireChange CollItemAdded, tte.theTimeFrame
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
 End Function
 
-Friend Sub finish()
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
+
 RemoveAll
 Set mTicker = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function Item(Key As String) As Timeframe
 Dim i As Long
+
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
 
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).Key = Key Then
@@ -319,36 +379,68 @@ For i = 0 To mNextTimeframeTableIndex - 1
         Exit For
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub Remove(Key As String)
 Dim i As Long
 
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).Key = Key Then
-        mTimeframeTable(i).theTimeFrame.finish
+        mTimeframeTable(i).theTimeFrame.Finish
         clearTimeframeTableEntry i
         fireChange CollItemRemoved, mTimeframeTable(i).theTimeFrame
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveAll()
 Dim i As Long
 
+Const ProcName As String = "RemoveAll"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To mNextTimeframeTableIndex - 1
-    mTimeframeTable(i).theTimeFrame.finish
+    mTimeframeTable(i).theTimeFrame.Finish
     clearTimeframeTableEntry i
     fireChange CollItemRemoved, mTimeframeTable(i).theTimeFrame
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -356,10 +448,19 @@ End Sub
 '@================================================================================
 
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
+Const ProcName As String = "clearTimeframeTableEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 mTimeframeTable(index).Key = ""
 mTimeframeTable(index).numberOfBarsToFetch = 0
 Set mTimeframeTable(index).theTimeFrame = Nothing
 Set mTimeframeTable(index).barTimePeriod = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireChange( _
@@ -367,6 +468,10 @@ Private Sub fireChange( _
                 ByVal affectedObject As Timeframe)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -374,6 +479,11 @@ For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function generateKey( _
@@ -385,6 +495,10 @@ Private Function generateKey( _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean) As String
+Const ProcName As String = "generateKey"
+Dim failpoint As String
+On Error GoTo Err
+
 generateKey = barTimePeriod.ToString & _
             "(" & numberOfBarsToFetch & _
             IIf(fromTime <> 0, "," & Format(fromTime, "yyyymmddhhnnss"), "") & _
@@ -394,6 +508,11 @@ generateKey = barTimePeriod.ToString & _
             IIf(excludeCurrentbar, "X", "") & _
             IIf(saveIntervalSeconds > 0, "S" & saveIntervalSeconds, "") & _
             IIf(writeBidAndAskBars, "W", "")
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
             
 End Function
 
@@ -406,6 +525,10 @@ Private Function getTimeframeIndex( _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean) As Long
 Dim i As Long
+
+Const ProcName As String = "getTimeframeIndex"
+Dim failpoint As String
+On Error GoTo Err
 
 getTimeframeIndex = -1
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -421,5 +544,10 @@ For i = 0 To mNextTimeframeTableIndex - 1
         Exit Function
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 

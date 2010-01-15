@@ -41,7 +41,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuild26"
+
 Private Const ModuleName                    As String = "ContractLoadTask"
 
 '@================================================================================
@@ -67,8 +67,8 @@ Private Sub Task_Cancel()
 End Sub
 
 Private Sub Task_run()
-gLog pMsg:="Loading contracts", pMsgQualifier:=mContractsBuilder.Contracts.contractSpecifier.ToString, pProcName:="Task_run", pProjName:=ProjectName, pModName:=ModuleName
-If Not gTB.ServiceProviders.loadContracts(Me, mContractsBuilder) Then
+GLog pMsg:="Loading contracts", pMsgQualifier:=mContractsBuilder.Contracts.ContractSpecifier.ToString, pProcName:="Task_run", pProjName:=ProjectName, pModName:=ModuleName
+If Not gTB.ServiceProviders.LoadContracts(Me, mContractsBuilder) Then
     mTaskContext.notify ApiNotifyCodes.ApiNotifyTryLater, _
                         "No contract info service provider has been configured"
     mTaskContext.Finish mContracts, False
@@ -78,7 +78,7 @@ End If
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Dim contractSpec As contractSpecifier
+Dim contractSpec As ContractSpecifier
 
 Set mTaskContext = RHS
 Set contractSpec = mTaskContext.data
@@ -96,10 +96,10 @@ End Property
 '@================================================================================
 
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
-                            ByVal handle As Long)
+                            ByVal Handle As Long)
 If mContracts.Count = 0 Then
     ' try the secondary contract service provider if any
-    If Not gTB.ServiceProviders.loadContractsFromSecondarySP(handle, Me, mContractsBuilder) Then
+    If Not gTB.ServiceProviders.loadContractsFromSecondarySP(Handle, Me, mContractsBuilder) Then
         mTaskContext.Finish mContracts, False
     End If
 Else
@@ -112,16 +112,15 @@ Private Sub IContractInfoServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal serviceProviderHandle As Long)
 
-Dim ev As NotificationEvent
-
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
     mTaskContext.notify ApiNotifyCodes.ApiNotifyInvalidRequest, _
                         eventMessage
     mTaskContext.Finish mContracts, False
+Case Else
+    gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
 End Select
 
-gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
 End Sub
 
 '@================================================================================

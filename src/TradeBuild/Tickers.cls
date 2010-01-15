@@ -30,7 +30,7 @@ Event StateChange(ByRef ev As StateChangeEvent)
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuild26"
+
 Private Const ModuleName                    As String = "Tickers"
 
 '@================================================================================
@@ -139,19 +139,19 @@ End Property
 
 Public Function Add( _
                 ByVal pTickerOptions As TickerOptions, _
-                Optional ByVal Key As String) As Ticker
+                Optional ByVal pKey As String) As Ticker
 Const ProcName As String = "Add"
 Dim failpoint As Long
 On Error GoTo Err
 
-If Key = "" Then Key = GenerateGUIDString
+If pKey = "" Then pKey = GenerateGUIDString
 Set Add = New Ticker
-Add.Key = Key
-Add.Workspace = Me.Workspace
 Add.Initialise AllocateTickerHandle, _
+                Me.Workspace, _
+                pKey, _
                 Me, _
                 pTickerOptions
-mTickers.Add Add, Key
+mTickers.Add Add, pKey
 fireChange CollItemAdded, Add
 
 Exit Function
@@ -166,11 +166,13 @@ Const ProcName As String = "AddCollectionChangeListener"
 Dim failpoint As Long
 On Error GoTo Err
 
-mChangeListeners.Add value
+mChangeListeners.Add value, CStr(ObjPtr(value))
 
+gNotifyExistingCollectionMembers mTickers, value, Me
 Exit Sub
 
 Err:
+If Err.number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
@@ -248,7 +250,7 @@ For i = 1 To mTickers.Count
         Exit For
     End If
 Next
-mTickerHandleTable(pTicker.handle) = False
+mTickerHandleTable(pTicker.Handle) = False
 fireChange CollItemRemoved, pTicker
 
 Exit Sub
@@ -258,14 +260,11 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
-Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
 Dim failpoint As Long
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
-Next
+mChangeListeners.Remove CStr(ObjPtr(value))
 
 Exit Sub
 
@@ -289,7 +288,7 @@ End Sub
 
 Public Function StartTickers( _
                 ByVal pTickerOptions As Long, _
-                ByVal pContractSpec As contractSpecifier, _
+                ByVal pContractSpec As ContractSpecifier, _
                 Optional ByVal pDOMEventsRequired As DOMEvents, _
                 Optional ByVal poutputTickfileFormat As String, _
                 Optional ByVal poutputTickfilePath As String, _

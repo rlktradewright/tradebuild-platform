@@ -41,7 +41,7 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuild26"
+
 Private Const ModuleName                    As String = "TickFileSpecifiers"
 
 '@================================================================================
@@ -81,25 +81,27 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function add(ByVal tfs As TickfileSpecifier) As TickfileSpecifier
-Set add = tfs
-mTickfileSpecifiers.add tfs, CStr(ObjPtr(tfs))
+Public Function Add(ByVal tfs As TickfileSpecifier) As TickfileSpecifier
+Set Add = tfs
+mTickfileSpecifiers.Add tfs, CStr(ObjPtr(tfs))
 fireChange CollItemAdded, tfs
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
+
+gNotifyExistingCollectionMembers mTickfileSpecifiers, value, Me
 End Sub
 
 Public Sub Clear()
 Set mTickfileSpecifiers = New Collection
 End Sub
 
-Public Function item( _
+Public Function Item( _
                 ByVal index As Variant) As TickfileSpecifier
-Attribute item.VB_UserMemId = 0
-Set item = mTickfileSpecifiers(index)
+Attribute Item.VB_UserMemId = 0
+Set Item = mTickfileSpecifiers(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -108,25 +110,25 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickfileSpecifiers.[_NewEnum]
 End Function
 
-Public Sub remove( _
+Public Sub Remove( _
                 ByVal index As Variant)
 Dim tfs As TickfileSpecifier
 
 If IsObject(index) Then
     If index Is Nothing Then Exit Sub
     Set tfs = index
-    mTickfileSpecifiers.remove CStr(ObjPtr(tfs))
+    mTickfileSpecifiers.Remove CStr(ObjPtr(tfs))
 Else
-    Set tfs = item(index)
-    mTickfileSpecifiers.remove index
+    Set tfs = Item(index)
+    mTickfileSpecifiers.Remove index
 End If
 fireChange CollItemRemoved, tfs
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
 End Sub
 

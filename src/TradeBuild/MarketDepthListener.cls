@@ -75,12 +75,12 @@ Public Sub MarketDepthNotAvailable( _
                 
 End Sub
 
-Public Sub resetMarketDepth( _
+Public Sub ResetMarketDepth( _
                 ByRef ev As MarketDepthEvent)
                 
 End Sub
 
-Public Sub setMarketDepthCell( _
+Public Sub SetMarketDepthCell( _
                 ByRef ev As MarketDepthEvent)
                 
 End Sub

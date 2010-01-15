@@ -123,8 +123,8 @@ Friend Property Get Contract() As Contract
 Set Contract = mReader.Contract
 End Property
 
-Friend Property Get contractSpecifier() As contractSpecifier
-Set contractSpecifier = mReader.contractSpecifier
+Friend Property Get ContractSpecifier() As ContractSpecifier
+Set ContractSpecifier = mReader.ContractSpecifier
 End Property
 
 Friend Property Let dataConsumer(ByVal value As IStreamingDataConsumer)
@@ -147,7 +147,7 @@ Friend Property Get ReplayProgressEventFrequency() As Long
 ReplayProgressEventFrequency = mReader.ReplayProgressEventFrequency
 End Property
 
-Friend Property Let replaySpeed(ByVal value As Long)
+Friend Property Let ReplaySpeed(ByVal value As Long)
 mReplaySpeed = value
 If mState = TickfileStateCodes.TickfilePlaying Then
     setBaseTimes
@@ -156,8 +156,8 @@ If mState = TickfileStateCodes.TickfilePlaying Then
 End If
 End Property
 
-Friend Property Get replaySpeed() As Long
-replaySpeed = mReplaySpeed
+Friend Property Get ReplaySpeed() As Long
+ReplaySpeed = mReplaySpeed
 End Property
 
 Friend Property Let ServiceProviderReader(ByVal value As TradeBuildSP.ITickfileReader)
@@ -220,7 +220,7 @@ mTimer.StartTimer
 
 End Sub
 
-Friend Sub stopReplay()
+Friend Sub StopReplay()
 mUnProcessed = False
 'If mState = TickfileStateCodes.TickfileNotPlaying Then Exit Sub
 If Not mTimer Is Nothing Then mTimer.StopTimer

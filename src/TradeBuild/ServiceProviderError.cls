@@ -47,36 +47,36 @@ Private mMessage As String
 ' Properties
 '@================================================================================
 
-Friend Property Let errorCode(ByVal value As Long)
+Friend Property Let ErrorCode(ByVal value As Long)
 mErrorCode = value
 End Property
 
-Public Property Get errorCode() As Long
-errorCode = mErrorCode
+Public Property Get ErrorCode() As Long
+ErrorCode = mErrorCode
 End Property
 
-Friend Property Let message(ByVal value As String)
+Friend Property Let Message(ByVal value As String)
 mMessage = value
 End Property
 
-Public Property Get message() As String
-message = mMessage
+Public Property Get Message() As String
+Message = mMessage
 End Property
 
-Friend Property Let serviceProviderName(ByVal value As String)
+Friend Property Let ServiceProviderName(ByVal value As String)
 mServiceProviderName = value
 End Property
 
-Public Property Get serviceProviderName() As String
-serviceProviderName = mServiceProviderName
+Public Property Get ServiceProviderName() As String
+ServiceProviderName = mServiceProviderName
 End Property
 
-Friend Property Let timestamp(ByVal value As Date)
+Friend Property Let Timestamp(ByVal value As Date)
 mTimestamp = value
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mTimestamp
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
 

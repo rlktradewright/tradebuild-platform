@@ -69,7 +69,6 @@ Event Volume(ByRef ev As QuoteEvent)
 '@================================================================================
 
 Private Const ModuleName As String = "Ticker"
-Private Const ProjectModuleName As String = ProjectName & "." & ModuleName & ":"
 
 '@================================================================================
 ' Enums
@@ -120,8 +119,6 @@ Private WithEvents mStopTickerTimer As IntervalTimer
 Attribute mStopTickerTimer.VB_VarHelpID = -1
 
 Private mHandle                     As Long
-Private mPriceFormatString          As String
-Private mDisplayThirtySeconds       As Boolean
 Private mTickSize                   As Double
 
 Private mTickersRef                 As WeakReference
@@ -168,7 +165,7 @@ Attribute mContractsLoadTC.VB_VarHelpID = -1
 Private mContracts                  As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As Contract
-Private mInitialContractSpec        As contractSpecifier
+Private mInitialContractSpec        As ContractSpecifier
 
 Private WithEvents mSession         As Session
 Attribute mSession.VB_VarHelpID = -1
@@ -240,14 +237,9 @@ Private mDataConsumers              As Collection
 Private mTickNumber                 As Long
 
 Private mPositionManager            As PositionManager
-Private mPositionManagerSimulated       As PositionManager
-Private mDefaultOrderContext        As OrderContext
-Private mdefaultOrderContextSimulated   As OrderContext
+Private mPositionManagerSimulated   As PositionManager
 
 Private mTimerList                  As TimerList
-
-Private mExecutions                 As Executions
-Private mExecutionsSimulated            As Executions
 
 'Private mStudies                    As Collection
 
@@ -277,15 +269,6 @@ Set mTickfileWriterListeners = New Collection
 Set mStateChangeListeners = New Collection
 
 Set mDataConsumers = New Collection
-
-Set mExecutions = New Executions
-Set mExecutionsSimulated = New Executions
-'Set mStudies = New Collection
-Set mPositionManager = New PositionManager
-Set mPositionManagerSimulated = New PositionManager
- 
-Set mDefaultOrderContext = mPositionManager.OrderContexts.Add("$default")
-Set mdefaultOrderContextSimulated = mPositionManagerSimulated.OrderContexts.Add("$default")
 
 Set mTimeframes = New Timeframes
 mTimeframes.Ticker = Me
@@ -480,7 +463,7 @@ Case TickTypes.TickTypeAsk, _
         Tick.operation = DOMDelete Then
         ' price is always zero
     ElseIf Not validPrice(Tick.price) Then
-        gLog pMsg:="Invalid price rejected", _
+        GLog pMsg:="Invalid price rejected", _
             pMsgQualifier:="tick={" & GenericTickToString(Tick) & _
                         "}; contract={" & mContract.specifier.ToString & _
                         "}", _
@@ -546,8 +529,6 @@ Private Sub ITickfileOutputServiceConsumer_NotifyEvent( _
                 ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
-
-Dim ev As NotificationEvent
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -624,7 +605,7 @@ mTickWriter.ServiceProviderWriterReady
 If mState = TickerStates.TickerStateStopped Then
     ' the Ticker is being closed before the tickfile writer has notified that it
     ' is Ready
-    mTickWriter.closeOutputFile
+    mTickWriter.CloseOutputFile
     Set mTickWriter = Nothing
     Set mSelfRef = Nothing
     If Not mTickWriterReleaseTimer Is Nothing Then
@@ -694,7 +675,7 @@ End If
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mContractsLoadTC_Completed", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mContractsLoadTC_Completed", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -712,7 +693,7 @@ MarketDepthNotAvailable "Can't start market depth replay during tickfile replay"
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mNoMarketDepthNotifyTimer_TimerExpired", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mNoMarketDepthNotifyTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -727,7 +708,7 @@ RaiseEvent TradingSessionEnded
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mSession_sessionEnded", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mSession_sessionEnded", pModuleName:=ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
@@ -742,7 +723,7 @@ RaiseEvent TradingSessionStarted
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mSession_SessionStarted", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mSession_SessionStarted", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -759,7 +740,7 @@ StopTicker
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mStopTickerTimer_TimerExpired", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mStopTickerTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -773,9 +754,9 @@ On Error GoTo Err
 
 mInEventHandler = True
 
-gLog pMsg:="Stopping tick data writer", pProcName:="mTickWriterReleaseTimer_TimerExpired", pProjName:=ProjectName, pModName:=ModuleName
+GLog pMsg:="Stopping tick data writer", pProcName:="mTickWriterReleaseTimer_TimerExpired", pProjName:=ProjectName, pModName:=ModuleName
 
-mTickWriter.closeOutputFile
+mTickWriter.CloseOutputFile
 Set mTickWriter = Nothing
 Set mSelfRef = Nothing
 Set mTickWriterReleaseTimer = Nothing
@@ -784,7 +765,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gHandleFatalError pProcName:="mTickWriterReleaseTimer_TimerExpired", pModuleName:=ModuleName
+GHandleFatalError pProcName:="mTickWriterReleaseTimer_TimerExpired", pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -871,12 +852,12 @@ Friend Property Let ContractsLoadTC(ByVal value As TaskController)
 Set mContractsLoadTC = value
 End Property
 
-Public Property Get DefaultOrderContextSimulated() As OrderContext
-Set DefaultOrderContextSimulated = mdefaultOrderContextSimulated
+Public Property Get DefaultOrderContext() As OrderContext
+Set DefaultOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 End Property
 
-Public Property Get DefaultOrderContext() As OrderContext
-Set DefaultOrderContext = mDefaultOrderContext
+Public Property Get DefaultOrderContextSimulated() As OrderContext
+Set DefaultOrderContextSimulated = mPositionManagerSimulated.OrderContexts.DefaultOrderContext
 End Property
 
 Public Property Get Description() As String
@@ -917,11 +898,11 @@ Set PositionManagerSimulated = mPositionManagerSimulated
 End Property
 
 Public Property Get ExecutionsSimulated() As Executions
-Set ExecutionsSimulated = mExecutionsSimulated
+Set ExecutionsSimulated = mPositionManagerSimulated.Executions
 End Property
 
 Public Property Get Executions() As Executions
-Set Executions = mExecutions
+Set Executions = mPositionManager.Executions
 End Property
 
 Public Property Get Handle() As Long
@@ -980,10 +961,6 @@ Public Property Get IsHistorical() As Boolean
 IsHistorical = mLoadOnly
 End Property
 
-Friend Property Let Key(ByVal value As String)
-mKey = value
-End Property
-
 Public Property Get Key() As String
 Key = mKey
 End Property
@@ -1029,7 +1006,7 @@ Public Property Get OutputTickfileFormat() As String
 OutputTickfileFormat = mOutputTickfileFormat
 End Property
 
-Public Property Let outputTickfilePath(ByVal value As String)
+Public Property Let OutputTickfilePath(ByVal value As String)
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1046,16 +1023,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="outputTickfilePath", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get outputTickfilePath() As String
-outputTickfilePath = mOutputTickfilePath
+Public Property Get OutputTickfilePath() As String
+OutputTickfilePath = mOutputTickfilePath
 End Property
 
 Public Property Get PositionManager() As PositionManager
 Set PositionManager = mPositionManager
-End Property
-
-Public Property Get PriceFormatString() As String
-PriceFormatString = mPriceFormatString
 End Property
 
 Friend Property Let ReplayingTickfile(ByVal value As Boolean)
@@ -1166,19 +1139,6 @@ Public Property Get WritingTradeBarData() As Boolean
 WritingTradeBarData = mWriteTradeBarData
 End Property
 
-Friend Property Let Workspace( _
-                ByVal pWorkspace As Workspace)
-Dim failpoint As Long
-On Error GoTo Err
-
-Set mWorkspaceRef = CreateWeakReference(pWorkspace)
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Workspace", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Property
-
 Public Property Get Workspace() As Workspace
 Dim failpoint As Long
 On Error GoTo Err
@@ -1254,7 +1214,7 @@ For i = 0 To mMaxBidPricesIndex
         processedMarketDepth.price = mBidPrices(i).price
         processedMarketDepth.type = DOMUpdateBid
         processedMarketDepth.size = mBidPrices(i).size
-        value.setMarketDepthCell processedMarketDepth
+        value.SetMarketDepthCell processedMarketDepth
     End If
 Next
 
@@ -1263,7 +1223,7 @@ For i = 0 To mMaxBidPricesIndex
         processedMarketDepth.price = mAskPrices(i).price
         processedMarketDepth.type = DOMUpdateAsk
         processedMarketDepth.size = mAskPrices(i).size
-        value.setMarketDepthCell processedMarketDepth
+        value.SetMarketDepthCell processedMarketDepth
     End If
 Next
 
@@ -1378,11 +1338,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If blankIfZero And price = 0# Then Exit Function
-If mDisplayThirtySeconds Then
-    FormatPrice = Int(price) & " ' " & Format(Int((price - Int(price)) / 0.03125), "00")
-Else
-    FormatPrice = Format(price, mPriceFormatString)
-End If
+FormatPrice = mContract.FormatPrice(price)
 
 Exit Function
 
@@ -1392,6 +1348,8 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal Handle As Long, _
+                ByVal pWorkspace As Workspace, _
+                ByVal pKey As String, _
                 ByVal pTickers As Tickers, _
                 ByVal Options As TickerOptions)
 
@@ -1399,6 +1357,8 @@ Dim failpoint As Long
 On Error GoTo Err
 
 mHandle = Handle
+mKey = pKey
+Set mWorkspaceRef = CreateWeakReference(pWorkspace)
 mOptions = Options
 
 Set mTickersRef = CreateWeakReference(pTickers)
@@ -1419,7 +1379,9 @@ If mWriteBidAskBarData Or _
 Then
     mUseExchangeTimeZone = True
 End If
-                
+
+setupPositionManagers
+ 
 State = TickerStates.TickerStateCreated
 
 Exit Sub
@@ -1441,7 +1403,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IsTimeInSession", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Sub LoadTicker(ByVal pContractSpecifier As contractSpecifier)
+Public Sub LoadTicker(ByVal pContractSpecifier As ContractSpecifier)
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1453,7 +1415,7 @@ mLoadOnly = True
 Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
 
-Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
+Set mContractsLoadTC = gTB.LoadContracts(pContractSpecifier)
 
 Exit Sub
 
@@ -1559,7 +1521,7 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     
     ev.price = mOpenPrice
     ev.size = 0
-    listener.sessionOpen ev
+    listener.SessionOpen ev
     
     ev.price = 0
     ev.size = mOpenInterest
@@ -1809,7 +1771,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="RequestMarketDepth", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
+Public Sub StartTicker(ByVal pContractSpecifier As ContractSpecifier)
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -1821,7 +1783,7 @@ If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllega
 Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
 
-Set mContractsLoadTC = gTB.loadContracts(pContractSpecifier)
+Set mContractsLoadTC = gTB.LoadContracts(pContractSpecifier)
 
 Exit Sub
 
@@ -1856,13 +1818,13 @@ On Error GoTo Err
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
-    gLog pMsg:="Deferring stop ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:="Deferring stop ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     Set mStopTickerTimer = CreateIntervalTimer(1)
     mStopTickerTimer.StartTimer
     Exit Sub
 End If
 
-gLog pMsg:="Stopping ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+GLog pMsg:="Stopping ticker", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
 
 ' NB: we don't do the following because the app may want to look at the contract(s)
 ' after being notified of a duplicate contract spec or for some other reason
@@ -1870,15 +1832,15 @@ gLog pMsg:="Stopping ticker", pProcName:="StopTicker", pProjName:=ProjectName, p
 'Set mContracts = Nothing
 
 If Not mTickWriter Is Nothing Then
-    If mTickWriter.numberOfPendingWrites = 0 Then
-        gLog pMsg:="Stopping tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
-        mTickWriter.closeOutputFile
+    If mTickWriter.NumberOfPendingWrites = 0 Then
+        GLog pMsg:="Stopping tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+        mTickWriter.CloseOutputFile
         Set mTickWriter = Nothing
     Else
         ' we've Finished processing the input data before the service provider
         ' writer is Ready - so delay releasing the writer until the
         ' service provider writer has had a chance to Finish initialising
-        gLog pMsg:="Deferring stop tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+        GLog pMsg:="Deferring stop tick data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
         Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
         mTickWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this Ticker isn't released
@@ -1895,30 +1857,30 @@ Then
         Set mTickfileManager = Nothing
     ElseIf Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StopData
-        gLog pMsg:="Stopping realtime data reader", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+        GLog pMsg:="Stopping realtime data reader", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
         Set mRealtimeDataReader = Nothing
     End If
 Else
     State = TickerStates.TickerStateClosing
 End If
 
-gLog pMsg:="Finishing timeframes", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+GLog pMsg:="Finishing timeframes", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
 mTimeframes.Finish
 Set mTimeframes = Nothing
 
 If Not mBarWriter Is Nothing Then
-    gLog pMsg:="Stopping bar data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:="Stopping bar data writer", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
 
 If Not mPositionManager Is Nothing Then
-    gLog pMsg:="Finishing position manager (live)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:="Finishing position manager (live)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     mPositionManager.Finish
     Set mPositionManager = Nothing
 End If
 If Not mPositionManagerSimulated Is Nothing Then
-    gLog pMsg:="Finishing position manager (simulated)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:="Finishing position manager (simulated)", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
     mPositionManagerSimulated.Finish
     Set mPositionManagerSimulated = Nothing
 End If
@@ -1931,9 +1893,6 @@ Set mRawMarketDepthListeners = New Collection
 Set mTickfileWriterListeners = New Collection
 Set mStateChangeListeners = New Collection
 Set mDataConsumers = New Collection
-
-Set mDefaultOrderContext = Nothing
-Set mdefaultOrderContextSimulated = Nothing
 
 mBidPrice = 0
 mBidSize = 0
@@ -1950,7 +1909,7 @@ Set mStudyManager = Nothing
 Set mInputStudy = Nothing
 
 
-gLog pMsg:="Ticker is stopped", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
+GLog pMsg:="Ticker is stopped", pProcName:="StopTicker", pProjName:=ProjectName, pModName:=ModuleName
 State = TickerStates.TickerStateStopped
 
 Exit Sub
@@ -2051,7 +2010,7 @@ Dim ev As NotificationEvent
 Dim failpoint As Long
 On Error GoTo Err
 
-gTraceLogger.Log LogLevelDetail, "Ticker: creating bar writer for " & mContract.specifier.localSymbol
+GLogLogger.Log LogLevelDetail, "Ticker: creating bar writer for " & mContract.specifier.LocalSymbol
 Set mBarWriter = gTB.ServiceProviders.CreateHistoricalDataWriter(Me, _
                             mContract, _
                             "")
@@ -2329,7 +2288,7 @@ Set quote.source = Me
 quote.price = price
 quote.size = 0
 For Each listener In mQuoteListeners
-    listener.sessionOpen quote
+    listener.SessionOpen quote
 Next
 RaiseEvent Low(quote)
 
@@ -2413,7 +2372,7 @@ On Error GoTo Err
 
 Set ev.source = Me
 For Each listener In mMarketDepthListeners
-    listener.resetMarketDepth ev
+    listener.ResetMarketDepth ev
 Next
 RaiseEvent DOMReset(ev)
 
@@ -2422,7 +2381,7 @@ Dim evRaw As RawMarketDepthEvent
 
 Set evRaw.source = Me
 For Each rawListener In mRawMarketDepthListeners
-    rawListener.resetMarketDepth evRaw
+    rawListener.ResetMarketDepth evRaw
 Next
 
 Exit Sub
@@ -2445,7 +2404,7 @@ processedMarketDepth.price = price
 processedMarketDepth.type = updateType
 processedMarketDepth.size = size
 For Each listener In mMarketDepthListeners
-    listener.setMarketDepthCell processedMarketDepth
+    listener.SetMarketDepthCell processedMarketDepth
 Next
 RaiseEvent DOMSetCell(processedMarketDepth)
 
@@ -2541,7 +2500,7 @@ rawMarketDepth.side = side
 rawMarketDepth.price = price
 rawMarketDepth.size = size
 For Each listener In mRawMarketDepthListeners
-    listener.updateMarketDepth rawMarketDepth
+    listener.UpdateMarketDepth rawMarketDepth
 Next
 RaiseEvent RawMarketDepthUpdate(rawMarketDepth)
 
@@ -2583,7 +2542,7 @@ If State <> TickerStateStarting Then Exit Sub
 If mContracts.Count = 0 Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-    ev.eventMessage = "No such contract exists: " & mContracts.contractSpecifier.ToString
+    ev.eventMessage = "No such contract exists: " & mContracts.ContractSpecifier.ToString
     gTB.notify ev
     StopTicker
     mInEventHandler = False
@@ -2593,7 +2552,7 @@ End If
 If mContracts.Count <> 1 Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.ToString
+    ev.eventMessage = "Ambiguous contract specification: " & mContracts.ContractSpecifier.ToString
     gTB.notify ev
     StopTicker
     mInEventHandler = False
@@ -2803,12 +2762,10 @@ End If
 
 mStudyManager.SetSessionTimes mContract.sessionStartTime, _
                             mContract.sessionEndTime, _
-                            mContract.TimeZone, _
+                            mContract.Timezone, _
                             Not mUseExchangeTimeZone
 
 If mInputStudy Is Nothing Then setupInputStudy
-
-mPositionManager.Ticker = Me
 
 If Not mSimulatedOrders Then
     Set orderSubmitter = gTB.ServiceProviders.CreateLiveOrderSubmitter(mPositionManager, mContract)
@@ -2829,7 +2786,6 @@ If mSimulatedOrders Then
 End If
 
 mPositionManagerSimulated.IsSimulated = True
-mPositionManagerSimulated.Ticker = Me
 mPositionManagerSimulated.orderSubmitter = gTB.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManagerSimulated, mContract)
 
 If mWriteTickData Then
@@ -2858,27 +2814,24 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not mInputStudy Is Nothing Then
-    mInputStudy.name = mContract.specifier.localSymbol
+    mInputStudy.name = mContract.specifier.LocalSymbol
     mStudyManager.SetInputTicksize mBidInputHandle, mContract.TickSize
     mStudyManager.SetInputTicksize mAskInputHandle, mContract.TickSize
     mStudyManager.SetInputTicksize mTradeInputHandle, mContract.TickSize
 End If
 
-mPriceFormatString = mContract.PriceFormatString
-
 mTickSize = mContract.TickSize
-If mTickSize = 0.03125 Then mDisplayThirtySeconds = True
 
 mTimeframes.Contract = mContract
 
 If mLoadOnly Then
-    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
+    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.standardName, ""))
     prepare
     State = TickerStateReady
 ElseIf mReplayingTickfile Then
     Set mClock = CreateSimulatedClock(mClockRate, _
                                     IIf(mUseExchangeTimeZone, _
-                                    mContract.TimeZone.standardName, _
+                                    mContract.Timezone.standardName, _
                                     ""))
     prepare
     State = TickerStateReady
@@ -2887,15 +2840,15 @@ ElseIf mReplayingTickfile Then
         mTickfileManager.StartTicker mContract
     End If
 Else
-    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
+    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.standardName, ""))
     
     prepare
     State = TickerStateReady
     
-    If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
+    If mContract.ExpiryDate <> 0 And mContract.ExpiryDate < Date Then
         Set ev.source = Me
         ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.ToString
+        ev.eventMessage = "Contract has expired: " & mContracts.ContractSpecifier.ToString
         gTB.notify ev
     Else
         Set mRealtimeDataReader = gTB.ServiceProviders.CreateRealtimeDataReader(Me, Me)
@@ -3201,8 +3154,8 @@ End If
 
 If pTick.size < 0 Then
     ' tickfile encoding can't cope with negative volumes, so just log it
-    gLog pMsg:="Corrected Volume tick is negative", _
-        pMsgQualifier:=vbCrLf & "Corrected size: " & pTick.size & vbCrLf & _
+    GLog pMsg:="Corrected Volume tick is negative", _
+        pMsgQualifier:=vbCrLf & "Corrected Size: " & pTick.size & vbCrLf & _
                                     "mPrevSessionAccumulatedVolume: " & mPrevSessionAccumulatedVolume & vbCrLf & _
                                     "mVolumeCorrectionIncrement: " & mVolumeCorrectionIncrement, _
         pLogLevel:=LogLevelWarning, _
@@ -3212,7 +3165,7 @@ If pTick.size < 0 Then
     Exit Sub
 End If
 
-' we write the corrected size to the tickfile rather than the raw size because
+' we write the corrected Size to the tickfile rather than the raw Size because
 ' otherwise replaying from the start of the Session gives inflated Volume figures
 ' if the first tick was subject to correction
 If mWriteTickData Then mTickWriter.writeTick pTick
@@ -3318,7 +3271,7 @@ On Error GoTo Err
 
 If mContract Is Nothing Then
     ' we don't yet have the contract details, so we can't generate a proper
-    ' name for this source, so do the best we can
+    ' Name for this source, so do the best we can
     If Not mInitialContractSpec Is Nothing Then
         sourceName = mInitialContractSpec.ToString
     Else
@@ -3363,7 +3316,7 @@ If mContract Is Nothing Then
                             False, _
                             1)
 Else
-    sourceName = mContract.specifier.localSymbol
+    sourceName = mContract.specifier.LocalSymbol
     Set mInputStudy = mStudyManager.AddSource(sourceName)
     Set mSession = mInputStudy.Session
     mBidInputHandle = mStudyManager.AddInput(mInputStudy, _
@@ -3408,6 +3361,25 @@ Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setupInputStudy", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Private Sub setupPositionManagers()
+Const ProcName As String = "setupPositionManagers"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mPositionManager = gGetPositionManager(mKey)
+If mPositionManager Is Nothing Then Set mPositionManager = gCreatePositionManager(mKey, mWorkspaceRef.Target)
+mPositionManager.Ticker = Me
+
+Set mPositionManagerSimulated = gGetPositionManagerSimulated(mKey)
+If mPositionManagerSimulated Is Nothing Then Set mPositionManagerSimulated = gCreatePositionManagerSimulated(mKey, mWorkspaceRef.Target)
+mPositionManagerSimulated.Ticker = Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Function getTickers() As Tickers
@@ -3476,10 +3448,10 @@ Case DOMOperations.DOMInsert
     End If
 Case DOMOperations.DOMUpdate
     If price <> prices(position).price And prices(position).price <> 0 Then
-        ' if need be we must blank the size display for the price currently
+        ' if need be we must blank the Size display for the price currently
         ' in this slot. Note that sometimes the market depth updates temporarily
         ' result in two or more adjacent slots for the same price - therefore we
-        ' only blank the size if the adjacent slot(s) are for a different price.
+        ' only blank the Size if the adjacent slot(s) are for a different price.
         If position = 0 Then
             If prices(1).price <> prices(0).price Then
                 If notifyApp Then
@@ -3516,9 +3488,9 @@ Case DOMOperations.DOMDelete
         ' methods, but the marketdepth updates are deleting some entries prior to
         ' inserting the Bid/Ask (why it deletes an entry then immediately reinserts
         ' it is a mystery to me, but it does!).
-        ' So in this scenario, we don't want to blank the size display for this price
+        ' So in this scenario, we don't want to blank the Size display for this price
     Else
-        ' otherwise we do want to blank the size entry for this price
+        ' otherwise we do want to blank the Size entry for this price
         If notifyApp Then
             If prices(position).price = 0 Then
                 ' we getting a delete before a price has been inserted in this position,

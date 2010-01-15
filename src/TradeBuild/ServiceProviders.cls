@@ -43,7 +43,7 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                           As String = "TradeBuild26"
+
 Private Const ModuleName                            As String = "ServiceProviders"
 
 Private Const AccessModeReadOnly                    As String = "Read only"
@@ -182,7 +182,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyFatalError( _
-                ByVal errorCode As Long, _
+                ByVal ErrorCode As Long, _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
@@ -193,7 +193,7 @@ On Error GoTo Err
 
 spName = NameFromHandle(spHandle)
 
-gTB.NotifyFatalError errorCode, _
+gTB.NotifyFatalError ErrorCode, _
                     errorMessage, _
                     source & IIf(spName <> "", vbCrLf & spName, "")
 
@@ -204,14 +204,14 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
-                            ByVal errorCode As Long, _
+                            ByVal ErrorCode As Long, _
                             ByVal errorMessage As String, _
                             ByVal spHandle As Long)
 Const ProcName As String = "ICommonServiceConsumer_NotifyRecoverableError"
 Dim failpoint As Long
 On Error GoTo Err
 
-gTB.SetServiceProviderError errorCode, _
+gTB.SetServiceProviderError ErrorCode, _
                 errorMessage, _
                 NameFromHandle(spHandle)
 
@@ -276,7 +276,20 @@ Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
     If Not liveOrderSp Is Nothing Then
         regOk = True
     End If
+    
+    gTB.OrderPlexRecoveryController.IOrderSubmissionSrvcProvider = liveOrderSp
 Case TradeBuildSP.ServiceProviderTypes.OrderPersistence
+    Dim OrderPersistenceSP As TradeBuildSP.IOrderPersistenceServiceProvider
+    Dim lOrderPlexRecoverer As OrderPlexRecoverer
+    
+    On Error Resume Next
+    Set OrderPersistenceSP = mServiceProviders(Handle).SPObject
+    On Error GoTo Err
+    If Not OrderPersistenceSP Is Nothing Then regOk = True
+    
+    gTB.OrderPlexRecoveryController.OrderPersistenceServiceProvider = OrderPersistenceSP
+    OrderPersistenceSP.OrderPersistenceServiceConsumer = gTB.OrderPlexRecoveryController
+    
 Case TradeBuildSP.ServiceProviderTypes.RealtimeData
     Dim realtimeDataSp As TradeBuildSP.IRealtimeDataServiceProvider
     
@@ -705,12 +718,12 @@ End Property
 
 Public Function Add( _
                 ByVal progId As String, _
-                ByVal enabled As Boolean, _
+                ByVal Enabled As Boolean, _
                 ByVal paramString As String, _
                 Optional ByVal name As String, _
                 Optional ByVal Description As String _
                 ) As TradeBuildSP.ICommonServiceProvider
-Dim params As parameters
+Dim params As Parameters
 Dim spindex As Long
 
 Const ProcName As String = "Add"
@@ -718,9 +731,9 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set Add = CreateObject(progId)
-Set params = CreateParametersFromString(paramString)
+Set params = CreateParametersFromString(Replace(paramString, "\", "\\"))
 
-If enabled Then
+If Enabled Then
     spindex = AddSP(Add, params, name)
     If spindex < 0 Then
         Set Add = Nothing
@@ -729,7 +742,7 @@ If enabled Then
 End If
 
 Set mServiceProviders(spindex).SpConfig = AddEntryToConfig(progId, _
-                                                        enabled, _
+                                                        Enabled, _
                                                         params, _
                                                         name, _
                                                         Description)
@@ -748,6 +761,7 @@ On Error GoTo Err
 
 mChangeListeners.Add value
 
+'gNotifyExistingCollectionMembers mWorkSpaces, value, Me
 Exit Sub
 
 Err:
@@ -1185,7 +1199,7 @@ Friend Function CreateTickfileWriter( _
                 ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                 ByVal pContract As Contract, _
                 ByVal outputTickfileFormatID As String, _
-                ByVal outputTickfilePath As String) As TickfileWriter
+                ByVal OutputTickfilePath As String) As TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
@@ -1217,7 +1231,7 @@ Set tfWriter = New TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
                                                     pContract, _
                                                     outputTickfileFormatID, _
-                                                    outputTickfilePath)
+                                                    OutputTickfilePath)
 
 tfWriter.ServiceProviderWriter = tickfileSPWriter
 
@@ -1255,7 +1269,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Friend Function loadContracts( _
+Friend Function LoadContracts( _
                 ByVal serviceConsumer As IContractInfoServiceConsumer, _
                 ByVal pContractsBuilder As ContractsBuilder) As Boolean
 Dim i As Long
@@ -1274,15 +1288,15 @@ For i = 0 To mMaxSPIndex
     End If
 Next
 
-loadContracts = True
+LoadContracts = True
 
 If contractInfoSP Is Nothing Then
     ' there doesn't seem to be a primary contract service provider configured,
     ' so let's try the secondary
-    gLog pMsg:="No primary contract info service provider configured - trying secondary", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:="No primary contract info service provider configured - trying secondary", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
     If Not loadContractsFromSecondarySP(-1, serviceConsumer, pContractsBuilder) Then
-        gLog pMsg:="No secondary contract info service provider configured - can't load contracts", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
-        loadContracts = False
+        GLog pMsg:="No secondary contract info service provider configured - can't load contracts", pProcName:="loadContracts", pProjName:=ProjectName, pModName:=ModuleName
+        LoadContracts = False
     End If
 Else
     contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
@@ -1554,7 +1568,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTbAccessMode, AccessModeReadOnly
+    setProperty currProps, PropertyNameTfAccessMode, AccessModeReadOnly
     setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
@@ -1564,7 +1578,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
     currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
 
     Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTbAccessMode, AccessModeWriteOnly
+    setProperty currProps, PropertyNameTfAccessMode, AccessModeWriteOnly
     setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
 End If
 
@@ -1580,8 +1594,8 @@ End Sub
 
 Private Function AddEntryToConfig( _
             ByVal progId As String, _
-            ByVal enabled As Boolean, _
-            ByVal params As parameters, _
+            ByVal Enabled As Boolean, _
+            ByVal params As Parameters, _
             ByVal name As String, _
             ByVal Description As String _
             ) As ConfigurationSection
@@ -1602,20 +1616,18 @@ If mServiceProviderConfigList Is Nothing Then
     Set mServiceProviderConfigList = mConfig.AddConfigurationSection(ConfigNameServiceProviders, ServiceProvidersRenderer)
 End If
 
-Set sp = mServiceProviderConfigList.AddConfigurationSection(ConfigNameServiceProvider, _
-                                                            Description)
 Set sp = mServiceProviderConfigList.AddConfigurationSection(ConfigNameServiceProvider & _
                                                             "(" & name & ")", _
                                                             Description)
-sp.setAttribute AttributeNameServiceProviderEnabled, CStr(enabled)
+sp.setAttribute AttributeNameServiceProviderEnabled, CStr(Enabled)
 sp.setAttribute AttributeNameServiceProviderProgId, progId
 
 Set props = sp.AddConfigurationSection(ConfigNameProperties)
 
 For Each param In params
-    Set prop = props.AddConfigurationSection(ConfigNameProperty)
-    prop.setAttribute AttributeNamePropertyName, param.name
-    prop.setAttribute AttributeNamePropertyValue, param.value
+    Set prop = props.AddConfigurationSection(ConfigNameProperty & _
+                                            "(" & param.name & ")")
+    prop.value = param.value
 Next
 
 Set AddEntryToConfig = sp
@@ -1628,7 +1640,7 @@ End Function
 
 Private Function AddSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
-            ByVal params As parameters, _
+            ByVal params As Parameters, _
             ByVal name As String _
             ) As Long
 Dim i As Long
@@ -1652,7 +1664,7 @@ For i = 0 To mMaxSPIndex
         If mServiceProviders(i).name = serviceProvider.name Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.ServiceProviders::Add", _
-                    "A Service Provider with this name has alReady been Added"
+                    "A Service Provider with this Name has alReady been Added"
         End If
     End If
 Next
@@ -1780,11 +1792,9 @@ Dim spName As String
 Dim spProgId As String
 Dim props As ConfigurationSection
 Dim prop As ConfigurationSection
-Dim propName As String
-Dim propValue As String
 Dim spObj As Object
 Dim spindex As Long
-Dim params As parameters
+Dim params As Parameters
 
 Const ProcName As String = "loadConfiguration"
 Dim failpoint As Long
@@ -1800,7 +1810,7 @@ For Each sp In mServiceProviderConfigList
                                        ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
                                        "Service provider ProgId not specified"
         
-        Set params = New parameters
+        Set params = New Parameters
         
         On Error Resume Next
         Set props = Nothing
@@ -1811,13 +1821,13 @@ For Each sp In mServiceProviderConfigList
             For Each prop In props
                 If prop.InstanceQualifier = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                             ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
-                                                            "Property name not specified"
-                'propValue = prop.getAttribute(AttributeNamePropertyValue, "")
+                                                            "Property Name not specified"
                 params.SetParameterValue prop.InstanceQualifier, prop.value
             Next
         End If
         
         On Error Resume Next
+        Set spObj = Nothing
         If spProgId = ProgIdTbOrders Then
             ' this is the built-in order simulator
             Set spObj = New OrderSimulatorSP
@@ -1885,7 +1895,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value
-'prop.setAttribute AttributeNamePropertyName, name
+'prop.setAttribute AttributeNamePropertyName, Name
 'prop.setAttribute AttributeNamePropertyValue, value
 
 Exit Sub

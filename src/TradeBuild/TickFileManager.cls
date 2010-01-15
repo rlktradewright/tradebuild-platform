@@ -158,7 +158,7 @@ Private Sub ITickfileInputServiceConsumer_Ready( _
                 ByVal tfSpec As TradeBuildSP.ITickfileSpecifier, _
                 ByVal TickfileSizeBytes As Long)
 
-Dim contractSpec As contractSpecifier
+Dim contractSpec As ContractSpecifier
 Dim ctb As ContractsBuilder
 
 If Not mReader.Contract Is Nothing Then
@@ -166,18 +166,18 @@ If Not mReader.Contract Is Nothing Then
     ctb.AddContract mReader.Contract
     ctb.LoadComplete
     mTicker.Contracts = ctb.Contracts
-ElseIf Not mReader.contractSpecifier Is Nothing Then
-    Set contractSpec = mReader.contractSpecifier
+ElseIf Not mReader.ContractSpecifier Is Nothing Then
+    Set contractSpec = mReader.ContractSpecifier
     
     'now query the Contract Details service provider(s) to see if we can
     ' determine the canonical contract for this contract spec
-    mTicker.ContractsLoadTC = gTB.loadContracts(contractSpec)
+    mTicker.ContractsLoadTC = gTB.LoadContracts(contractSpec)
 ElseIf Not tfSpec.Contract Is Nothing Then
     Set contractSpec = tfSpec.Contract.specifier
 
     'now query the Contract Details service provider(s) to see if we can
     ' determine the canonical contract for this contract spec
-    mTicker.ContractsLoadTC = gTB.loadContracts(contractSpec)
+    mTicker.ContractsLoadTC = gTB.LoadContracts(contractSpec)
 ElseIf Not mDefaultContract Is Nothing Then
     Set ctb = CreateContractsBuilder(mDefaultContract.specifier)
     ctb.AddContract mDefaultContract
@@ -189,8 +189,8 @@ Else
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileNoContractDetails
     ev.eventMessage = "Contract details must be supplied for tickfile: " & _
-                    gTickfileSpecifierToString(tfSpec)
-    gTB.notify ev
+                    GTickfileSpecifierToString(tfSpec)
+    gTB.Notify ev
     Set mReader = Nothing
     Exit Sub
 End If
@@ -242,13 +242,13 @@ Public Property Let defaultContract(ByVal value As Contract)
 Set mDefaultContract = value
 End Property
 
-Friend Property Get firstTickFileTime() As Date
+Friend Property Get FirstTickFileTime() As Date
 If mReader Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "TickFileManage::firstTickFileTime", _
                 "Tickfile reader not yet created"
 End If
-firstTickFileTime = mReader.firstTickFileTime
+FirstTickFileTime = mReader.FirstTickFileTime
 End Property
 
 Friend Property Get NumberOfInputTickfiles() As Long
@@ -303,14 +303,14 @@ Public Property Get ReplayProgressEventIntervalMillisecs() As Long
 ReplayProgressEventIntervalMillisecs = mReplayProgressEventIntervalMillisecs
 End Property
 
-Public Property Let replaySpeed(ByVal value As Long)
+Public Property Let ReplaySpeed(ByVal value As Long)
 mReplaySpeed = value
 If Not mTicker Is Nothing Then mTicker.ClockRate = mReplaySpeed
 setReplayAttributes
 End Property
 
-Public Property Get replaySpeed() As Long
-replaySpeed = mReplaySpeed
+Public Property Get ReplaySpeed() As Long
+ReplaySpeed = mReplaySpeed
 End Property
 
 Friend Property Get State() As TradeBuildSP.TickfileStateCodes
@@ -391,7 +391,7 @@ End Sub
 
 Friend Sub FinishTickfile()
 stopProgressTimer
-If Not mReader Is Nothing Then mReader.stopReplay
+If Not mReader Is Nothing Then mReader.StopReplay
 Set mReader = Nothing
 Set mTicker = Nothing
 End Sub
@@ -453,7 +453,7 @@ If Not mReader Is Nothing Then
 End If
 End Sub
 
-Public Sub stopReplay()
+Public Sub StopReplay()
 If Not mReplayInProgress Then Exit Sub
 mReplayInProgress = False
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
@@ -474,11 +474,11 @@ Private Sub playOrNot( _
 Dim continueMode As ReplayContinueModes
 
 'mContract.setSession mReader.firstTickFileTime
-mTicker.Timestamp = mReader.firstTickFileTime
+mTicker.Timestamp = mReader.FirstTickFileTime
 
 RaiseEvent QueryReplayNextTickfile( _
                 mCurrTickfileIndex, _
-                gTickfileSpecifierToString(TickfileSpec), _
+                GTickfileSpecifierToString(TickfileSpec), _
                 TickfileSizeBytes, _
                 mContract, _
                 continueMode)
@@ -486,7 +486,7 @@ RaiseEvent QueryReplayNextTickfile( _
 Select Case continueMode
 Case ReplayContinueModes.ReplayCancelAllFiles
     mCurrTickfileIndex = 0
-    mReader.stopReplay
+    mReader.StopReplay
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
 Case ReplayContinueModes.ReplayContinue
@@ -503,7 +503,7 @@ If mReplaySpeed = 0 Or mReplayProgressEventFrequency = 0 Then
 Else
     mReader.ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End If
-mReader.replaySpeed = mReplaySpeed
+mReader.ReplaySpeed = mReplaySpeed
 End Sub
 
 Private Sub SetupNextTickfile()

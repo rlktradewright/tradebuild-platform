@@ -66,7 +66,7 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-Public Property Let orderPlex(ByVal value As orderPlex)
+Public Property Let OrderPlex(ByVal value As OrderPlex)
 End Property
 
 Public Property Let Ticker(ByVal value As Ticker)

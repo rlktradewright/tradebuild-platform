@@ -41,6 +41,8 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "Orders"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -79,27 +81,72 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Const ProcName As String = "Count"
+Dim failpoint As Long
+On Error GoTo Err
+
 Count = mOrders.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Function add(ByVal pOrder As order) As order
-Set add = pOrder
-mOrders.add pOrder, pOrder.id
+Friend Function Add(ByVal pOrder As Order) As Order
+Const ProcName As String = "Add"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set Add = pOrder
+mOrders.Add pOrder, pOrder.Id
 fireChange CollItemAdded, pOrder
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Sub addCollectionChangeListener( _
+Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
+mChangeListeners.Add value
+
+gNotifyExistingCollectionMembers mOrders, value, Me
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Public Function item(index As Variant) As order
-Attribute item.VB_UserMemId = 0
-Set item = mOrders(index)
+Public Function Contains(index As Variant) As Boolean
+Const ProcName As String = "Contains"
+Dim lOrder As Order
+On Error Resume Next
+Set lOrder = mOrders(index)
+If Not lOrder Is Nothing Then Contains = True
+End Function
+
+Public Function Item(index As Variant) As Order
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set Item = mOrders(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -108,11 +155,35 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mOrders.[_NewEnum]
 End Function
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub Remove( _
+                ByVal pOrder As Order)
+Const ProcName As String = "Remove"
+Dim failpoint As Long
+On Error GoTo Err
+
+mOrders.Remove pOrder.Id
+fireChange CollItemRemoved, pOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
+
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -121,9 +192,13 @@ End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As order)
+                ByVal affectedObject As Order)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -131,6 +206,11 @@ For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

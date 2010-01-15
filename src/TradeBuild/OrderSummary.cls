@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements JSONable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,37 +46,43 @@ Private Const ModuleName                    As String = "OrderSummary"
 ' Member variables
 '@================================================================================
 
-Private mAction As TradeBuildSP.OrderActions
-Private mallOrNone As Boolean
-Private mblockOrder As Boolean
-Private mbrokerId As String
-Private mContractSpecifier As ContractUtils26.ContractSpecifier
-Private mdiscretionaryAmount As Double
-Private mdisplaySize As Long
-Private meTradeOnly As Boolean
-Private mfirmQuoteOnly As Boolean
-Private mgoodAfterTime As Date
-Private mgoodAfterTimeTZ As String
-Private mgoodTillDate As Date
-Private mgoodTillDateTZ As String
-Private mhidden As Boolean
-Private mignoreRegularTradingHours As Boolean
-Private mlimitPrice As Double
-Private mminimumQuantity As Long
-Private mNbboPriceCap As Double
-Private morderType As TradeBuildSP.OrderTypes
-Private morigin As TradeBuildSP.OrderOrigins
+Private mAction As OrderActions
+Private mAllOrNone As Boolean
+Private mBlockOrder As Boolean
+Private mBrokerId As String
+Private mDiscretionaryAmount As Double
+Private mDisplaySize As Long
+Private mETradeOnly As Boolean
+Private mFirmQuoteOnly As Boolean
+Private mGoodAfterTime As Date
+Private mGoodAfterTimeTZ As String
+Private mGoodTillDate As Date
+Private mGoodTillDateTZ As String
+Private mHidden As Boolean
+Private mIgnoreRegularTradingHours As Boolean
+Private mLimitPrice As Double
+Private mMinimumQuantity As Long
+Private mNBBOPriceCap As Double
+Private mOrderType As OrderTypes
+Private mOrigin As OrderOrigins
 Private moriginatorRef As String
-Private moverrideConstraints As Boolean
+Private mOverrideConstraints As Boolean
 Private mProviderProperties As Parameters
-Private mquantity As Long
-Private msettlingFirm As String
-Private mStatus As TradeBuildSP.OrderStatuses
-Private mstopTriggerMethod As TradeBuildSP.StopTriggerMethods
-Private msweepToFill As Boolean
-Private mtimeInForce As TradeBuildSP.OrderTifs
-Private mtradeBuildId As String
-Private mtriggerPrice As Double
+Private mQuantity As Long
+Private mSettlingFirm As String
+Private mStatus As OrderStatuses
+Private mStopTriggerMethod As StopTriggerMethods
+Private mSweepToFill As Boolean
+Private mTimeInForce As OrderTifs
+Private mIdentifier As String
+Private mTriggerPrice As Double
+Private mAveragePrice               As Double
+Private mFillTime                   As Date
+Private mQuantityFilled             As Long
+Private mQuantityRemaining          As Long
+Private mLastFillPrice              As Double
+Private mOffset                     As Long
+Private mPercentOffset              As Double
  
 '@================================================================================
 ' Class Event Handlers
@@ -88,6 +96,10 @@ End Sub
 ' XXXX Interface Members
 '@================================================================================
 
+Private Function JSONable_ToJSON() As String
+JSONable_ToJSON = ToJSON
+End Function
+
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -96,257 +108,430 @@ End Sub
 ' Properties
 '@================================================================================
 
-Private Property Let IOrderReport_action(ByVal value As TradeBuildSP.OrderActions)
+Public Property Let action(ByVal value As OrderActions)
 mAction = value
 End Property
 
-Private Property Get IOrderReport_action() As TradeBuildSP.OrderActions
-IOrderReport_action = mAction
+Public Property Get action() As OrderActions
+action = mAction
 End Property
 
-Private Property Let IOrderReport_allOrNone(ByVal value As Boolean)
-mallOrNone = value
+Public Property Let AllOrNone(ByVal value As Boolean)
+mAllOrNone = value
 End Property
 
-Private Property Get IOrderReport_allOrNone() As Boolean
-IOrderReport_allOrNone = mallOrNone
+Public Property Get AllOrNone() As Boolean
+AllOrNone = mAllOrNone
 End Property
 
-Private Property Let IOrderReport_blockOrder(ByVal value As Boolean)
-mblockOrder = value
+Public Property Let AveragePrice(ByVal value As Double)
+mAveragePrice = value
 End Property
 
-Private Property Get IOrderReport_blockOrder() As Boolean
-IOrderReport_blockOrder = mblockOrder
+Public Property Get AveragePrice() As Double
+AveragePrice = mAveragePrice
 End Property
 
-Private Property Let IOrderReport_brokerId(ByVal value As String)
-mbrokerId = value
+Public Property Let BlockOrder(ByVal value As Boolean)
+mBlockOrder = value
 End Property
 
-Private Property Get IOrderReport_brokerId() As String
-IOrderReport_brokerId = mbrokerId
+Public Property Get BlockOrder() As Boolean
+BlockOrder = mBlockOrder
 End Property
 
-Private Property Let IOrderReport_ContractSpecifier(ByVal value As ContractUtils26.ContractSpecifier)
-Set mContractSpecifier = value
+Public Property Let BrokerId(ByVal value As String)
+mBrokerId = value
 End Property
 
-Private Property Get IOrderReport_ContractSpecifier() As ContractUtils26.ContractSpecifier
-Set IOrderReport_ContractSpecifier = mContractSpecifier
+Public Property Get BrokerId() As String
+BrokerId = mBrokerId
 End Property
 
-Private Property Let IOrderReport_discretionaryAmount(ByVal value As Double)
-mdiscretionaryAmount = value
+Public Property Let DiscretionaryAmount(ByVal value As Double)
+mDiscretionaryAmount = value
 End Property
 
-Private Property Get IOrderReport_discretionaryAmount() As Double
-IOrderReport_discretionaryAmount = mdiscretionaryAmount
+Public Property Get DiscretionaryAmount() As Double
+DiscretionaryAmount = mDiscretionaryAmount
 End Property
 
-Private Property Let IOrderReport_displaySize(ByVal value As Long)
-mdisplaySize = value
+Public Property Let DisplaySize(ByVal value As Long)
+mDisplaySize = value
 End Property
 
-Private Property Get IOrderReport_displaySize() As Long
-IOrderReport_displaySize = mdisplaySize
+Public Property Get DisplaySize() As Long
+DisplaySize = mDisplaySize
 End Property
 
-Private Property Let IOrderReport_eTradeOnly(ByVal value As Boolean)
-meTradeOnly = value
+Public Property Let ETradeOnly(ByVal value As Boolean)
+mETradeOnly = value
 End Property
 
-Private Property Get IOrderReport_eTradeOnly() As Boolean
-IOrderReport_eTradeOnly = meTradeOnly
+Public Property Get ETradeOnly() As Boolean
+ETradeOnly = mETradeOnly
 End Property
 
-Private Property Let IOrderReport_firmQuoteOnly(ByVal value As Boolean)
-mfirmQuoteOnly = value
+Public Property Let FillTime(ByVal value As Date)
+mFillTime = value
 End Property
 
-Private Property Get IOrderReport_firmQuoteOnly() As Boolean
-IOrderReport_firmQuoteOnly = mfirmQuoteOnly
+Public Property Get FillTime() As Date
+FillTime = mFillTime
 End Property
 
-Private Property Let IOrderReport_goodAfterTime(ByVal value As Date)
-mgoodAfterTime = value
+Public Property Let FirmQuoteOnly(ByVal value As Boolean)
+mFirmQuoteOnly = value
 End Property
 
-Private Property Get IOrderReport_goodAfterTime() As Date
-IOrderReport_goodAfterTime = mgoodAfterTime
+Public Property Get FirmQuoteOnly() As Boolean
+FirmQuoteOnly = mFirmQuoteOnly
 End Property
 
-Private Property Let IOrderReport_goodAfterTimeTZ(ByVal value As String)
-mgoodAfterTimeTZ = value
+Public Property Let GoodAfterTime(ByVal value As Date)
+mGoodAfterTime = value
 End Property
 
-Private Property Get IOrderReport_goodAfterTimeTZ() As String
-IOrderReport_goodAfterTimeTZ = mgoodAfterTimeTZ
+Public Property Get GoodAfterTime() As Date
+GoodAfterTime = mGoodAfterTime
 End Property
 
-Private Property Let IOrderReport_goodTillDate(ByVal value As Date)
-mgoodTillDate = value
+Public Property Let GoodAfterTimeTZ(ByVal value As String)
+mGoodAfterTimeTZ = value
 End Property
 
-Private Property Get IOrderReport_goodTillDate() As Date
-IOrderReport_goodTillDate = mgoodTillDate
+Public Property Get GoodAfterTimeTZ() As String
+GoodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
-Private Property Let IOrderReport_goodTillDateTZ(ByVal value As String)
-mgoodTillDateTZ = value
+Public Property Let GoodTillDate(ByVal value As Date)
+mGoodTillDate = value
 End Property
 
-Private Property Get IOrderReport_goodTillDateTZ() As String
-IOrderReport_goodTillDateTZ = mgoodTillDateTZ
+Public Property Get GoodTillDate() As Date
+GoodTillDate = mGoodTillDate
 End Property
 
-Private Property Let IOrderReport_hidden(ByVal value As Boolean)
-mhidden = value
+Public Property Let GoodTillDateTZ(ByVal value As String)
+mGoodTillDateTZ = value
 End Property
 
-Private Property Get IOrderReport_hidden() As Boolean
-IOrderReport_hidden = mhidden
+Public Property Get GoodTillDateTZ() As String
+GoodTillDateTZ = mGoodTillDateTZ
 End Property
 
-Private Property Let IOrderReport_ignoreRegularTradingHours(ByVal value As Boolean)
-mignoreRegularTradingHours = value
+Public Property Let Hidden(ByVal value As Boolean)
+mHidden = value
 End Property
 
-Private Property Get IOrderReport_ignoreRegularTradingHours() As Boolean
-IOrderReport_ignoreRegularTradingHours = mignoreRegularTradingHours
+Public Property Get Hidden() As Boolean
+Hidden = mHidden
 End Property
 
-Private Property Let IOrderReport_limitPrice(ByVal value As Double)
-mlimitPrice = value
+Public Property Let Id(ByVal value As String)
+mIdentifier = value
 End Property
 
-Private Property Get IOrderReport_limitPrice() As Double
-IOrderReport_limitPrice = mlimitPrice
+Public Property Get Id() As String
+Id = mIdentifier
 End Property
 
-Private Property Let IOrderReport_minimumQuantity(ByVal value As Long)
-mminimumQuantity = value
+Public Property Let IgnoreRegularTradingHours(ByVal value As Boolean)
+mIgnoreRegularTradingHours = value
 End Property
 
-Private Property Get IOrderReport_minimumQuantity() As Long
-IOrderReport_minimumQuantity = mminimumQuantity
+Public Property Get IgnoreRegularTradingHours() As Boolean
+IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
-Private Property Let IOrderReport_NbboPriceCap(ByVal value As Double)
-mNbboPriceCap = value
+Public Property Let LastFillPrice(ByVal value As Double)
+mLastFillPrice = value
 End Property
 
-Private Property Get IOrderReport_NbboPriceCap() As Double
-IOrderReport_NbboPriceCap = mNbboPriceCap
+Public Property Get LastFillPrice() As Double
+LastFillPrice = mLastFillPrice
 End Property
 
-Private Property Let IOrderReport_orderType(ByVal value As TradeBuildSP.OrderTypes)
-morderType = value
+Public Property Let LimitPrice(ByVal value As Double)
+mLimitPrice = value
 End Property
 
-Private Property Get IOrderReport_orderType() As TradeBuildSP.OrderTypes
-IOrderReport_orderType = morderType
+Public Property Get LimitPrice() As Double
+LimitPrice = mLimitPrice
 End Property
 
-Private Property Let IOrderReport_origin(ByVal value As TradeBuildSP.OrderOrigins)
-morigin = value
+Public Property Let MinimumQuantity(ByVal value As Long)
+mMinimumQuantity = value
 End Property
 
-Private Property Get IOrderReport_origin() As TradeBuildSP.OrderOrigins
-IOrderReport_origin = morigin
+Public Property Get MinimumQuantity() As Long
+MinimumQuantity = mMinimumQuantity
 End Property
 
-Private Property Let IOrderReport_originatorRef(ByVal value As String)
+Public Property Let NbboPriceCap(ByVal value As Double)
+mNBBOPriceCap = value
+End Property
+
+Public Property Get NbboPriceCap() As Double
+NbboPriceCap = mNBBOPriceCap
+End Property
+
+Public Property Let Offset(ByVal value As Long)
+mOffset = value
+End Property
+
+Public Property Get Offset() As Long
+Offset = mOffset
+End Property
+
+Public Property Let OrderType(ByVal value As OrderTypes)
+mOrderType = value
+End Property
+
+Public Property Get OrderType() As OrderTypes
+OrderType = mOrderType
+End Property
+
+Public Property Let Origin(ByVal value As OrderOrigins)
+mOrigin = value
+End Property
+
+Public Property Get Origin() As OrderOrigins
+Origin = mOrigin
+End Property
+
+Public Property Let OriginatorRef(ByVal value As String)
 moriginatorRef = value
 End Property
 
-Private Property Get IOrderReport_originatorRef() As String
-IOrderReport_originatorRef = moriginatorRef
+Public Property Get OriginatorRef() As String
+OriginatorRef = moriginatorRef
 End Property
 
-Private Property Let IOrderReport_overrideConstraints(ByVal value As Boolean)
-moverrideConstraints = value
+Public Property Let OverrideConstraints(ByVal value As Boolean)
+mOverrideConstraints = value
 End Property
 
-Private Property Get IOrderReport_overrideConstraints() As Boolean
-IOrderReport_overrideConstraints = moverrideConstraints
+Public Property Get OverrideConstraints() As Boolean
+OverrideConstraints = mOverrideConstraints
 End Property
 
-Private Property Let IOrderReport_providerProperties(ByVal value As TWUtilities30.Parameters)
+Public Property Let PercentOffset(ByVal value As Double)
+mPercentOffset = value
+End Property
+
+Public Property Get PercentOffset() As Double
+PercentOffset = mPercentOffset
+End Property
+
+Public Property Let ProviderProperties(ByVal value As TWUtilities30.Parameters)
 Set mProviderProperties = value
 End Property
 
-Private Property Get IOrderReport_providerProperties() As TWUtilities30.Parameters
-Set IOrderReport_providerProperties = mProviderProperties
+Public Property Get ProviderProperties() As TWUtilities30.Parameters
+Set ProviderProperties = mProviderProperties
 End Property
 
-Private Property Let IOrderReport_quantity(ByVal value As Long)
-mquantity = value
+Public Property Let Quantity(ByVal value As Long)
+mQuantity = value
 End Property
 
-Private Property Get IOrderReport_quantity() As Long
-IOrderReport_quantity = mquantity
+Public Property Get Quantity() As Long
+Quantity = mQuantity
 End Property
 
-Private Property Let IOrderReport_settlingFirm(ByVal value As String)
-msettlingFirm = value
+Public Property Let QuantityFilled(ByVal value As Long)
+mQuantityFilled = value
 End Property
 
-Private Property Get IOrderReport_settlingFirm() As String
-IOrderReport_settlingFirm = msettlingFirm
+Public Property Get QuantityFilled() As Long
+QuantityFilled = mQuantityFilled
 End Property
 
-Private Property Let IOrderReport_status(ByVal value As TradeBuildSP.OrderStatuses)
+Public Property Let QuantityRemaining(ByVal value As Long)
+mQuantityRemaining = value
+End Property
+
+Public Property Get QuantityRemaining() As Long
+QuantityRemaining = mQuantityRemaining
+End Property
+
+Public Property Let SettlingFirm(ByVal value As String)
+mSettlingFirm = value
+End Property
+
+Public Property Get SettlingFirm() As String
+SettlingFirm = mSettlingFirm
+End Property
+
+Public Property Let Status(ByVal value As OrderStatuses)
 mStatus = value
 End Property
 
-Private Property Get IOrderReport_status() As TradeBuildSP.OrderStatuses
-IOrderReport_status = mStatus
+Public Property Get Status() As OrderStatuses
+Status = mStatus
 End Property
 
-Private Property Let IOrderReport_stopTriggerMethod(ByVal value As TradeBuildSP.StopTriggerMethods)
-mstopTriggerMethod = value
+Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
+mStopTriggerMethod = value
 End Property
 
-Private Property Get IOrderReport_stopTriggerMethod() As TradeBuildSP.StopTriggerMethods
-IOrderReport_stopTriggerMethod = mstopTriggerMethod
+Public Property Get StopTriggerMethod() As StopTriggerMethods
+StopTriggerMethod = mStopTriggerMethod
 End Property
 
-Private Property Let IOrderReport_sweepToFill(ByVal value As Boolean)
-msweepToFill = value
+Public Property Let SweepToFill(ByVal value As Boolean)
+mSweepToFill = value
 End Property
 
-Private Property Get IOrderReport_sweepToFill() As Boolean
-IOrderReport_sweepToFill = msweepToFill
+Public Property Get SweepToFill() As Boolean
+SweepToFill = mSweepToFill
 End Property
 
-Private Property Let IOrderReport_timeInForce(ByVal value As TradeBuildSP.OrderTifs)
-mtimeInForce = value
+Public Property Let TimeInForce(ByVal value As OrderTifs)
+mTimeInForce = value
 End Property
 
-Private Property Get IOrderReport_timeInForce() As TradeBuildSP.OrderTifs
-IOrderReport_timeInForce = mtimeInForce
+Public Property Get TimeInForce() As OrderTifs
+TimeInForce = mTimeInForce
 End Property
 
-Private Property Let IOrderReport_tradeBuildId(ByVal value As String)
-mtradeBuildId = value
+Public Property Let TriggerPrice(ByVal value As Double)
+mTriggerPrice = value
 End Property
 
-Private Property Get IOrderReport_tradeBuildId() As String
-IOrderReport_tradeBuildId = mtradeBuildId
-End Property
-
-Private Property Let IOrderReport_triggerPrice(ByVal value As Double)
-mtriggerPrice = value
-End Property
-
-Private Property Get IOrderReport_triggerPrice() As Double
-IOrderReport_triggerPrice = mtriggerPrice
+Public Property Get TriggerPrice() As Double
+TriggerPrice = mTriggerPrice
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Function ToJSON() As String
+Dim jb As JSONBuilder
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "Action"
+jb.EncodeValue mAction
+
+jb.EncodeName "AllOrNone"
+jb.EncodeValue mAllOrNone
+
+jb.EncodeName "AveragePrice"
+jb.EncodeValue mAveragePrice
+
+jb.EncodeName "BlockOrder"
+jb.EncodeValue mBlockOrder
+
+jb.EncodeName "BrokerId"
+jb.EncodeValue mBrokerId
+
+jb.EncodeName "DiscretionaryAmount"
+jb.EncodeValue mDiscretionaryAmount
+
+jb.EncodeName "DisplaySize"
+jb.EncodeValue mDisplaySize
+
+jb.EncodeName "ETradeOnly"
+jb.EncodeValue mETradeOnly
+
+jb.EncodeName "FillTime"
+jb.EncodeValue mFillTime
+
+jb.EncodeName "FirmQuoteOnly"
+jb.EncodeValue mFirmQuoteOnly
+
+jb.EncodeName "GoodAfterTime"
+jb.EncodeValue mGoodAfterTime
+
+jb.EncodeName "GoodAfterTimeTZ"
+jb.EncodeValue mGoodAfterTimeTZ
+
+jb.EncodeName "GoodTillDate"
+jb.EncodeValue mGoodTillDate
+
+jb.EncodeName "GoodTillDateTZ"
+jb.EncodeValue mGoodTillDateTZ
+
+jb.EncodeName "Hidden"
+jb.EncodeValue mHidden
+
+jb.EncodeName "Id"
+jb.EncodeValue mIdentifier
+
+jb.EncodeName "IgnoreRegularTradingHours"
+jb.EncodeValue mIgnoreRegularTradingHours
+
+jb.EncodeName "LastFillPrice"
+jb.EncodeValue mLastFillPrice
+
+jb.EncodeName "LimitPrice"
+jb.EncodeValue mLimitPrice
+
+jb.EncodeName "MinimumQuantity"
+jb.EncodeValue mMinimumQuantity
+
+jb.EncodeName "NbboPriceCap"
+jb.EncodeValue mNBBOPriceCap
+
+jb.EncodeName "Offset"
+jb.EncodeValue mOffset
+
+jb.EncodeName "OrderType"
+jb.EncodeValue mOrderType
+
+jb.EncodeName "Origin"
+jb.EncodeValue mOrigin
+
+jb.EncodeName "OriginatorRef"
+jb.EncodeValue moriginatorRef
+
+jb.EncodeName "OverrideConstraints"
+jb.EncodeValue mOverrideConstraints
+
+jb.EncodeName "PercentOffset"
+jb.EncodeValue mPercentOffset
+
+jb.EncodeName "ProviderProperties"
+jb.EncodeValue mProviderProperties
+
+jb.EncodeName "Quantity"
+jb.EncodeValue mQuantity
+
+jb.EncodeName "QuantityFilled"
+jb.EncodeValue mQuantityFilled
+
+jb.EncodeName "QuantityRemaining"
+jb.EncodeValue mQuantityRemaining
+
+jb.EncodeName "SettlingFirm"
+jb.EncodeValue mSettlingFirm
+
+jb.EncodeName "Status"
+jb.EncodeValue mStatus
+
+jb.EncodeName "StopTriggerMethod"
+jb.EncodeValue mStopTriggerMethod
+
+jb.EncodeName "SweepToFill"
+jb.EncodeValue mSweepToFill
+
+jb.EncodeName "TimeInForce"
+jb.EncodeValue mTimeInForce
+
+jb.EncodeName "TriggerPrice"
+jb.EncodeValue mTriggerPrice
+
+jb.EndObject
+
+ToJSON = jb.JSONString
+End Function
 
 '@================================================================================
 ' Helper Functions

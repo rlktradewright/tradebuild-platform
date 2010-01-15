@@ -105,6 +105,8 @@ Public Enum ApiNotifyCodes
     ApiNotifyReConnectingContractDataSource
     ApiNotifyRetryConnectContractDataSource
     
+    ApiNotifyOrderRejected
+    
 End Enum
 
 Public Enum BulletinTypes
@@ -299,13 +301,16 @@ End Enum
 Public Enum ProfitTypes
     ProfitTypeProfit
     ProfitTypeMaxProfit
+    ProfitTypeMaxLoss
     ProfitTypeDrawdown
     ProfitTypeSessionProfit
     ProfitTypeSessionMaxProfit
+    ProfitTypeSessionMaxLoss
     ProfitTypeSessionDrawdown
-    ProfitTypetradeProfit
+    ProfitTypeTradeProfit
     ProfitTypeTradeMaxProfit
-    ProfitTypetradeDrawdown
+    ProfitTypeTradeMaxLoss
+    ProfitTypeTradeDrawdown
 End Enum
 
 Public Enum ReplayContinueModes
@@ -476,7 +481,7 @@ End Type
 Public Type ProfitEvent
     source          As Object
     profitType    As Long
-    profitAmount    As Currency
+    ProfitAmount    As Currency
     currencyCode    As String
 End Type
 
@@ -576,17 +581,17 @@ End Property
 '@/
 Public Function EntryOrderTypeToOrderType( _
                 ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
-EntryOrderTypeToOrderType = gEntryOrderTypeToOrderType(pEntryOrderType)
+EntryOrderTypeToOrderType = GEntryOrderTypeToOrderType(pEntryOrderType)
 End Function
 
 Public Function EntryOrderTypeToString( _
                 ByVal value As EntryOrderTypes) As String
-EntryOrderTypeToString = gEntryOrderTypeToString(value)
+EntryOrderTypeToString = GEntryOrderTypeToString(value)
 End Function
 
 Public Function EntryOrderTypeToShortString( _
                 ByVal value As EntryOrderTypes) As String
-EntryOrderTypeToShortString = gEntryOrderTypeToShortString(value)
+EntryOrderTypeToShortString = GEntryOrderTypeToShortString(value)
 End Function
 
 Public Function GetFormattedPriceFromQuoteEvent( _
@@ -598,45 +603,45 @@ End Function
 
 Public Function LegOpenCloseFromString( _
                 ByVal value As String) As LegOpenClose
-LegOpenCloseFromString = gLegOpenCloseFromString(value)
+LegOpenCloseFromString = GLegOpenCloseFromString(value)
 End Function
 
 Public Function LegOpenCloseToString( _
                 ByVal value As LegOpenClose) As String
-LegOpenCloseToString = gLegOpenCloseToString(value)
+LegOpenCloseToString = GLegOpenCloseToString(value)
 End Function
 
 Public Function OrderActionFromString( _
                 ByVal value As String) As OrderActions
-OrderActionFromString = gOrderActionFromString(value)
+OrderActionFromString = GOrderActionFromString(value)
 End Function
 
 Public Function OrderActionToString( _
                 ByVal value As OrderActions) As String
-OrderActionToString = gOrderActionToString(value)
+OrderActionToString = GOrderActionToString(value)
 End Function
 
 Public Function OrderAttributeToString(ByVal value As OrderAttributes) As String
-OrderAttributeToString = gOrderAttributeToString(value)
+OrderAttributeToString = GOrderAttributeToString(value)
 End Function
 Public Function OrderStatusToString( _
                 ByVal value As OrderStatuses) As String
-OrderStatusToString = gOrderStatusToString(value)
+OrderStatusToString = GOrderStatusToString(value)
 End Function
 
 Public Function OrderStopTriggerMethodToString( _
                 ByVal value As StopTriggerMethods) As String
-OrderStopTriggerMethodToString = gOrderStopTriggerMethodToString(value)
+OrderStopTriggerMethodToString = GOrderStopTriggerMethodToString(value)
 End Function
 
 Public Function OrderTIFToString( _
                 ByVal value As OrderTifs) As String
-OrderTIFToString = gOrderTIFToString(value)
+OrderTIFToString = GOrderTIFToString(value)
 End Function
 
 Public Function OrderTypeToString( _
                 ByVal value As OrderTypes) As String
-OrderTypeToString = gOrderTypeToString(value)
+OrderTypeToString = GOrderTypeToString(value)
 End Function
 
 ''
@@ -649,12 +654,12 @@ End Function
 '@/
 Public Function StopOrderTypeToOrderType( _
                 ByVal pStopOrderType As StopOrderTypes) As OrderTypes
-StopOrderTypeToOrderType = gStopOrderTypeToOrderType(pStopOrderType)
+StopOrderTypeToOrderType = GStopOrderTypeToOrderType(pStopOrderType)
 End Function
 
 Public Function StopOrderTypeToString( _
                 ByVal value As StopOrderTypes)
-StopOrderTypeToString = gStopOrderTypeToString(value)
+StopOrderTypeToString = GStopOrderTypeToString(value)
 End Function
 
 ''
@@ -667,17 +672,17 @@ End Function
 '@/
 Public Function TargetOrderTypeToOrderType( _
                 ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
-TargetOrderTypeToOrderType = gTargetOrderTypeToOrderType(pTargetOrderType)
+TargetOrderTypeToOrderType = GTargetOrderTypeToOrderType(pTargetOrderType)
 End Function
 
 Public Function TargetOrderTypeToString( _
                 ByVal value As TargetOrderTypes) As String
-TargetOrderTypeToString = gTargetOrderTypeToString(value)
+TargetOrderTypeToString = GTargetOrderTypeToString(value)
 End Function
 
 Public Function TickfileSpecifierToString( _
                 ByVal TickfileSpec As TickfileSpecifier) As String
-TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
+TickfileSpecifierToString = GTickfileSpecifierToString(TickfileSpec)
 End Function
 
 '@================================================================================

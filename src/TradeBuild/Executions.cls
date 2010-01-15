@@ -34,7 +34,7 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "TradeBuild26"
+
 Private Const ModuleName                As String = "Executions"
 
 '@================================================================================
@@ -77,27 +77,29 @@ Public Property Get Count() As Long
 Count = mExecutions.Count
 End Property
 
-Public Property Get Item(ByVal key As String) As Execution
-Set Item = mExecutions.Item(key)
+Public Property Get Item(ByVal pExecId As String) As Execution
+Set Item = mExecutions.Item(pExecId)
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Add(pExecution As Execution)
-mExecutions.Add pExecution, pExecution.execId
+Friend Sub Add(ByVal pExecution As Execution)
+mExecutions.Add pExecution, pExecution.ExecId
 fireChange CollItemAdded, pExecution
 End Sub
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 mChangeListeners.Add value
+
+gNotifyExistingCollectionMembers mExecutions, value, Me
 End Sub
 
 Friend Sub Change(pExecution As Execution)
 Dim exec As Execution
-Set exec = mExecutions.Item(pExecution.execId)
+Set exec = mExecutions.Item(pExecution.ExecId)
 If Not exec Is pExecution Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "change", _

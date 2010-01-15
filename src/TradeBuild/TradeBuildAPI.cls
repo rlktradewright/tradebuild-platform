@@ -30,7 +30,7 @@ Event Notification(ByRef ev As NotificationEvent)
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuild26"
+
 Private Const ModuleName                    As String = "TradeBuildAPI"
 
 '@================================================================================
@@ -45,6 +45,8 @@ Private Const ModuleName                    As String = "TradeBuildAPI"
 ' Member variables
 '@================================================================================
 
+Private mApplicationName                As String
+
 Private mServiceProviderError           As ServiceProviderError
 
 Private mServiceProviders               As ServiceProviders
@@ -53,9 +55,14 @@ Private mWorkSpaces                     As WorkSpaces
 Private mDefaultWorkSpace               As Workspace
 Private mTickers                        As Tickers
 Private mExecutions                     As Executions
+Private mExecutionsSimulated            As Executions
 
 Private WithEvents mClosePositionsTC    As TaskController
 Attribute mClosePositionsTC.VB_VarHelpID = -1
+
+Private mOrderPlexRecoveryController    As OrderPlexRecoveryCtlr
+
+Private mSessionID                      As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -100,6 +107,36 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
+Public Property Let ApplicationName( _
+                ByVal value As String)
+mApplicationName = value
+End Property
+
+Public Property Get ApplicationName() As String
+ApplicationName = mApplicationName
+End Property
+
+Public Property Get AppSettingsFolder() As String
+Const ProcName As String = "AppSettingsFolder"
+Dim failpoint As String
+On Error GoTo Err
+
+If mApplicationName = "" Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "The TradeBuildAPI object's ApplicationName property has not been set"
+End If
+
+AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
+                    "\TradeWright\" & _
+                    mApplicationName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Property
+
 Public Property Get ClosingPositions() As Boolean
 Const ProcName As String = "ClosingPositions"
 Dim failpoint As Long
@@ -113,12 +150,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get defaultWorkSpace() As Workspace
+Public Property Get DefaultWorkSpace() As Workspace
 Const ProcName As String = "defaultWorkSpace"
 Dim failpoint As Long
 On Error GoTo Err
 
-Set defaultWorkSpace = mDefaultWorkSpace
+Set DefaultWorkSpace = mDefaultWorkSpace
 
 Exit Property
 
@@ -137,6 +174,23 @@ Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Property
+
+Public Property Get ExecutionsSimulated() As Executions
+Const ProcName As String = "ExecutionsSimulated"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set Executions = mExecutionsSimulated
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Property
+
+Friend Property Get OrderPlexRecoveryController() As OrderPlexRecoveryCtlr
+Set OrderPlexRecoveryController = mOrderPlexRecoveryController
 End Property
 
 Public Property Let PermittedServiceProviderRoles( _
@@ -183,6 +237,10 @@ Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Property
+
+Public Property Get SessionID() As String
+SessionID = mSessionID
 End Property
 
 Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
@@ -356,8 +414,8 @@ If useExchangeTimezone Then
     FromDate = startDate
     If endDate <> 0 Then ToDate = endDate
 Else
-    FromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(startDate), lContract.TimeZone)
-    If endDate <> 0 Then ToDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(endDate), lContract.TimeZone)
+    FromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(startDate), lContract.Timezone)
+    If endDate <> 0 Then ToDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(endDate), lContract.Timezone)
 End If
 
 ' determine start and end times ---------------------------------------------------
@@ -389,19 +447,19 @@ If ToDate <> 0 Then
     toSessionTimes = lSession.GetSessionTimes(ToDate)
     
     If completeSessionsOnly Then
-        replayToDate = toSessionTimes.endTime
+        replayToDate = toSessionTimes.EndTime
     Else
         replayToDate = ToDate
     End If
 Else
     toSessionTimes.StartTime = fromSessionTimes.StartTime
-    toSessionTimes.endTime = fromSessionTimes.endTime
-    replayToDate = toSessionTimes.endTime
+    toSessionTimes.EndTime = fromSessionTimes.EndTime
+    replayToDate = toSessionTimes.EndTime
 End If
 
 ' find contract for start date ------------------------------------------------------
 
-lSecType = pContracts(1).specifier.sectype
+lSecType = pContracts(1).specifier.SecType
 
 If lSecType <> SecurityTypes.SecTypeFuture And _
     lSecType <> SecurityTypes.SecTypeOption And _
@@ -412,7 +470,7 @@ Else
     For i = 1 To pContracts.Count
         Set aContract = pContracts(i)
         If DateValue(FromDate) <= _
-            (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+            (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
         Then
             Set currContract = aContract
             Exit For
@@ -447,7 +505,7 @@ If completeSessionsOnly Then
         If useCustomSessionTimes Then
             thisSessionTimes = lSession.GetSessionTimes(currSessionStart)
             tfs.FromDate = thisSessionTimes.StartTime
-            tfs.ToDate = thisSessionTimes.endTime
+            tfs.ToDate = thisSessionTimes.EndTime
             tfs.EntireSession = False
             tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                         "-" & _
@@ -471,12 +529,12 @@ If completeSessionsOnly Then
             lSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
+                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
             Then
                 For i = i + 1 To pContracts.Count
                     Set aContract = pContracts(i)
                     If DateValue(currSessionStart) <= _
-                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+                        (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
                     Then
                         Set currContract = aContract
                         If useCustomSessionTimes Then
@@ -517,12 +575,12 @@ Else
             lSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
+                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
             Then
                 For i = i + 1 To pContracts.Count
                     Set aContract = pContracts(i)
                     If DateValue(currSessionStart) <= _
-                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+                        (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
                     Then
                         tfs.ToDate = currSessionStart
                         tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
@@ -590,11 +648,16 @@ Const ProcName As String = "Initialise"
 Dim failpoint As Long
 On Error GoTo Err
 
+mSessionID = GenerateGUIDString
+
 Set mWorkSpaces = New WorkSpaces
 
 Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
-Set mTickers = defaultWorkSpace.Tickers
-Set mExecutions = defaultWorkSpace.Executions
+Set mTickers = DefaultWorkSpace.Tickers
+Set mExecutions = DefaultWorkSpace.Executions
+Set mExecutionsSimulated = DefaultWorkSpace.ExecutionsSimulated
+
+Set mOrderPlexRecoveryController = New OrderPlexRecoveryCtlr
 
 Exit Sub
 
@@ -617,14 +680,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Function loadContracts( _
-                ByVal pContractSpec As contractSpecifier) As TaskController
+Public Function LoadContracts( _
+                ByVal pContractSpec As ContractSpecifier) As TaskController
 Const ProcName As String = "loadContracts"
 Dim failpoint As Long
 On Error GoTo Err
 
-gLogLogger.Log LogLevelDetail, "Starting contract load task for " & pContractSpec.ToString
-Set loadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
+GLogLogger.Log LogLevelDetail, "Starting contract load task for " & pContractSpec.ToString
+Set LoadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
 
 Exit Function
 
@@ -637,9 +700,9 @@ Const ProcName As String = "notify"
 Dim failpoint As Long
 On Error GoTo Err
 
-gLog pMsg:="Notification", _
-    pMsgQualifier:="(" & gApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
-    pProcName:="notify", pProjName:=ProjectName, pModName:=ModuleName
+logMessage pMsg:="Notification", _
+    pMsgQualifier:="(" & GApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
+    pProcName:="notify"
 RaiseEvent Notification(ev)
 
 Exit Sub
@@ -649,14 +712,14 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Friend Sub NotifyFatalError( _
-                ByVal errorCode As Long, _
+                ByVal ErrorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal errorSource As String)
 Dim ev As ErrorEvent
 
 On Error Resume Next
 
-logMessage pMsg:="Fatal error " & errorCode & vbCrLf & _
+logMessage pMsg:="Fatal error " & ErrorCode & vbCrLf & _
                                 errorMessage & vbCrLf & _
                                 "Occurred at:" & vbCrLf & _
                                 errorSource, _
@@ -670,7 +733,7 @@ logMessage pMsg:="Killing program", _
 TerminateTWUtilities    ' to stop any outstanding tasks and timers
 
 Set ev.source = Me
-ev.errorCode = errorCode
+ev.ErrorCode = ErrorCode
 ev.errorMessage = errorMessage
 ev.errorSource = errorSource
 
@@ -684,75 +747,14 @@ TerminateProcess GetCurrentProcess, 1
 
 End Sub
 
-Friend Sub notifyListeners( _
-                            ByVal value As Variant, _
-                            ByVal valueType As Long, _
-                            ByVal source As Object)
-Const ProcName As String = "notifyListeners"
-Dim failpoint As Long
-On Error GoTo Err
-
-Select Case valueType
-Case VTLog
-    gLogLogger.Log LogLevelNormal, value
-Case VTTrace
-    gTraceLogger.Log LogLevelNormal, value, source
-Case VTDebug
-    gDebugLogger.Log LogLevelNormal, value, source
-Case VTProfitProfile
-    gProfitProfileLogger.Log LogLevelNormal, value, source
-Case VTSimulatedProfitProfile
-    gProfitProfileLoggerSimulated.Log LogLevelNormal, value, source
-Case VTMoneyManagement
-    gMoneyManagementLogger.Log LogLevelNormal, value, source
-Case VTOrderPlexProfileStruct
-    gOrderPlexProfileStructLogger.Log LogLevelNormal, value, source
-Case VTSimulatedOrderPlexProfileStruct
-    gOrderPlexProfileStructLoggerSimulated.Log LogLevelNormal, value, source
-Case VTOrderPlexProfileString
-    gOrderPlexProfileStringLogger.Log LogLevelNormal, value, source
-Case VTSimulatedOrderPlexProfileString
-    gOrderPlexProfileStringLoggerSimulated.Log LogLevelNormal, value, source
-Case VTOrder
-    gOrderLogger.Log LogLevelNormal, value, source
-Case VTSimulatedOrder
-    gOrderLoggerSimulated.Log LogLevelNormal, value, source
-Case VTPosition
-    gPositionLogger.Log LogLevelNormal, value, source
-Case VTSimulatedPosition
-    gPositionLoggerSimulated.Log LogLevelNormal, value, source
-Case VTTradeProfile
-    gTradeProfileLogger.Log LogLevelNormal, value, source
-Case VTSimulatedTradeProfile
-    gTradeProfileLoggerSimulated.Log LogLevelNormal, value, source
-Case VTProfit
-    gProfitLogger.Log LogLevelNormal, value, source
-Case VTSimulatedProfit
-    gProfitLoggerSimulated.Log LogLevelNormal, value, source
-Case VTDrawdown
-    gDrawdownLogger.Log LogLevelNormal, value, source
-Case VTSimulatedDrawdown
-    gDrawdownLoggerSimulated.Log LogLevelNormal, value, source
-Case VTMaxProfit
-    gMaxProfitLogger.Log LogLevelNormal, value, source
-Case VTSimulatedMaxProfit
-    gMaxProfitLoggerSimulated.Log LogLevelNormal, value, source
-Case VTOrderDetail
-    gOrderDetailLogger.Log LogLevelNormal, value, source
-Case VTOrderDetailSimulated
-    gOrderDetailLoggerSimulated.Log LogLevelNormal, value, source
-End Select
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+Public Sub RecoverOrders(ByVal sessionName As String)
+mOrderPlexRecoveryController.RecoverOrders sessionName
 End Sub
-                            
+
 Friend Sub SetServiceProviderError( _
-                ByVal errorCode As Long, _
+                ByVal ErrorCode As Long, _
                 ByVal errorMessage As String, _
-                ByVal serviceProviderName As String)
+                ByVal ServiceProviderName As String)
 Dim ev As NotificationEvent
 
 Const ProcName As String = "SetServiceProviderError"
@@ -760,9 +762,9 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set mServiceProviderError = New ServiceProviderError
-mServiceProviderError.errorCode = errorCode
-mServiceProviderError.message = errorMessage
-mServiceProviderError.serviceProviderName = serviceProviderName
+mServiceProviderError.ErrorCode = ErrorCode
+mServiceProviderError.Message = errorMessage
+mServiceProviderError.ServiceProviderName = ServiceProviderName
 mServiceProviderError.Timestamp = GetTimestamp
 
 Set ev.source = Me
@@ -827,7 +829,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+GLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 

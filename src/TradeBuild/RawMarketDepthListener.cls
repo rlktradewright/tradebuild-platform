@@ -75,11 +75,11 @@ Public Sub MarketDepthNotAvailable( _
                 
 End Sub
 
-Public Sub resetMarketDepth(ByRef ev As RawMarketDepthEvent)
+Public Sub ResetMarketDepth(ByRef ev As RawMarketDepthEvent)
                 
 End Sub
 
-Public Sub updateMarketDepth(ByRef ev As RawMarketDepthEvent)
+Public Sub UpdateMarketDepth(ByRef ev As RawMarketDepthEvent)
                 
 End Sub
 

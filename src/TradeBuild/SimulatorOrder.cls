@@ -46,7 +46,7 @@ Option Explicit
 ''
 ' The underlying <code>order</code>
 '@/
-Private mOrder As order
+Private mOrder As Order
 
 ''
 ' Index into the simulator's MarketTable relevant to this <code>order</code>
@@ -85,44 +85,44 @@ Private mOcaGroup       As String
 ' Properties
 '@================================================================================
 
-Friend Property Let atExchange(ByVal value As Boolean)
+Friend Property Let AtExchange(ByVal value As Boolean)
 mAtExchange = value
 End Property
 
-Friend Property Get atExchange() As Boolean
-atExchange = mAtExchange
+Friend Property Get AtExchange() As Boolean
+AtExchange = mAtExchange
 End Property
 
-Friend Property Let marketIndex(ByVal value As Long)
+Friend Property Let MarketIndex(ByVal value As Long)
 mMarketIndex = value
 End Property
 
-Friend Property Get marketIndex() As Long
-marketIndex = mMarketIndex
+Friend Property Get MarketIndex() As Long
+MarketIndex = mMarketIndex
 End Property
 
-Friend Property Let ocaGroup(ByVal value As String)
+Friend Property Let OcaGroup(ByVal value As String)
 mOcaGroup = value
 End Property
 
-Friend Property Get ocaGroup() As String
-ocaGroup = mOcaGroup
+Friend Property Get OcaGroup() As String
+OcaGroup = mOcaGroup
 End Property
 
-Friend Property Let order(ByVal value As order)
+Friend Property Let Order(ByVal value As Order)
 Set mOrder = value
 End Property
 
-Friend Property Get order() As order
-Set order = mOrder
+Friend Property Get Order() As Order
+Set Order = mOrder
 End Property
 
-Friend Property Let parentId(ByVal value As String)
+Friend Property Let ParentId(ByVal value As String)
 mParentId = value
 End Property
 
-Friend Property Get parentId() As String
-parentId = mParentId
+Friend Property Get ParentId() As String
+ParentId = mParentId
 End Property
 
 '@================================================================================

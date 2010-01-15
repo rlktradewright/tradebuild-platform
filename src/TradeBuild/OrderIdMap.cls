@@ -44,9 +44,17 @@ Private Const ModuleName                            As String = "OrderIdMap"
 ' Member variables
 '@================================================================================
 
+Private mTradeBuildIds                              As Collection
+Private mBrokerIds                                  As Collection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mTradeBuildIds = New Collection
+Set mBrokerIds = New Collection
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -64,6 +72,42 @@ Private Const ModuleName                            As String = "OrderIdMap"
 ' Methods
 '@================================================================================
 
+Friend Sub Add( _
+                ByRef pTradeBuildId As String, _
+                ByRef pBrokerId As String)
+On Error Resume Next
+mTradeBuildIds.Add pTradeBuildId, pBrokerId
+mBrokerIds.Add pBrokerId, pTradeBuildId
+End Sub
+
+Friend Function GetBrokerId( _
+                ByRef pTradeBuildId As String) As String
+Const ProcName As String = "GetBrokerId"
+Dim failpoint As String
+On Error GoTo Err
+
+GetBrokerId = mBrokerIds.Item(pTradeBuildId)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Function
+                
+Friend Function GetTradeBuildId( _
+                ByRef pBrokerId As String) As String
+Const ProcName As String = "GetTradeBuildId"
+Dim failpoint As String
+On Error GoTo Err
+
+GetTradeBuildId = mTradeBuildIds.Item(pBrokerId)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Function
+                
 '@================================================================================
 ' Helper Functions
 '@================================================================================

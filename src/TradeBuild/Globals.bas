@@ -5,7 +5,9 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "TradeBuild26"
+Public Const ProjectName                As String = "TradeBuild26"
+
+Private Const ModuleName                As String = "Globals"
 
 Public Const S_OK                           As Long = 0
 Public Const NoValidID                      As Long = -1
@@ -60,39 +62,6 @@ Public Const StrOrderActionSell             As String = "Sell"
 ' Enums
 '@================================================================================
 
-Public Enum TradeBuildListenValueTypes
-
-    VTAll = -1  ' used by listenenrs to specify that they want to receive all
-                ' types of listen data
-    
-    VTLog = 1
-    VTTrace
-    VTDebug
-
-    VTProfitProfile
-    VTSimulatedProfitProfile
-    VTMoneyManagement
-    VTOrderPlexProfileStruct
-    VTSimulatedOrderPlexProfileStruct
-    VTOrderPlexProfileString
-    VTSimulatedOrderPlexProfileString
-    VTOrder
-    VTSimulatedOrder
-    VTPosition
-    VTSimulatedPosition
-    VTTradeProfile
-    VTSimulatedTradeProfile
-    VTProfit
-    VTSimulatedProfit
-    VTDrawdown
-    VTSimulatedDrawdown
-    VTMaxProfit
-    VTSimulatedMaxProfit
-    VTOrderDetail
-    VTOrderDetailSimulated
-        
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -107,161 +76,108 @@ End Enum
 
 Public gTB As TradeBuildAPI
 
-Private mLogLogger As Logger
-Private mErrorLogger As Logger
-
-Private mSpLogLogger As Logger
-
-Private mTraceLogger As Logger
-
-Private mDebugLogger As Logger
-
-Private mProfitProfileLogger As Logger
-
-Private mProfitProfileLoggerSimulated As Logger
-
-Private mMoneyManagementLogger As Logger
-
-Private mOrderPlexProfileStructLogger As Logger
-
-Private mOrderPlexProfileStructLoggerSimulated As Logger
-
-Private mOrderPlexProfileStringLogger As Logger
-
-Private mOrderPlexProfileStringLoggerSimulated As Logger
-
-Private mOrderLogger As Logger
-
-Private mOrderLoggerSimulated As Logger
-
-Private mPositionLogger As Logger
-
-Private mPositionLoggerSimulated As Logger
-
-Private mTradeProfileLogger As Logger
-
-Private mTradeProfileLoggerSimulated As Logger
-
-Private mProfitLogger As Logger
-
-Private mProfitLoggerSimulated As Logger
-
-Private mDrawdownLogger  As Logger
-
-Private mDrawdownLoggerSimulated As Logger
-
-Private mMaxProfitLogger As Logger
-
-Private mMaxProfitLoggerSimulated As Logger
-
-Private mOrderDetailLogger As Logger
-
-Private mOrderDetailLoggerSimulated As Logger
-
 Private mLogTokens(9) As String
-
-Private mTracer As Tracer
 
 '@================================================================================
 ' Procedures
 '@================================================================================
 
-Public Function gApiNotifyCodeToString(value As ApiNotifyCodes) As String
+Public Function GApiNotifyCodeToString(value As ApiNotifyCodes) As String
 Select Case value
 Case ApiNotifyServiceProviderError
-    gApiNotifyCodeToString = "ApiNotifyServiceProviderError"
+    GApiNotifyCodeToString = "ApiNotifyServiceProviderError"
 Case ApiNotifyTickfileEmpty
-    gApiNotifyCodeToString = "ApiNotifyTickfileEmpty"
+    GApiNotifyCodeToString = "ApiNotifyTickfileEmpty"
 Case ApiNotifyTickfileInvalid
-    gApiNotifyCodeToString = "ApiNotifyTickfileInvalid"
+    GApiNotifyCodeToString = "ApiNotifyTickfileInvalid"
 Case ApiNotifyTickfileVersionNotSupported
-    gApiNotifyCodeToString = "ApiNotifyTickfileVersionNotSupported"
+    GApiNotifyCodeToString = "ApiNotifyTickfileVersionNotSupported"
 Case ApiNotifyTickfileContractDetailsInvalid
-    gApiNotifyCodeToString = "ApiNotifyTickfileContractDetailsInvalid"
+    GApiNotifyCodeToString = "ApiNotifyTickfileContractDetailsInvalid"
 Case ApiNotifyTickfileNoContractDetails
-    gApiNotifyCodeToString = "ApiNotifyTickfileNoContractDetails"
+    GApiNotifyCodeToString = "ApiNotifyTickfileNoContractDetails"
 Case ApiNotifyTickfileDataSourceNotResponding
-    gApiNotifyCodeToString = "ApiNotifyTickfileDataSourceNotResponding"
+    GApiNotifyCodeToString = "ApiNotifyTickfileDataSourceNotResponding"
 Case ApiNotifyTickfileDoesntExist
-    gApiNotifyCodeToString = "ApiNotifyTickfileDoesntExist"
+    GApiNotifyCodeToString = "ApiNotifyTickfileDoesntExist"
 Case ApiNOtifyTickfileFormatNotSupported
-    gApiNotifyCodeToString = "ApiNOtifyTickfileFormatNotSupported"
+    GApiNotifyCodeToString = "ApiNOtifyTickfileFormatNotSupported"
 Case ApiNotifyTickfileContractSpecifierInvalid
-    gApiNotifyCodeToString = "ApiNotifyTickfileContractSpecifierInvalid"
+    GApiNotifyCodeToString = "ApiNotifyTickfileContractSpecifierInvalid"
 Case ApiNotifyCantWriteToTickfileDataStore
-    gApiNotifyCodeToString = "ApiNotifyCantWriteToTickfileDataStore"
+    GApiNotifyCodeToString = "ApiNotifyCantWriteToTickfileDataStore"
 Case ApiNotifyRetryingConnectionToTickfileDataSource
-    gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToTickfileDataSource"
+    GApiNotifyCodeToString = "ApiNotifyRetryingConnectionToTickfileDataSource"
 Case ApiNotifyConnectedToTickfileDataSource
-    gApiNotifyCodeToString = "ApiNotifyConnectedToTickfileDataSource"
+    GApiNotifyCodeToString = "ApiNotifyConnectedToTickfileDataSource"
 Case ApiNotifyReconnectingToTickfileDataSource
-    gApiNotifyCodeToString = "ApiNotifyReconnectingToTickfileDataSource"
+    GApiNotifyCodeToString = "ApiNotifyReconnectingToTickfileDataSource"
 Case ApiNotifyLostConnectionToTickfileDataSource
-    gApiNotifyCodeToString = "ApiNotifyLostConnectionToTickfileDataSource"
+    GApiNotifyCodeToString = "ApiNotifyLostConnectionToTickfileDataSource"
 Case ApiNotifyNoHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyNoHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyNoHistoricDataSource"
 Case ApiNotifyCantConnectHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyCantConnectHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyCantConnectHistoricDataSource"
 Case ApiNotifyConnectedToHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyConnectedToHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyConnectedToHistoricDataSource"
 Case ApiNotifyDisconnectedFromHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyDisconnectedFromHistoricDataSource"
 Case ApiNotifyRetryingConnectionToHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyRetryingConnectionToHistoricDataSource"
 Case ApiNotifyLostConnectionToHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyLostConnectionToHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyLostConnectionToHistoricDataSource"
 Case ApiNotifyReconnectingToHistoricDataSource
-    gApiNotifyCodeToString = "ApiNotifyReconnectingToHistoricDataSource"
+    GApiNotifyCodeToString = "ApiNotifyReconnectingToHistoricDataSource"
 Case ApiNotifyHistoricDataRequestFailed
-    gApiNotifyCodeToString = "ApiNotifyHistoricDataRequestFailed"
+    GApiNotifyCodeToString = "ApiNotifyHistoricDataRequestFailed"
 Case ApiNotifyInvalidRequest
-    gApiNotifyCodeToString = "ApiNotifyInvalidRequest"
+    GApiNotifyCodeToString = "ApiNotifyInvalidRequest"
 Case ApiNotifyCantConnectRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyCantConnectRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyCantConnectRealtimeDataSource"
 Case ApiNotifyConnectedToRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyConnectedToRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyConnectedToRealtimeDataSource"
 Case ApiNotifyLostConnectionToRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyLostConnectionToRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyLostConnectionToRealtimeDataSource"
 Case ApiNotifyNoRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyNoRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyNoRealtimeDataSource"
 Case ApiNotifyReconnectingToRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyReconnectingToRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyReconnectingToRealtimeDataSource"
 Case ApiNotifyDisconnectedFromRealtimeDataSource
-    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromRealtimeDataSource"
+    GApiNotifyCodeToString = "ApiNotifyDisconnectedFromRealtimeDataSource"
 Case ApiNotifyRealtimeDataRequestFailed
-    gApiNotifyCodeToString = "ApiNotifyRealtimeDataRequestFailed"
+    GApiNotifyCodeToString = "ApiNotifyRealtimeDataRequestFailed"
 Case ApiNotifyRealtimeDataSourceNotResponding
-    gApiNotifyCodeToString = "ApiNotifyRealtimeDataSourceNotResponding"
+    GApiNotifyCodeToString = "ApiNotifyRealtimeDataSourceNotResponding"
 Case ApiNotifyCantConnectToBroker
-    gApiNotifyCodeToString = "ApiNotifyCantConnectToBroker"
+    GApiNotifyCodeToString = "ApiNotifyCantConnectToBroker"
 Case ApiNotifyConnectedToBroker
-    gApiNotifyCodeToString = "ApiNotifyConnectedToBroker"
+    GApiNotifyCodeToString = "ApiNotifyConnectedToBroker"
 Case ApiNotifyRetryConnectToBroker
-    gApiNotifyCodeToString = "ApiNotifyRetryConnectToBroker"
+    GApiNotifyCodeToString = "ApiNotifyRetryConnectToBroker"
 Case ApiNotifyLostConnectionToBroker
-    gApiNotifyCodeToString = "ApiNotifyLostConnectionToBroker"
+    GApiNotifyCodeToString = "ApiNotifyLostConnectionToBroker"
 Case ApiNotifyReConnectingToBroker
-    gApiNotifyCodeToString = "ApiNotifyReConnectingToBroker"
+    GApiNotifyCodeToString = "ApiNotifyReConnectingToBroker"
 Case ApiNotifyDisconnectedFromBroker
-    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromBroker"
+    GApiNotifyCodeToString = "ApiNotifyDisconnectedFromBroker"
 Case ApiNotifyNonSpecificNotification
-    gApiNotifyCodeToString = "ApiNotifyNonSpecificNotification"
+    GApiNotifyCodeToString = "ApiNotifyNonSpecificNotification"
 Case ApiNotifyCantWriteToHistoricDataStore
-    gApiNotifyCodeToString = "ApiNotifyCantWriteToHistoricDataStore"
+    GApiNotifyCodeToString = "ApiNotifyCantWriteToHistoricDataStore"
 Case ApiNotifyTryLater
-    gApiNotifyCodeToString = "ApiNotifyTryLater"
+    GApiNotifyCodeToString = "ApiNotifyTryLater"
 Case ApiNotifyCantConnectContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyCantConnectContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyCantConnectContractDataSource"
 Case ApiNotifyConnectedToContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyConnectedToContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyConnectedToContractDataSource"
 Case ApiNotifyDisconnectedFromContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyDisconnectedFromContractDataSource"
 Case ApiNotifyLostConnectionToContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyLostConnectionToContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyLostConnectionToContractDataSource"
 Case ApiNotifyReConnectingContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyReConnectingContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyReConnectingContractDataSource"
 Case ApiNotifyRetryConnectContractDataSource
-    gApiNotifyCodeToString = "ApiNotifyRetryConnectContractDataSource"
+    GApiNotifyCodeToString = "ApiNotifyRetryConnectContractDataSource"
 End Select
 End Function
 
@@ -273,37 +189,37 @@ End Function
 ' @ see
 '
 '@/
-Public Function gEntryOrderTypeToOrderType( _
+Public Function GEntryOrderTypeToOrderType( _
                 ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
 Select Case pEntryOrderType
 Case EntryOrderTypeMarket
-    gEntryOrderTypeToOrderType = OrderTypeMarket
+    GEntryOrderTypeToOrderType = OrderTypeMarket
 Case EntryOrderTypeMarketOnOpen
-    gEntryOrderTypeToOrderType = OrderTypeMarketOnOpen
+    GEntryOrderTypeToOrderType = OrderTypeMarketOnOpen
 Case EntryOrderTypeMarketOnClose
-    gEntryOrderTypeToOrderType = OrderTypeMarketOnClose
+    GEntryOrderTypeToOrderType = OrderTypeMarketOnClose
 Case EntryOrderTypeMarketIfTouched
-    gEntryOrderTypeToOrderType = OrderTypeMarketIfTouched
+    GEntryOrderTypeToOrderType = OrderTypeMarketIfTouched
 Case EntryOrderTypeMarketToLimit
-    gEntryOrderTypeToOrderType = OrderTypeMarketToLimit
+    GEntryOrderTypeToOrderType = OrderTypeMarketToLimit
 Case EntryOrderTypeBid
-    gEntryOrderTypeToOrderType = OrderTypeLimit
+    GEntryOrderTypeToOrderType = OrderTypeLimit
 Case EntryOrderTypeAsk
-    gEntryOrderTypeToOrderType = OrderTypeLimit
+    GEntryOrderTypeToOrderType = OrderTypeLimit
 Case EntryOrderTypeLast
-    gEntryOrderTypeToOrderType = OrderTypeLimit
+    GEntryOrderTypeToOrderType = OrderTypeLimit
 Case EntryOrderTypeLimit
-    gEntryOrderTypeToOrderType = OrderTypeLimit
+    GEntryOrderTypeToOrderType = OrderTypeLimit
 Case EntryOrderTypeLimitOnOpen
-    gEntryOrderTypeToOrderType = OrderTypeLimitOnOpen
+    GEntryOrderTypeToOrderType = OrderTypeLimitOnOpen
 Case EntryOrderTypeLimitOnClose
-    gEntryOrderTypeToOrderType = OrderTypeLimitOnClose
+    GEntryOrderTypeToOrderType = OrderTypeLimitOnClose
 Case EntryOrderTypeLimitIfTouched
-    gEntryOrderTypeToOrderType = OrderTypeLimitIfTouched
+    GEntryOrderTypeToOrderType = OrderTypeLimitIfTouched
 Case EntryOrderTypeStop
-    gEntryOrderTypeToOrderType = OrderTypeStop
+    GEntryOrderTypeToOrderType = OrderTypeStop
 Case EntryOrderTypeStopLimit
-    gEntryOrderTypeToOrderType = OrderTypeStopLimit
+    GEntryOrderTypeToOrderType = OrderTypeStopLimit
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gEntryOrderTypeToOrderType", _
@@ -311,80 +227,84 @@ Case Else
 End Select
 End Function
 
-Public Function gEntryOrderTypeToString(ByVal value As EntryOrderTypes) As String
+Public Function GEntryOrderTypeToString(ByVal value As EntryOrderTypes) As String
 Select Case value
 Case EntryOrderTypeMarket
-    gEntryOrderTypeToString = "Market"
+    GEntryOrderTypeToString = "Market"
 Case EntryOrderTypeMarketOnOpen
-    gEntryOrderTypeToString = "Market on open"
+    GEntryOrderTypeToString = "Market on open"
 Case EntryOrderTypeMarketOnClose
-    gEntryOrderTypeToString = "Market on close"
+    GEntryOrderTypeToString = "Market on close"
 Case EntryOrderTypeMarketIfTouched
-    gEntryOrderTypeToString = "Market if touched"
+    GEntryOrderTypeToString = "Market if touched"
 Case EntryOrderTypeMarketToLimit
-    gEntryOrderTypeToString = "Market to limit"
+    GEntryOrderTypeToString = "Market to limit"
 Case EntryOrderTypeBid
-    gEntryOrderTypeToString = "Bid price"
+    GEntryOrderTypeToString = "Bid price"
 Case EntryOrderTypeAsk
-    gEntryOrderTypeToString = "Ask price"
+    GEntryOrderTypeToString = "Ask price"
 Case EntryOrderTypeLast
-    gEntryOrderTypeToString = "Last Trade price"
+    GEntryOrderTypeToString = "Last Trade price"
 Case EntryOrderTypeLimit
-    gEntryOrderTypeToString = "Limit"
+    GEntryOrderTypeToString = "Limit"
 Case EntryOrderTypeLimitOnOpen
-    gEntryOrderTypeToString = "Limit on open"
+    GEntryOrderTypeToString = "Limit on open"
 Case EntryOrderTypeLimitOnClose
-    gEntryOrderTypeToString = "Limit on close"
+    GEntryOrderTypeToString = "Limit on close"
 Case EntryOrderTypeLimitIfTouched
-    gEntryOrderTypeToString = "Limit if touched"
+    GEntryOrderTypeToString = "Limit if touched"
 Case EntryOrderTypeStop
-    gEntryOrderTypeToString = "Stop"
+    GEntryOrderTypeToString = "Stop"
 Case EntryOrderTypeStopLimit
-    gEntryOrderTypeToString = "Stop limit"
+    GEntryOrderTypeToString = "Stop limit"
 End Select
 End Function
 
-Public Function gEntryOrderTypeToShortString(ByVal value As EntryOrderTypes) As String
+Public Function GEntryOrderTypeToShortString(ByVal value As EntryOrderTypes) As String
 Select Case value
 Case EntryOrderTypeMarket
-    gEntryOrderTypeToShortString = "MKT"
+    GEntryOrderTypeToShortString = "MKT"
 Case EntryOrderTypeMarketOnOpen
-    gEntryOrderTypeToShortString = "MOO"
+    GEntryOrderTypeToShortString = "MOO"
 Case EntryOrderTypeMarketOnClose
-    gEntryOrderTypeToShortString = "MOC"
+    GEntryOrderTypeToShortString = "MOC"
 Case EntryOrderTypeMarketIfTouched
-    gEntryOrderTypeToShortString = "MIT"
+    GEntryOrderTypeToShortString = "MIT"
 Case EntryOrderTypeMarketToLimit
-    gEntryOrderTypeToShortString = "MTL"
+    GEntryOrderTypeToShortString = "MTL"
 Case EntryOrderTypeBid
-    gEntryOrderTypeToShortString = "BID"
+    GEntryOrderTypeToShortString = "BID"
 Case EntryOrderTypeAsk
-    gEntryOrderTypeToShortString = "ASK"
+    GEntryOrderTypeToShortString = "ASK"
 Case EntryOrderTypeLast
-    gEntryOrderTypeToShortString = "LAST"
+    GEntryOrderTypeToShortString = "LAST"
 Case EntryOrderTypeLimit
-    gEntryOrderTypeToShortString = "LMT"
+    GEntryOrderTypeToShortString = "LMT"
 Case EntryOrderTypeLimitOnOpen
-    gEntryOrderTypeToShortString = "LOO"
+    GEntryOrderTypeToShortString = "LOO"
 Case EntryOrderTypeLimitOnClose
-    gEntryOrderTypeToShortString = "LOC"
+    GEntryOrderTypeToShortString = "LOC"
 Case EntryOrderTypeLimitIfTouched
-    gEntryOrderTypeToShortString = "LIT"
+    GEntryOrderTypeToShortString = "LIT"
 Case EntryOrderTypeStop
-    gEntryOrderTypeToShortString = "STP"
+    GEntryOrderTypeToShortString = "STP"
 Case EntryOrderTypeStopLimit
-    gEntryOrderTypeToShortString = "STPLMT"
+    GEntryOrderTypeToShortString = "STPLMT"
 End Select
 End Function
 
-Public Sub gHandleFatalError( _
+Public Sub GHandleFatalError( _
                 ByRef pProcName As String, _
                 ByRef pModuleName As String, _
                 Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.number
+Dim errSource As String: errSource = Err.source
+Dim errDesc As String: errDesc = Err.Description
+
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=pModuleName, pFailpoint:=pFailpoint
+HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=pModuleName, pFailpoint:=pFailpoint
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -392,223 +312,270 @@ Err:
 gTB.NotifyFatalError Err.number, Err.Description, Err.source
 End Sub
 
-Public Function gIsValidTIF(ByVal value As OrderTifs) As Boolean
+Public Function GIsValidTIF(ByVal value As OrderTifs) As Boolean
 Select Case value
 Case TIFDay
-    gIsValidTIF = True
+    GIsValidTIF = True
 Case TIFGoodTillCancelled
-    gIsValidTIF = True
+    GIsValidTIF = True
 Case TIFImmediateOrCancel
-    gIsValidTIF = True
+    GIsValidTIF = True
 Case Else
-    gIsValidTIF = False
+    GIsValidTIF = False
 End Select
 End Function
 
-Public Function gLegOpenCloseFromString(ByVal value As String) As LegOpenClose
+Public Function GLegOpenCloseFromString(ByVal value As String) As LegOpenClose
 Select Case UCase$(value)
 Case ""
-    gLegOpenCloseFromString = LegUnknownPos
+    GLegOpenCloseFromString = LegUnknownPos
 Case "SAME"
-    gLegOpenCloseFromString = LegSamePos
+    GLegOpenCloseFromString = LegSamePos
 Case "OPEN"
-    gLegOpenCloseFromString = LegOpenPos
+    GLegOpenCloseFromString = LegOpenPos
 Case "CLOSE"
-    gLegOpenCloseFromString = LegClosePos
+    GLegOpenCloseFromString = LegClosePos
 End Select
 End Function
 
-Public Function gLegOpenCloseToString(ByVal value As LegOpenClose) As String
+Public Function GLegOpenCloseToString(ByVal value As LegOpenClose) As String
 Select Case value
 Case LegSamePos
-    gLegOpenCloseToString = "SAME"
+    GLegOpenCloseToString = "SAME"
 Case LegOpenPos
-    gLegOpenCloseToString = "OPEN"
+    GLegOpenCloseToString = "OPEN"
 Case LegClosePos
-    gLegOpenCloseToString = "CLOSE"
+    GLegOpenCloseToString = "CLOSE"
 End Select
 End Function
 
-Public Function gOrderActionFromString(ByVal value As String) As OrderActions
+Public Function gNotifyExistingCollectionMembers( _
+                ByVal pCollection As Variant, _
+                ByVal pListener As CollectionChangeListener, _
+                ByVal pSource As Object)
+Dim lItem As Variant
+
+Const ProcName As String = "gNotifyExistingCollectionMembers"
+Dim failpoint As String
+On Error GoTo Err
+
+If VarType(pCollection) And vbArray = vbArray Then
+    For Each lItem In pCollection
+        notifyCollectionMember lItem, pSource, pListener
+    Next
+ElseIf Not IsObject(pCollection) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
+ElseIf TypeOf pCollection Is Collection Then
+    For Each lItem In pCollection
+        notifyCollectionMember lItem, pSource, pListener
+    Next
+ElseIf TypeOf pCollection Is Enumerable Then
+    Dim enColl As Enumerable
+    Dim en As Enumerator
+    
+    Set enColl = pCollection
+    Set en = enColl.Enumerator
+    
+    Do While en.MoveNext
+        notifyCollectionMember en.current, pSource, pListener
+    Loop
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "pCollection argument must be an array or a VB6 collection or must implement Enumerable"
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+
+End Function
+
+Public Function GOrderActionFromString(ByVal value As String) As OrderActions
 Select Case UCase$(value)
 Case StrOrderActionBuy
-    gOrderActionFromString = ActionBuy
+    GOrderActionFromString = ActionBuy
 Case StrOrderActionSell
-    gOrderActionFromString = ActionSell
+    GOrderActionFromString = ActionSell
 End Select
 End Function
 
-Public Function gOrderActionToString(ByVal value As OrderActions) As String
+Public Function GOrderActionToString(ByVal value As OrderActions) As String
 Select Case value
 Case ActionBuy
-    gOrderActionToString = StrOrderActionBuy
+    GOrderActionToString = StrOrderActionBuy
 Case ActionSell
-    gOrderActionToString = StrOrderActionSell
+    GOrderActionToString = StrOrderActionSell
 End Select
 End Function
 
-Public Function gOrderAttributeToString(ByVal value As OrderAttributes) As String
+Public Function GOrderAttributeToString(ByVal value As OrderAttributes) As String
 Select Case value
     Case OrderAttOpenClose
-        gOrderAttributeToString = "OpenClose"
+        GOrderAttributeToString = "OpenClose"
     Case OrderAttOrigin
-        gOrderAttributeToString = "Origin"
+        GOrderAttributeToString = "Origin"
     Case OrderAttOriginatorRef
-        gOrderAttributeToString = "OriginatorRef"
+        GOrderAttributeToString = "OriginatorRef"
     Case OrderAttBlockOrder
-        gOrderAttributeToString = "BlockOrder"
+        GOrderAttributeToString = "BlockOrder"
     Case OrderAttSweepToFill
-        gOrderAttributeToString = "SweepToFill"
+        GOrderAttributeToString = "SweepToFill"
     Case OrderAttDisplaySize
-        gOrderAttributeToString = "DisplaySize"
+        GOrderAttributeToString = "DisplaySize"
     Case OrderAttIgnoreRTH
-        gOrderAttributeToString = "IgnoreRTH"
+        GOrderAttributeToString = "IgnoreRTH"
     Case OrderAttHidden
-        gOrderAttributeToString = "Hidden"
+        GOrderAttributeToString = "Hidden"
     Case OrderAttDiscretionaryAmount
-        gOrderAttributeToString = "DiscretionaryAmount"
+        GOrderAttributeToString = "DiscretionaryAmount"
     Case OrderAttGoodAfterTime
-        gOrderAttributeToString = "GoodAfterTime"
+        GOrderAttributeToString = "GoodAfterTime"
     Case OrderAttGoodTillDate
-        gOrderAttributeToString = "GoodTillDate"
+        GOrderAttributeToString = "GoodTillDate"
     Case OrderAttRTHOnly
-        gOrderAttributeToString = "RTHOnly"
+        GOrderAttributeToString = "RTHOnly"
     Case OrderAttRule80A
-        gOrderAttributeToString = "Rule80A"
+        GOrderAttributeToString = "Rule80A"
     Case OrderAttSettlingFirm
-        gOrderAttributeToString = "SettlingFirm"
+        GOrderAttributeToString = "SettlingFirm"
     Case OrderAttAllOrNone
-        gOrderAttributeToString = "AllOrNone"
+        GOrderAttributeToString = "AllOrNone"
     Case OrderAttMinimumQuantity
-        gOrderAttributeToString = "MinimumQuantity"
+        GOrderAttributeToString = "MinimumQuantity"
     Case OrderAttPercentOffset
-        gOrderAttributeToString = "PercentOffset"
+        GOrderAttributeToString = "PercentOffset"
     Case OrderAttETradeOnly
-        gOrderAttributeToString = "ETradeOnly"
+        GOrderAttributeToString = "ETradeOnly"
     Case OrderAttFirmQuoteOnly
-        gOrderAttributeToString = "FirmQuoteOnly"
+        GOrderAttributeToString = "FirmQuoteOnly"
     Case OrderAttNBBOPriceCap
-        gOrderAttributeToString = "NBBOPriceCap"
+        GOrderAttributeToString = "NBBOPriceCap"
     Case OrderAttOverrideConstraints
-        gOrderAttributeToString = "OverrideConstraints"
+        GOrderAttributeToString = "OverrideConstraints"
     Case OrderAttAction
-        gOrderAttributeToString = "Action"
+        GOrderAttributeToString = "Action"
     Case OrderAttLimitPrice
-        gOrderAttributeToString = "LimitPrice"
+        GOrderAttributeToString = "LimitPrice"
     Case OrderAttOrderType
-        gOrderAttributeToString = "OrderType"
+        GOrderAttributeToString = "OrderType"
     Case OrderAttQuantity
-        gOrderAttributeToString = "Quantity"
+        GOrderAttributeToString = "Quantity"
     Case OrderAttTimeInForce
-        gOrderAttributeToString = "TimeInForce"
+        GOrderAttributeToString = "TimeInForce"
     Case OrderAttTriggerPrice
-        gOrderAttributeToString = "TriggerPrice"
+        GOrderAttributeToString = "TriggerPrice"
     Case OrderAttGoodAfterTimeTZ
-        gOrderAttributeToString = "GoodAfterTimeTZ"
+        GOrderAttributeToString = "GoodAfterTimeTZ"
     Case OrderAttGoodTillDateTZ
-        gOrderAttributeToString = "GoodTillDateTZ"
+        GOrderAttributeToString = "GoodTillDateTZ"
     Case OrderAttStopTriggerMethod
-        gOrderAttributeToString = "StopTriggerMethod"
+        GOrderAttributeToString = "StopTriggerMethod"
     Case Else
-        gOrderAttributeToString = "***Unknown order attribute***"
+        GOrderAttributeToString = "***Unknown order attribute***"
 End Select
 End Function
 
-Public Function gOrderStatusToString(ByVal value As OrderStatuses) As String
+Public Function GOrderStatusToString(ByVal value As OrderStatuses) As String
 Select Case UCase$(value)
 Case OrderStatusCreated
-    gOrderStatusToString = "Created"
+    GOrderStatusToString = "Created"
+Case OrderStatusRejected
+    GOrderStatusToString = "Rejected"
 Case OrderStatusPendingSubmit
-    gOrderStatusToString = "Pending Submit"
+    GOrderStatusToString = "Pending Submit"
 Case OrderStatusPreSubmitted
-    gOrderStatusToString = "Presubmitted"
+    GOrderStatusToString = "Presubmitted"
 Case OrderStatusSubmitted
-    gOrderStatusToString = "Submitted"
+    GOrderStatusToString = "Submitted"
 Case OrderStatusCancelling
-    gOrderStatusToString = "Cancelling"
+    GOrderStatusToString = "Cancelling"
 Case OrderStatusCancelled
-    gOrderStatusToString = "Cancelled"
+    GOrderStatusToString = "Cancelled"
 Case OrderStatusFilled
-    gOrderStatusToString = "Filled"
+    GOrderStatusToString = "Filled"
 End Select
 End Function
 
-Public Function gOrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
+Public Function GOrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
 Select Case value
 Case StopTriggerMethods.StopTriggerBidAsk
-    gOrderStopTriggerMethodToString = "Bid/Ask"
+    GOrderStopTriggerMethodToString = "Bid/Ask"
 Case StopTriggerMethods.StopTriggerDefault
-    gOrderStopTriggerMethodToString = "Default"
+    GOrderStopTriggerMethodToString = "Default"
 Case StopTriggerMethods.StopTriggerDoubleBidAsk
-    gOrderStopTriggerMethodToString = "Double Bid/Ask"
+    GOrderStopTriggerMethodToString = "Double Bid/Ask"
 Case StopTriggerMethods.StopTriggerDoubleLast
-    gOrderStopTriggerMethodToString = "Double last"
+    GOrderStopTriggerMethodToString = "Double last"
 Case StopTriggerMethods.StopTriggerLast
-    gOrderStopTriggerMethodToString = "Last"
+    GOrderStopTriggerMethodToString = "Last"
 Case StopTriggerMethods.StopTriggerLastOrBidAsk
-    gOrderStopTriggerMethodToString = "Last or Bid/Ask"
+    GOrderStopTriggerMethodToString = "Last or Bid/Ask"
 Case StopTriggerMethods.StopTriggerMidPoint
-    gOrderStopTriggerMethodToString = "Mid-point"
+    GOrderStopTriggerMethodToString = "Mid-point"
 End Select
 End Function
 
-Public Function gOrderTIFToString(ByVal value As OrderTifs) As String
+Public Function GOrderTIFToString(ByVal value As OrderTifs) As String
 Select Case value
 Case TIFDay
-    gOrderTIFToString = "DAY"
+    GOrderTIFToString = "DAY"
 Case TIFGoodTillCancelled
-    gOrderTIFToString = "GTC"
+    GOrderTIFToString = "GTC"
 Case TIFImmediateOrCancel
-    gOrderTIFToString = "IOC"
+    GOrderTIFToString = "IOC"
 End Select
 End Function
 
-Public Function gOrderTypeToString(ByVal value As OrderTypes) As String
+Public Function GOrderTypeToString(ByVal value As OrderTypes) As String
 Select Case value
 Case OrderTypeNone
-    gOrderTypeToString = StrOrderTypeNone
+    GOrderTypeToString = StrOrderTypeNone
 Case OrderTypeMarket
-    gOrderTypeToString = StrOrderTypeMarket
+    GOrderTypeToString = StrOrderTypeMarket
 Case OrderTypeMarketOnClose
-    gOrderTypeToString = StrOrderTypeMarketClose
+    GOrderTypeToString = StrOrderTypeMarketClose
 Case OrderTypeLimit
-    gOrderTypeToString = StrOrderTypeLimit
+    GOrderTypeToString = StrOrderTypeLimit
 Case OrderTypeLimitOnClose
-    gOrderTypeToString = StrOrderTypeLimitClose
+    GOrderTypeToString = StrOrderTypeLimitClose
 Case OrderTypePeggedToMarket
-    gOrderTypeToString = StrOrderTypePegMarket
+    GOrderTypeToString = StrOrderTypePegMarket
 Case OrderTypeStop
-    gOrderTypeToString = StrOrderTypeStop
+    GOrderTypeToString = StrOrderTypeStop
 Case OrderTypeStopLimit
-    gOrderTypeToString = StrOrderTypeStopLimit
+    GOrderTypeToString = StrOrderTypeStopLimit
 Case OrderTypeTrail
-    gOrderTypeToString = StrOrderTypeTrail
+    GOrderTypeToString = StrOrderTypeTrail
 Case OrderTypeRelative
-    gOrderTypeToString = StrOrderTypeRelative
+    GOrderTypeToString = StrOrderTypeRelative
 Case OrderTypeVWAP
-    gOrderTypeToString = StrOrderTypeVWAP
+    GOrderTypeToString = StrOrderTypeVWAP
 Case OrderTypeMarketToLimit
-    gOrderTypeToString = StrOrderTypeMarketToLimit
+    GOrderTypeToString = StrOrderTypeMarketToLimit
 Case OrderTypeQuote
-    gOrderTypeToString = StrOrderTypeQuote
+    GOrderTypeToString = StrOrderTypeQuote
 Case OrderTypeAdjust
-    gOrderTypeToString = StrOrderTypeAdjust
+    GOrderTypeToString = StrOrderTypeAdjust
 Case OrderTypeAlert
-    gOrderTypeToString = StrOrderTypeAlert
+    GOrderTypeToString = StrOrderTypeAlert
 Case OrderTypeLimitIfTouched
-    gOrderTypeToString = StrOrderTypeLimitIfTouched
+    GOrderTypeToString = StrOrderTypeLimitIfTouched
 Case OrderTypeMarketIfTouched
-    gOrderTypeToString = StrOrderTypeMarketIfTouched
+    GOrderTypeToString = StrOrderTypeMarketIfTouched
 Case OrderTypeTrailLimit
-    gOrderTypeToString = StrOrderTypeTrailLimit
+    GOrderTypeToString = StrOrderTypeTrailLimit
 Case OrderTypeMarketWithProtection
-    gOrderTypeToString = StrOrderTypeMarketWithProtection
+    GOrderTypeToString = StrOrderTypeMarketWithProtection
 Case OrderTypeMarketOnOpen
-    gOrderTypeToString = StrOrderTypeMarketOnOpen
+    GOrderTypeToString = StrOrderTypeMarketOnOpen
 Case OrderTypeLimitOnOpen
-    gOrderTypeToString = StrOrderTypeLimitOnOpen
+    GOrderTypeToString = StrOrderTypeLimitOnOpen
 Case OrderTypePeggedToPrimary
-    gOrderTypeToString = StrOrderTypePeggedToPrimary
+    GOrderTypeToString = StrOrderTypePeggedToPrimary
 End Select
 
 End Function
@@ -620,23 +587,23 @@ End Function
 ' @param pStopOrderType the StopOrderTypes value to be converted
 '
 '@/
-Public Function gStopOrderTypeToOrderType( _
+Public Function GStopOrderTypeToOrderType( _
                 ByVal pStopOrderType As StopOrderTypes) As OrderTypes
 Select Case pStopOrderType
 Case StopOrderTypeNone
-    gStopOrderTypeToOrderType = OrderTypeNone
+    GStopOrderTypeToOrderType = OrderTypeNone
 Case StopOrderTypeStop
-    gStopOrderTypeToOrderType = OrderTypeStop
+    GStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeStopLimit
-    gStopOrderTypeToOrderType = OrderTypeStopLimit
+    GStopOrderTypeToOrderType = OrderTypeStopLimit
 Case StopOrderTypeBid
-    gStopOrderTypeToOrderType = OrderTypeStop
+    GStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeAsk
-    gStopOrderTypeToOrderType = OrderTypeStop
+    GStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeLast
-    gStopOrderTypeToOrderType = OrderTypeStop
+    GStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeAuto
-    gStopOrderTypeToOrderType = OrderTypeAutoStop
+    GStopOrderTypeToOrderType = OrderTypeAutoStop
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gStopOrderTypeToOrderType", _
@@ -644,41 +611,41 @@ Case Else
 End Select
 End Function
 
-Public Function gStopOrderTypeToShortString(ByVal value As StopOrderTypes)
+Public Function GStopOrderTypeToShortString(ByVal value As StopOrderTypes)
 Select Case value
 Case StopOrderTypeNone
-    gStopOrderTypeToShortString = "NONE"
+    GStopOrderTypeToShortString = "NONE"
 Case StopOrderTypeStop
-    gStopOrderTypeToShortString = "STP"
+    GStopOrderTypeToShortString = "STP"
 Case StopOrderTypeStopLimit
-    gStopOrderTypeToShortString = "STPLMT"
+    GStopOrderTypeToShortString = "STPLMT"
 Case StopOrderTypeBid
-    gStopOrderTypeToShortString = "BID"
+    GStopOrderTypeToShortString = "BID"
 Case StopOrderTypeAsk
-    gStopOrderTypeToShortString = "ASK"
+    GStopOrderTypeToShortString = "ASK"
 Case StopOrderTypeLast
-    gStopOrderTypeToShortString = "TRADE"
+    GStopOrderTypeToShortString = "TRADE"
 Case StopOrderTypeAuto
-    gStopOrderTypeToShortString = "AUTO"
+    GStopOrderTypeToShortString = "AUTO"
 End Select
 End Function
 
-Public Function gStopOrderTypeToString(ByVal value As StopOrderTypes)
+Public Function GStopOrderTypeToString(ByVal value As StopOrderTypes)
 Select Case value
 Case StopOrderTypeNone
-    gStopOrderTypeToString = "None"
+    GStopOrderTypeToString = "None"
 Case StopOrderTypeStop
-    gStopOrderTypeToString = "Stop"
+    GStopOrderTypeToString = "Stop"
 Case StopOrderTypeStopLimit
-    gStopOrderTypeToString = "Stop limit"
+    GStopOrderTypeToString = "Stop limit"
 Case StopOrderTypeBid
-    gStopOrderTypeToString = "Bid price"
+    GStopOrderTypeToString = "Bid price"
 Case StopOrderTypeAsk
-    gStopOrderTypeToString = "Ask price"
+    GStopOrderTypeToString = "Ask price"
 Case StopOrderTypeLast
-    gStopOrderTypeToString = "LAST"
+    GStopOrderTypeToString = "LAST"
 Case StopOrderTypeAuto
-    gStopOrderTypeToString = "Auto"
+    GStopOrderTypeToString = "Auto"
 End Select
 End Function
 
@@ -690,25 +657,25 @@ End Function
 ' @ see
 '
 '@/
-Public Function gTargetOrderTypeToOrderType( _
+Public Function GTargetOrderTypeToOrderType( _
                 ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
 Select Case pTargetOrderType
 Case TargetOrderTypeNone
-    gTargetOrderTypeToOrderType = OrderTypeNone
+    GTargetOrderTypeToOrderType = OrderTypeNone
 Case TargetOrderTypeLimit
-    gTargetOrderTypeToOrderType = OrderTypeLimit
+    GTargetOrderTypeToOrderType = OrderTypeLimit
 Case TargetOrderTypeLimitIfTouched
-    gTargetOrderTypeToOrderType = OrderTypeLimitIfTouched
+    GTargetOrderTypeToOrderType = OrderTypeLimitIfTouched
 Case TargetOrderTypeMarketIfTouched
-    gTargetOrderTypeToOrderType = OrderTypeMarketIfTouched
+    GTargetOrderTypeToOrderType = OrderTypeMarketIfTouched
 Case TargetOrderTypeBid
-    gTargetOrderTypeToOrderType = OrderTypeLimit
+    GTargetOrderTypeToOrderType = OrderTypeLimit
 Case TargetOrderTypeAsk
-    gTargetOrderTypeToOrderType = OrderTypeLimit
+    GTargetOrderTypeToOrderType = OrderTypeLimit
 Case TargetOrderTypeLast
-    gTargetOrderTypeToOrderType = OrderTypeLimit
+    GTargetOrderTypeToOrderType = OrderTypeLimit
 Case TargetOrderTypeAuto
-    gTargetOrderTypeToOrderType = OrderTypeAutoLimit
+    GTargetOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gTargetOrderTypeToOrderType", _
@@ -716,62 +683,62 @@ Case Else
 End Select
 End Function
 
-Public Function gTargetOrderTypeToShortString(ByVal value As TargetOrderTypes)
+Public Function GTargetOrderTypeToShortString(ByVal value As TargetOrderTypes)
 Select Case value
 Case TargetOrderTypeNone
-    gTargetOrderTypeToShortString = "NONE"
+    GTargetOrderTypeToShortString = "NONE"
 Case TargetOrderTypeLimit
-    gTargetOrderTypeToShortString = "LMT"
+    GTargetOrderTypeToShortString = "LMT"
 Case TargetOrderTypeMarketIfTouched
-    gTargetOrderTypeToShortString = "MIT"
+    GTargetOrderTypeToShortString = "MIT"
 Case TargetOrderTypeBid
-    gTargetOrderTypeToShortString = "BID"
+    GTargetOrderTypeToShortString = "BID"
 Case TargetOrderTypeAsk
-    gTargetOrderTypeToShortString = "ASK"
+    GTargetOrderTypeToShortString = "ASK"
 Case TargetOrderTypeLast
-    gTargetOrderTypeToShortString = "LAST"
+    GTargetOrderTypeToShortString = "LAST"
 Case TargetOrderTypeAuto
-    gTargetOrderTypeToShortString = "AUTO"
+    GTargetOrderTypeToShortString = "AUTO"
 End Select
 End Function
 
-Public Function gTargetOrderTypeToString(ByVal value As TargetOrderTypes)
+Public Function GTargetOrderTypeToString(ByVal value As TargetOrderTypes)
 Select Case value
 Case TargetOrderTypeNone
-    gTargetOrderTypeToString = "None"
+    GTargetOrderTypeToString = "None"
 Case TargetOrderTypeLimit
-    gTargetOrderTypeToString = "Limit"
+    GTargetOrderTypeToString = "Limit"
 Case TargetOrderTypeMarketIfTouched
-    gTargetOrderTypeToString = "Market if touched"
+    GTargetOrderTypeToString = "Market if touched"
 Case TargetOrderTypeBid
-    gTargetOrderTypeToString = "Bid price"
+    GTargetOrderTypeToString = "Bid price"
 Case TargetOrderTypeAsk
-    gTargetOrderTypeToString = "Ask price"
+    GTargetOrderTypeToString = "Ask price"
 Case TargetOrderTypeLast
-    gTargetOrderTypeToString = "Last Trade price"
+    GTargetOrderTypeToString = "Last Trade price"
 Case TargetOrderTypeAuto
-    gTargetOrderTypeToString = "Auto"
+    GTargetOrderTypeToString = "Auto"
 End Select
 End Function
 
-Public Function gTickfileSpecifierToString(tfSpec As ITickfileSpecifier) As String
+Public Function GTickfileSpecifierToString(tfSpec As ITickfileSpecifier) As String
 If tfSpec.Filename <> "" Then
-    gTickfileSpecifierToString = tfSpec.Filename
+    GTickfileSpecifierToString = tfSpec.Filename
 Else
-    gTickfileSpecifierToString = "Contract: " & _
+    GTickfileSpecifierToString = "Contract: " & _
                                 Replace(tfSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(tfSpec.FromDate, vbGeneralDate) & _
                             " To: " & FormatDateTime(tfSpec.ToDate, vbGeneralDate)
 End If
 End Function
 
-Public Sub gLog(ByRef pMsg As String, _
+Public Sub GLog(ByRef pMsg As String, _
                 ByRef pProjName As String, _
                 ByRef pModName As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-If Not gLogLogger.IsLoggable(pLogLevel) Then Exit Sub
+If Not GLogLogger.IsLoggable(pLogLevel) Then Exit Sub
 mLogTokens(0) = "["
 mLogTokens(1) = pProjName
 mLogTokens(2) = "."
@@ -788,211 +755,169 @@ Else
     mLogTokens(9) = vbNullString
 End If
 
-gLogLogger.Log pLogLevel, Join(mLogTokens, "")
+GLogLogger.Log pLogLevel, Join(mLogTokens, "")
 End Sub
 
-Public Property Get gLogLogger() As Logger
-If mLogLogger Is Nothing Then
-    Set mLogLogger = GetLogger("tradebuild.log")
+Public Property Get GLogLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then
+    Set lLogger = GetLogger("tradebuild.log")
 End If
-Set gLogLogger = mLogLogger
+Set GLogLogger = lLogger
 End Property
 
-Public Property Get gErrorLogger() As Logger
-If mErrorLogger Is Nothing Then
-    Set mErrorLogger = GetLogger("error")
+Public Sub GLogProfitProfile( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "ProfitProfile", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogMoneyManagement( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "MoneyManagement", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogOrderPlexProfileStruct( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "OrderPlexProfileStruct", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogOrderPlexProfileString( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "OrderPlexProfileString", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogOrder( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "Order", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogPosition( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "Position", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogTradeProfile( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "TradeProfile", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogProfit( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "Profit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogDrawdown( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "Drawdown", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogMaxProfit( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "MaxProfit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogMaxLoss( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "MaxLoss", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Sub GLogOrderDetail( _
+                ByVal pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Static lLogger As Logger
+Static lLoggerSimulated As Logger
+logInfotypeData "OrderDetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+End Sub
+
+Public Property Get GTracer() As Tracer
+Static lTracer As Tracer
+If lTracer Is Nothing Then Set lTracer = GetTracer("tradebuild")
+Set GTracer = lTracer
+End Property
+
+Private Sub logInfotypeData( _
+                ByVal pInfotype As String, _
+                ByRef pData As Variant, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                ByVal pLogLevel As LogLevels, _
+                ByRef pLogger As Logger)
+If pLogger Is Nothing Then
+    Set pLogger = GetLogger("tradebuild." & pInfotype & IIf(pSimulated, "Simulated", ""))
+    pLogger.LogToParent = False
 End If
-Set gErrorLogger = mErrorLogger
-End Property
+pLogger.Log pLogLevel, pData, pSource
+End Sub
 
-Public Property Get gSpLogLogger() As Logger
-If mSpLogLogger Is Nothing Then
-    Set mSpLogLogger = GetLogger("tradebuild.log.serviceprovider")
+Private Sub notifyCollectionMember( _
+                ByVal pItem As Variant, _
+                ByVal pSource As Object, _
+                ByVal pListener As CollectionChangeListener)
+Dim ev As CollectionChangeEvent
+Set ev.source = pSource
+ev.changeType = CollItemAdded
+
+If IsObject(pItem) Then
+    Set ev.affectedItem = pItem
+Else
+    ev.affectedItem = pItem
 End If
-Set gSpLogLogger = mSpLogLogger
-End Property
-
-Public Property Get gTraceLogger() As Logger
-If mTraceLogger Is Nothing Then
-    Set mTraceLogger = GetLogger("tradebuild.trace")
-End If
-Set gTraceLogger = mTraceLogger
-End Property
-
-Public Property Get gDebugLogger() As Logger
-If mDebugLogger Is Nothing Then
-    Set mDebugLogger = GetLogger("tradebuild.debug")
-End If
-Set gDebugLogger = mDebugLogger
-End Property
-
-Public Property Get gProfitProfileLogger() As Logger
-If mProfitProfileLogger Is Nothing Then
-    Set mProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
-    mProfitProfileLogger.LogToParent = False
-End If
-Set gProfitProfileLogger = mProfitProfileLogger
-End Property
-
-Public Property Get gProfitProfileLoggerSimulated() As Logger
-If mProfitProfileLoggerSimulated Is Nothing Then
-    Set mProfitProfileLoggerSimulated = GetLogger("tradebuild.ProfitProfileSimulated")
-    mProfitProfileLoggerSimulated.LogToParent = False
-End If
-Set gProfitProfileLoggerSimulated = mProfitProfileLoggerSimulated
-End Property
-
-Public Property Get gMoneyManagementLogger() As Logger
-If mMoneyManagementLogger Is Nothing Then
-    Set mMoneyManagementLogger = GetLogger("tradebuild.MoneyManagement")
-End If
-Set gMoneyManagementLogger = mMoneyManagementLogger
-End Property
-
-Public Property Get gOrderPlexProfileStructLogger() As Logger
-If mOrderPlexProfileStructLogger Is Nothing Then
-    Set mOrderPlexProfileStructLogger = GetLogger("tradebuild.OrderPlexProfileStruct")
-    mOrderPlexProfileStructLogger.LogToParent = False
-End If
-Set gOrderPlexProfileStructLogger = mOrderPlexProfileStructLogger
-End Property
-
-Public Property Get gOrderPlexProfileStructLoggerSimulated() As Logger
-If mOrderPlexProfileStructLoggerSimulated Is Nothing Then
-    Set mOrderPlexProfileStructLoggerSimulated = GetLogger("tradebuild.SimulatedOrderPlexProfileStructSimulated")
-    mOrderPlexProfileStructLoggerSimulated.LogToParent = False
-End If
-Set gOrderPlexProfileStructLoggerSimulated = mOrderPlexProfileStructLoggerSimulated
-End Property
-
-Public Property Get gOrderPlexProfileStringLogger() As Logger
-If mOrderPlexProfileStringLogger Is Nothing Then
-    Set mOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
-    mOrderPlexProfileStringLogger.LogToParent = False
-End If
-Set gOrderPlexProfileStringLogger = mOrderPlexProfileStringLogger
-End Property
-
-Public Property Get gOrderPlexProfileStringLoggerSimulated() As Logger
-If mOrderPlexProfileStringLoggerSimulated Is Nothing Then
-    Set mOrderPlexProfileStringLoggerSimulated = GetLogger("tradebuild.OrderPlexProfileStringSimulated")
-    mOrderPlexProfileStringLoggerSimulated.LogToParent = False
-End If
-Set gOrderPlexProfileStringLoggerSimulated = mOrderPlexProfileStringLoggerSimulated
-End Property
-
-Public Property Get gOrderLogger() As Logger
-If mOrderLogger Is Nothing Then
-    Set mOrderLogger = GetLogger("tradebuild.order")
-End If
-Set gOrderLogger = mOrderLogger
-End Property
-
-Public Property Get gOrderLoggerSimulated() As Logger
-If mOrderLoggerSimulated Is Nothing Then
-    Set mOrderLoggerSimulated = GetLogger("tradebuild.orderSimulated")
-End If
-Set gOrderLoggerSimulated = mOrderLoggerSimulated
-End Property
-
-Public Property Get gPositionLogger() As Logger
-If mPositionLogger Is Nothing Then
-    Set mPositionLogger = GetLogger("tradebuild.position")
-    mPositionLogger.LogToParent = False
-End If
-Set gPositionLogger = mPositionLogger
-End Property
-
-Public Property Get gPositionLoggerSimulated() As Logger
-If mPositionLoggerSimulated Is Nothing Then
-    Set mPositionLoggerSimulated = GetLogger("tradebuild.positionSimulated")
-    mPositionLoggerSimulated.LogToParent = False
-End If
-Set gPositionLoggerSimulated = mPositionLoggerSimulated
-End Property
-
-Public Property Get gTradeProfileLogger() As Logger
-If mTradeProfileLogger Is Nothing Then
-    Set mTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
-    mTradeProfileLogger.LogToParent = False
-End If
-Set gTradeProfileLogger = mTradeProfileLogger
-End Property
-
-Public Property Get gTradeProfileLoggerSimulated() As Logger
-If mTradeProfileLoggerSimulated Is Nothing Then
-    Set mTradeProfileLoggerSimulated = GetLogger("tradebuild.TradeProfileSimulated")
-    mTradeProfileLoggerSimulated.LogToParent = False
-End If
-Set gTradeProfileLoggerSimulated = mTradeProfileLoggerSimulated
-End Property
-
-Public Property Get gProfitLogger() As Logger
-If mProfitLogger Is Nothing Then
-    Set mProfitLogger = GetLogger("tradebuild.Profit")
-    mProfitLogger.LogToParent = False
-End If
-Set gProfitLogger = mProfitLogger
-End Property
-
-Public Property Get gProfitLoggerSimulated() As Logger
-If mProfitLoggerSimulated Is Nothing Then
-    Set mProfitLoggerSimulated = GetLogger("tradebuild.profitSimulated")
-    mProfitLoggerSimulated.LogToParent = False
-End If
-Set gProfitLoggerSimulated = mProfitLoggerSimulated
-End Property
-
-Public Property Get gDrawdownLogger() As Logger
-If mDrawdownLogger Is Nothing Then
-    Set mDrawdownLogger = GetLogger("tradebuild.Drawdown")
-    mDrawdownLogger.LogToParent = False
-End If
-Set gDrawdownLogger = mDrawdownLogger
-End Property
-
-Public Property Get gDrawdownLoggerSimulated() As Logger
-If mDrawdownLoggerSimulated Is Nothing Then
-    Set mDrawdownLoggerSimulated = GetLogger("tradebuild.drawdownSimulated")
-    mDrawdownLoggerSimulated.LogToParent = False
-End If
-Set gDrawdownLoggerSimulated = mDrawdownLoggerSimulated
-End Property
-
-Public Property Get gMaxProfitLogger() As Logger
-If mMaxProfitLogger Is Nothing Then
-    Set mMaxProfitLogger = GetLogger("tradebuild.MaxProfit")
-    mMaxProfitLogger.LogToParent = False
-End If
-Set gMaxProfitLogger = mMaxProfitLogger
-End Property
-
-Public Property Get gMaxProfitLoggerSimulated() As Logger
-If mMaxProfitLoggerSimulated Is Nothing Then
-    Set mMaxProfitLoggerSimulated = GetLogger("tradebuild.MaxProfitSimulated")
-    mMaxProfitLoggerSimulated.LogToParent = False
-End If
-Set gMaxProfitLoggerSimulated = mMaxProfitLoggerSimulated
-End Property
-
-Public Property Get gOrderDetailLogger() As Logger
-If mOrderDetailLogger Is Nothing Then
-    Set mOrderDetailLogger = GetLogger("tradebuild.orderdetail")
-    mOrderDetailLogger.LogToParent = False
-End If
-Set gOrderDetailLogger = mOrderDetailLogger
-End Property
-
-Public Property Get gOrderDetailLoggerSimulated() As Logger
-If mOrderDetailLoggerSimulated Is Nothing Then
-    Set mOrderDetailLoggerSimulated = GetLogger("tradebuild.orderdetailSimulated")
-    mOrderDetailLoggerSimulated.LogToParent = False
-End If
-Set gOrderDetailLoggerSimulated = mOrderDetailLoggerSimulated
-End Property
-
-Public Property Get gTracer() As Tracer
-If mTracer Is Nothing Then Set mTracer = GetTracer("tradebuild")
-Set gTracer = mTracer
-End Property
-
+pListener.Change ev
+End Sub

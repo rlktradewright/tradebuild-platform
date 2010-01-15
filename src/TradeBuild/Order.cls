@@ -31,9 +31,7 @@ Implements TradeBuildSP.IOrder
 
 Event Clean()
 Event Dirty()
-Event Fill( _
-                ByVal quantityFilled As Long, _
-                ByVal fillPrice As Double)
+Event Fill(ByVal pExec As Execution)
 Event PropertyChanged()
 Event StatusChanged()
 
@@ -83,8 +81,8 @@ Private mOffset                     As Long
 
 Private mTimeInForce                As OrderTifs
 Private mOrigin                     As OrderOrigins
-Private mOriginatorRef              As String
-Private mProviderProperties         As parameters
+Private moriginatorRef              As String
+Private mProviderProperties         As Parameters
 Private mBlockOrder                 As Boolean
 Private mSweepToFill                As Boolean
 Private mDisplaySize                As Long
@@ -116,7 +114,8 @@ mAction = ActionBuy
 mOrderType = OrderTypeNone
 mTimeInForce = TIFDay
 
-Set mProviderProperties = New parameters
+Set mProviderProperties = New Parameters
+
 End Sub
 
 '@================================================================================
@@ -136,7 +135,7 @@ IOrder_blockOrder = mBlockOrder
 End Property
 
 Private Property Let IOrder_brokerId(ByVal RHS As String)
-mBrokerId = RHS
+BrokerId = RHS
 End Property
 
 Private Property Get IOrder_brokerId() As String
@@ -208,14 +207,14 @@ IOrder_origin = mOrigin
 End Property
 
 Private Property Get IOrder_originatorRef() As String
-IOrder_originatorRef = mOriginatorRef
+IOrder_originatorRef = moriginatorRef
 End Property
 
 Private Property Get IOrder_overrideConstraints() As Boolean
 IOrder_overrideConstraints = mOverrideConstraints
 End Property
 
-Private Property Get IOrder_providerProperties() As TWUtilities30.parameters
+Private Property Get IOrder_providerProperties() As TWUtilities30.Parameters
 Set IOrder_providerProperties = mProviderProperties
 End Property
 
@@ -268,183 +267,297 @@ End Property
 '@================================================================================
 
 Friend Property Let action(ByVal value As OrderActions)
-mAction = UCase$(value)
+mAction = value
 End Property
 
 Public Property Get action() As OrderActions
 action = mAction
 End Property
 
-Public Property Let allOrNone(ByVal value As Boolean)
+Friend Property Get Active() As Boolean
+Active = (mStatus = OrderStatusPendingSubmit) Or _
+        (mStatus = OrderStatusPreSubmitted) Or _
+        (mStatus = OrderStatusSubmitted)
+End Property
+
+Public Property Let AllOrNone(ByVal value As Boolean)
+Const ProcName As String = "allOrNone"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttAllOrNone
 If value = mAllOrNone Then Exit Property
 setDirty
 mAllOrNone = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get allOrNone() As Boolean
-allOrNone = mAllOrNone
+Public Property Get AllOrNone() As Boolean
+AllOrNone = mAllOrNone
 End Property
 
-Friend Property Let averagePrice(ByVal value As Double)
+Friend Property Let AveragePrice(ByVal value As Double)
 mAveragePrice = value
 End Property
 
-Public Property Get averagePrice() As Double
-averagePrice = mAveragePrice
+Public Property Get AveragePrice() As Double
+AveragePrice = mAveragePrice
 End Property
 
-Public Property Let blockOrder(value As Boolean)
+Public Property Let BlockOrder(value As Boolean)
+Const ProcName As String = "blockOrder"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttBlockOrder
 If value = mBlockOrder Then Exit Property
 setDirty
 mBlockOrder = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get blockOrder() As Boolean
-blockOrder = mBlockOrder
+Public Property Get BlockOrder() As Boolean
+BlockOrder = mBlockOrder
 End Property
 
-Friend Property Let brokerId(ByVal value As String)
+Friend Property Let BrokerId(ByVal value As String)
 mBrokerId = value
 End Property
 
-Public Property Get brokerId() As String
-brokerId = mBrokerId
+Public Property Get BrokerId() As String
+BrokerId = mBrokerId
 End Property
 
 Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
-Public Property Let displaySize(ByVal value As Long)
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDisplaySize
-If value = mDisplaySize Then Exit Property
-setDirty
-mDisplaySize = value
-End Property
+Public Property Let DiscretionaryAmount(ByVal value As Double)
+Const ProcName As String = "discretionaryAmount"
+Dim failpoint As Long
+On Error GoTo Err
 
-Public Property Get displaySize() As Long
-displaySize = mDisplaySize
-End Property
-
-Public Property Let discretionaryAmount(ByVal value As Double)
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDiscretionaryAmount
 If value = mDiscretionaryAmount Then Exit Property
 setDirty
 mDiscretionaryAmount = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get discretionaryAmount() As Double
-discretionaryAmount = mDiscretionaryAmount
+Public Property Get DiscretionaryAmount() As Double
+DiscretionaryAmount = mDiscretionaryAmount
 End Property
 
-Public Property Let eTradeOnly(ByVal value As Boolean)
+Public Property Let DisplaySize(ByVal value As Long)
+Const ProcName As String = "displaySize"
+Dim failpoint As Long
+On Error GoTo Err
+
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDisplaySize
+If value = mDisplaySize Then Exit Property
+setDirty
+mDisplaySize = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Property
+
+Public Property Get DisplaySize() As Long
+DisplaySize = mDisplaySize
+End Property
+
+Public Property Let ETradeOnly(ByVal value As Boolean)
+Const ProcName As String = "eTradeOnly"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttETradeOnly
 If value = mETradeOnly Then Exit Property
 setDirty
 mETradeOnly = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get eTradeOnly() As Boolean
-eTradeOnly = mETradeOnly
+Public Property Get ETradeOnly() As Boolean
+ETradeOnly = mETradeOnly
 End Property
 
-Friend Property Let fillTime(ByVal value As Date)
+Friend Property Let FillTime(ByVal value As Date)
 mFillTime = value
 End Property
 
-Public Property Get fillTime() As Date
-fillTime = mFillTime
+Public Property Get FillTime() As Date
+FillTime = mFillTime
 End Property
 
-Public Property Let firmQuoteOnly(ByVal value As Boolean)
+Public Property Let FirmQuoteOnly(ByVal value As Boolean)
+Const ProcName As String = "firmQuoteOnly"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly
 If value = mFirmQuoteOnly Then Exit Property
 setDirty
 mFirmQuoteOnly = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get firmQuoteOnly() As Boolean
-firmQuoteOnly = mFirmQuoteOnly
+Public Property Get FirmQuoteOnly() As Boolean
+FirmQuoteOnly = mFirmQuoteOnly
 End Property
 
-Public Property Let goodAfterTime(ByVal value As Date)
+Public Property Let GoodAfterTime(ByVal value As Date)
+Const ProcName As String = "goodAfterTime"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime
 If value = mGoodAfterTime Then Exit Property
 setDirty
 mGoodAfterTime = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodAfterTime() As Date
-goodAfterTime = mGoodAfterTime
+Public Property Get GoodAfterTime() As Date
+GoodAfterTime = mGoodAfterTime
 End Property
 
-Public Property Let goodAfterTimeTZ(ByVal value As String)
+Public Property Let GoodAfterTimeTZ(ByVal value As String)
+Const ProcName As String = "goodAfterTimeTZ"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ
 If value = mGoodAfterTimeTZ Then Exit Property
 setDirty
 mGoodAfterTimeTZ = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodAfterTimeTZ() As String
-goodAfterTimeTZ = mGoodAfterTimeTZ
+Public Property Get GoodAfterTimeTZ() As String
+GoodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
-Public Property Let goodTillDate(ByVal value As Date)
+Public Property Let GoodTillDate(ByVal value As Date)
+Const ProcName As String = "goodTillDate"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate
 If value = mGoodTillDate Then Exit Property
 setDirty
 mGoodTillDate = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodTillDate() As Date
-goodTillDate = mGoodTillDate
+Public Property Get GoodTillDate() As Date
+GoodTillDate = mGoodTillDate
 End Property
 
-Public Property Let goodTillDateTZ(ByVal value As String)
+Public Property Let GoodTillDateTZ(ByVal value As String)
+Const ProcName As String = "goodTillDateTZ"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ
 If value = mGoodTillDateTZ Then Exit Property
 setDirty
 mGoodTillDateTZ = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get goodTillDateTZ() As String
-goodTillDateTZ = mGoodTillDateTZ
+Public Property Get GoodTillDateTZ() As String
+GoodTillDateTZ = mGoodTillDateTZ
 End Property
 
-Public Property Let hidden(value As Boolean)
+Public Property Let Hidden(value As Boolean)
+Const ProcName As String = "hidden"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttHidden
 If value = mHidden Then Exit Property
 setDirty
 mHidden = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get hidden() As Boolean
-hidden = mHidden
+Public Property Get Hidden() As Boolean
+Hidden = mHidden
 End Property
 
-Friend Property Let id(ByVal value As String)
+Friend Property Let Id(ByVal value As String)
 mIdentifier = value
 End Property
 
-Public Property Get id() As String
-id = mIdentifier
+Public Property Get Id() As String
+Id = mIdentifier
 End Property
 
-Public Property Let ignoreRegularTradingHours(value As Boolean)
+Public Property Let IgnoreRegularTradingHours(value As Boolean)
+Const ProcName As String = "ignoreRegularTradingHours"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH
 If value = mIgnoreRegularTradingHours Then Exit Property
 setDirty
 mIgnoreRegularTradingHours = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get ignoreRegularTradingHours() As Boolean
-ignoreRegularTradingHours = mIgnoreRegularTradingHours
+Public Property Get IgnoreRegularTradingHours() As Boolean
+IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
-Public Property Get isDirty() As Boolean
-isDirty = mIsDirty
+Public Property Get IsDirty() As Boolean
+IsDirty = mIsDirty
 End Property
 
 Friend Property Let IsSimulated(ByVal value As Boolean)
@@ -455,50 +568,68 @@ Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
 
-Friend Property Let lastFillPrice(ByVal value As Double)
+Friend Property Let LastFillPrice(ByVal value As Double)
 mLastFillPrice = value
 End Property
 
-Public Property Get lastFillPrice() As Double
-lastFillPrice = mLastFillPrice
+Public Property Get LastFillPrice() As Double
+LastFillPrice = mLastFillPrice
 End Property
 
-Friend Property Let limitPrice(ByVal value As Double)
+Friend Property Let LimitPrice(ByVal value As Double)
 mLimitPrice = value
 End Property
 
-Public Property Get limitPrice() As Double
-limitPrice = mLimitPrice
+Public Property Get LimitPrice() As Double
+LimitPrice = mLimitPrice
 End Property
 
-Public Property Let minimumQuantity(ByVal value As Long)
+Public Property Let MinimumQuantity(ByVal value As Long)
+Const ProcName As String = "minimumQuantity"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity
 If value = mMinimumQuantity Then Exit Property
 setDirty
 mMinimumQuantity = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get minimumQuantity() As Long
-minimumQuantity = mMinimumQuantity
+Public Property Get MinimumQuantity() As Long
+MinimumQuantity = mMinimumQuantity
 End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
+Const ProcName As String = "NbboPriceCap"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap
 If value = mNBBOPriceCap Then Exit Property
 setDirty
 mNBBOPriceCap = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
 End Property
 
-Friend Property Let offset(ByVal value As Long)
+Friend Property Let Offset(ByVal value As Long)
 mOffset = value
 End Property
 
-Friend Property Get offset() As Long
-offset = mOffset
+Friend Property Get Offset() As Long
+Offset = mOffset
 End Property
 
 Friend Property Let OrderContext(ByVal value As OrderContext)
@@ -509,124 +640,200 @@ Public Property Get OrderContext() As OrderContext
 Set OrderContext = mOrderContext
 End Property
 
-Friend Property Let orderType(ByVal value As OrderTypes)
+Friend Property Let OrderType(ByVal value As OrderTypes)
+Const ProcName As String = "orderType"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrderType
-If Not mOrderContext.isOrderTypeValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttOrderType, value
+If Not mOrderContext Is Nothing Then
+    If Not mOrderContext.IsOrderTypeValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttOrderType, value
+End If
 If value = mOrderType Then Exit Property
 setDirty
 mOrderType = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get orderType() As OrderTypes
-orderType = mOrderType
+Public Property Get OrderType() As OrderTypes
+OrderType = mOrderType
 End Property
 
-Public Property Let origin(ByVal value As OrderOrigins)
+Public Property Let Origin(ByVal value As OrderOrigins)
+Const ProcName As String = "origin"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrigin
 If value = mOrigin Then Exit Property
 setDirty
 mOrigin = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get origin() As OrderOrigins
-origin = mOrigin
+Public Property Get Origin() As OrderOrigins
+Origin = mOrigin
 End Property
 
-Public Property Let originatorRef(ByVal value As String)
+Public Property Let OriginatorRef(ByVal value As String)
+Const ProcName As String = "originatorRef"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef
-If value = mOriginatorRef Then Exit Property
+If value = moriginatorRef Then Exit Property
 setDirty
-mOriginatorRef = value
+moriginatorRef = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get originatorRef() As String
-originatorRef = mOriginatorRef
+Public Property Get OriginatorRef() As String
+OriginatorRef = moriginatorRef
 End Property
 
-Public Property Let overrideConstraints(ByVal value As Boolean)
+Public Property Let OverrideConstraints(ByVal value As Boolean)
+Const ProcName As String = "overrideConstraints"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints
 If value = mOverrideConstraints Then Exit Property
 setDirty
 mOverrideConstraints = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get overrideConstraints() As Boolean
-overrideConstraints = mOverrideConstraints
+Public Property Get OverrideConstraints() As Boolean
+OverrideConstraints = mOverrideConstraints
 End Property
 
-Public Property Let percentOffset(ByVal value As Double)
+Public Property Let PercentOffset(ByVal value As Double)
+Const ProcName As String = "percentOffset"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttPercentOffset
 If value = mPercentOffset Then Exit Property
 setDirty
 mPercentOffset = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get percentOffset() As Double
-percentOffset = mPercentOffset
+Public Property Get PercentOffset() As Double
+PercentOffset = mPercentOffset
 End Property
 
-Friend Property Let providerProperties( _
-                ByVal value As TWUtilities30.parameters)
+Friend Property Let ProviderProperties( _
+                ByVal value As TWUtilities30.Parameters)
 Set mProviderProperties = value
 End Property
 
-Public Property Get providerProperties() As TWUtilities30.parameters
-Set providerProperties = mProviderProperties
+Public Property Get ProviderProperties() As TWUtilities30.Parameters
+Set ProviderProperties = mProviderProperties
 End Property
 
-Public Property Let quantity(ByVal value As Long)
+Public Property Let Quantity(ByVal value As Long)
+Const ProcName As String = "quantity"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttQuantity
 If value = mQuantity Then Exit Property
 mQuantity = value
 setDirty
 mQuantityRemaining = mQuantity - mQuantityFilled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get quantity() As Long
-quantity = mQuantity
+Public Property Get Quantity() As Long
+Quantity = mQuantity
 End Property
 
-Friend Property Let quantityFilled(ByVal value As Long)
+Friend Property Let QuantityFilled(ByVal value As Long)
 mQuantityFilled = value
 End Property
 
-Public Property Get quantityFilled() As Long
-quantityFilled = mQuantityFilled
+Public Property Get QuantityFilled() As Long
+QuantityFilled = mQuantityFilled
 End Property
 
-Friend Property Let quantityRemaining(ByVal value As Long)
+Friend Property Let QuantityRemaining(ByVal value As Long)
 mQuantityRemaining = value
 End Property
 
-Public Property Get quantityRemaining() As Long
-quantityRemaining = mQuantityRemaining
+Public Property Get QuantityRemaining() As Long
+QuantityRemaining = mQuantityRemaining
 End Property
 
-Public Property Let settlingFirm(value As String)
+Public Property Let SettlingFirm(value As String)
+Const ProcName As String = "settlingFirm"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm
 If value = mSettlingFirm Then Exit Property
 setDirty
 mSettlingFirm = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get settlingFirm() As String
-settlingFirm = mSettlingFirm
+Public Property Get SettlingFirm() As String
+SettlingFirm = mSettlingFirm
 End Property
 
-Friend Property Let status(value As OrderStatuses)
+Friend Property Let Status(value As OrderStatuses)
 mStatus = value
 End Property
 
-Public Property Get status() As OrderStatuses
-status = mStatus
+Public Property Get Status() As OrderStatuses
+Status = mStatus
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
+Const ProcName As String = "StopTriggerMethod"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod
-If Not mOrderContext.isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod, value
+If Not mOrderContext Is Nothing Then
+    If Not mOrderContext.IsStopTriggerMethodValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod, value
+End If
 If value = mStopTriggerMethod Then Exit Property
 setDirty
 mStopTriggerMethod = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get StopTriggerMethod() As StopTriggerMethods
@@ -634,10 +841,19 @@ StopTriggerMethod = mStopTriggerMethod
 End Property
 
 Public Property Let SweepToFill(value As Boolean)
+Const ProcName As String = "SweepToFill"
+Dim failpoint As Long
+On Error GoTo Err
+
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSweepToFill
 If value = mSweepToFill Then Exit Property
 setDirty
 mSweepToFill = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -645,47 +861,76 @@ SweepToFill = mSweepToFill
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
+Const ProcName As String = "Ticker"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTicker = value
 Set mContract = mTicker.Contract
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Let timeInForce(ByVal value As OrderTifs)
-If Not gIsValidTIF(value) Then
+Public Property Let TimeInForce(ByVal value As OrderTifs)
+Const ProcName As String = "timeInForce"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not GIsValidTIF(value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "timeInForce", _
             "Value must be a member of the OrderTifs enum"
 End If
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttTimeInForce
-If Not mOrderContext.isOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttTimeInForce, value
+If Not mOrderContext Is Nothing Then
+    If Not mOrderContext.IsOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttTimeInForce, value
+End If
 If value = mTimeInForce Then Exit Property
 setDirty
 mTimeInForce = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get timeInForce() As OrderTifs
-timeInForce = mTimeInForce
+Public Property Get TimeInForce() As OrderTifs
+TimeInForce = mTimeInForce
 End Property
 
-Friend Property Let triggerPrice(ByVal value As Double)
+Friend Property Let TriggerPrice(ByVal value As Double)
 mTriggerPrice = value
 End Property
 
-Public Property Get triggerPrice() As Double
-triggerPrice = mTriggerPrice
+Public Property Get TriggerPrice() As Double
+TriggerPrice = mTriggerPrice
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function clone() As order
-Set clone = New order
-syncToMe clone
+Public Function Clone() As Order
+Const ProcName As String = "clone"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set Clone = New Order
+syncToMe Clone
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 ''
@@ -694,49 +939,86 @@ End Function
 ' @param exec  an <code>Execution</code> object containing details of the fill
 '
 '@/
-Friend Sub notifyFill( _
-                ByVal exec As Execution)
+Friend Sub NotifyFill( _
+                ByVal exec As Execution, _
+                ByRef persistenceKey As String)
 
-If Not mIsSimulated Then gTB.notifyListeners _
-                        mContract.specifier.exchange & "," & _
-                        mContract.specifier.symbol & "," & _
-                        mContract.specifier.expiry & "," & _
-                        exec.quantity & "," & _
-                        exec.price & "," & _
-                        gOrderActionToString(exec.action) & "," & _
-                        exec.time & "," & _
-                        exec.orderTradeBuildId & "," & _
-                        exec.orderBrokerId, _
-                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTOrderDetailSimulated, TradeBuildListenValueTypes.VTOrderDetail), _
-                        Me
+Const ProcName As String = "NotifyFill"
+Dim failpoint As Long
+On Error GoTo Err
 
-mAveragePrice = (mQuantityFilled * mAveragePrice + exec.quantity * exec.price) / (mQuantityFilled + exec.quantity)
-mQuantityFilled = mQuantityFilled + exec.quantity
-mQuantityRemaining = mQuantityRemaining - exec.quantity
+If mContract Is Nothing Then
+    ' happens when an order from a previous session is being recovered before
+    ' the relevant ticker is ready
+Else
+    GLogOrderDetail mContract.specifier.Exchange & "," & _
+            mContract.specifier.Symbol & "," & _
+            mContract.specifier.Expiry & "," & _
+            exec.Quantity & "," & _
+            exec.price & "," & _
+            GOrderActionToString(exec.action) & "," & _
+            exec.Time & "," & _
+            exec.Timezone & "," & _
+            exec.OrderTradeBuildId & "," & _
+            exec.OrderBrokerId, _
+            mIsSimulated, _
+            Me
+End If
+
+mAveragePrice = (mQuantityFilled * mAveragePrice + exec.Quantity * exec.price) / (mQuantityFilled + exec.Quantity)
+mQuantityFilled = mQuantityFilled + exec.Quantity
+mQuantityRemaining = mQuantityRemaining - exec.Quantity
 mLastFillPrice = exec.price
-mFillTime = exec.time
-RaiseEvent Fill(exec.quantity, exec.price)
+mFillTime = exec.Time
+If mQuantityRemaining = 0 Then mStatus = OrderStatusFilled
+SaveRecoveryInfo persistenceKey
+RaiseEvent Fill(exec)
+If mStatus = OrderStatusFilled Then RaiseEvent StatusChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mTicker = Nothing
 Set mContract = Nothing
 Set mOrderContext = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Public Function isAttributeModifiable( _
+Public Function IsAttributeModifiable( _
                 ByVal attributeId As OrderAttributeIds) As Boolean
 
-If Not mOrderContext.isAttributeSupported(attributeId) Then Exit Function
+Const ProcName As String = "isAttributeModifiable"
+Dim failpoint As Long
+On Error GoTo Err
+
+If mOrderContext Is Nothing Then
+    ' we are currently recovering persisted order information so don't make this check
+    IsAttributeModifiable = True
+    Exit Function
+End If
+
+If Not mOrderContext.IsAttributeSupported(attributeId) Then Exit Function
 
 Select Case mStatus
 Case OrderStatusCreated
-    isAttributeModifiable = True
+    IsAttributeModifiable = True
 Case OrderStatusRejected
-    isAttributeModifiable = True
+    IsAttributeModifiable = True
 Case OrderStatusPendingSubmit
-    isAttributeModifiable = attributeId And _
+    IsAttributeModifiable = attributeId And _
                             (OrderAttributeIds.OrderAttAllOrNone Or _
                             OrderAttributeIds.OrderAttBlockOrder Or _
                             OrderAttributeIds.OrderAttDiscretionaryAmount Or _
@@ -754,7 +1036,7 @@ Case OrderStatusPendingSubmit
                             OrderAttributeIds.OrderAttTimeInForce Or _
                             OrderAttributeIds.OrderAttTriggerPrice)
 Case OrderStatusPreSubmitted
-    isAttributeModifiable = attributeId And _
+    IsAttributeModifiable = attributeId And _
                             (OrderAttributeIds.OrderAttAllOrNone Or _
                             OrderAttributeIds.OrderAttBlockOrder Or _
                             OrderAttributeIds.OrderAttDiscretionaryAmount Or _
@@ -772,7 +1054,7 @@ Case OrderStatusPreSubmitted
                             OrderAttributeIds.OrderAttTimeInForce Or _
                             OrderAttributeIds.OrderAttTriggerPrice)
 Case OrderStatusSubmitted
-    isAttributeModifiable = attributeId And _
+    IsAttributeModifiable = attributeId And _
                             (OrderAttributeIds.OrderAttDiscretionaryAmount Or _
                             OrderAttributeIds.OrderAttDisplaySize Or _
                             OrderAttributeIds.OrderAttGoodTillDate Or _
@@ -784,11 +1066,11 @@ Case OrderStatusSubmitted
                             OrderAttributeIds.OrderAttTimeInForce Or _
                             OrderAttributeIds.OrderAttTriggerPrice)
 Case OrderStatusFilled
-    isAttributeModifiable = False
+    IsAttributeModifiable = False
 Case OrderStatusCancelling
-    isAttributeModifiable = False
+    IsAttributeModifiable = False
 Case OrderStatusCancelled
-    isAttributeModifiable = False
+    IsAttributeModifiable = False
 End Select
 
 Select Case attributeId
@@ -800,7 +1082,7 @@ Case OrderAttributeIds.OrderAttLimitPrice
         OrderTypeLimitIfTouched, _
         OrderTypeLimitOnOpen
     Case Else
-        isAttributeModifiable = False
+        IsAttributeModifiable = False
     End Select
 Case OrderAttributeIds.OrderAttTriggerPrice
     Select Case mOrderType
@@ -809,20 +1091,34 @@ Case OrderAttributeIds.OrderAttTriggerPrice
         OrderTypeLimitIfTouched, _
         OrderTypeMarketIfTouched
     Case Else
-        isAttributeModifiable = False
+        IsAttributeModifiable = False
     End Select
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
-Public Function isModifiable() As Boolean
+Public Function IsModifiable() As Boolean
+Const ProcName As String = "isModifiable"
+Dim failpoint As Long
+On Error GoTo Err
+
 If mStatus <> OrderStatuses.OrderStatusCancelled And _
     mStatus <> OrderStatuses.OrderStatusCancelling And _
     mStatus <> OrderStatuses.OrderStatusFilled _
-Then isModifiable = True
+Then IsModifiable = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 ' commented out 22/5/6
-'Friend Sub openOrder(ByVal action As OrderActions, _
+'Friend Sub openOrder(ByVal Action As OrderActions, _
 '                        ByVal quantity As Long, _
 '                        ByVal orderType As OrderTypes, _
 '                        ByVal lmtPrice As Double, _
@@ -830,8 +1126,8 @@ End Function
 '                        ByVal tif As OrderTifs, _
 '                        ByVal ocaGroup As String)
 '
-'mTWSAction = action
-'If action <> mAction Then
+'mTWSAction = Action
+'If Action <> mAction Then
 '    mDifferent = True
 'End If
 '
@@ -864,18 +1160,85 @@ End Function
 'Else
 '    mTWSTriggerPrice = 0
 'End If
-'' NB: mDifferent will be cleared when updateStatus is called (this always
+'' NB: mDifferent will be cleared when UpdateStatus is called (this always
 '' happens shortly after openOrder)
 ''If mDifferent Then Stop
 'End Sub
+
+Friend Sub SaveRecoveryInfo(pKey As String)
+Dim summary As OrderSummary
+
+Const ProcName As String = "SaveRecoveryInfo"
+Dim failpoint As String
+On Error GoTo Err
+
+If mIsSimulated Then Exit Sub
+If mStatus = OrderStatuses.OrderStatusCreated Then Exit Sub
+
+Set summary = New OrderSummary
+
+summary.action = mAction
+summary.AllOrNone = mAllOrNone
+summary.AveragePrice = mAveragePrice
+summary.BlockOrder = False
+summary.BrokerId = mBrokerId
+summary.DiscretionaryAmount = mDiscretionaryAmount
+summary.DisplaySize = mDisplaySize
+summary.ETradeOnly = mETradeOnly
+summary.FillTime = mFillTime
+summary.FirmQuoteOnly = mFirmQuoteOnly
+summary.GoodAfterTime = mGoodAfterTime
+summary.GoodAfterTimeTZ = mGoodAfterTimeTZ
+summary.GoodTillDate = mGoodTillDate
+summary.GoodTillDateTZ = mGoodTillDateTZ
+summary.Hidden = mHidden
+summary.Id = mIdentifier
+summary.IgnoreRegularTradingHours = mIgnoreRegularTradingHours
+summary.LastFillPrice = mLastFillPrice
+summary.LimitPrice = mLimitPrice
+summary.MinimumQuantity = mMinimumQuantity
+summary.NbboPriceCap = mNBBOPriceCap
+summary.Offset = mOffset
+summary.OrderType = mOrderType
+summary.Origin = mOrigin
+summary.OriginatorRef = moriginatorRef
+summary.OverrideConstraints = mOverrideConstraints
+summary.PercentOffset = mPercentOffset
+summary.ProviderProperties = mProviderProperties
+summary.Quantity = mQuantity
+summary.QuantityFilled = mQuantityFilled
+summary.QuantityRemaining = mQuantityRemaining
+summary.SettlingFirm = mSettlingFirm
+summary.Status = mStatus
+summary.StopTriggerMethod = mStopTriggerMethod
+summary.SweepToFill = mSweepToFill
+summary.TimeInForce = mTimeInForce
+summary.TriggerPrice = mTriggerPrice
+
+gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, summary.ToJSON
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Sub
 
 ''
 ' Marks this order as clean, ie all changes have been either
 ' actioned or cancelled.
 '@/
 Friend Sub setClean()
+Const ProcName As String = "setClean"
+Dim failpoint As Long
+On Error GoTo Err
+
 mIsDirty = False
 RaiseEvent Clean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -884,87 +1247,108 @@ End Sub
 '
 ' @param  targetOrder the <code>order</code> that must be made identical
 '@/
-Friend Sub syncToMe(ByVal targetOrder As order)
-With targetOrder
+Friend Sub syncToMe(ByVal TargetOrder As Order)
+Const ProcName As String = "syncToMe"
+Dim failpoint As Long
+On Error GoTo Err
+
+With TargetOrder
     .OrderContext = mOrderContext   ' set this first because others depend on it
-    .status = mStatus               ' ditto
+    .Status = mStatus               ' ditto
     
-    .averagePrice = mAveragePrice
+    .AveragePrice = mAveragePrice
     .action = mAction
-    If isAttributeModifiable(OrderAttributeIds.OrderAttAllOrNone) Then .allOrNone = mAllOrNone
-    If isAttributeModifiable(OrderAttributeIds.OrderAttBlockOrder) Then .blockOrder = mBlockOrder
-    .brokerId = mBrokerId
-    If isAttributeModifiable(OrderAttributeIds.OrderAttDiscretionaryAmount) Then .discretionaryAmount = mDiscretionaryAmount
-    If isAttributeModifiable(OrderAttributeIds.OrderAttDisplaySize) Then .displaySize = mDisplaySize
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttAllOrNone) Then .AllOrNone = mAllOrNone
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttBlockOrder) Then .BlockOrder = mBlockOrder
+    .BrokerId = mBrokerId
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = mDiscretionaryAmount
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttDisplaySize) Then .DisplaySize = mDisplaySize
     .IsSimulated = mIsSimulated
-    If isAttributeModifiable(OrderAttributeIds.OrderAttETradeOnly) Then .eTradeOnly = mETradeOnly
-    .fillTime = mFillTime
-    If isAttributeModifiable(OrderAttributeIds.OrderAttFirmQuoteOnly) Then .firmQuoteOnly = mFirmQuoteOnly
-    If isAttributeModifiable(OrderAttributeIds.OrderAttGoodAfterTime) Then .goodAfterTime = mGoodAfterTime
-    If isAttributeModifiable(OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then .goodAfterTimeTZ = mGoodAfterTimeTZ
-    If isAttributeModifiable(OrderAttributeIds.OrderAttGoodTillDate) Then .goodTillDate = mGoodTillDate
-    If isAttributeModifiable(OrderAttributeIds.OrderAttGoodTillDateTZ) Then .goodTillDateTZ = mGoodTillDateTZ
-    If isAttributeModifiable(OrderAttributeIds.OrderAttHidden) Then .hidden = mHidden
-    .id = mIdentifier
-    If isAttributeModifiable(OrderAttributeIds.OrderAttIgnoreRTH) Then .ignoreRegularTradingHours = mIgnoreRegularTradingHours
-    .lastFillPrice = mLastFillPrice
-    If isAttributeModifiable(OrderAttributeIds.OrderAttLimitPrice) Then .limitPrice = mLimitPrice
-    If isAttributeModifiable(OrderAttributeIds.OrderAttMinimumQuantity) Then .minimumQuantity = mMinimumQuantity
-    If isAttributeModifiable(OrderAttributeIds.OrderAttNBBOPriceCap) Then .NbboPriceCap = mNBBOPriceCap
-    .offset = mOffset
-    If isAttributeModifiable(OrderAttributeIds.OrderAttOrderType) Then .orderType = mOrderType
-    If isAttributeModifiable(OrderAttributeIds.OrderAttOrigin) Then .origin = mOrigin
-    If isAttributeModifiable(OrderAttributeIds.OrderAttOriginatorRef) Then .originatorRef = mOriginatorRef
-    If isAttributeModifiable(OrderAttributeIds.OrderAttOverrideConstraints) Then .overrideConstraints = mOverrideConstraints
-    If isAttributeModifiable(OrderAttributeIds.OrderAttPercentOffset) Then .percentOffset = mPercentOffset
-    If isAttributeModifiable(OrderAttributeIds.OrderAttQuantity) Then .quantity = mQuantity
-    .quantityFilled = mQuantityFilled
-    If isAttributeModifiable(OrderAttributeIds.OrderAttSettlingFirm) Then .settlingFirm = mSettlingFirm
-    If isAttributeModifiable(OrderAttributeIds.OrderAttStopTriggerMethod) And _
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttETradeOnly) Then .ETradeOnly = mETradeOnly
+    .FillTime = mFillTime
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = mFirmQuoteOnly
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttGoodAfterTime) Then .GoodAfterTime = mGoodAfterTime
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = mGoodAfterTimeTZ
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttGoodTillDate) Then .GoodTillDate = mGoodTillDate
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = mGoodTillDateTZ
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttHidden) Then .Hidden = mHidden
+    .Id = mIdentifier
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = mIgnoreRegularTradingHours
+    .LastFillPrice = mLastFillPrice
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttLimitPrice) Then .LimitPrice = mLimitPrice
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttMinimumQuantity) Then .MinimumQuantity = mMinimumQuantity
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttNBBOPriceCap) Then .NbboPriceCap = mNBBOPriceCap
+    .Offset = mOffset
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttOrderType) Then .OrderType = mOrderType
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttOrigin) Then .Origin = mOrigin
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttOriginatorRef) Then .OriginatorRef = moriginatorRef
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttOverrideConstraints) Then .OverrideConstraints = mOverrideConstraints
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttPercentOffset) Then .PercentOffset = mPercentOffset
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttQuantity) Then .Quantity = mQuantity
+    .QuantityFilled = mQuantityFilled
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttSettlingFirm) Then .SettlingFirm = mSettlingFirm
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttStopTriggerMethod) And _
         mStopTriggerMethod <> StopTriggerMethods.StopTriggerNone Then .StopTriggerMethod = mStopTriggerMethod
-    If isAttributeModifiable(OrderAttributeIds.OrderAttSweepToFill) Then .SweepToFill = mSweepToFill
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttSweepToFill) Then .SweepToFill = mSweepToFill
     .Ticker = mTicker
-    If isAttributeModifiable(OrderAttributeIds.OrderAttTimeInForce) Then .timeInForce = mTimeInForce
-    If isAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice) Then .triggerPrice = mTriggerPrice
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttTimeInForce) Then .TimeInForce = mTimeInForce
+    If IsAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice) Then .TriggerPrice = mTriggerPrice
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub SyncToOrderReport( _
-                ByVal OrderReport As IOrderReport)
+                ByVal OrderReport As IOrderReport, _
+                ByVal persistenceKey As String)
 Dim changed As Boolean
+
+Const ProcName As String = "SyncToOrderReport"
+Dim failpoint As Long
+On Error GoTo Err
 
 With OrderReport
     If .action <> mAction Then mAction = .action: changed = True
-    If .allOrNone <> mAllOrNone Then mAllOrNone = .allOrNone: changed = True
-    If .blockOrder <> mBlockOrder Then mBlockOrder = .blockOrder: changed = True
-    If .discretionaryAmount <> mDiscretionaryAmount Then mDiscretionaryAmount = .discretionaryAmount: changed = True
-    If .displaySize <> mDisplaySize Then mDisplaySize = .displaySize: changed = True
-    If .eTradeOnly <> mETradeOnly Then mETradeOnly = .eTradeOnly: changed = True
-    If .firmQuoteOnly <> mFirmQuoteOnly Then mFirmQuoteOnly = .firmQuoteOnly: changed = True
-    If .goodAfterTime <> mGoodAfterTime Then mGoodAfterTime = .goodAfterTime: changed = True
-    If .goodAfterTimeTZ <> mGoodAfterTimeTZ Then mGoodAfterTimeTZ = .goodAfterTimeTZ: changed = True
-    If .goodTillDate <> mGoodTillDate Then mGoodTillDate = .goodTillDate: changed = True
-    If .goodTillDateTZ <> mGoodTillDateTZ Then mGoodTillDateTZ = .goodTillDateTZ: changed = True
-    If .hidden <> mHidden Then mHidden = .hidden: changed = True
-    If .ignoreRegularTradingHours <> mIgnoreRegularTradingHours Then mIgnoreRegularTradingHours = .ignoreRegularTradingHours: changed = True
-    If .limitPrice <> mLimitPrice Then mLimitPrice = .limitPrice: changed = True
-    If .minimumQuantity <> mMinimumQuantity Then mMinimumQuantity = .minimumQuantity: changed = True
+    If .AllOrNone <> mAllOrNone Then mAllOrNone = .AllOrNone: changed = True
+    If .BlockOrder <> mBlockOrder Then mBlockOrder = .BlockOrder: changed = True
+    If .DiscretionaryAmount <> mDiscretionaryAmount Then mDiscretionaryAmount = .DiscretionaryAmount: changed = True
+    If .DisplaySize <> mDisplaySize Then mDisplaySize = .DisplaySize: changed = True
+    If .ETradeOnly <> mETradeOnly Then mETradeOnly = .ETradeOnly: changed = True
+    If .FirmQuoteOnly <> mFirmQuoteOnly Then mFirmQuoteOnly = .FirmQuoteOnly: changed = True
+    If .GoodAfterTime <> mGoodAfterTime Then mGoodAfterTime = .GoodAfterTime: changed = True
+    If .GoodAfterTimeTZ <> mGoodAfterTimeTZ Then mGoodAfterTimeTZ = .GoodAfterTimeTZ: changed = True
+    If .GoodTillDate <> mGoodTillDate Then mGoodTillDate = .GoodTillDate: changed = True
+    If .GoodTillDateTZ <> mGoodTillDateTZ Then mGoodTillDateTZ = .GoodTillDateTZ: changed = True
+    If .Hidden <> mHidden Then mHidden = .Hidden: changed = True
+    If .IgnoreRegularTradingHours <> mIgnoreRegularTradingHours Then mIgnoreRegularTradingHours = .IgnoreRegularTradingHours: changed = True
+    If .LimitPrice <> mLimitPrice Then mLimitPrice = .LimitPrice: changed = True
+    If .MinimumQuantity <> mMinimumQuantity Then mMinimumQuantity = .MinimumQuantity: changed = True
     If .NbboPriceCap <> mNBBOPriceCap Then mNBBOPriceCap = .NbboPriceCap: changed = True
-    If .orderType <> mOrderType Then mOrderType = .orderType: changed = True
-    If .origin <> mOrigin Then mOrigin = .origin: changed = True
-    If .originatorRef <> mOriginatorRef Then mOriginatorRef = .originatorRef: changed = True
-    If .overrideConstraints <> mOverrideConstraints Then mOverrideConstraints = .overrideConstraints: changed = True
-    Set mProviderProperties = .providerProperties
-    If .quantity <> mQuantity Then mQuantity = .quantity: changed = True
-    If .settlingFirm <> mSettlingFirm Then mSettlingFirm = .settlingFirm: changed = True
+    If .OrderType <> mOrderType Then mOrderType = .OrderType: changed = True
+    If .Origin <> mOrigin Then mOrigin = .Origin: changed = True
+    If .OriginatorRef <> moriginatorRef Then moriginatorRef = .OriginatorRef: changed = True
+    If .OverrideConstraints <> mOverrideConstraints Then mOverrideConstraints = .OverrideConstraints: changed = True
+    Set mProviderProperties = .ProviderProperties
+    If .Quantity <> mQuantity Then mQuantity = .Quantity: changed = True
+    If .SettlingFirm <> mSettlingFirm Then mSettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mStopTriggerMethod Then mStopTriggerMethod = .StopTriggerMethod: changed = True
     If .SweepToFill <> mSweepToFill Then mSweepToFill = .SweepToFill: changed = True
-    If .timeInForce <> mTimeInForce Then mTimeInForce = .timeInForce: changed = True
-    If .tradeBuildId <> mIdentifier Then mIdentifier = .tradeBuildId: changed = True
-    If .triggerPrice <> mTriggerPrice Then mTriggerPrice = .triggerPrice: changed = True
+    If .TimeInForce <> mTimeInForce Then mTimeInForce = .TimeInForce: changed = True
+    'If .tradebuildId <> mIdentifier Then mIdentifier = .tradebuildId: changed = True
+    If .TriggerPrice <> mTriggerPrice Then mTriggerPrice = .TriggerPrice: changed = True
 End With
 
-If changed Then RaiseEvent PropertyChanged
+If changed Then
+    SaveRecoveryInfo persistenceKey
+    RaiseEvent PropertyChanged
+End If
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -974,12 +1358,24 @@ End Sub
 '                   specifying the <code>order</code>'s new status
 '
 '@/
-Friend Sub updateStatus(ByVal pStatus As OrderStatuses)
+Friend Sub UpdateStatus( _
+                ByVal pStatus As OrderStatuses, _
+                Optional ByRef persistenceKey As String)
+
+Const ProcName As String = "UpdateStatus"
+Dim failpoint As Long
+On Error GoTo Err
 
 If pStatus <> mStatus Then
     mStatus = pStatus
+    SaveRecoveryInfo persistenceKey
     RaiseEvent StatusChanged
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -989,18 +1385,36 @@ End Sub
 Private Sub attributeValueNotSupported( _
                 ByVal pAttribute As OrderAttributeIds, _
                 ByVal value As Variant)
+Const ProcName As String = "attributeValueNotSupported"
+Dim failpoint As Long
+On Error GoTo Err
+
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
-            "Value " & CStr(value) & " for attribute " & gOrderAttributeToString(pAttribute) & " is not supported by the service provider"
+            "Value " & CStr(value) & " for attribute " & GOrderAttributeToString(pAttribute) & " is not supported by the service provider"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub checkAttributeModificationPermitted( _
                 ByVal attributeId As OrderAttributeIds)
-If Not isAttributeModifiable(attributeId) Then
+Const ProcName As String = "checkAttributeModificationPermitted"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not IsAttributeModifiable(attributeId) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "TradeBuild26.Order", _
-                "The " & gOrderAttributeToString(attributeId) & " attribute is not currently modifiable"
+                "The " & GOrderAttributeToString(attributeId) & " attribute is not currently modifiable"
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -1008,10 +1422,19 @@ End Sub
 ' been raised.
 '@/
 Private Sub setDirty()
+Const ProcName As String = "setDirty"
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mIsDirty Then
     mIsDirty = True
     RaiseEvent Dirty
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

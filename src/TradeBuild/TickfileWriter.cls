@@ -81,26 +81,26 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get numberOfPendingWrites() As Long
-numberOfPendingWrites = mPendingWrites.Count
+Friend Property Get NumberOfPendingWrites() As Long
+NumberOfPendingWrites = mPendingWrites.Count
 End Property
 
 Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileWriter)
 Set mWriter = value
 End Property
 
-Friend Property Get ready() As Boolean
-ready = mServiceProviderWriterReady
+Friend Property Get Ready() As Boolean
+Ready = mServiceProviderWriterReady
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub closeOutputFile()
-gLog pMsg:="Closing output tickfile", pProcName:="closeOutputFile", pProjName:=ProjectName, pModName:=ModuleName
+Public Sub CloseOutputFile()
+GLog pMsg:="Closing output tickfile", pProcName:="closeOutputFile", pProjName:=ProjectName, pModName:=ModuleName
 Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
-mWriter.closeOutputFile
+mWriter.CloseOutputFile
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()

@@ -43,7 +43,7 @@ Implements ITickfileSpecifier
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuild26"
+
 Private Const ModuleName                    As String = "TickfileSpecifier"
 
 '@================================================================================

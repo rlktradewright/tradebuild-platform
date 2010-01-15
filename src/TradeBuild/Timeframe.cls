@@ -53,10 +53,8 @@ Event StateChange(ByRef ev As StateChangeEvent)
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                       As String = "TradeBuild26"
-Private Const ModuleName                        As String = "Timeframe"
 
-Private Const BarValueVolume As String = "Volume"
+Private Const ModuleName                        As String = "Timeframe"
 
 Private Const ConstTimeBarsStudyName As String = "Constant time bars"
 Private Const ConstTimeBarsParamBarLength As String = "Bar length"
@@ -141,8 +139,6 @@ Private mBarReader                  As TradeBuildSP.IBarDataReader
 
 Private WithEvents mWriteTimer      As IntervalTimer
 Attribute mWriteTimer.VB_VarHelpID = -1
-
-Private mTimerList                  As TimerList
 
 Private mHistoricBar                As TimeframeUtils26.Bar
 
@@ -362,10 +358,11 @@ Private Sub Task_Cancel()
 End Sub
 
 Private Sub Task_run()
+Const ProcName As String = "Task_run"
 Dim failpoint As Long
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -379,7 +376,7 @@ If mState = TimeframeStateFinished Then
     mTaskContext.Finish Empty, False
     
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+        GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
     #End If
     Exit Sub
 End If
@@ -389,7 +386,7 @@ If mBarReader Is Nothing Then
     mTaskContext.suspend -1
     
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+        GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
     #End If
     Exit Sub
 End If
@@ -404,7 +401,7 @@ If mHistoricBar Is Nothing Then
         mTaskContext.suspend -1
         
         #If trace Then
-            gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+            GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
         #End If
         Exit Sub
     End If
@@ -416,15 +413,12 @@ failpoint = 300
 ProcessHistoricBar
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
-mTaskContext.Finish Empty, False
+GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -448,6 +442,7 @@ End Sub
 '@================================================================================
 
 Private Sub mWriteTimer_TimerExpired()
+Const ProcName As String = "mWriteTimer_TimerExpired"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -470,32 +465,30 @@ End If
 Exit Sub
 
 Err:
-gTB.NotifyFatalError Err.number, _
-                    Err.Description, _
-                    IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mWriteTimer_TimerExpired" & "." & failpoint
+GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
 End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get askBars() As Bars
-Set askBars = mAskBars
+Public Property Get AskBars() As Bars
+Set AskBars = mAskBars
 End Property
 
-Public Property Get askStudy() As BarStudy
-Set askStudy = mAskBarsStudy
+Public Property Get AskStudy() As BarStudy
+Set AskStudy = mAskBarsStudy
 End Property
 
 Public Property Get barTimePeriod() As TimePeriod
 Set barTimePeriod = mBarTimePeriod
 End Property
 
-Public Property Get bidBars() As Bars
-Set bidBars = mBidBars
+Public Property Get BidBars() As Bars
+Set BidBars = mBidBars
 End Property
 
-Public Property Get bidStudy() As BarStudy
-Set bidStudy = mBidBarsStudy
+Public Property Get BidStudy() As BarStudy
+Set BidStudy = mBidBarsStudy
 End Property
 
 Public Property Get Contract() As Contract
@@ -509,7 +502,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -523,7 +516,7 @@ studyMgr.SetInputTicksize mTradeInputHandle, mContract.TickSize
 startHistDataFetch
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 Exit Property
@@ -532,8 +525,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Public Property Get historicDataLoaded() As Boolean
-historicDataLoaded = mHistoricDataLoaded
+Public Property Get HistoricDataLoaded() As Boolean
+HistoricDataLoaded = mHistoricDataLoaded
 End Property
 
 Public Property Get IsHistorical() As Boolean
@@ -548,12 +541,12 @@ Public Property Get State() As TimeframeStates
 State = mState
 End Property
 
-Public Property Get tradeBars() As Bars
-Set tradeBars = mTradeBars
+Public Property Get TradeBars() As Bars
+Set TradeBars = mTradeBars
 End Property
 
-Public Property Get tradeStudy() As BarStudy
-Set tradeStudy = mTradeBarsStudy
+Public Property Get TradeStudy() As BarStudy
+Set TradeStudy = mTradeBarsStudy
 End Property
 
 '@================================================================================
@@ -713,7 +706,7 @@ On Error GoTo Err
 If mContract Is Nothing Then
     getName = "????/" & mKey
 Else
-    getName = mContract.specifier.localSymbol & "/" & mKey
+    getName = mContract.specifier.LocalSymbol & "/" & mKey
 End If
 
 Exit Function
@@ -734,7 +727,7 @@ On Error GoTo Err
 If newState = mState Then Exit Sub
 mState = newState
 
-If gLogLogger.IsLoggable(LogLevelDetail) Then
+If GLogLogger.IsLoggable(LogLevelDetail) Then
     s = "Timeframe (" & getName & ") "
     Select Case newState
     Case TimeframeStateCreated
@@ -746,7 +739,7 @@ If gLogLogger.IsLoggable(LogLevelDetail) Then
     Case TimeframeStateFinished
         s = s & "Finished " & mTradeBars.Count & " bars"
     End Select
-    gLog pMsg:=s, pLogLevel:=LogLevelDetail, pProcName:="fireStateChange", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:=s, pLogLevel:=LogLevelDetail, pProcName:="fireStateChange", pProjName:=ProjectName, pModName:=ModuleName
 End If
 
 Set ev.source = Me
@@ -770,7 +763,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -825,7 +818,7 @@ End With
 Set mHistoricBar = Nothing
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 Exit Sub
@@ -843,7 +836,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -856,7 +849,7 @@ If mNumberOfBarsToFetch = 0 Then
     mTaskContext.Finish 0, False
     
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+        GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
     #End If
     Exit Sub
 End If
@@ -871,14 +864,14 @@ If mBarReader Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
     ev.eventMessage = "Timeframe: Can't create historic data reader (" & getName & ")"
-    gLog pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:="setupBarReader", pProjName:=ProjectName, pModName:=ModuleName
+    GLog pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:="setupBarReader", pProjName:=ProjectName, pModName:=ModuleName
     gTB.notify ev
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     mTaskContext.Finish 0, False
     
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+        GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
     #End If
     Exit Sub
 End If
@@ -908,7 +901,7 @@ mBarReader.FetchBars barSpecifier
 ' other bar types ????????????????????????????????????????
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 Exit Sub
@@ -958,7 +951,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Private Sub setupConstantMomentumBarsStudies()
-Dim params As New parameters
+Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantMomentumBarsStudies"
@@ -1017,7 +1010,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Private Sub setupConstantTimeBarsStudies()
-Dim params As New parameters
+Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantTimeBarsStudies"
@@ -1078,7 +1071,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNu
 End Sub
 
 Private Sub setupConstantVolumeBarsStudies()
-Dim params As New parameters
+Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantVolumeBarsStudies"
@@ -1203,7 +1196,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -1214,7 +1207,7 @@ On Error GoTo Err
 StartTask Me, PriorityNormal, "Timeframe (" & getName & "): start bar fetch"
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 Exit Sub
@@ -1232,7 +1225,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.EnterProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 ' for historical timeframes, don't want to switch to the Ticker
@@ -1270,7 +1263,7 @@ If mWriteBidAndAskBars Then
 End If
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+    GTracer.ExitProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 Exit Sub
@@ -1334,7 +1327,7 @@ On Error GoTo Err
 
 If mBarWriter Is Nothing Then Exit Sub
 
-Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
+Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.LocalSymbol & _
             " Write " & mBarTimePeriod.ToString & _
             " type " & barType & " bar " & theBar.BarNumber & _
             " (" & FormatDateTime(theBar.Timestamp, vbLongTime) & _
