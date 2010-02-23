@@ -69,6 +69,10 @@ End Sub
 Private Sub Task_run()
 Dim i As Long
 
+Const ProcName As String = "Task_run"
+Dim failpoint As String
+On Error GoTo Err
+
 Do While mIndex <= mNumberToAppend And i < 100
     mDestBars.Add mSourceBars.Bar(mIndex), _
                     mDestBars.CurrentBarNumber + 1, _
@@ -87,6 +91,11 @@ If mIndex > mNumberToAppend Then
     mTaskContext.Finish Empty, False
     Exit Sub
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
     
 End Sub
 

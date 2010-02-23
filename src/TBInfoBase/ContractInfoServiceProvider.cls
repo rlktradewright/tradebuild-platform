@@ -129,6 +129,7 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long, _
                 ByVal params As Parameters)
+Const ProcName As String = "ICommonServiceProvider_Link"
 Dim param As Parameter
 
 Dim failpoint As Long
@@ -159,7 +160,7 @@ For Each param In params
             mRole = "SECONDARY"
         Case Else
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "ICommonServiceProvider_Link", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid role parameter"
         End Select
     End Select
@@ -172,7 +173,7 @@ createDatabase
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ICommonServiceProvider_Link", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -194,6 +195,7 @@ End Sub
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
                             ByVal serviceConsumer As TradeBuildSP.IContractInfoServiceConsumer, _
                             ByVal pContractsBuilder As ContractsBuilder)
+Const ProcName As String = "IContractInfoServiceProvider_RequestContractDetails"
 Dim contractSpec As ContractSpecifier
 Dim tc As TaskController
 Dim index As Long
@@ -209,65 +211,65 @@ Set contractSpec = pContractsBuilder.Contracts.ContractSpecifier
 
 logMessage pMsg:="Requesting contract data for " & contractSpec.ToString, pProcName:="IContractInfoServiceProvider_RequestContractDetails"
 
-If contractSpec.secType = SecTypeNone Then
+If contractSpec.SecType = SecTypeNone Then
     ' no sectype supplied, so we'll place a separate request for each of the following:
     '       Futures
     '       Indexes
     '       Stocks
-    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
-                                                    contractSpec.symbol, _
+    Set tc = mTradingDB.LoadContractsAsync(CreateContractSpecifier(contractSpec.LocalSymbol, _
+                                                    contractSpec.Symbol, _
                                                     contractSpec.Exchange, _
                                                     SecTypeFuture, _
-                                                    contractSpec.currencyCode, _
-                                                    contractSpec.expiry), _
+                                                    contractSpec.CurrencyCode, _
+                                                    contractSpec.Expiry), _
                                             index)
     tc.AddTaskCompletionListener Me
     incrementrequestcount index
     
-    If contractSpec.localSymbol = "" Then
-        Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.symbol, _
+    If contractSpec.LocalSymbol = "" Then
+        Set tc = mTradingDB.LoadContractsAsync(CreateContractSpecifier(contractSpec.Symbol, _
                                                         "", _
                                                         contractSpec.Exchange, _
                                                         SecTypeFuture, _
-                                                        contractSpec.currencyCode, _
-                                                        contractSpec.expiry), _
+                                                        contractSpec.CurrencyCode, _
+                                                        contractSpec.Expiry), _
                                                 index)
         tc.AddTaskCompletionListener Me
         incrementrequestcount index
     End If
     
-    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
-                                                    contractSpec.symbol, _
+    Set tc = mTradingDB.LoadContractsAsync(CreateContractSpecifier(contractSpec.LocalSymbol, _
+                                                    contractSpec.Symbol, _
                                                     contractSpec.Exchange, _
                                                     SecTypeIndex, _
-                                                    contractSpec.currencyCode, _
-                                                    contractSpec.expiry), _
+                                                    contractSpec.CurrencyCode, _
+                                                    contractSpec.Expiry), _
                                             index)
     tc.AddTaskCompletionListener Me
     incrementrequestcount index
 
-    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
-                                                    contractSpec.symbol, _
+    Set tc = mTradingDB.LoadContractsAsync(CreateContractSpecifier(contractSpec.LocalSymbol, _
+                                                    contractSpec.Symbol, _
                                                     contractSpec.Exchange, _
                                                     SecTypeStock, _
-                                                    contractSpec.currencyCode, _
-                                                    contractSpec.expiry), _
+                                                    contractSpec.CurrencyCode, _
+                                                    contractSpec.Expiry), _
                                             index)
     tc.AddTaskCompletionListener Me
     incrementrequestcount index
 
-    Set tc = mTradingDB.loadContractsAsync(CreateContractSpecifier(contractSpec.localSymbol, _
-                                                    contractSpec.symbol, _
+    Set tc = mTradingDB.LoadContractsAsync(CreateContractSpecifier(contractSpec.LocalSymbol, _
+                                                    contractSpec.Symbol, _
                                                     contractSpec.Exchange, _
                                                     SecTypeCash, _
-                                                    contractSpec.currencyCode, _
-                                                    contractSpec.expiry), _
+                                                    contractSpec.CurrencyCode, _
+                                                    contractSpec.Expiry), _
                                             index)
     tc.AddTaskCompletionListener Me
     incrementrequestcount index
 
 Else
-    Set tc = mTradingDB.loadContractsAsync(contractSpec, _
+    Set tc = mTradingDB.LoadContractsAsync(contractSpec, _
                                             index)
     tc.AddTaskCompletionListener Me
     incrementrequestcount index
@@ -300,6 +302,7 @@ End Function
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ByRef ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "TaskCompletionListener_taskCompleted"
 Dim lContracts As Contracts
 Dim lContract As Contract
 Dim index As Long
@@ -332,7 +335,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TaskCompletionListener_taskCompleted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -386,6 +389,9 @@ End Property
 '@===============================================================================
 
 Private Function allocateRequestEntry() As Long
+Const ProcName As String = "allocateRequestEntry"
+On Error GoTo Err
+
 If mFirstFreeRequestIndex <> -1 Then
     allocateRequestEntry = mFirstFreeRequestIndex
     mFirstFreeRequestIndex = mRequests(mFirstFreeRequestIndex).next
@@ -394,9 +400,15 @@ Else
     If mRequestsMaxIndex > UBound(mRequests) Then ReDim Preserve mRequests(2 * (UBound(mRequests) + 1) - 1) As ContractRequest
     allocateRequestEntry = mRequestsMaxIndex
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub createDatabase()
+Const ProcName As String = "createDatabase"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -414,13 +426,21 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createDatabase", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function decrementRequestCount( _
                 ByVal index As Long) As Long
+Const ProcName As String = "decrementRequestCount"
+On Error GoTo Err
+
 mRequests(index).numberOfRequests = mRequests(index).numberOfRequests - 1
 decrementRequestCount = mRequests(index).numberOfRequests
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub handleFatalError( _
@@ -433,7 +453,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -443,7 +469,15 @@ End Sub
 
 Private Sub incrementrequestcount( _
                 ByVal index As Long)
+Const ProcName As String = "incrementrequestcount"
+On Error GoTo Err
+
 mRequests(index).numberOfRequests = mRequests(index).numberOfRequests + 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub logMessage( _
@@ -455,6 +489,7 @@ gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=
 End Sub
 
 Private Sub registerSP()
+Const ProcName As String = "registerSP"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -469,14 +504,22 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="registerSP", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub releaseRequestEntry( _
                 ByVal index As Long)
+Const ProcName As String = "releaseRequestEntry"
+On Error GoTo Err
+
 mRequests(index).next = mFirstFreeRequestIndex
 mFirstFreeRequestIndex = index
 Set mRequests(index).builder = Nothing
 mRequests(index).numberOfRequests = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

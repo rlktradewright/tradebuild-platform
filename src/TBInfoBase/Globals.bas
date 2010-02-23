@@ -138,6 +138,7 @@ End Function
 
 Public Function gStringToBool( _
                 ByVal value As String) As Boolean
+Const ProcName As String = "gStringToBool"
 Select Case UCase$(value)
 Case "Y", "YES", "T", "TRUE"
     gStringToBool = True
@@ -152,7 +153,7 @@ Case Else
         End If
     Else
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "gStringToBool", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Value does not represent a Boolean"
     
     End If

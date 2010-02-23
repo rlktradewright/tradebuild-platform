@@ -263,18 +263,42 @@ Private mReadOnly                   As Boolean
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+Const ProcName As String = "UserControl_Initialize"
+On Error GoTo Err
+
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
 disableFields
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_LostFocus()
+Const ProcName As String = "UserControl_LostFocus"
+On Error GoTo Err
+
 checkForOutstandingUpdates
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -289,6 +313,9 @@ Private Sub AddButton_Click()
 Dim newName As String
 Dim nameStub As String
 Dim i As Long
+
+Const ProcName As String = "AddButton_Click"
+On Error GoTo Err
 
 checkForOutstandingUpdates
 clearSelection
@@ -321,9 +348,16 @@ Else
 End If
 ProgIdText = ""
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ApplyButton_Click()
+Const ProcName As String = "ApplyButton_Click"
+On Error GoTo Err
+
 If applyProperties Then
     If mCurrSLIndex >= 0 Then
         mNames.Remove StudyLibList.List(mCurrSLIndex)
@@ -339,18 +373,34 @@ If applyProperties Then
         StudyLibList.selected(StudyLibList.ListCount - 1) = True
     End If
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BuiltInOpt_Click()
+Const ProcName As String = "BuiltInOpt_Click"
+On Error GoTo Err
+
 ProgIdText.Enabled = False
 ProgIdText.BackColor = vbButtonFace
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CancelButton_Click()
 Dim Index As Long
+Const ProcName As String = "CancelButton_Click"
+On Error GoTo Err
+
 Index = mCurrSLIndex
 enableApplyButton False
 enableCancelButton False
@@ -359,20 +409,36 @@ Set mCurrSL = Nothing
 mCurrSLIndex = -1
 StudyLibList.selected(Index) = False
 StudyLibList.selected(Index) = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CustomOpt_Click()
+Const ProcName As String = "CustomOpt_Click"
+On Error GoTo Err
+
 ProgIdText.Enabled = True
 ProgIdText.BackColor = vbWindowBackground
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DownButton_Click()
 Dim s As String
 Dim i As Long
 Dim thisSL As ConfigurationSection
+
+Const ProcName As String = "DownButton_Click"
+On Error GoTo Err
 
 For i = StudyLibList.ListCount - 2 To 0 Step -1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i + 1) Then
@@ -389,30 +455,62 @@ For i = StudyLibList.ListCount - 2 To 0 Step -1
 Next
 
 setDownButton
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub EnabledCheck_Click()
+Const ProcName As String = "EnabledCheck_Click"
+On Error GoTo Err
+
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NameText_Change()
+Const ProcName As String = "NameText_Change"
+On Error GoTo Err
+
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ProgIdText_Change()
+Const ProcName As String = "ProgIdText_Change"
+On Error GoTo Err
+
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveButton_Click()
 Dim s As String
 Dim i As Long
 Dim sl As ConfigurationSection
+
+Const ProcName As String = "RemoveButton_Click"
+On Error GoTo Err
 
 clearFields
 disableFields
@@ -436,9 +534,16 @@ DownButton.Enabled = False
 UpButton.Enabled = False
 RemoveButton.Enabled = False
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StudyLibList_Click()
+Const ProcName As String = "StudyLibList_Click"
+On Error GoTo Err
+
 setDownButton
 setUpButton
 setRemoveButton
@@ -471,19 +576,26 @@ If mCurrSL.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
     On Error Resume Next
     ' preserve whatever is in the config
     ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
-    On Error GoTo 0
+    On Error GoTo Err
 Else
     CustomOpt = True
     ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
 End If
 mNoCheck = False
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UpButton_Click()
 Dim s As String
 Dim i As Long
 Dim thisSL As ConfigurationSection
+
+Const ProcName As String = "UpButton_Click"
+On Error GoTo Err
 
 For i = 1 To StudyLibList.ListCount - 1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i - 1) Then
@@ -501,6 +613,11 @@ For i = 1 To StudyLibList.ListCount - 1
 Next
 
 setUpButton
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -512,7 +629,15 @@ End Sub
 '@================================================================================
 
 Public Property Get Dirty() As Boolean
+Const ProcName As String = "Dirty"
+On Error GoTo Err
+
 Dirty = ApplyButton.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -520,16 +645,27 @@ End Property
 '@================================================================================
 
 Public Function ApplyChanges() As Boolean
+Const ProcName As String = "ApplyChanges"
+On Error GoTo Err
+
 If applyProperties Then
     enableApplyButton False
     enableCancelButton False
     ApplyChanges = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub Initialise( _
                 ByVal configdata As ConfigurationSection, _
                 Optional ByVal readOnly As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 mReadOnly = readOnly
 checkForOutstandingUpdates
 clearFields
@@ -538,6 +674,11 @@ mCurrSLIndex = -1
 Set mNames = New Collection
 loadConfig configdata
 If mReadOnly Then disableControls
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -545,7 +686,7 @@ End Sub
 '@================================================================================
 
 Private Function applyProperties() As Boolean
-Dim failpoint As Long
+Const ProcName As String = "applyProperties"
 On Error GoTo Err
 
 If mCurrSL Is Nothing Then
@@ -573,18 +714,13 @@ applyProperties = True
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    MsgBox "Invalid study library name", vbExclamation, "Attention!"
-    Exit Function
-End If
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "applyProperties" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub checkForOutstandingUpdates()
+Const ProcName As String = "checkForOutstandingUpdates"
+On Error GoTo Err
+
 If ApplyButton.Enabled Then
     If MsgBox("Do you want to apply the changes you have made?", _
             vbExclamation Or vbYesNoCancel) = vbYes Then
@@ -593,42 +729,82 @@ If ApplyButton.Enabled Then
     enableApplyButton False
     enableCancelButton False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearFields()
+Const ProcName As String = "clearFields"
+On Error GoTo Err
+
 mNoCheck = True
 EnabledCheck = vbUnchecked
 NameText = ""
 ProgIdText = ""
 mNoCheck = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearSelection()
 Dim i As Long
+Const ProcName As String = "clearSelection"
+On Error GoTo Err
+
 For i = 0 To StudyLibList.ListCount - 1
     StudyLibList.selected(i) = False
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub disableControls()
+Const ProcName As String = "disableControls"
+On Error GoTo Err
+
 AddButton.Enabled = False
 UpButton.Enabled = False
 DownButton.Enabled = False
 RemoveButton.Enabled = False
 CancelButton.Enabled = False
 ApplyButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub disableFields()
+Const ProcName As String = "disableFields"
+On Error GoTo Err
+
 EnabledCheck.Enabled = False
 NameText.Enabled = False
 BuiltInOpt.Enabled = False
 CustomOpt.Enabled = False
 ProgIdText.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableApplyButton( _
                 ByVal enable As Boolean)
+Const ProcName As String = "enableApplyButton"
+On Error GoTo Err
+
 If mReadOnly Then Exit Sub
 If enable Then
     ApplyButton.Enabled = True
@@ -637,10 +813,18 @@ Else
     ApplyButton.Enabled = False
     ApplyButton.Default = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableCancelButton( _
                 ByVal enable As Boolean)
+Const ProcName As String = "enableCancelButton"
+On Error GoTo Err
+
 If mReadOnly Then Exit Sub
 If enable Then
     CancelButton.Enabled = True
@@ -649,24 +833,48 @@ Else
     CancelButton.Enabled = False
     CancelButton.Cancel = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableFields()
+Const ProcName As String = "enableFields"
+On Error GoTo Err
+
 EnabledCheck.Enabled = True
 NameText.Enabled = True
 BuiltInOpt.Enabled = True
 CustomOpt.Enabled = True
 ProgIdText.Enabled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function findSL( _
                 ByVal name As String) As ConfigurationSection
+Const ProcName As String = "findSL"
+On Error GoTo Err
+
 If mCurrSLsList Is Nothing Then Exit Function
 Set findSL = mCurrSLsList.GetConfigurationSection(ConfigNameStudyLibrary & "(" & name & ")")
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function hasBuiltIn() As Boolean
 Dim sl As ConfigurationSection
+Const ProcName As String = "hasBuiltIn"
+On Error GoTo Err
+
 If mCurrSLsList Is Nothing Then Exit Function
 For Each sl In mCurrSLsList
     If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
@@ -674,10 +882,18 @@ For Each sl In mCurrSLsList
         Exit Function
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function invalidName(ByVal name As String) As Boolean
 Dim s As String
+
+Const ProcName As String = "invalidName"
+On Error GoTo Err
 
 If name = "" Then
     invalidName = True
@@ -698,10 +914,12 @@ End If
 Exit Function
 
 Err:
-
 End Function
 
 Private Function isValidFields() As Boolean
+Const ProcName As String = "isValidFields"
+On Error GoTo Err
+
 On Error Resume Next
 If invalidName(NameText) Then
 ElseIf Not CustomOpt Then
@@ -713,12 +931,20 @@ ElseIf Len(ProgIdText) > 39 Then
 Else
     isValidFields = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub loadConfig( _
                 ByVal configdata As ConfigurationSection)
                 
 Dim sl As ConfigurationSection
+
+Const ProcName As String = "loadConfig"
+On Error GoTo Err
 
 Set mConfig = configdata
 
@@ -739,10 +965,18 @@ If Not mCurrSLsList Is Nothing Then
         StudyLibList.selected(0) = True
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setDownButton()
 Dim i As Long
+
+Const ProcName As String = "setDownButton"
+On Error GoTo Err
 
 For i = 0 To StudyLibList.ListCount - 2
     If StudyLibList.selected(i) And Not StudyLibList.selected(i + 1) Then
@@ -751,18 +985,34 @@ For i = 0 To StudyLibList.ListCount - 2
     End If
 Next
 DownButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setRemoveButton()
+Const ProcName As String = "setRemoveButton"
+On Error GoTo Err
+
 If StudyLibList.SelCount <> 0 Then
     If Not mReadOnly Then RemoveButton.Enabled = True
 Else
     RemoveButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setUpButton()
 Dim i As Long
+
+Const ProcName As String = "setUpButton"
+On Error GoTo Err
 
 For i = 1 To StudyLibList.ListCount - 1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i - 1) Then
@@ -771,6 +1021,11 @@ For i = 1 To StudyLibList.ListCount - 1
     End If
 Next
 UpButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

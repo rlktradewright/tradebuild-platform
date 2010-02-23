@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.Form fPathChooser 
    Caption         =   "Choose folder"
    ClientHeight    =   2775
@@ -78,7 +78,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickFileManager26"
 Private Const ModuleName                    As String = "fPathChooser"
 
 '@================================================================================
@@ -101,9 +100,13 @@ End Sub
 
 Private Sub Form_Resize()
 Dim butleft As Long
-butleft = Me.ScaleWidth - OKButton.Width - 8 * Screen.TwipsPerPixelX
+Const ProcName As String = "Form_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
+butleft = Me.ScaleWidth - OkButton.Width - 8 * Screen.TwipsPerPixelX
 If butleft >= 2160 Then
-    OKButton.Left = butleft
+    OkButton.Left = butleft
     CancelButton.Left = butleft
     NewFolderButton.Left = butleft
     PathChooser1.Width = butleft - 8 * Screen.TwipsPerPixelX - PathChooser1.Left
@@ -113,6 +116,11 @@ If Me.ScaleHeight >= 1560 Then
     PathChooser1.Height = Me.ScaleHeight - 8 * Screen.TwipsPerPixelY - PathChooser1.Top
     NewFolderButton.Top = PathChooser1.Height + PathChooser1.Top - NewFolderButton.Height
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -124,17 +132,44 @@ End Sub
 '@================================================================================
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 Me.Hide
 mCancelled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub NewFolderButton_Click()
+Const ProcName As String = "NewFolderButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 PathChooser1.NewFolder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub OKButton_Click()
+Const ProcName As String = "OKButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 mCancelled = False
 Me.Hide
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -150,11 +185,29 @@ cancelled = mCancelled
 End Property
 
 Public Property Let path(ByVal newvalue As String)
+Const ProcName As String = "path"
+Dim failpoint As String
+On Error GoTo Err
+
 PathChooser1.path = newvalue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get path() As String
+Const ProcName As String = "path"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mCancelled Then path = PathChooser1.path
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

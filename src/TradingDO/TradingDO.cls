@@ -108,8 +108,8 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "GlobalClass"
+
+Private Const ModuleName As String = "TradingDO"
 
 '@================================================================================
 ' Member variables
@@ -136,39 +136,62 @@ Private Const ModuleName As String = "GlobalClass"
 '@================================================================================
 
 Public Function CreateTradingDB( _
-                ByVal connectionString As String, _
-                ByVal databaseType As DatabaseTypes) As TradingDB
-
-Dim failpoint As Long
+                ByVal ConnectionString As String, _
+                ByVal DatabaseType As DatabaseTypes) As TradingDB
+Const ProcName As String = "CreateTradingDB"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateTradingDB = New TradingDB
 
-CreateTradingDB.initialise connectionString, databaseType
+CreateTradingDB.Initialise ConnectionString, DatabaseType
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateTradingDB" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function ContractFromInstrument( _
                 ByVal instrument As instrument) As Contract
+Const ProcName As String = "ContractFromInstrument"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ContractFromInstrument = gContractFromInstrument(instrument)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function DatabaseTypeFromString( _
                 ByVal value As String) As DatabaseTypes
+Const ProcName As String = "DatabaseTypeFromString"
+Dim failpoint As String
+On Error GoTo Err
+
 DatabaseTypeFromString = gDatabaseTypeFromString(value)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function DatabaseTypeToString( _
                 ByVal value As DatabaseTypes) As String
+Const ProcName As String = "DatabaseTypeToString"
+Dim failpoint As String
+On Error GoTo Err
+
 DatabaseTypeToString = gDatabaseTypeToString(value)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GenerateConnectionString( _
@@ -177,6 +200,10 @@ Public Function GenerateConnectionString( _
                 ByVal databaseName As String, _
                 Optional ByVal username As String, _
                 Optional ByVal password As String) As String
+
+Const ProcName As String = "GenerateConnectionString"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case dbType
 Case DbSQLServer7
@@ -219,7 +246,11 @@ Case DbMySQL5
                         ";Password=" & password & _
                         ";Option=3"
 End Select
-                
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

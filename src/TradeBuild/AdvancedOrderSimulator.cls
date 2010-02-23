@@ -128,14 +128,14 @@ If ev.State = TimerListItemStates.TimerListItemStateExpired Then
     End Select
 Else
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "StateChangeListener_Change", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Unexpected TimerListItem status"
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -162,7 +162,7 @@ End With
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let CommonServiceConsumer(ByVal value As TradeBuildSP.ICommonServiceConsumer)
@@ -211,7 +211,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -253,7 +253,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -272,7 +272,7 @@ On Error GoTo Err
 
 If lOrder Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.AdvancedOrderSimulator::cancelOrder", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Unknown order id " & Id
 End If
 
@@ -346,7 +346,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -370,7 +370,7 @@ Set GetOrder = mAllOrders(pId)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub placeOrder( _
@@ -390,7 +390,7 @@ On Error GoTo Err
 
 If MarketIndex < 0 Or MarketIndex > UBound(mMarketTable) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid marketIndex " & MarketIndex & " in order " & pOrder.Id
 End If
 
@@ -409,7 +409,7 @@ End Select
 Set specifier = pOrder.Contract.specifier
 If Not specifier.Equals(mMarketTable(MarketIndex).Contract.specifier) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Incorrect contract in order " & pOrder.Id & ": " & _
             specifier.ToString
 End If
@@ -500,7 +500,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                     
 Friend Function startMarket( _
@@ -538,7 +538,7 @@ End With
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -564,7 +564,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Trade(ByVal Timestamp As Date, _
@@ -626,7 +626,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -656,7 +656,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub handlePendingSubmitOrders(ByVal marketid As Long)
@@ -676,7 +676,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub handleRelatedOrders(ByVal pOrder As SimulatorOrder)
@@ -726,7 +726,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
@@ -756,7 +756,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
@@ -787,7 +787,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyOrderStatus( _
@@ -795,109 +795,6 @@ Private Sub notifyOrderStatus( _
 mMarketTable(pOrder.MarketIndex).serviceConsumer.OrderStatusReport gCreateOrderStatusReport(pOrder.Order.Id, pOrder.Order.Status)
 End Sub
 
-
-' commented out on 22/5/6
-'Private Sub RemoveCancelledOrder(ByVal id As Long)
-'' this function is called by the instrumentProcessor when a real order
-'' has been canceled, in case the simulator hasn't also cancelled it (because
-'' the simulator isn't an exact reflection of reality)
-'
-'
-'Dim lOrder as simulatororder
-'Dim relatedOrder as simulatororder
-'Dim theOrder as simulatororder
-'
-'On Error Resume Next
-'Set theOrder = mAllOrders(id)
-'On Error GoTo 0
-'If theOrder Is Nothing Then
-'    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::RemoveCancelledOrder", _
-'                "Unknown order id " & id
-'End If
-'
-'With mMarketTable(lOrder.marketIndex)
-'
-'    On Error Resume Next
-'
-'    Set lOrder = .activeOrders(id)
-'    If lOrder Is Nothing Then Exit Sub
-'
-'    On Error GoTo 0
-'
-'    .activeOrders.Remove id
-'
-'    If lOrder.parentId <> "" Then
-'        For Each relatedOrder In .activeOrders
-'            If relatedOrder.parentId = lOrder.parentId And _
-'                relatedOrder.id <> lOrder.id _
-'            Then
-'                setCancelOrder relatedOrder
-'            End If
-'        Next
-'    Else
-'        For Each relatedOrder In .activeOrders
-'            If relatedOrder.parentId = lOrder.id Or _
-'                (relatedOrder.ocaGroup = lOrder.ocaGroup And _
-'                lOrder.ocaGroup <> "" And _
-'                relatedOrder.id <> lOrder.id) _
-'            Then
-'                setCancelOrder relatedOrder
-'            End If
-'        Next
-'    End If
-'
-'End With
-'
-'End Sub
-'
-'Private Sub RemoveFilledOrder(ByVal id As Long)
-'' this function is called by the instrumentProcessor when a real order
-'' has been filled, in case the simulator hasn't also filled it (because
-'' the simulator isn't an exact reflection of reality)
-'Dim theOrder as simulatororder
-'Dim lOrder as simulatororder
-'
-'On Error Resume Next
-'Set theOrder = mAllOrders(id)
-'On Error GoTo 0
-'If theOrder Is Nothing Then
-'    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::RemoveFilledOrder", _
-'                "Unknown order id " & id
-'End If
-'
-'With mMarketTable(lOrder.marketIndex)
-'
-'    On Error Resume Next
-'
-'    Set lOrder = .activeOrders(id)
-'    If lOrder Is Nothing Then Exit Sub
-'
-'    On Error GoTo 0
-'
-'    handleRelatedOrders lOrder
-'    .activeOrders.Remove id
-'End With
-'End Sub
-'
-'Private Sub RemoveOrder(ByVal id As Long)
-'Dim lOrder as simulatororder
-'
-'On Error Resume Next
-'Set lOrder = mAllOrders(id)
-'On Error GoTo 0
-'If lOrder Is Nothing Then
-'    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild26.AdvancedOrderSimulator::RemoveOrder", _
-'                "Unknown order id " & id
-'End If
-'
-'With mMarketTable(lOrder.marketIndex)
-'    On Error Resume Next
-'    .activeOrders.Remove id
-'End With
-'End Sub
 
 Private Sub setCancelOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "setCancelOrder"
@@ -925,7 +822,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setFillOrder(pOrder As SimulatorOrder, _
@@ -1024,7 +921,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setOrderStatus( _
@@ -1094,7 +991,7 @@ mMarketTable(MarketIndex).serviceConsumer.RejectOrder pOrder.Id, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
@@ -1134,7 +1031,7 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
         End If
     Case Else
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Order type " & pOrder.Order.OrderType & " invalid for submission"
     End Select
 Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
@@ -1159,20 +1056,20 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
         End If
     Case Else
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Order type " & pOrder.Order.OrderType & " invalid for submission"
     End Select
         
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Order type " & pOrder.Order.OrderType & " invalid for submission"
 End Select
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

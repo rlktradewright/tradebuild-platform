@@ -80,10 +80,18 @@ Private mOIParser                           As VolumeParser
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
 
+Const ProcName As String = "mSession_SessionStarted"
+On Error GoTo Err
+
 If mBarEndTime <> 0 And _
     mSession.SessionCurrentTime < mBarEndTime Then Exit Sub
     
 Set mCurrentBar = Nothing
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -98,20 +106,29 @@ End Property
 ' before any Bars have been built.
 Public Property Let TickSize( _
                 ByVal value As Double)
+Const ProcName As String = "TickSize"
+Dim failpoint As String
+On Error GoTo Err
+
 If mBars.Count > 0 Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "TickSize", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Can only set TickSize before any Bars have been created"
 End If
 
 If value <= 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Ticksize must be > 0 if TimePeriod.Units is TimePeriodTickMovement"
 End If
 
 mTicksize = value
 mMaxBarRange = mBarTimePeriod.Length * mTicksize
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
                 
 End Property
 
@@ -129,6 +146,10 @@ Public Sub AddBar( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Dim lBar As New Bar
+Const ProcName As String = "AddBar"
+Dim failpoint As String
+On Error GoTo Err
+
 lBar.Initialise Timestamp, _
                 OpenValue, _
                 HighValue, _
@@ -139,31 +160,72 @@ lBar.Initialise Timestamp, _
                 OpenInterest
 mCurrentBarNumber = mCurrentBarNumber + 1
 mBars.Add lBar, mCurrentBarNumber, Timestamp
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddThisBar( _
                 ByVal pBar As Bar)
+Const ProcName As String = "AddThisBar"
+Dim failpoint As String
+On Error GoTo Err
+
 mCurrentBarNumber = mCurrentBarNumber + 1
 mBars.Add pBar, mCurrentBarNumber, pBar.Timestamp
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AppendBars( _
                 ByVal pBars As Bars, _
                 Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF)
+Const ProcName As String = "AppendBars"
+Dim failpoint As String
+On Error GoTo Err
+
 mBars.AppendBars pBars, maxNumberToAppend
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Function AppendBarsAsync( _
                 ByVal pBars As Bars, _
                 Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF) As TaskController
+Const ProcName As String = "AppendBarsAsync"
+Dim failpoint As String
+On Error GoTo Err
+
 Set AppendBarsAsync = mBars.AppendBarsAsync(pBars, maxNumberToAppend)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Sub ChangeSession( _
                 ByVal newSession As Session)
+Const ProcName As String = "ChangeSession"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mSession = newSession
 mVolParser.ChangeSession mSession
 mOIParser.ChangeSession mSession
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -180,11 +242,20 @@ End Sub
 '@/
 Public Sub IncrementTickVolume( _
                 ByVal increment As Long)
+Const ProcName As String = "IncrementTickVolume"
+Dim failpoint As String
+On Error GoTo Err
+
 If mCurrentBar Is Nothing Then
     ' a Bar with no price causes all sorts of problems so do nothing
     Exit Sub
 End If
 mCurrentBar.IncrementTickVolume increment
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -193,6 +264,10 @@ Friend Sub Initialise( _
                 ByVal TickSize As Double, _
                 ByVal numberOfBarsToCache As Long)
                
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mBarTimePeriod = BarTimePeriod
 Set mSession = pSession
 mTicksize = TickSize
@@ -214,11 +289,20 @@ mVolParser.Initialise mSession
 
 Set mOIParser = New VolumeParser
 mOIParser.Initialise mSession
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub NotifyOpenInterest( _
                 oi As SValue)
 Dim oiIncrement As Long
+
+Const ProcName As String = "NotifyOpenInterest"
+Dim failpoint As String
+On Error GoTo Err
 
 If IsEmpty(oi.value) Then Exit Sub
 
@@ -242,11 +326,20 @@ Else
     
     mCurrentBar.NotifyOpenInterest mOIParser.Notify(oi.value)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
                 
 End Sub
 
 Public Sub NotifyValue( _
                 value As SValue)
+
+Const ProcName As String = "NotifyValue"
+Dim failpoint As String
+On Error GoTo Err
 
 If IsEmpty(value.value) Then Exit Sub
 
@@ -307,12 +400,21 @@ ElseIf value.Timestamp >= mBarEndTime Then
 Else
     mCurrentBar.NotifyValue value.value
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
     
 End Sub
 
 Public Sub NotifyVolume( _
                 vol As SValue)
 Dim volIncrement As Long
+
+Const ProcName As String = "NotifyVolume"
+Dim failpoint As String
+On Error GoTo Err
 
 If IsEmpty(vol.value) Then Exit Sub
 
@@ -369,18 +471,41 @@ Else
     mCurrentBar.NotifyVolume mCurrentBar.Volume + mVolParser.Notify(vol.value)
 End If
 
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
                 
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub ResetBarChangeIndicators()
+Const ProcName As String = "ResetBarChangeIndicators"
+Dim failpoint As String
+On Error GoTo Err
+
 mBars.ResetBarChangeIndicators
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -393,32 +518,52 @@ Private Sub createNewBar( _
                 ByVal initialVolume As Long, _
                 ByVal initialOpenInterest As Long)
 
+Const ProcName As String = "createNewBar"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mCurrentBar = New Bar
-mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
 
 If mBarTimePeriod.Length = 0 Then
+    ' the caller supplies Bar numbers
+    mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
     mCurrentBar.Timestamp = Timestamp
 Else
+    mCurrentBarNumber = mCurrentBarNumber + 1
+    mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
     mBarEndTime = mSession.BarEndTime(Timestamp, _
                                 mBarTimePeriod)
     mCurrentBar.Timestamp = mSession.BarStartTime(Timestamp, _
                                     mBarTimePeriod)
-    mCurrentBarNumber = mCurrentBarNumber + 1
 End If
 mCurrentBar.BarNumber = mCurrentBarNumber
 If initialValue <> MaxDouble Then mCurrentBar.NotifyValue initialValue
 If initialVolume <> 0 Then mCurrentBar.NotifyVolume initialVolume
 If initialOpenInterest <> 0 Then mCurrentBar.NotifyOpenInterest initialOpenInterest
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Sub
 
 Private Function newBar(BarNumber As Long) As Boolean
+Const ProcName As String = "newBar"
+Dim failpoint As String
+On Error GoTo Err
+
 If BarNumber <> mCurrentBarNumber Then
     mCurrentBarNumber = BarNumber
     newBar = True
 Else
     newBar = False
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 

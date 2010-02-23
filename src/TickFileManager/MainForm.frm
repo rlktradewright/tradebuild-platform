@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#166.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.6"
    ClientHeight    =   7875
@@ -49,26 +49,26 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Frame4"
-      Tab(1).Control(1)=   "SelectTickfilesButton"
-      Tab(1).Control(2)=   "ClearTickfileListButton"
-      Tab(1).Control(3)=   "TickfileList"
-      Tab(1).Control(3).Enabled=   0   'False
+      Tab(1).Control(0)=   "ReplayProgressLabel"
+      Tab(1).Control(1)=   "ReplayContractLabel"
+      Tab(1).Control(2)=   "ReplayProgressBar"
+      Tab(1).Control(3)=   "ConvertButton"
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(5)=   "ConvertButton"
-      Tab(1).Control(6)=   "ReplayProgressBar"
-      Tab(1).Control(7)=   "ReplayContractLabel"
-      Tab(1).Control(8)=   "ReplayProgressLabel"
+      Tab(1).Control(5)=   "TickfileList"
+      Tab(1).Control(5).Enabled=   0   'False
+      Tab(1).Control(6)=   "ClearTickfileListButton"
+      Tab(1).Control(7)=   "SelectTickfilesButton"
+      Tab(1).Control(8)=   "Frame4"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ContractSpecBuilder1"
-      Tab(2).Control(1)=   "Frame2"
+      Tab(2).Control(0)=   "Label11"
+      Tab(2).Control(1)=   "ContractDetailsText"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "ContractDetailsText"
-      Tab(2).Control(3).Enabled=   0   'False
-      Tab(2).Control(4)=   "Label11"
+      Tab(2).Control(3)=   "Frame2"
+      Tab(2).Control(4)=   "ContractSpecBuilder1"
       Tab(2).ControlCount=   5
       Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
          Height          =   2895
@@ -990,6 +990,8 @@ Implements LogListener
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "MainForm"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -1001,6 +1003,9 @@ Implements LogListener
 '================================================================================
 ' Member variables
 '================================================================================
+
+Private WithEvents mUnhandledErrorHandler           As UnhandledErrorHandler
+Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
@@ -1018,8 +1023,6 @@ Private mRunningFromComandLine As Boolean
 
 Private mOutputFormat As String
 Private mOutputPath As String
-
-Private mQuoteTrackerSP As QTSP26.QTTickfileServiceProvider
 
 Private mContract As Contract
 
@@ -1050,16 +1053,27 @@ Private mTickfilesSelected As Boolean
 
 Private mLogFormatter As LogFormatter
 
+Private mIsInDev                                    As Boolean
 
 '================================================================================
 ' Form Event Handlers
 '================================================================================
 
 Private Sub Form_Initialize()
-On Error GoTo err
+Const ProcName As String = "Form_Initialize"
+On Error GoTo Err
+
+Debug.Print "Running in development environment: " & CStr(inDev)
+
 InitCommonControls
 
 InitialiseTWUtilities
+
+Set mUnhandledErrorHandler = UnhandledErrorHandler
+
+ApplicationGroupName = "TradeWright"
+ApplicationName = getAppTitle
+SetupDefaultLogging Command
 
 TaskQuantumMillisecs = 200
 TaskConcurrency = 100
@@ -1080,23 +1094,23 @@ mMonths(12) = "Dec"
 
 Exit Sub
 
-err:
-handleFatalError err.Number, _
-                "Couldn't initialise common controls.", _
-                "Form_Initialize"
-
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Load()
 
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
+
 On Error Resume Next
 Set mTradeBuildAPI = TradeBuildAPI
-On Error GoTo 0
+On Error GoTo Err
+
 If mTradeBuildAPI Is Nothing Then
-    handleFatalError 999, _
-                    "The required version of TradeBuild is not installed.", _
-                    "Form_Load"
-    Exit Sub
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "The required version of TradeBuild is not installed"
 End If
 
 Set mTickers = mTradeBuildAPI.Tickers
@@ -1121,6 +1135,11 @@ WriteBarDataCheck.Value = vbChecked
 If Not ProcessCommandLineArgs Then
     Unload Me
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
@@ -1136,10 +1155,18 @@ Private Sub LogListener_finish()
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Const ProcName As String = "LogListener_Notify"
+On Error GoTo Err
+
 StatusText.SelStart = Len(StatusText.Text)
 StatusText.SelLength = 0
 If Len(StatusText.Text) <> 0 Then StatusText.SelText = vbCrLf
-StatusText.SelText = mLogFormatter.formatRecord(logrec)
+StatusText.SelText = mLogFormatter.FormatRecord(logrec)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -1147,6 +1174,9 @@ End Sub
 '================================================================================
 
 Private Sub AdjustTimestampsCheck_Click()
+Const ProcName As String = "AdjustTimestampsCheck_Click"
+On Error GoTo Err
+
 If AdjustTimestampsCheck = vbChecked Then
     AdjustSecondsStartText.Enabled = True
     AdjustSecondsEndText.Enabled = True
@@ -1154,9 +1184,17 @@ Else
     AdjustSecondsStartText.Enabled = False
     AdjustSecondsEndText.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
+Const ProcName As String = "ClearTickfileListButton_Click"
+On Error GoTo Err
+
 TickfileList.Clear
 ClearTickfileListButton.Enabled = False
 If Not mTickfileManager Is Nothing Then mTickfileManager.ClearTickfileSpecifiers
@@ -1164,38 +1202,86 @@ mTickfiles.Clear
 ConvertButton.Enabled = False
 StopButton.Enabled = False
 mTickfilesSelected = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigureButton_Click()
+Const ProcName As String = "ConfigureButton_Click"
+On Error GoTo Err
+
 SelectTickfilesButton.Enabled = setupServiceProviders
 TickfileList.Clear
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractFromServiceProviderOption_Click()
+Const ProcName As String = "ContractFromServiceProviderOption_Click"
+On Error GoTo Err
+
 ContractSpecBuilder1.SetFocus
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractInTickfileOption_Click()
+Const ProcName As String = "ContractInTickfileOption_Click"
+On Error GoTo Err
+
 GetContractButton.Enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
+Const ProcName As String = "ContractSpecBuilder1_NotReady"
+On Error GoTo Err
+
 GetContractButton.Enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_ready()
+Const ProcName As String = "ContractSpecBuilder1_ready"
+On Error GoTo Err
+
 If ContractFromServiceProviderOption Then
     GetContractButton.Enabled = True
 Else
     GetContractButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConvertButton_Click()
+Const ProcName As String = "ConvertButton_Click"
+On Error GoTo Err
+
 If ContractFromServiceProviderOption And _
     mContract Is Nothing _
 Then
-    writeStatusMessage "Can't convert - no contract details are available"
+    LogMessage "Can't convert - no contract details are available"
     Exit Sub
 End If
 
@@ -1205,34 +1291,58 @@ ConvertButton.Enabled = False
 StopButton.Enabled = True
 ReplayProgressBar.Visible = True
 
-Set mTickfileManager = mTickers.createTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
+Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
                                         IIf(WriteTickDataCheck = vbChecked, TickerOptions.TickerOptWriteTickData Or TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0) Or _
                                         IIf(WriteBarDataCheck = vbChecked, TickerOptions.TickerOptWriteTradeBarData, 0))
 mTickfileManager.TickFileSpecifiers = mTickfiles
 If ContractFromServiceProviderOption Then mTickfileManager.defaultContract = mContract
-mTickfileManager.replaySpeed = 0
+mTickfileManager.ReplaySpeed = 0
 If AdjustTimestampsCheck = vbChecked Then
     mTickfileManager.TimestampAdjustmentStart = AdjustSecondsStartText
     mTickfileManager.TimestampAdjustmentEnd = AdjustSecondsEndText
 End If
 
-writeStatusMessage "Tickfile conversion started"
+LogMessage "Tickfile conversion started"
 mTickfileManager.StartReplay
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DatabaseInputOption_Click()
+Const ProcName As String = "DatabaseInputOption_Click"
+On Error GoTo Err
+
 enableInputDatabaseFields
 disableQtFields
 disableContractDatabaseFields
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DatabaseOutputOption_Click()
+Const ProcName As String = "DatabaseOutputOption_Click"
+On Error GoTo Err
+
 disableOutputFileFields
 enableOutputDatabaseFields
 disableContractDatabaseFields
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FileInputOption_Click()
+Const ProcName As String = "FileInputOption_Click"
+On Error GoTo Err
+
 disableInputDatabaseFields
 disableQtFields
 If FileOutputOption Then
@@ -1240,9 +1350,17 @@ If FileOutputOption Then
 Else
     disableContractDatabaseFields
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FileOutputOption_Click()
+Const ProcName As String = "FileOutputOption_Click"
+On Error GoTo Err
+
 enableOutputFileFields
 disableOutputDatabaseFields
 If FileInputOption Or QtInputOption Then
@@ -1250,10 +1368,18 @@ If FileInputOption Or QtInputOption Then
 Else
     disableContractDatabaseFields
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FormatList_Click()
 Dim i As Long
+Const ProcName As String = "FormatList_Click"
+On Error GoTo Err
+
 mOutputFormat = ""
 For i = 0 To UBound(mSupportedOutputFormats)
     If FormatList.Text = mSupportedOutputFormats(i).Name Then
@@ -1261,36 +1387,59 @@ For i = 0 To UBound(mSupportedOutputFormats)
         Exit Sub
     End If
 Next
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub GetContractButton_Click()
-Dim lContractSpecifier As contractSpecifier
+Const ProcName As String = "GetContractButton_Click"
+On Error GoTo Err
 
-On Error GoTo err
-
-Set mContracts = mTradeBuildAPI.loadContracts(ContractSpecBuilder1.contractSpecifier)
-writeStatusMessage "Requesting contract details"
+Set mContracts = mTradeBuildAPI.LoadContracts(ContractSpecBuilder1.ContractSpecifier)
+LogMessage "Requesting contract details"
 Exit Sub
 
-err:
-handleFatalError err.Number, err.description, "GetContractButton_Click"
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OutputPathButton_Click()
 Dim PathChooser As PathChooser
+Const ProcName As String = "OutputPathButton_Click"
+On Error GoTo Err
+
 Set PathChooser = New PathChooser
 PathChooser.path = OutputPathText.Text
 PathChooser.choose
 If Not PathChooser.cancelled Then
     OutputPathText.Text = PathChooser.path
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OutputPathText_Change()
+Const ProcName As String = "OutputPathText_Change"
+On Error GoTo Err
+
 mOutputPath = OutputPathText.Text
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub QtInputOption_Click()
+Const ProcName As String = "QtInputOption_Click"
+On Error GoTo Err
+
 disableInputDatabaseFields
 enableQtFields
 If FileOutputOption Then
@@ -1298,11 +1447,19 @@ If FileOutputOption Then
 Else
     disableContractDatabaseFields
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
 Dim tfs As TickfileSpecifier
 Dim userCancelled As Boolean
+
+Const ProcName As String = "SelectTickfilesButton_Click"
+On Error GoTo Err
 
 Set mTickfiles = SelectTickfiles(userCancelled)
 
@@ -1312,28 +1469,57 @@ mTickfilesSelected = True
 
 TickfileList.Clear
 For Each tfs In mTickfiles
-    TickfileList.AddItem tfs.filename
+    TickfileList.AddItem tfs.FileName
 Next
 ClearTickfileListButton.Enabled = True
 
 checkOkToConvert
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub StopButton_Click()
+Const ProcName As String = "StopButton_Click"
+On Error GoTo Err
+
 ConvertButton.Enabled = True
 StopButton.Enabled = False
 SelectTickfilesButton.Enabled = True
 ClearTickfileListButton.Enabled = True
-mTickfileManager.stopReplay
+mTickfileManager.StopReplay
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub WriteBarDataCheck_Click()
+Const ProcName As String = "WriteBarDataCheck_Click"
+On Error GoTo Err
+
 checkOkToConvert
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub WriteTickDataCheck_Click()
+Const ProcName As String = "WriteTickDataCheck_Click"
+On Error GoTo Err
+
 checkOkToConvert
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1341,8 +1527,16 @@ End Sub
 '================================================================================
 
 Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
-writeStatusMessage "Invalid contract specifier: " & _
-                    Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+Const ProcName As String = "mContracts_ContractSpecifierInvalid"
+On Error GoTo Err
+
+LogMessage "Invalid contract specifier: " & _
+                    Replace(mContracts.ContractSpecifier.ToString, vbCrLf, "; ")
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
@@ -1351,22 +1545,23 @@ Dim i As Long
 Dim j As Long
 Dim lSupportedInputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier
 
-On Error GoTo err
+Const ProcName As String = "mContracts_NoMoreContractDetails"
+On Error GoTo Err
 
 If mContracts.Count = 0 Then
-    writeStatusMessage "An invalid contract was specified"
+    LogMessage "An invalid contract was specified"
     Exit Sub
 End If
 
 If mContracts.Count > 1 Then
-    writeStatusMessage "Unique contract not specified"
+    LogMessage "Unique contract not specified"
     Exit Sub
 End If
 
 Set mContract = mContracts(1)
 ContractDetailsText = mContract.ToString
 
-writeStatusMessage "Contract details received"
+LogMessage "Contract details received"
 If Not mRunningFromComandLine Then
     GetContractButton.Enabled = True
     Exit Sub
@@ -1401,13 +1596,13 @@ For i = 0 To mNumberOfSessions - 1
         Next
         
         If .EntireSession Then
-            .filename = "Session (" & .FromDate & ") " & _
-                            Replace(mContract.specifier.ToString, vbCrLf, "; ")
+            .FileName = "Session (" & .FromDate & ") " & _
+                            Replace(mContract.Specifier.ToString, vbCrLf, "; ")
         Else
-            .filename = .FromDate & "-" & .ToDate & " " & _
-                            Replace(mContract.specifier.ToString, vbCrLf, "; ")
+            .FileName = .FromDate & "-" & .ToDate & " " & _
+                            Replace(mContract.Specifier.ToString, vbCrLf, "; ")
         End If
-        TickfileList.AddItem .filename
+        TickfileList.AddItem .FileName
     End With
 Next
 
@@ -1415,8 +1610,9 @@ Set mTimer = CreateIntervalTimer(10)
 mTimer.StartTimer
 
 Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTradeBuildAPI_Contract"
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1424,7 +1620,15 @@ End Sub
 '================================================================================
 
 Private Sub mTicker_TickfileWriterNotification(ev As TradeBuild26.WriterEvent)
-If ev.Action = WriterFileCreated Then writeStatusMessage "Created output tickfile: " & ev.filename
+Const ProcName As String = "mTicker_TickfileWriterNotification"
+On Error GoTo Err
+
+If ev.Action = WriterFileCreated Then LogMessage "Created output tickfile: " & ev.FileName
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1437,24 +1641,27 @@ Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal tickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 continueMode As ReplayContinueModes)
-On Error GoTo err
+Const ProcName As String = "mTickfileManager_QueryReplayNextTickfile"
+On Error GoTo Err
 
 ReplayProgressBar.Min = 0
 ReplayProgressBar.Max = 100
 ReplayProgressBar.Value = 0
 TickfileList.ListIndex = tickfileIndex - 1
-writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
-ReplayContractLabel.Caption = pContract.specifier.ToString
+LogMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
+ReplayContractLabel.Caption = pContract.Specifier.ToString
 Set mEt = New ElapsedTimer
 mEt.StartTiming
 
 Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTickfileManager_QueryReplayNextTickfile"
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
-On Error GoTo err
+Const ProcName As String = "mTickfileManager_ReplayCompleted"
+On Error GoTo Err
 
 ConvertButton.Enabled = True
 StopButton.Enabled = False
@@ -1465,13 +1672,14 @@ ReplayProgressBar.Visible = False
 ReplayContractLabel.Caption = ""
 ReplayProgressLabel.Caption = ""
 
-writeStatusMessage "Tickfile conversion completed"
+LogMessage "Tickfile conversion completed"
 
 If mRun Then Unload Me
 
 Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTickfileManager_ReplayCompleted"
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1480,7 +1688,9 @@ Private Sub mTickfileManager_ReplayProgress( _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
 
-On Error GoTo err
+Const ProcName As String = "mTickfileManager_ReplayProgress"
+On Error GoTo Err
+
 ReplayProgressBar.Value = percentComplete
 ReplayProgressBar.Refresh
 ReplayProgressLabel.Caption = tickfileTimestamp & _
@@ -1488,31 +1698,43 @@ ReplayProgressLabel.Caption = tickfileTimestamp & _
                                 eventsPlayed & _
                                 " events" & _
                                 IIf(percentComplete >= 1, Format(percentComplete, " \(0\%\)"), "")
+
 Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTickfileManager_ReplayProgress"
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
-Dim i As Long
-On Error GoTo err
+Const ProcName As String = "mTickfileManager_TickerAllocated"
+On Error GoTo Err
+
 Set mTicker = pTicker
-mTicker.outputTickfilePath = mOutputPath
-mTicker.outputTickfileFormat = mOutputFormat
+mTicker.OutputTickfilePath = mOutputPath
+mTicker.OutputTickfileFormat = mOutputFormat
 
 Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTickfileManager_TickerAllocated"
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_TickfileCompleted( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String)
 Dim elapsed As Single
+Const ProcName As String = "mTickfileManager_TickfileCompleted"
+On Error GoTo Err
+
 elapsed = mEt.ElapsedTimeMicroseconds
 
-writeStatusMessage "Processed " & mTicker.tickNumber & " ticks in " & Format(elapsed / 1000000, "0.0") & " seconds"
-writeStatusMessage "Ticks per second: " & CLng(mTicker.tickNumber / (elapsed / 1000000))
+LogMessage "Processed " & mTicker.TickNumber & " ticks in " & Format(elapsed / 1000000, "0.0") & " seconds"
+LogMessage "Ticks per second: " & CLng(mTicker.TickNumber / (elapsed / 1000000))
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1520,14 +1742,22 @@ End Sub
 '================================================================================
 
 Private Sub mTimer_TimerExpired()
-Set mTickfileManager = mTickers.createTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
+Const ProcName As String = "mTimer_TimerExpired"
+On Error GoTo Err
+
+Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
                                         IIf(mNoWriteTicks, 0, TickerOptions.TickerOptWriteTickData Or TickerOptions.TickerOptIncludeMarketDepthInTickfile) Or _
                                         IIf(mNoWriteBars, 0, TickerOptions.TickerOptWriteTradeBarData))
 
 mTickfileManager.TickFileSpecifiers = mTickfiles
-mTickfileManager.replaySpeed = 0
+mTickfileManager.ReplaySpeed = 0
 
 mTickfileManager.StartReplay
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1536,25 +1766,37 @@ End Sub
 
 Private Sub mTradeBuildAPI_Error( _
                 ev As ErrorEvent)
-writeStatusMessage "Fatal rrror " & ev.errorCode & ": " & ev.errorMessage
+Const ProcName As String = "mTradeBuildAPI_Error"
+On Error Resume Next
 
-End
-
-Exit Sub
-
-err:
-handleFatalError err.Number, err.description, "mTradeBuildAPI_Error"
+handleFatalError
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
                 ev As NotificationEvent)
 Dim spe As ServiceProviderError
+Const ProcName As String = "mTradeBuildAPI_Notification"
+On Error GoTo Err
+
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTradeBuildAPI.GetServiceProviderError
-    writeStatusMessage "Service provider error in " & spe.serviceProviderName & ": error " & spe.errorCode & ": " & spe.message
+    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.ErrorCode & ": " & spe.message
 Else
-    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
+    LogMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mUnhandledErrorHandler Event Handlers
+'@================================================================================
+
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEvent)
+handleFatalError
 End Sub
 
 '================================================================================
@@ -1570,6 +1812,9 @@ End Sub
 '================================================================================
 
 Private Sub checkOkToConvert()
+Const ProcName As String = "checkOkToConvert"
+On Error GoTo Err
+
 If mTickfilesSelected Then
     If WriteTickDataCheck = vbChecked Or WriteBarDataCheck = vbChecked Then
         ConvertButton.Enabled = True
@@ -1579,18 +1824,34 @@ If mTickfilesSelected Then
 Else
     ConvertButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub disableContractDatabaseFields()
+Const ProcName As String = "disableContractDatabaseFields"
+On Error GoTo Err
+
 disableControl ContractServerText
 disableControl ContractDbTypeCombo
 disableControl ContractDatabaseText
 disableControl ContractUsernameText
 disableControl ContractPasswordText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub disableControl( _
                 ByVal ctrl As Control)
+Const ProcName As String = "disableControl"
+On Error GoTo Err
+
 If TypeOf ctrl Is ComboBox Then
     Dim cb As ComboBox
     Set cb = ctrl
@@ -1610,45 +1871,93 @@ ElseIf TypeOf ctrl Is ListBox Then
     Set lb = ctrl
     lb.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub disableInputDatabaseFields()
+Const ProcName As String = "disableInputDatabaseFields"
+On Error GoTo Err
+
 disableControl DbInServerText
 disableControl DbInTypeCombo
 disableControl DatabaseInText
 disableControl UsernameInText
 disableControl PasswordInText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub disableOutputDatabaseFields()
+Const ProcName As String = "disableOutputDatabaseFields"
+On Error GoTo Err
+
 disableControl DbOutServerText
 disableControl DbOutTypeCombo
 disableControl DatabaseOutText
 disableControl UsernameOutText
 disableControl PasswordOutText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub disableOutputFileFields()
+Const ProcName As String = "disableOutputFileFields"
+On Error GoTo Err
+
 disableControl FormatList
 disableControl OutputPathText
 disableControl OutputPathButton
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub disableQtFields()
+Const ProcName As String = "disableQtFields"
+On Error GoTo Err
+
 disableControl QTServerText
 disableControl QTPortText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub enableContractDatabaseFields()
+Const ProcName As String = "enableContractDatabaseFields"
+On Error GoTo Err
+
 enableControl ContractServerText
 enableControl ContractDbTypeCombo
 enableControl ContractDatabaseText
 enableControl ContractUsernameText
 enableControl ContractPasswordText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableControl( _
                 ByVal ctrl As Control)
+Const ProcName As String = "enableControl"
+On Error GoTo Err
+
 If TypeOf ctrl Is ComboBox Then
     Dim cb As ComboBox
     Set cb = ctrl
@@ -1668,56 +1977,115 @@ ElseIf TypeOf ctrl Is ListBox Then
     Set lb = ctrl
     lb.Enabled = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub enableInputDatabaseFields()
+Const ProcName As String = "enableInputDatabaseFields"
+On Error GoTo Err
+
 enableControl DbInServerText
 enableControl DbInTypeCombo
 enableControl DatabaseInText
 enableControl UsernameInText
 enableControl PasswordInText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub enableOutputDatabaseFields()
+Const ProcName As String = "enableOutputDatabaseFields"
+On Error GoTo Err
+
 enableControl DbOutServerText
 enableControl DbOutTypeCombo
 enableControl DatabaseOutText
 enableControl UsernameOutText
 enableControl PasswordOutText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub enableOutputFileFields()
+Const ProcName As String = "enableOutputFileFields"
+On Error GoTo Err
+
 enableControl FormatList
 enableControl OutputPathText
 enableControl OutputPathButton
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub enableQtFields()
+Const ProcName As String = "enableQtFields"
+On Error GoTo Err
+
 enableControl QTServerText
 enableControl QTPortText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub handleFatalError(ByVal errNum As Long, _
-                            ByVal description As String, _
-                            ByVal source As String)
+Private Function getAppTitle() As String
+getAppTitle = AppName & _
+                " v" & _
+                App.Major & "." & App.Minor
+End Function
 
-Dim i As Long
+Private Sub handleFatalError()
+On Error Resume Next    ' ignore any further errors that might arise
 
-Set mTicker = Nothing
-Set mTradeBuildAPI = Nothing
-
-MsgBox "A fatal error has occurred. The program will close" & vbCrLf & _
-        "Error number: " & errNum & vbCrLf & _
-        "Description: " & description & vbCrLf & _
-        "Source: TickFielManager.MainForm::" & source, _
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please email the log file located at" & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"
 
-For i = Forms.Count - 1 To 0 Step -1
-   Unload Forms(i)
-Next
+' At this point, we don't know what state things are in, so it's not feasible to return to
+' the caller. All we can do is terminate abruptly. Note that normally one would use the
+' End statement to terminate a VB6 program abruptly. However the TWUtilities component interferes
+' with the End statement's processing and prevents proper shutdown, so we use the
+' TWUtilities component's EndProcess method instead. (However if we are running in the
+' development environment, then we call End because the EndProcess method kills the
+' entire development environment as well which can have undesirable side effects if other
+' components are also loaded.)
+
+If mIsInDev Then
+    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
+    ' needed here because the End statement will prevent return to TWUtilities
+    UnhandledErrorHandler.Handled = True
+    End
+Else
+    EndProcess
+End If
 
 End Sub
+
+Private Function inDev() As Boolean
+Const ProcName As String = "inDev"
+
+mIsInDev = True
+inDev = True
+
+End Function
 
 Private Function ProcessCommandLineArgs() As Boolean
 Dim symbolValue As String
@@ -1734,17 +2102,17 @@ Dim sessionsValue As String
 Dim outFormatValue As String
 Dim QTServerValue As String
 Dim commaPosn As Long
-Dim contractSpec As contractSpecifier
-Dim i As Long
-Dim j As Long
-Dim listener As LogListener
+Dim contractSpec As ContractSpecifier
 
+
+Const ProcName As String = "ProcessCommandLineArgs"
+On Error GoTo Err
 
 Set mArguments = CreateCommandLineParser(Command)
 
 If mArguments.Switch("?") Then
-    MsgBox vbCrLf & _
-            "tickfilemanager [symbol  localSymbol|NOLOCALSYMBOL sectype " & vbCrLf & _
+    Dim s As String
+    s = "tickfilemanager [symbol  localSymbol|NOLOCALSYMBOL sectype " & vbCrLf & _
             "                month|NOMONTH exchange currency [strike] [right]]" & vbCrLf & _
             "                [/from:yyyymmdd[hhmmss]] " & vbCrLf & _
             "                [/to:yyyymmdd[hhmmss]] " & vbCrLf & _
@@ -1756,7 +2124,21 @@ If mArguments.Switch("?") Then
             "                [/noWriteBars  |  /nwb]" & vbCrLf & _
             "                [/noUI]  [/run]" & vbCrLf & _
             "                [/QTserver:[server][,port]]" & vbCrLf & _
+            "                [/log:filename] " & vbCrLf & _
+            "                [/loglevel:levelName]" & vbCrLf
+    s = s & "  where" & vbCrLf & _
             vbCrLf & _
+            "    levelname is one of:" & vbCrLf & _
+            "       None    or 0" & vbCrLf & _
+            "       Severe  or S" & vbCrLf & _
+            "       Warning or W" & vbCrLf & _
+            "       Info    or I" & vbCrLf & _
+            "       Normal  or N" & vbCrLf & _
+            "       Detail  or D" & vbCrLf & _
+            "       Medium  or M" & vbCrLf & _
+            "       High    or H" & vbCrLf & _
+            "       All     or A"
+    s = s & vbCrLf & _
             "Notes:" & vbCrLf & _
             "   If /from is supplied, /sessions is ignored." & vbCrLf & _
             "   If /from is not supplied, /to is ignored." & vbCrLf & _
@@ -1764,32 +2146,18 @@ If mArguments.Switch("?") Then
             "      is the number of sessions before current to start at." & vbCrLf & _
             "      m defaults to 1. If m is zero, the current session is" & vbCrLf & _
             "      supplied." & vbCrLf & _
-            "   In /QTserver, port defaults to 16240.", _
+            "   In /QTserver, port defaults to 16240."
+    MsgBox s, _
             , _
             "Usage"
     ProcessCommandLineArgs = False
     Exit Function
 End If
 
-If mArguments.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mArguments.SwitchValue("LogLevel"))
-
 Set mLogFormatter = CreateBasicLogFormatter(TimestampTimeOnlyISO8601)
-gLogger.addLogListener Me
+GetLogger("log").AddLogListener Me
 
-Dim logFilename As String
-logFilename = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                                    "\TradeWright\" & _
-                                    AppName & _
-                                    "\v" & _
-                                    App.Major & "." & App.Minor & _
-                                    "\log.txt"
-Set listener = CreateFileLogListener(logFilename, _
-                                    CreateBasicLogFormatter, _
-                                    True, _
-                                    False)
-' ensure log entries of all infotypes get written to the log file
-GetLogger("").addLogListener listener
-writeStatusMessage "Log file: " & logFilename
+LogMessage "Log file: " & DefaultLogFileName
 
 If mArguments.Switch("noui") Then
     mNoUI = True
@@ -1836,12 +2204,12 @@ If mArguments.Switch("from") Then
     Then
         On Error Resume Next
         unpackDateTimeString fromValue, mFromDate, mFromTime
-        If err.Number <> 0 Then
+        If Err.Number <> 0 Then
             MsgBox fromValue & " is not a valid date and time (format yyyymmdd[hhmmss])"
             ProcessCommandLineArgs = False
             Exit Function
         End If
-        On Error GoTo 0
+        On Error GoTo Err
     Else
         If mNoUI Then
             ProcessCommandLineArgs = False
@@ -1863,12 +2231,12 @@ If mArguments.Switch("from") And mArguments.Switch("to") Then
     Then
         On Error Resume Next
         unpackDateTimeString toValue, mToDate, mToTime
-        If err.Number <> 0 Then
+        If Err.Number <> 0 Then
             MsgBox toValue & " is not a valid date and time (format yyyymmdd[hhmmss])"
             ProcessCommandLineArgs = False
             Exit Function
         End If
-        On Error GoTo 0
+        On Error GoTo Err
     Else
         If mNoUI Then
             ProcessCommandLineArgs = False
@@ -1893,20 +2261,20 @@ If mArguments.Switch("sessions") Then
     On Error Resume Next
     If InStr(1, sessionsValue, ",") Then
         mNumberOfSessions = CLng(Left$(sessionsValue, InStr(1, sessionsValue, ",") - 1))
-        If err.Number <> 0 Or mNumberOfSessions < 1 Then
+        If Err.Number <> 0 Or mNumberOfSessions < 1 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
         End If
         mStartingSession = CLng(Right$(sessionsValue, Len(sessionsValue) - InStr(1, sessionsValue, ",")))
-        If err.Number <> 0 Or mStartingSession < 0 Then
+        If Err.Number <> 0 Or mStartingSession < 0 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
         End If
     Else
         mNumberOfSessions = sessionsValue
-        If err.Number <> 0 Or mNumberOfSessions < 1 Then
+        If Err.Number <> 0 Or mNumberOfSessions < 1 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
@@ -1978,15 +2346,23 @@ If symbolValue <> "" Then
                                 monthValue, _
                                 IIf(strikevalue = "", 0, strikevalue), _
                                 OptionRightFromString(rightValue))
-    Set mContracts = mTradeBuildAPI.loadContracts(contractSpec)
+    Set mContracts = mTradeBuildAPI.LoadContracts(contractSpec)
 
 End If
 
 ProcessCommandLineArgs = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupContractDatabaseAsContractSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupContractDatabaseAsContractSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.ContractInfoSrvcProvider", _
@@ -1998,15 +2374,23 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & ContractPasswordText, _
                             "Contracts database", _
                             "Contract database")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupContractDatabaseAsContractSP = True
 Else
-    writeStatusMessage "Can't configure Contract Info Service Provider"
+    LogMessage "Can't configure Contract Info Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setupDbTypeCombos()
+Const ProcName As String = "setupDbTypeCombos"
+On Error GoTo Err
+
 DbInTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
 DbOutTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
 ContractDbTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
@@ -2018,10 +2402,18 @@ ContractDbTypeCombo.AddItem DatabaseTypeToString(DbSQLServer)
 DbInTypeCombo.ListIndex = 0
 DbOutTypeCombo.ListIndex = 0
 ContractDbTypeCombo.ListIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function setupInDatabase() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupInDatabase"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.TickfileServiceProvider", _
@@ -2035,16 +2427,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "Input tick database", _
                             "Historical tick data input from database")
                                                         
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupInDatabase = True
 Else
-    writeStatusMessage "Can't configure Input Database Service Provider"
+    LogMessage "Can't configure Input Database Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupInDatabaseAsContractSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupInDatabaseAsContractSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.ContractInfoSrvcProvider", _
@@ -2056,16 +2456,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & PasswordInText, _
                             "Contract database", _
                             "Contract data from input database")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupInDatabaseAsContractSP = True
 Else
-    writeStatusMessage "Can't configure Contract Info Service Provider"
+    LogMessage "Can't configure Contract Info Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupInFileSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupInFileSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TickfileSP26.TickfileServiceProvider", _
@@ -2073,16 +2481,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "Access mode=ReadOnly", _
                             "Input tickfiles", _
                             "Historical tick data input from files")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupInFileSP = True
 Else
-    writeStatusMessage "Can't configure input Tickfile Service Provider"
+    LogMessage "Can't configure input Tickfile Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupOutBarDatabase() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupOutBarDatabase"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.HistDataServiceProvider", _
@@ -2095,16 +2511,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes"), _
                             "Output bar database", _
                             "Historical bar data output to database")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupOutBarDatabase = True
 Else
-    writeStatusMessage "Can't configure Historic Bar Data Service Provider"
+    LogMessage "Can't configure Historic Bar Data Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupOutTickDatabase() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupOutTickDatabase"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.TickfileServiceProvider", _
@@ -2118,16 +2542,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Access mode=WriteOnly", _
                             "Output tick database", _
                             "Historical tick data output to database")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupOutTickDatabase = True
 Else
-    writeStatusMessage "Can't configure Historic Tick Data Service Provider"
+    LogMessage "Can't configure Historic Tick Data Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupOutTickDatabaseAsContractSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupOutTickDatabaseAsContractSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TBInfoBase26.ContractInfoSrvcProvider", _
@@ -2139,16 +2571,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & PasswordOutText, _
                             "Contract database", _
                             "Contract data from output database")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupOutTickDatabaseAsContractSP = True
 Else
-    writeStatusMessage "Can't configure Contract Info Service Provider"
+    LogMessage "Can't configure Contract Info Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupOutFileSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupOutFileSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TickfileSP26.TickfileServiceProvider", _
@@ -2156,16 +2596,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "Access mode=WriteOnly", _
                             "Output tickfiles", _
                             "Historical tick data output to files")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupOutFileSP = True
 Else
-    writeStatusMessage "Can't configure output Tickfile Service Provider"
+    LogMessage "Can't configure output Tickfile Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupQtSP() As Boolean
 Dim sp As Object
+Const ProcName As String = "setupQtSP"
+On Error GoTo Err
+
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "QTSP26.QTTickfileServiceProvider", _
@@ -2178,16 +2626,24 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Keep connection=true", _
                             "QuoteTracker input tickdata", _
                             "Historical tick data input from QuoteTracker")
-On Error GoTo 0
+On Error GoTo Err
 If Not sp Is Nothing Then
     setupQtSP = True
 Else
-    writeStatusMessage "Can't configure QuoteTracker Service Provider"
+    LogMessage "Can't configure QuoteTracker Service Provider"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupServiceProviders() As Boolean
 Dim i As Long
+
+Const ProcName As String = "setupServiceProviders"
+On Error GoTo Err
 
 setupServiceProviders = True
 
@@ -2260,7 +2716,7 @@ If QtInputOption Then
 End If
 
 If Not setupServiceProviders Then
-    writeStatusMessage "Service provider configuration failed"
+    LogMessage "Service provider configuration failed"
     WriteTickDataCheck.Enabled = False
     WriteBarDataCheck.Enabled = False
     Exit Function
@@ -2274,13 +2730,21 @@ Next
 
 FormatList.ListIndex = 0
 
-writeStatusMessage "Service provider configuration succeeded"
+LogMessage "Service provider configuration succeeded"
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub unpackDateTimeString( _
                             ByVal timestampString As String, _
                             ByRef dateOut As Date, _
                             ByRef timeOut As Date)
+Const ProcName As String = "unpackDateTimeString"
+On Error GoTo Err
+
 dateOut = CDate(mMonths(Mid$(timestampString, 5, 2)) & " " & _
                             Mid$(timestampString, 7, 2) & " " & _
                             Left$(timestampString, 4))
@@ -2289,11 +2753,11 @@ If Len(timestampString) = 14 Then
                             Mid$(timestampString, 11, 2) & ":" & _
                             Mid(timestampString, 13, 2))
 End If
-End Sub
 
-Private Sub writeStatusMessage(message As String)
-gLogger.Log LogLevelNormal, message
-End Sub
+Exit Sub
 
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 

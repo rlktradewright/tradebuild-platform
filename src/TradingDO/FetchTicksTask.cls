@@ -40,7 +40,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradingDO26"
+
 Private Const ModuleName                    As String = "FetchTicksTask"
 
 '@================================================================================
@@ -70,24 +70,42 @@ End Sub
 ' Task Interface Members
 '@================================================================================
 
-Private Sub Task_cancel()
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mInstrumentTaskController Is Nothing Then
     mInstrumentTaskController.cancelTask
 End If
-mTaskContext.finish Empty, True
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Task_run()
+Const ProcName As String = "Task_run"
+Dim failpoint As String
+On Error GoTo Err
+
 If mTaskContext.CancelPending Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
     Exit Sub
 End If
 
-Set mInstrumentTaskController = mDB.InstrumentFactory.loadBySpecifierAsync( _
+Set mInstrumentTaskController = mDB.InstrumentFactory.LoadBySpecifierAsync( _
                                                 mSpecifier, _
                                                 , _
                                                 "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
 mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -95,7 +113,7 @@ Set mTaskContext = value
 End Property
 
 Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.name
+Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -103,13 +121,14 @@ End Property
 '@================================================================================
 
 Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mInstrumentTaskController_Completed"
 Dim lInstrument As instrument
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.cancelled Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
     mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 ElseIf IsEmpty(ev.result) Then
@@ -117,13 +136,13 @@ ElseIf IsEmpty(ev.result) Then
                         "Specified object does not exist"
 Else
     Set lInstrument = ev.result
-    mTaskContext.finish lInstrument.createTickStream(mFromDate, mToDate), False
+    mTaskContext.Finish lInstrument.CreateTickStream(mFromDate, mToDate), False
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -134,11 +153,12 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal specifier As ContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date)
+Const ProcName As String = "Initialise"
 Set mDB = db
 Set mSpecifier = specifier
 mFromDate = fromDate

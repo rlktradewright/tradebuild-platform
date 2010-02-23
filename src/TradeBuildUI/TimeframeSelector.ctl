@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -104,22 +104,31 @@ On Error Resume Next
 backColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
 If Err.Number <> 0 Then
     backColor = PropDfltBackColor
-    Err.clear
+    Err.Clear
 End If
 
 foreColor = PropBag.ReadProperty(PropNameForeColor, PropDfltForeColor)
 If Err.Number <> 0 Then
     backColor = PropDfltForeColor
-    Err.clear
+    Err.Clear
 End If
 
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
 TimeframeCombo.Left = 0
 TimeframeCombo.Top = 0
 TimeframeCombo.Width = UserControl.Width
 UserControl.Height = TimeframeCombo.Height
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
@@ -141,13 +150,17 @@ End Sub
 
 Private Sub TimeframeCombo_Click()
 Dim tp As TimePeriod
+Const ProcName As String = "TimeframeCombo_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If TimeframeCombo.Text = TimeframeCustom Then
     If mSpecifier Is Nothing Then
         Set mSpecifier = New fTimeframeSpecifier
     End If
     mSpecifier.Show vbModal
     If Not mSpecifier.cancelled Then
-        Set tp = mSpecifier.timeframeDesignator
+        Set tp = mSpecifier.TimeframeDesignator
         selectComboEntry tp
         RaiseEvent Click
     Else
@@ -156,6 +169,11 @@ If TimeframeCombo.Text = TimeframeCustom Then
 Else
     RaiseEvent Click
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -168,48 +186,129 @@ End Sub
 
 Public Property Let backColor( _
                 ByVal value As OLE_COLOR)
+Const ProcName As String = "backColor"
+Dim failpoint As String
+On Error GoTo Err
+
 TimeframeCombo.backColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get backColor() As OLE_COLOR
+Const ProcName As String = "backColor"
+Dim failpoint As String
+On Error GoTo Err
+
 backColor = TimeframeCombo.backColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 Enabled = UserControl.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 UserControl.Enabled = value
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let foreColor( _
                 ByVal value As OLE_COLOR)
+Const ProcName As String = "foreColor"
+Dim failpoint As String
+On Error GoTo Err
+
 TimeframeCombo.foreColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get foreColor() As OLE_COLOR
+Const ProcName As String = "foreColor"
+Dim failpoint As String
+On Error GoTo Err
+
 foreColor = TimeframeCombo.foreColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Text() As String
 Attribute Text.VB_UserMemId = 0
+Const ProcName As String = "Text"
+Dim failpoint As String
+On Error GoTo Err
+
 Text = TimeframeCombo.Text
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
-Public Property Let timeframeDesignator( _
+Public Property Let TimeframeDesignator( _
                 ByRef value As TimePeriod)
+Const ProcName As String = "TimeframeDesignator"
+Dim failpoint As String
+On Error GoTo Err
+
 selectComboEntry value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
-Public Property Get timeframeDesignator() As TimePeriod
+Public Property Get TimeframeDesignator() As TimePeriod
 
-If TimeframeCombo.selectedItem Is Nothing Then Exit Sub
+Const ProcName As String = "TimeframeDesignator"
+Dim failpoint As String
+On Error GoTo Err
 
-Set timeframeDesignator = TimePeriodFromString(TimeframeCombo.selectedItem.Text)
+If TimeframeCombo.SelectedItem Is Nothing Then Exit Sub
+
+Set TimeframeDesignator = TimePeriodFromString(TimeframeCombo.SelectedItem.Text)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Property
 
@@ -219,12 +318,25 @@ End Property
 
 Public Sub appendEntry( _
                 ByVal pTimePeriod As TimePeriod)
+Const ProcName As String = "appendEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 addComboEntry pTimePeriod
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Initialise()
-TimeframeCombo.ComboItems.clear
-TimeframeCombo.ComboItems.add , TimeframeCustom, TimeframeCustom
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
+TimeframeCombo.ComboItems.Clear
+TimeframeCombo.ComboItems.Add , TimeframeCustom, TimeframeCustom
 addComboEntry GetTimePeriod(5, TimePeriodSecond)
 addComboEntry GetTimePeriod(15, TimePeriodSecond)
 addComboEntry GetTimePeriod(30, TimePeriodSecond)
@@ -264,17 +376,40 @@ addComboEntry GetTimePeriod(20, TimePeriodTickMovement)
 'Else
 '    selectComboEntry 1, TimePeriodMonth
 'End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub insertEntry( _
                 ByVal pTimePeriod As TimePeriod)
+Const ProcName As String = "insertEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 insertComboEntry pTimePeriod
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub selectTimeframe( _
                 ByRef pTimePeriod As TimePeriod)
 
+Const ProcName As String = "selectTimeframe"
+Dim failpoint As String
+On Error GoTo Err
+
 selectComboEntry pTimePeriod
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -286,10 +421,19 @@ Private Sub addComboEntry( _
                 
 Dim s As String
 
-s = pTimePeriod.toString
+Const ProcName As String = "addComboEntry"
+Dim failpoint As String
+On Error GoTo Err
+
+s = pTimePeriod.ToString
 If TradeBuildAPI.IsSupportedHistoricalDataPeriod(pTimePeriod) Then
-    TimeframeCombo.ComboItems.add , s, s
+    TimeframeCombo.ComboItems.Add , s, s
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub insertComboEntry( _
@@ -299,28 +443,39 @@ Dim s As String
 Dim i As Long
 Dim unitFound As Boolean
 
-s = pTimePeriod.toString
+Const ProcName As String = "insertComboEntry"
+Dim failpoint As String
+On Error GoTo Err
+
+s = pTimePeriod.ToString
 If TradeBuildAPI.IsSupportedHistoricalDataPeriod(pTimePeriod) Then
-    For i = 2 To TimeframeCombo.ComboItems.count
+    For i = 2 To TimeframeCombo.ComboItems.Count
         Dim currTp As TimePeriod
         Set currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
-        If currTp.units = pTimePeriod.units Then unitFound = True
-        If currTp.units = pTimePeriod.units And currTp.length >= pTimePeriod.length Then Exit For
-        If unitFound And currTp.units <> pTimePeriod.units Then Exit For
+        If currTp.Units = pTimePeriod.Units Then unitFound = True
+        If currTp.Units = pTimePeriod.Units And currTp.length >= pTimePeriod.length Then Exit For
+        If unitFound And currTp.Units <> pTimePeriod.Units Then Exit For
     Next
-    If currTp.units = pTimePeriod.units And currTp.length = pTimePeriod.length Then Exit Sub
-    TimeframeCombo.ComboItems.add i, s, s
+    If currTp.Units = pTimePeriod.Units And currTp.length = pTimePeriod.length Then Exit Sub
+    TimeframeCombo.ComboItems.Add i, s, s
     TimeframeCombo.Refresh
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function selectComboEntry( _
                 ByVal pTimePeriod As TimePeriod) As Boolean
 Dim s As String
 
+Const ProcName As String = "selectComboEntry"
+Dim failpoint As String
 On Error GoTo Err
 
-s = pTimePeriod.toString
+s = pTimePeriod.ToString
 If TradeBuildAPI.IsSupportedHistoricalDataPeriod(pTimePeriod) Then
     TimeframeCombo.ComboItems.item(s).Selected = True
     Set mLatestTimePeriod = pTimePeriod
@@ -335,8 +490,7 @@ If Err.Number = 35601 Then
     insertComboEntry pTimePeriod
     Resume
 End If
-
-Err.Raise Err.Number
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 

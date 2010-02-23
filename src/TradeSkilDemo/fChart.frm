@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#210.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -203,7 +203,8 @@ Private mConfig As ConfigurationSection
 '================================================================================
 
 Private Sub Form_Activate()
-Dim failpoint As Long
+Const ProcName As String = "Form_Activate"
+Dim failpoint As String
 On Error GoTo Err
 
 syncStudyPicker
@@ -211,12 +212,13 @@ syncStudyPicker
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Activate", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_Load()
-Dim failpoint As Long
+Const ProcName As String = "Form_Load"
+Dim failpoint As String
 On Error GoTo Err
 
 Resize
@@ -224,13 +226,15 @@ Resize
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Load", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
+Const ProcName As String = "Form_QueryUnload"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 MultiChart1.Finish
@@ -257,12 +261,13 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_QueryUnload", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_Resize()
-Dim failpoint As Long
+Const ProcName As String = "Form_Resize"
+Dim failpoint As String
 On Error GoTo Err
 
 Resize
@@ -270,12 +275,13 @@ Resize
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="Form_Resize", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_Terminate()
-gLogger.Log LogLevelDetail, "Chart form terminated"
+Const ProcName As String = "Form_Terminate"
+logMessage "Chart form terminated", LogLevelDetail
 End Sub
 
 '================================================================================
@@ -283,8 +289,10 @@ End Sub
 '================================================================================
 
 Private Sub ChartToolsToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
+Const ProcName As String = "ChartToolsToolbar_ButtonClick"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -305,17 +313,19 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="ChartToolsToolbar_ButtonClick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub CoolBar1_HeightChanged(ByVal NewHeight As Single)
+Const ProcName As String = "CoolBar1_HeightChanged"
 Resize
 End Sub
 
 Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEvent)
+Const ProcName As String = "MultiChart1_Change"
 Dim changeType As MultiChartChangeTypes
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 changeType = ev.changeType
@@ -348,17 +358,18 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="MultiChart1_Change", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities30.StateChangeEvent)
+Const ProcName As String = "MultiChart1_ChartStateChanged"
 Dim loadingText As Text
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
-Select Case ev.State
+Select Case ev.state
 Case ChartStateBlank
 
 Case ChartStateCreated
@@ -386,8 +397,8 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="MultiChart1_ChartStateChanged", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 '================================================================================
@@ -395,7 +406,8 @@ End Sub
 '================================================================================
 
 Private Sub mChartController_PointerModeChanged()
-Dim failpoint As Long
+Const ProcName As String = "mChartController_PointerModeChanged"
+Dim failpoint As String
 On Error GoTo Err
 
 setSelectionButton
@@ -403,8 +415,8 @@ setSelectionButton
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mChartController_PointerModeChanged", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 '================================================================================
@@ -412,7 +424,8 @@ End Sub
 '================================================================================
 
 Private Sub mTicker_ask(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_ask"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentAsk = GetFormattedPriceFromQuoteEvent(ev)
@@ -421,12 +434,13 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_ask", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_bid(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_bid"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentBid = GetFormattedPriceFromQuoteEvent(ev)
@@ -435,12 +449,13 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_bid", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_high(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_high"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentHigh = GetFormattedPriceFromQuoteEvent(ev)
@@ -449,12 +464,13 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_high", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_Low(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_Low"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentLow = GetFormattedPriceFromQuoteEvent(ev)
@@ -463,12 +479,13 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_Low", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_previousClose(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_previousClose"
+Dim failpoint As String
 On Error GoTo Err
 
 mPreviousClose = GetFormattedPriceFromQuoteEvent(ev)
@@ -477,19 +494,20 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_previousClose", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_stateChange( _
                 ByRef ev As TWUtilities30.StateChangeEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_stateChange"
+Dim failpoint As String
 On Error GoTo Err
 
-If ev.State = TickerStates.TickerStateReady Then
-    mSymbol = mTicker.Contract.specifier.localSymbol
+If ev.state = TickerStates.TickerStateReady Then
+    mSymbol = mTicker.Contract.Specifier.LocalSymbol
     setCaption
-ElseIf ev.State = TickerStates.TickerStateStopped Then
+ElseIf ev.state = TickerStates.TickerStateStopped Then
     ' the ticker has been stopped before the chart has been closed,
     ' so remove the chart from the config and close it
     MultiChart1.Finish
@@ -501,12 +519,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_stateChange", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_trade(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_trade"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentTrade = GetFormattedPriceFromQuoteEvent(ev)
@@ -515,12 +534,13 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_trade", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub mTicker_volume(ev As QuoteEvent)
-Dim failpoint As Long
+Const ProcName As String = "mTicker_volume"
+Dim failpoint As String
 On Error GoTo Err
 
 mCurrentVolume = ev.Size
@@ -529,8 +549,8 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:="mTicker_volume", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 '================================================================================
@@ -543,7 +563,8 @@ End Sub
 
 Friend Function LoadFromConfig( _
                 ByVal config As ConfigurationSection) As Boolean
-Dim failpoint As Long
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 Set mConfig = config
@@ -566,14 +587,16 @@ LoadFromConfig = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="LoadFromConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub showChart( _
                 ByVal pTicker As Ticker, _
                 ByVal chartspec As ChartSpecifier)
+Const ProcName As String = "showChart"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 mIsHistorical = False
@@ -594,7 +617,7 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showChart", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub showHistoricalChart( _
@@ -602,8 +625,10 @@ Friend Sub showHistoricalChart( _
                 ByVal chartspec As ChartSpecifier, _
                 ByVal fromtime As Date, _
                 ByVal totime As Date)
+Const ProcName As String = "showHistoricalChart"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 mIsHistorical = True
@@ -621,7 +646,7 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showHistoricalChart", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -629,10 +654,11 @@ End Sub
 '================================================================================
 
 Private Sub createFibChartTool()
+Const ProcName As String = "createFibChartTool"
 Dim ls As LineStyle
 Dim lineSpecs(4) As FibLineSpecifier
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Set ls = New LineStyle
@@ -665,13 +691,14 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createFibChartTool", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createLineChartTool()
+Const ProcName As String = "createLineChartTool"
 Dim ls As LineStyle
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Set ls = New LineStyle
@@ -685,16 +712,17 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createLineChartTool", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub getInitialTickerValues()
-Dim failpoint As Long
+Const ProcName As String = "getInitialTickerValues"
+Dim failpoint As String
 On Error GoTo Err
 
-If mTicker.State <> TickerStateRunning Then Exit Sub
+If mTicker.state <> TickerStateRunning Then Exit Sub
 
-mSymbol = mTicker.Contract.specifier.localSymbol
+mSymbol = mTicker.Contract.Specifier.LocalSymbol
 mCurrentBid = mTicker.FormatPrice(mTicker.BidPrice)
 mCurrentTrade = mTicker.FormatPrice(mTicker.TradePrice)
 mCurrentAsk = mTicker.FormatPrice(mTicker.AskPrice)
@@ -706,11 +734,12 @@ mPreviousClose = mTicker.FormatPrice(mTicker.ClosePrice)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getInitialTickerValues", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Resize()
-Dim failpoint As Long
+Const ProcName As String = "Resize"
+Dim failpoint As String
 On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
@@ -724,13 +753,14 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Resize", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setCaption()
+Const ProcName As String = "setCaption"
 Dim s As String
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then
@@ -757,11 +787,12 @@ Me.caption = s
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setCaption", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setConfig()
-Dim failpoint As Long
+Const ProcName As String = "setConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 Set mConfig = gAppInstanceConfig.GetConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
@@ -772,11 +803,12 @@ MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSelectionMode()
-Dim failpoint As Long
+Const ProcName As String = "setSelectionMode"
+Dim failpoint As String
 On Error GoTo Err
 
 If mChartController.PointerMode <> PointerModeSelection Then
@@ -790,11 +822,12 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setSelectionMode", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSelectionButton()
-Dim failpoint As Long
+Const ProcName As String = "setSelectionButton"
+Dim failpoint As String
 On Error GoTo Err
 
 If mChartController.PointerMode = PointerModeSelection Then
@@ -806,11 +839,12 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setSelectionButton", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setWindow()
-Dim failpoint As Long
+Const ProcName As String = "setWindow"
+Dim failpoint As String
 On Error GoTo Err
 
 Me.Width = CLng(mConfig.GetSetting(ConfigSettingWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
@@ -830,11 +864,12 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setWindow", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub syncStudyPicker()
-Dim failpoint As Long
+Const ProcName As String = "syncStudyPicker"
+Dim failpoint As String
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -845,11 +880,12 @@ gSyncStudyPicker MultiChart1.ChartManager, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="syncStudyPicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateSettings()
-Dim failpoint As Long
+Const ProcName As String = "updateSettings"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case Me.WindowState
@@ -868,7 +904,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="updateSettings", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

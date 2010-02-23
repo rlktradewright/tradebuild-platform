@@ -79,35 +79,62 @@ End Property
                 
 Public Property Let SessionStartTime( _
                 ByVal value As Date)
+Const ProcName As String = "SessionStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "SessionStartTime", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.SessionStartTime = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
                 
 Public Property Let SessionEndTime( _
                 ByVal value As Date)
+Const ProcName As String = "SessionEndTime"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "SessionEndTime", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.SessionEndTime = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Let TimeZone( _
                 ByVal value As TimeZone)
+Const ProcName As String = "TimeZone"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "TimeZone", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.TimeZone = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -129,9 +156,13 @@ End Property
 Public Sub LinkSession( _
                 ByVal objectToLink As Session)
                 
+Const ProcName As String = "LinkSession"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not objectToLink.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "LinkSession", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Target session not linkable"
 End If
 
@@ -139,30 +170,53 @@ objectToLink.SessionStartTime = mSession.SessionStartTime
 objectToLink.SessionEndTime = mSession.SessionEndTime
 objectToLink.SetSessionCurrentTime mLatestTimeNotified
 mLinkedSessions.Add objectToLink
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub SetLinkable()
+Const ProcName As String = "SetLinkable"
+Dim failpoint As String
+On Error GoTo Err
+
 mSession.IsLinkable = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
-Public Sub SetSessionCurrentTime( _
-                ByVal Timestamp As Date)
+Public Function SetSessionCurrentTime( _
+                ByVal Timestamp As Date) As SessionEvent
 Dim sess As Session
+
+Const ProcName As String = "SetSessionCurrentTime"
+Dim failpoint As String
+On Error GoTo Err
 
 If mSession.IsLinkable Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "SetSessionCurrentTime", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
-mSession.SetSessionCurrentTime Timestamp
+SetSessionCurrentTime = mSession.SetSessionCurrentTime(Timestamp)
 
 For Each sess In mLinkedSessions
     sess.SetSessionCurrentTime Timestamp
 Next
 
 mLatestTimeNotified = Timestamp
-End Sub
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+End Function
 
 ''
 ' Unlinks a previously linked <code>Session</code> object from this
@@ -178,10 +232,19 @@ Public Sub UnLinkSession( _
 Dim sess As Session
 Dim i As Long
 
+Const ProcName As String = "UnLinkSession"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = mLinkedSessions.Count To 1 Step -1
     Set sess = mLinkedSessions(i)
     If sess Is objectToUnlink Then mLinkedSessions.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

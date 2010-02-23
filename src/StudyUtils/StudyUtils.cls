@@ -43,7 +43,7 @@ Private Const ModuleName                As String = "StudyUtils"
 
 Public Type StudyValueEvent
     source              As Object
-    ValueName           As String
+    valueName           As String
     sVal                As SValue
 End Type
 
@@ -80,7 +80,7 @@ Public Function AddStudyLibrary( _
                 ByVal enabled As Boolean, _
                 Optional ByVal Name As String _
                 ) As StudyLibrary
-Dim failpoint As Long
+Const ProcName As String = "AddStudyLibrary"
 On Error GoTo Err
 
 If Name = "" Then Name = GenerateGUIDString
@@ -92,15 +92,11 @@ Set AddStudyLibrary = Globals.StudyLibraryManager.AddStudyLibrary( _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function AvailableStudies() As StudyListEntry()
-Dim failpoint As Long
+Const ProcName As String = "AvailableStudies"
 On Error GoTo Err
 
 AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
@@ -108,67 +104,63 @@ AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateCacheReplayTask( _
                 ByVal valueCache As valueCache, _
-                ByVal Target As Object, _
-                ByVal SourceStudy As Study, _
+                ByVal target As Object, _
+                ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
                 ByVal Discriminator As Long) As CacheReplayTask
-Dim failpoint As Long
+Const ProcName As String = "CreateCacheReplayTask"
 On Error GoTo Err
 
 Set CreateCacheReplayTask = New CacheReplayTask
-CreateCacheReplayTask.Initialise valueCache, _
-                            Target, _
-                            SourceStudy, _
+CreateCacheReplayTask.initialise valueCache, _
+                            target, _
+                            sourceStudy, _
                             numberOfValuesToReplay, _
                             Discriminator
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateStudyPoint( _
-                ByVal x As Date, _
-                ByVal y As Double) As StudyPoint
-Dim failpoint As Long
+                ByVal X As Date, _
+                ByVal Y As Double) As StudyPoint
+Const ProcName As String = "CreateStudyPoint"
 On Error GoTo Err
 
 Set CreateStudyPoint = New StudyPoint
-CreateStudyPoint.x = x
-CreateStudyPoint.y = y
+CreateStudyPoint.X = X
+CreateStudyPoint.Y = Y
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function DefaultStudyValueName() As String
+Const ProcName As String = "DefaultStudyValueName"
+On Error GoTo Err
+
 DefaultStudyValueName = DefaultStudyValueNameStr
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 Optional ByVal libraryName As String) As Parameters
-Dim failpoint As Long
+Const ProcName As String = "GetStudyDefaultParameters"
 On Error GoTo Err
 
 Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
@@ -178,17 +170,13 @@ Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultPar
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetStudyDefinition( _
                 ByVal Name As String, _
                 Optional ByVal libraryName As String) As StudyDefinition
-Dim failpoint As Long
+Const ProcName As String = "GetStudyDefinition"
 On Error GoTo Err
 
 Set GetStudyDefinition = Globals.StudyLibraryManager.StudyDefinition(Name, libraryName)
@@ -196,16 +184,12 @@ Set GetStudyDefinition = Globals.StudyLibraryManager.StudyDefinition(Name, libra
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub LoadStudyLibraryConfiguration( _
                 ByVal config As ConfigurationSection)
-Dim failpoint As Long
+Const ProcName As String = "LoadStudyLibraryConfiguration"
 On Error GoTo Err
 
 Globals.StudyLibraryManager.LoadStudyLibraryConfiguration config
@@ -213,36 +197,36 @@ Globals.StudyLibraryManager.LoadStudyLibraryConfiguration config
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function MovingAverageStudyValueName() As String
+Const ProcName As String = "MovingAverageStudyValueName"
+On Error GoTo Err
+
 MovingAverageStudyValueName = MovingAverageStudyValueNameStr
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub RemoveStudyLibrary( _
                 ByVal library As StudyLibrary)
-Dim failpoint As Long
+Const ProcName As String = "RemoveStudyLibrary"
 On Error GoTo Err
 
-Globals.StudyLibraryManager.remove library
+Globals.StudyLibraryManager.Remove library
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveAllStudyLibraries()
-Dim failpoint As Long
+Const ProcName As String = "RemoveAllStudyLibraries"
 On Error GoTo Err
 
 Globals.StudyLibraryManager.RemoveAll
@@ -250,11 +234,7 @@ Globals.StudyLibraryManager.RemoveAll
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetDefaultStudyLibraryConfig( _
@@ -262,13 +242,16 @@ Public Sub SetDefaultStudyLibraryConfig( _
 Dim currSLsList As ConfigurationSection
 Dim currSL As ConfigurationSection
 
+Const ProcName As String = "SetDefaultStudyLibraryConfig"
+On Error GoTo Err
+
 On Error Resume Next
 Set currSLsList = configdata.GetConfigurationSection(ConfigNameStudyLibraries)
-On Error GoTo 0
+On Error GoTo Err
 
 If Not currSLsList Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "setDefaultStudyLibrary", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Study libraries list is not empty"
 End If
 
@@ -278,13 +261,18 @@ Set currSL = currSLsList.AddConfigurationSection(ConfigNameStudyLibrary & "(" & 
 
 currSL.setAttribute AttributeNameEnabled, "True"
 currSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function SetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal libraryName As String, _
                 ByVal params As Parameters) As Boolean
-Dim failpoint As Long
+Const ProcName As String = "SetStudyDefaultParameters"
 On Error GoTo Err
 
 SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameters( _
@@ -295,11 +283,7 @@ SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameter
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

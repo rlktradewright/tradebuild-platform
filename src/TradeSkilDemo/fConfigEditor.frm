@@ -104,6 +104,10 @@ Private mConfig                                     As ConfigurationSection
 '@================================================================================
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mConfig = gAppInstanceConfig
 
 Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
@@ -112,9 +116,18 @@ Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - 
 ConfigManager1.initialise gConfigFile, App.ProductName, ConfigFileVersion
 
 CurrentConfigNameText = mConfig.InstanceQualifier
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
+Const ProcName As String = "Form_QueryUnload"
+Dim failpoint As String
+On Error GoTo Err
+
 updateSettings
 
 If UnloadMode = vbFormControlMenu Then
@@ -132,6 +145,11 @@ If ConfigManager1.changesPending Then
     End If
 End If
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 '@================================================================================
@@ -147,12 +165,30 @@ Me.Hide
 End Sub
 
 Private Sub ConfigManager1_SelectedItemChanged()
+Const ProcName As String = "ConfigManager1_SelectedItemChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 checkOkToLoadConfiguration
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigureButton_Click()
+Const ProcName As String = "ConfigureButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 updateSettings
 If Not gMainForm.LoadConfig(ConfigManager1.selectedAppConfig) Then Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -172,6 +208,10 @@ End Sub
 '@================================================================================
 
 Private Sub checkOkToLoadConfiguration()
+Const ProcName As String = "checkOkToLoadConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not ConfigManager1.selectedAppConfig Is Nothing Then
     ConfigureButton.Enabled = True
     ConfigureButton.Default = True
@@ -179,14 +219,28 @@ Else
     ConfigureButton.Enabled = False
     CloseButton.Default = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateSettings()
+Const ProcName As String = "updateSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then
     mConfig.AddPrivateConfigurationSection ConfigSectionConfigEditor
     mConfig.SetSetting ConfigSettingConfigEditorLeft, Me.left / Screen.TwipsPerPixelX
     mConfig.SetSetting ConfigSettingConfigEditorTop, Me.Top / Screen.TwipsPerPixelY
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

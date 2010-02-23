@@ -166,7 +166,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let AllOrNone(ByVal value As Boolean)
@@ -180,7 +180,7 @@ mAllOrNone = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -198,7 +198,7 @@ mBlockOrder = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -223,7 +223,7 @@ Complete = True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get CompletedSize() As Long
@@ -241,7 +241,7 @@ mDisplaySize = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DisplaySize() As Long
@@ -259,7 +259,7 @@ checkReady
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ETradeOnly(ByVal value As Boolean)
@@ -273,7 +273,7 @@ mETradeOnly = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ETradeOnly() As Boolean
@@ -291,7 +291,7 @@ mFirmQuoteOnly = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get FirmQuoteOnly() As Boolean
@@ -309,7 +309,7 @@ mGoodAfterTime = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -327,7 +327,7 @@ mGoodAfterTimeTZ = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -345,7 +345,7 @@ mGoodTillDate = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -363,7 +363,7 @@ mGoodTillDateTZ = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -381,7 +381,7 @@ mHidden = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -399,7 +399,7 @@ mIgnoreRegularTradingHours = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
@@ -417,7 +417,7 @@ checkReady
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsReady() As Boolean
@@ -443,7 +443,7 @@ mLimitPrice = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -461,7 +461,7 @@ mMinimumQuantity = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -487,7 +487,7 @@ mNBBOPriceCap = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get NbboPriceCap() As Double
@@ -506,7 +506,7 @@ mOrderType = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -524,7 +524,7 @@ mOrigin = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -547,7 +547,7 @@ mOverrideConstraints = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -567,7 +567,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let PercentOffset(ByVal value As Double)
@@ -581,7 +581,7 @@ mPercentOffset = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -624,7 +624,7 @@ mQuantity = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Quantity() As Long
@@ -648,7 +648,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let SettlingFirm(ByVal value As String)
@@ -662,7 +662,7 @@ mSettlingFirm = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -685,7 +685,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
@@ -700,7 +700,7 @@ mStopTriggerMethod = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StopTriggerMethod() As StopTriggerMethods
@@ -718,7 +718,7 @@ mSweepToFill = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -735,7 +735,7 @@ Set mTicker = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Ticker() As Ticker
@@ -749,7 +749,7 @@ On Error GoTo Err
 
 If Not GIsValidTIF(value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "timeInForce", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value must be a member of the OrderTifs enum"
 End If
 
@@ -760,7 +760,7 @@ mTimeInForce = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TimeInForce() As OrderTifs
@@ -778,7 +778,7 @@ mTriggerPrice = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TriggerPrice() As Double
@@ -804,7 +804,7 @@ pOrderPlex.Activate
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -907,7 +907,7 @@ Const ProcName As String = "Buy"
 Dim failpoint As Long
 On Error GoTo Err
 
-GLog pMsg:="Buy", _
+GLogLogger.Log pMsg:="Buy", _
     pMsgQualifier:=mTicker.Contract.specifier.LocalSymbol & _
                 " number=" & number & _
                 "; EntryOrderType=" & GEntryOrderTypeToShortString(EntryOrderType) & _
@@ -929,7 +929,7 @@ GLog pMsg:="Buy", _
                 "; stopStrategy=" & TypeName(StopStrategy) & _
                 "; exitStrategy=" & TypeName(ExitStrategy) & _
                 "; scalingStrategy=" & TypeName(ScalingStrategy), _
-    pProcName:="Buy", pProjName:=ProjectName, pModName:=ModuleName
+    pProcName:=ProcName, pModName:=ModuleName
                 
 Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 number, _
@@ -955,7 +955,7 @@ ExecuteOrderPlex Buy, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStra
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Cancel() As Boolean
@@ -972,7 +972,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CancelPending() As Boolean
@@ -989,7 +989,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub CloseOut(ByVal method As String)
@@ -1006,7 +1006,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1046,7 +1046,7 @@ Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Function CreateOrderPlex(ByVal action As OrderActions, _
@@ -1078,11 +1078,11 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not IsReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "OrderContext::CreateOrderPlex", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "The service provider is not Ready"
 
 If number <= 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "OrderContext::CreateOrderPlex", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "The quantity must be greater than zero"
 
 Select Case EntryOrderType
@@ -1102,8 +1102,8 @@ Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::CreateOderPlex", _
-    "Invalid entry type"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Invalid entry type"
 End Select
 
 Select Case StopOrderType
@@ -1116,8 +1116,8 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::CreateOderPlex", _
-    "Invalid stop type"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Invalid stop type"
 End Select
 
 Select Case TargetOrderType
@@ -1131,8 +1131,8 @@ Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "OrderContext::CreateOderPlex", _
-    "Invalid target type"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Invalid target type"
 End Select
 
 Set lOrderPlex = New orderPlex
@@ -1155,7 +1155,7 @@ Case EntryOrderTypeMarketOnOpen
 Case EntryOrderTypeMarketOnClose
 Case EntryOrderTypeMarketIfTouched
     If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The trigger price must not be zero for this order type"
     
     EntryOrder.TriggerPrice = TriggerPrice
@@ -1168,41 +1168,41 @@ Case EntryOrderTypeLast
     EntryOrder.LimitPrice = mTicker.TradePrice + Offset * mTickSize
 Case EntryOrderTypeLimit
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The entry price must not be zero for this order type"
     
     EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitOnOpen
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The entry price must not be zero for this order type"
     
     EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitOnClose
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The entry price must not be zero for this order type"
     
     EntryOrder.LimitPrice = price + Offset * mTickSize
 Case EntryOrderTypeLimitIfTouched
     If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The entry price must not be zero for this order type"
     If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The trigger price must not be zero for this order type"
 
     EntryOrder.LimitPrice = price + Offset * mTickSize
     EntryOrder.TriggerPrice = TriggerPrice
 Case EntryOrderTypeStop
     If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The trigger price must not be zero for this order type"
     
     EntryOrder.TriggerPrice = TriggerPrice
 Case EntryOrderTypeStopLimit
     If TriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "OrderContext::CreateOrderPlex", _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "The trigger price must not be zero for this order type"
     
     EntryOrder.LimitPrice = price + Offset * mTickSize
@@ -1222,16 +1222,16 @@ If StopOrderType <> StopOrderTypeNone Then
     Select Case StopOrderType
     Case StopOrderTypeStop
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The stopTrigger price must not be zero for this order type"
         
         stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
     Case StopOrderTypeStopLimit
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The stopTrigger price must not be zero for this order type"
         If stopLimitPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The stopLimit price must not be zero for this order type"
         
         stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
@@ -1258,23 +1258,23 @@ If TargetOrderType <> TargetOrderTypeNone Then
     Select Case TargetOrderType
     Case TargetOrderTypeLimit
         If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The target price must not be zero for this order type"
         
         TargetOrder.LimitPrice = targetPrice + targetOffset * mTickSize
     Case TargetOrderTypeLimitIfTouched
         If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The target price must not be zero for this order type"
         If targetTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The target trigger price must not be zero for this order type"
     
         TargetOrder.LimitPrice = targetPrice + Offset * mTickSize
         TargetOrder.TriggerPrice = targetTriggerPrice
     Case TargetOrderTypeMarketIfTouched
         If targetTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The target trigger price must not be zero for this order type"
         
         TargetOrder.TriggerPrice = targetTriggerPrice
@@ -1309,7 +1309,7 @@ GLogOrder "Create order plex: " & _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -1349,7 +1349,7 @@ Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ExecuteOrderPlex(ByVal pOrderPlex As orderPlex, _
@@ -1368,7 +1368,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If pOrderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "OrderContext::executeOrderPlex", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "No order plex supplied"
 
 If checkMoneyManagement And Not mIsSimulated Then
@@ -1426,7 +1426,7 @@ pOrderPlex.Execute cancelPrice
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function Finish()
@@ -1453,7 +1453,7 @@ Set mOrderSubmitter = Nothing
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetAccountBalance() As Double
@@ -1466,7 +1466,7 @@ GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function IsAttributeSupported( _
@@ -1548,7 +1548,7 @@ Set NewOrder = lOrder
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub NotifyEndOfTradingSession( _
@@ -1566,7 +1566,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyPositionCloseout( _
@@ -1585,7 +1585,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function orderPlexClosed( _
@@ -1606,7 +1606,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Sell(ByRef number As Long, _
@@ -1634,7 +1634,7 @@ Const ProcName As String = "Sell"
 Dim failpoint As Long
 On Error GoTo Err
 
-GLog pMsg:="Sell", _
+GLogLogger.Log pMsg:="Sell", _
     pMsgQualifier:=mTicker.Contract.specifier.LocalSymbol & _
                 " number=" & number & _
                 "; EntryOrderType=" & GEntryOrderTypeToShortString(EntryOrderType) & _
@@ -1656,7 +1656,7 @@ GLog pMsg:="Sell", _
                 "; stopStrategy=" & TypeName(StopStrategy) & _
                 "; exitStrategy=" & TypeName(ExitStrategy) & _
                 "; scalingStrategy=" & TypeName(ScalingStrategy), _
-    pProcName:="Sell", pProjName:=ProjectName, pModName:=ModuleName
+    pProcName:=ProcName, pModName:=ModuleName
                 
 Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 number, _
@@ -1682,7 +1682,7 @@ ExecuteOrderPlex Sell, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStr
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -1697,13 +1697,13 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value " & CStr(value) & " for attribute " & GOrderAttributeToString(pAttribute) & " is not supported by the service provider"
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkAttributeSupported( _
@@ -1714,14 +1714,14 @@ On Error GoTo Err
 
 If Not IsAttributeSupported(pAttribute) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                , _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "The " & GOrderAttributeToString(pAttribute) & " attribute is not supported by the service provider"
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkReady()
@@ -1742,7 +1742,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function nextPlexKey() As String
@@ -1757,6 +1757,6 @@ nextPlexKey = gTB.SessionID & "/" & currID
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 

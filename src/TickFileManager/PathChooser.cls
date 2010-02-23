@@ -13,16 +13,34 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+Private Const ModuleName                As String = "PathChooser"
+
 Private mForm As fPathChooser
 Private mPath As String
 Private mCancelled As Boolean
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 Set mForm = New fPathChooser
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Class_Terminate()
+Const ProcName As String = "Class_Terminate"
+On Error GoTo Err
+
 Unload mForm
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Public Property Get cancelled() As Boolean
@@ -38,9 +56,17 @@ path = mPath
 End Property
 
 Public Sub choose()
+Const ProcName As String = "choose"
+On Error GoTo Err
+
 If mPath <> "" Then mForm.path = mPath
-mForm.show vbModal
+mForm.Show vbModal
 mCancelled = mForm.cancelled
 mPath = mForm.path
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

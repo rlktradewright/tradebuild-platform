@@ -77,7 +77,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradeBuildUI25"
 Private Const ModuleName As String = "fTimeframeSpecifier"
 
 '@================================================================================
@@ -91,12 +90,30 @@ Private mCancelled As Boolean
 '@================================================================================
 
 Private Sub Form_Activate()
+Const ProcName As String = "Form_Activate"
+Dim failpoint As String
+On Error GoTo Err
+
 mCancelled = False
 TimeframeSpecifier1.SetFocus
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Load()
-If TimeframeSpecifier1.isTimeframeValid Then OKButton.Enabled = True
+Const ProcName As String = "Form_Load"
+Dim failpoint As String
+On Error GoTo Err
+
+If TimeframeSpecifier1.isTimeframeValid Then OkButton.Enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -108,17 +125,52 @@ End Sub
 '@================================================================================
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 mCancelled = True
 Me.Hide
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Private Sub OkButton_Click()
+Private Sub OKButton_Click()
+Const ProcName As String = "OKButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 Me.Hide
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Event Handlers
+' TimeframeSpecifier1 Event Handlers
 '@================================================================================
+
+Private Sub TimeframeSpecifier1_Change()
+Const ProcName As String = "TimeframeSpecifier1_Change"
+Dim failpoint As String
+On Error GoTo Err
+
+If TimeframeSpecifier1.isTimeframeValid Then
+    OkButton.Enabled = True
+Else
+    OkButton.Enabled = False
+End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -128,13 +180,22 @@ Friend Property Get cancelled() As Boolean
 cancelled = mCancelled
 End Property
 
-Friend Property Get timeframeDesignator() As TimePeriod
+Friend Property Get TimeframeDesignator() As TimePeriod
+Const ProcName As String = "timeframeDesignator"
+Dim failpoint As String
+On Error GoTo Err
+
 If mCancelled Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Cancelled by user"
 End If
-Set timeframeDesignator = TimeframeSpecifier1.timeframeDesignator
+Set TimeframeDesignator = TimeframeSpecifier1.TimeframeDesignator
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -146,10 +207,3 @@ End Property
 '@================================================================================
 
 
-Private Sub TimeframeSpecifier1_Change()
-If TimeframeSpecifier1.isTimeframeValid Then
-    OKButton.Enabled = True
-Else
-    OKButton.Enabled = False
-End If
-End Sub

@@ -155,6 +155,10 @@ End If
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
 If UserControl.Height <= ContractSelector1.Height Then UserControl.Height = ContractSelector1.Height
 
 ActionButton.Left = UserControl.Width - ActionButton.Width
@@ -173,6 +177,11 @@ ContractSelector1.Width = UserControl.Width
 
 ContractSelector1.Height = Line1.Y1 - 120
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
@@ -189,15 +198,24 @@ End Sub
 '@================================================================================
 
 Private Sub ActionButton_Click()
+Const ProcName As String = "ActionButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If ContractSelector1.Visible Then
     RaiseEvent Action
 Else
-    Set mContractsLoadTC = TradeBuildAPI.loadContracts(ContractSpecBuilder1.contractSpecifier)
+    Set mContractsLoadTC = TradeBuildAPI.LoadContracts(ContractSpecBuilder1.contractSpecifier)
     mLoadingContracts = True
     ActionButton.Enabled = False
     UserControl.MousePointer = MousePointerConstants.vbHourglass
     MessageLabel.caption = "Searching..."
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub ClearButton_Click()
@@ -223,6 +241,10 @@ End Sub
 '@================================================================================
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mContractsLoadTC_Completed"
+Dim failpoint As String
+On Error GoTo Err
+
 MessageLabel.caption = ""
 UserControl.MousePointer = MousePointerConstants.vbDefault
 ActionButton.Enabled = True
@@ -242,6 +264,11 @@ Else
     Set mContracts = ev.result
     handleContractsLoaded
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -259,19 +286,46 @@ End Property
 
 Public Property Let IncludeHistoricalContracts( _
                 ByVal value As Boolean)
+Const ProcName As String = "IncludeHistoricalContracts"
+Dim failpoint As String
+On Error GoTo Err
+
 ContractSelector1.IncludeHistoricalContracts = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get IncludeHistoricalContracts() As Boolean
+Const ProcName As String = "IncludeHistoricalContracts"
+Dim failpoint As String
+On Error GoTo Err
+
 IncludeHistoricalContracts = ContractSelector1.IncludeHistoricalContracts
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get SelectedContracts() As Contracts
+Const ProcName As String = "SelectedContracts"
+Dim failpoint As String
+On Error GoTo Err
+
 If mContracts.Count = 1 Then
     Set SelectedContracts = mContracts
 Else
     Set SelectedContracts = ContractSelector1.SelectedContracts
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -283,6 +337,10 @@ End Property
 '@================================================================================
 
 Private Sub handleContractsLoaded()
+Const ProcName As String = "handleContractsLoaded"
+Dim failpoint As String
+On Error GoTo Err
+
 If mContracts.Count = 0 Then
     MessageLabel.caption = "No contracts"
     RaiseEvent NoContracts
@@ -296,6 +354,11 @@ Else
     ContractSelector1.SetFocus
     ClearButton.Visible = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

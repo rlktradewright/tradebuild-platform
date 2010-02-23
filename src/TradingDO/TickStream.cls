@@ -44,7 +44,7 @@ Event Error( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradingDO26"
+
 Private Const ModuleName                    As String = "TickStream"
 
 '@================================================================================
@@ -92,6 +92,10 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.connection)
+Const ProcName As String = "mConnection_ExecuteComplete"
+Dim failpoint As String
+On Error GoTo Err
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error " & vbCrLf & _
@@ -105,6 +109,11 @@ Else
     If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -113,8 +122,17 @@ End Sub
 
 Private Sub mConnector_Connected( _
                 ByVal pConnection As ADODB.connection)
+Const ProcName As String = "mConnector_Connected"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mConnection = pConnection
 If mAsynchronous Then doFetchTicks
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
@@ -131,6 +149,10 @@ Private Sub mRs_FetchComplete( _
                 ByVal pError As ADODB.Error, _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pRecordset As ADODB.Recordset)
+Const ProcName As String = "mRs_FetchComplete"
+Dim failpoint As String
+On Error GoTo Err
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error " & vbCrLf & _
@@ -148,7 +170,11 @@ ElseIf mWaitingForData Then
     mWaitingForData = False
     RaiseEvent DataAvailable
 End If
-    
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mRs_FetchProgress( _
@@ -157,6 +183,10 @@ Private Sub mRs_FetchProgress( _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pRecordset As ADODB.Recordset)
 
+Const ProcName As String = "mRs_FetchProgress"
+Dim failpoint As String
+On Error GoTo Err
+
 Debug.Print "Fetch progress=" & Progress & "; max=" & MaxProgress
 If Not mAsynchronous Then Exit Sub
 
@@ -164,26 +194,35 @@ If mWaitingForData Then
     mWaitingForData = False
     RaiseEvent DataAvailable
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get eos() As Boolean
-eos = mEos
+Public Property Get Eos() As Boolean
+Eos = mEos
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub cancel()
+Public Sub Cancel()
+Const ProcName As String = "Cancel"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mRs Is Nothing Then
     If gIsStateSet(mRs.State, adStateOpen) Then
         mRs.Close
     Else
-        mRs.cancel
+        mRs.Cancel
     End If
     Set mRs = Nothing
 End If
@@ -192,24 +231,33 @@ If Not mConnection Is Nothing Then
     If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
-        mConnection.cancel
+        mConnection.Cancel
     End If
     Set mConnection = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
     
 End Sub
 
-Public Function getNextTick( _
+Public Function GetNextTick( _
                 ByRef tick As GenericTick) As Boolean
+
+Const ProcName As String = "GetNextTick"
+Dim failpoint As String
+On Error GoTo Err
 
 If mRs Is Nothing Then
     If Not mAsynchronous Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & "getNextTick", _
-                "Must call startStream before calling getNextTick"
+                ProjectName & "." & ModuleName & ":" & ProcName, _
+                "Must call StartStream before calling GetNextTick"
     End If
     
-    Debug.Print "getNextTick: no recordset"
+    Debug.Print "GetNextTick: no recordset"
     mWaitingForData = True
     Exit Function
 End If
@@ -217,34 +265,57 @@ End If
 If mDecoder Is Nothing Then
     If Not getNextDecoder Then Exit Function
 End If
-Do While Not mDecoder.getNextTick(tick)
+Do While Not mDecoder.GetNextTick(tick)
     If Not getNextDecoder Then Exit Function
 Loop
-getNextTick = True
+GetNextTick = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal instrumentID As Long, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mDB = db
 mInstrumentID = instrumentID
 mFromDate = gTruncateTimeToMinute(fromDate)
 mToDate = gTruncateTimeToNextMinute(toDate)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
-Public Sub startStream( _
+Public Sub StartStream( _
                 ByVal asynchronous As Boolean)
+Const ProcName As String = "StartStream"
+Dim failpoint As String
+On Error GoTo Err
+
 mAsynchronous = asynchronous
-Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
+Set mConnector = mDB.GetConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
 mConnector.connect
 If Not mAsynchronous Then
     doFetchTicks
     If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -255,22 +326,35 @@ Private Function createNewTickDecoder() As TickDataDecoder
 Dim PeriodStartTime As Date
 Dim format As String
 Dim BasePrice As Double
-Dim tickSize As Double
+Dim TickSize As Double
 Dim Data() As Byte
+
+Const ProcName As String = "createNewTickDecoder"
+Dim failpoint As String
+On Error GoTo Err
 
 PeriodStartTime = gRoundTimeToSecond(mRs("DateTime"))
 format = mRs("Version")
 BasePrice = mRs("baseprice")
-tickSize = mRs("ticksize")
+TickSize = mRs("ticksize")
 Data = mRs("data")
 
-Set createNewTickDecoder = CreateTickDecoder(PeriodStartTime, tickSize, BasePrice, Data, format)
+Set createNewTickDecoder = CreateTickDecoder(PeriodStartTime, TickSize, BasePrice, Data, format)
 Debug.Print "createNewTickDecoder: " & FormatTimestamp(PeriodStartTime, TimestampDateAndTime + TimestampNoMillisecs)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub doFetchTicks()
 Dim cmd As ADODB.Command
 Dim param As ADODB.Parameter
+
+Const ProcName As String = "doFetchTicks"
+Dim failpoint As String
+On Error GoTo Err
 
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
@@ -321,9 +405,18 @@ Else
             , _
             CommandTypeEnum.adCmdStoredProc
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getNextDecoder() As Boolean
+Const ProcName As String = "getNextDecoder"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mDecoder = Nothing
 
 If Not gIsStateSet(mRs.State, adStateOpen) Then
@@ -346,6 +439,11 @@ Else
     
     mRs.MoveNext
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

@@ -111,22 +111,24 @@ End Sub
 '@===============================================================================
 
 Private Property Get IBarDataWriter_ContractSpecifier() As ContractSpecifier
-Set IBarDataWriter_ContractSpecifier = mContract.specifier
+Set IBarDataWriter_ContractSpecifier = mContract.Specifier
 End Property
 
 Private Sub IBarDataWriter_ReleaseDataStore()
+Const ProcName As String = "IBarDataWriter_ReleaseDataStore"
 On Error GoTo Err
 finish
 mHistDataServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
-handleFatalError "IBarDataWriter_ReleaseDataStore"
+handleFatalError ProcName
 End Sub
 
 Private Sub IBarDataWriter_WriteBar( _
                 ByVal data As Bar, _
                 ByVal barType As BarTypes, _
                 ByVal barTimePeriod As TimePeriod)
+Const ProcName As String = "IBarDataWriter_WriteBar"
 Dim index As Long
 Dim tc As TaskController
 
@@ -176,7 +178,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="IBarDataWriter_WriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -185,6 +187,7 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "TaskCompletionListener_taskCompleted"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -198,7 +201,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="TaskCompletionListener_taskCompleted", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -206,6 +209,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mInstrumentTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -216,7 +220,7 @@ ElseIf ev.errorNumber <> 0 Then
                                 mHistDataServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error: specified instrument does not exist: " & mContract.specifier.ToString, _
+                                "Error: specified instrument does not exist: " & mContract.Specifier.ToString, _
                                 mHistDataServiceProvider.handle
 Else
     Set mInstrument = ev.result
@@ -231,7 +235,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -252,6 +256,7 @@ End Property
 '@===============================================================================
 
 Friend Sub finish()
+Const ProcName As String = "finish"
 Dim s As String
 Dim i As Long
 
@@ -263,7 +268,7 @@ If Not mInstrumentTC Is Nothing Then
     Set mInstrumentTC = Nothing
 End If
 
-s = mServiceProviderName & " (" & mContract.specifier.localSymbol & ")"
+s = mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")"
 For i = 0 To UBound(mTimeframeTable)
     s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
             mTimeframeTable(i).timeframe.ToString & _
@@ -276,7 +281,7 @@ Set mServiceConsumer = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -288,6 +293,7 @@ Friend Sub initialise( _
                 ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
                 ByVal pContract As Contract, _
                 ByVal useSynchronousWrites As Boolean)
+Const ProcName As String = "initialise"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -306,14 +312,14 @@ Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 Set mHistDataServiceProvider = HistDataServiceProvider
 Set mContract = pContract
 
-If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
+If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
 
-Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
+Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -323,6 +329,7 @@ End Sub
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
                 Optional ByVal pFailpoint As Long)
+Const ProcName As String = "handleFatalError"
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDesc As String: errDesc = Err.Description
@@ -330,7 +337,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -347,6 +360,7 @@ gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=
 End Sub
 
 Private Sub requestTimeframes()
+Const ProcName As String = "requestTimeframes"
 Dim i As Long
 
 Dim failpoint As Long
@@ -362,7 +376,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="requestTimeframes", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 

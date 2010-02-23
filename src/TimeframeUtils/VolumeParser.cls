@@ -108,6 +108,10 @@ End Sub
 Public Function Notify( _
                 ByVal newTotalVolume As Long) As Long
 
+Const ProcName As String = "Notify"
+Dim failpoint As String
+On Error GoTo Err
+
 Debug.Print "VolumeParser(" & mObjId & "): Notify: " & newTotalVolume
 If mSwitchedSession Then
     ' this is the first Volume notification after switching to a new
@@ -136,11 +140,20 @@ mCurrSessionVolume = newTotalVolume
 
 Debug.Print "VolumeParser(" & mObjId & "): Volume increment returned " & Notify
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Function
 
 Public Sub ChangeSession( _
                 ByVal newSession As Session)
                 
+Const ProcName As String = "ChangeSession"
+Dim failpoint As String
+On Error GoTo Err
+
 Debug.Print "VolumeParser(" & mObjId & "): ChangeSession object"
 
 Set mSession = newSession
@@ -159,6 +172,11 @@ mCurrSessionVolume = 0
 ' use of previous session figures
 mPrevSessionVolume = 0
 mVolumeResetPending = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

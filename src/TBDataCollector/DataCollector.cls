@@ -48,7 +48,6 @@ Event TimeframeAdded( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TBDataCollector26"
 Private Const ModuleName                    As String = "TBDataCollector"
 
 Private Const CommonStudiesLibProgId        As String = "CmnStudiesLib26.StudyLib"
@@ -125,9 +124,17 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
+Const ProcName As String = "CollectionChangeListener_Change"
+On Error GoTo Err
+
 If ev.changeType = CollItemAdded Then
     RaiseEvent TimeframeAdded(ev.affectedItem)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -135,7 +142,15 @@ End Sub
 '@================================================================================
 
 Private Sub mEndCollectionTimer_TimerExpired()
+Const ProcName As String = "mEndCollectionTimer_TimerExpired"
+On Error GoTo Err
+
 stopAll True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -143,9 +158,17 @@ End Sub
 '@================================================================================
 
 Private Sub mExitProgramTimer_TimerExpired()
+Const ProcName As String = "mExitProgramTimer_TimerExpired"
+On Error GoTo Err
+
 stopAll False
 
 RaiseEvent ExitProgram
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -153,16 +176,15 @@ End Sub
 '@================================================================================
 
 Private Sub mStartCollectionTimer_TimerExpired()
+Const ProcName As String = "mStartCollectionTimer_TimerExpired"
 On Error GoTo Err
 
 startCollection
+
 Exit Sub
 
 Err:
-gLogger.Log LogLevelSevere, "Error " & Err.Number & " in " & _
-        ProjectName & "." & ModuleName & ":" & "startCollection" & vbCrLf & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & _
-        Err.description
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -170,6 +192,9 @@ End Sub
 '@================================================================================
 
 Private Sub mStartTasksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mStartTasksTC_Completed"
+On Error GoTo Err
+
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     gLogger.Log LogLevelSevere, _
@@ -179,6 +204,11 @@ ElseIf ev.errorNumber <> 0 Then
 Else
     gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -187,16 +217,32 @@ End Sub
 
 Private Sub mTickers_CollectionChanged(ev As TWUtilities30.CollectionChangeEvent)
 Dim lTicker As ticker
+Const ProcName As String = "mTickers_CollectionChanged"
+On Error GoTo Err
+
 If ev.changeType = CollItemAdded Then
     Set lTicker = ev.affectedItem
     lTicker.Timeframes.AddCollectionChangeListener Me
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickers_stateChange(ev As StateChangeEvent)
+Const ProcName As String = "mTickers_stateChange"
+On Error GoTo Err
+
 If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(ev.Source)
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -210,6 +256,9 @@ End Sub
 Private Sub mTradeBuildAPI_Notification( _
                 ev As NotificationEvent)
 Dim spError As ServiceProviderError
+Const ProcName As String = "mTradeBuildAPI_Notification"
+On Error GoTo Err
+
 If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
     gLogger.Log LogLevelNormal, "Connected ok to realtime data source"
     RaiseEvent Connected
@@ -236,6 +285,11 @@ Else
     gLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
     RaiseEvent Notification(ev)
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -264,11 +318,8 @@ Friend Sub initialise( _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _
                 ByVal exitTimeDescriptor As String)
-
-Dim failpoint As Long
+Const ProcName As String = "initialise"
 On Error GoTo Err
-
-failpoint = 50
 
 Set mConfigFile = pConfigFile
 mConfigName = configName
@@ -276,34 +327,26 @@ Set mConfig = GetAppInstanceConfig(mConfigFile, configName)
 
 If mConfig Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Specified instance config does not exist"
 End If
 
-failpoint = 100
 determineProcessingTimes startTimeDescriptor, _
                         endTimeDescriptor, _
                         exitTimeDescriptor
 
-failpoint = 200
 processConfig
 
-failpoint = 300
 scheduleStart
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub startCollection()
-Dim failpoint As Long
+Const ProcName As String = "startCollection"
 On Error GoTo Err
 
 processConfig
@@ -332,14 +375,19 @@ RaiseEvent CollectionStarted
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "startCollection" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub stopCollection()
+Const ProcName As String = "stopCollection"
+On Error GoTo Err
+
 stopAll True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -351,6 +399,9 @@ Private Function calcTimeFromDescriptor( _
 Dim day As Long
 Dim theTime As Date
 
+Const ProcName As String = "calcTimeFromDescriptor"
+On Error GoTo Err
+
 On Error Resume Next
 
 If descriptor = "" Then Exit Function
@@ -359,7 +410,7 @@ descriptor = UCase$(Trim$(descriptor))
 
 If Len(descriptor) <> 8 And Len(descriptor) <> 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Format for descriptor is dddhh:mm or hh:mm"
 End If
 
@@ -381,7 +432,7 @@ If Len(descriptor) = 8 Then
         day = vbSaturday
     Case Else
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "First three bytes of descriptor must be a valid day code"
     End Select
 Else
@@ -390,7 +441,7 @@ End If
 
 If Not IsDate(Right$(descriptor, 5)) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Last five bytes must be hh:mm"
 End If
 
@@ -398,7 +449,7 @@ theTime = CDate(Right$(descriptor, 5))
 
 If theTime >= 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Last five bytes must be hh:mm"
 End If
 
@@ -408,18 +459,31 @@ Else
     calcTimeFromDescriptor = Int(Now + day - Weekday(Now)) + theTime
 End If
 If calcTimeFromDescriptor <= Now Then calcTimeFromDescriptor = calcTimeFromDescriptor + 7
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub determineProcessingTimes( _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _
                 ByVal exitTimeDescriptor As String)
+Const ProcName As String = "determineProcessingTimes"
+On Error GoTo Err
+
 mStartTimeDescriptor = startTimeDescriptor
 mEndTimeDescriptor = endTimeDescriptor
 
 If mStartTimeDescriptor <> "" Then mStartTime = calcTimeFromDescriptor(mStartTimeDescriptor)
 If mEndTimeDescriptor <> "" Then mEndTime = calcTimeFromDescriptor(mEndTimeDescriptor)
 If exitTimeDescriptor <> "" Then mExitProgramTime = calcTimeFromDescriptor(exitTimeDescriptor)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -428,11 +492,8 @@ Dim i As Long
 Dim outputFormat As String
 Dim cs As ConfigurationSection
 
-Dim failpoint As Long
+Const ProcName As String = "processConfig"
 On Error GoTo Err
-
-
-failpoint = 100
 
 mTradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
@@ -442,23 +503,15 @@ mWritebars = False
 mOutputFormat = ""
 mOutputPath = ""
 
-failpoint = 200
-
 ConfigureTradeBuild mConfigFile, mConfig.InstanceQualifier
-
-failpoint = 500
 
 AddStudyLibrary CommonStudiesLibProgId, True, "Built-in"
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
-failpoint = 600
-
 mWriteticks = mConfig.GetSetting(ConfigSettingWriteTickData, "False")
 mWritebars = mConfig.GetSetting(ConfigSettingWriteBarData, "False")
 
-
-failpoint = 700
 
 If mWriteticks Then
     outputFormat = UCase$(mConfig.GetSetting(ConfigSettingWriteTickDataFormat))
@@ -484,19 +537,18 @@ End If
 
 mOutputPath = mConfig.GetSetting(ConfigSettingWriteTickDataPath)
 
-failpoint = 700
-
 Set mContractsConfig = mConfig.GetConfigurationSection(ConfigSectionContracts)
+
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "startCollection" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub scheduleStart()
+Const ProcName As String = "scheduleStart"
+On Error GoTo Err
+
 If mStartTime <> 0 Then
     If mStartTime < mEndTime Then
         Set mStartCollectionTimer = CreateIntervalTimer(mStartTime, _
@@ -510,7 +562,7 @@ If mStartTime <> 0 Then
         mStartCollectionTimer.StartTimer
     Else
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "initialise", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Start time and end time descriptors must be different"
     End If
 End If
@@ -521,10 +573,18 @@ If mExitProgramTime <> 0 Then
     mExitProgramTimer.StartTimer
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub startTickers()
 Dim stTask As New StartTickersTask
+Const ProcName As String = "startTickers"
+On Error GoTo Err
+
 stTask.initialise mTickers, _
                 mContractsConfig, _
                 mWritebars, _
@@ -532,12 +592,20 @@ stTask.initialise mTickers, _
                 mOutputFormat, _
                 mOutputPath
 Set mStartTasksTC = StartTask(stTask, PriorityNormal, "StartTickers")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub stopAll( _
                 ByVal allowNextStart As Boolean)
 Dim lTicker As ticker
 Dim startTime As Date
+
+Const ProcName As String = "stopAll"
+On Error GoTo Err
 
 TaskSummaryLoggingIntervalSecs = 0
 
@@ -559,6 +627,11 @@ If allowNextStart Then
 End If
 
 RaiseEvent CollectionStopped
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

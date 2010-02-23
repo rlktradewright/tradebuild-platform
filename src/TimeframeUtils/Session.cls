@@ -32,7 +32,7 @@ Option Explicit
 Event SessionStarted( _
                 ByRef ev As SessionEvent)
 
-Event sessionEnded( _
+Event SessionEnded( _
                 ByRef ev As SessionEvent)
 
 '@================================================================================
@@ -49,10 +49,6 @@ Private Const ModuleName As String = "SessionBuilder"
 '@================================================================================
 ' Types
 '@================================================================================
-
-Public Type SessionEvent
-    source              As Object
-End Type
 
 '@================================================================================
 ' Member variables
@@ -111,12 +107,30 @@ IsLinkable = mIsLinkable
 End Property
 
 Public Property Get SessionCurrentTime() As Date
+Const ProcName As String = "SessionCurrentTime"
+Dim failpoint As String
+On Error GoTo Err
+
 SessionCurrentTime = mClock.Timestamp
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let SessionEndTime( _
                 ByVal value As Date)
+Const ProcName As String = "SessionEndTime"
+Dim failpoint As String
+On Error GoTo Err
+
 mSessionEndTime = gNormaliseTime(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -125,7 +139,16 @@ End Property
 
 Friend Property Let SessionStartTime( _
                 ByVal value As Date)
+Const ProcName As String = "SessionStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 mSessionStartTime = gNormaliseTime(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
                 
 Public Property Get SessionStartTime() As Date
@@ -134,8 +157,17 @@ End Property
 
 Friend Property Let TimeZone( _
                 ByVal value As TimeZone)
+Const ProcName As String = "TimeZone"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mTimezone = value
 Set mClock = CreateSimulatedClock(1, mTimezone.standardName)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeZone() As TimeZone
@@ -149,26 +181,57 @@ End Property
 Public Function BarEndTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod) As Date
+Const ProcName As String = "BarEndTime"
+Dim failpoint As String
+On Error GoTo Err
+
 BarEndTime = gBarEndTime(Timestamp, BarTimePeriod, mSessionStartTime, mSessionStartTime)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function BarStartTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod) As Date
+Const ProcName As String = "BarStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 BarStartTime = gBarStartTime(Timestamp, BarTimePeriod, mSessionStartTime)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function GetSessionTimes( _
                             ByVal Timestamp As Date) As SessionTimes
 Dim st As SessionTimes
+Const ProcName As String = "GetSessionTimes"
+Dim failpoint As String
+On Error GoTo Err
+
 gCalcSessionTimes Timestamp, mSessionStartTime, mSessionEndTime, st.startTime, st.endTime
 GetSessionTimes = st
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function GetOffsetSessionTimes( _
                 ByVal Timestamp As Date, _
                 ByVal offset As Long) As SessionTimes
 Dim st As SessionTimes
+Const ProcName As String = "GetOffsetSessionTimes"
+Dim failpoint As String
+On Error GoTo Err
+
 gCalcOffsetSessionTimes Timestamp, _
                         offset, _
                         mSessionStartTime, _
@@ -176,20 +239,43 @@ gCalcOffsetSessionTimes Timestamp, _
                         st.startTime, _
                         st.endTime
 GetOffsetSessionTimes = st
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
+
+Const ProcName As String = "IsTimeInSession"
+Dim failpoint As String
+On Error GoTo Err
 
 If Timestamp >= mCurrentSessionStartTime And _
     Timestamp < mCurrentSessionEndTime _
 Then
     IsTimeInSession = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function NumberOfBarsInSession( _
                 ByVal BarTimePeriod As TimePeriod) As Long
+Const ProcName As String = "NumberOfBarsInSession"
+Dim failpoint As String
+On Error GoTo Err
+
 NumberOfBarsInSession = gCalcNumberOfBarsInSession(BarTimePeriod, mSessionStartTime, mSessionEndTime)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 
@@ -197,44 +283,79 @@ Public Function OffsetBarStartTime( _
                 ByVal Timestamp As Date, _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByVal offset As Long) As Date
+Const ProcName As String = "OffsetBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                     Timestamp, _
                                     BarTimePeriod, _
                                     offset, _
                                     mSessionStartTime, _
                                     mSessionEndTime)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
-Friend Sub SetSessionCurrentTime( _
-                ByVal Timestamp As Date)
+Friend Function SetSessionCurrentTime( _
+                ByVal pTimestamp As Date) As SessionEvent
 Dim ev As SessionEvent
 Static sessionStartNotified As Boolean
-mClock.SetTime Timestamp
-If Timestamp >= mCurrentSessionEndTime Then
-    Set ev.source = Me
-    RaiseEvent sessionEnded(ev)
-    sessionStartNotified = False
-End If
+Const ProcName As String = "SetSessionCurrentTime"
+Dim failpoint As String
+On Error GoTo Err
 
-If Timestamp >= mCurrentSessionEndTime Or _
-    Timestamp < mReferenceTime _
-Then
-    mReferenceTime = Timestamp
-    gCalcSessionTimes Timestamp, _
+Set ev.source = Me
+ev.changeType = SessionChangeNone
+
+If mReferenceTime = 0 Then
+    mReferenceTime = pTimestamp
+    gCalcSessionTimes pTimestamp, _
                         mSessionStartTime, _
                         mSessionEndTime, _
                         mCurrentSessionStartTime, _
                         mCurrentSessionEndTime
 End If
 
-If Timestamp >= mCurrentSessionStartTime And _
+mClock.SetTime pTimestamp
+
+If pTimestamp >= mCurrentSessionEndTime Then
+    ev.changeType = SessionChangeEnd
+    ev.Timestamp = mCurrentSessionEndTime
+    RaiseEvent SessionEnded(ev)
+    sessionStartNotified = False
+End If
+
+If pTimestamp >= mCurrentSessionEndTime Or _
+    pTimestamp < mReferenceTime _
+Then
+    mReferenceTime = pTimestamp
+    gCalcSessionTimes pTimestamp, _
+                        mSessionStartTime, _
+                        mSessionEndTime, _
+                        mCurrentSessionStartTime, _
+                        mCurrentSessionEndTime
+End If
+
+If pTimestamp >= mCurrentSessionStartTime And _
     Not sessionStartNotified _
 Then
-    Set ev.source = Me
+    ev.changeType = SessionChangeStart
+    ev.Timestamp = mCurrentSessionStartTime
     RaiseEvent SessionStarted(ev)
     sessionStartNotified = True
 End If
-End Sub
+
+SetSessionCurrentTime = ev
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+End Function
 
 '@================================================================================
 ' Helper Functions

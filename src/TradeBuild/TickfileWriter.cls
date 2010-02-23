@@ -82,15 +82,39 @@ End Sub
 '@================================================================================
 
 Friend Property Get NumberOfPendingWrites() As Long
+Const ProcName As String = "NumberOfPendingWrites"
+On Error GoTo Err
+
 NumberOfPendingWrites = mPendingWrites.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileWriter)
+Const ProcName As String = "ServiceProviderWriter"
+On Error GoTo Err
+
 Set mWriter = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Get Ready() As Boolean
-Ready = mServiceProviderWriterReady
+Friend Property Get ready() As Boolean
+Const ProcName As String = "ready"
+On Error GoTo Err
+
+ready = mServiceProviderWriterReady
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -98,18 +122,37 @@ End Property
 '@================================================================================
 
 Public Sub CloseOutputFile()
-GLog pMsg:="Closing output tickfile", pProcName:="closeOutputFile", pProjName:=ProjectName, pModName:=ModuleName
+Const ProcName As String = "CloseOutputFile"
+On Error GoTo Err
+
+GLogLogger.Log pMsg:="Closing output tickfile", pProcName:=ProcName, pModName:=ModuleName
 Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
 mWriter.CloseOutputFile
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()
+Const ProcName As String = "ServiceProviderWriterNotReady"
+On Error GoTo Err
+
 mServiceProviderWriterReady = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
 Dim Item As Variant
 Dim pendingTick As GenericTick
+
+Const ProcName As String = "ServiceProviderWriterReady"
+On Error GoTo Err
 
 mServiceProviderWriterReady = True
 
@@ -119,15 +162,28 @@ For Each Item In mPendingWrites
 Next
 
 Set mPendingWrites = New Collection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub writeTick( _
                 pTick As GenericTick)
+Const ProcName As String = "writeTick"
+On Error GoTo Err
+
 If Not mServiceProviderWriterReady Then
     mPendingWrites.Add pTick
 Else
     mWriter.writeTick pTick
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

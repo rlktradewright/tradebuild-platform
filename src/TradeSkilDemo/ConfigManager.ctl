@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#165.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#103.0#0"; "StudiesUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#161.0#0"; "StudiesUI2-6.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -240,12 +240,28 @@ Private mConfigNames                        As Collection
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+Const ProcName As String = "UserControl_Initialize"
+On Error GoTo Err
+
 Set mConfigNames = New Collection
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 UserControl.Width = BoundingRect.Width
 UserControl.Height = BoundingRect.Height
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -254,7 +270,10 @@ End Sub
 
 Private Sub ChangeListener_Change( _
                 ev As TWUtilities30.ChangeEvent)
-If ev.source Is mConfigFile Then
+Const ProcName As String = "ChangeListener_Change"
+On Error GoTo Err
+
+If ev.Source Is mConfigFile Then
     Select Case ev.changeType
     Case ConfigChangeTypes.ConfigClean
         SaveConfigButton.Enabled = False
@@ -264,6 +283,11 @@ If ev.source Is mConfigFile Then
         SaveConfigMenu.Enabled = True
     End Select
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -273,6 +297,10 @@ End Sub
 Private Sub ConfigsTV_AfterLabelEdit( _
                 cancel As Integer, _
                 NewString As String)
+
+Const ProcName As String = "ConfigsTV_AfterLabelEdit"
+Dim failpoint As String
+On Error GoTo Err
 
 If NewString = "" Then
     cancel = True
@@ -289,6 +317,10 @@ End If
 
 renameCurrentConfig NewString
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigsTV_Collapse( _
@@ -303,6 +335,10 @@ Private Sub ConfigsTV_MouseUp( _
                 y As Single)
                 
 Dim lNode As Node
+Const ProcName As String = "ConfigsTV_MouseUp"
+Dim failpoint As String
+On Error GoTo Err
+
 If Button = vbRightButton Then
     Set lNode = ConfigsTV.HitTest(x, y)
     If Not lNode Is Nothing Then
@@ -327,10 +363,19 @@ If Button = vbRightButton Then
         PopupMenu ConfigTVMenu, , , , RenameConfigMenu
     End If
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigsTV_NodeClick( _
                 ByVal Node As MSComctlLib.Node)
+
+Const ProcName As String = "ConfigsTV_NodeClick"
+Dim failpoint As String
+On Error GoTo Err
 
 If IsObject(Node.Tag) Then
     setCurrentConfig Node.Tag, Node
@@ -348,38 +393,115 @@ Else
     Set mSelectedAppConfig = Nothing
 End If
 RaiseEvent SelectedItemChanged
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DeleteConfigButton_Click()
+Const ProcName As String = "DeleteConfigButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 deleteAppConfig
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DeleteConfigMenu_Click()
+Const ProcName As String = "DeleteConfigMenu_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 deleteAppConfig
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NewConfigButton_Click()
+Const ProcName As String = "NewConfigButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 newAppConfig
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NewConfigMenu_Click()
+Const ProcName As String = "NewConfigMenu_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 newAppConfig
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RenameConfigMenu_Click()
+Const ProcName As String = "RenameConfigMenu_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 ConfigsTV.StartLabelEdit
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SaveConfigButton_Click()
+Const ProcName As String = "SaveConfigButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 saveConfigFile
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SaveConfigMenu_Click()
+Const ProcName As String = "SaveConfigMenu_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 saveConfigFile
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SetDefaultConfigMenu_Click()
+Const ProcName As String = "SetDefaultConfigMenu_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 toggleDefaultConfig
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -391,28 +513,64 @@ End Sub
 '@================================================================================
 
 Public Property Get changesPending() As Boolean
+Const ProcName As String = "changesPending"
+Dim failpoint As String
+On Error GoTo Err
+
 If StudyLibConfigurer1.dirty Or SPConfigurer1.dirty Then
     changesPending = True
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get dirty() As Boolean
+Const ProcName As String = "dirty"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConfigFile Is Nothing Then dirty = mConfigFile.dirty
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get appConfig( _
                 ByVal name As String) As ConfigurationSection
+Const ProcName As String = "appConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set appConfig = findConfig(name)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get firstAppConfig() As ConfigurationSection
 Dim appConfig As ConfigurationSection
+
+Const ProcName As String = "firstAppConfig"
+Dim failpoint As String
+On Error GoTo Err
 
 For Each appConfig In mAppConfigs
     Exit For
 Next
 
 Set firstAppConfig = appConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -425,6 +583,10 @@ End Property
 '@================================================================================
 
 Public Sub applyPendingChanges()
+Const ProcName As String = "applyPendingChanges"
+Dim failpoint As String
+On Error GoTo Err
+
 If StudyLibConfigurer1.dirty Then
     StudyLibConfigurer1.ApplyChanges
 End If
@@ -432,11 +594,20 @@ If SPConfigurer1.dirty Then
     SPConfigurer1.ApplyChanges
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Public Sub createNewAppConfig( _
                 ByVal configName As String, _
                 ByVal includeDefaultStudyLibrary As Boolean)
+Const ProcName As String = "createNewAppConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mCurrAppConfig = AddAppInstanceConfig(mConfigFile, _
                                     configName, _
                                     includeDefaultStudyLibrary)
@@ -445,6 +616,11 @@ Set mCurrConfigNode = addConfigNode(mCurrAppConfig)
 mCurrConfigNode.Expanded = True
 ConfigsTV.SelectedItem = mCurrConfigNode
 ConfigsTV_NodeClick ConfigsTV.SelectedItem
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function initialise( _
@@ -454,7 +630,11 @@ Public Function initialise( _
 Dim appConfig As ConfigurationSection
 Dim newnode As Node
 
-gLogger.Log LogLevelDetail, "Initialising ConfigManager"
+Const ProcName As String = "initialise"
+Dim failpoint As String
+On Error GoTo Err
+
+logMessage "Initialising ConfigManager", LogLevelDetail
 
 Set mConfigFile = configFile
     
@@ -462,22 +642,22 @@ If mConfigFile.applicationName <> applicationName Or _
     mConfigFile.fileVersion <> expectedConfigFileVersion Or _
     Not IsValidConfigurationFile(mConfigFile) _
 Then
-    gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
+    logMessage "The configuration file is not the correct format for this program"
     Exit Function
 End If
     
-mConfigFile.addChangeListener Me
+mConfigFile.AddChangeListener Me
 
 If mConfigFile.dirty Then
     SaveConfigButton.Enabled = True
     SaveConfigMenu.Enabled = True
 End If
 
-gLogger.Log LogLevelDetail, "Locating config definitions in config file"
+logMessage "Locating config definitions in config file", LogLevelDetail
 
 Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
 
-gLogger.Log LogLevelDetail, "Loading config definitions into ConfigManager control"
+logMessage "Loading config definitions into ConfigManager control", LogLevelDetail
 
 Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigFile)
 
@@ -496,12 +676,26 @@ ElseIf ConfigsTV.Nodes.Count > 0 Then
 End If
 If Not ConfigsTV.SelectedItem Is Nothing Then ConfigsTV_NodeClick ConfigsTV.SelectedItem
 initialise = True
-gLogger.Log LogLevelDetail, "ConfigManager initialised ok"
+logMessage "ConfigManager initialised ok", LogLevelDetail
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub saveConfigFile( _
                 Optional ByVal filename As String)
-mConfigFile.save filename
+Const ProcName As String = "saveConfigFile"
+Dim failpoint As String
+On Error GoTo Err
+
+mConfigFile.Save filename
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -511,94 +705,188 @@ End Sub
 Private Function addConfigNode( _
                 ByVal appConfig As ConfigurationSection) As Node
 Dim name As String
+Const ProcName As String = "addConfigNode"
+Dim failpoint As String
+On Error GoTo Err
+
 name = appConfig.InstanceQualifier
 Set addConfigNode = ConfigsTV.Nodes.Add(, , name, name)
 Set addConfigNode.Tag = appConfig
 mConfigNames.Add name, name
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeServiceProviders
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeStudyLibraries
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub deleteAppConfig()
+Const ProcName As String = "deleteAppConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         "If you click Yes, all data for this configuration will be removed from the configuration file", _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
     RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
-    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.Index
+    ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
     If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
     Set mCurrAppConfig = Nothing
     If mCurrConfigNode Is mDefaultConfigNode Then Set mDefaultConfigNode = Nothing
     Set mCurrConfigNode = Nothing
     
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function findConfig( _
                 ByVal name As String) As ConfigurationSection
+Const ProcName As String = "findConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set findConfig = mAppConfigs.GetConfigurationSection(ConfigNameAppConfig & "(" & name & ")")
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub hideConfigControls()
+Const ProcName As String = "hideConfigControls"
+Dim failpoint As String
+On Error GoTo Err
+
 SPConfigurer1.Visible = False
 StudyLibConfigurer1.Visible = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function nameAlreadyInUse( _
                 ByVal name As String) As Boolean
 Dim s As String
+Const ProcName As String = "nameAlreadyInUse"
+Dim failpoint As String
+On Error GoTo Err
+
 On Error Resume Next
 s = mConfigNames(name)
 If s <> "" Then nameAlreadyInUse = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub newAppConfig()
 Dim name As String
 Dim i As Long
+Const ProcName As String = "newAppConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 name = NewConfigNameStub
 Do While nameAlreadyInUse(name)
     i = i + 1
     name = NewConfigNameStub & i
 Loop
 createNewAppConfig name, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub renameCurrentConfig( _
                 ByVal newName As String)
+Const ProcName As String = "renameCurrentConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 mConfigNames.Remove mCurrAppConfig.InstanceQualifier
 mCurrAppConfig.InstanceQualifier = newName
 mConfigNames.Add newName, newName
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setCurrentConfig( _
                 ByVal cs As ConfigurationSection, _
                 ByVal lNode As Node)
+Const ProcName As String = "setCurrentConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mCurrAppConfig = cs
 Set mCurrConfigNode = lNode
 
 SPConfigurer1.Visible = False
 StudyLibConfigurer1.Visible = False
 DeleteConfigButton.Enabled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showServiceProviderConfigDetails()
+Const ProcName As String = "showServiceProviderConfigDetails"
+Dim failpoint As String
+On Error GoTo Err
+
 hideConfigControls
 SPConfigurer1.left = Box1.left
 SPConfigurer1.Top = Box1.Top
 SPConfigurer1.Visible = True
 SPConfigurer1.initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
                         False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showStudyLibraryConfigDetails()
+Const ProcName As String = "showStudyLibraryConfigDetails"
+Dim failpoint As String
+On Error GoTo Err
+
 hideConfigControls
 StudyLibConfigurer1.left = Box1.left
 StudyLibConfigurer1.Top = Box1.Top
 StudyLibConfigurer1.Visible = True
 StudyLibConfigurer1.initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub toggleDefaultConfig()
+Const ProcName As String = "toggleDefaultConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 If mCurrAppConfig Is mDefaultAppConfig Then
     UnsetDefaultAppInstanceConfig mConfigFile
     mDefaultConfigNode.Bold = False
@@ -612,6 +900,11 @@ Else
     Set mDefaultConfigNode = mCurrConfigNode
     mDefaultConfigNode.Bold = True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

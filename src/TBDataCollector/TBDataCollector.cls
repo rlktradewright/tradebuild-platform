@@ -41,7 +41,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TBDataCollector26"
 Private Const ModuleName                    As String = "GlobalClass"
 
 '@================================================================================
@@ -74,12 +73,20 @@ Public Function CreateDataCollector( _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _
                 ByVal exitTimeDescriptor As String) As DataCollector
+Const ProcName As String = "CreateDataCollector"
+On Error GoTo Err
+
 Set CreateDataCollector = New DataCollector
 CreateDataCollector.initialise pConfigFile, _
                             configName, _
                             startTimeDescriptor, _
                             endTimeDescriptor, _
                             exitTimeDescriptor
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

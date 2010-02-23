@@ -410,6 +410,9 @@ End Property
 
 Friend Function ToJSON() As String
 Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
+On Error GoTo Err
+
 Set jb = New JSONBuilder
 
 jb.BeginObject
@@ -531,6 +534,11 @@ jb.EncodeValue mTriggerPrice
 jb.EndObject
 
 ToJSON = jb.JSONString
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

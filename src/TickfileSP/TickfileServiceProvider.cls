@@ -107,7 +107,10 @@ Private Sub ICommonServiceProvider_Link( _
                             ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                             ByVal handle As Long, _
                             ByVal params As Parameters)
+Const ProcName As String = "ICommonServiceProvider_Link"
 Dim param As Parameter
+
+On Error GoTo Err
 
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
@@ -128,13 +131,16 @@ For Each param In params
             mMode = ReadWrite
         Case Else
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "ICommonServiceProvider_Link", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid access mode parameter"
             Exit Sub
         End Select
     End Select
 Next
 
+Exit Sub
+Err:
+handleFatalError ProcName
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -146,15 +152,14 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
+Const ProcName As String = "ICommonServiceProvider_Terminate"
 On Error GoTo Err
 finishReaders
 finishWriters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -165,21 +170,22 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
+Const ProcName As String = "ITickfileServiceProvider_CreateTickfileReader"
 Dim reader As TickfileReader
 On Error GoTo Err
 mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.TickfileServiceProvider = Me
-reader.CommonServiceConsumer = mCommonServiceConsumer
-reader.TickfileInputServiceConsumer = serviceConsumer
-reader.StreamingDataConsumer = dataConsumer
+reader.Initialise mHandle, _
+                    mName & " (reader)", _
+                    mCommonServiceConsumer, _
+                    serviceConsumer, _
+                    Me, _
+                    dataConsumer
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
-                Err.Description
+handleFatalError ProcName
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -187,6 +193,7 @@ Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                             ByVal pContract As Contract, _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
+Const ProcName As String = "ITickfileServiceProvider_CreateTickfileWriter"
 Dim formatId As TickfileFormats
 Dim formatVersion As TickFileVersions
 Dim writer As TickfileWriter
@@ -195,13 +202,14 @@ On Error GoTo Err
 gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
 If formatId = TickfileFormats.TickfileUnknown Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "ITickfileServiceProvider_CreateTickfileWriter", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid format identifier"
 End If
 
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.initialise mName & " (writer)", _
+writer.Initialise mHandle, _
+                    mName & " (writer)", _
                     mCommonServiceConsumer, _
                     serviceConsumer, _
                     Me, _
@@ -212,9 +220,7 @@ writer.initialise mName & " (writer)", _
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
-                Err.Description
+handleFatalError ProcName
 End Function
 
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
@@ -294,6 +300,10 @@ Friend Sub dataReaderFinished( _
                 ByVal dataReader As TickfileReader)
 Dim i As Long
 Dim reader As TickfileReader
+Const ProcName As String = "dataReaderFinished"
+Dim failpoint As String
+On Error GoTo Err
+
 i = 1
 For Each reader In mTickfileDataReaders
     If reader Is dataReader Then
@@ -302,12 +312,21 @@ For Each reader In mTickfileDataReaders
     End If
     i = i + 1
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As TickfileWriter)
 Dim i As Long
 Dim writer As TickfileWriter
+Const ProcName As String = "dataWriterFinished"
+Dim failpoint As String
+On Error GoTo Err
+
 i = 1
 For Each writer In mTickfileDataWriters
     If writer Is dataWriter Then
@@ -316,6 +335,11 @@ For Each writer In mTickfileDataWriters
     End If
     i = i + 1
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -324,30 +348,58 @@ End Sub
 
 Private Sub finishReaders()
 Dim reader As TickfileReader
+Const ProcName As String = "finishReaders"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each reader In mTickfileDataReaders
-    reader.finish
+    reader.Finish
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishWriters()
 Dim writer As TickfileWriter
+Const ProcName As String = "finishWriters"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each writer In mTickfileDataWriters
-    writer.finish
+    writer.Finish
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, Source, Description, mHandle
+On Error GoTo Err
 
-finishReaders
-finishWriters
+' re-raise the error to get the calling procedure's procName into the source info
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
 
-Set mCommonServiceConsumer = Nothing
+Err.Raise errNum, errSource, errDesc
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
 
 

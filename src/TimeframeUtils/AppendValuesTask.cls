@@ -69,6 +69,10 @@ Private Sub Task_run()
 Dim val As SValue
 Dim i As Long
 
+Const ProcName As String = "Task_run"
+Dim failpoint As String
+On Error GoTo Err
+
 mIndex = mIndex + 1
 
 Do While mIndex <= mSourceValues.Count And i < 100
@@ -88,6 +92,11 @@ If mIndex > mSourceValues.Count Then
     mTaskContext.Finish Empty, False
     Exit Sub
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
     
 End Sub
 
@@ -114,9 +123,18 @@ End Property
 Friend Sub Initialise( _
                 ByVal destValues As ValueCache, _
                 ByVal sourceValues As ValueCache)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mSourceValues = sourceValues
 Set mDestValues = destValues
 If mSourceValues.Count / 20 >= 200 Then mProgressModulus = mSourceValues.Count / 20
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

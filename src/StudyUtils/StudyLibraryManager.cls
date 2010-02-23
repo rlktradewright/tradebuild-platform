@@ -46,7 +46,7 @@ Event StudyLibraryError( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "StudyUtils26"
+
 Private Const ModuleName As String = "StudyLibraryManager"
 
 '@================================================================================
@@ -99,6 +99,9 @@ End Sub
 '@================================================================================
 
 Friend Property Get AvailableStudies() As StudyListEntry()
+Const ProcName As String = "AvailableStudies"
+On Error GoTo Err
+
 ReDim studylist(31) As StudyListEntry
 Dim spList() As String
 Dim nextStudyListIndex As Long
@@ -125,6 +128,11 @@ If nextStudyListIndex <> 0 Then
     ReDim Preserve studylist(nextStudyListIndex - 1) As StudyListEntry
     AvailableStudies = studylist
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get StudyDefinition( _
@@ -132,6 +140,9 @@ Friend Property Get StudyDefinition( _
                 ByVal libName As String) As StudyDefinition
 Dim studyLib As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
@@ -146,6 +157,11 @@ For i = 0 To mMaxLibIndex
         End If
     End If
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -157,6 +173,9 @@ Friend Function Add( _
                 ByVal Name As String _
                 ) As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "Add"
+On Error GoTo Err
 
 If Name <> "" Then studyLib.Name = Name
 
@@ -188,6 +207,11 @@ Set mStudyLibraries(mMaxLibIndex).libObject = studyLib
 
 studyLib.initialise Me, mMaxLibIndex
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Friend Sub AddConfigEntry( _
@@ -196,6 +220,9 @@ Friend Sub AddConfigEntry( _
                 ByVal Name As String _
                 )
 Dim sl As ConfigurationSection
+
+Const ProcName As String = "AddConfigEntry"
+On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
@@ -206,6 +233,11 @@ If mConfig Is Nothing Then Exit Sub
 Set sl = mStudyLibs.AddConfigurationSection(ConfigNameStudyLibrary & "(" & Name & ")")
 sl.setAttribute AttributeNameEnabled, enabled
 sl.setAttribute AttributeNameStudyLibraryProgId, progId
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function AddStudyLibrary( _
@@ -214,10 +246,18 @@ Friend Function AddStudyLibrary( _
                 ByVal Name As String _
                 ) As StudyLibrary
 
+Const ProcName As String = "AddStudyLibrary"
+On Error GoTo Err
+
 If enabled Then
     Set AddStudyLibrary = Add(CreateObject(progId), Name)
 End If
 AddConfigEntry progId, enabled, Name
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateStudy( _
@@ -225,6 +265,9 @@ Public Function CreateStudy( _
                 ByVal libName As String) As Study
 Dim studyLib As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "CreateStudy"
+On Error GoTo Err
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
@@ -239,6 +282,11 @@ For i = 0 To mMaxLibIndex
         End If
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ErrorInLibrary( _
@@ -246,12 +294,20 @@ Public Sub ErrorInLibrary( _
                 ByVal errorMessage As String, _
                 ByVal libHandle As Long)
 Dim ev As ErrorEvent
+Const ProcName As String = "ErrorInLibrary"
+On Error GoTo Err
+
 ev.errorCode = errorCode
 ev.errorMessage = errorMessage
 If libHandle >= 0 Then
     Set ev.source = mStudyLibraries(libHandle).libObject
 End If
 RaiseEvent StudyLibraryError(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub FatalErrorInLibrary( _
@@ -260,12 +316,20 @@ Public Sub FatalErrorInLibrary( _
                 ByVal errorMessage As String, _
                 ByVal libHandle As Long)
 Dim ev As ErrorEvent
+Const ProcName As String = "FatalErrorInLibrary"
+On Error GoTo Err
+
 ev.errorCode = errorCode
 ev.errorMessage = errorMessage & " (" & source & ")"
 If libHandle >= 0 Then
     Set ev.source = mStudyLibraries(libHandle).libObject
 End If
 RaiseEvent FatalStudyLibraryError(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function FetchStudyDefaultParameters( _
@@ -273,6 +337,9 @@ Friend Function FetchStudyDefaultParameters( _
                 ByVal libName As String) As Parameters
 Dim studyLib As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "FetchStudyDefaultParameters"
+On Error GoTo Err
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
@@ -287,25 +354,41 @@ For i = 0 To mMaxLibIndex
         End If
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub LoadStudyLibraryConfiguration( _
                 ByVal config As ConfigurationSection)
 
+Const ProcName As String = "LoadStudyLibraryConfiguration"
+On Error GoTo Err
+
 On Error Resume Next
 Set mStudyLibs = config.GetConfigurationSection(ConfigNameStudyLibraries)
-On Error GoTo 0
+On Error GoTo Err
 
 If Not mStudyLibs Is Nothing Then
     Set mConfig = config
     loadStudyLibs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Remove( _
                 ByVal lib As StudyLibrary, _
                 Optional ByVal removeFromConfig As Boolean)
 Dim i As Long
+
+Const ProcName As String = "Remove"
+On Error GoTo Err
 
 If lib Is Nothing Then Exit Sub
 
@@ -320,12 +403,20 @@ For i = 0 To mMaxLibIndex
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RemoveAll( _
                 Optional ByVal removeFromConfig As Boolean)
 Dim i As Long
 Dim lib As StudyLibrary
+
+Const ProcName As String = "RemoveAll"
+On Error GoTo Err
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
@@ -338,6 +429,11 @@ For i = 0 To mMaxLibIndex
         mStudyLibraries(i).Name = ""
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function SetStudyDefaultParameters( _
@@ -346,6 +442,9 @@ Friend Function SetStudyDefaultParameters( _
                 ByVal params As Parameters) As Boolean
 Dim studyLib As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "SetStudyDefaultParameters"
+On Error GoTo Err
 
 For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
@@ -360,6 +459,11 @@ For i = 0 To mMaxLibIndex
         End If
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -373,10 +477,11 @@ Dim slProgId As String
 Dim slObj As StudyLibrary
 Dim slEnabled As String
 
+Const ProcName As String = "loadStudyLibs"
+On Error GoTo Err
+
 For Each sl In mStudyLibs
-    On Error Resume Next
-    slEnabled = sl.getAttribute(AttributeNameEnabled)
-    If slEnabled = "" Then slEnabled = "True"
+    slEnabled = sl.getAttribute(AttributeNameEnabled, "True")
     If CBool(slEnabled) Then
         slName = sl.InstanceQualifier
         
@@ -386,20 +491,27 @@ For Each sl In mStudyLibs
             slProgId = sl.getAttribute(AttributeNameStudyLibraryProgId)
             If slProgId = "" Then _
                 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                        ProjectName & "." & ModuleName & ":" & "LoadStudyLibraryConfiguration", _
+                        ProjectName & "." & ModuleName & ":" & ProcName, _
                         "Study library ProgId not specified in configuration file"
         End If
         
+        Set slObj = Nothing
+        On Error Resume Next
         Set slObj = CreateObject(slProgId)
         If slObj Is Nothing Then _
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & "LoadStudyLibraryConfiguration", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid study library ProgId in configuration file: " & slProgId
         
-        On Error GoTo 0
+        On Error GoTo Err
         Add slObj, slName
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

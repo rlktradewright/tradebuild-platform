@@ -40,7 +40,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradingDO26"
+
 Private Const ModuleName                    As String = "FetchBarsTask"
 
 '@================================================================================
@@ -80,30 +80,43 @@ End Sub
 ' Task Interface Members
 '@================================================================================
 
-Private Sub Task_cancel()
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mFetchTaskController Is Nothing Then
     mFetchTaskController.cancelTask
 ElseIf Not mInstrumentTaskController Is Nothing Then
     mInstrumentTaskController.cancelTask
 End If
-mTaskContext.finish Empty, True
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Task_run()
+Const ProcName As String = "Task_run"
+Dim failpoint As String
+On Error GoTo Err
+
 If mTaskContext.CancelPending Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
     Exit Sub
 End If
 
 If mInstrument Is Nothing Then
     gLogger.Log LogLevelDetail, "FetchBarsTask started for " & mSpecifier.ToString
-    Set mInstrumentTaskController = mDB.InstrumentFactory.loadBySpecifierAsync( _
+    Set mInstrumentTaskController = mDB.InstrumentFactory.LoadBySpecifierAsync( _
                                             mSpecifier, _
                                             , _
                                             "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
     mTaskContext.Suspend -1
 Else
-    Set mFetchTaskController = mInstrument.fetchbarsAsync(mbarTimePeriod, _
+    Set mFetchTaskController = mInstrument.FetchbarsAsync(mbarTimePeriod, _
                                                         mMaxNumberOfBars, _
                                                         mFromDate, _
                                                         mToDate, _
@@ -113,6 +126,11 @@ Else
                                                         mBarType)
     mTaskContext.Suspend -1
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -120,7 +138,7 @@ Set mTaskContext = value
 End Property
 
 Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.name
+Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -128,11 +146,12 @@ End Property
 '@================================================================================
 
 Private Sub mFetchTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
-Dim failpoint As Long
+Const ProcName As String = "mFetchTaskController_Completed"
+
 On Error GoTo Err
 
 If ev.cancelled Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
     gLogger.Log LogLevelDetail, "FetchBarsTask failed for " & mSpecifier.ToString & vbCrLf & _
                                 "Error " & ev.errorNumber & ": " & ev.errorMessage
@@ -142,14 +161,14 @@ ElseIf IsEmpty(ev.result) Then
                         "No bars returned"
 Else
     gLogger.Log LogLevelDetail, "FetchBarsTask retrieved bars for " & mSpecifier.ToString
-    mTaskContext.finish ev.result, False
+    mTaskContext.Finish ev.result, False
 End If
 Set mFetchTaskController = Nothing
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mFetchTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -157,11 +176,13 @@ End Sub
 '@================================================================================
 
 Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
-Dim failpoint As Long
+Const ProcName As String = "mInstrumentTaskController_Completed"
+
+
 On Error GoTo Err
 
 If ev.cancelled Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
     mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 ElseIf IsEmpty(ev.result) Then
@@ -177,7 +198,7 @@ Set mInstrumentTaskController = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTaskController_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -188,7 +209,7 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal specifier As ContractSpecifier, _
                 ByVal barTimePeriod As TimePeriod, _
@@ -199,6 +220,7 @@ Friend Sub initialise( _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal barType As BarTypes = BarTypeTrade)
+Const ProcName As String = "Initialise"
 Set mDB = db
 Set mSpecifier = specifier
 Set mbarTimePeriod = barTimePeriod

@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "InputStudy"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -67,7 +69,9 @@ Private mUseLocalTimeForStudies As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
-'mIdent = gGenerateGUIDString
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 Set mStudies = New Studies
 Set mListeners = New StudyValueListeners
 
@@ -78,6 +82,10 @@ Set mTickSizes = New Collection
 
 Set mSessionBuilder = New SessionBuilder
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -86,63 +94,140 @@ End Sub
 
 Private Function Study_AddStudy( _
                 ByVal pStudy As Study, _
-                ByRef ValueNames() As String, _
+                ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-mStudies.Add pStudy, ValueNames
+Const ProcName As String = "Study_AddStudy"
+On Error GoTo Err
+
+mStudies.Add pStudy, valueNames
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study_AddStudyValueListener( _
                 ByVal listener As StudyValueListener, _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-mListeners.Add listener, ValueName
+Const ProcName As String = "Study_AddStudyValueListener"
+On Error GoTo Err
+
+mListeners.Add listener, valueName
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_BaseStudy() As Study
+Const ProcName As String = "Study_BaseStudy"
+On Error GoTo Err
+
 Set Study_BaseStudy = Me
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_GetStudyValue( _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal ref As Long) As SValue
 
+Const ProcName As String = "Study_GetStudyValue"
+On Error GoTo Err
+
+
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function study_GetValueTicksize( _
-                ByVal ValueName As String) As Double
+                ByVal valueName As String) As Double
+Const ProcName As String = "study_GetValueTicksize"
+On Error GoTo Err
+
 On Error Resume Next
-study_GetValueTicksize = mTickSizes(ValueName)
+study_GetValueTicksize = mTickSizes(valueName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_Id() As String
+Const ProcName As String = "Study_Id"
+On Error GoTo Err
+
 Study_Id = mIdent
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_Initialise( _
                 ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ValueNames() As String, _
+                valueNames() As String, _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
 
+Const ProcName As String = "Study_Initialise"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_InstanceName() As String
+Const ProcName As String = "Study_InstanceName"
+On Error GoTo Err
+
 Study_InstanceName = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get Study_InstancePath() As String
+Const ProcName As String = "Study_InstancePath"
+On Error GoTo Err
+
 Study_InstancePath = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_Notify( _
                 ByRef ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
+
+Const ProcName As String = "Study_Notify"
+On Error GoTo Err
 
 mTimestamp = ev.sVal.Timestamp
 mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
@@ -156,33 +241,89 @@ End If
 evOut.sVal.BarStartTime = 0  ' a higher level study must generate this
 mStudies.Notify evOut
 mListeners.Notify evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_NumberOfBarsRequired() As Long
 
+Const ProcName As String = "Study_NumberOfBarsRequired"
+On Error GoTo Err
+
+
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_NumberOfCachedValues( _
-                Optional ByVal ValueName As String) As Long
+                Optional ByVal valueName As String) As Long
 
+Const ProcName As String = "Study_NumberOfCachedValues"
+On Error GoTo Err
+
+
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_Parameters() As Parameters
 
+Const ProcName As String = "Study_Parameters"
+On Error GoTo Err
+
+
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_RemoveStudyValueListener( _
                 ByVal listener As StudyValueListener)
-mListeners.remove listener
+Const ProcName As String = "Study_RemoveStudyValueListener"
+On Error GoTo Err
+
+mListeners.Remove listener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub study_SetInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
+Const ProcName As String = "study_SetInputTicksize"
+On Error GoTo Err
+
 SetInputTicksize inputName, tickSize
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_studyDefinition() As StudyDefinition
 
+Const ProcName As String = "Study_studyDefinition"
+On Error GoTo Err
+
 Set Study_studyDefinition = mStudyDef.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -195,21 +336,53 @@ End Property
 '@================================================================================
 
 Public Property Let Name(ByVal value As String)
+Const ProcName As String = "Name"
+On Error GoTo Err
+
 mName = value
 'mIdent = mName
 mStudyDef.Name = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Name() As String
+Const ProcName As String = "Name"
+On Error GoTo Err
+
 Name = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Session() As Session
+Const ProcName As String = "Session"
+On Error GoTo Err
+
 Set Session = mSessionBuilder.Session
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Timestamp() As Date
+Const ProcName As String = "Timestamp"
+On Error GoTo Err
+
 Timestamp = mTimestamp
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -219,40 +392,51 @@ End Property
 Friend Sub AddInput( _
                 ByVal Name As String, _
                 ByVal Description As String, _
-                ByVal valueType As StudyInputTypes, _
-                ByVal isDefault As Boolean, _
+                ByVal ValueType As StudyInputTypes, _
+                ByVal IsDefault As Boolean, _
                 ByVal tickSize As Double)
 Dim valueDef As StudyValueDefinition
 
     
+Const ProcName As String = "AddInput"
+On Error GoTo Err
+
 Set valueDef = mStudyDef.StudyValueDefinitions.Add(Name)
 valueDef.Description = Description
-valueDef.isDefault = isDefault
-valueDef.valueMode = ValueModeNone
-Select Case valueType
+valueDef.IsDefault = IsDefault
+valueDef.ValueMode = ValueModeNone
+Select Case ValueType
 Case InputTypeNone
-    valueDef.valueType = ValueTypeNone
+    valueDef.ValueType = ValueTypeNone
 Case InputTypeInteger
-    valueDef.valueType = ValueTypeInteger
+    valueDef.ValueType = ValueTypeInteger
 Case InputTypeReal
-    valueDef.valueType = ValueTypeReal
+    valueDef.ValueType = ValueTypeReal
 Case InputTypeString
-    valueDef.valueType = ValueTypeString
+    valueDef.ValueType = ValueTypeString
 Case InputTypeDate
-    valueDef.valueType = ValueTypeDate
+    valueDef.ValueType = ValueTypeDate
 Case InputTypeBoolean
-    valueDef.valueType = ValueTypeBoolean
+    valueDef.ValueType = ValueTypeBoolean
 End Select
     
 mTickSizes.Add tickSize, Name
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub Initialise( _
+Friend Sub initialise( _
                 ByVal Name As String, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date, _
                 ByVal exchangeTimeZone As TimeZone, _
                 ByVal useLocalTimeForStudies As Boolean)
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 mName = Name
 mIdent = GenerateGUIDString
 mStudyDef.Name = mName
@@ -261,6 +445,11 @@ mSessionBuilder.sessionEndTime = sessionEndTime
 Set mExchangeTimeZone = exchangeTimeZone
 mSessionBuilder.TimeZone = mExchangeTimeZone
 mUseLocalTimeForStudies = useLocalTimeForStudies
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -278,12 +467,23 @@ End Sub
 '@/
 Friend Sub linkSession( _
                 ByVal objectToLink As Session)
+Const ProcName As String = "linkSession"
+On Error GoTo Err
+
 mSessionBuilder.linkSession objectToLink
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetInputTicksize( _
                 ByVal Name As String, _
                 ByVal tickSize As Double)
+Const ProcName As String = "SetInputTicksize"
+On Error GoTo Err
+
 On Error GoTo Err
 
 mTickSizes.Add tickSize, Name
@@ -293,16 +493,24 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    mTickSizes.remove Name
+    mTickSizes.Remove Name
     Resume
 End If
-Err.Raise Err.Number
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetSessionCurrentTime( _
                 ByVal currentTime As Date)
+Const ProcName As String = "SetSessionCurrentTime"
+On Error GoTo Err
+
 mTimestamp = currentTime
 mSessionBuilder.SetSessionCurrentTime currentTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Friend Sub SetSessionTimes( _
@@ -310,11 +518,19 @@ Friend Sub SetSessionTimes( _
                 ByVal sessionEndTime As Date, _
                 ByVal exchangeTimeZone As TimeZone, _
                 ByVal useLocalTimeForStudies As Boolean)
+Const ProcName As String = "SetSessionTimes"
+On Error GoTo Err
+
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
 Set mExchangeTimeZone = exchangeTimeZone
 mSessionBuilder.TimeZone = mExchangeTimeZone
 mUseLocalTimeForStudies = useLocalTimeForStudies
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -328,7 +544,15 @@ End Sub
 '@/
 Friend Sub UnlinkSession( _
                 ByVal objectToUnlink As Session)
+Const ProcName As String = "UnlinkSession"
+On Error GoTo Err
+
 mSessionBuilder.UnlinkSession objectToUnlink
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

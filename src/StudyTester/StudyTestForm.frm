@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#124.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#110.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#162.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#141.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -293,6 +293,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "StudyTestForm"
+
 Private Const CellBackColorOdd As Long = &HF8F8F8
 Private Const CellBackColorEven As Long = &HEEEEEE
 
@@ -351,6 +353,9 @@ End Enum
 ' Member variables
 '================================================================================
 
+Private WithEvents mUnhandledErrorHandler As UnhandledErrorHandler
+Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
+
 Private mLetterWidth As Single
 Private mDigitWidth As Single
 
@@ -360,8 +365,6 @@ Private mIsDataLoaded As Boolean
 Private mIsStudySet As Boolean
 
 Private mName As String
-
-'Private mStudyLibrary As StudyLibrary
 
 Private mStudyDefinition As StudyDefinition
 
@@ -377,17 +380,29 @@ Private mVolumeInputHandle As Long
 Private mPeriodLength As Long
 Private mPeriodUnits As TimePeriodUnits
 
+Private mIsInDev As Boolean
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
 
 Private Sub Form_Initialize()
+Debug.Print "Running in development environment: " & CStr(inDev)
+
 InitCommonControls  ' enables WinXP look and feel
 InitialiseTWUtilities
+Set mUnhandledErrorHandler = UnhandledErrorHandler
+
+ApplicationGroupName = "TradeWright"
+ApplicationName = App.Title & "-V" & App.Major & "-" & App.Minor
+SetupDefaultLogging Command
 End Sub
 
 Private Sub Form_Load()
 Dim widthString As String
+
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
 
 mName = "TradeBuild Study Test Harness"
 
@@ -404,10 +419,23 @@ AddStudyLibrary "CmnStudiesLib26.StudyLib", True
 ' before loading the test data
 setupInitialStudies
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_Terminate()
+Const ProcName As String = "Form_Terminate"
+On Error GoTo Err
+
 TerminateTWUtilities
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -415,15 +443,26 @@ End Sub
 '================================================================================
 
 Private Sub AddLibButton_Click()
+Const ProcName As String = "AddLibButton_Click"
+On Error GoTo Err
+
 StudyLibraryList.AddItem LibToAddText
 StudyLibraryList.ListIndex = StudyLibraryList.ListCount - 1
 LibToAddText = ""
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FindFileButton_Click()
 
+Const ProcName As String = "FindFileButton_Click"
+On Error GoTo Err
+
 CommonDialog1.CancelError = True
-On Error GoTo err
+On Error GoTo Err
 
 CommonDialog1.MaxFileSize = 32767
 CommonDialog1.DialogTitle = "Open test data file"
@@ -440,31 +479,61 @@ TestDataFilenameText = CommonDialog1.FileName
 
 LoadData
 
-err:
+Exit Sub
+
+Err:
+' ignore errors
 End Sub
 
 Private Sub MinimumPriceTickText_KeyPress(KeyAscii As Integer)
+Const ProcName As String = "MinimumPriceTickText_KeyPress"
+On Error GoTo Err
+
 If KeyAscii = vbKeyBack Or KeyAscii = vbKeyReturn Then Exit Sub
 If Not IsNumeric(MinimumPriceTickText & Chr(KeyAscii)) Then KeyAscii = 0
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveLibButton_Click()
+Const ProcName As String = "RemoveLibButton_Click"
+On Error GoTo Err
+
 StudyLibraryList.RemoveItem StudyLibraryList.ListIndex
 RemoveLibButton.Enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StudyLibraryClassNameText_Change()
+Const ProcName As String = "StudyLibraryClassNameText_Change"
+On Error GoTo Err
+
 If StudyLibraryClassNameText = "" Then
     SetStudyLibraryButton.Enabled = False
 Else
     SetStudyLibraryButton.Enabled = True
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SetStudyLibraryButton_Click()
 Dim availableStudies() As String
 Dim lStudyLibrary As StudyLibrary
 Dim i As Long
+
+Const ProcName As String = "SetStudyLibraryButton_Click"
+On Error GoTo Err
 
 StudiesCombo.Clear
 StudyConfigurer1.Clear
@@ -481,7 +550,7 @@ End If
 RemoveAllStudyLibraries
 On Error Resume Next
 Set lStudyLibrary = AddStudyLibrary(StudyLibraryClassNameText, True)
-On Error GoTo 0
+On Error GoTo Err
 If lStudyLibrary Is Nothing Then
     StudiesCombo.Enabled = False
     MsgBox StudyLibraryClassNameText & " is not a valid Study Library"
@@ -494,26 +563,50 @@ For i = 0 To UBound(availableStudies)
     StudiesCombo.AddItem availableStudies(i)
 Next
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub StudyLibraryList_Click()
+Const ProcName As String = "StudyLibraryList_Click"
+On Error GoTo Err
+
 If StudyLibraryList.ListIndex = -1 Then
     RemoveLibButton.Enabled = False
 Else
     RemoveLibButton.Enabled = True
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LibToAddText_Change()
+Const ProcName As String = "LibToAddText_Change"
+On Error GoTo Err
+
 If LibToAddText = "" Then
     AddLibButton.Enabled = False
 Else
     AddLibButton.Enabled = True
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StudiesCombo_Click()
 Dim regionNames(1) As String
+
+Const ProcName As String = "StudiesCombo_Click"
+On Error GoTo Err
 
 addStudyLibraries
 
@@ -526,16 +619,21 @@ regionNames(1) = VolumeRegionName
 
 Set mStudyDefinition = GetStudyDefinition(StudiesCombo)
 
-StudyConfigurer1.Initialise Chart1, _
+StudyConfigurer1.Initialise Chart1.Controller, _
                             mStudyDefinition, _
                             "", _
                             regionNames, _
-                            mInitialStudyConfigs, _
+                            mChartManager.BaseStudyConfiguration, _
                             Nothing, _
                             mStudyParams, _
                             False
 mIsStudySet = True
 If mIsDataLoaded Then TestButton.Enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TestButton_Click()
@@ -549,7 +647,9 @@ Dim accumVolume As Long
 Dim addTestStudyToSource As Boolean
 Dim regionNames(1) As String
 
-On Error GoTo err
+Const ProcName As String = "TestButton_Click"
+On Error GoTo Err
+
 Screen.MousePointer = MousePointerConstants.vbArrowHourglass
 
 when = "adding study libraries"
@@ -577,11 +677,11 @@ mChartManager.StartStudy testStudy
 ' objects are referenced
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
-StudyConfigurer1.Initialise Chart1, _
+StudyConfigurer1.Initialise Chart1.Controller, _
                             mStudyDefinition, _
                             "", _
                             regionNames, _
-                            mInitialStudyConfigs, _
+                            mChartManager.BaseStudyConfiguration, _
                             testStudyConfig, _
                             mStudyParams, _
                             False
@@ -672,23 +772,53 @@ setTestDataGridRowBackColors 1
 Screen.MousePointer = MousePointerConstants.vbDefault
 Exit Sub
 
-err:
+Err:
 setTestDataGridRowBackColors 1
 
 Do Until Chart1.IsDrawingEnabled
     Chart1.EnableDrawing
 Loop
 
-MsgBox "Error " & err.Number & _
+MsgBox "Error " & Err.Number & _
         " when " & when & _
-        ": " & err.Description & _
-        IIf(err.Source <> "", ": " & err.Source, "")
+        ": " & Err.Description & _
+        IIf(Err.Source <> "", ": " & Err.Source, "")
 Screen.MousePointer = MousePointerConstants.vbDefault
+
 End Sub
 
 '================================================================================
-' XXXX Event Handlers
+' mUnhandledErrorHandler Event Handlers
 '================================================================================
+
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEvent)
+On Error Resume Next    ' ignore any further errors that might arise
+
+
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please email the log file located at" & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "to support@tradewright.com", _
+        vbCritical, _
+        "Fatal error"
+
+' At this point, we don't know what state things are in, so it's not feasible to return to
+' the caller. All we can do is terminate abruptly. Note that normally one would use the
+' End statement to terminate a VB6 program abruptly. However the TWUtilities component interferes
+' with the End statement's processing and prevents proper shutdown, so we use the
+' TWUtilities component's EndProcess method instead. (However if we are running in the
+' development environment, then we call End because EndProcess method kills the
+' development environment as well which can have undesirable side effects if other
+' components are also loaded.)
+
+If mIsInDev Then
+    mUnhandledErrorHandler.Handled = True
+    End
+Else
+    EndProcess
+End If
+
+End Sub
 
 '================================================================================
 ' Properties
@@ -705,6 +835,9 @@ End Sub
 Private Sub addStudyLibraries()
 Dim i As Long
 
+Const ProcName As String = "addStudyLibraries"
+On Error GoTo Err
+
 RemoveAllStudyLibraries
 
 AddStudyLibrary "CmnStudiesLib26.StudyLib", True
@@ -716,10 +849,18 @@ Next
 If StrComp(StudyLibraryClassNameText, "CmnStudiesLib26.StudyLib", vbTextCompare) <> 0 Then
     If StudyLibraryClassNameText <> "" Then AddStudyLibrary StudyLibraryClassNameText, True
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function createBarsStudyConfig() As StudyConfiguration
 Dim studyDef As StudyDefinition
+Const ProcName As String = "createBarsStudyConfig"
+On Error GoTo Err
+
 ReDim inputValueNames(1) As String
 Dim params As New Parameters
 Dim studyValueConfig As StudyValueConfiguration
@@ -737,7 +878,6 @@ createBarsStudyConfig.Name = studyDef.Name
 params.SetParameterValue "Bar length", 1
 params.SetParameterValue "Time units", "Minutes"
 createBarsStudyConfig.Parameters = params
-'createBarsStudyConfig.StudyDefinition = studyDef
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Bar")
 studyValueConfig.ChartRegionName = PriceRegionName
@@ -765,6 +905,11 @@ volumeStyle.HistogramBarWidth = 0.7
 volumeStyle.IncludeInAutoscale = True
 volumeStyle.LineThickness = 1
 studyValueConfig.DataPointStyle = volumeStyle
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub determinePeriodParameters()
@@ -775,6 +920,9 @@ Dim timestamp1 As Date
 Dim timestamp2 As Date
 Dim rec As String
 Dim tokens() As String
+
+Const ProcName As String = "determinePeriodParameters"
+On Error GoTo Err
 
 Set fso = New FileSystemObject
 Set ts = fso.OpenTextFile(TestDataFilenameText, ForReading)
@@ -821,13 +969,26 @@ Do While Not ts.AtEndOfStream
         End If
     End If
 Loop
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function inDev() As Boolean
+mIsInDev = True
+inDev = True
+End Function
 
 Private Sub initialiseChart()
 Dim regionStyle As ChartRegionStyle
 Dim priceRegion As ChartRegion
 Dim volumeRegion As ChartRegion
 
+
+Const ProcName As String = "initialiseChart"
+On Error GoTo Err
 
 Chart1.DisableDrawing
 
@@ -854,6 +1015,11 @@ volumeRegion.Title.Text = "Volume"
 volumeRegion.Title.Color = vbBlue
 
 Chart1.EnableDrawing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub LoadData()
@@ -867,7 +1033,8 @@ Dim timestamp As Date
 Dim analyzer As DataAnalyzer
 Dim price As Double
 
-On Error GoTo err
+Const ProcName As String = "LoadData"
+On Error GoTo Err
 
 mIsDataLoaded = False
 TestButton.Enabled = False
@@ -906,25 +1073,25 @@ Do While Not ts.AtEndOfStream
         mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
-        analyzer.addDataValue price
+        analyzer.AddDataValue price
         
         price = CDbl(tokens(TestDataFileColumns.HighValue))
         mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
-        analyzer.addDataValue price
+        analyzer.AddDataValue price
         
         price = CDbl(tokens(TestDataFileColumns.LowValue))
         mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
-        analyzer.addDataValue price
+        analyzer.AddDataValue price
         
         price = CDbl(tokens(TestDataFileColumns.CloseValue))
         mStudyManager.NotifyInput mPriceInputHandle, _
                         price, _
                         timestamp
-        analyzer.addDataValue price
+        analyzer.AddDataValue price
         
         If tokens(TestDataFileColumns.Volume) <> "" Then
             accumVolume = accumVolume + CLng(tokens(TestDataFileColumns.Volume))
@@ -958,7 +1125,7 @@ TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
 Chart1.EnableDrawing
 
-analyzer.analyze
+analyzer.Analyze
 MinimumPriceTickText = Format(analyzer.minimumDifference, "0.00000")
 
 Screen.MousePointer = MousePointerConstants.vbDefault
@@ -968,7 +1135,7 @@ If mIsStudySet Then TestButton.Enabled = True
 
 Exit Sub
 
-err:
+Err:
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
 Chart1.EnableDrawing
@@ -976,7 +1143,8 @@ Chart1.EnableDrawing
 Screen.MousePointer = MousePointerConstants.vbDefault
 
 MsgBox "Can't load data file: " & TestDataFilenameText & vbCrLf & _
-        "Error " & err.Number & ": " & err.Description
+        "Error " & Err.Number & ": " & Err.Description
+
 End Sub
 
 Private Sub processStudyValues( _
@@ -992,6 +1160,9 @@ Dim j As Long
 Dim lLine As StudyLine
 Dim lBar As timeframeutils26.Bar
 Dim lText As StudyText
+
+Const ProcName As String = "processStudyValues"
+On Error GoTo Err
 
 For i = 1 To studyConfig.StudyValueConfigurations.Count
     Set svc = studyConfig.StudyValueConfigurations.Item(i)
@@ -1032,11 +1203,19 @@ For i = 1 To studyConfig.StudyValueConfigurations.Count
     End If
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub setTestDataGridRowBackColors( _
                 ByVal startingIndex As Long)
 Dim i As Long
+
+Const ProcName As String = "setTestDataGridRowBackColors"
+On Error GoTo Err
 
 TestDataGrid.Redraw = False
 
@@ -1050,13 +1229,21 @@ For i = startingIndex To TestDataGrid.Rows - 1
 Next
 
 TestDataGrid.Redraw = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupInitialStudies()
 Dim studyConfig As StudyConfiguration
 
+Const ProcName As String = "setupInitialStudies"
+On Error GoTo Err
+
 Set mStudyManager = New StudyManager
-Set mChartManager = CreateChartManager(mStudyManager, Chart1)
+Set mChartManager = CreateChartManager(mStudyManager, Chart1.Controller)
 
 initialiseChart
 
@@ -1090,6 +1277,11 @@ mChartManager.BaseStudyConfiguration = studyConfig
 
 Set mInitialStudyConfigs = New StudyConfigurations
 mInitialStudyConfigs.Add mChartManager.BaseStudyConfiguration
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupStudyValueGridColumns( _
@@ -1100,6 +1292,9 @@ Dim i As Long
 Dim j As Long
 
 ' remove any existing study value columns
+Const ProcName As String = "setupStudyValueGridColumns"
+On Error GoTo Err
+
 TestDataGrid.Cols = TestDataGridColumns.StudyValue1
 
 For i = 1 To studyConfig.StudyValueConfigurations.Count
@@ -1109,15 +1304,23 @@ For i = 1 To studyConfig.StudyValueConfigurations.Count
         setupTestDataGridColumn TestDataGridColumns.StudyValue1 + j, _
                                 TestDataGridColumnWidths.StudyValue1Width, _
                                 svd.Name, _
-                                IIf(svd.valueType = ValueTypeString, True, False), _
-                                IIf(svd.valueType = ValueTypeString, AlignmentSettings.flexAlignLeftCenter, AlignmentSettings.flexAlignRightCenter)
+                                IIf(svd.ValueType = ValueTypeString, True, False), _
+                                IIf(svd.ValueType = ValueTypeString, AlignmentSettings.flexAlignLeftCenter, AlignmentSettings.flexAlignRightCenter)
         j = j + 1
     End If
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub setupTestDataGrid()
+
+Const ProcName As String = "setupTestDataGrid"
+On Error GoTo Err
 
 With TestDataGrid
     .AllowBigSelection = True
@@ -1140,6 +1343,11 @@ setupTestDataGridColumn TestDataGridColumns.CloseValue, TestDataGridColumnWidths
 setupTestDataGridColumn TestDataGridColumns.Volume, TestDataGridColumnWidths.volumeWidth, "Volume", False, AlignmentSettings.flexAlignRightCenter
 
 setTestDataGridRowBackColors 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupTestDataGridColumn( _
@@ -1150,6 +1358,9 @@ Private Sub setupTestDataGridColumn( _
                 ByVal align As AlignmentSettings)
     
 Dim lColumnWidth As Long
+
+Const ProcName As String = "setupTestDataGridColumn"
+On Error GoTo Err
 
 With TestDataGrid
     If (columnNumber + 1) > .Cols Then
@@ -1168,6 +1379,11 @@ With TestDataGrid
     .ColAlignment(columnNumber) = align
     .TextMatrix(0, columnNumber) = columnHeader
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 

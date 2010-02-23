@@ -742,6 +742,8 @@ Event CaptionChanged(ByVal caption As String)
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "OrderTicket"
+
 Private Const NotReadyMessage                   As String = "Not ready for placing orders"
 
 Private Const OrdersLiveMessage                 As String = "Orders are LIVE !!"
@@ -803,6 +805,10 @@ End Sub
 
 Private Sub UserControl_Initialize()
 
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 setupOrderSchemeCombo
 
 loadOrderFields BracketIndexes.BracketStopOrder
@@ -812,6 +818,10 @@ setupActionCombo BracketIndexes.BracketEntryOrder
 setupActionCombo BracketIndexes.BracketStopOrder
 setupActionCombo BracketIndexes.BracketTargetOrder
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -824,6 +834,10 @@ End Sub
 
 Private Sub ChangeListener_Change(ev As ChangeEvent)
 Dim op As OrderPlex
+
+Const ProcName As String = "ChangeListener_Change"
+Dim failpoint As String
+On Error GoTo Err
 
 Set op = ev.Source
 
@@ -857,6 +871,11 @@ Case OrderPlexChangeTypes.OrderPlexDrawdownThresholdExceeded
 Case OrderPlexChangeTypes.OrderPlexSizeChanged
 Case OrderPlexChangeTypes.OrderPlexStateChanged
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -864,15 +883,33 @@ End Sub
 '@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_ask"
+Dim failpoint As String
+On Error GoTo Err
+
 AskText = GetFormattedPriceFromQuoteEvent(ev)
 AskSizeText = ev.size
 setPriceFields
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_bid"
+Dim failpoint As String
+On Error GoTo Err
+
 BidText = GetFormattedPriceFromQuoteEvent(ev)
 BidSizeText = ev.size
 setPriceFields
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
@@ -880,7 +917,16 @@ HighText = GetFormattedPriceFromQuoteEvent(ev)
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_Low"
+Dim failpoint As String
+On Error GoTo Err
+
 LowText = GetFormattedPriceFromQuoteEvent(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
@@ -891,18 +937,36 @@ Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As tradebuild26.QuoteEvent)
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
 
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_trade"
+Dim failpoint As String
+On Error GoTo Err
+
 LastText = GetFormattedPriceFromQuoteEvent(ev)
 LastSizeText = ev.size
 setPriceFields
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_volume"
+Dim failpoint As String
+On Error GoTo Err
+
 VolumeText = ev.size
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -910,20 +974,47 @@ End Sub
 '@================================================================================
 
 Private Sub ActionCombo_Click(ByRef index As Integer)
+Const ProcName As String = "ActionCombo_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 setAction index
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BracketTabStrip_Click()
+Const ProcName As String = "BracketTabStrip_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 mCurrentBrackerOrderIndex = BracketTabStrip.SelectedItem.index - 1
 showOrderFields mCurrentBrackerOrderIndex
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mOrderPlex Is Nothing Then
     mOrderPlex.Cancel True
 End If
 clearOrderPlex
 reset
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CompleteOrdersButton_Click()
@@ -947,6 +1038,10 @@ Private Sub CompleteOrdersButton_Click()
 End Sub
 
 Private Sub ModifyButton_Click()
+Const ProcName As String = "ModifyButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not isValidOrder(BracketEntryOrder) Then Exit Sub
 setOrderAttributes mOrderPlex.entryOrder, BracketIndexes.BracketEntryOrder
 If Not mOrderPlex.stopOrder Is Nothing Then
@@ -958,15 +1053,29 @@ If Not mOrderPlex.targetOrder Is Nothing Then
     setOrderAttributes mOrderPlex.targetOrder, BracketIndexes.BracketTargetOrder
 End If
 mOrderPlex.Update
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OffsetText_Change(index As Integer)
+Const ProcName As String = "OffsetText_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsNumeric(OffsetText(index)) Then
     OffsetValueText(index) = OffsetText(index) * mContract.tickSize
 Else
     OffsetValueText(index) = ""
 End If
 setPriceField index
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OrderSchemeCombo_Click()
@@ -975,6 +1084,10 @@ End Sub
 
 Private Sub PlaceOrdersButton_Click()
 Dim op As OrderPlex
+
+Const ProcName As String = "PlaceOrdersButton_Click"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case comboItemData(OrderSchemeCombo)
 Case OrderSchemes.SimpleOrder
@@ -1014,7 +1127,7 @@ Case OrderSchemes.SimpleOrder
     End If
     
     setOrderAttributes op.entryOrder, BracketIndexes.BracketEntryOrder
-    mOrderContext.executeOrderPlex op
+    mOrderContext.ExecuteOrderPlex op
 Case OrderSchemes.Bracketorder
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
@@ -1059,10 +1172,15 @@ Case OrderSchemes.Bracketorder
     If Not op.targetOrder Is Nothing Then
         setOrderAttributes op.targetOrder, BracketIndexes.BracketTargetOrder
     End If
-    mOrderContext.executeOrderPlex op
+    mOrderContext.ExecuteOrderPlex op
 Case OrderSchemes.OCAOrder
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 End Select
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1076,6 +1194,10 @@ Dim price As Double
 ' want to change the order type - if space is not allowed then they
 ' would have to enter a valid price before being able to get to the order
 ' type combo
+Const ProcName As String = "PriceText_Validate"
+Dim failpoint As String
+On Error GoTo Err
+
 If PriceText(index) = "" Then Exit Sub
 
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
@@ -1090,13 +1212,18 @@ End If
 If Not mOrderPlex Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.newEntryPrice = price
+        mOrderPlex.NewEntryPrice = price
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.newStopPrice = price
+        mOrderPlex.NewStopPrice = price
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.newTargetPrice = price
+        mOrderPlex.NewTargetPrice = price
     End Select
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub QuantityText_Validate( _
@@ -1105,6 +1232,10 @@ Private Sub QuantityText_Validate( _
 Dim quantity As Long
 Dim max As Long
 
+Const ProcName As String = "QuantityText_Validate"
+Dim failpoint As String
+On Error GoTo Err
+
 If comboItemData(ActionCombo(index)) <> OrderActions.ActionNone And _
     Not IsNumeric(QuantityText(index)) _
 Then
@@ -1112,7 +1243,7 @@ Then
     Exit Sub
 End If
 
-Select Case mContract.specifier.secType
+Select Case mContract.Specifier.secType
 Case SecTypeStock
     max = 100000
 Case SecTypeFuture
@@ -1157,28 +1288,55 @@ If mOrderPlex Is Nothing Then
     End If
     
 Else
-    mOrderPlex.newQuantity = quantity
+    mOrderPlex.NewQuantity = quantity
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ResetButton_Click()
+Const ProcName As String = "ResetButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 clearOrderPlex
 reset
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SimulateOrdersCheck_Click()
+Const ProcName As String = "SimulateOrdersCheck_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If SimulateOrdersCheck.value = vbUnchecked Then
     Set mOrderContext = mTicker.DefaultOrderContext
 Else
     Set mOrderContext = mTicker.DefaultOrderContextSimulated
 End If
 setupTicker
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StopPriceText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
 Dim price As Double
+
+Const ProcName As String = "StopPriceText_Validate"
+Dim failpoint As String
+On Error GoTo Err
 
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         StopPriceText(index) <> "" _
@@ -1192,22 +1350,45 @@ End If
 If Not mOrderPlex Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.newEntryTriggerPrice = price
+        mOrderPlex.NewEntryTriggerPrice = price
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.newStopTriggerPrice = price
+        mOrderPlex.NewStopTriggerPrice = price
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.newTargetTriggerPrice = price
+        mOrderPlex.NewTargetTriggerPrice = price
     End Select
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TypeCombo_Click(index As Integer)
+Const ProcName As String = "TypeCombo_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 configureOrderFields index
 setPriceField index
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UndoButton_Click()
-mOrderPlex.cancelChanges
+Const ProcName As String = "UndoButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
+mOrderPlex.CancelChanges
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -1215,12 +1396,30 @@ End Sub
 '@================================================================================
 
 Private Sub mOrderContext_NotReady()
+Const ProcName As String = "mOrderContext_NotReady"
+Dim failpoint As String
+On Error GoTo Err
+
 disableAll NotReadyMessage
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub mOrderContext_Ready()
+Const ProcName As String = "mOrderContext_Ready"
+Dim failpoint As String
+On Error GoTo Err
+
 OrderSchemeCombo.Enabled = True
 setupTicker
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -1228,15 +1427,42 @@ End Sub
 '@================================================================================
 
 Private Sub mOrderPlex_EntryOrderFilled()
+Const ProcName As String = "mOrderPlex_EntryOrderFilled"
+Dim failpoint As String
+On Error GoTo Err
+
 disableOrderFields BracketIndexes.BracketEntryOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub mOrderPlex_StopOrderFilled()
+Const ProcName As String = "mOrderPlex_StopOrderFilled"
+Dim failpoint As String
+On Error GoTo Err
+
 disableOrderFields BracketIndexes.BracketStopOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub mOrderPlex_TargetOrderFilled()
+Const ProcName As String = "mOrderPlex_TargetOrderFilled"
+Dim failpoint As String
+On Error GoTo Err
+
 disableOrderFields BracketIndexes.BracketTargetOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -1244,6 +1470,10 @@ End Sub
 '@================================================================================
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
+
+Const ProcName As String = "mTicker_StateChange"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case ev.State
 Case TickerStateCreated
@@ -1261,6 +1491,11 @@ Case TickerStateStopped
     Set mOrderContext = Nothing
     Set mTicker = Nothing
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -1269,22 +1504,46 @@ End Sub
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 Enabled = UserControl.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 UserControl.Enabled = value
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Ticker(ByVal value As Ticker)
+
+Const ProcName As String = "Ticker"
+Dim failpoint As String
+On Error GoTo Err
 
 If value Is mTicker Then Exit Property
 
 If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
 
 Set mTicker = value
+Set mContract = mTicker.Contract
+
 If mTicker.OrdersAreLive Then
     Set mOrderContext = mTicker.DefaultOrderContext
 Else
@@ -1296,6 +1555,10 @@ Else
     disableAll NotReadyMessage
 End If
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -1321,6 +1584,10 @@ Public Sub showOrderPlex( _
 Dim entryOrder As Order
 Dim stopOrder As Order
 Dim targetOrder As Order
+
+Const ProcName As String = "showOrderPlex"
+Dim failpoint As String
+On Error GoTo Err
 
 clearOrderPlex
 
@@ -1385,6 +1652,11 @@ CompleteOrdersButton.Visible = False
 ResetButton.Visible = True
 
 mOrderPlex.AddChangeListener Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -1395,15 +1667,28 @@ Private Sub addItemToCombo( _
                 ByVal combo As ComboBox, _
                 ByVal itemText As String, _
                 ByVal itemData As Long)
+Const ProcName As String = "addItemToCombo"
+Dim failpoint As String
+On Error GoTo Err
+
 combo.addItem itemText
 combo.itemData(combo.ListCount - 1) = itemData
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub clearOrderFields(ByVal index As Long)
+Const ProcName As String = "clearOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 enableOrderFields index
 OrderIDText(index) = ""
 ActionCombo(index).ListIndex = 0
-Select Case mContract.specifier.secType
+Select Case mContract.Specifier.secType
 Case SecTypeStock
     QuantityText(index) = 100
 Case SecTypeFuture
@@ -1443,21 +1728,49 @@ GoodAfterTimeText(index) = ""
 GoodAfterTimeTZText(index) = ""
 GoodTillDateText(index) = ""
 GoodTillDateTZText(index) = ""
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub clearOrderPlex()
+Const ProcName As String = "clearOrderPlex"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mOrderPlex Is Nothing Then
     mOrderPlex.RemoveChangeListener Me
     Set mOrderPlex = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function comboItemData(ByVal combo As ComboBox) As Long
+Const ProcName As String = "comboItemData"
+Dim failpoint As String
+On Error GoTo Err
+
+If combo.ListIndex < 0 Then Exit Function
 comboItemData = combo.itemData(combo.ListIndex)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub configureOrderFields( _
                 ByVal orderIndex As Long)
+Const ProcName As String = "configureOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 Select Case orderIndex
 Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(orderIndex))
@@ -1585,10 +1898,19 @@ Case BracketIndexes.BracketTargetOrder
         enableControl OffsetText(orderIndex)
     End Select
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub disableAll( _
                 ByVal message As String)
+Const ProcName As String = "disableAll"
+Dim failpoint As String
+On Error GoTo Err
+
 OrderSchemeCombo.Enabled = False
 
 PlaceOrdersButton.Enabled = False
@@ -1613,17 +1935,35 @@ HighText = ""
 LowText = ""
 
 OrderSimulationLabel = message
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub disableControl(ByVal field As Control)
+Const ProcName As String = "disableControl"
+Dim failpoint As String
+On Error GoTo Err
+
 field.Enabled = False
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
 field.backColor = SystemColorConstants.vbButtonFace
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub disableOrderFields(ByVal index As Long)
+Const ProcName As String = "disableOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 disableControl ActionCombo(index)
 disableControl QuantityText(index)
 disableControl TypeCombo(index)
@@ -1648,17 +1988,35 @@ disableControl GoodAfterTimeText(index)
 disableControl GoodAfterTimeTZText(index)
 disableControl GoodTillDateText(index)
 disableControl GoodTillDateTZText(index)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub enableControl(ByVal field As Control)
+Const ProcName As String = "enableControl"
+Dim failpoint As String
+On Error GoTo Err
+
 field.Enabled = True
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
 field.backColor = SystemColorConstants.vbWindowBackground
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub enableOrderFields(ByVal index As Long)
+Const ProcName As String = "enableOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 enableControl ActionCombo(index)
 enableControl QuantityText(index)
 enableControl TypeCombo(index)
@@ -1683,28 +2041,64 @@ enableControl GoodAfterTimeText(index)
 enableControl GoodAfterTimeTZText(index)
 enableControl GoodTillDateText(index)
 enableControl GoodTillDateTZText(index)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function getPrice( _
                 ByVal priceString As String) As Double
 Dim price As Double
+Const ProcName As String = "getPrice"
+Dim failpoint As String
+On Error GoTo Err
+
 mContract.ParsePrice priceString, price
 getPrice = price
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isOrderModifiable(ByVal pOrder As Order) As Boolean
+Const ProcName As String = "isOrderModifiable"
+Dim failpoint As String
+On Error GoTo Err
+
 If pOrder Is Nothing Then Exit Function
-isOrderModifiable = pOrder.isModifiable
+isOrderModifiable = pOrder.IsModifiable
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
-Private Function isPrice( _
+Private Function isValidPrice( _
                 ByVal priceString As String) As Boolean
 Dim price As Double
-isPrice = mContract.ParsePrice(priceString, price)
+Const ProcName As String = "isValidPrice"
+Dim failpoint As String
+On Error GoTo Err
+
+isValidPrice = mContract.ParsePrice(priceString, price)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isValidOrder( _
                 ByVal index As Long) As Boolean
+
+Const ProcName As String = "isValidOrder"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).backColor = vbButtonFace
 
@@ -1722,16 +2116,16 @@ Case BracketEntryOrder
     Case EntryOrderTypeMarket, EntryOrderTypeMarketOnOpen, EntryOrderTypeMarketOnClose
         ' other field values don't matter
     Case EntryOrderTypeMarketIfTouched, EntryOrderTypeStop
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case EntryOrderTypeMarketToLimit, EntryOrderTypeLimit, EntryOrderTypeLimitOnOpen, EntryOrderTypeLimitOnClose
-        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case EntryOrderTypeBid, EntryOrderTypeAsk, EntryOrderTypeLast
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     Case EntryOrderTypeLimitIfTouched, EntryOrderTypeStopLimit
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     End Select
 Case BracketStopOrder
     If comboItemData(TypeCombo(index)) = StopOrderTypeNone Then
@@ -1743,10 +2137,10 @@ Case BracketStopOrder
     
     Select Case comboItemData(TypeCombo(index))
     Case StopOrderTypeStop
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case StopOrderTypeStopLimit
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case StopOrderTypeBid, StopOrderTypeAsk, StopOrderTypeLast, StopOrderTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
@@ -1762,12 +2156,12 @@ Case BracketTargetOrder
     
     Select Case comboItemData(TypeCombo(index))
     Case TargetOrderTypeLimit
-        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case TargetOrderTypeLimitIfTouched
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case TargetOrderTypeMarketIfTouched
-        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case TargetOrderTypeBid, TargetOrderTypeAsk, TargetOrderTypeLast, TargetOrderTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
@@ -1784,13 +2178,22 @@ If MinQuantityText(index) <> "" Then
 End If
 
 If DiscrAmountText(index) <> "" Then
-    If Not isPrice(DiscrAmountText(index)) Then setInvalidControl DiscrAmountText(index), index: Exit Function
+    If Not isValidPrice(DiscrAmountText(index)) Then setInvalidControl DiscrAmountText(index), index: Exit Function
 End If
 
 isValidOrder = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub loadOrderFields(ByVal index As Long)
+Const ProcName As String = "loadOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 load OrderIDText(index)
 load ActionCombo(index)
 load QuantityText(index)
@@ -1817,9 +2220,18 @@ load GoodAfterTimeText(index)
 load GoodAfterTimeTZText(index)
 load GoodTillDateText(index)
 load GoodTillDateTZText(index)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub reset()
+Const ProcName As String = "reset"
+Dim failpoint As String
+On Error GoTo Err
+
 clearOrderFields BracketIndexes.BracketEntryOrder
 clearOrderFields BracketIndexes.BracketStopOrder
 clearOrderFields BracketIndexes.BracketTargetOrder
@@ -1856,6 +2268,11 @@ configureOrderFields BracketIndexes.BracketTargetOrder
 
 BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub selectComboEntry( _
@@ -1863,16 +2280,29 @@ Private Sub selectComboEntry( _
                 ByVal itemData As Long)
 Dim i As Long
 
+Const ProcName As String = "selectComboEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To combo.ListCount - 1
     If combo.itemData(i) = itemData Then
         combo.ListIndex = i
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setAction( _
                 ByVal index As Long)
+Const ProcName As String = "setAction"
+Dim failpoint As String
+On Error GoTo Err
+
 mOrderAction = comboItemData(ActionCombo(index))
 If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder And _
     index = BracketIndexes.BracketEntryOrder _
@@ -1887,14 +2317,28 @@ Then
     disableControl ActionCombo(BracketIndexes.BracketStopOrder)
     disableControl ActionCombo(BracketIndexes.BracketTargetOrder)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setInvalidControl( _
                 ByVal pControl As Control, _
                 ByVal index As Long)
+Const ProcName As String = "setInvalidControl"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mInvalidControls(index) = pControl
 If BracketTabStrip.Visible Then BracketTabStrip.Tabs(index + 1).Selected = True
 pControl.backColor = ErroredFieldColor
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '/**
@@ -1909,35 +2353,48 @@ Private Sub setOrderAttributes( _
                 ByVal pOrder As Order, _
                 ByVal orderIndex As Long)
 
+Const ProcName As String = "setOrderAttributes"
+Dim failpoint As String
+On Error GoTo Err
+
 With pOrder
-    If pOrder.isAttributeModifiable(OrderAttAllOrNone) Then .allOrNone = (AllOrNoneCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttBlockOrder) Then .blockOrder = (BlockOrderCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttDiscretionaryAmount) Then .discretionaryAmount = IIf(DiscrAmountText(orderIndex) = "", 0, DiscrAmountText(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttDisplaySize) Then .displaySize = IIf(DisplaySizeText(orderIndex) = "", 0, DisplaySizeText(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttETradeOnly) Then .eTradeOnly = (ETradeOnlyCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttFirmQuoteOnly) Then .firmQuoteOnly = (FirmQuoteOnlyCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttGoodAfterTime) Then .goodAfterTime = IIf(GoodAfterTimeText(orderIndex) = "", 0, GoodAfterTimeText(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .goodAfterTimeTZ = GoodAfterTimeTZText(orderIndex)
-    If pOrder.isAttributeModifiable(OrderAttGoodTillDate) Then .goodTillDate = IIf(GoodTillDateText(orderIndex) = "", 0, GoodTillDateText(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttGoodTillDateTZ) Then .goodTillDateTZ = GoodTillDateTZText(orderIndex)
-    If pOrder.isAttributeModifiable(OrderAttHidden) Then .Hidden = (HiddenCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttIgnoreRTH) Then .ignoreRegularTradingHours = (IgnoreRthCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttAllOrNone) Then .AllOrNone = (AllOrNoneCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttBlockOrder) Then .BlockOrder = (BlockOrderCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = IIf(DiscrAmountText(orderIndex) = "", 0, DiscrAmountText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttDisplaySize) Then .displaySize = IIf(DisplaySizeText(orderIndex) = "", 0, DisplaySizeText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = (ETradeOnlyCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = (FirmQuoteOnlyCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttGoodAfterTime) Then .GoodAfterTime = IIf(GoodAfterTimeText(orderIndex) = "", 0, GoodAfterTimeText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = GoodAfterTimeTZText(orderIndex)
+    If pOrder.IsAttributeModifiable(OrderAttGoodTillDate) Then .GoodTillDate = IIf(GoodTillDateText(orderIndex) = "", 0, GoodTillDateText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttGoodTillDateTZ) Then .GoodTillDateTZ = GoodTillDateTZText(orderIndex)
+    If pOrder.IsAttributeModifiable(OrderAttHidden) Then .Hidden = (HiddenCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttIgnoreRTH) Then .IgnoreRegularTradingHours = (IgnoreRthCheck(orderIndex) = vbChecked)
     'If pOrder.isAttributeModifiable(OrderAttLimitPrice) Then .limitPrice = IIf(PriceText(orderIndex) = "", 0, PriceText(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttMinimumQuantity) Then .minimumQuantity = IIf(MinQuantityText(orderIndex) = "", 0, MinQuantityText(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = IIf(MinQuantityText(orderIndex) = "", 0, MinQuantityText(orderIndex))
     'If pOrder.isAttributeModifiable(OrderAttOrderType) Then .orderType = comboItemData(TypeCombo(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttOriginatorRef) Then .originatorRef = OrderRefText(orderIndex)
-    If pOrder.isAttributeModifiable(OrderAttOverrideConstraints) Then .overrideConstraints = (OverrideCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttQuantity) Then .quantity = QuantityText(orderIndex)
-    If pOrder.isAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(orderIndex))
-    If pOrder.isAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttTimeInForce) Then .timeInForce = comboItemData(TIFCombo(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = OrderRefText(orderIndex)
+    If pOrder.IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = (OverrideCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .quantity = QuantityText(orderIndex)
+    If pOrder.IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(orderIndex))
+    If pOrder.IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(orderIndex) = vbChecked)
+    If pOrder.IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = comboItemData(TIFCombo(orderIndex))
     'If pOrder.isAttributeModifiable(OrderAttTriggerPrice) Then .triggerPrice = IIf(StopPriceText(orderIndex) = "", 0, StopPriceText(orderIndex))
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrderFieldValues( _
                 ByVal pOrder As Order, _
                 ByVal orderIndex As Long)
+Const ProcName As String = "setOrderFieldValues"
+Dim failpoint As String
+On Error GoTo Err
+
 If pOrder Is Nothing Then
     disableOrderFields orderIndex
     Exit Sub
@@ -1950,30 +2407,30 @@ With pOrder
     
     ActionCombo(orderIndex).Text = OrderActionToString(.Action)
     QuantityText(orderIndex) = .quantity
-    TypeCombo(orderIndex).Text = OrderTypeToString(.orderType)
-    PriceText(orderIndex) = IIf(.limitPrice <> 0, .limitPrice, "")
-    StopPriceText(orderIndex) = IIf(.triggerPrice <> 0, .triggerPrice, "")
-    IgnoreRthCheck(orderIndex) = IIf(.ignoreRegularTradingHours, vbChecked, vbUnchecked)
-    TIFCombo(orderIndex) = OrderTIFToString(.timeInForce)
-    OrderRefText(orderIndex) = .originatorRef
-    AllOrNoneCheck(orderIndex) = IIf(.allOrNone, vbChecked, vbUnchecked)
-    BlockOrderCheck(orderIndex) = IIf(.blockOrder, vbChecked, vbUnchecked)
-    ETradeOnlyCheck(orderIndex) = IIf(.eTradeOnly, vbChecked, vbUnchecked)
-    FirmQuoteOnlyCheck(orderIndex) = IIf(.firmQuoteOnly, vbChecked, vbUnchecked)
+    TypeCombo(orderIndex).Text = OrderTypeToString(.OrderType)
+    PriceText(orderIndex) = IIf(.LimitPrice <> 0, .LimitPrice, "")
+    StopPriceText(orderIndex) = IIf(.TriggerPrice <> 0, .TriggerPrice, "")
+    IgnoreRthCheck(orderIndex) = IIf(.IgnoreRegularTradingHours, vbChecked, vbUnchecked)
+    TIFCombo(orderIndex) = OrderTIFToString(.TimeInForce)
+    OrderRefText(orderIndex) = .OriginatorRef
+    AllOrNoneCheck(orderIndex) = IIf(.AllOrNone, vbChecked, vbUnchecked)
+    BlockOrderCheck(orderIndex) = IIf(.BlockOrder, vbChecked, vbUnchecked)
+    ETradeOnlyCheck(orderIndex) = IIf(.ETradeOnly, vbChecked, vbUnchecked)
+    FirmQuoteOnlyCheck(orderIndex) = IIf(.FirmQuoteOnly, vbChecked, vbUnchecked)
     HiddenCheck(orderIndex) = IIf(.Hidden, vbChecked, vbUnchecked)
-    OverrideCheck(orderIndex) = IIf(.overrideConstraints, vbChecked, vbUnchecked)
+    OverrideCheck(orderIndex) = IIf(.OverrideConstraints, vbChecked, vbUnchecked)
     SweepToFillCheck(orderIndex) = IIf(.SweepToFill, vbChecked, vbUnchecked)
     DisplaySizeText(orderIndex) = IIf(.displaySize <> 0, .displaySize, "")
-    MinQuantityText(orderIndex) = IIf(.minimumQuantity <> 0, .displaySize, "")
+    MinQuantityText(orderIndex) = IIf(.MinimumQuantity <> 0, .displaySize, "")
     If .StopTriggerMethod <> 0 Then TriggerMethodCombo(orderIndex) = OrderStopTriggerMethodToString(.StopTriggerMethod)
-    DiscrAmountText(orderIndex) = IIf(.discretionaryAmount <> 0, .discretionaryAmount, "")
-    GoodAfterTimeText(orderIndex) = IIf(.goodAfterTime <> 0, FormatDateTime(.goodAfterTime, vbGeneralDate), "")
-    GoodAfterTimeTZText(orderIndex) = .goodAfterTimeTZ
-    GoodTillDateText(orderIndex) = IIf(.goodTillDate <> 0, FormatDateTime(.goodTillDate, vbGeneralDate), "")
-    GoodTillDateTZText(orderIndex) = .goodTillDateTZ
+    DiscrAmountText(orderIndex) = IIf(.DiscretionaryAmount <> 0, .DiscretionaryAmount, "")
+    GoodAfterTimeText(orderIndex) = IIf(.GoodAfterTime <> 0, FormatDateTime(.GoodAfterTime, vbGeneralDate), "")
+    GoodAfterTimeTZText(orderIndex) = .GoodAfterTimeTZ
+    GoodTillDateText(orderIndex) = IIf(.GoodTillDate <> 0, FormatDateTime(.GoodTillDate, vbGeneralDate), "")
+    GoodTillDateTZText(orderIndex) = .GoodTillDateTZ
     
     ' do this last because it sets the various fields attributes
-    TypeCombo(orderIndex).Text = OrderTypeToString(.orderType)
+    TypeCombo(orderIndex).Text = OrderTypeToString(.OrderType)
 End With
 
 If Not isOrderModifiable(pOrder) Then
@@ -1981,28 +2438,46 @@ If Not isOrderModifiable(pOrder) Then
 Else
     setOrderFieldsEnabling orderIndex, pOrder
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrderFieldEnabling( _
                 ByVal pControl As Control, _
                 ByVal orderAtt As OrderAttributeIds, _
                 ByVal pOrder As Order)
+Const ProcName As String = "setOrderFieldEnabling"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not pOrder Is Nothing Then
-    If pOrder.isAttributeModifiable(orderAtt) Then
+    If pOrder.IsAttributeModifiable(orderAtt) Then
         enableControl pControl
     Else
         disableControl pControl
     End If
-ElseIf mOrderContext.isAttributeSupported(orderAtt) Then
+ElseIf mOrderContext.IsAttributeSupported(orderAtt) Then
     enableControl pControl
 Else
     disableControl pControl
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrderFieldsEnabling( _
                 ByVal index As Long, _
                 ByVal pOrder As Order)
+Const ProcName As String = "setOrderFieldsEnabling"
+Dim failpoint As String
+On Error GoTo Err
+
 setOrderFieldEnabling ActionCombo(index), OrderAttAction, pOrder
 setOrderFieldEnabling QuantityText(index), OrderAttQuantity, pOrder
 setOrderFieldEnabling TypeCombo(index), OrderAttOrderType, pOrder
@@ -2026,18 +2501,36 @@ setOrderFieldEnabling GoodAfterTimeText(index), OrderAttGoodAfterTime, pOrder
 setOrderFieldEnabling GoodAfterTimeTZText(index), OrderAttGoodAfterTimeTZ, pOrder
 setOrderFieldEnabling GoodTillDateText(index), OrderAttGoodTillDate, pOrder
 setOrderFieldEnabling GoodTillDateTZText(index), OrderAttGoodTillDateTZ, pOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrderId( _
                 ByVal index As Long, _
                 ByVal id As String)
+Const ProcName As String = "setOrderId"
+Dim failpoint As String
+On Error GoTo Err
+
 enableControl OrderIDText(index)
 OrderIDText(index) = id
 disableControl OrderIDText(index)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrderScheme( _
                 ByVal pOrderScheme As OrderSchemes)
+Const ProcName As String = "setOrderScheme"
+Dim failpoint As String
+On Error GoTo Err
+
 Select Case pOrderScheme
 Case OrderSchemes.SimpleOrder
     RaiseEvent CaptionChanged("Create a simple order")
@@ -2072,12 +2565,21 @@ Case OrderSchemes.OCAOrder
     ModifyButton.Visible = False
     UndoButton.Visible = False
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setPriceField( _
                 index As Integer)
 Dim basePrice As Double
 Dim offset As Double
+
+Const ProcName As String = "setPriceField"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case index
 Case BracketIndexes.BracketEntryOrder
@@ -2124,15 +2626,33 @@ If IsNumeric(OffsetText(index)) Then
 End If
 
 PriceText(index) = mTicker.FormatPrice(basePrice + offset)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setPriceFields()
+Const ProcName As String = "setPriceFields"
+Dim failpoint As String
+On Error GoTo Err
+
 setPriceField BracketIndexes.BracketEntryOrder
 setPriceField BracketIndexes.BracketStopOrder
 setPriceField BracketIndexes.BracketTargetOrder
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupActionCombo(ByVal index As Long)
+Const ProcName As String = "setupActionCombo"
+Dim failpoint As String
+On Error GoTo Err
+
 ActionCombo(index).Clear
 If index <> BracketIndexes.BracketEntryOrder Then
     addItemToCombo ActionCombo(index), _
@@ -2145,9 +2665,18 @@ addItemToCombo ActionCombo(index), _
 addItemToCombo ActionCombo(index), _
             OrderActionToString(OrderActions.ActionSell), _
             OrderActions.ActionSell
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupOrderSchemeCombo()
+Const ProcName As String = "setupOrderSchemeCombo"
+Dim failpoint As String
+On Error GoTo Err
+
 OrderSchemeCombo.Clear
 addItemToCombo OrderSchemeCombo, _
             "Bracket order", _
@@ -2162,14 +2691,22 @@ addItemToCombo OrderSchemeCombo, _
 '            "Combination order", _
 '            OrderSchemes.CombinationOrder
 OrderSchemeCombo.ListIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTicker()
-Set mContract = mTicker.Contract
 
-SymbolLabel.caption = mContract.specifier.localSymbol & _
+Const ProcName As String = "setupTicker"
+Dim failpoint As String
+On Error GoTo Err
+
+SymbolLabel.caption = mContract.Specifier.localSymbol & _
                         " on " & _
-                        mContract.specifier.exchange
+                        mContract.Specifier.exchange
                         
 setupTifCombo BracketIndexes.BracketEntryOrder
 setupTifCombo BracketIndexes.BracketStopOrder
@@ -2195,12 +2732,21 @@ Else
     OrderSimulationLabel.caption = OrdersLiveMessage
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub setupTifCombo(ByVal index As Long)
 Dim permittedTifs As Long
 
-permittedTifs = mOrderContext.permittedOrderTifs
+Const ProcName As String = "setupTifCombo"
+Dim failpoint As String
+On Error GoTo Err
+
+permittedTifs = mOrderContext.PermittedOrderTifs
 
 TIFCombo(index).Clear
 
@@ -2221,10 +2767,19 @@ If permittedTifs And OrderTifs.TIFImmediateOrCancel Then
 End If
 
 TIFCombo(0).ListIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTriggerMethodCombo(ByVal index As Long)
 Dim permittedTriggers As Long
+
+Const ProcName As String = "setupTriggerMethodCombo"
+Dim failpoint As String
+On Error GoTo Err
 
 permittedTriggers = mOrderContext.permittedStopTriggerMethods
 
@@ -2267,10 +2822,19 @@ If permittedTriggers And StopTriggerMethods.StopTriggerMidPoint Then
 End If
 
 TriggerMethodCombo(index).ListIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTypeCombo(ByVal index As Long)
 Dim permittedOrderTypes As Long
+
+Const ProcName As String = "setupTypeCombo"
+Dim failpoint As String
+On Error GoTo Err
 
 permittedOrderTypes = mOrderContext.permittedOrderTypes
 
@@ -2404,10 +2968,19 @@ ElseIf index = BracketIndexes.BracketTargetOrder Then
 End If
 
 TypeCombo(index).ListIndex = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showOrderFields(ByVal index As Long)
 Dim i As Long
+Const ProcName As String = "showOrderFields"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To ActionCombo.Count - 1
     If i = index Then
         OrderIDText(i).Visible = True
@@ -2465,9 +3038,18 @@ For i = 0 To ActionCombo.Count - 1
         GoodTillDateTZText(i).Visible = False
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showTickerValues()
+Const ProcName As String = "showTickerValues"
+Dim failpoint As String
+On Error GoTo Err
+
 AskText.Text = mTicker.FormatPrice(mTicker.AskPrice)
 AskSizeText.Text = mTicker.AskSize
 BidText.Text = mTicker.FormatPrice(mTicker.BidPrice)
@@ -2478,6 +3060,11 @@ VolumeText.Text = mTicker.Volume
 HighText.Text = mTicker.FormatPrice(mTicker.HighPrice)
 LowText.Text = mTicker.FormatPrice(mTicker.LowPrice)
 setPriceFields
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

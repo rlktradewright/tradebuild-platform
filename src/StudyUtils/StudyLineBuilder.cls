@@ -31,6 +31,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyLineBuilder"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -66,15 +68,39 @@ End Sub
 '@================================================================================
 
 Public Property Let Point1(ByVal value As StudyPoint)
+Const ProcName As String = "Point1"
+On Error GoTo Err
+
 mStudyLine.Point1 = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Point2(ByVal value As StudyPoint)
+Const ProcName As String = "Point2"
+On Error GoTo Err
+
 mStudyLine.Point2 = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyLine() As StudyLine
+Const ProcName As String = "StudyLine"
+On Error GoTo Err
+
 Set StudyLine = mStudyLine
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

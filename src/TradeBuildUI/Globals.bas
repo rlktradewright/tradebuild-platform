@@ -19,7 +19,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                        As String = "TradeBuildUI26"
+Public Const ProjectName                As String = "TradeBuildUI26"
+Private Const ModuleName                As String = "Globals"
 
 Public Const KeyDownShift As Integer = &H1
 Public Const KeyDownCtrl As Integer = &H2
@@ -79,15 +80,9 @@ Private mDefaultStudyConfigurations As Collection
 ' Properties
 '@================================================================================
 
-Public Property Get gErrorLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("error")
-Set gErrorLogger = lLogger
-End Property
-
-Public Property Get gLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Public Property Get gLogger() As FormattingLogger
+Static lLogger As FormattingLogger
+If lLogger Is Nothing Then Set lLogger = CreateFormattingLogger("tradebuildui.log", ProjectName)
 Set gLogger = lLogger
 End Property
 
@@ -106,14 +101,23 @@ Public Function gLoadDefaultStudyConfiguration( _
                 ByVal name As String, _
                 ByVal spName As String) As StudyConfiguration
 Dim sc As StudyConfiguration
+Const ProcName As String = "gLoadDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDefaultStudyConfigurations Is Nothing Then
     Set gLoadDefaultStudyConfiguration = Nothing
 Else
     On Error Resume Next
     Set sc = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
-    On Error GoTo 0
+    On Error GoTo Err
     If Not sc Is Nothing Then Set gLoadDefaultStudyConfiguration = sc.Clone
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Sub gNotImplemented()
@@ -124,16 +128,25 @@ Public Sub gUpdateDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)
 Dim sc As StudyConfiguration
 
+Const ProcName As String = "gUpdateDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 On Error Resume Next
 mDefaultStudyConfigurations.Remove calcDefaultStudyKey(value.name, value.StudyLibraryName)
-On Error GoTo 0
+On Error GoTo Err
 
 Set sc = value.Clone
 sc.UnderlyingStudy = Nothing
 mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(value.name, value.StudyLibraryName)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

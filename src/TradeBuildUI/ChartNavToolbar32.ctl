@@ -380,7 +380,8 @@ UserControl.Height = Toolbar1.Height
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log LogLevelDetail, "ChartNavToolbar32 terminated"
+Const ProcName As String = "UserControl_Terminate"
+gLogger.Log "ChartNavToolbar32 terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "ChartNavToolbar32 terminated"
 End Sub
 
@@ -389,8 +390,8 @@ End Sub
 '================================================================================
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
-
-Dim failpoint As Long
+Const ProcName As String = "Toolbar1_ButtonClick"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case Button.Key
@@ -464,11 +465,7 @@ End Select
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TimeframeToolbar_ButtonClick" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -477,6 +474,10 @@ End Sub
 
 Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEvent)
 Dim changeType As MultiChartChangeTypes
+Const ProcName As String = "ChangeListener_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 changeType = ev.changeType
 Select Case changeType
 Case MultiChartSelectionChanged
@@ -486,6 +487,11 @@ Case MultiChartAdd
 Case MultiChartRemove
 
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -493,7 +499,16 @@ End Sub
 '================================================================================
 
 Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mBarSeries_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -501,7 +516,16 @@ End Sub
 '================================================================================
 
 Private Sub mPriceRegion_AutoscaleChanged()
+Const ProcName As String = "mPriceRegion_AutoscaleChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -510,6 +534,10 @@ End Sub
 
 Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEvent)
 Dim State As ChartStates
+Const ProcName As String = "mTradeBuildChart_StateChange"
+Dim failpoint As String
+On Error GoTo Err
+
 State = ev.State
 Select Case State
 Case ChartStateBlank
@@ -521,6 +549,11 @@ Case ChartStateInitialised
 Case ChartStateLoaded
     setupChartNavButtons
 End Select
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -545,11 +578,15 @@ End Property
 Public Sub Initialise( _
                 Optional ByVal pChart As TradeBuildChart, _
                 Optional ByVal pMultiChart As MultiChart)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 If pChart Is Nothing And pMultiChart Is Nothing Or _
     (Not pChart Is Nothing And Not pMultiChart Is Nothing) _
 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Either a Chart or a Multichart (but not both) must be supplied"
 End If
 
@@ -563,6 +600,11 @@ Else
     Set mTradeBuildChart = Nothing
     Set mPriceRegion = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -570,15 +612,28 @@ End Sub
 '@================================================================================
 
 Private Sub attachToChart(ByVal pChart As TradeBuildChart)
+Const ProcName As String = "attachToChart"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mTradeBuildChart = pChart
 Set mPriceRegion = mTradeBuildChart.PriceRegion
 Set mBarSeries = mTradeBuildChart.TradeBarSeries
 If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub attachToCurrentChart()
+Const ProcName As String = "attachToCurrentChart"
+Dim failpoint As String
+On Error GoTo Err
+
 Toolbar1.Enabled = False
-If multiChartObj.count > 0 Then
+If multiChartObj.Count > 0 Then
     Toolbar1.Enabled = True
     attachToChart multiChartObj.Chart
 Else
@@ -586,13 +641,31 @@ Else
     Set mTradeBuildChart = Nothing
     Set mPriceRegion = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function multiChartObj() As MultiChart
+Const ProcName As String = "multiChartObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set multiChartObj = mMultichartRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub setupChartNavButtons()
+
+Const ProcName As String = "setupChartNavButtons"
+Dim failpoint As String
+On Error GoTo Err
 
 Set mBarSeries = mTradeBuildChart.TradeBarSeries
 If mBarSeries Is Nothing Then Exit Sub
@@ -610,9 +683,18 @@ End If
 Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
 Toolbar1.Enabled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupDisplayModeButtons()
+Const ProcName As String = "setupDisplayModeButtons"
+Dim failpoint As String
+On Error GoTo Err
+
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
     Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
@@ -622,6 +704,11 @@ Else
     Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Width > 0.1)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

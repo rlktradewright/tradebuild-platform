@@ -93,12 +93,20 @@ End Property
 
 Public Property Get DefaultValueName() As String
 Dim svd As StudyValueDefinition
+Const ProcName As String = "DefaultValueName"
+On Error GoTo Err
+
 For Each svd In mStudyValueDefinitions
-    If svd.isDefault Then
+    If svd.IsDefault Then
         DefaultValueName = svd.Name
         Exit Property
     End If
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Description(ByVal value As String)
@@ -160,7 +168,9 @@ Dim newSVDs As StudyValueDefinitions
 Dim newSVD As StudyValueDefinition
 Dim svd As StudyValueDefinition
 
+Const ProcName As String = "Clone"
 Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Clone = New StudyDefinition
@@ -174,17 +184,17 @@ Set newSIDs = Clone.StudyInputDefinitions
 For Each sid In mStudyInputDefinitions
     Set newSID = newSIDs.Add(sid.Name)
     newSID.Description = sid.Description
-    newSID.inputType = sid.inputType
+    newSID.InputType = sid.InputType
 Next
 
 Set newSPDs = Clone.StudyParameterDefinitions
 For Each spd In mStudyParameterDefinitions
     Set newSPD = newSPDs.Add(spd.Name)
     newSPD.Description = spd.Description
-    newSPD.maximumValue = spd.maximumValue
-    newSPD.minimumValue = spd.minimumValue
-    newSPD.parameterType = spd.parameterType
-    newSPD.permittedValues = spd.permittedValues
+    newSPD.MaximumValue = spd.MaximumValue
+    newSPD.MinimumValue = spd.MinimumValue
+    newSPD.ParameterType = spd.ParameterType
+    newSPD.PermittedValues = spd.PermittedValues
 Next
 
 Set newSVDs = Clone.StudyValueDefinitions
@@ -193,23 +203,18 @@ For Each svd In mStudyValueDefinitions
     newSVD.DefaultRegion = svd.DefaultRegion
     newSVD.Description = svd.Description
     newSVD.IncludeInChart = svd.IncludeInChart
-    newSVD.isDefault = svd.isDefault
-    newSVD.maximumValue = svd.maximumValue
-    newSVD.minimumValue = svd.minimumValue
-    newSVD.valueMode = svd.valueMode
-    newSVD.valueStyle = svd.valueStyle
-    newSVD.valueType = svd.valueType
+    newSVD.IsDefault = svd.IsDefault
+    newSVD.MaximumValue = svd.MaximumValue
+    newSVD.MinimumValue = svd.MinimumValue
+    newSVD.ValueMode = svd.ValueMode
+    newSVD.ValueStyle = svd.ValueStyle
+    newSVD.ValueType = svd.ValueType
 Next
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

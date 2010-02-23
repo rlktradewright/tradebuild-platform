@@ -106,7 +106,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuildUI26"
 Private Const ModuleName                    As String = "fTickfileOrganiser"
 
 '@================================================================================
@@ -120,9 +119,18 @@ Private mCancelled                          As Boolean
 '@================================================================================
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+Dim failpoint As String
+On Error GoTo Err
+
 If TickfileListManager1.supportsTickFiles Then AddTickfilesButton.Enabled = True
 If TickfileListManager1.supportsTickStreams Then AddTickstreamsButton.Enabled = True
 mCancelled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -139,16 +147,29 @@ End Sub
 
 Private Sub AddTickfilesButton_Click()
 Dim tickfileNames() As String
+Const ProcName As String = "AddTickfilesButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 tickfileNames = TickfileChooser1.chooseTickfiles
 
 If TickfileChooser1.cancelled Then Exit Sub
 
 TickfileListManager1.addTickfileNames tickfileNames
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub AddTickstreamsButton_Click()
 Dim lTickstreamSpecifier As fTickStreamSpecifier
+
+Const ProcName As String = "AddTickstreamsButton_Click"
+Dim failpoint As String
+On Error GoTo Err
 
 Set lTickstreamSpecifier = New fTickStreamSpecifier
 lTickstreamSpecifier.Show vbModal
@@ -157,23 +178,59 @@ If lTickstreamSpecifier.cancelled Then Exit Sub
 
 TickfileListManager1.addTickfileSpecifiers lTickstreamSpecifier.TickfileSpecifiers
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 mCancelled = True
 Unload Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub ClearButton_Click()
-TickfileListManager1.clear
+Const ProcName As String = "ClearButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
+TickfileListManager1.Clear
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub OKButton_Click()
+Const ProcName As String = "OKButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 mCancelled = False
 Me.Hide
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub TickfileListManager1_TickfileCountChanged()
+Const ProcName As String = "TickfileListManager1_TickfileCountChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 If TickfileListManager1.tickfileCount > 0 Then
     OkButton.Enabled = True
     ClearButton.Enabled = True
@@ -181,6 +238,11 @@ Else
     OkButton.Enabled = False
     ClearButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -192,7 +254,16 @@ cancelled = mCancelled
 End Property
 
 Public Property Get TickfileSpecifiers() As TickfileSpecifiers
+Const ProcName As String = "TickfileSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mCancelled Then Set TickfileSpecifiers = TickfileListManager1.TickfileSpecifiers
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

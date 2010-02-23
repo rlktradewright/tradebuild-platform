@@ -72,7 +72,7 @@ Private Const ExecutionsTimeWidth = 23
 '@================================================================================
 
 Private Enum ExecutionsColumns
-    execId = 1
+    ExecId = 1
     orderId
     Action
     quantity
@@ -97,12 +97,16 @@ Private mSimulated                      As Boolean
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mMonitoredWorkspaces = New Collection
 
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.execId, , "Exec id"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec id"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.orderId, , "ID"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Action, , "Action"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.quantity, , "Quant"
@@ -113,13 +117,22 @@ ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
 ExecutionsList.SortKey = ExecutionsColumns.Time - 1
 ExecutionsList.SortOrder = lvwDescending
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
 ExecutionsList.Height = UserControl.Height
 ExecutionsList.Width = UserControl.Width
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.execId).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.ExecId).Width = _
     ExecutionsExecIdWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.orderId).Width = _
@@ -140,6 +153,11 @@ ExecutionsList.ColumnHeaders(ExecutionsColumns.price).Width = _
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Time).Width = _
     ExecutionsTimeWidth * ExecutionsList.Width / 100
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -155,24 +173,33 @@ Private Sub CollectionChangeListener_Change( _
 Dim exec As Execution
 Dim listItem As listItem
 
+Const ProcName As String = "CollectionChangeListener_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 If ev.changeType <> CollItemAdded Then Exit Sub
 
 Set exec = ev.affectedItem
 
 On Error Resume Next
-Set listItem = ExecutionsList.ListItems(exec.execId)
-On Error GoTo 0
+Set listItem = ExecutionsList.ListItems(exec.ExecId)
+On Error GoTo Err
 
 If listItem Is Nothing Then
-    Set listItem = ExecutionsList.ListItems.Add(, exec.execId, exec.execId)
+    Set listItem = ExecutionsList.ListItems.Add(, exec.ExecId, exec.ExecId)
 End If
 
 listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
-listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.orderBrokerId
+listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.OrderBrokerId
 listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
 listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
-listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.contractSpecifier.localSymbol
+listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.SecurityName
 listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
@@ -181,12 +208,21 @@ End Sub
 '@================================================================================
 
 Private Sub ExecutionsList_ColumnClick(ByVal columnHeader As columnHeader)
+Const ProcName As String = "ExecutionsList_ColumnClick"
+Dim failpoint As String
+On Error GoTo Err
+
 If ExecutionsList.SortKey = columnHeader.index - 1 Then
     ExecutionsList.SortOrder = 1 - ExecutionsList.SortOrder
 Else
     ExecutionsList.SortKey = columnHeader.index - 1
     ExecutionsList.SortOrder = lvwAscending
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -198,14 +234,23 @@ End Sub
 '@================================================================================
 
 Public Property Let Simulated(ByVal value As Boolean)
-If mMonitoredWorkspaces.count > 0 Then
+Const ProcName As String = "Simulated"
+Dim failpoint As String
+On Error GoTo Err
+
+If mMonitoredWorkspaces.Count > 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "simulated", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Property must be set before any workspaces are monitored"
 End If
 
 mSimulated = value
 PropertyChanged "simulated"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Simulated() As Boolean
@@ -217,20 +262,30 @@ End Property
 '@================================================================================
 
 Public Sub Clear()
+Const ProcName As String = "Clear"
+Dim failpoint As String
+On Error GoTo Err
+
 ExecutionsList.ListItems.Clear
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Finish()
 Dim i As Long
 Dim lWorkspace As Workspace
 
-Dim failpoint As Long
+Const ProcName As String = "Finish"
+Dim failpoint As String
 On Error GoTo Err
 
-For i = mMonitoredWorkspaces.count To 1 Step -1
+For i = mMonitoredWorkspaces.Count To 1 Step -1
     Set lWorkspace = mMonitoredWorkspaces(i)
-    lWorkspace.Executions.removeCollectionChangeListener Me
-    mMonitoredWorkspaces.remove i
+    lWorkspace.Executions.RemoveCollectionChangeListener Me
+    mMonitoredWorkspaces.Remove i
 Next
 
 Clear
@@ -238,20 +293,26 @@ Clear
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Finish" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub monitorWorkspace( _
                 ByVal pWorkspace As Workspace)
+Const ProcName As String = "monitorWorkspace"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSimulated Then
-    pWorkspace.ExecutionsSimulated.addCollectionChangeListener Me
+    pWorkspace.ExecutionsSimulated.AddCollectionChangeListener Me
 Else
-    pWorkspace.Executions.addCollectionChangeListener Me
+    pWorkspace.Executions.AddCollectionChangeListener Me
 End If
 mMonitoredWorkspaces.Add pWorkspace
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
                 
 '@================================================================================

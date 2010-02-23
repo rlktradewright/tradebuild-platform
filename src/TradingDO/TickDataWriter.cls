@@ -50,7 +50,7 @@ Event Error( _
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName               As String = "TradingDO26"
+
 Private Const ModuleName                As String = "TickDataWriter"
 
 '@===============================================================================
@@ -100,34 +100,34 @@ End Sub
 ' Task Interface Members
 '@===============================================================================
 
-Private Sub Task_cancel()
-Const ProcName As String = "Task_cancel"
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mCmd Is Nothing Then
-    mCmd.cancel
+    mCmd.Cancel
     mConnection.Close
 ElseIf Not mConnection Is Nothing Then
     If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
-        mConnection.cancel
+        mConnection.Cancel
     End If
 End If
 If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
-mTaskContext.finish Empty, True
+mTaskContext.Finish Empty, True
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 connectToDB
@@ -136,7 +136,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -144,7 +144,7 @@ Set mTaskContext = RHS
 End Property
 
 Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.name
+Task_taskName = mTaskContext.Name
 End Property
 
 '@===============================================================================
@@ -160,11 +160,11 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pConnection As ADODB.connection)
 Const ProcName As String = "mConnection_ExecuteComplete"
 Dim errorMsg As String
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    If mDB.databaseType = DbMySQL5 And _
+    If mDB.DatabaseType = DbMySQL5 And _
         pError.SQLState = "S1000" And _
         pError.NativeError = 1213 _
     Then
@@ -174,10 +174,10 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         Exit Sub
     End If
     
-    If (mDB.databaseType = DbSQLServer Or _
-        mDB.databaseType = DbSQLServer2000 Or _
-        mDB.databaseType = DbSQLServer2005 Or _
-        mDB.databaseType = DbSQLServer7) And _
+    If (mDB.DatabaseType = DbSQLServer Or _
+        mDB.DatabaseType = DbSQLServer2000 Or _
+        mDB.DatabaseType = DbSQLServer2005 Or _
+        mDB.DatabaseType = DbSQLServer7) And _
         pError.Number = -2147217871 _
     Then
         ' this occurs occasionally while running under Hyper-V Server, when the OS
@@ -188,7 +188,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         
         If mAsynchronous Then
             If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
-            mTaskContext.finish 0, False
+            mTaskContext.Finish 0, False
         End If
        
         Exit Sub
@@ -226,7 +226,7 @@ Else
     
     If mAsynchronous Then
         If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
-        mTaskContext.finish 0, False
+        mTaskContext.Finish 0, False
     Else
         RaiseEvent DataWritten
     End If
@@ -235,7 +235,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -246,7 +246,7 @@ End Sub
 Private Sub mConnector_Connected( _
                 ByVal pConnection As ADODB.connection)
 Const ProcName As String = "mConnector_Connected"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mConnection = pConnection
@@ -255,13 +255,13 @@ If mAsynchronous Then DoWriteTickData
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
                 ByVal errorCode As Long, ByVal errorDesc As String)
 Const ProcName As String = "mConnector_ConnectFailed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mAsynchronous Then
@@ -273,7 +273,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -284,27 +284,37 @@ End Sub
 ' Methods
 '@===============================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal instrumentID As Long, _
-                ByVal shortName As String)
+                ByVal ShortName As String)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mDB = db
 mInstrumentID = instrumentID
-mShortName = shortName
+mShortName = ShortName
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub WriteData( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
-                        ByVal tickSize As Double, _
+                        ByVal TickSize As Double, _
                         ByRef Data() As Byte)
-Dim failpoint As Long
+Const ProcName As String = "WriteData"
+
+
 On Error GoTo Err
 
 If Not mCmd Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":WriteData", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Object has already been used"
 End If
 
@@ -313,7 +323,7 @@ mAsynchronous = False
 mVersion = Version
 mPeriodStartTime = PeriodStartTime
 mBasePrice = BasePrice
-mTickSize = tickSize
+mTickSize = TickSize
 mData = Data
 
 connectToDB
@@ -323,21 +333,23 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function WriteDataAsync( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
-                        ByVal tickSize As Double, _
+                        ByVal TickSize As Double, _
                         ByRef Data() As Byte) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "WriteDataAsync"
+
+
 On Error GoTo Err
 
 If Not mCmd Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":WriteData", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Object has already been used"
 End If
 
@@ -346,7 +358,7 @@ mAsynchronous = True
 mVersion = Version
 mPeriodStartTime = PeriodStartTime
 mBasePrice = BasePrice
-mTickSize = tickSize
+mTickSize = TickSize
 mData = Data
 
 ' we pass the periodstarttime as the cookie for use by the
@@ -359,7 +371,7 @@ Set WriteDataAsync = StartTask(Me, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteDataAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -368,24 +380,28 @@ End Function
 '@===============================================================================
 
 Private Sub connectToDB()
-Dim failpoint As Long
+Const ProcName As String = "connectToDB"
+
+
 On Error GoTo Err
 
 Debug.Print "TickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
-If mConnector Is Nothing Then Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
+If mConnector Is Nothing Then Set mConnector = mDB.GetConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
 mConnector.connect
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="connectToDB", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub DoWriteTickData()
+Const ProcName As String = "DoWriteTickData"
+
 
 Dim param As ADODB.Parameter
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mCmd = New ADODB.Command
@@ -446,11 +462,13 @@ Execute
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="DoWriteTickData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Execute()
-Dim failpoint As Long
+Const ProcName As String = "Execute"
+
+
 On Error GoTo Err
 
 Set mCmd.ActiveConnection = mConnection
@@ -467,7 +485,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Execute", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub logMessage( _
@@ -475,10 +493,12 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "logMessage"
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Function taskName() As String
+Const ProcName As String = "taskName"
 Static lTaskName
 If lTaskName = "" Then lTaskName = "TickDataWriter/" & mShortName & "(" & gGetSequenceNumber & ")"
 taskName = lTaskName

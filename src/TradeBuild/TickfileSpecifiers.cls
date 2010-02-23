@@ -74,7 +74,15 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Const ProcName As String = "Count"
+On Error GoTo Err
+
 Count = mTickfileSpecifiers.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -82,37 +90,80 @@ End Property
 '@================================================================================
 
 Public Function Add(ByVal tfs As TickfileSpecifier) As TickfileSpecifier
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = tfs
 mTickfileSpecifiers.Add tfs, CStr(ObjPtr(tfs))
 fireChange CollItemAdded, tfs
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+On Error GoTo Err
+
 mChangeListeners.Add value
 
 gNotifyExistingCollectionMembers mTickfileSpecifiers, value, Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Clear()
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
 Set mTickfileSpecifiers = New Collection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function Item( _
                 ByVal index As Variant) As TickfileSpecifier
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mTickfileSpecifiers(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mTickfileSpecifiers.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub Remove( _
                 ByVal index As Variant)
 Dim tfs As TickfileSpecifier
+
+Const ProcName As String = "Remove"
+On Error GoTo Err
 
 If IsObject(index) Then
     If index Is Nothing Then Exit Sub
@@ -123,13 +174,26 @@ Else
     mTickfileSpecifiers.Remove index
 End If
 fireChange CollItemRemoved, tfs
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -141,6 +205,9 @@ Private Sub fireChange( _
                 ByVal affectedObject As TickfileSpecifier)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -148,6 +215,11 @@ For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

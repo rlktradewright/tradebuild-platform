@@ -90,10 +90,10 @@ Private mBlank As Boolean   ' indicates that there were no Ticks during the Bar
 
 Private Sub Class_Initialize()
 mBlank = True
-mOpen = DummyLow
-mLow = DummyLow
-mHigh = DummyHigh
-mClose = DummyLow
+mOpen = MaxDouble
+mLow = MaxDouble
+mHigh = MinDouble
+mClose = MaxDouble
 End Sub
 
 '@================================================================================
@@ -224,8 +224,17 @@ End Property
 
 Friend Sub IncrementTickVolume( _
                 ByVal increment As Long)
+Const ProcName As String = "IncrementTickVolume"
+Dim failpoint As String
+On Error GoTo Err
+
 mTickVolume = mTickVolume + increment
 fireChange BarTickVolumeChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub Initialise( _
@@ -237,6 +246,10 @@ Friend Sub Initialise( _
                 Optional ByVal Volume As Long, _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 mTimestamp = Timestamp
 mOpen = OpenValue
 mHigh = HighValue
@@ -260,10 +273,19 @@ fireChange BarPriceChanged
 If mVolume <> 0 Then fireChange BarVolumeChanged
 If mOpenInterest <> 0 Then fireChange BarOpenInterestChanged
 If mTickVolume <> 0 Then fireChange BarTickVolumeChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyOpenInterest( _
                 ByVal OpenInterest As Long)
+Const ProcName As String = "NotifyOpenInterest"
+Dim failpoint As String
+On Error GoTo Err
+
 clean
 ' note that we don't set mBlank to false because the Bar is blank until
 ' the first value is notified
@@ -271,9 +293,18 @@ mOpenInterest = OpenInterest
 mBarChanged = True
 mOpenInterestChanged = True
 fireChange BarOpenInterestChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyValue(ByVal value As Double)
+Const ProcName As String = "NotifyValue"
+Dim failpoint As String
+On Error GoTo Err
+
 clean
 
 If mBlank Then
@@ -303,10 +334,19 @@ End If
 
 mTickVolume = mTickVolume + 1
 If mBarChanged Then fireChange BarPriceChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyVolume( _
                 ByVal Volume As Long)
+Const ProcName As String = "NotifyVolume"
+Dim failpoint As String
+On Error GoTo Err
+
 clean
 ' note that we don't set mBlank to false because the Bar is blank until
 ' the first value is notified
@@ -314,10 +354,24 @@ mVolume = Volume
 mBarChanged = True
 mVolumeChanged = True
 fireChange BarVolumeChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub ResetChangeIndicators()
+Const ProcName As String = "ResetChangeIndicators"
+Dim failpoint As String
+On Error GoTo Err
+
 clean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -325,6 +379,10 @@ End Sub
 '@================================================================================
 
 Private Sub clean()
+Const ProcName As String = "clean"
+Dim failpoint As String
+On Error GoTo Err
+
 mBarChanged = False
 mOpenChanged = False
 mHighChanged = False
@@ -332,15 +390,29 @@ mLowChanged = False
 mCloseChanged = False
 mVolumeChanged = False
 mOpenInterestChanged = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As BarChangeTypes)
 Dim ev As ChangeEvent
 
+Const ProcName As String = "fireChange"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 RaiseEvent Changed(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 

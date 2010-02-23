@@ -33,7 +33,7 @@ Implements TaskCompletionListener
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "StudyUtils26"
+
 Private Const ModuleName                    As String = "StudyFoundation"
 
 '@================================================================================
@@ -47,7 +47,7 @@ End Enum
 
 Private Type ValueCacheTableEntry
     valueCache          As valueCache
-    isDefault           As Boolean
+    IsDefault           As Boolean
 End Type
 
 '@================================================================================
@@ -98,6 +98,9 @@ Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
 Dim tc As TaskController
 Dim result As ValueReplayResult
+Const ProcName As String = "TaskCompletionListener_taskCompleted"
+On Error GoTo Err
+
 Set result = ev.result
 Set tc = ev.source
 Select Case CLng(tc.cookie)
@@ -106,6 +109,11 @@ Case TaskDiscriminators.TaskAddStudy
 Case TaskDiscriminators.TaskAddStudyValueListener
     mListeners.Add result.target, result.valueName
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -117,41 +125,105 @@ End Sub
 '@================================================================================
 
 Public Property Get BarNumber() As Long
+Const ProcName As String = "BarNumber"
+On Error GoTo Err
+
 BarNumber = mBarNumber
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Id() As String
+Const ProcName As String = "Id"
+On Error GoTo Err
+
 Id = mIdent
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InstanceName() As String
+Const ProcName As String = "InstanceName"
+On Error GoTo Err
+
 InstanceName = mShortName & "(" & _
                 Join(mInputValueNames, ",") & "," & _
                 ParamsToString & ")"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InstancePath() As String
+Const ProcName As String = "InstancePath"
+On Error GoTo Err
+
 InstancePath = mShortName & "(" & _
                 Join(mInputValueNames, ",") & "," & _
                 ParamsToString & ")." & _
                 mUnderlyingStudy.InstancePath
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsNewBar() As Boolean
+Const ProcName As String = "IsNewBar"
+On Error GoTo Err
+
 IsNewBar = mIsNewBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LocalBarNumber() As Long
+Const ProcName As String = "LocalBarNumber"
+On Error GoTo Err
+
 LocalBarNumber = mLocalBarNumber
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Parameters() As Parameters
+Const ProcName As String = "Parameters"
+On Error GoTo Err
+
 Set Parameters = mParams.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ReplayUsingStudyValues( _
                 ByVal value As Boolean)
+Const ProcName As String = "ReplayUsingStudyValues"
+On Error GoTo Err
+
 mReplayUsingStudyValues = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -171,6 +243,9 @@ Dim inputDefs As StudyInputDefinitions
 Dim lBarStudy As BarStudy
 Dim i As Long
 Dim j As Long
+
+Const ProcName As String = "AddStudy"
+On Error GoTo Err
 
 Set inputDefs = studyToAdd.StudyDefinition.StudyInputDefinitions
 
@@ -241,6 +316,11 @@ Else
 End If
     
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Public Function AddStudyValueListener( _
@@ -252,6 +332,9 @@ Public Function AddStudyValueListener( _
 Dim valueDefs As StudyValueDefinitions
 Dim valNames(0) As String
 Dim notifyNames(0) As String 'dummy
+
+Const ProcName As String = "AddStudyValueListener"
+On Error GoTo Err
 
 If numberOfValuesToReplay >= 0 Or _
     numberOfValuesToReplay = ReplayNumbers.ReplayAll _
@@ -294,22 +377,35 @@ Else
                                     taskData)
     AddStudyValueListener.AddTaskCompletionListener Me
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function FindValueCache( _
                 ByVal valueName As String) As valueCache
 Dim i As Long
 
+Const ProcName As String = "FindValueCache"
+On Error GoTo Err
+
 valueName = UCase$(valueName)
 For i = 0 To UBound(mValueCaches)
     If UCase$(mValueCaches(i).valueCache.valueName) = valueName Or _
         (valueName = DefaultStudyValueNameStr And _
-        mValueCaches(i).isDefault) _
+        mValueCaches(i).IsDefault) _
     Then
         Set FindValueCache = mValueCaches(i).valueCache
         Exit For
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetStudyValue( _
@@ -317,8 +413,16 @@ Public Function GetStudyValue( _
                 ByVal ref As Long) As SValue
 Dim valueCache As valueCache
 
+Const ProcName As String = "GetStudyValue"
+On Error GoTo Err
+
 Set valueCache = FindValueCache(valueName)
 GetStudyValue = valueCache.GetSValue(ref)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub initialise( _
@@ -328,6 +432,9 @@ Public Sub initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study)
+
+Const ProcName As String = "initialise"
+On Error GoTo Err
 
 Set mStudyRef = CreateWeakReference(Study)
 mShortName = Study.StudyDefinition.ShortName
@@ -345,10 +452,18 @@ mListeners.DefaultValueName = Study.StudyDefinition.DefaultValueName
 mNumberOfValuesToCache = numberOfValuesToCache
 createValueCaches mNumberOfValuesToCache
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Public Sub NotifyInput( _
                 ByRef ev As StudyValueEvent)
+Const ProcName As String = "NotifyInput"
+On Error GoTo Err
+
 If ev.sVal.BarNumber <> mBarNumber Then
     mBarNumber = ev.sVal.BarNumber
     mLocalBarNumber = mLocalBarNumber + 1
@@ -357,37 +472,74 @@ If ev.sVal.BarNumber <> mBarNumber Then
 Else
     mIsNewBar = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Public Sub NotifyValue( _
                 ByRef ev As StudyValueEvent)
+Const ProcName As String = "NotifyValue"
+On Error GoTo Err
+
 If ev.sVal.BarStartTime = 0 Then ev.sVal.BarStartTime = mBarStartTime
 mStudies.Notify ev
 mListeners.Notify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Public Function NumberOfBarsRequired( _
                 ByVal studyNeeds As Long) As Long
 Dim superiorStudiesNeeds
+Const ProcName As String = "NumberOfBarsRequired"
+On Error GoTo Err
+
 studyNeeds = studyNeeds + mNumberOfValuesToCache
 superiorStudiesNeeds = mStudies.NumberOfBarsRequired
 NumberOfBarsRequired = IIf(studyNeeds > superiorStudiesNeeds, _
                             studyNeeds, _
                             superiorStudiesNeeds)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NumberOfCachedValues( _
                 Optional ByVal valueName As String = "") As Long
+Const ProcName As String = "NumberOfCachedValues"
+On Error GoTo Err
+
 If valueName = "" Then
     NumberOfCachedValues = mValueCaches(0).valueCache.Count
 Else
     NumberOfCachedValues = FindValueCache(valueName).Count
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub RemoveStudyValueListener( _
                 ByVal listener As StudyValueListener)
+Const ProcName As String = "RemoveStudyValueListener"
+On Error GoTo Err
+
 mListeners.Remove listener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 
@@ -407,6 +559,9 @@ Private Function addStudyHelper( _
 Dim valueDefs As StudyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim i As Long
+
+Const ProcName As String = "addStudyHelper"
+On Error GoTo Err
 
 If numberOfValuesToReplay >= 0 Or _
     numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Or _
@@ -432,7 +587,7 @@ If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
     For Each valueDef In valueDefs
         If UCase$(valueDef.Name) = valueName Or _
             (valueName = DefaultStudyValueNameStr And _
-            valueDef.isDefault) _
+            valueDef.IsDefault) _
         Then
             Set addStudyHelper = replayCacheValues(mValueCaches(i).valueCache, _
                                         studyToAdd, _
@@ -460,6 +615,11 @@ Else
     addStudyHelper.AddTaskCompletionListener Me
     
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Function
 
@@ -469,20 +629,31 @@ Dim valueDefs As StudyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim i As Long
 
+Const ProcName As String = "createValueCaches"
+On Error GoTo Err
+
 Set valueDefs = Study.StudyDefinition.StudyValueDefinitions
 
 ReDim mValueCaches(valueDefs.Count - 1) As ValueCacheTableEntry
 For Each valueDef In valueDefs
     Set mValueCaches(i).valueCache = CreateValueCache(numberOfValuesToCache, valueDef.Name)
-    mValueCaches(i).isDefault = valueDef.isDefault
+    mValueCaches(i).IsDefault = valueDef.IsDefault
     i = i + 1
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function ParamsToString() As String
 Dim paramDefs As StudyParameterDefinitions
 Dim paramDef As StudyParameterDefinition
 Dim i As Long
+
+Const ProcName As String = "ParamsToString"
+On Error GoTo Err
 
 On Error Resume Next
 Set paramDefs = Study.StudyDefinition.StudyParameterDefinitions
@@ -494,6 +665,11 @@ For i = 1 To paramDefs.Count
         ParamsToString = ParamsToString & "," & mParams.GetParameterValue(paramDef.Name)
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function replayCacheValues( _
@@ -501,10 +677,13 @@ Private Function replayCacheValues( _
                 ByVal target As Object, _
                 ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal Discriminator As Long, _
+                Optional ByVal discriminator As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 Dim replayTask As New CacheReplayTask
+
+Const ProcName As String = "replayCacheValues"
+On Error GoTo Err
 
 If numberOfValuesToReplay >= 0 Or _
     numberOfValuesToReplay = ReplayNumbers.ReplayAll _
@@ -525,11 +704,24 @@ Set replayCacheValues = StartTask( _
                                 replayTask, _
                                 PriorityNormal, _
                                 IIf(taskName <> "", taskName, GenerateGUIDString), _
-                                Discriminator, _
+                                discriminator, _
                                 taskData)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study() As Study
+Const ProcName As String = "Study"
+On Error GoTo Err
+
 Set Study = mStudyRef.target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 

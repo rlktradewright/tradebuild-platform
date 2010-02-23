@@ -40,7 +40,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TBInfoBase26"
+
 Private Const ModuleName                    As String = "ContractsRetrievalTask"
 
 '@================================================================================
@@ -72,25 +72,35 @@ End Sub
 ' Task Interface Members
 '@================================================================================
 
-Private Sub Task_cancel()
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.cancelTask
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Task_run()
+Const ProcName As String = "Task_run"
 Dim instrument As BusinessDataObject
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mInstrEnumerator Is Nothing Then
-    Set mFetchInstrumentsTC = mDB.InstrumentFactory.queryObjectsBySpecAsync( _
+    Set mFetchInstrumentsTC = mDB.InstrumentFactory.QueryObjectsBySpecAsync( _
                                                 mBuilder.Contracts.ContractSpecifier, _
                                                 , _
                                                 "LoadBySpecifier/" & mBuilder.Contracts.ContractSpecifier.ToString & "(" & gGetSequenceNumber & ")")
     mTaskContext.Suspend -1
 Else
     If Not mInstrEnumerator.MoveNext Then
-        mTaskContext.finish mBuilder.Contracts, False
+        mTaskContext.Finish mBuilder.Contracts, False
     Else
         Set instrument = mInstrEnumerator.current
         mBuilder.AddContract gContractFromInstrument(instrument)
@@ -102,7 +112,7 @@ Exit Sub
 Err:
 If Err.Number = 3265 Then
     ' This error is 'Item cannot be found in the collection corresponding
-    ' to the requested name or ordinal'. It occurs the first time this object
+    ' to the requested Name or ordinal'. It occurs the first time this object
     ' runs after the database has not been used for some time (hours?). The
     ' instrument objects are correctly constructed, but when the first one is
     ' accessed (in gContractFromInstrument) the recordset has mysteriously been closed
@@ -116,16 +126,17 @@ If Err.Number = 3265 Then
     Exit Sub
 End If
     
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Task_run", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext( _
                 ByVal value As TWUtilities30.TaskContext)
+Const ProcName As String = "Task_TaskContext"
 Set mTaskContext = value
 End Property
 
 Private Property Get Task_taskName() As String
-Task_taskName = mTaskContext.name
+Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -134,13 +145,14 @@ End Property
 
 Private Sub mFetchInstrumentsTC_Completed( _
                 ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mFetchInstrumentsTC_Completed"
 Dim instruments As DataObjects
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.cancelled Then
-    mTaskContext.finish Empty, True
+    mTaskContext.Finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
     mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 Else
@@ -153,7 +165,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mFetchInstrumentsTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -164,9 +176,10 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal specifier As ContractSpecifier)
+Const ProcName As String = "Initialise"
 Set mDB = db
 Set mBuilder = CreateContractsBuilder(specifier)
 End Sub
@@ -180,6 +193,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "logMessage"
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 

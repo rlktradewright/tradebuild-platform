@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#115.1#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#140.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -73,7 +73,8 @@ UserControl.Height = ChartToolbar1.Height
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log LogLevelDetail, "ChartNavToolbar terminated"
+Const ProcName As String = "UserControl_Terminate"
+gLogger.Log "ChartNavToolbar terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "ChartNavToolbar terminated"
 End Sub
 
@@ -88,6 +89,10 @@ End Sub
 
 Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEvent)
 Dim changeType As MultiChartChangeTypes
+Const ProcName As String = "ChangeListener_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 changeType = ev.changeType
 Select Case changeType
 Case MultiChartSelectionChanged
@@ -97,6 +102,11 @@ Case MultiChartAdd
 Case MultiChartRemove
 
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -105,6 +115,10 @@ End Sub
 
 Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEvent)
 Dim State As ChartStates
+Const ProcName As String = "mTradeBuildChart_StateChange"
+Dim failpoint As String
+On Error GoTo Err
+
 State = ev.State
 Select Case State
 Case ChartStateBlank
@@ -116,6 +130,11 @@ Case ChartStateInitialised
 Case ChartStateLoaded
     setupChartNavButtons
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -129,9 +148,18 @@ End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 UserControl.Enabled = value
 ChartToolbar1.Enabled = value
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -141,11 +169,15 @@ End Property
 Public Sub Initialise( _
                 Optional ByVal pChart As TradeBuildChart, _
                 Optional ByVal pMultiChart As MultiChart)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 If pChart Is Nothing And pMultiChart Is Nothing Or _
     (Not pChart Is Nothing And Not pMultiChart Is Nothing) _
 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Either a Chart or a Multichart (but not both) must be supplied"
 End If
 
@@ -158,6 +190,11 @@ ElseIf Not pMultiChart Is Nothing Then
 Else
     Set mTradeBuildChart = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -165,27 +202,63 @@ End Sub
 '@================================================================================
 
 Private Sub attachToChart(ByVal pChart As TradeBuildChart)
+Const ProcName As String = "attachToChart"
+Dim failpoint As String
+On Error GoTo Err
+
     Set mTradeBuildChart = pChart
     If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub attachToCurrentChart()
-If multiChartObj.count > 0 Then
+Const ProcName As String = "attachToCurrentChart"
+Dim failpoint As String
+On Error GoTo Err
+
+If multiChartObj.Count > 0 Then
     attachToChart multiChartObj.Chart
 Else
     Set mTradeBuildChart = Nothing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function multiChartObj() As MultiChart
+Const ProcName As String = "multiChartObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set multiChartObj = mMultichartRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub setupChartNavButtons()
 
+Const ProcName As String = "setupChartNavButtons"
+Dim failpoint As String
+On Error GoTo Err
+
 ChartToolbar1.Initialise mTradeBuildChart.BaseChartController, _
                         mTradeBuildChart.PriceRegion, _
                         mTradeBuildChart.TradeBarSeries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 

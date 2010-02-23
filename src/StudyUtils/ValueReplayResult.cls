@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "StudyUtils26"
+
 Private Const ModuleName                    As String = "ValueReplayResult"
 
 '@================================================================================
@@ -46,7 +46,7 @@ Private Const ModuleName                    As String = "ValueReplayResult"
 '@================================================================================
 
 Private mTarget As Object
-Private mSourceStudy As study
+Private mSourceStudy As Study
 Private mValueName As String
 Private mValueNames() As String
 Private mNotifyName As String
@@ -76,7 +76,7 @@ Public Property Get notifyNames() As String()
 notifyNames = mNotifyNames
 End Property
 
-Public Property Get sourceStudy() As study
+Public Property Get sourceStudy() As Study
 Set sourceStudy = mSourceStudy
 End Property
 
@@ -99,9 +99,12 @@ End Property
 
 Friend Sub initialise( _
                 ByVal target As Object, _
-                ByVal sourceStudy As study, _
+                ByVal sourceStudy As Study, _
                 ByRef valueNames() As String, _
                 ByRef notifyNames() As String)
+
+Const ProcName As String = "initialise"
+On Error GoTo Err
 
 Set mTarget = target
 Set mSourceStudy = sourceStudy
@@ -109,6 +112,11 @@ mValueNames = valueNames
 mValueName = mValueNames(0)
 mNotifyNames = notifyNames
 mNotifyName = mNotifyNames(0)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

@@ -52,7 +52,6 @@ Event Error( _
 ' Member variables
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradingDO26"
 Private Const ModuleName                    As String = "TickWriter"
 
 Private mTde                                As TickDataEncoder
@@ -95,7 +94,7 @@ ElseIf ev.errorNumber <> 0 Then
 Else
     If gLogger.IsLoggable(LogLevelMediumDetail) Then
         gLogger.Log LogLevelMediumDetail, _
-                    "TickWriter: successfully wrote data for " & mInstrument.shortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601)
+                    "TickWriter: successfully wrote data for " & mInstrument.ShortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601)
     End If
 End If
 End Sub
@@ -106,7 +105,7 @@ End Sub
 
 Private Sub mTickWriter_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 Const ProcName As String = "mTickWriter_ConnectFailed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent ConnectFailed(errorCode, errorDesc)
@@ -115,7 +114,7 @@ Set mTickWriter = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickWriter_DataWritten()
@@ -133,7 +132,7 @@ End Sub
 
 Private Sub mWriteTimer_TimerExpired()
 Const ProcName As String = "mWriteTimer_TimerExpired"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 writePeriodData
@@ -142,43 +141,45 @@ startWriteTimer
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get bytesWritten() As Long
-bytesWritten = mTotalBytes
+Public Property Get BytesWritten() As Long
+BytesWritten = mTotalBytes
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal pInstrument As instrument, _
                 ByVal useAsynchronousWrites As Boolean)
-Const ProcName As String = "initialise"
-Dim failpoint As Long
+Const ProcName As String = "Initialise"
+
 On Error GoTo Err
 
 Set mDB = db
 Set mInstrument = pInstrument
-mTickSize = mInstrument.tickSize
+mTickSize = mInstrument.TickSize
 mUseAsynchronousWrites = useAsynchronousWrites
 startWriteTimer
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub finish()
-Dim failpoint As Long
+Public Sub Finish()
+Const ProcName As String = "Finish"
+
+
 On Error GoTo Err
 
 writePeriodData
@@ -186,14 +187,16 @@ writePeriodData
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeAsk( _
+Public Sub WriteAsk( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteAsk"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -204,14 +207,16 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeAsk", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeBid( _
+Public Sub WriteBid( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteBid"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -222,13 +227,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeBid", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeClose( _
+Public Sub WriteClose( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
-Dim failpoint As Long
+Const ProcName As String = "WriteClose"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -239,13 +246,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeClose", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeHigh( _
+Public Sub WriteHigh( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
-Dim failpoint As Long
+Const ProcName As String = "WriteHigh"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -256,13 +265,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeHigh", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeLow( _
+Public Sub WriteLow( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
-Dim failpoint As Long
+Const ProcName As String = "WriteLow"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -273,10 +284,10 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeLow", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeMarketDepthData( _
+Public Sub WriteMarketDepthData( _
                 ByVal timestamp As Date, _
                 ByVal position As Long, _
                 ByVal marketmaker As String, _
@@ -284,7 +295,9 @@ Public Sub writeMarketDepthData( _
                 ByVal side As Long, _
                 ByVal price As Double, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteMarketDepthData"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -295,12 +308,14 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeMarketDepthData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeMarketDepthReset( _
+Public Sub WriteMarketDepthReset( _
                 ByVal timestamp As Date)
-Dim failpoint As Long
+Const ProcName As String = "WriteMarketDepthReset"
+
+
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
@@ -310,13 +325,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeMarketDepthReset", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeOpen( _
+Public Sub WriteOpen( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
-Dim failpoint As Long
+Const ProcName As String = "WriteOpen"
+
+
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
@@ -326,13 +343,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeOpen", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeOpenInterest( _
+Public Sub WriteOpenInterest( _
                 ByVal timestamp As Date, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteOpenInterest"
+
+
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
@@ -342,52 +361,56 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeOpenInterest", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeTick( _
+Public Sub WriteTick( _
                 ByRef tick As GenericTick)
-Dim failpoint As Long
+Const ProcName As String = "WriteTick"
+
+
 On Error GoTo Err
 
 With tick
     Select Case .tickType
     Case TickTypes.TickTypeAsk
-        writeAsk .timestamp, .price, .size
+        WriteAsk .timestamp, .price, .size
     Case TickTypes.TickTypeBid
-        writeBid .timestamp, .price, .size
+        WriteBid .timestamp, .price, .size
     Case TickTypes.TickTypeClosePrice
-        writeClose .timestamp, .price
+        WriteClose .timestamp, .price
     Case TickTypes.TickTypeHighPrice
-        writeHigh .timestamp, .price
+        WriteHigh .timestamp, .price
     Case TickTypes.TickTypeLowPrice
-        writeLow .timestamp, .price
+        WriteLow .timestamp, .price
     Case TickTypes.TickTypeMarketDepth
-        writeMarketDepthData .timestamp, .position, .marketmaker, .operation, .side, .price, .size
+        WriteMarketDepthData .timestamp, .position, .marketmaker, .operation, .side, .price, .size
     Case TickTypes.TickTypeMarketDepthReset
-        writeMarketDepthReset .timestamp
+        WriteMarketDepthReset .timestamp
     Case TickTypes.TickTypeOpenInterest
-        writeOpenInterest .timestamp, .size
+        WriteOpenInterest .timestamp, .size
     Case TickTypes.TickTypeOpenPrice
-        writeOpen .timestamp, .price
+        WriteOpen .timestamp, .price
     Case TickTypes.TickTypeTrade
-        writeTrade .timestamp, .price, .size
+        WriteTrade .timestamp, .price, .size
     Case TickTypes.TickTypeVolume
-        writeVolume .timestamp, .size
+        WriteVolume .timestamp, .size
     End Select
 End With
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeTick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeTrade( _
+Public Sub WriteTrade( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteTrade"
+
+
 On Error GoTo Err
 
 If price = 0# Then Exit Sub
@@ -398,13 +421,15 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeTrade", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub writeVolume( _
+Public Sub WriteVolume( _
                 ByVal timestamp As Date, _
                 ByVal size As Long)
-Dim failpoint As Long
+Const ProcName As String = "WriteVolume"
+
+
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
@@ -414,7 +439,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writeVolume", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -422,8 +447,9 @@ End Sub
 '@================================================================================
 
 Private Sub checkIfNewPeriod(ByVal timestamp As Date)
+Const ProcName As String = "checkIfNewPeriod"
 Dim barTime As Date
-Dim failpoint As Long
+
 On Error GoTo Err
 
 barTime = gTruncateTimeToMinute(timestamp)
@@ -443,12 +469,14 @@ mOpeningTimestamp = barTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkIfNewPeriod", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub startWriteTimer()
-Dim failpoint As Long
+Const ProcName As String = "startWriteTimer"
+
+
 On Error GoTo Err
 
 If mWriteTimer Is Nothing Then Set mWriteTimer = CreateIntervalTimer(4000 + (Int(2000 * Rnd) + 1), ExpiryTimeUnitMilliseconds)
@@ -457,26 +485,27 @@ mWriteTimer.StartTimer
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="startWriteTimer", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub writePeriodData()
+Const ProcName As String = "writePeriodData"
 Dim tc As TaskController
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTde Is Nothing Then Exit Sub
 If Not mDataAdded Then Exit Sub
 
 Set mTickWriter = New TickDataWriter
-mTickWriter.initialise mDB, mInstrument.id, mInstrument.shortName
+mTickWriter.Initialise mDB, mInstrument.Id, mInstrument.ShortName
 
 If mUseAsynchronousWrites Then
     Set tc = mTickWriter.WriteDataAsync(mTde.encodingFormatIdentifier, _
                                         mTde.PeriodStartTime, _
                                         IIf(mTde.BasePrice = MaxDouble, 0#, mTde.BasePrice), _
-                                        mTde.tickSize, _
+                                        mTde.TickSize, _
                                         mTde.encodedData)
     tc.AddTaskCompletionListener Me
     Set mTickWriter = Nothing
@@ -484,7 +513,7 @@ Else
     mTickWriter.WriteData mTde.encodingFormatIdentifier, _
                                 mTde.PeriodStartTime, _
                                 IIf(mTde.BasePrice = MaxDouble, 0#, mTde.BasePrice), _
-                                mTde.tickSize, _
+                                mTde.TickSize, _
                                 mTde.encodedData
 End If
 
@@ -493,7 +522,7 @@ mDataAdded = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="writePeriodData", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

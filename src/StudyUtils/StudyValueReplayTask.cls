@@ -93,7 +93,6 @@ Private mResult As ValueReplayResult
 '@================================================================================
 
 Private Property Get ValueReplayTask_Discriminator() As Long
-'ValueReplayTask_Discriminator = mDiscriminator
 ValueReplayTask_Discriminator = 0
 End Property
 
@@ -130,7 +129,7 @@ End Property
 '@================================================================================
 
 Private Sub task_cancel()
-
+mTaskContext.Finish Empty, True
 End Sub
 
 Private Property Get task_TaskName() As String
@@ -142,11 +141,8 @@ Dim i As Long
 Dim ev As StudyValueEvent
 Dim valueEntry As SValue
 
-Dim failpoint As Long
-
+Const ProcName As String = "Task_run"
 On Error GoTo Err
-
-failpoint = 100
 
 If mSourceStudy.NumberOfCachedValues = 0 Then
     mTaskContext.Progress 100
@@ -164,8 +160,6 @@ End If
 
 For i = 0 To UBound(mReplayValueNames)
     
-    failpoint = 200
-    
     valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), mNextValueNumber)
      
     If Not IsEmpty(valueEntry.value) Then
@@ -174,16 +168,12 @@ For i = 0 To UBound(mReplayValueNames)
         
         If mTargetIsStudy Then
             
-            failpoint = 300
-            
             mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
             
             ev.valueName = mReplayNotifyNames(i)
             mStudyToNotify.Notify ev
         Else
         
-            failpoint = 400
-            
             ev.valueName = mReplayValueNames(i)
             mTargetListener.Notify ev
         End If
@@ -211,12 +201,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
@@ -232,7 +217,6 @@ End Property
 '@================================================================================
 
 Public Property Get Discriminator() As Long
-'Discriminator = mDiscriminator
 Discriminator = 0
 End Property
 
@@ -276,6 +260,9 @@ Friend Sub initialise( _
 Dim numValuesToNotify As Long
 Dim studyEntry As StudyTableEntry
 
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 Set mTarget = target
 Set mSourceStudy = sourceStudy
 mReplayValueNames = replayValueNames
@@ -316,6 +303,11 @@ End If
 
 mNextValueNumber = mSourceStudy.NumberOfCachedValues - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

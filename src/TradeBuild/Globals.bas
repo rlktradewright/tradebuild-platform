@@ -76,13 +76,14 @@ Public Const StrOrderActionSell             As String = "Sell"
 
 Public gTB As TradeBuildAPI
 
-Private mLogTokens(9) As String
-
 '@================================================================================
 ' Procedures
 '@================================================================================
 
 Public Function GApiNotifyCodeToString(value As ApiNotifyCodes) As String
+Const ProcName As String = "GApiNotifyCodeToString"
+On Error GoTo Err
+
 Select Case value
 Case ApiNotifyServiceProviderError
     GApiNotifyCodeToString = "ApiNotifyServiceProviderError"
@@ -179,6 +180,11 @@ Case ApiNotifyReConnectingContractDataSource
 Case ApiNotifyRetryConnectContractDataSource
     GApiNotifyCodeToString = "ApiNotifyRetryConnectContractDataSource"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 ''
@@ -191,6 +197,9 @@ End Function
 '@/
 Public Function GEntryOrderTypeToOrderType( _
                 ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
+Const ProcName As String = "GEntryOrderTypeToOrderType"
+On Error GoTo Err
+
 Select Case pEntryOrderType
 Case EntryOrderTypeMarket
     GEntryOrderTypeToOrderType = OrderTypeMarket
@@ -222,12 +231,20 @@ Case EntryOrderTypeStopLimit
     GEntryOrderTypeToOrderType = OrderTypeStopLimit
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.Module1::gEntryOrderTypeToOrderType", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Invalid entry type"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GEntryOrderTypeToString(ByVal value As EntryOrderTypes) As String
+Const ProcName As String = "GEntryOrderTypeToString"
+On Error GoTo Err
+
 Select Case value
 Case EntryOrderTypeMarket
     GEntryOrderTypeToString = "Market"
@@ -258,9 +275,17 @@ Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
     GEntryOrderTypeToString = "Stop limit"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GEntryOrderTypeToShortString(ByVal value As EntryOrderTypes) As String
+Const ProcName As String = "GEntryOrderTypeToShortString"
+On Error GoTo Err
+
 Select Case value
 Case EntryOrderTypeMarket
     GEntryOrderTypeToShortString = "MKT"
@@ -291,6 +316,11 @@ Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
     GEntryOrderTypeToShortString = "STPLMT"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub GHandleFatalError( _
@@ -304,7 +334,14 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=pModuleName, pFailpoint:=pFailpoint
+
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            pModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -313,6 +350,9 @@ gTB.NotifyFatalError Err.number, Err.Description, Err.source
 End Sub
 
 Public Function GIsValidTIF(ByVal value As OrderTifs) As Boolean
+Const ProcName As String = "GIsValidTIF"
+On Error GoTo Err
+
 Select Case value
 Case TIFDay
     GIsValidTIF = True
@@ -323,9 +363,17 @@ Case TIFImmediateOrCancel
 Case Else
     GIsValidTIF = False
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GLegOpenCloseFromString(ByVal value As String) As LegOpenClose
+Const ProcName As String = "GLegOpenCloseFromString"
+On Error GoTo Err
+
 Select Case UCase$(value)
 Case ""
     GLegOpenCloseFromString = LegUnknownPos
@@ -336,9 +384,17 @@ Case "OPEN"
 Case "CLOSE"
     GLegOpenCloseFromString = LegClosePos
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GLegOpenCloseToString(ByVal value As LegOpenClose) As String
+Const ProcName As String = "GLegOpenCloseToString"
+On Error GoTo Err
+
 Select Case value
 Case LegSamePos
     GLegOpenCloseToString = "SAME"
@@ -347,6 +403,11 @@ Case LegOpenPos
 Case LegClosePos
     GLegOpenCloseToString = "CLOSE"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gNotifyExistingCollectionMembers( _
@@ -356,7 +417,7 @@ Public Function gNotifyExistingCollectionMembers( _
 Dim lItem As Variant
 
 Const ProcName As String = "gNotifyExistingCollectionMembers"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If VarType(pCollection) And vbArray = vbArray Then
@@ -390,29 +451,48 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
 Public Function GOrderActionFromString(ByVal value As String) As OrderActions
+Const ProcName As String = "GOrderActionFromString"
+On Error GoTo Err
+
 Select Case UCase$(value)
 Case StrOrderActionBuy
     GOrderActionFromString = ActionBuy
 Case StrOrderActionSell
     GOrderActionFromString = ActionSell
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderActionToString(ByVal value As OrderActions) As String
+Const ProcName As String = "GOrderActionToString"
+On Error GoTo Err
+
 Select Case value
 Case ActionBuy
     GOrderActionToString = StrOrderActionBuy
 Case ActionSell
     GOrderActionToString = StrOrderActionSell
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderAttributeToString(ByVal value As OrderAttributes) As String
+Const ProcName As String = "GOrderAttributeToString"
+On Error GoTo Err
+
 Select Case value
     Case OrderAttOpenClose
         GOrderAttributeToString = "OpenClose"
@@ -477,9 +557,17 @@ Select Case value
     Case Else
         GOrderAttributeToString = "***Unknown order attribute***"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderStatusToString(ByVal value As OrderStatuses) As String
+Const ProcName As String = "GOrderStatusToString"
+On Error GoTo Err
+
 Select Case UCase$(value)
 Case OrderStatusCreated
     GOrderStatusToString = "Created"
@@ -498,9 +586,17 @@ Case OrderStatusCancelled
 Case OrderStatusFilled
     GOrderStatusToString = "Filled"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
+Const ProcName As String = "GOrderStopTriggerMethodToString"
+On Error GoTo Err
+
 Select Case value
 Case StopTriggerMethods.StopTriggerBidAsk
     GOrderStopTriggerMethodToString = "Bid/Ask"
@@ -517,9 +613,17 @@ Case StopTriggerMethods.StopTriggerLastOrBidAsk
 Case StopTriggerMethods.StopTriggerMidPoint
     GOrderStopTriggerMethodToString = "Mid-point"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderTIFToString(ByVal value As OrderTifs) As String
+Const ProcName As String = "GOrderTIFToString"
+On Error GoTo Err
+
 Select Case value
 Case TIFDay
     GOrderTIFToString = "DAY"
@@ -528,9 +632,17 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
     GOrderTIFToString = "IOC"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GOrderTypeToString(ByVal value As OrderTypes) As String
+Const ProcName As String = "GOrderTypeToString"
+On Error GoTo Err
+
 Select Case value
 Case OrderTypeNone
     GOrderTypeToString = StrOrderTypeNone
@@ -578,6 +690,11 @@ Case OrderTypePeggedToPrimary
     GOrderTypeToString = StrOrderTypePeggedToPrimary
 End Select
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 ''
@@ -589,6 +706,9 @@ End Function
 '@/
 Public Function GStopOrderTypeToOrderType( _
                 ByVal pStopOrderType As StopOrderTypes) As OrderTypes
+Const ProcName As String = "GStopOrderTypeToOrderType"
+On Error GoTo Err
+
 Select Case pStopOrderType
 Case StopOrderTypeNone
     GStopOrderTypeToOrderType = OrderTypeNone
@@ -606,12 +726,20 @@ Case StopOrderTypeAuto
     GStopOrderTypeToOrderType = OrderTypeAutoStop
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.Module1::gStopOrderTypeToOrderType", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Invalid entry type"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GStopOrderTypeToShortString(ByVal value As StopOrderTypes)
+Const ProcName As String = "GStopOrderTypeToShortString"
+On Error GoTo Err
+
 Select Case value
 Case StopOrderTypeNone
     GStopOrderTypeToShortString = "NONE"
@@ -628,9 +756,17 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
     GStopOrderTypeToShortString = "AUTO"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GStopOrderTypeToString(ByVal value As StopOrderTypes)
+Const ProcName As String = "GStopOrderTypeToString"
+On Error GoTo Err
+
 Select Case value
 Case StopOrderTypeNone
     GStopOrderTypeToString = "None"
@@ -647,6 +783,11 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
     GStopOrderTypeToString = "Auto"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 ''
@@ -659,6 +800,9 @@ End Function
 '@/
 Public Function GTargetOrderTypeToOrderType( _
                 ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
+Const ProcName As String = "GTargetOrderTypeToOrderType"
+On Error GoTo Err
+
 Select Case pTargetOrderType
 Case TargetOrderTypeNone
     GTargetOrderTypeToOrderType = OrderTypeNone
@@ -678,12 +822,20 @@ Case TargetOrderTypeAuto
     GTargetOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild26.Module1::gTargetOrderTypeToOrderType", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Invalid entry type"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GTargetOrderTypeToShortString(ByVal value As TargetOrderTypes)
+Const ProcName As String = "GTargetOrderTypeToShortString"
+On Error GoTo Err
+
 Select Case value
 Case TargetOrderTypeNone
     GTargetOrderTypeToShortString = "NONE"
@@ -700,9 +852,17 @@ Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
     GTargetOrderTypeToShortString = "AUTO"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GTargetOrderTypeToString(ByVal value As TargetOrderTypes)
+Const ProcName As String = "GTargetOrderTypeToString"
+On Error GoTo Err
+
 Select Case value
 Case TargetOrderTypeNone
     GTargetOrderTypeToString = "None"
@@ -719,9 +879,17 @@ Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
     GTargetOrderTypeToString = "Auto"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GTickfileSpecifierToString(tfSpec As ITickfileSpecifier) As String
+Const ProcName As String = "GTickfileSpecifierToString"
+On Error GoTo Err
+
 If tfSpec.Filename <> "" Then
     GTickfileSpecifierToString = tfSpec.Filename
 Else
@@ -730,40 +898,28 @@ Else
                             ": From: " & FormatDateTime(tfSpec.FromDate, vbGeneralDate) & _
                             " To: " & FormatDateTime(tfSpec.ToDate, vbGeneralDate)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Sub GLog(ByRef pMsg As String, _
-                ByRef pProjName As String, _
-                ByRef pModName As String, _
-                ByRef pProcName As String, _
-                Optional ByRef pMsgQualifier As String = vbNullString, _
-                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-If Not GLogLogger.IsLoggable(pLogLevel) Then Exit Sub
-mLogTokens(0) = "["
-mLogTokens(1) = pProjName
-mLogTokens(2) = "."
-mLogTokens(3) = pModName
-mLogTokens(4) = ":"
-mLogTokens(5) = pProcName
-mLogTokens(6) = "] "
-mLogTokens(7) = pMsg
-If Len(pMsgQualifier) <> 0 Then
-    mLogTokens(8) = ": "
-    mLogTokens(9) = pMsgQualifier
-Else
-    mLogTokens(8) = vbNullString
-    mLogTokens(9) = vbNullString
-End If
+Public Property Get GLogLogger() As FormattingLogger
+Static lLogger As FormattingLogger
+Const ProcName As String = "GLogLogger"
 
-GLogLogger.Log pLogLevel, Join(mLogTokens, "")
-End Sub
+On Error GoTo Err
 
-Public Property Get GLogLogger() As Logger
-Static lLogger As Logger
 If lLogger Is Nothing Then
-    Set lLogger = GetLogger("tradebuild.log")
+    Set lLogger = CreateFormattingLogger("tradebuild.log", ProjectName)
 End If
 Set GLogLogger = lLogger
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Sub GLogProfitProfile( _
@@ -783,7 +939,15 @@ Public Sub GLogMoneyManagement( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogMoneyManagement"
+On Error GoTo Err
+
 logInfotypeData "MoneyManagement", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogOrderPlexProfileStruct( _
@@ -793,7 +957,15 @@ Public Sub GLogOrderPlexProfileStruct( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogOrderPlexProfileStruct"
+On Error GoTo Err
+
 logInfotypeData "OrderPlexProfileStruct", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogOrderPlexProfileString( _
@@ -803,7 +975,15 @@ Public Sub GLogOrderPlexProfileString( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogOrderPlexProfileString"
+On Error GoTo Err
+
 logInfotypeData "OrderPlexProfileString", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogOrder( _
@@ -813,7 +993,15 @@ Public Sub GLogOrder( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogOrder"
+On Error GoTo Err
+
 logInfotypeData "Order", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogPosition( _
@@ -823,7 +1011,15 @@ Public Sub GLogPosition( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogPosition"
+On Error GoTo Err
+
 logInfotypeData "Position", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogTradeProfile( _
@@ -833,7 +1029,15 @@ Public Sub GLogTradeProfile( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogTradeProfile"
+On Error GoTo Err
+
 logInfotypeData "TradeProfile", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogProfit( _
@@ -843,7 +1047,15 @@ Public Sub GLogProfit( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogProfit"
+On Error GoTo Err
+
 logInfotypeData "Profit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogDrawdown( _
@@ -853,7 +1065,15 @@ Public Sub GLogDrawdown( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogDrawdown"
+On Error GoTo Err
+
 logInfotypeData "Drawdown", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogMaxProfit( _
@@ -863,7 +1083,15 @@ Public Sub GLogMaxProfit( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogMaxProfit"
+On Error GoTo Err
+
 logInfotypeData "MaxProfit", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogMaxLoss( _
@@ -873,7 +1101,15 @@ Public Sub GLogMaxLoss( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogMaxLoss"
+On Error GoTo Err
+
 logInfotypeData "MaxLoss", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub GLogOrderDetail( _
@@ -883,13 +1119,29 @@ Public Sub GLogOrderDetail( _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Static lLogger As Logger
 Static lLoggerSimulated As Logger
+Const ProcName As String = "GLogOrderDetail"
+On Error GoTo Err
+
 logInfotypeData "OrderDetail", pData, pSimulated, pSource, pLogLevel, IIf(pSimulated, lLoggerSimulated, lLogger)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Property Get GTracer() As Tracer
 Static lTracer As Tracer
+Const ProcName As String = "GTracer"
+On Error GoTo Err
+
 If lTracer Is Nothing Then Set lTracer = GetTracer("tradebuild")
 Set GTracer = lTracer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub logInfotypeData( _
@@ -899,11 +1151,19 @@ Private Sub logInfotypeData( _
                 ByVal pSource As Object, _
                 ByVal pLogLevel As LogLevels, _
                 ByRef pLogger As Logger)
+Const ProcName As String = "logInfotypeData"
+On Error GoTo Err
+
 If pLogger Is Nothing Then
     Set pLogger = GetLogger("tradebuild." & pInfotype & IIf(pSimulated, "Simulated", ""))
     pLogger.LogToParent = False
 End If
 pLogger.Log pLogLevel, pData, pSource
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyCollectionMember( _
@@ -911,6 +1171,9 @@ Private Sub notifyCollectionMember( _
                 ByVal pSource As Object, _
                 ByVal pListener As CollectionChangeListener)
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "notifyCollectionMember"
+On Error GoTo Err
+
 Set ev.source = pSource
 ev.changeType = CollItemAdded
 
@@ -920,4 +1183,9 @@ Else
     ev.affectedItem = pItem
 End If
 pListener.Change ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub

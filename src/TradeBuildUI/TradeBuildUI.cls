@@ -77,7 +77,6 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuildUI26"
 Private Const ModuleName                    As String = "TradeBuildUI"
 
 '@================================================================================
@@ -105,14 +104,14 @@ Private Const ModuleName                    As String = "TradeBuildUI"
 '@================================================================================
 
 Public Function SelectTickfiles( _
-                ByRef userCancelled As Boolean) As TickfileSpecifiers
+                ByRef UserCancelled As Boolean) As TickfileSpecifiers
 Static inHere As Boolean
 
 Dim lTickfileOrganiser As fTickfileOrganiser
 Dim lLogger As Logger
 
-
-Dim failpoint As Long
+Const ProcName As String = "SelectTickfiles"
+Dim failpoint As String
 On Error GoTo Err
 
 Set lLogger = GetLogger("diag.tradebuild.tradebuildui")
@@ -121,7 +120,7 @@ lLogger.Log LogLevelMediumDetail, "SelectTickfiles"
 If inHere Then
     ' this is a re-entrant call
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "SelectTickfiles", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Already selecting tickfiles"
 End If
 
@@ -133,19 +132,14 @@ lTickfileOrganiser.Show vbModal
 
 lLogger.Log LogLevelMediumDetail, "Tickfile organiser form closed"
 
-userCancelled = lTickfileOrganiser.cancelled
+UserCancelled = lTickfileOrganiser.cancelled
 
 Set SelectTickfiles = lTickfileOrganiser.TickfileSpecifiers
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SelectTickfiles" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function StartTickersWithUserSelection( _
@@ -154,7 +148,8 @@ Public Function StartTickersWithUserSelection( _
                 ByVal contractSpec As contractSpecifier, _
                 ByVal pContractSelector As IContractSelector, _
                 Optional ByVal startIntervalMillisecs As Long = 50) As TickersStarter
-Dim failpoint As Long
+Const ProcName As String = "StartTickersWithUserSelection"
+Dim failpoint As String
 On Error GoTo Err
 
 Set StartTickersWithUserSelection = New TickersStarter
@@ -167,12 +162,7 @@ StartTickersWithUserSelection.Initialise pWorkspace, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartTickersWithUserSelection" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================

@@ -180,7 +180,6 @@ Private mIsHistoric                         As Boolean
 Private mFromTime                           As Date
 Private mToTime                             As Date
 
-Private mIndexes                            As Collection
 Private mCurrentIndex                       As Long
 
 Private mBarFormatterFactory                As BarFormatterFactory
@@ -189,12 +188,13 @@ Private mChangeListeners                    As Collection
 
 Private mConfig                             As ConfigurationSection
 
+Private mCount                             As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub UserControl_Initialize()
-Set mIndexes = New Collection
 Set mChangeListeners = New Collection
 ChartSelector.Tabs.Clear
 TBChart(0).Visible = True
@@ -209,7 +209,8 @@ resize
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log LogLevelDetail, "MultiChart terminated"
+Const ProcName As String = "UserControl_Terminate"
+gLogger.Log "MultiChart terminated", ProcName, ModuleName, LogLevelDetail
 Debug.Print "MultiChart terminated"
 End Sub
 
@@ -232,7 +233,7 @@ fireChange MultiChartSelectionChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ControlToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
@@ -264,7 +265,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities30.StateChangeEvent)
@@ -282,7 +283,7 @@ RaiseEvent ChartStateChanged(index, ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TBChart_TimeframeChange(index As Integer)
@@ -296,7 +297,7 @@ fireChange MultiChartTimeframeChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TimeframeSelector1_Click()
@@ -305,11 +306,11 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If ControlToolbar.Buttons("add").value = tbrPressed Then
-    Add TimeframeSelector1.timeframeDesignator
+    Add TimeframeSelector1.TimeframeDesignator
     hideTimeframeSelector
     ControlToolbar.Buttons("add").value = tbrUnpressed
 Else
-    Chart.ChangeTimeframe TimeframeSelector1.timeframeDesignator
+    Chart.ChangeTimeframe TimeframeSelector1.TimeframeDesignator
     hideTimeframeSelector
     ControlToolbar.Buttons("change").value = tbrUnpressed
 End If
@@ -317,7 +318,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -340,7 +341,7 @@ Set BaseChartController = getChartFromIndex(index).BaseChartController
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 ' do not make this Public because the value returned cannot be handled by non-friend
@@ -357,7 +358,7 @@ Set Chart = getChartFromIndex(index)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ChartManager( _
@@ -372,7 +373,7 @@ Set ChartManager = getChartFromIndex(index).ChartManager
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Count() As Long
@@ -380,12 +381,12 @@ Const ProcName As String = "Count"
 Dim failpoint As Long
 On Error GoTo Err
 
-Count = ChartSelector.Tabs.Count
+Count = mCount
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -401,7 +402,7 @@ storeSettings
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -414,7 +415,7 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Enabled( _
@@ -429,7 +430,7 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LoadingText( _
@@ -444,7 +445,7 @@ Set LoadingText = getChartFromIndex(index).LoadingText
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PriceRegion( _
@@ -459,7 +460,7 @@ Set PriceRegion = getChartFromIndex(index).PriceRegion
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get State( _
@@ -474,7 +475,7 @@ State = getChartFromIndex(index).State
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Ticker() As Ticker
@@ -487,7 +488,7 @@ Set Ticker = mTicker
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Timeframe( _
@@ -502,7 +503,7 @@ Set Timeframe = getChartFromIndex(index).Timeframe
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get TimePeriod( _
@@ -517,7 +518,7 @@ Set TimePeriod = getChartFromIndex(index).TimePeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get VolumeRegion( _
@@ -532,7 +533,7 @@ Set VolumeRegion = getChartFromIndex(index).VolumeRegion
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -549,11 +550,7 @@ Const ProcName As String = "Add"
 Dim failpoint As Long
 On Error GoTo Err
 
-load TBChart(TBChart.UBound + 1)
-Set lChart = TBChart(TBChart.UBound).object
-TBChart(TBChart.UBound).align = vbAlignTop
-TBChart(TBChart.UBound).Top = 0
-TBChart(TBChart.UBound).Height = ChartSelector.Top
+Set lChart = loadChartControl
 Set lSpec = mSpec.Clone
 lSpec.Timeframe = pTimeframe
 
@@ -579,7 +576,7 @@ fireChange MultiChartSelectionChanged
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Sub AddChangeListener( _
@@ -593,7 +590,7 @@ mChangeListeners.Add listener, CStr(ObjPtr(listener))
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
                
 Public Sub ChangeTimeframe(ByVal pTimeframe As TimePeriod)
@@ -606,7 +603,7 @@ Chart.ChangeTimeframe pTimeframe
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Clear()
@@ -621,28 +618,24 @@ Loop
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Finish()
 Dim i As Long
-Dim index As Long
 Const ProcName As String = "Finish"
-Dim failpoint As Long
 On Error GoTo Err
 
-For i = mIndexes.Count To 1 Step -1
-    index = mIndexes(i)
-    getChartFromIndex(index).Finish
-    Unload TBChart(getChartControlIndexFromIndex(index))
-    mIndexes.Remove i
+For i = 1 To mCount
+    getChartFromIndex(i).Finish
+    unloadChartControl i
 Next
 TBChart(0).Finish
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Initialise( _
@@ -671,7 +664,7 @@ storeSettings
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Function LoadFromConfig( _
@@ -680,7 +673,6 @@ Dim cs As ConfigurationSection
 Dim currentChartIndex As Long
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As Long
 On Error GoTo Err
 
 Set mConfig = config
@@ -719,7 +711,7 @@ LoadFromConfig = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 LoadFromConfig = False
 End Function
@@ -734,7 +726,7 @@ On Error GoTo Err
 
 If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Remove", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Index must not be less than 1 or greater than Count"
 End If
 
@@ -754,7 +746,7 @@ fireChange MultiChartSelectionChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal listener As ChangeListener)
@@ -767,7 +759,7 @@ mChangeListeners.Remove ObjPtr(listener)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -780,7 +772,7 @@ mConfig.Remove
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub ScrollToTime(ByVal pTime As Date)
@@ -793,7 +785,7 @@ Chart.ScrollToTime pTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SelectChart( _
@@ -804,7 +796,7 @@ On Error GoTo Err
 
 If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "SelectChart", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Index must not be less than 1 or greater than Count"
 End If
 
@@ -813,7 +805,7 @@ ChartSelector.Tabs(index).Selected = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -823,48 +815,48 @@ End Sub
 Private Sub addFromConfig( _
                 ByVal chartSect As ConfigurationSection)
 Dim lChart As TradeBuildChart
+Dim lTab As MSComctlLib.Tab
 
 Const ProcName As String = "addFromConfig"
 Dim failpoint As Long
 On Error GoTo Err
 
-load TBChart(TBChart.UBound + 1)
-Set lChart = TBChart(TBChart.UBound).object
-TBChart(TBChart.UBound).align = vbAlignTop
-TBChart(TBChart.UBound).Top = 0
-TBChart(TBChart.UBound).Height = ChartSelector.Top
+Set lChart = loadChartControl
+Set lTab = addTab(Nothing)
 
 lChart.LoadFromConfig chartSect
 
-addTab(lChart.TimePeriod).Selected = True
+lTab.caption = lChart.TimePeriod.ToShortString
+lTab.Selected = True
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function addTab( _
                 ByVal pTimePeriod As TimePeriod) As MSComctlLib.Tab
-Static chartNumber As Long
 
 Const ProcName As String = "addTab"
 Dim failpoint As Long
 On Error GoTo Err
 
-chartNumber = chartNumber + 1
-Set addTab = ChartSelector.Tabs.Add(, , pTimePeriod.ToShortString)
-addTab.Tag = CStr(chartNumber)
+If pTimePeriod Is Nothing Then
+    Set addTab = ChartSelector.Tabs.Add(, , "")
+Else
+    Set addTab = ChartSelector.Tabs.Add(, , pTimePeriod.ToShortString)
+End If
+addTab.Tag = TBChart.UBound
 
 ControlToolbar.Buttons("remove").Enabled = True
 
-mIndexes.Add TBChart.UBound, CStr(chartNumber)
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, ChartSelector.Tabs.Count
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function checkIndex( _
@@ -876,7 +868,7 @@ On Error GoTo Err
 If index = -1 Then
     If mCurrentIndex < 1 Then
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "checkIndex", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "No currrent chart"
     Else
         index = mCurrentIndex
@@ -885,7 +877,7 @@ End If
 
 If index > Count Or index < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "checkIndex", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
             "Index must not be less than 1 or greater than Count"
 End If
 
@@ -894,7 +886,7 @@ checkIndex = index
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub closeChart( _
@@ -907,8 +899,7 @@ On Error GoTo Err
 Set lChart = getChartFromIndex(index)
 lChart.RemoveFromConfig
 lChart.Finish
-Unload TBChart(getChartControlIndexFromIndex(index))
-mIndexes.Remove ChartSelector.Tabs(index).Tag
+unloadChartControl index
 ChartSelector.Tabs.Remove index
 If ChartSelector.Tabs.Count = 0 Then
     ControlToolbar.Buttons("remove").Enabled = False
@@ -920,7 +911,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub fireChange( _
@@ -941,7 +932,7 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function getChartControlIndexFromIndex(index) As Long
@@ -949,12 +940,12 @@ Const ProcName As String = "getChartControlIndexFromIndex"
 Dim failpoint As Long
 On Error GoTo Err
 
-getChartControlIndexFromIndex = mIndexes(ChartSelector.Tabs(index).Tag)
+getChartControlIndexFromIndex = ChartSelector.Tabs(index).Tag
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function getChartFromIndex(index) As TradeBuildChart
@@ -967,7 +958,7 @@ Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index))
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function getIndexFromChartControlIndex(index) As Long
@@ -986,7 +977,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub hideChart( _
@@ -1004,7 +995,7 @@ TBChart(getChartControlIndexFromIndex(index)).Visible = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub hideTimeframeSelector()
@@ -1021,8 +1012,25 @@ resize
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
+
+Private Function loadChartControl() As TradeBuildChart
+Const ProcName As String = "loadChartControl"
+On Error GoTo Err
+
+load TBChart(TBChart.UBound + 1)
+TBChart(TBChart.UBound).align = vbAlignTop
+TBChart(TBChart.UBound).Top = 0
+TBChart(TBChart.UBound).Height = ChartSelector.Top
+mCount = mCount + 1
+Set loadChartControl = TBChart(TBChart.UBound).object
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 Private Function nextIndex( _
                 ByVal index As Long) As Long
@@ -1041,7 +1049,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub resize()
@@ -1065,7 +1073,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function showChart( _
@@ -1096,7 +1104,7 @@ Set showChart = lChart
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub showTimeframeSelector()
@@ -1113,7 +1121,7 @@ resize
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub storeSettings()
@@ -1154,7 +1162,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub switchToChart( _
@@ -1171,7 +1179,19 @@ showChart index
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
+Private Sub unloadChartControl(ByVal index As Long)
+Const ProcName As String = "unloadChartControl"
+On Error GoTo Err
+
+Unload TBChart(getChartControlIndexFromIndex(index))
+mCount = mCount - 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub

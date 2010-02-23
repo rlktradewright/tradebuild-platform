@@ -109,18 +109,42 @@ End Sub
 '@================================================================================
 
 Private Sub AddButton_Click()
+Const ProcName As String = "AddButton_Click"
+On Error GoTo Err
+
 mCancelled = False
 Set mStudyConfig = StudyConfigurer1.StudyConfiguration
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+On Error GoTo Err
+
 mCancelled = True
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SetDefaultButton_Click()
+Const ProcName As String = "SetDefaultButton_Click"
+On Error GoTo Err
+
 SetDefaultStudyConfiguration StudyConfigurer1.StudyConfiguration
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -132,17 +156,33 @@ End Sub
 '@================================================================================
 
 Public Property Get Cancelled() As Boolean
+Const ProcName As String = "Cancelled"
+On Error GoTo Err
+
 Cancelled = mCancelled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyConfiguration() As StudyConfiguration
+Const ProcName As String = "StudyConfiguration"
+On Error GoTo Err
+
 If mCancelled Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "StudyConfiguration", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Study configuration was cancelled by the user"
 End If
 
 Set StudyConfiguration = mStudyConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -159,6 +199,9 @@ Friend Sub Initialise( _
                 ByVal defaultParameters As Parameters, _
                 ByVal noParameterModification As Boolean)
                 
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mStudyConfig = Nothing
 mCancelled = False
 
@@ -173,6 +216,11 @@ StudyConfigurer1.Initialise _
                 defaultConfiguration, _
                 defaultParameters, _
                 noParameterModification
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

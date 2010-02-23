@@ -123,6 +123,7 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long, _
                 ByVal params As Parameters)
+Const ProcName As String = "ICommonServiceProvider_Link"
 Dim param As Parameter
 
 Dim failpoint As Long
@@ -141,7 +142,7 @@ For Each param In params
         databaseType = DatabaseTypeFromString(param.value)
         If databaseType = DbNone Then
             Err.Raise ErrorCodes.ErrIllegalStateException, _
-                    ProjectName & "." & ModuleName & ":" & "ICommonServiceProvider_Link", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid database type parameter"
         End If
     Case UCase$(ParamNameDatabaseName)
@@ -166,7 +167,7 @@ For Each param In params
             mMode = ReadWrite
         Case Else
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "ICommonServiceProvider_Link", _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid access mode parameter"
             Exit Sub
         End Select
@@ -176,7 +177,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ICommonServiceProvider_Link", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -189,13 +190,14 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
+Const ProcName As String = "ICommonServiceProvider_Terminate"
 On Error GoTo Err
 finishReaders
 finishWriters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
-handleFatalError "ICommonServiceProvider_Terminate"
+handleFatalError ProcName
 End Sub
 
 '@===============================================================================
@@ -206,6 +208,7 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                 ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                 ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
+Const ProcName As String = "ITickfileServiceProvider_CreateTickfileReader"
 Dim reader As TickfileReader
 Dim connectionString As String
 
@@ -237,7 +240,7 @@ reader.initialise mName & " (reader)", _
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
-handleFatalError "ITickfileServiceProvider_CreateTickfileReader"
+handleFatalError ProcName
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -245,6 +248,7 @@ Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                 ByVal pContract As Contract, _
                 Optional ByVal FormatIdentifier As String = "", _
                 Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
+Const ProcName As String = "ITickfileServiceProvider_CreateTickfileWriter"
 Dim writer As TickfileWriter
 Dim connectionString As String
 
@@ -274,10 +278,11 @@ writer.initialise mName & " (writer)", _
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
-handleFatalError "ITickfileServiceProvider_CreateTickfileWriter"
+handleFatalError ProcName
 End Function
 
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "ITickfileServiceProvider_SupportedFormats"
 Dim formats(0) As TickfileFormatSpecifier
 
 formats(0).Name = "TradeBuild SQLDB"
@@ -370,6 +375,7 @@ End Property
 
 Friend Sub dataReaderFinished( _
                 ByVal dataReader As TickfileReader)
+Const ProcName As String = "dataReaderFinished"
 Dim i As Long
 Dim reader As TickfileReader
 Dim failpoint As Long
@@ -387,11 +393,12 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataReaderFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As TickfileWriter)
+Const ProcName As String = "dataWriterFinished"
 Dim i As Long
 Dim writer As TickfileWriter
 Dim failpoint As Long
@@ -409,7 +416,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataWriterFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -417,6 +424,9 @@ End Sub
 '@===============================================================================
 
 Private Function getCapabilities() As Long
+Const ProcName As String = "getCapabilities"
+On Error GoTo Err
+
 Select Case mMode
 Case ReadOnly
     getCapabilities = gSQLDBCapabilitiesReadOnly
@@ -426,9 +436,15 @@ Case ReadWrite
     getCapabilities = gSQLDBCapabilitiesReadWrite
 End Select
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Sub finishReaders()
+Const ProcName As String = "finishReaders"
 Dim i As Long
 Dim reader As TickfileReader
 Dim failpoint As Long
@@ -443,10 +459,11 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishReaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishWriters()
+Const ProcName As String = "finishWriters"
 Dim i As Long
 Dim writer As TickfileWriter
 Dim failpoint As Long
@@ -461,12 +478,13 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishWriters", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
                 Optional ByVal pFailpoint As Long)
+Const ProcName As String = "handleFatalError"
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDesc As String: errDesc = Err.Description
@@ -474,7 +492,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 

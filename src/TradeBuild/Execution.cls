@@ -278,8 +278,16 @@ mTimezone = pTimezone
 End Sub
                 
 Friend Sub SaveRecoveryInfo(pKey As String)
+Const ProcName As String = "SaveRecoveryInfo"
+On Error GoTo Err
+
 If mIsSimulated Then Exit Sub
 gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, ToJSON
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SyncToExecutionReport( _
@@ -288,7 +296,6 @@ Friend Sub SyncToExecutionReport( _
 Dim changed As Boolean
 
 Const ProcName As String = "SyncToExecutionReport"
-Dim failpoint As Long
 On Error GoTo Err
 
 With pExecReport
@@ -309,11 +316,14 @@ If changed Then SaveRecoveryInfo pKey
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function ToJSON() As String
 Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
+On Error GoTo Err
+
 Set jb = New JSONBuilder
 
 jb.BeginObject
@@ -363,6 +373,11 @@ jb.EncodeValue mTimezone
 jb.EndObject
 
 ToJSON = jb.JSONString
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

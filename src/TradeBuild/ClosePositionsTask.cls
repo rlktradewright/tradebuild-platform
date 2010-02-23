@@ -66,6 +66,9 @@ Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEvent)
 Dim pm As PositionManager
 Dim changeType As PositionManagerChangeTypes
 
+Const ProcName As String = "ChangeListener_Change"
+On Error GoTo Err
+
 Set pm = ev.source
 changeType = ev.changeType
 Select Case changeType
@@ -84,6 +87,11 @@ Case PositionManagerChangeTypes.ProviderReadinessChanged
         If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -96,12 +104,20 @@ End Sub
 
 Private Sub Task_run()
 
+Const ProcName As String = "Task_run"
+On Error GoTo Err
+
 initiateCloses
 If mNumberRemaining = 0 Then
     mTaskContext.Finish 0, False
 Else
     mTaskContext.suspend -1
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -125,7 +141,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal types As PositionTypes, _
                 ByVal flags As ClosePositionFlags)
 mTypes = types
@@ -139,6 +155,9 @@ End Sub
 
 Private Sub check( _
                 ByVal pm As PositionManager)
+Const ProcName As String = "check"
+On Error GoTo Err
+
 If pm.PositionSize <> 0 Or _
     pm.PendingPositionSize <> 0 _
 Then
@@ -150,11 +169,19 @@ Then
         mClosePositionsResult.numberOfPositionsNotClosed = mClosePositionsResult.numberOfPositionsNotClosed + 1
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initiateCloses()
 Dim ws As Workspace
 Dim tckr As Ticker
+
+Const ProcName As String = "initiateCloses"
+On Error GoTo Err
 
 For Each ws In gTB.WorkSpaces
     For Each tckr In ws.Tickers
@@ -162,5 +189,10 @@ For Each ws In gTB.WorkSpaces
         If mTypes And PositionTypeSimulated Then check tckr.PositionManagerSimulated
     Next
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

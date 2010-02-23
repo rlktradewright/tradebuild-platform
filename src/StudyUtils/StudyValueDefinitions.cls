@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements StudyValueDefinitions
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -39,6 +37,8 @@ Option Explicit
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ModuleName                As String = "StudyValueDefinitions"
 
 '@================================================================================
 ' Enums
@@ -63,26 +63,8 @@ Set mStudyValueDefinitions = New Collection
 End Sub
 
 '@================================================================================
-' IStudyValueDefinitions Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-'Private Function IStudyValueDefinitions_Add( _
-'                ByVal ValueName As String) As StudyValueDefinition
-'Set IStudyValueDefinitions_Add = Add(ValueName)
-'End Function
-'
-'Private Property Get IStudyValueDefinitions_Count() As Long
-'IStudyValueDefinitions_Count = Count
-'End Property
-'
-'Private Function IStudyValueDefinitions_Item( _
-'                ByVal index As Variant) As StudyValueDefinition
-'Set IStudyValueDefinitions_Item = Item(index)
-'End Function
-'
-'Private Function IStudyValueDefinitions_NewEnum() As Object
-'Set IStudyValueDefinitions_NewEnum = NewEnum
-'End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -101,22 +83,46 @@ End Property
 '@================================================================================
 
 Public Function Add( _
-                ByVal ValueName As String) As StudyValueDefinition
+                ByVal valueName As String) As StudyValueDefinition
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = New StudyValueDefinition
-Add.Name = ValueName
-Add.valueMode = ValueModeNone
-Add.valueType = ValueTypeReal
-mStudyValueDefinitions.Add Add, ValueName
+Add.Name = valueName
+Add.ValueMode = ValueModeNone
+Add.ValueType = ValueTypeReal
+mStudyValueDefinitions.Add Add, valueName
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyValueDefinition
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mStudyValueDefinitions(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mStudyValueDefinitions.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

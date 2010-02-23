@@ -38,7 +38,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuildUI26"
 Private Const ModuleName                    As String = "TickfileSelection"
 
 '@================================================================================
@@ -64,17 +63,35 @@ Private mTickfileOrganiser As fTickfileOrganiser
 '@================================================================================
 
 Public Property Get TickfileSpecifiers() As TickfileSpecifiers
-If Not userCancelled Then Set TickfileSpecifiers = mTickfileOrganiser.TickfileSpecifiers
+Const ProcName As String = "TickfileSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not UserCancelled Then Set TickfileSpecifiers = mTickfileOrganiser.TickfileSpecifiers
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
-Public Property Get userCancelled() As Boolean
+Public Property Get UserCancelled() As Boolean
+Const ProcName As String = "UserCancelled"
+Dim failpoint As String
+On Error GoTo Err
+
 If mTickfileOrganiser Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "userCancelled", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Tickfile selection dialogue has not been displayed"
 End If
 
-userCancelled = mTickfileOrganiser.cancelled
+UserCancelled = mTickfileOrganiser.cancelled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -83,9 +100,18 @@ End Property
 
 Friend Sub SelectTickfiles()
 
+Const ProcName As String = "SelectTickfiles"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mTickfileOrganiser = New fTickfileOrganiser
 
 mTickfileOrganiser.Show vbModal
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 

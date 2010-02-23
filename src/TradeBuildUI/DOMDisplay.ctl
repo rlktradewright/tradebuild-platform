@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#37.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -123,14 +123,18 @@ End Sub
 
 Private Sub UserControl_Initialize()
 
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 ReDim mAskPrices(20) As Double
 ReDim mBidPrices(20) As Double
 
 DOMGrid.AllowUserResizing = TWControls10.AllowUserResizeSettings.TwGridResizeColumns
 DOMGrid.BackColorFixed = vbButtonFace
 DOMGrid.BackColorSel = GridColours.BGDefault
-DOMGrid.BackColor = GridColours.BGDefault
-DOMGrid.ForeColorSel = DOMGrid.ForeColor
+DOMGrid.backColor = GridColours.BGDefault
+DOMGrid.ForeColorSel = DOMGrid.foreColor
 DOMGrid.Rows = 200
 DOMGrid.Cols = 5
 DOMGrid.FixedCols = 0
@@ -161,10 +165,19 @@ DOMGrid.colWidth(DOMColumns.PriceRight) = 24 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.PriceRight) = TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
 Set mResizeTimer = CreateIntervalTimer(200, ExpiryTimeUnitMilliseconds)
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
 Static firstResizeDone As Boolean
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not firstResizeDone Then
     Debug.Print ModuleName & " first resize"
     resize
@@ -173,6 +186,11 @@ Else
     mResizeTimer.StopTimer
     mResizeTimer.StartTimer
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Show()
@@ -198,19 +216,41 @@ End Sub
 
 Private Sub MarketDepthListener_MarketDepthNotAvailable( _
                 ByVal reason As String)
+Const ProcName As String = "MarketDepthListener_MarketDepthNotAvailable"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mCentreTimer Is Nothing Then mCentreTimer.StopTimer
 Set mCentreTimer = Nothing
 Finish
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub MarketDepthListener_resetMarketDepth( _
                 ev As MarketDepthEvent)
+Const ProcName As String = "MarketDepthListener_resetMarketDepth"
+Dim failpoint As String
+On Error GoTo Err
+
 reset
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub MarketDepthListener_setMarketDepthCell( _
                 ev As MarketDepthEvent)
 Static firstCentre As Boolean
+Const ProcName As String = "MarketDepthListener_setMarketDepthCell"
+Dim failpoint As String
+On Error GoTo Err
+
 If mInitialPrice = 0 Then
     mInitialPrice = ev.price
     setupRows
@@ -221,6 +261,11 @@ ElseIf Not firstCentre And ev.Type = DOMUpdateLast Then
 End If
 
 setDOMCell ev.Type, ev.price, ev.size
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -228,6 +273,10 @@ End Sub
 '@================================================================================
 
 Private Sub mCentreTimer_TimerExpired()
+Const ProcName As String = "mCentreTimer_TimerExpired"
+Dim failpoint As String
+On Error GoTo Err
+
 If mInitialPrice = 0 Then
     Debug.Print "DOMDisplay centre timer expired - initial price is 0"
 Else
@@ -235,6 +284,11 @@ Else
     centreRow mInitialPrice
 End If
 Set mCentreTimer = Nothing
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -242,8 +296,17 @@ End Sub
 '@================================================================================
 
 Private Sub mResizeTimer_TimerExpired()
+Const ProcName As String = "mResizeTimer_TimerExpired"
+Dim failpoint As String
+On Error GoTo Err
+
 Debug.Print "Resize timer expired"
 resize
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -257,16 +320,29 @@ End Property
 
 Public Property Let numberOfRows(ByVal value As Long)
 
+Const ProcName As String = "numberOfRows"
+Dim failpoint As String
+On Error GoTo Err
+
 If value < 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuildUI.DOMDisplay::numberOfRows()", _
-                "Value must be >= 5"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value must be >= 5"
 End If
 
 DOMGrid.Rows = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Ticker(ByVal value As Ticker)
+Const ProcName As String = "Ticker"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mTicker = value
 Set mContract = mTicker.Contract
 mPriceIncrement = mContract.tickSize
@@ -304,6 +380,11 @@ mTicker.AddMarketDepthListener Me
 
 mTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, False
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Property
 
 '@================================================================================
@@ -311,7 +392,16 @@ End Property
 '@================================================================================
 
 Public Sub centre()
+Const ProcName As String = "centre"
+Dim failpoint As String
+On Error GoTo Err
+
 centreRow mCurrentLast
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Finish()
@@ -341,6 +431,10 @@ End Sub
 Private Sub checkEnoughRows(ByVal price As Double)
 Dim i As Long
 Dim rowprice As Double
+
+Const ProcName As String = "checkEnoughRows"
+Dim failpoint As String
+On Error GoTo Err
 
 If price = 0 Then Exit Sub
 
@@ -378,9 +472,18 @@ If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
     DOMGrid.Redraw = True
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub clearDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double)
+Const ProcName As String = "clearDisplay"
+Dim failpoint As String
+On Error GoTo Err
+
 checkEnoughRows price
 Select Case updateType
 Case DOMUpdateTypes.DOMUpdateAsk
@@ -390,9 +493,18 @@ Case DOMUpdateTypes.DOMUpdateBid
 Case DOMUpdateTypes.DOMUpdateLast
     setCellContents calcRowNumber(price), DOMColumns.LastSize, ""
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub reset()
+Const ProcName As String = "reset"
+Dim failpoint As String
+On Error GoTo Err
+
 mHalted = True
 DOMGrid.Clear
 ReDim mAskPrices(20) As Double
@@ -407,6 +519,11 @@ mCurrentLast = 0#
 
 setupRows
 RaiseEvent Halted
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub resize()
@@ -415,6 +532,10 @@ Static prevHeight As Long
 
 Dim i As Long
 Dim colWidth As Long
+
+Const ProcName As String = "resize"
+Dim failpoint As String
+On Error GoTo Err
 
 If UserControl.Width = prevWidth And UserControl.Height = prevHeight Then Exit Sub
 
@@ -439,10 +560,19 @@ End If
 
 DOMGrid.Redraw = True
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub setCellContents(ByVal row As Long, ByVal col As Long, ByVal value As String)
 Dim currVal As String
+
+Const ProcName As String = "setCellContents"
+Dim failpoint As String
+On Error GoTo Err
 
 DOMGrid.row = row
 DOMGrid.col = col
@@ -471,12 +601,21 @@ Then
     End If
 End If
 DOMGrid.Text = value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setDOMCell( _
                 ByVal updateType As DOMUpdateTypes, _
                 ByVal price As Double, _
                 ByVal size As Long)
+Const ProcName As String = "setDOMCell"
+Dim failpoint As String
+On Error GoTo Err
+
 If mHalted Then
     mHalted = False
     RaiseEvent Resumed
@@ -486,9 +625,18 @@ If size > 0 Then
 Else
     clearDisplay updateType, price
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
                 
 Private Sub setDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double, ByVal size As Long)
+Const ProcName As String = "setDisplay"
+Dim failpoint As String
+On Error GoTo Err
+
 checkEnoughRows price
 Select Case updateType
 Case DOMUpdateTypes.DOMUpdateAsk
@@ -499,11 +647,20 @@ Case DOMUpdateTypes.DOMUpdateLast
     setCellContents calcRowNumber(price), DOMColumns.LastSize, size
     mCurrentLast = price
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupRows()
 Dim i As Long
 Dim price As Double
+
+Const ProcName As String = "setupRows"
+Dim failpoint As String
+On Error GoTo Err
 
 mBasePrice = mInitialPrice - (mPriceIncrement * Int(DOMGrid.Rows / 2))
 mCeilingPrice = mBasePrice + (DOMGrid.Rows - 2) * mPriceIncrement
@@ -517,6 +674,11 @@ For i = DOMGrid.Rows - 1 To 1 Step -1
 Next
 
 DOMGrid.Redraw = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 

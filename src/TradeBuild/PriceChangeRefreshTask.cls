@@ -49,7 +49,6 @@ Private Const ModuleName                            As String = "PriceChangeRefr
 Private mTaskContext                                As TaskContext
 Private mTickers                                    As Tickers
 Private mIndex                                      As Long
-Private mCancelled                                  As Boolean
 Private mListener                                   As PriceChangeListener
 
 '@================================================================================
@@ -61,23 +60,39 @@ Private mListener                                   As PriceChangeListener
 '@================================================================================
 
 Private Sub Task_Cancel()
-mCancelled = True
+Const ProcName As String = "Task_Cancel"
+On Error GoTo Err
+
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Task_run()
 
-If mCancelled Then
-    mTaskContext.finish Empty, True
+Const ProcName As String = "Task_run"
+On Error GoTo Err
+
+If mTaskContext.CancelPending Then
+    mTaskContext.Finish Empty, True
     Exit Sub
 End If
 
 mIndex = mIndex + 1
 If mIndex > mTickers.Count Then
-    mTaskContext.finish Empty, False
+    mTaskContext.Finish Empty, False
     Exit Sub
 End If
 
-mTickers.item(mIndex).RefreshPriceChange mListener
+mTickers.Item(mIndex).RefreshPriceChange mListener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -86,7 +101,15 @@ Set mTaskContext = RHS
 End Property
 
 Private Property Get Task_TaskName() As String
+Const ProcName As String = "Task_TaskName"
+On Error GoTo Err
+
 Task_TaskName = mTaskContext.name
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -104,8 +127,16 @@ End Property
 Friend Sub Initialise( _
                 ByVal pTickers As Tickers, _
                 ByVal listener As PriceChangeListener)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mTickers = pTickers
 Set mListener = listener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

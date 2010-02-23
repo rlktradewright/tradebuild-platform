@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IPriceFormatter
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,47 @@ Private Const ModuleName                            As String = "PriceFormatter"
 ' Member variables
 '@================================================================================
 
+Private mcontract As Contract
+
+Private mIntegerYScale                              As Boolean
+
+Private mYScaleFormatStr                            As String
+Private mYScaleSubFormatStr                         As String
+
+Private mYScaleGridSpacing                        As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IPriceFormatter Interface Members
 '@================================================================================
+
+Private Function IPriceFormatter_FormatPrice( _
+                ByVal pValue As Double) As String
+Const ProcName As String = "IPriceFormatter_FormatPrice"
+On Error GoTo Err
+
+IPriceFormatter_FormatPrice = mcontract.FormatPrice(pValue)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Property Let IPriceFormatter_IntegerYScale(ByVal RHS As Boolean)
+
+End Property
+
+Private Property Let IPriceFormatter_YScaleGridSpacing(ByVal RHS As Double)
+
+End Property
+
+Private Property Let IPriceFormatter_YScaleQuantum(ByVal RHS As Double)
+
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -59,6 +95,10 @@ Private Const ModuleName                            As String = "PriceFormatter"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Let Contract(ByVal value As Contract)
+Set mcontract = value
+End Property
 
 '@================================================================================
 ' Methods

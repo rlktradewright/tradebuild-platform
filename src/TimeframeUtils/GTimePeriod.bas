@@ -60,15 +60,19 @@ Public Function gGetTimePeriod( _
                 ByVal Units As TimePeriodUnits) As TimePeriod
 Dim tp As TimePeriod
 
+Const ProcName As String = "gGetTimePeriod"
+Dim failpoint As String
+On Error GoTo Err
+
 If Length < 1 And Units <> TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Length cannot be < 1"
 End If
 
 If Length <> 0 And Units = TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Length must be zero for a null timeperiod"
 End If
 
@@ -96,7 +100,7 @@ Select Case Units
     Case TimePeriodVolume
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "gGetTimePeriod", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid Units argument"
 End Select
 
@@ -107,12 +111,17 @@ tp.Initialise Length, Units
 ' now ensure that only a single object for each timeperiod exists
 On Error Resume Next
 Set gGetTimePeriod = mTimePeriods(tp.ToString)
-On Error GoTo 0
+On Error GoTo Err
 
 If gGetTimePeriod Is Nothing Then
     mTimePeriods.Add tp, tp.ToString
     Set gGetTimePeriod = tp
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 
 End Function
 

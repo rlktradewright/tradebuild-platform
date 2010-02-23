@@ -41,6 +41,8 @@ Implements ValueReplayTask
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "CacheReplayTask"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -62,9 +64,6 @@ Private mTargetStudy As Study
 Private mStudyToNotify As Study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As Study
-
-' The following no longer used as the cookie argument to startTask is used instead
-'Private mDiscriminator As Long
 
 Private mValueCache As valueCache
 
@@ -90,7 +89,6 @@ Private mResult As ValueReplayResult
 '@================================================================================
 
 Private Property Get ValueReplayTask_Discriminator() As Long
-'ValueReplayTask_Discriminator = mDiscriminator
 ValueReplayTask_Discriminator = 0
 End Property
 
@@ -127,7 +125,7 @@ End Property
 '@================================================================================
 
 Private Sub task_cancel()
-
+mTaskContext.Finish Empty, True
 End Sub
 
 Private Property Get task_TaskName() As String
@@ -138,6 +136,9 @@ Private Sub Task_run()
 Dim ev As StudyValueEvent
 Dim valueEntry As SValue
 
+Const ProcName As String = "Task_run"
+On Error GoTo Err
+
 If mValueCache.Count = 0 Then
     mTaskContext.Progress 100
     mTaskContext.Finish mResult, False
@@ -145,24 +146,24 @@ If mValueCache.Count = 0 Then
     Exit Sub
 End If
 
-If mTaskContext.cancelPending Then
+If mTaskContext.CancelPending Then
     mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1)
     mTaskContext.Finish mResult, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
-valueEntry = mValueCache.getSValue(mNextValueNumber)
+valueEntry = mValueCache.GetSValue(mNextValueNumber)
 If Not IsEmpty(valueEntry.value) Then
     Set ev.source = mSourceStudy
     ev.sVal = valueEntry
     
     If mTargetIsStudy Then
         mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
-        ev.ValueName = mNotifyName
+        ev.valueName = mNotifyName
         mStudyToNotify.Notify ev
     Else
-        ev.ValueName = mValueName
+        ev.valueName = mValueName
         mTargetListener.Notify ev
     End If
     
@@ -183,6 +184,10 @@ If mNextValueNumber > mValueCache.Count Then
     Set mTaskContext = Nothing
 End If
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
@@ -198,60 +203,61 @@ End Property
 '@================================================================================
 
 Public Property Get Discriminator() As Long
-'Discriminator = mDiscriminator
 Discriminator = 0
 End Property
 
-Public Property Get NotifyName() As String
-NotifyName = mNotifyName
+Public Property Get notifyName() As String
+notifyName = mNotifyName
 End Property
 
-Public Property Get NotifyNames() As String()
-NotifyNames = mNotifyNames
+Public Property Get notifyNames() As String()
+notifyNames = mNotifyNames
 End Property
 
-Public Property Get SourceStudy() As Study
-Set SourceStudy = mSourceStudy
+Public Property Get sourceStudy() As Study
+Set sourceStudy = mSourceStudy
 End Property
 
-Public Property Get Target() As Object
-Set Target = mTarget
+Public Property Get target() As Object
+Set target = mTarget
 End Property
 
-Public Property Get ValueName() As String
-ValueName = mValueName
+Public Property Get valueName() As String
+valueName = mValueName
 End Property
 
-Public Property Get ValueNames() As String()
-ValueNames = mValueNames
+Public Property Get valueNames() As String()
+valueNames = mValueNames
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
+Friend Sub initialise( _
                 ByVal valueCache As valueCache, _
-                ByVal Target As Object, _
-                ByVal SourceStudy As Study, _
+                ByVal target As Object, _
+                ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
                 ByVal Discriminator As Long)
 Dim numValuesToNotify As Long
 Dim studyEntry As StudyTableEntry
 
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 Set mValueCache = valueCache
-Set mTarget = Target
-Set mSourceStudy = SourceStudy
-mValueName = valueCache.ValueName
+Set mTarget = target
+Set mSourceStudy = sourceStudy
+mValueName = valueCache.valueName
 mValueNames(0) = mValueName
-'mDiscriminator = Discriminator
 
 Set mResult = New ValueReplayResult
-mResult.Initialise Target, SourceStudy, ValueNames, NotifyNames
+mResult.initialise target, sourceStudy, valueNames, notifyNames
 
-If TypeOf Target Is Study Then
+If TypeOf target Is Study Then
     mTargetIsStudy = True
-    Set mTargetStudy = Target
+    Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.BaseStudy
     
     studyEntry = Globals.StudiesCollection(mTargetStudy.Id)
@@ -266,7 +272,7 @@ If TypeOf Target Is Study Then
         numValuesToNotify = numberOfValuesToReplay
     End If
 Else
-    Set mTargetListener = Target
+    Set mTargetListener = target
     numValuesToNotify = numberOfValuesToReplay
 End If
 If numValuesToNotify > mValueCache.Count Or _
@@ -277,6 +283,11 @@ End If
 
 mNextValueNumber = mValueCache.Count - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

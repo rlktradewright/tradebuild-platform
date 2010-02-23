@@ -72,7 +72,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeBuildUI26"
 Private Const ModuleName                    As String = "fTickstreamSpecifier"
 
 '@================================================================================
@@ -105,9 +104,18 @@ Unload Me
 End Sub
 
 Private Sub OKButton_Click()
+Const ProcName As String = "OKButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 Screen.MousePointer = vbHourglass
 mCancelled = False
 TickStreamSpecifier1.load
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TickStreamSpecifier1_NotReady()

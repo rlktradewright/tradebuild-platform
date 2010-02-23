@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TradingDO26"
+
 Private Const ModuleName As String = "InstrumentLocalSymbol"
 
 '@===============================================================================
@@ -72,40 +72,76 @@ Private mBookmark As Variant
 ' Properties
 '@===============================================================================
 
-Friend Property Get bookmark() As Variant
-bookmark = mBookmark
+Friend Property Get Bookmark() As Variant
+Bookmark = mBookmark
 End Property
 
-Public Property Get localSymbol() As String
-localSymbol = Trim$(mRs("localSymbol"))
+Public Property Get LocalSymbol() As String
+Const ProcName As String = "LocalSymbol"
+Dim failpoint As String
+On Error GoTo Err
+
+LocalSymbol = Trim$(mRs("LocalSymbol"))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let localSymbol( _
+Public Property Let LocalSymbol( _
                 ByVal value As String)
+Const ProcName As String = "LocalSymbol"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
-mRs("localSymbol") = value
+mRs("LocalSymbol") = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get providerKey() As String
-providerKey = Trim$(mRs("providerkey"))
+Public Property Get ProviderKey() As String
+Const ProcName As String = "ProviderKey"
+Dim failpoint As String
+On Error GoTo Err
+
+ProviderKey = Trim$(mRs("providerkey"))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let providerKey( _
+Public Property Let ProviderKey( _
                 ByVal value As String)
+Const ProcName As String = "ProviderKey"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
 mRs("providerkey") = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@===============================================================================
 ' Methods
 '@===============================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal value As ADODB.Recordset, _
-                ByVal bookmark As Variant)
+                ByVal Bookmark As Variant)
 Set mRs = value
-mBookmark = bookmark
-mRs.bookmark = mBookmark
+mBookmark = Bookmark
+mRs.Bookmark = mBookmark
 End Sub
 
 '@===============================================================================

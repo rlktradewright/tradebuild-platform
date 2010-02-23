@@ -103,23 +103,26 @@ Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
+Const ProcName As String = "IBarDataReader_CancelFetch"
 On Error GoTo Err
 mRequestInProgress = False
 finish
 Exit Sub
 Err:
-handleFatalError "IBarDataReader_CancelFetch"
+handleFatalError ProcName
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             ByVal barSpecifier As BarDataSpecifier)
+Const ProcName As String = "IBarDataReader_FetchBars"
+
 
 On Error GoTo Err
 
-logMessage pMsg:="Fetching bars for " & barSpecifier.Contract.specifier.localSymbol, pProcName:="IBarDataReader_FetchBars", pLogLevel:=LogLevelDetail
+logMessage pMsg:="Fetching bars for " & barSpecifier.Contract.Specifier.LocalSymbol, pProcName:="IBarDataReader_FetchBars", pLogLevel:=LogLevelDetail
 
 If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                       ProjectName & "." & ModuleName & ":" & "IBarDataReader_FetchBars", _
+                                       ProjectName & "." & ModuleName & ":" & ProcName, _
                                        "Request already in progress"
 
 Select Case barSpecifier.barTimePeriod.Units
@@ -145,7 +148,7 @@ mWaitingForData = True
 Set mBarDataSpecifier = barSpecifier
 Set mContract = mBarDataSpecifier.Contract
 
-Set mBarsTC = mTradingDB.fetchbarsAsync(mBarDataSpecifier.Contract.specifier, _
+Set mBarsTC = mTradingDB.FetchbarsAsync(mBarDataSpecifier.Contract.Specifier, _
                                         mBarDataSpecifier.barTimePeriod, _
                                         mBarDataSpecifier.MaxNumberOfBars, _
                                         mBarDataSpecifier.FromDate, _
@@ -157,10 +160,11 @@ Set mBarsTC = mTradingDB.fetchbarsAsync(mBarDataSpecifier.Contract.specifier, _
 
 Exit Sub
 Err:
-handleFatalError "IBarDataReader_FetchBars"
+handleFatalError ProcName
 End Sub
 
 Private Sub IBarDataReader_FireNextBar()
+Const ProcName As String = "IBarDataReader_FireNextBar"
 On Error GoTo Err
 If mWaitingForData Then
     mBarRequested = True
@@ -169,7 +173,7 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "IBarDataReader_FireNextBar"
+handleFatalError ProcName
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
@@ -177,12 +181,13 @@ IBarDataReader_NumberOfBars = mBars.Count
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
+Const ProcName As String = "IBarDataReader_ReleaseDataStore"
 On Error GoTo Err
 finish
 mHistDataServiceProvider.dataReaderFinished Me
 Exit Sub
 Err:
-handleFatalError "IBarDataReader_ReleaseDataStore"
+handleFatalError ProcName
 End Sub
 
 Private Function IBarDataReader_Supports( _
@@ -195,13 +200,14 @@ End Function
 '@===============================================================================
 
 Private Sub mBarsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mBarsTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     logMessage pMsg:="Failed to retrieve bars for " & _
-                        mBarDataSpecifier.Contract.specifier.ToString & vbCrLf & _
+                        mBarDataSpecifier.Contract.Specifier.ToString & vbCrLf & _
                         "Error " & ev.errorNumber & ": " & ev.errorMessage, _
                 pProcName:="mBarsTC_Completed", _
                 pLogLevel:=LogLevelSevere
@@ -221,7 +227,7 @@ Else
     Set mEnumerator = mBars.Enumerator
     
     logMessage pMsg:="Retrieved " & _
-                    mBars.Count & " bars for " & mBarDataSpecifier.Contract.specifier.ToString, _
+                    mBars.Count & " bars for " & mBarDataSpecifier.Contract.Specifier.ToString, _
                 pProcName:="mBarsTC_Completed", _
                 pLogLevel:=LogLevelDetail
     mServiceConsumer.Ready
@@ -238,7 +244,7 @@ Set mBarsTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mBarsTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -250,6 +256,7 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+Const ProcName As String = "finish"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -263,7 +270,7 @@ Set mDataConsumer = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -275,6 +282,7 @@ Friend Sub initialise( _
                 ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
                 ByVal DataConsumer As TradeBuildSP.IBarDataConsumer, _
                 ByVal mode As AccessModes)
+Const ProcName As String = "initialise"
                 
 Dim failpoint As Long
 On Error GoTo Err
@@ -292,7 +300,7 @@ Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
@@ -310,7 +318,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -327,12 +341,13 @@ gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=
 End Sub
 
 Private Sub ProcessBar()
+Const ProcName As String = "ProcessBar"
 Dim lBar As Bar
 
 Dim failpoint As Long
 On Error GoTo Err
 
-If mEnumerator.moveNext Then
+If mEnumerator.MoveNext Then
     Set lBar = mEnumerator.current
     mDataConsumer.Bar lBar, mBarDataSpecifier.barTimePeriod
     mNumBarsProcessed = mNumBarsProcessed + 1
@@ -344,6 +359,6 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ProcessBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 

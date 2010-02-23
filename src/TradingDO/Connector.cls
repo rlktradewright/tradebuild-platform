@@ -45,7 +45,7 @@ Event ConnectFailed( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradingDO26"
+
 Private Const ModuleName                    As String = "Connector"
 
 '@================================================================================
@@ -58,7 +58,7 @@ Private WithEvents mConnection              As ADODB.connection
 Attribute mConnection.VB_VarHelpID = -1
 Private mConnected                          As Boolean
 
-' need the following because sometimes when running async under heavy load,
+' need the following because sometimes when running async under heavy Load,
 ' ADO appears not to notify the connection completion event. So need to retry
 ' the connection if we don't get the event within a certain time.
 Private WithEvents mConnectionTimer         As IntervalTimer
@@ -76,7 +76,7 @@ If Not mConnection Is Nothing Then
     If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
-        mConnection.cancel
+        mConnection.Cancel
     End If
 End If
 End Sub
@@ -90,6 +90,10 @@ End Sub
 '@===============================================================================
 
 Private Sub mConnection_ConnectComplete(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.connection)
+Const ProcName As String = "mConnection_ConnectComplete"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     gLogger.Log LogLevelDetail, "Connector: connection error occurred" & vbCrLf & _
@@ -104,7 +108,10 @@ Else
     RaiseEvent Connected(mConnection)
 End If
 
+Exit Sub
 
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnection_InfoMessage(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.connection)
@@ -118,14 +125,23 @@ End Sub
 '@===============================================================================
 
 Private Sub mConnectionTimer_TimerExpired()
+Const ProcName As String = "mConnectionTimer_TimerExpired"
+Dim failpoint As String
+On Error GoTo Err
+
 Debug.Print "BarWriter: Connect timed out - reconnecting"
 gLogger.Log LogLevelDetail, "Connector: connect timed out - reconnecting"
 If gIsStateSet(mConnection.State, adStateOpen) Then
     mConnection.Close
 Else
-    mConnection.cancel
+    mConnection.Cancel
 End If
 connectToDB
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -133,13 +149,22 @@ End Sub
 '@================================================================================
 
 Public Property Get connection() As ADODB.connection
+Const ProcName As String = "connection"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConnected Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "connection", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Connection not yet established or connection failed"
 End If
 
 Set connection = mConnection
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -147,10 +172,19 @@ End Property
 '@================================================================================
 
 Public Sub connect()
+Const ProcName As String = "connect"
+Dim failpoint As String
+On Error GoTo Err
+
 connectToDB
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 ByVal cursorlocation As CursorLocationEnum, _
                 ByVal Options As ConnectOptionEnum)
@@ -164,11 +198,15 @@ End Sub
 '@================================================================================
 
 Private Sub connectToDB()
+Const ProcName As String = "connectToDB"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConnection Is Nothing Then
     If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
-        mConnection.cancel
+        mConnection.Cancel
     End If
     Set mConnection = Nothing
 End If
@@ -176,11 +214,16 @@ End If
 Set mConnection = New ADODB.connection
 
 mConnection.cursorlocation = mCursorlocation
-mConnection.Open mDB.connectionString, , , mOptions
+mConnection.Open mDB.ConnectionString, , , mOptions
 
 If mOptions = adAsyncConnect Then
     Set mConnectionTimer = CreateIntervalTimer(ConnectCompletionTimeoutMillisecs, ExpiryTimeUnitMilliseconds)
     mConnectionTimer.StartTimer
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements StudyParameterDefinitions
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -39,6 +37,8 @@ Option Explicit
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ModuleName                As String = "StudyParameterDefinitions"
 
 '@================================================================================
 ' Enums
@@ -63,26 +63,8 @@ Set mStudyParameterDefinitions = New Collection
 End Sub
 
 '@================================================================================
-' IStudyParameterDefinitions Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-'Private Function IStudyParameterDefinitions_Add( _
-'                ByVal paramName As String) As StudyParameterDefinition
-'Set IStudyParameterDefinitions_Add = Add(paramName)
-'End Function
-'
-'Private Property Get IStudyParameterDefinitions_Count() As Long
-'IStudyParameterDefinitions_Count = Count
-'End Property
-'
-'Private Function IStudyParameterDefinitions_Item( _
-'                ByVal index As Variant) As StudyParameterDefinition
-'Set IStudyParameterDefinitions_Item = Item(index)
-'End Function
-'
-'Private Function IStudyParameterDefinitions_NewEnum() As Object
-'Set IStudyParameterDefinitions_NewEnum = NewEnum
-'End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -93,7 +75,15 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Const ProcName As String = "Count"
+On Error GoTo Err
+
 Count = mStudyParameterDefinitions.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -102,20 +92,44 @@ End Property
 
 Public Function Add( _
                 ByVal paramName As String) As StudyParameterDefinition
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = New StudyParameterDefinition
 Add.Name = paramName
 Add.ParameterType = ParameterTypeInteger
 mStudyParameterDefinitions.Add Add, paramName
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyParameterDefinition
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mStudyParameterDefinitions(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mStudyParameterDefinitions.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

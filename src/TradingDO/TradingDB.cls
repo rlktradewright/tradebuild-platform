@@ -41,7 +41,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradingDO26"
+
 Private Const ModuleName As String = "TradingDB"
 
 '@================================================================================
@@ -82,25 +82,23 @@ End Sub
 Private Sub mConnector_Connected( _
                 ByVal pConnection As ADODB.connection)
 gLogger.Log LogLevelDetail, "TradingDB " & mDbID & ": initial connect succeeded"
-'RaiseEvent ConnectSucceeded
 pConnection.Close
 End Sub
 
 Private Sub mConnector_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 gLogger.Log LogLevelDetail, "TradingDB " & mDbID & ": initial connect failed"
-'RaiseEvent ConnectFailed(errorCode, errorDesc)
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get connectionString() As String
-connectionString = mConnectionString
+Public Property Get ConnectionString() As String
+ConnectionString = mConnectionString
 End Property
 
-Public Property Get databaseType() As DatabaseTypes
-databaseType = mDatabaseType
+Public Property Get DatabaseType() As DatabaseTypes
+DatabaseType = mDatabaseType
 End Property
 
 Public Property Get ExchangeFactory() As ExchangeFactory
@@ -123,7 +121,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function fetchBars( _
+Public Function FetchBars( _
                 ByVal specifier As ContractSpecifier, _
                 ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
@@ -135,17 +133,18 @@ Public Function fetchBars( _
                 Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
 Dim lInstrument As instrument
 
-Dim failpoint As Long
+Const ProcName As String = "FetchBars"
+Dim failpoint As String
 On Error GoTo Err
 
-Set lInstrument = InstrumentFactory.loadBySpecifier(specifier)
+Set lInstrument = InstrumentFactory.LoadBySpecifier(specifier)
 If lInstrument Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "fetchBars", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "The specified contract is not known"
 End If
 
-Set fetchBars = lInstrument.fetchBars(barTimePeriod, _
+Set FetchBars = lInstrument.FetchBars(barTimePeriod, _
                 maxNumberOfBars, _
                 fromDate, _
                 toDate, _
@@ -157,13 +156,10 @@ Set fetchBars = lInstrument.fetchBars(barTimePeriod, _
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchBars" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function fetchbarsAsync( _
+Public Function FetchbarsAsync( _
                 ByVal specifier As ContractSpecifier, _
                 ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
@@ -176,10 +172,12 @@ Public Function fetchbarsAsync( _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Dim fbt As New FetchBarsTask
-Dim failpoint As Long
+
+Const ProcName As String = "FetchbarsAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-fbt.initialise Me, _
+fbt.Initialise Me, _
                 specifier, _
                 barTimePeriod, _
                 maxNumberOfBars, _
@@ -190,8 +188,8 @@ fbt.initialise Me, _
                 includeBarsOutsideSession, _
                 barType
                 
-If taskName = "" Then taskName = "FetchBarsAsync/" & specifier.localSymbol & "(" & barTimePeriod.ToString & ")" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
-Set fetchbarsAsync = StartTask(fbt, _
+If taskName = "" Then taskName = "FetchBarsAsync/" & specifier.LocalSymbol & "(" & barTimePeriod.ToString & ")" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+Set FetchbarsAsync = StartTask(fbt, _
                             PriorityNormal, _
                             taskName, _
                             cookie)
@@ -199,57 +197,52 @@ Set fetchbarsAsync = StartTask(fbt, _
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchbarsAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function fetchTicks( _
+Public Function FetchTicks( _
                 ByVal specifier As ContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date) As TickStream
 Dim lInstrument As instrument
 
-Dim failpoint As Long
+Const ProcName As String = "FetchTicks"
+Dim failpoint As String
 On Error GoTo Err
 
-Set lInstrument = InstrumentFactory.loadBySpecifier(specifier)
+Set lInstrument = InstrumentFactory.LoadBySpecifier(specifier)
 If lInstrument Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "fetchTicks", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "The specified contract is not known"
 End If
 
-Set fetchTicks = lInstrument.createTickStream(fromDate, toDate)
+Set FetchTicks = lInstrument.CreateTickStream(fromDate, toDate)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchTicks" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function fetchTicksAsync( _
+Public Function FetchTicksAsync( _
                 ByVal specifier As ContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Dim ftt As New FetchTicksTask
-Dim failpoint As Long
+
+Const ProcName As String = "FetchTicksAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-ftt.initialise Me, _
+ftt.Initialise Me, _
                 specifier, _
                 fromDate, _
                 toDate
-If taskName = "" Then taskName = "FetchTicksAsync/" & specifier.localSymbol & "/" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
-Set fetchTicksAsync = StartTask(ftt, _
+If taskName = "" Then taskName = "FetchTicksAsync/" & specifier.LocalSymbol & "/" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+Set FetchTicksAsync = StartTask(ftt, _
                         PriorityNormal, _
                         taskName, _
                         cookie)
@@ -257,52 +250,61 @@ Set fetchTicksAsync = StartTask(ftt, _
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchTicksAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Function getConnector( _
+Friend Function GetConnector( _
                 Optional ByVal cursorlocation As CursorLocationEnum = CursorLocationEnum.adUseClient, _
                 Optional ByVal Options As ConnectOptionEnum) As Connector
-Set getConnector = New Connector
-getConnector.initialise Me, cursorlocation, Options
+Set GetConnector = New Connector
+GetConnector.Initialise Me, cursorlocation, Options
 mNumberOfConnections = mNumberOfConnections + 1
 End Function
 
-Friend Sub initialise( _
-                ByVal connectionString As String, _
+Friend Sub Initialise( _
+                ByVal ConnectionString As String, _
                 ByVal dbType As DatabaseTypes)
-mConnectionString = connectionString
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
+mConnectionString = ConnectionString
 mDatabaseType = dbType
 
 Set mExchangeFactory = New ExchangeFactory
-mExchangeFactory.initialise Me
+mExchangeFactory.Initialise Me
 
 Set mInstrumentFactory = New InstrumentFactory
-mInstrumentFactory.initialise Me
+mInstrumentFactory.Initialise Me
 
 Set mInstrumentClassFactory = New InstrumentClassFactory
-mInstrumentClassFactory.initialise Me
+mInstrumentClassFactory.Initialise Me
 
 Set mTimeZoneFactory = New TimeZoneFactory
-mTimeZoneFactory.initialise Me
+mTimeZoneFactory.Initialise Me
 
 mDbID = GenerateGUIDString
 gLogger.Log LogLevelDetail, "TradingDB " & mDbID & ": initial connect"
-Set mConnector = getConnector(CursorLocationEnum.adUseClient, ConnectOptionEnum.adAsyncConnect)
+Set mConnector = GetConnector(CursorLocationEnum.adUseClient, ConnectOptionEnum.adAsyncConnect)
 mConnector.connect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function loadContracts( _
+Public Function LoadContracts( _
                 ByVal contractSpec As ContractSpecifier) As Contracts
 Dim instruments As DataObjects
 Dim instrument As BusinessDataObject
 Dim builder As ContractsBuilder
 
-Set instruments = Me.InstrumentFactory.queryObjectsBySpec(contractSpec)
+Const ProcName As String = "LoadContracts"
+Dim failpoint As String
+On Error GoTo Err
+
+Set instruments = Me.InstrumentFactory.QueryObjectsBySpec(contractSpec)
 
 Set builder = CreateContractsBuilder(contractSpec)
 
@@ -310,20 +312,34 @@ For Each instrument In instruments
     builder.AddContract gContractFromInstrument(instrument)
 Next
 
-Set loadContracts = builder.Contracts
+Set LoadContracts = builder.Contracts
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadContractsAsync( _
+Public Function LoadContractsAsync( _
                 ByVal contractSpec As ContractSpecifier, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Dim crt As New ContractsRetrievalTask
-crt.initialise Me, contractSpec
+Const ProcName As String = "LoadContractsAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+crt.Initialise Me, contractSpec
 If taskName = "" Then taskName = "LoadContractsAsync/" & contractSpec.ToString & "(" & gGetSequenceNumber & ")"
-Set loadContractsAsync = StartTask(crt, _
+Set LoadContractsAsync = StartTask(crt, _
                             PriorityNormal, _
                             taskName, _
                             cookie)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

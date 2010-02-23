@@ -153,7 +153,16 @@ End Property
 '@================================================================================
 
 Public Property Get Bar(Optional ByVal ref As Long) As Bar
+Const ProcName As String = "Bar"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Bar = mBarsCache.GetValue(ref)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
@@ -165,7 +174,16 @@ Set BarsCache = mBarsCache
 End Property
 
 Public Property Get CloseValue(Optional ByVal ref As Long) As Variant
+Const ProcName As String = "CloseValue"
+Dim failpoint As String
+On Error GoTo Err
+
 CloseValue = Bar(ref).CloseValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get CurrentBarNumber() As Long
@@ -173,7 +191,16 @@ CurrentBarNumber = mCurrentBarNumber
 End Property
 
 Public Property Get Down(Optional ByVal ref As Long) As Boolean
+Const ProcName As String = "Down"
+Dim failpoint As String
+On Error GoTo Err
+
 Down = Bar(ref).IsDownBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 ''
@@ -188,7 +215,16 @@ Set Enumerator = CreateEnumerator(Me)
 End Property
 
 Public Property Get Gain(Optional ByVal ref As Long) As Double
+Const ProcName As String = "Gain"
+Dim failpoint As String
+On Error GoTo Err
+
 Gain = Bar(ref).Gain
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HigherHighValue( _
@@ -198,6 +234,10 @@ Dim valueToCompare As Double
 Dim currentHigh As Double
 Dim i As Long
 Dim numHighsFound As Long
+
+Const ProcName As String = "HigherHighValue"
+Dim failpoint As String
+On Error GoTo Err
 
 valueToCompare = HighValue(ref)
 i = 1
@@ -210,6 +250,11 @@ Do
     End If
 Loop While numHighsFound < rank
 HigherHighValue = currentHigh
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HighestCloseValue(ByVal periods As Long, _
@@ -220,6 +265,10 @@ Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
+
+Const ProcName As String = "HighestCloseValue"
+Dim failpoint As String
+On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -246,6 +295,11 @@ lastBarNumber = mCurrentBarNumber
 lastPeriods = periods
 lastRef = ref
 lastValue = HighestCloseValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HighestHighValue(ByVal periods As Long, _
@@ -256,6 +310,10 @@ Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
+
+Const ProcName As String = "HighestHighValue"
+Dim failpoint As String
+On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -271,6 +329,7 @@ Then
     End If
 End If
 
+HighestHighValue = MinDouble
 For i = 0 To periods - 1
     High = HighValue(ref - i)
     If High > HighestHighValue Then
@@ -282,18 +341,50 @@ lastBarNumber = mCurrentBarNumber
 lastPeriods = periods
 lastRef = ref
 lastValue = HighestHighValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get HighValue(Optional ByVal ref As Long) As Double
+Const ProcName As String = "HighValue"
+Dim failpoint As String
+On Error GoTo Err
+
 HighValue = Bar(ref).HighValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Inside(Optional ByVal ref As Long) As Variant
+Const ProcName As String = "Inside"
+Dim failpoint As String
+On Error GoTo Err
+
 Inside = (HighValue(ref) <= HighValue(ref - 1)) And (LowValue(ref) >= LowValue(ref - 1))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Loss(Optional ByVal ref As Long) As Double
+Const ProcName As String = "Loss"
+Dim failpoint As String
+On Error GoTo Err
+
 Loss = Bar(ref).Loss
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get LowerLowValue( _
@@ -303,6 +394,10 @@ Dim valueToCompare As Double
 Dim currentLow As Double
 Dim i As Long
 Dim numLowsFound As Long
+
+Const ProcName As String = "LowerLowValue"
+Dim failpoint As String
+On Error GoTo Err
 
 valueToCompare = LowValue(ref)
 i = 1
@@ -315,6 +410,11 @@ Do
     End If
 Loop While numLowsFound < rank
 LowerLowValue = currentLow
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get LowestCloseValue(ByVal periods As Long, _
@@ -325,6 +425,10 @@ Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
+
+Const ProcName As String = "LowestCloseValue"
+Dim failpoint As String
+On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -351,6 +455,11 @@ lastBarNumber = mCurrentBarNumber
 lastPeriods = periods
 lastRef = ref
 lastValue = LowestCloseValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get LowestLowValue(ByVal periods As Long, _
@@ -361,6 +470,10 @@ Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
+
+Const ProcName As String = "LowestLowValue"
+Dim failpoint As String
+On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -376,7 +489,7 @@ Then
     End If
 End If
 
-LowestLowValue = DummyLow
+LowestLowValue = MaxDouble
 For i = 0 To periods - 1
     Low = LowValue(ref - i)
     If Low < LowestLowValue Then
@@ -389,26 +502,76 @@ lastBarNumber = mCurrentBarNumber
 lastPeriods = periods
 lastRef = ref
 lastValue = LowestLowValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get LowValue(Optional ByVal ref As Long) As Double
+Const ProcName As String = "LowValue"
+Dim failpoint As String
+On Error GoTo Err
+
 LowValue = Bar(ref).LowValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get OpenValue(Optional ByVal ref As Long) As Variant
+Const ProcName As String = "OpenValue"
+Dim failpoint As String
+On Error GoTo Err
+
 OpenValue = Bar(ref).OpenValue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Outside(Optional ByVal ref As Long) As Boolean
+Const ProcName As String = "Outside"
+Dim failpoint As String
+On Error GoTo Err
+
 Outside = (HighValue(ref) > HighValue(ref - 1)) And (LowValue(ref) < LowValue(ref - 1))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TickVolume(Optional ByVal ref As Long) As Long
+Const ProcName As String = "TickVolume"
+Dim failpoint As String
+On Error GoTo Err
+
 TickVolume = Bar(ref).TickVolume
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Up(Optional ByVal ref As Long) As Boolean
+Const ProcName As String = "Up"
+Dim failpoint As String
+On Error GoTo Err
+
 Up = Bar(ref).IsUpBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -419,6 +582,10 @@ Friend Sub Add( _
                 ByVal pBar As Bar, _
                 ByVal BarNumber As Long, _
                 ByVal Timestamp As Date)
+Const ProcName As String = "Add"
+Dim failpoint As String
+On Error GoTo Err
+
 change
 mBarsCache.AddValue pBar, _
                     BarNumber, _
@@ -427,6 +594,11 @@ mBarsCache.AddValue pBar, _
 Set mCurrentBar = pBar
 mCurrentBarNumber = BarNumber
 fireChange CollItemAdded, pBar
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub AppendBars( _
@@ -435,18 +607,36 @@ Friend Sub AppendBars( _
 Dim i As Long
 Dim max As Long
 
+Const ProcName As String = "AppendBars"
+Dim failpoint As String
+On Error GoTo Err
+
 max = IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
 For i = 1 To max
     Add pBars.Bar(i), mCurrentBarNumber + 1, pBars.Bar(i).Timestamp
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Function AppendBarsAsync( _
                 ByVal pBars As Bars, _
                 ByVal maxNumberToAppend As Long) As TaskController
 Dim abt As New AppendBarsTask
+Const ProcName As String = "AppendBarsAsync"
+Dim failpoint As String
+On Error GoTo Err
+
 abt.Initialise Me, pBars, IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
 Set AppendBarsAsync = StartTask(abt, PriorityNormal)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 ''
@@ -460,7 +650,16 @@ End Function
 '@/
 Public Sub AddCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 mChangeListeners.Add listener, CStr(ObjPtr(listener))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 ''
@@ -470,15 +669,33 @@ End Sub
 '   The number of Bars in the collection.
 '@/
 Public Function Count() As Long
+Const ProcName As String = "Count"
+Dim failpoint As String
+On Error GoTo Err
+
 Count = mBarsCache.Count
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Friend Sub Initialise( _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToCache As Long)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mBarTimePeriod = BarTimePeriod
 Set mBarsCache = New ValueCache
 mBarsCache.Initialise numberOfBarsToCache, "Bar"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -495,11 +712,29 @@ End Function
 '@/
 Public Sub RemoveCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 mChangeListeners.Remove CStr(ObjPtr(listener))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub ResetBarChangeIndicators()
+Const ProcName As String = "ResetBarChangeIndicators"
+Dim failpoint As String
+On Error GoTo Err
+
 mCurrentBar.ResetChangeIndicators
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -517,6 +752,10 @@ Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEvent
 
+Const ProcName As String = "fireChange"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -526,6 +765,11 @@ For i = 1 To mChangeListeners.Count
 Next
 
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 

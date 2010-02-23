@@ -81,12 +81,21 @@ Attribute mStartTickersTC.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mContractsLoadTC_Completed"
+Dim failpoint As String
+On Error GoTo Err
+
 If ev.errorNumber <> 0 Then
     RaiseEvent Error(ev.errorNumber, ev.errorMessage)
 Else
     Set mContracts = ev.result
     handleContractsLoaded
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -121,6 +130,10 @@ Friend Sub Initialise( _
                 ByVal contractSpec As contractSpecifier, _
                 ByVal pContractSelector As IContractSelector, _
                 ByVal startIntervalMillisecs As Long)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mWorkspace = pWorkspace
 mTickerOptions = pTickerOptions
 Set mContractSpec = contractSpec
@@ -131,11 +144,20 @@ RaiseEvent DisableCancelCommand
 RaiseEvent DisableStartCommand
 RaiseEvent HideContractSelector
 
-Set mContractsLoadTC = TradeBuildAPI.loadContracts(mContractSpec)
+Set mContractsLoadTC = TradeBuildAPI.LoadContracts(mContractSpec)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
 Public Sub StartTickers()
+Const ProcName As String = "StartTickers"
+Dim failpoint As String
+On Error GoTo Err
+
 If mContractSelector.SelectedContracts.Count > 0 Then
     Set mStartTickersTC = mWorkspace.Tickers.StartTickersFromContracts( _
                                                 mTickerOptions, _
@@ -146,6 +168,11 @@ If mContractSelector.SelectedContracts.Count > 0 Then
                                                 mStartIntervalMillisecs)
     RaiseEvent DisableStartCommand
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -153,6 +180,10 @@ End Sub
 '@================================================================================
 
 Private Sub handleContractsLoaded()
+Const ProcName As String = "handleContractsLoaded"
+Dim failpoint As String
+On Error GoTo Err
+
 If mContracts.Count = 0 Then
     RaiseEvent NoContracts
 ElseIf mContracts.Count = 1 Then
@@ -163,6 +194,11 @@ Else
     RaiseEvent EnableStartCommand
     RaiseEvent EnableCancelCommand
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

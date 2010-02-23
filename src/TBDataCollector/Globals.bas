@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                               As String = "TBDataCollector26"
+Public Const ProjectName                               As String = "TBDataCollector26"
 Private Const ModuleName                                As String = "Globals"
 
 Public Const AttributeNameBidAskBars                    As String = "WriteBidAndAskBars"

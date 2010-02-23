@@ -105,7 +105,7 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
                             ByVal DataConsumer As TradeBuildSP.IBarDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
                             ) As TradeBuildSP.IBarDataReader
-
+Const ProcName As String = "IBarDataServiceProvider_CreateBarDataReader"
 Dim reader As HistDataReader
 Dim connectionString As String
 
@@ -137,7 +137,7 @@ reader.initialise mName & " (reader)", _
 mHistDataReaders.Add reader, CStr(ObjPtr(reader))
 Exit Function
 Err:
-handleFatalError "IBarDataServiceProvider_CreateBarDataReader"
+handleFatalError ProcName
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -145,7 +145,7 @@ Private Function IBarDataServiceProvider_CreateBarDataWriter( _
                             ByVal pContract As Contract, _
                             Optional ByVal location As String = "" _
                             ) As TradeBuildSP.IBarDataWriter
-
+Const ProcName As String = "IBarDataServiceProvider_CreateBarDataWriter"
 Dim writer As HistDataWriter
 Dim connectionString As String
 
@@ -178,7 +178,7 @@ writer.initialise mName & " (writer)", _
 mHistDataWriters.Add writer, CStr(ObjPtr(writer))
 Exit Function
 Err:
-handleFatalError "IBarDataServiceProvider_CreateBarDataWriter"
+handleFatalError ProcName
 End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
@@ -248,6 +248,9 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
+Const ProcName As String = "ICommonServiceProvider_Link"
+On Error GoTo Err
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -279,11 +282,16 @@ For Each param In params
             mMode = ReadWrite
         Case Else
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "ICommonServiceProvider_Link", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Invalid access mode parameter"
         End Select
     End Select
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -295,13 +303,14 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
+Const ProcName As String = "ICommonServiceProvider_Terminate"
 On Error GoTo Err
 finishReaders
 finishWriters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
-handleFatalError "ICommonServiceProvider_Terminate"
+handleFatalError ProcName
 End Sub
 
 '@===============================================================================
@@ -365,6 +374,7 @@ End Property
 
 Friend Sub dataReaderFinished( _
                 ByVal dataReader As HistDataReader)
+Const ProcName As String = "dataReaderFinished"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -373,11 +383,12 @@ mHistDataReaders.Remove CStr(ObjPtr(dataReader))
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataReaderFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As HistDataWriter)
+Const ProcName As String = "dataWriterFinished"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -386,7 +397,7 @@ mHistDataWriters.Remove CStr(ObjPtr(dataWriter))
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="dataWriterFinished", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -394,6 +405,7 @@ End Sub
 '@===============================================================================
 
 Private Sub finishReaders()
+Const ProcName As String = "finishReaders"
 Dim i As Long
 Dim reader As HistDataReader
 Dim failpoint As Long
@@ -408,10 +420,11 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishReaders", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishWriters()
+Const ProcName As String = "finishWriters"
 Dim i As Long
 Dim writer As HistDataWriter
 Dim failpoint As Long
@@ -426,12 +439,13 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finishWriters", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
                 Optional ByVal pFailpoint As Long)
+Const ProcName As String = "handleFatalError"
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDesc As String: errDesc = Err.Description
@@ -439,7 +453,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -452,6 +472,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "logMessage"
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 

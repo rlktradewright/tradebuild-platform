@@ -43,7 +43,7 @@ Implements DataObjectFactory
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradingDO26"
+
 Private Const ModuleName As String = "InstrumentFactory"
 
 '@================================================================================
@@ -62,122 +62,302 @@ Private mBaseFactory As AbstractDOFactory
 ' DataObjectFactory Interface Members
 '@================================================================================
 
-Private Sub DataObjectFactory_delete(ByVal id As Long)
-mBaseFactory.Delete id
+Private Sub DataObjectFactory_delete(ByVal Id As Long)
+Const ProcName As String = "DataObjectFactory_delete"
+Dim failpoint As String
+On Error GoTo Err
+
+mBaseFactory.Delete Id
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Property Get DataObjectFactory_fieldSpecifiers() As BusObjUtils10.fieldSpecifiers
-Set DataObjectFactory_fieldSpecifiers = fieldSpecifiers
+Private Property Get DataObjectFactory_FieldSpecifiers() As BusObjUtils10.FieldSpecifiers
+Const ProcName As String = "DataObjectFactory_FieldSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_FieldSpecifiers = FieldSpecifiers
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Private Function DataObjectFactory_loadByID( _
-                ByVal id As Long) As BusinessDataObject
-Set DataObjectFactory_loadByID = loadByID(id)
+Private Function DataObjectFactory_LoadByID( _
+                ByVal Id As Long) As BusinessDataObject
+Const ProcName As String = "DataObjectFactory_LoadByID"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByID = LoadByID(Id)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_loadByIDAsync( _
-                ByVal id As Long, _
+Private Function DataObjectFactory_LoadByIDAsync( _
+                ByVal Id As Long, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_LoadByIDAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByIDAsync = LoadByIDAsync(Id, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_loadByName( _
+Private Function DataObjectFactory_LoadByName( _
                 ByVal pName As String) As BusinessDataObject
-Set DataObjectFactory_loadByName = loadByName(Trim$(pName))
+Const ProcName As String = "DataObjectFactory_LoadByName"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByName = LoadByName(Trim$(pName))
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_loadByNameAsync( _
+Private Function DataObjectFactory_LoadByNameAsync( _
                 ByVal pName As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_LoadByNameAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByNameAsync = LoadByNameAsync(pName, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_loadByQuery( _
+Private Function DataObjectFactory_LoadByQuery( _
                 ByVal whereCondition As String) As BusinessDataObject
-Set DataObjectFactory_loadByQuery = loadByQuery(whereCondition)
+Const ProcName As String = "DataObjectFactory_LoadByQuery"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByQuery = LoadByQuery(whereCondition)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_loadByQueryAsync( _
+Private Function DataObjectFactory_LoadByQueryAsync( _
                 ByVal whereCondition As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_LoadByQueryAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_LoadByQueryAsync = LoadByQueryAsync(whereCondition, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_makeNew() As BusinessDataObject
-Set DataObjectFactory_makeNew = makeNew
+Private Function DataObjectFactory_MakeNew() As BusinessDataObject
+Const ProcName As String = "DataObjectFactory_MakeNew"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_MakeNew = MakeNew
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_makeNewAsync( _
+Private Function DataObjectFactory_MakeNewAsync( _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_makeNewAsync = makeNewAsync(cookie)
+Const ProcName As String = "DataObjectFactory_MakeNewAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_MakeNewAsync = MakeNewAsync(cookie)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function DataObjectFactory_makeNewFromRecordset( _
                 ByVal rs As ADODB.Recordset) As BusObjUtils10.BusinessDataObject
 Dim obj As New instrument
+Const ProcName As String = "DataObjectFactory_makeNewFromRecordset"
+Dim failpoint As String
+On Error GoTo Err
+
 Set DataObjectFactory_makeNewFromRecordset = obj
-obj.initialise mDB, rs
+obj.Initialise mDB, rs
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_query( _
+Private Function DataObjectFactory_Query( _
                 ByVal whereCondition As String, _
                 fieldNames() As String) As DataObjectSummaries
-Set DataObjectFactory_query = query(whereCondition, fieldNames)
+Const ProcName As String = "DataObjectFactory_Query"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_Query = Query(whereCondition, fieldNames)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_queryAsync( _
+Private Function DataObjectFactory_QueryAsync( _
                 ByVal whereCondition As String, _
                 fieldNames() As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_QueryAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_QueryAsync = QueryAsync(whereCondition, fieldNames, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_queryObjects( _
+Private Function DataObjectFactory_QueryObjects( _
                 ByVal whereCondition As String) As BusObjUtils10.DataObjects
-Set DataObjectFactory_queryObjects = queryObjects(whereCondition)
+Const ProcName As String = "DataObjectFactory_QueryObjects"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_QueryObjects = QueryObjects(whereCondition)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_queryObjectsAsync( _
+Private Function DataObjectFactory_QueryObjectsAsync( _
                 ByVal whereCondition As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_queryObjectsAsync = queryObjectsAsync(whereCondition, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_QueryObjectsAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_QueryObjectsAsync = QueryObjectsAsync(whereCondition, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub DataObjectFactory_refresh( _
+Private Sub DataObjectFactory_Refresh( _
                 ByVal dataObj As BusObjUtils10.BusinessDataObject)
-refresh dataObj
+Const ProcName As String = "DataObjectFactory_Refresh"
+Dim failpoint As String
+On Error GoTo Err
+
+Refresh dataObj
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function DataObjectFactory_search( _
+Private Function DataObjectFactory_Search( _
                 ByVal criterion As String, _
                 fieldNames() As String) As DataObjectSummaries
-Set DataObjectFactory_search = search(criterion, fieldNames)
+Const ProcName As String = "DataObjectFactory_Search"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_Search = Search(criterion, fieldNames)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_searchAsync( _
+Private Function DataObjectFactory_SearchAsync( _
                 ByVal criterion As String, _
                 fieldNames() As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_SearchAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_SearchAsync = SearchAsync(criterion, fieldNames, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_searchObjects( _
+Private Function DataObjectFactory_SearchObjects( _
                 ByVal criterion As String) As BusObjUtils10.DataObjects
-Set DataObjectFactory_searchObjects = searchObjects(criterion)
+Const ProcName As String = "DataObjectFactory_SearchObjects"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_SearchObjects = SearchObjects(criterion)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function DataObjectFactory_searchObjectsAsync( _
+Private Function DataObjectFactory_SearchObjectsAsync( _
                 ByVal criterion As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TWUtilities30.TaskController
-Set DataObjectFactory_searchObjectsAsync = searchObjectsAsync(criterion, cookie, taskName)
+Const ProcName As String = "DataObjectFactory_SearchObjectsAsync"
+Dim failpoint As String
+On Error GoTo Err
+
+Set DataObjectFactory_SearchObjectsAsync = SearchObjectsAsync(criterion, cookie, taskName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -188,540 +368,483 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get fieldSpecifiers() As fieldSpecifiers
-Set fieldSpecifiers = mBaseFactory.fieldSpecifiers
+Public Property Get FieldSpecifiers() As FieldSpecifiers
+Const ProcName As String = "FieldSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
+Set FieldSpecifiers = mBaseFactory.FieldSpecifiers
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB)
+
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
 
 Set mDB = db
 
-Set mBaseFactory = CreateAbstractDOFactory(Me, mDB.connectionString, "instrument", "vinstrumentdetails")
+Set mBaseFactory = CreateAbstractDOFactory(Me, mDB.ConnectionString, "instrument", "vinstrumentdetails")
 
-mBaseFactory.addField FieldNameName, InstrumentColumnName, FieldWidthInstrument, FieldAlignInstrument, True
-mBaseFactory.addField FieldNameShortName, InstrumentColumnShortName, FieldWidthShortName, FieldAlignShortName, True
-mBaseFactory.addField FieldNameExchange, InstrumentColumnExchangeName, FieldWidthExchange, FieldAlignExchange, False
-mBaseFactory.addField FieldNameSymbol, InstrumentColumnSymbol, FieldWidthSymbol, FieldAlignSymbol, True
-mBaseFactory.addField FieldNameSecType, InstrumentColumnSecType, FieldWidthSecType, FieldAlignSecType, False
-mBaseFactory.addField FieldNameExpiry, InstrumentColumnExpiry, FieldWidthExpiry, FieldAlignExpiry, True
-mBaseFactory.addField FieldNameCurrency, InstrumentColumnCurrency, FieldWidthCurrency, FieldAlignCurrency, False
-mBaseFactory.addField FieldNameStrikePrice, InstrumentColumnStrikePrice, FieldWidthStrikePrice, FieldAlignStrikePrice, True
-mBaseFactory.addField FieldNameOptionRight, InstrumentColumnOptionRight, FieldWidthOptionRight, FieldAlignOptionRight, True
-mBaseFactory.addField FieldNameTickSize, InstrumentColumnTickSize, FieldWidthTickSize, FieldAlignTickSize, False
-mBaseFactory.addField FieldNameTickValue, InstrumentColumnTickValue, FieldWidthTickValue, FieldAlignTickValue, False
-mBaseFactory.addField FieldNameSessionStartTime, InstrumentColumnSessionStartTime, FieldWidthSessionStartTime, FieldAlignSessionStartTime, False
-mBaseFactory.addField FieldNameSessionEndTime, InstrumentColumnSessionEndTime, FieldWidthSessionEndTime, FieldAlignSessionEndTime, False
-mBaseFactory.addField FieldNameTimeZone, InstrumentColumnTimeZoneName, FieldWidthTimeZone, FieldAlignTimeZone, False
-mBaseFactory.addField FieldNameNotes, InstrumentColumnNotes, FieldWidthNotes, FieldAlignNotes, True
+mBaseFactory.AddField FieldNameName, InstrumentColumnName, FieldWidthInstrument, FieldAlignInstrument, True
+mBaseFactory.AddField FieldNameShortName, InstrumentColumnShortName, FieldWidthShortName, FieldAlignShortName, True
+mBaseFactory.AddField FieldNameExchange, InstrumentColumnExchangeName, FieldWidthExchange, FieldAlignExchange, False
+mBaseFactory.AddField FieldNameSymbol, InstrumentColumnSymbol, FieldWidthSymbol, FieldAlignSymbol, True
+mBaseFactory.AddField FieldNameSecType, InstrumentColumnSecType, FieldWidthSecType, FieldAlignSecType, False
+mBaseFactory.AddField FieldNameExpiry, InstrumentColumnExpiry, FieldWidthExpiry, FieldAlignExpiry, True
+mBaseFactory.AddField FieldNameCurrency, InstrumentColumnCurrency, FieldWidthCurrency, FieldAlignCurrency, False
+mBaseFactory.AddField FieldNameStrikePrice, InstrumentColumnStrikePrice, FieldWidthStrikePrice, FieldAlignStrikePrice, True
+mBaseFactory.AddField FieldNameOptionRight, InstrumentColumnOptionRight, FieldWidthOptionRight, FieldAlignOptionRight, True
+mBaseFactory.AddField FieldNameTickSize, InstrumentColumnTickSize, FieldWidthTickSize, FieldAlignTickSize, False
+mBaseFactory.AddField FieldNameTickValue, InstrumentColumnTickValue, FieldWidthTickValue, FieldAlignTickValue, False
+mBaseFactory.AddField FieldNameSessionStartTime, InstrumentColumnSessionStartTime, FieldWidthSessionStartTime, FieldAlignSessionStartTime, False
+mBaseFactory.AddField FieldNameSessionEndTime, InstrumentColumnSessionEndTime, FieldWidthSessionEndTime, FieldAlignSessionEndTime, False
+mBaseFactory.AddField FieldNameTimeZone, InstrumentColumnTimeZoneName, FieldWidthTimeZone, FieldAlignTimeZone, False
+mBaseFactory.AddField FieldNameNotes, InstrumentColumnNotes, FieldWidthNotes, FieldAlignNotes, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
-Public Function loadByID( _
-                ByVal id As Long) As instrument
-Dim failpoint As Long
+Public Function LoadByID( _
+                ByVal Id As Long) As instrument
+Dim rs As Recordset
+Const ProcName As String = "LoadByID"
+Dim failpoint As String
 On Error GoTo Err
 
-Dim rs As Recordset
-Set rs = mBaseFactory.loadByID(id)
+Set rs = mBaseFactory.LoadByID(Id)
 If Not rs Is Nothing Then
-    Set loadByID = New instrument
-    loadByID.initialise mDB, rs
+    Set LoadByID = New instrument
+    LoadByID.Initialise mDB, rs
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByID" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadByIDAsync( _
-                ByVal id As Long, _
+Public Function LoadByIDAsync( _
+                ByVal Id As Long, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "LoadByIDAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadByIDAsync = mBaseFactory.loadByIDAsync(id, cookie, taskName)
+Set LoadByIDAsync = mBaseFactory.LoadByIDAsync(Id, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByIDAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadByName( _
+Public Function LoadByName( _
                 ByVal pName As String) As instrument
-Dim failpoint As Long
-On Error GoTo Err
-
 Dim rs As Recordset
 
-Set rs = mBaseFactory.loadByQuery(getNameWhereCondition(Trim$(pName)))
+Const ProcName As String = "LoadByName"
+Dim failpoint As String
+On Error GoTo Err
+
+Set rs = mBaseFactory.LoadByQuery(getNameWhereCondition(Trim$(pName)))
 If Not rs Is Nothing Then
-    Set loadByName = New instrument
-    loadByName.initialise mDB, rs
+    Set LoadByName = New instrument
+    LoadByName.Initialise mDB, rs
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByName" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadByNameAsync( _
+Public Function LoadByNameAsync( _
                 ByVal pName As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "LoadByNameAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadByNameAsync = mBaseFactory.loadByQueryAsync(getNameWhereCondition(Trim$(pName)), cookie, taskName)
+Set LoadByNameAsync = mBaseFactory.LoadByQueryAsync(getNameWhereCondition(Trim$(pName)), cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByNameAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadByQuery( _
+Public Function LoadByQuery( _
                 ByVal whereCondition As String) As instrument
-Dim failpoint As Long
+Dim rs As Recordset
+Const ProcName As String = "LoadByQuery"
+Dim failpoint As String
 On Error GoTo Err
 
-Dim rs As Recordset
-Set rs = mBaseFactory.loadByQuery(whereCondition)
+Set rs = mBaseFactory.LoadByQuery(whereCondition)
 If Not rs Is Nothing Then
-    Set loadByQuery = New instrument
-    loadByQuery.initialise mDB, rs
+    Set LoadByQuery = New instrument
+    LoadByQuery.Initialise mDB, rs
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByQuery" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadByQueryAsync( _
+Public Function LoadByQueryAsync( _
                 ByVal whereCondition As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "LoadByQueryAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(whereCondition, cookie, taskName)
+Set LoadByQueryAsync = mBaseFactory.LoadByQueryAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadByQueryAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadBySpecifier( _
+Public Function LoadBySpecifier( _
                 ByVal contractSpec As ContractSpecifier) As instrument
-
-Dim failpoint As Long
-On Error GoTo Err
 
 Dim rs As Recordset
 Dim summs As DataObjectSummaries
 Dim fieldNames() As String
 
-Set summs = loadSummariesBySpec(fieldNames, contractSpec)
+Const ProcName As String = "LoadBySpecifier"
+Dim failpoint As String
+On Error GoTo Err
 
-If summs.count <> 1 Then Exit Function
+Set summs = LoadSummariesBySpec(fieldNames, contractSpec)
 
-Set rs = mBaseFactory.loadByID(summs(1).id)
+If summs.Count <> 1 Then Exit Function
+
+Set rs = mBaseFactory.LoadByID(summs(1).Id)
 If Not rs Is Nothing Then
-    Set loadBySpecifier = New instrument
-    loadBySpecifier.initialise mDB, rs
+    Set LoadBySpecifier = New instrument
+    LoadBySpecifier.Initialise mDB, rs
 End If
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadBySpec" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadBySpecifierAsync( _
+Public Function LoadBySpecifierAsync( _
                 ByVal contractSpec As ContractSpecifier, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "LoadBySpecifierAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadBySpecifierAsync = mBaseFactory.loadByQueryAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
+Set LoadBySpecifierAsync = mBaseFactory.LoadByQueryAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadBySpecifierAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadSummariesByClass( _
+Public Function LoadSummariesByClass( _
                 ByRef fieldNames() As String, _
-                ByVal exchangeName As String, _
-                ByVal instrumentClassName As String) As DataObjectSummaries
+                ByVal ExchangeName As String, _
+                ByVal InstrumentClassName As String) As DataObjectSummaries
 Dim cond As New SimpleConditionBuilder
 
-Dim failpoint As Long
+Const ProcName As String = "LoadSummariesByClass"
+Dim failpoint As String
 On Error GoTo Err
 
-cond.addTerm InstrumentColumnExchangeName, CondOpEqual, exchangeName
-cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, instrumentClassName, LogicalOpAND
-Set loadSummariesByClass = mBaseFactory.query(cond.conditionString, fieldNames)
+cond.addTerm InstrumentColumnExchangeName, CondOpEqual, ExchangeName
+cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, InstrumentClassName, LogicalOpAND
+Set LoadSummariesByClass = mBaseFactory.Query(cond.conditionString, fieldNames)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadSummariesByClass" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadSummariesByClassAsync( _
+Public Function LoadSummariesByClassAsync( _
                 ByRef fieldNames() As String, _
-                ByVal exchangeName As String, _
-                ByVal instrumentClassName As String, _
+                ByVal ExchangeName As String, _
+                ByVal InstrumentClassName As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Dim cond As New SimpleConditionBuilder
 
-Dim failpoint As Long
+Const ProcName As String = "LoadSummariesByClassAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-cond.addTerm InstrumentColumnExchangeName, CondOpEqual, exchangeName
-cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, instrumentClassName, LogicalOpAND
-Set loadSummariesByClassAsync = mBaseFactory.queryAsync(cond.conditionString, fieldNames, cookie, taskName)
+cond.addTerm InstrumentColumnExchangeName, CondOpEqual, ExchangeName
+cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, InstrumentClassName, LogicalOpAND
+Set LoadSummariesByClassAsync = mBaseFactory.QueryAsync(cond.conditionString, fieldNames, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadSummariesByClassAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadSummariesBySpec( _
+Public Function LoadSummariesBySpec( _
                 ByRef fieldNames() As String, _
                 ByVal contractSpec As ContractSpecifier) As DataObjectSummaries
 
-Dim failpoint As Long
+Const ProcName As String = "LoadSummariesBySpec"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadSummariesBySpec = mBaseFactory.query(conditionStringFromSpec(contractSpec), fieldNames)
+Set LoadSummariesBySpec = mBaseFactory.Query(conditionStringFromSpec(contractSpec), fieldNames)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadSummariesBySpec" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function loadSummariesBySpecAsync( _
+Public Function LoadSummariesBySpecAsync( _
                 ByRef fieldNames() As String, _
                 ByVal contractSpec As ContractSpecifier, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 
-Dim failpoint As Long
+Const ProcName As String = "LoadSummariesBySpecAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set loadSummariesBySpecAsync = mBaseFactory.queryAsync(conditionStringFromSpec(contractSpec), fieldNames, cookie, taskName)
+Set LoadSummariesBySpecAsync = mBaseFactory.QueryAsync(conditionStringFromSpec(contractSpec), fieldNames, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "loadSummariesBySpecAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function makeNew() As instrument
+Public Function MakeNew() As instrument
 
-Dim failpoint As Long
+Const ProcName As String = "MakeNew"
+Dim failpoint As String
 On Error GoTo Err
 
-Set makeNew = New instrument
-makeNew.initialise mDB, mBaseFactory.makeNew
+Set MakeNew = New instrument
+MakeNew.Initialise mDB, mBaseFactory.MakeNew
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "makeNew" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function makeNewAsync( _
+Public Function MakeNewAsync( _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 
-Dim failpoint As Long
+Const ProcName As String = "MakeNewAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set makeNewAsync = mBaseFactory.makeNewAsync(cookie, taskName)
+Set MakeNewAsync = mBaseFactory.MakeNewAsync(cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "makeNewAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function query( _
+Public Function Query( _
                 ByVal whereCondition As String, _
                 ByRef fieldNames() As String) As DataObjectSummaries
-Dim failpoint As Long
+Const ProcName As String = "Query"
+Dim failpoint As String
 On Error GoTo Err
 
-Set query = mBaseFactory.query(whereCondition, fieldNames)
+Set Query = mBaseFactory.Query(whereCondition, fieldNames)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "query" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function queryAsync( _
+Public Function QueryAsync( _
                 ByVal whereCondition As String, _
                 ByRef fieldNames() As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "QueryAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames, cookie, taskName)
+Set QueryAsync = mBaseFactory.QueryAsync(whereCondition, fieldNames, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "queryAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function queryObjects( _
+Public Function QueryObjects( _
                 ByVal whereCondition As String) As DataObjects
-Dim failpoint As Long
+Const ProcName As String = "QueryObjects"
+Dim failpoint As String
 On Error GoTo Err
 
-Set queryObjects = mBaseFactory.queryObjects(whereCondition)
+Set QueryObjects = mBaseFactory.QueryObjects(whereCondition)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "queryObjects" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function queryObjectsAsync( _
+Public Function QueryObjectsAsync( _
                 ByVal whereCondition As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "QueryObjectsAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set queryObjectsAsync = mBaseFactory.queryObjectsAsync(whereCondition, cookie, taskName)
+Set QueryObjectsAsync = mBaseFactory.QueryObjectsAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "queryObjectsAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function queryObjectsBySpec( _
+Public Function QueryObjectsBySpec( _
                 ByVal contractSpec As ContractSpecifier) As DataObjects
-Dim failpoint As Long
+Const ProcName As String = "QueryObjectsBySpec"
+Dim failpoint As String
 On Error GoTo Err
 
-Set queryObjectsBySpec = mBaseFactory.queryObjects(conditionStringFromSpec(contractSpec))
+Set QueryObjectsBySpec = mBaseFactory.QueryObjects(conditionStringFromSpec(contractSpec))
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "queryObjectsBySpec" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function queryObjectsBySpecAsync( _
+Public Function QueryObjectsBySpecAsync( _
                 ByVal contractSpec As ContractSpecifier, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "QueryObjectsBySpecAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set queryObjectsBySpecAsync = mBaseFactory.queryObjectsAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
+Set QueryObjectsBySpecAsync = mBaseFactory.QueryObjectsAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "queryObjectsBySpecAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function search( _
-                ByVal criterion As String, _
-                ByRef fieldNames() As String) As DataObjectSummaries
-Dim failpoint As Long
-On Error GoTo Err
-
-Set search = mBaseFactory.search(criterion, fieldNames)
-
-Exit Function
-
-Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "search" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
-End Function
-
-Friend Sub refresh( _
+Friend Sub Refresh( _
                 ByVal pInstrument As instrument)
-Dim failpoint As Long
+Dim rs As Recordset
+Const ProcName As String = "Refresh"
+Dim failpoint As String
 On Error GoTo Err
 
-Dim rs As Recordset
-Set rs = mBaseFactory.loadByID(pInstrument.id)
+Set rs = mBaseFactory.LoadByID(pInstrument.Id)
 If Not rs Is Nothing Then
-    pInstrument.initialise mDB, rs
+    pInstrument.Initialise mDB, rs
 End If
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "reFresh" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function searchAsync( _
+Public Function Search( _
+                ByVal criterion As String, _
+                ByRef fieldNames() As String) As DataObjectSummaries
+Const ProcName As String = "Search"
+Dim failpoint As String
+On Error GoTo Err
+
+Set Search = mBaseFactory.Search(criterion, fieldNames)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Public Function SearchAsync( _
                 ByVal criterion As String, _
                 ByRef fieldNames() As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "SearchAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames, cookie, taskName)
+Set SearchAsync = mBaseFactory.SearchAsync(criterion, fieldNames, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "searchAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function searchObjects( _
+Public Function SearchObjects( _
                 ByVal criterion As String) As DataObjects
-Dim failpoint As Long
+Const ProcName As String = "SearchObjects"
+Dim failpoint As String
 On Error GoTo Err
 
-Set searchObjects = mBaseFactory.searchObjects(criterion)
+Set SearchObjects = mBaseFactory.SearchObjects(criterion)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "searchObjects" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function searchObjectsAsync( _
+Public Function SearchObjectsAsync( _
                 ByVal criterion As String, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
-Dim failpoint As Long
+Const ProcName As String = "SearchObjectsAsync"
+Dim failpoint As String
 On Error GoTo Err
 
-Set searchObjectsAsync = mBaseFactory.searchObjectsAsync(criterion, cookie, taskName)
+Set SearchObjectsAsync = mBaseFactory.SearchObjectsAsync(criterion, cookie, taskName)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "searchObjectsAsync" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -733,6 +856,10 @@ Private Sub addTerm( _
             ByVal columnName As String, _
             ByVal op As ConditionalOperators, _
             ByVal value As String)
+Const ProcName As String = "addTerm"
+Dim failpoint As String
+On Error GoTo Err
+
 If value <> "" Then
     If cond.expectingLogicalOperator Then
         cond.addTerm columnName, op, value, LogicalOpAND
@@ -740,30 +867,44 @@ If value <> "" Then
         cond.addTerm columnName, op, value
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function conditionStringFromSpec( _
             ByVal contractSpec As ContractSpecifier) As String
 
 Dim cond As New SimpleConditionBuilder
+Const ProcName As String = "conditionStringFromSpec"
+Dim failpoint As String
+On Error GoTo Err
+
 With contractSpec
-    addTerm cond, InstrumentColumnShortName, CondOpEqual, .localSymbol
-    addTerm cond, InstrumentColumnSymbol, CondOpEqual, .symbol
+    addTerm cond, InstrumentColumnShortName, CondOpEqual, .LocalSymbol
+    addTerm cond, InstrumentColumnSymbol, CondOpEqual, .Symbol
     addTerm cond, InstrumentColumnExchangeName, CondOpEqual, .Exchange
-    addTerm cond, InstrumentColumnSecType, CondOpEqual, gCategoryToString(gCategoryFromSecType(.secType))
-    addTerm cond, InstrumentColumnCurrencyE, CondOpEqual, .currencyCode
+    addTerm cond, InstrumentColumnSecType, CondOpEqual, gCategoryToString(gCategoryFromSecType(.SecType))
+    addTerm cond, InstrumentColumnCurrencyE, CondOpEqual, .CurrencyCode
     
-    Select Case .secType
+    Select Case .SecType
     Case SecTypeFuture
-        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .expiry & "%"
+        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
     Case SecTypeOption, SecTypeFuturesOption
-        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .expiry & "%"
-        If .strike <> 0# Then addTerm cond, InstrumentColumnStrikePrice, CondOpEqual, .strike
+        addTerm cond, InstrumentColumnExpiryMonth, CondOpLike, .Expiry & "%"
+        If .Strike <> 0# Then addTerm cond, InstrumentColumnStrikePrice, CondOpEqual, .Strike
         If .Right <> OptNone Then addTerm cond, InstrumentColumnOptionRight, CondOpEqual, Left$(OptionRightToString(.Right), 1)
     End Select
 End With
 
 conditionStringFromSpec = cond.conditionString
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -773,27 +914,36 @@ Dim instrClass As InstrumentClass
 Dim cond As New SimpleConditionBuilder
 Dim clp As CommandLineParser
 
+Const ProcName As String = "getNameWhereCondition"
+Dim failpoint As String
+On Error GoTo Err
+
 pName = Trim$(pName)
 
 Set clp = CreateCommandLineParser(pName, "/")
 
 If clp.NumberOfArgs <> 3 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "getNameWhereCondition", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Name must be of the form exchangename/instrumentclassname/instrumentname"
 End If
 
-Set instrClass = mDB.InstrumentClassFactory.loadByName("""" & clp.Arg(0) & """/""" & clp.Arg(1) & """")
+Set instrClass = mDB.InstrumentClassFactory.LoadByName("""" & clp.Arg(0) & """/""" & clp.Arg(1) & """")
 If instrClass Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "getNameWhereCondition", _
-            clp.Arg(0) & "/" & clp.Arg(1) & " is not a valid instrumentclass name"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            clp.Arg(0) & "/" & clp.Arg(1) & " is not a valid instrumentclass Name"
 End If
 
-cond.addTerm InstrumentColumnInstrumentClassID, CondOpEqual, instrClass.id
+cond.addTerm InstrumentColumnInstrumentClassID, CondOpEqual, instrClass.Id
 cond.addTerm InstrumentColumnName, CondOpEqual, clp.Arg(2), LogicalOpAND
 
 getNameWhereCondition = cond.conditionString
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

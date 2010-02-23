@@ -105,21 +105,40 @@ End Property
 '@================================================================================
 
 Friend Sub ReleaseDataStore()
-gLog pMsg:="Releasing data store", pProcName:="ReleaseDataStore", pProjName:=ProjectName, pModName:=ModuleName
+Const ProcName As String = "ReleaseDataStore"
+On Error GoTo Err
+
+GLogLogger.Log pMsg:="Releasing data store", pProcName:=ProcName, pModName:=ModuleName
 mWriter.ReleaseDataStore
 
 Set mSelfRef = Me
 Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitMilliseconds)
 mTimer.StartTimer
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()
+Const ProcName As String = "ServiceProviderWriterNotReady"
+On Error GoTo Err
+
 mServiceProviderWriterReady = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
 Dim Item As Variant
 Dim pendingWrite As PendingBarWrite
+
+Const ProcName As String = "ServiceProviderWriterReady"
+On Error GoTo Err
 
 mServiceProviderWriterReady = True
 
@@ -131,6 +150,11 @@ For Each Item In mPendingWrites
 Next
 
 Set mPendingWrites = New Collection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub WriteBar( _
@@ -138,6 +162,9 @@ Friend Sub WriteBar( _
                 ByVal barType As BarTypes, _
                 ByVal barTimePeriod As TimePeriod)
 Dim pendingWrite As PendingBarWrite
+
+Const ProcName As String = "WriteBar"
+On Error GoTo Err
 
 If Not mServiceProviderWriterReady Then
     pendingWrite.barType = barType
@@ -147,6 +174,11 @@ If Not mServiceProviderWriterReady Then
 Else
     mWriter.WriteBar theBar, barType, barTimePeriod
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

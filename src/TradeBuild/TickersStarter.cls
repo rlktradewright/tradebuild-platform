@@ -42,7 +42,6 @@ Implements Task
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                    As String = "TickersStarter"
 
 '@================================================================================
@@ -71,6 +70,8 @@ Private mInterval                           As Long
 Private mTickers()                          As Ticker
 Private mNumberStarted                      As Long
 
+Private mLoadOnly                           As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -80,12 +81,15 @@ Private mNumberStarted                      As Long
 '@================================================================================
 
 Private Sub Task_Cancel()
-
+mTaskContext.Finish Empty, True
 End Sub
 
 Private Sub Task_run()
 Dim lContract As Contract
 Dim lTicker As Ticker
+
+Const ProcName As String = "Task_run"
+On Error GoTo Err
 
 If mTaskContext.CancelPending Then
     mTaskContext.Finish Empty, True
@@ -94,14 +98,14 @@ End If
 
 If mContracts Is Nothing Then
     Set mContractsLoadTC = gTB.LoadContracts(mContractSpec)
-    GLogLogger.Log LogLevelDetail, mTaskContext.name & " waiting for contracts to be loaded"
+    GLogLogger.Log mTaskContext.name & " waiting for contracts to be loaded", ModuleName, ProcName, , LogLevelDetail
     mTaskContext.suspend -1
     Exit Sub
 End If
 
 If mEnumerator Is Nothing Then
     If mContracts.Count = 0 Then
-        GLogLogger.Log LogLevelDetail, mTaskContext.name & " no contracts"
+        GLogLogger.Log mTaskContext.name & " no contracts", ModuleName, ProcName, , LogLevelDetail
         mTaskContext.Finish Empty, False
         Exit Sub
     End If
@@ -111,7 +115,7 @@ If mEnumerator Is Nothing Then
 End If
 
 If Not mEnumerator.MoveNext Then
-    GLogLogger.Log LogLevelDetail, mTaskContext.name & ": " & mNumberStarted & " contracts processed"
+    GLogLogger.Log mTaskContext.name & ": " & mNumberStarted & " contracts processed", ModuleName, ProcName, , LogLevelDetail
     If mNumberStarted > 0 Then
         ReDim Preserve mTickers(mNumberStarted - 1) As Ticker
         mTaskContext.Finish mTickers, False
@@ -123,28 +127,46 @@ End If
 
 Set lContract = mEnumerator.current
     
-'check contract is still current
-If lContract.ExpiryDate <> 0 And lContract.ExpiryDate < Date Then
-    GLogLogger.Log LogLevelDetail, mTaskContext.name & " expired contract ignored: " & lContract.specifier.ToString
-    Exit Sub
+If mLoadOnly Then
+    Set lTicker = tckrs.Add(lTickerOptions)
+    lTicker.DOMEventsRequired = mDOMEventsRequired
+    lTicker.OutputTickfileFormat = mOutputTickfileFormat
+    lTicker.OutputTickfilePath = mOutputTickfilePath
+    
+    GLogLogger.Log mTaskContext.name & " loading Ticker: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+    lTicker.LoadTickerFromContract lContract
+Else
+    'check contract is still current
+    If lContract.ExpiryDate <> 0 And lContract.ExpiryDate < Date Then
+        GLogLogger.Log mTaskContext.name & " expired contract ignored: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+        Exit Sub
+    End If
+    
+    Set lTicker = tckrs.Add(lTickerOptions)
+    lTicker.DOMEventsRequired = mDOMEventsRequired
+    lTicker.OutputTickfileFormat = mOutputTickfileFormat
+    lTicker.OutputTickfilePath = mOutputTickfilePath
+    
+    GLogLogger.Log mTaskContext.name & " starting Ticker: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+    lTicker.StartTickerFromContract lContract
 End If
 
-Set lTicker = tckrs.Add(lTickerOptions)
-lTicker.DOMEventsRequired = mDOMEventsRequired
-lTicker.OutputTickfileFormat = mOutputTickfileFormat
-lTicker.OutputTickfilePath = mOutputTickfilePath
-
-GLogLogger.Log LogLevelDetail, mTaskContext.name & " starting Ticker: " & lContract.specifier.ToString
-lTicker.StartTickerFromContract lContract
 Set mTickers(mNumberStarted) = lTicker
 mNumberStarted = mNumberStarted + 1
 
 mTaskContext.suspend mInterval
 
+Exit Sub
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
 Dim obj As Object
+
+Const ProcName As String = "Task_TaskContext"
+On Error GoTo Err
 
 Set mTaskContext = value
 
@@ -152,7 +174,7 @@ If IsObject(mTaskContext.data) Then
     Set obj = mTaskContext.data
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Task_TaskContext", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Supplied data is not a contractSpecifier or contracts object"
 End If
 
@@ -162,9 +184,14 @@ ElseIf TypeOf obj Is Contracts Then
     Set mContracts = obj
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Task_TaskContext", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Supplied data is not a contractSpecifier or contracts object"
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -177,17 +204,33 @@ End Property
 '@================================================================================
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mContractsLoadTC_Completed"
+On Error GoTo Err
+
 If ev.errorNumber <> 0 Then
     handleContractLoadError ev.errorNumber, ev.errorMessage
 Else
     Set mContracts = ev.result
-    GLogLogger.Log LogLevelDetail, mTaskContext.name & ": " & mContracts.Count & " contracts loaded"
+    GLogLogger.Log mTaskContext.name & ": " & mContracts.Count & " contracts loaded", ModuleName, ProcName, , LogLevelDetail
     mTaskContext.Continue
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEvent)
-GLogLogger.Log LogLevelNormal, mTaskContext.name & " notification " & ev.eventCode & ":" & ev.eventMessage
+Const ProcName As String = "mContractsLoadTC_Notification"
+On Error GoTo Err
+
+GLogLogger.Log mTaskContext.name & " notification " & ev.eventCode & ":" & ev.eventMessage, ModuleName, ProcName, , LogLevelNormal
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -204,21 +247,31 @@ Friend Sub Initialise( _
                 ByVal pDOMEventsRequired As DOMEvents, _
                 ByVal poutputTickfileFormat As String, _
                 ByVal poutputTickfilePath As String, _
-                ByVal interval As Long)
+                ByVal pInterval As Long, _
+                ByVal pLoadOnly As Boolean)
                 
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set lTickersRef = CreateWeakReference(pTickers)
 lTickerOptions = pTickerOptions
 mDOMEventsRequired = pDOMEventsRequired
 mOutputTickfileFormat = poutputTickfileFormat
 mOutputTickfilePath = poutputTickfilePath
 
-If interval < 0 Then
+If pInterval < 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Interval cannot be negative"
 End If
 
-mInterval = interval
+mInterval = pInterval
+mLoadOnly = pLoadOnly
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -231,25 +284,19 @@ Private Sub handleContractLoadError( _
 Const ProcName As String = "handleContractLoadError"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
 On Error GoTo Err
 
 If errorNumber = ErrorCodes.ErrIllegalArgumentException Then
-    
-    failpoint = 100
-    
     Set ev.source = mContracts.ContractSpecifier
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
     ev.eventMessage = errorMessage & ": " & mContracts.ContractSpecifier.ToString
-    GLogLogger.Log LogLevelDetail, mTaskContext.name & " invalid contract specifier: " & errorMessage
+    GLogLogger.Log mTaskContext.name & " invalid contract specifier: " & errorMessage, ModuleName, ProcName, , LogLevelDetail
     gTB.notify ev
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, ev.eventMessage
 Else
-    
-    failpoint = 200
-    
     mTaskContext.Error errorNumber, errorMessage
 End If
+
 Exit Sub
 
 Err:
@@ -257,6 +304,14 @@ GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function tckrs() As Tickers
+Const ProcName As String = "tckrs"
+On Error GoTo Err
+
 Set tckrs = lTickersRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 

@@ -95,20 +95,22 @@ End Sub
 '@===============================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
+Const ProcName As String = "ITickfileWriter_CloseOutputFile"
 On Error GoTo Err
 finish
 mTickfileServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
-handleFatalError "ITickfileWriter_CloseOutputFile"
+handleFatalError ProcName
 End Sub
 
 Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
+Const ProcName As String = "ITickfileWriter_WriteTick"
 On Error GoTo Err
 mTickWriter.WriteTick tick
 Exit Sub
 Err:
-handleFatalError "ITickfileWriter_WriteTick"
+handleFatalError ProcName
 End Sub
 
 '@===============================================================================
@@ -116,6 +118,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mInstrumentTC_Completed"
 Dim lInstrument As Instrument
 Dim failpoint As Long
 On Error GoTo Err
@@ -127,12 +130,12 @@ ElseIf ev.errorNumber <> 0 Then
                             mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
-                            "Specified instrument does not exist: " & mContract.specifier.ToString, _
+                            "Specified instrument does not exist: " & mContract.Specifier.ToString, _
                             mTickfileServiceProvider.handle
 Else
     Set lInstrument = ev.result
     mTickSize = lInstrument.TickSize
-    Set mTickWriter = lInstrument.createTickWriter(Not mUseSynchronousWrites)
+    Set mTickWriter = lInstrument.CreateTickWriter(Not mUseSynchronousWrites)
     mServiceConsumer.OutputTickfileCreated mConnectionString
     mServiceConsumer.Ready
 End If
@@ -142,7 +145,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mInstrumentTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -152,6 +155,7 @@ End Sub
 Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+Const ProcName As String = "mTickWriter_ConnectFailed"
 On Error GoTo Err
 mServiceConsumer.NotReady
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
@@ -159,19 +163,20 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                         mTickfileServiceProvider.handle
 Exit Sub
 Err:
-handleFatalError "mTickWriter_ConnectFailed"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTickWriter_Error( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+Const ProcName As String = "mTickWriter_Error"
 On Error GoTo Err
 mCommonServiceConsumer.NotifyRecoverableError errorCode, _
                                     errorDesc, _
                                     mTickfileServiceProvider.handle
 Exit Sub
 Err:
-handleFatalError "mTickWriter_Error"
+handleFatalError ProcName
 End Sub
 
 '@===============================================================================
@@ -183,6 +188,7 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+Const ProcName As String = "finish"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -194,8 +200,8 @@ End If
 If Not mTickWriter Is Nothing Then
     mTickWriter.finish
     
-    logMessage pMsg:=mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
-                        "    Total data written: " & mTickWriter.bytesWritten & " bytes", _
+    logMessage pMsg:=mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")" & vbCrLf & _
+                        "    Total data written: " & mTickWriter.BytesWritten & " bytes", _
                 pProcName:="finish"
     Set mTickWriter = Nothing
 End If
@@ -204,7 +210,7 @@ Exit Sub
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="finish", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -216,6 +222,8 @@ Friend Sub initialise( _
                 ByVal TickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
                 ByVal pContract As Contract, _
                 ByVal useSynchronousWrites As Boolean)
+Const ProcName As String = "initialise"
+
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -235,15 +243,15 @@ Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 Set mContract = pContract
 
 If gLogger.IsLoggable(LogLevelDetail) Then
-    logMessage pMsg:="Retrieving instrument object for " & mContract.specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
+    logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
 End If
 
-Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
+Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -253,6 +261,7 @@ End Sub
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
                 Optional ByVal pFailpoint As Long)
+Const ProcName As String = "handleFatalError"
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDesc As String: errDesc = Err.Description
@@ -260,7 +269,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 

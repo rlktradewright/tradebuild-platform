@@ -72,8 +72,6 @@ Private Sub Class_Initialize()
 
 InitialiseTWUtilities
 
-Set mServiceProviders = New ServiceProviders
-
 Initialise
 End Sub
 
@@ -104,7 +102,7 @@ AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ApplicationName( _
@@ -134,7 +132,7 @@ AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ClosingPositions() As Boolean
@@ -147,7 +145,7 @@ ClosingPositions = Not (mClosePositionsTC Is Nothing)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DefaultWorkSpace() As Workspace
@@ -160,7 +158,7 @@ Set DefaultWorkSpace = mDefaultWorkSpace
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Executions() As Executions
@@ -173,7 +171,7 @@ Set Executions = mExecutions
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ExecutionsSimulated() As Executions
@@ -186,7 +184,7 @@ Set Executions = mExecutionsSimulated
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get OrderPlexRecoveryController() As OrderPlexRecoveryCtlr
@@ -201,7 +199,7 @@ On Error GoTo Err
 
 If mServiceProviders.IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Service providers are alReady configured"
 End If
 
@@ -210,7 +208,7 @@ mServiceProviders.PermittedServiceProviderRoles = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
@@ -223,7 +221,7 @@ PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
@@ -236,7 +234,7 @@ Set ServiceProviders = mServiceProviders
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SessionID() As String
@@ -253,7 +251,7 @@ SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
@@ -266,7 +264,7 @@ SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
@@ -279,7 +277,7 @@ SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormat
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Tickers() As Tickers
@@ -292,7 +290,7 @@ Set Tickers = mTickers
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get WorkSpaces() As WorkSpaces
@@ -305,7 +303,7 @@ Set WorkSpaces = mWorkSpaces
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -321,7 +319,7 @@ On Error GoTo Err
 
 If Not mClosePositionsTC Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "CloseAllPositions", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Positions are alReady being closed"
 End If
 
@@ -333,7 +331,7 @@ Set CloseAllPositions = mClosePositionsTC
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ConfigureDefaults( _
@@ -359,7 +357,24 @@ AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub EndSession()
+
+Const ProcName As String = "EndSession"
+Dim failpoint As String
+On Error GoTo Err
+
+StopAllTickers
+ServiceProviders.RemoveAll
+
+Initialise
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function GenerateTickfileSpecifiers( _
@@ -401,7 +416,7 @@ On Error GoTo Err
 If (customSessionStartTime = 0 And customSessionEndTime <> 0) Or _
     (customSessionStartTime <> 0 And customSessionEndTime = 0) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session start and end times must be either both supplied or both omitted"
     
 If customSessionStartTime <> 0 Then useCustomSessionTimes = True
@@ -479,7 +494,7 @@ Else
     
     If currContract Is Nothing Then
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "No contract for this from date"
     End If
 End If
@@ -547,7 +562,7 @@ If completeSessionsOnly Then
                 Next
                 If currContract Is Nothing Then
                     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "No contract from " & currSessionStart
                                     
                 End If
@@ -557,7 +572,7 @@ If completeSessionsOnly Then
         Loop
     If lTickfileSpecifiers.Count = 0 Then
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "No trading sessions in specified date range"
     End If
 Else
@@ -602,7 +617,7 @@ Else
                 Next
                 If currContract Is Nothing Then
                     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "No contract from " & currSessionStart
                 End If
             End If
@@ -625,7 +640,7 @@ Set GenerateTickfileSpecifiers = lTickfileSpecifiers
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -640,7 +655,7 @@ Set GetServiceProviderError = mServiceProviderError
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise()
@@ -650,7 +665,10 @@ On Error GoTo Err
 
 mSessionID = GenerateGUIDString
 
+Set mServiceProviders = New ServiceProviders
+
 Set mWorkSpaces = New WorkSpaces
+GPositionManager.gInitialise
 
 Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
 Set mTickers = DefaultWorkSpace.Tickers
@@ -662,7 +680,7 @@ Set mOrderPlexRecoveryController = New OrderPlexRecoveryCtlr
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -677,7 +695,7 @@ IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPer
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function LoadContracts( _
@@ -686,13 +704,13 @@ Const ProcName As String = "loadContracts"
 Dim failpoint As Long
 On Error GoTo Err
 
-GLogLogger.Log LogLevelDetail, "Starting contract load task for " & pContractSpec.ToString
+GLogLogger.Log "Starting contract load task for " & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 Set LoadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
@@ -702,19 +720,20 @@ On Error GoTo Err
 
 logMessage pMsg:="Notification", _
     pMsgQualifier:="(" & GApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
-    pProcName:="notify"
+    pProcName:=ProcName
 RaiseEvent Notification(ev)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyFatalError( _
                 ByVal ErrorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal errorSource As String)
+Const ProcName As String = "NotifyFatalError"
 Dim ev As ErrorEvent
 
 On Error Resume Next
@@ -723,11 +742,11 @@ logMessage pMsg:="Fatal error " & ErrorCode & vbCrLf & _
                                 errorMessage & vbCrLf & _
                                 "Occurred at:" & vbCrLf & _
                                 errorSource, _
-            pProcName:="NotifyFatalError", _
+            pProcName:=ProcName, _
             pLogLevel:=LogLevelSevere
 
 logMessage pMsg:="Killing program", _
-            pProcName:="NotifyFatalError", _
+            pProcName:=ProcName, _
             pLogLevel:=LogLevelSevere
 
 TerminateTWUtilities    ' to stop any outstanding tasks and timers
@@ -775,7 +794,7 @@ notify ev
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                     
 End Sub
 
@@ -796,7 +815,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -821,7 +840,7 @@ Set editContractSessionTimes = lContractBuilder.Contract
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub logMessage( _
@@ -829,7 +848,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-GLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+GLogLogger.Log pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 

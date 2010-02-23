@@ -562,6 +562,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyConfigurer"
+
 Private Const CompatibleNode As String = "YES"
 
 Private Const RegionDefault As String = "Use default"
@@ -618,11 +620,22 @@ End Sub
 '@================================================================================
 
 Private Sub AdvancedButton_Click(Index As Integer)
+Const ProcName As String = "AdvancedButton_Click"
+On Error GoTo Err
+
 notImplemented
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BaseStudiesTree_Click()
 Dim i As Long
+Const ProcName As String = "BaseStudiesTree_Click"
+On Error GoTo Err
+
 BaseStudiesTree.SelectedItem.Expanded = True
 If Not BaseStudiesTree.SelectedItem.Tag = CompatibleNode Then
     Set BaseStudiesTree.SelectedItem = mPrevSelectedBaseStudiesTreeNode
@@ -632,21 +645,36 @@ Else
         initialiseInputValueCombo i
     Next
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ColorLabel_Click( _
                 Index As Integer)
 Dim studyValueDef As StudyValueDefinition
+Const ProcName As String = "ColorLabel_Click"
+On Error GoTo Err
+
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
 ColorLabel(Index).BackColor = chooseAColor(ColorLabel(Index).BackColor, _
                                             IIf(studyValueDef.ValueMode = ValueModeBar, True, False))
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DisplayModeCombo_Click(Index As Integer)
 Dim studyValueDef  As StudyValueDefinition
 Dim studyValueconfig  As StudyValueConfiguration
+
+Const ProcName As String = "DisplayModeCombo_Click"
+On Error GoTo Err
 
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
@@ -682,17 +710,32 @@ Case ValueModeText
 
 End Select
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DisplayModeCombo_Validate( _
                 Index As Integer, _
                 Cancel As Boolean)
+Const ProcName As String = "DisplayModeCombo_Validate"
+On Error GoTo Err
+
 If DisplayModeCombo(Index).SelectedItem Is Nothing Then Cancel = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DownColorLabel_Click(Index As Integer)
 Dim studyValueDef As StudyValueDefinition
 Dim allowNullColor As Boolean
+
+Const ProcName As String = "DownColorLabel_Click"
+On Error GoTo Err
 
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
@@ -702,10 +745,17 @@ If studyValueDef.ValueMode = ValueModeBar Or _
 DownColorLabel(Index).BackColor = chooseAColor(DownColorLabel(Index).BackColor, _
                                             allowNullColor)
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FontButton_Click(Index As Integer)
 Dim aFont As StdFont
+
+Const ProcName As String = "FontButton_Click"
+On Error GoTo Err
 
 CommonDialog1.flags = cdlCFBoth + cdlCFEffects
 CommonDialog1.FontName = mFonts(Index).name
@@ -729,25 +779,56 @@ Set mFonts(Index) = aFont
 
 ColorLabel(Index).BackColor = CommonDialog1.Color
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LineColorLabel_Click(Index As Integer)
+Const ProcName As String = "LineColorLabel_Click"
+On Error GoTo Err
+
 LineColorLabel(Index).BackColor = chooseAColor(LineColorLabel(Index).BackColor, False)
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StyleCombo_Validate( _
                 Index As Integer, _
                 Cancel As Boolean)
+Const ProcName As String = "StyleCombo_Validate"
+On Error GoTo Err
+
 If StyleCombo(Index).SelectedItem Is Nothing Then Cancel = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ThicknessText_KeyPress(Index As Integer, KeyAscii As Integer)
+Const ProcName As String = "ThicknessText_KeyPress"
+On Error GoTo Err
+
 filterNonNumericKeyPress KeyAscii
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UpColorLabel_Click(Index As Integer)
 Dim studyValueDef As StudyValueDefinition
 Dim allowNullColor As Boolean
+
+Const ProcName As String = "UpColorLabel_Click"
+On Error GoTo Err
 
 Set studyValueDef = mStudyDefinition.studyValueDefinitions.item(Index + 1)
 
@@ -757,6 +838,10 @@ If studyValueDef.ValueMode = ValueModeBar Or _
 UpColorLabel(Index).BackColor = chooseAColor(UpColorLabel(Index).BackColor, _
                                             allowNullColor)
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -778,6 +863,9 @@ Dim studyHorizRule As StudyHorizontalRule
 Dim regionName As String
 Dim inputValueNames() As String
 Dim i As Long
+
+Const ProcName As String = "StudyConfiguration"
+On Error GoTo Err
 
 Set studyConfig = New StudyConfiguration
 'studyConfig.studyDefinition = mStudyDefinition
@@ -1060,6 +1148,11 @@ For i = 0 To 4
 Next
 
 Set StudyConfiguration = studyConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -1067,8 +1160,16 @@ End Property
 '@================================================================================
 
 Public Sub Clear()
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
 Set mPrevSelectedBaseStudiesTreeNode = Nothing
 initialiseControls
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Initialise( _
@@ -1081,9 +1182,12 @@ Public Sub Initialise( _
                 ByVal defaultParameters As Parameters, _
                 ByVal noParameterModification As Boolean)
                 
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 If Not defaultConfiguration Is Nothing And defaultParameters Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuildUI.StudyConfigurer::Initialise", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "DefaultConfiguration and DefaultParameters cannot both be Nothing"
 End If
 
@@ -1100,6 +1204,11 @@ processRegionNames regionNames
 setupBaseStudiesTree
 
 processStudyDefinition defaultParameters, noParameterModification
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -1112,6 +1221,9 @@ Private Sub addBaseStudiesTreeEntry( _
 Dim lNode As Node
 Dim parentNode As Node
 Dim childStudyConfig As StudyConfiguration
+
+Const ProcName As String = "addBaseStudiesTreeEntry"
+On Error GoTo Err
 
 If studyConfig Is Nothing Then Exit Sub
 
@@ -1153,6 +1265,11 @@ End If
 For Each childStudyConfig In studyConfig.StudyConfigurations
     addBaseStudiesTreeEntry childStudyConfig, studyConfig
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function chooseAColor( _
@@ -1160,6 +1277,9 @@ Private Function chooseAColor( _
                 ByVal allowNull As Boolean) As Long
 Dim simpleColorPicker As New fSimpleColorPicker
 Dim cursorpos As W32Point
+
+Const ProcName As String = "chooseAColor"
+On Error GoTo Err
 
 GetCursorPos cursorpos
 
@@ -1170,10 +1290,18 @@ If allowNull Then simpleColorPicker.NoColorButton.Enabled = True
 simpleColorPicker.Show vbModal, UserControl
 chooseAColor = simpleColorPicker.selectedColor
 Unload simpleColorPicker
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub initialiseControls()
 Dim i As Long
+
+Const ProcName As String = "initialiseControls"
+On Error GoTo Err
 
 On Error Resume Next
 
@@ -1281,6 +1409,11 @@ For i = 0 To LineText.UBound
 Next
 
 BaseStudiesTree.Enabled = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseBarDisplayModeCombo( _
@@ -1288,6 +1421,9 @@ Private Sub initialiseBarDisplayModeCombo( _
                 ByVal pDisplayMode As BarDisplayModes, _
                 ByVal pSolid As Boolean)
 Dim item As ComboItem
+Const ProcName As String = "initialiseBarDisplayModeCombo"
+On Error GoTo Err
+
 combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , BarModeBar)
@@ -1305,6 +1441,11 @@ If pDisplayMode = BarDisplayModeLine Then item.selected = True
 combo.ToolTipText = "Select the type of bar"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseBarStyleCombo( _
@@ -1312,6 +1453,9 @@ Private Sub initialiseBarStyleCombo( _
                 ByVal barWidth As Single)
 Dim item As ComboItem
 Dim selected As Boolean
+
+Const ProcName As String = "initialiseBarStyleCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1333,6 +1477,11 @@ End If
 combo.ToolTipText = "Select the width of the bar"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseHistogramStyleCombo( _
@@ -1340,6 +1489,9 @@ Private Sub initialiseHistogramStyleCombo( _
                 ByVal histBarWidth As Single)
 Dim item As ComboItem
 Dim selected As Boolean
+
+Const ProcName As String = "initialiseHistogramStyleCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1361,6 +1513,11 @@ End If
 combo.ToolTipText = "Select the width of the histogram"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseInputValueCombo( _
@@ -1371,6 +1528,9 @@ Dim valueDef As StudyValueDefinition
 Dim inputDef As StudyInputDefinition
 Dim selIndex As Long
 
+Const ProcName As String = "initialiseInputValueCombo"
+On Error GoTo Err
+
 Set lstudy = mCompatibleStudies(BaseStudiesTree.SelectedItem.Key)
 Set studyValueDefs = lstudy.StudyDefinition.studyValueDefinitions
 Set inputDef = mStudyDefinition.studyInputDefinitions.item(Index + 1)
@@ -1380,10 +1540,10 @@ InputValueCombo(Index).ComboItems.Clear
 selIndex = -1
 'InputValueCombo(Index).ComboItems.Add , , ""
 For Each valueDef In studyValueDefs
-    If typesCompatible(valueDef.valueType, inputDef.InputType) Then
+    If typesCompatible(valueDef.ValueType, inputDef.InputType) Then
         InputValueCombo(Index).ComboItems.Add , , valueDef.name
         If UCase$(inputDef.name) = UCase$(valueDef.name) Then selIndex = InputValueCombo(Index).ComboItems.Count
-        If valueDef.isDefault And _
+        If valueDef.IsDefault And _
             selIndex = -1 Then selIndex = InputValueCombo(Index).ComboItems.Count
     End If
 Next
@@ -1395,6 +1555,11 @@ ElseIf InputValueCombo(Index).ComboItems.Count <> 0 Then
 End If
 
 InputValueCombo(Index).Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseLineDisplayModeCombo( _
@@ -1402,6 +1567,9 @@ Private Sub initialiseLineDisplayModeCombo( _
                 ByVal pArrowStart As Boolean, _
                 ByVal pArrowEnd As Boolean)
 Dim item As ComboItem
+Const ProcName As String = "initialiseLineDisplayModeCombo"
+On Error GoTo Err
+
 combo.ComboItems.Clear
 
 Set item = combo.ComboItems.Add(, , LineDisplayModePlain)
@@ -1419,12 +1587,20 @@ If pArrowStart And pArrowEnd Then item.selected = True
 combo.ToolTipText = "Select the type of line"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseLineStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pLineStyle As LineStyles)
 Dim item As ComboItem
+
+Const ProcName As String = "initialiseLineStyleCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1446,12 +1622,20 @@ If pLineStyle = LineDashDotDot Then item.selected = True
 combo.ToolTipText = "Select the style of the line"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialisePointDisplayModeCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pDisplayMode As DataPointDisplayModes)
 Dim item As ComboItem
+
+Const ProcName As String = "initialisePointDisplayModeCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1468,12 +1652,20 @@ Set item = combo.ComboItems.Add(, , PointDisplayModeHistogram)
 If pDisplayMode = DataPointDisplayModeHistogram Then item.selected = True
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialisePointStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pPointStyle As PointStyles)
 Dim item As ComboItem
+
+Const ProcName As String = "initialisePointStyleCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1486,6 +1678,11 @@ If pPointStyle = PointSquare Then item.selected = True
 combo.ToolTipText = "Select the shape of the point"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseTextDisplayModeCombo( _
@@ -1498,6 +1695,9 @@ Private Sub initialiseTextDisplayModeCombo( _
                 ByVal pBoxFillColor As Long)
 Dim item As ComboItem
 Dim selected As Boolean
+
+Const ProcName As String = "initialiseTextDisplayModeCombo"
+On Error GoTo Err
 
 combo.ComboItems.Clear
 
@@ -1520,16 +1720,32 @@ End If
 combo.ToolTipText = "Select the type of text"
 
 combo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function nextTabIndex() As Long
+Const ProcName As String = "nextTabIndex"
+On Error GoTo Err
+
 nextTabIndex = mNextTabIndex
 mNextTabIndex = mNextTabIndex + 1
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub processRegionNames( _
                 ByRef regionNames() As String)
 Dim i As Long
+
+Const ProcName As String = "processRegionNames"
+On Error GoTo Err
 
 ChartRegionCombo.ComboItems.Clear
 
@@ -1541,6 +1757,11 @@ For i = 0 To UBound(regionNames)
 Next
 ChartRegionCombo.ComboItems.item(1).selected = True
 ChartRegionCombo.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processStudyDefinition( _
@@ -1565,6 +1786,9 @@ Dim numPermittedParamValues As Long
 Dim defaultParamValue As String
 Dim inputValueNames() As String
 Dim noInputModification As Boolean
+
+Const ProcName As String = "processStudyDefinition"
+On Error GoTo Err
 
 mNextTabIndex = 2
 
@@ -1679,7 +1903,7 @@ For i = 1 To studyParameterDefinitions.Count
     numPermittedParamValues = -1
     On Error Resume Next
     numPermittedParamValues = UBound(permittedParamValues)
-    On Error GoTo 0
+    On Error GoTo Err
     If numPermittedParamValues <> -1 Then
         For Each permittedParamValue In permittedParamValues
             ParameterValueCombo(i - 1).ComboItems.Add , , permittedParamValue
@@ -1763,7 +1987,7 @@ For i = 1 To studyValueDefinitions.Count
                 
         On Error Resume Next
         Set studyValueconfig = studyValueconfigs.item(j)
-        On Error GoTo 0
+        On Error GoTo Err
         If Not studyValueconfig Is Nothing Then
             If studyValueconfig.valueName = studyValueDef.name Then
                 mStudyValueRegionNames(i - 1) = studyValueconfig.ChartRegionName
@@ -2037,22 +2261,38 @@ If Not studyHorizRules Is Nothing Then
         LineColorLabel(i - 1).BackColor = studyHorizRule.Color
     Next
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setComboSelection( _
                 ByVal combo As ImageCombo, _
                 ByVal text As String)
 Dim item As ComboItem
+Const ProcName As String = "setComboSelection"
+On Error GoTo Err
+
 For Each item In combo.ComboItems
     If UCase$(item.text) = UCase$(text) Then
         item.selected = True
         Exit For
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupBaseStudiesTree()
 Dim studyConfig As StudyConfiguration
+
+Const ProcName As String = "setupBaseStudiesTree"
+On Error GoTo Err
 
 BaseStudiesTree.Nodes.Clear
 Set mCompatibleStudies = New Collection
@@ -2063,6 +2303,11 @@ If mBaseStudyConfig Is Nothing Then Exit Sub
 Set studyConfig = mBaseStudyConfig
 addBaseStudiesTreeEntry studyConfig, Nothing
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Function studiesCompatible( _
@@ -2072,21 +2317,32 @@ Dim sourceValueDef As StudyValueDefinition
 Dim sinkInputDef As StudyInputDefinition
 Dim i As Long
 
+Const ProcName As String = "studiesCompatible"
+On Error GoTo Err
+
 For i = 1 To sinkStudyDefinition.studyInputDefinitions.Count
     Set sinkInputDef = sinkStudyDefinition.studyInputDefinitions.item(i)
     For Each sourceValueDef In sourceStudyDefinition.studyValueDefinitions
-        If typesCompatible(sourceValueDef.valueType, sinkInputDef.InputType) Then
+        If typesCompatible(sourceValueDef.ValueType, sinkInputDef.InputType) Then
             studiesCompatible = True
             Exit For
         End If
     Next
     If Not studiesCompatible Then Exit Function
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function typesCompatible( _
                 ByVal sourceValueType As StudyValueTypes, _
                 ByVal sinkInputType As StudyInputTypes) As Boolean
+Const ProcName As String = "typesCompatible"
+On Error GoTo Err
+
 Select Case sourceValueType
 Case ValueTypeInteger
     Select Case sinkInputType
@@ -2111,6 +2367,11 @@ Case ValueTypeDate
         typesCompatible = True
     End Select
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

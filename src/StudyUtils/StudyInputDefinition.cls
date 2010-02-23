@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements StudyInputDefinition
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -70,35 +68,8 @@ Private mInputType As StudyInputTypes
 '@================================================================================
 
 '@================================================================================
-' IStudyParameterDefinition Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-'Private Property Get IStudyInputDefinition_Description() As String
-'IStudyInputDefinition_Description = mDescription
-'End Property
-'
-'Private Property Let IStudyInputDefinition_Description( _
-'                ByVal RHS As String)
-'mDescription = RHS
-'End Property
-'
-''Private Property Let IStudyInputDefinition_Name( _
-''                ByVal RHS As String)
-''mName = RHS
-''End Property
-'
-'Private Property Get IStudyInputDefinition_Name() As String
-'IStudyInputDefinition_Name = mName
-'End Property
-'
-'Private Property Let IStudyInputDefinition_InputType( _
-'                ByVal RHS As TradeBuildSP.StudyInputTypes)
-'mInputType = RHS
-'End Property
-'
-'Private Property Get IStudyInputDefinition_InputType() As TradeBuildSP.StudyInputTypes
-'IStudyInputDefinition_InputType = mInputType
-'End Property
 
 '@================================================================================
 ' XXXX Event Handlers

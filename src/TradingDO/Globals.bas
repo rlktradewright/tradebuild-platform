@@ -29,7 +29,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                       As String = "TradingDO26"
+Public Const ProjectName                        As String = "TradingDO26"
 Private Const ModuleName                        As String = "Globals"
 
 Public Const ConnectCompletionTimeoutMillisecs  As Long = 2000
@@ -70,7 +70,7 @@ Public Const FieldNameOptionRight               As String = "Right"
 Public Const FieldNameSecType                   As String = "Sec Type"
 Public Const FieldNameSessionEndTime            As String = "Session End"
 Public Const FieldNameSessionStartTime          As String = "Session Start"
-Public Const FieldNameShortName                 As String = "Short name"
+Public Const FieldNameShortName                 As String = "Short Name"
 Public Const FieldNameStrikePrice               As String = "Strike"
 Public Const FieldNameSwitchDays                As String = "Switch Day"
 Public Const FieldNameSymbol                    As String = "Symbol"
@@ -290,36 +290,40 @@ Public Function gContractFromInstrument( _
                 ByVal instrument As instrument) As Contract
 Dim lContractBuilder As ContractBuilder
 Dim contractSpec As ContractSpecifier
-Dim localSymbol As InstrumentLocalSymbol
+Dim LocalSymbol As InstrumentLocalSymbol
 Dim providerIDs As TWUtilities30.Parameters
 
-Set contractSpec = CreateContractSpecifier(instrument.shortName, _
-                                        instrument.symbol, _
-                                        instrument.exchangeName, _
-                                        instrument.secType, _
-                                        instrument.currencyCode, _
-                                        IIf(instrument.expiryDate = 0, "", format(instrument.expiryDate, "yyyymmdd")), _
-                                        instrument.strikePrice, _
-                                        instrument.optionRight)
+Const ProcName As String = "gContractFromInstrument"
+Dim failpoint As String
+On Error GoTo Err
+
+Set contractSpec = CreateContractSpecifier(instrument.ShortName, _
+                                        instrument.Symbol, _
+                                        instrument.ExchangeName, _
+                                        instrument.SecType, _
+                                        instrument.CurrencyCode, _
+                                        IIf(instrument.ExpiryDate = 0, "", format(instrument.ExpiryDate, "yyyymmdd")), _
+                                        instrument.StrikePrice, _
+                                        instrument.OptionRight)
 
 Set lContractBuilder = CreateContractBuilder(contractSpec)
 With lContractBuilder
-    .daysBeforeExpiryToSwitch = instrument.daysBeforeExpiryToSwitch
-    .Description = instrument.name
-    .expiryDate = instrument.expiryDate
-    .tickSize = instrument.tickSize
-    .multiplier = instrument.tickValue / instrument.tickSize
+    .DaysBeforeExpiryToSwitch = instrument.DaysBeforeExpiryToSwitch
+    .Description = instrument.Name
+    .ExpiryDate = instrument.ExpiryDate
+    .TickSize = instrument.TickSize
+    .Multiplier = instrument.TickValue / instrument.TickSize
     .TimeZone = GetTimeZone(instrument.TimeZoneName)
     
-    .sessionEndTime = instrument.sessionEndTime
-    .sessionStartTime = instrument.sessionStartTime
+    .SessionEndTime = instrument.SessionEndTime
+    .SessionStartTime = instrument.SessionStartTime
 
 If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    If instrument.localSymbols.count > 0 Then
+    If instrument.LocalSymbols.Count > 0 Then
         Set providerIDs = New TWUtilities30.Parameters
 
-        For Each localSymbol In instrument.localSymbols
-            providerIDs.SetParameterValue localSymbol.providerKey, localSymbol.localSymbol
+        For Each LocalSymbol In instrument.LocalSymbols
+            providerIDs.SetParameterValue LocalSymbol.ProviderKey, LocalSymbol.LocalSymbol
         Next
         .providerIDs = providerIDs
     End If
@@ -327,6 +331,11 @@ End If
     
 End With
 Set gContractFromInstrument = lContractBuilder.Contract
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gDatabaseTypeFromString( _
@@ -365,21 +374,39 @@ Public Function gGenerateConnectionErrorMessages( _
 Dim lError As ADODB.Error
 Dim errMsg As String
 
+Const ProcName As String = "gGenerateConnectionErrorMessages"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each lError In pConnection.Errors
     errMsg = "--------------------" & vbCrLf & _
             gGenerateErrorMessage(lError)
 Next
 pConnection.Errors.Clear
 gGenerateConnectionErrorMessages = errMsg
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gGenerateErrorMessage( _
                 ByVal pError As ADODB.Error)
+Const ProcName As String = "gGenerateErrorMessage"
+Dim failpoint As String
+On Error GoTo Err
+
 gGenerateErrorMessage = _
         "Error " & pError.Number & ": " & pError.Description & vbCrLf & _
         "    Source: " & pError.Source & vbCrLf & _
         "    SQL state: " & pError.SQLState & vbCrLf & _
         "    Native error: " & pError.NativeError & vbCrLf
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gGetSequenceNumber() As Long

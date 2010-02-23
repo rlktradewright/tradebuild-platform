@@ -27,12 +27,14 @@ Option Explicit
 
 Private Type ListenerTableEntry
     theListener         As StudyValueListener
-    ValueName           As String
+    valueName           As String
 End Type
 
 '@================================================================================
 ' Member variables and constants
 '@================================================================================
+
+Private Const ModuleName                As String = "StudyValueListeners"
 
 Private mListenerTable() As ListenerTableEntry
 Private mNextListenerTableIndex As Long
@@ -69,16 +71,24 @@ End Property
 
 Public Sub Add( _
                 ByVal listener As StudyValueListener, _
-                ByVal ValueName As String)
+                ByVal valueName As String)
 Dim tableEntry As ListenerTableEntry
+
+Const ProcName As String = "Add"
+On Error GoTo Err
 
 If mNextListenerTableIndex > UBound(mListenerTable) Then
     ReDim Preserve mListenerTable(2 * (UBound(mListenerTable) + 1) - 1) As ListenerTableEntry
 End If
 Set tableEntry.theListener = listener
-tableEntry.ValueName = UCase$(ValueName)
+tableEntry.valueName = UCase$(valueName)
 mListenerTable(mNextListenerTableIndex) = tableEntry
 mNextListenerTableIndex = mNextListenerTableIndex + 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Notify( _
@@ -86,20 +96,28 @@ Public Sub Notify( _
 Dim i As Long
 Dim listener As StudyValueListener
 
-ev.ValueName = UCase$(ev.ValueName)
+Const ProcName As String = "Notify"
+On Error GoTo Err
+
+ev.valueName = UCase$(ev.valueName)
 For i = 0 To mNextListenerTableIndex - 1
     Set listener = mListenerTable(i).theListener
     If Not listener Is Nothing Then
-        If ev.ValueName = mDefaultValuename Then
-            If mListenerTable(i).ValueName = DefaultStudyValueNameStr Then
+        If ev.valueName = mDefaultValuename Then
+            If mListenerTable(i).valueName = DefaultStudyValueNameStr Then
                 listener.Notify ev
             End If
         End If
-        If ev.ValueName = mListenerTable(i).ValueName Then
+        If ev.valueName = mListenerTable(i).valueName Then
             listener.Notify ev
         End If
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Remove( _
@@ -107,13 +125,21 @@ Public Sub Remove( _
 Dim i As Long
 Dim lListener As StudyValueListener
 
+Const ProcName As String = "Remove"
+On Error GoTo Err
+
 For i = 0 To mNextListenerTableIndex - 1
     Set lListener = mListenerTable(i).theListener
     If lListener Is listener Then
         Set mListenerTable(i).theListener = Nothing
-        mListenerTable(i).ValueName = ""
+        mListenerTable(i).valueName = ""
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

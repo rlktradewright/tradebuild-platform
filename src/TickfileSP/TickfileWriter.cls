@@ -58,6 +58,8 @@ Private Const ModuleName                As String = "TickfileWriter"
 Private mServiceProviderName As String
 Private mTickfileServiceProvider As TickfileServiceProvider
 
+Private mHandle As Long
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 
@@ -80,7 +82,7 @@ Private mBytesWritten As Long
 
 Private Sub Class_Initialize()
 mPath = App.path & "\TickFiles"
-Set mFileSys = CreateObject("scripting.filesystemobject")
+Set mFileSys = New FileSystemObject
 End Sub
 
 Private Sub Class_Terminate()
@@ -100,17 +102,17 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
+Const ProcName As String = "ITickfileWriter_CloseOutputFile"
 On Error GoTo Err
-finish
+Finish
 mTickfileServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
+Const ProcName As String = "ITickfileWriter_WriteTick"
 On Error GoTo Err
 
 Select Case tick.tickType
@@ -165,9 +167,7 @@ End Select
 
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteTick", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -178,17 +178,27 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub finish()
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mTsOut Is Nothing Then
     mTsOut.Close
     Set mTsOut = Nothing
-    logMessage mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
+    logMessage mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")" & vbCrLf & _
                 "    Closed tickfile: " & mBytesWritten & "bytes written"
 End If
 Set mServiceConsumer = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
+                ByVal pHandle As Long, _
                 ByVal Name As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
@@ -198,6 +208,7 @@ Friend Sub initialise( _
                 ByVal version As TickFileVersions, _
                 ByVal path As String)
 
+mHandle = pHandle
 mServiceProviderName = Name
 Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = tickfileOutputServiceConsumer
@@ -225,6 +236,8 @@ Dim tfPath As String
 Dim tfName As String
 Const TICKFILE_CURR_VERSION As Integer = 2
 
+Const ProcName As String = "createCrescendoTickfile"
+Dim failpoint As String
 On Error GoTo Err
 
 tfPath = IIf(mPath <> "", mPath, App.path)
@@ -234,9 +247,9 @@ On Error Resume Next
 mFileSys.CreateFolder tfPath
 On Error GoTo Err
 
-With mContract.specifier
-    tfPath = tfPath & UCase$(.symbol) & .expiry & "\"
-    tfName = UCase$(.symbol) & .expiry & "-" _
+With mContract.Specifier
+    tfPath = tfPath & UCase$(.Symbol) & .Expiry & "\"
+    tfName = UCase$(.Symbol) & .Expiry & "-" _
             & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
@@ -249,9 +262,9 @@ With mContract.specifier
     
     writeTickfileLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
-                .exchange & "," & _
-                .symbol & "," & _
-                .expiry & "," & _
+                .Exchange & "," & _
+                .Symbol & "," & _
+                .Expiry & "," & _
                 CDbl(timestamp) & "," & _
                 FormatDateTime(timestamp, vbGeneralDate)
 End With
@@ -262,15 +275,16 @@ Err:
 If Err.Number = 76 Then
     mFileSys.CreateFolder tfPath
     Resume
-Else
-    Err.Raise Err.Number, , Err.Description
 End If
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createTradeBuildTickFile(ByVal timestamp As Date)
 Dim tfPath As String
 Dim tfName As String
 
+Const ProcName As String = "createTradeBuildTickFile"
+Dim failpoint As String
 On Error GoTo Err
 
 tfPath = IIf(mPath <> "", mPath, App.path)
@@ -280,8 +294,8 @@ On Error Resume Next
 mFileSys.CreateFolder tfPath
 On Error GoTo Err
 
-tfPath = tfPath & UCase$(mContract.specifier.localSymbol) & "\"
-tfName = UCase$(mContract.specifier.localSymbol) & "-" & _
+tfPath = tfPath & UCase$(mContract.Specifier.LocalSymbol) & "\"
+tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
         format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
 
@@ -293,9 +307,9 @@ mServiceConsumer.OutputTickfileCreated tfPath & tfName
 logMessage "Created output tickfile " & tfPath & tfName
 writeTickfileLine TICKFILE_DECLARER & "," & _
             TRADEBUILD_TICKFILE_CURR_VERSION & "," & _
-            UCase$(mContract.specifier.exchange) & "," & _
-            UCase$(mContract.specifier.symbol) & "," & _
-            mContract.specifier.expiry & "," & _
+            UCase$(mContract.Specifier.Exchange) & "," & _
+            UCase$(mContract.Specifier.Symbol) & "," & _
+            mContract.Specifier.Expiry & "," & _
             CDbl(timestamp) & "," & _
             FormatDateTime(timestamp, vbGeneralDate)
 writeTickfileLine CONTRACT_DETAILS_MARKER & mContract.ToXML
@@ -306,24 +320,32 @@ Err:
 If Err.Number = 76 Then
     mFileSys.CreateFolder tfPath
     Resume
-Else
-    Err.Raise Err.Number, , Err.Description
 End If
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, _
-                            Source, _
-                            Description, _
-                            mTickfileServiceProvider.handle
+On Error GoTo Err
 
-finish
-mTickfileServiceProvider.dataWriterFinished Me
+' re-raise the error to get the calling procedure's procName into the source info
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
 
 Private Sub logMessage( _
@@ -344,11 +366,15 @@ Dim crescendoTickType As FileTickTypes
 Static priceFormatString As String
 
 
+Const ProcName As String = "writeTickData"
+Dim failpoint As String
+On Error GoTo Err
+
 If priceFormatString = "" Then
-    If mContract.numberOfDecimals = 0 Then
+    If mContract.NumberOfDecimals = 0 Then
         priceFormatString = "0"
     Else
-        priceFormatString = "0." & String(mContract.numberOfDecimals, "0")
+        priceFormatString = "0." & String(mContract.NumberOfDecimals, "0")
     End If
 End If
 
@@ -384,12 +410,26 @@ Case TickfileFormats.TickfileCrescendo
                 price & "," & _
                 size
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub writeTickfileLine( _
                 ByVal text As String)
+Const ProcName As String = "writeTickfileLine"
+Dim failpoint As String
+On Error GoTo Err
+
 mTsOut.WriteLine text
 mBytesWritten = mBytesWritten + Len(text)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

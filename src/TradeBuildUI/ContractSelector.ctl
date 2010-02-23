@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#37.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -67,7 +67,7 @@ Private Enum ContractsGridColumns
     exchange
     expiry = exchange
     currencyCode
-    strike = currencyCode
+    Strike = currencyCode
     OptionRight
 '    Filler
 '    Description
@@ -130,6 +130,10 @@ End Sub
 
 Private Sub UserControl_Initialize()
 Dim widthString As String
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 widthString = "ABCDEFGH IJKLMNOP QRST UVWX YZ"
 mLetterWidth = UserControl.TextWidth(widthString) / Len(widthString)
 widthString = ".0123456789"
@@ -143,6 +147,11 @@ mSortKeys(3) = ContractSortKeyExpiry
 mSortKeys(4) = ContractSortKeyStrike
 mSortKeys(5) = ContractSortKeyRight
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -155,22 +164,48 @@ End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
+Const ProcName As String = "UserControl_ReadProperties"
+Dim failpoint As String
+On Error GoTo Err
+
 TWGrid1.RowBackColorOdd = PropBag.ReadProperty("RowBackColorOdd", CRowBackColorOdd)
 TWGrid1.RowBackColorEven = PropBag.ReadProperty("RowBackColorEven", CRowBackColorEven)
 TWGrid1.ScrollBars = PropBag.ReadProperty("ScrollBars", 3)
 
 setupGrid
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
+
 TWGrid1.Move 0, 0, UserControl.Width, UserControl.Height
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-    Call PropBag.WriteProperty("ScrollBars", TWGrid1.ScrollBars, 3)
-    Call PropBag.WriteProperty("RowBackColorOdd", TWGrid1.RowBackColorOdd, 0)
-    Call PropBag.WriteProperty("RowBackColorEven", TWGrid1.RowBackColorEven, 0)
+Const ProcName As String = "UserControl_WriteProperties"
+Dim failpoint As String
+On Error GoTo Err
+
+Call PropBag.WriteProperty("ScrollBars", TWGrid1.ScrollBars, 3)
+Call PropBag.WriteProperty("RowBackColorOdd", TWGrid1.RowBackColorOdd, 0)
+Call PropBag.WriteProperty("RowBackColorEven", TWGrid1.RowBackColorEven, 0)
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -178,11 +213,29 @@ End Sub
 '@================================================================================
 
 Private Sub IContractSelector_Initialise(ByVal pContracts As ContractUtils26.Contracts)
+Const ProcName As String = "IContractSelector_Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Initialise pContracts
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Property Get IContractSelector_SelectedContracts() As ContractUtils26.Contracts
+Const ProcName As String = "IContractSelector_SelectedContracts"
+Dim failpoint As String
+On Error GoTo Err
+
 Set IContractSelector_SelectedContracts = SelectedContracts
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -194,6 +247,10 @@ Dim row As Long
 Dim rowSel As Long
 Dim col As Long
 Dim colSel As Long
+Const ProcName As String = "TWGrid1_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 row = TWGrid1.row
 rowSel = TWGrid1.rowSel
 col = TWGrid1.col
@@ -209,22 +266,27 @@ Else
 End If
 
 RaiseEvent Click
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TWGrid1_DblClick()
-    RaiseEvent DblClick
+RaiseEvent DblClick
 End Sub
 
 Private Sub TWGrid1_KeyDown(KeyCode As Integer, Shift As Integer)
-    RaiseEvent KeyDown(KeyCode, Shift)
+RaiseEvent KeyDown(KeyCode, Shift)
 End Sub
 
 Private Sub TWGrid1_KeyPress(KeyAscii As Integer)
-    RaiseEvent KeyPress(KeyAscii)
+RaiseEvent KeyPress(KeyAscii)
 End Sub
 
 Private Sub TWGrid1_KeyUp(KeyCode As Integer, Shift As Integer)
-    RaiseEvent KeyUp(KeyCode, Shift)
+RaiseEvent KeyUp(KeyCode, Shift)
 End Sub
 
 Private Sub TWGrid1_MouseDown( _
@@ -273,36 +335,94 @@ IncludeHistoricalContracts = mIncludeHistoricalContracts
 End Property
 
 Public Property Get RowBackColorOdd() As OLE_COLOR
-    RowBackColorOdd = TWGrid1.RowBackColorOdd
+Const ProcName As String = "RowBackColorOdd"
+Dim failpoint As String
+On Error GoTo Err
+
+RowBackColorOdd = TWGrid1.RowBackColorOdd
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let RowBackColorOdd(ByVal New_RowBackColorOdd As OLE_COLOR)
-    TWGrid1.RowBackColorOdd = New_RowBackColorOdd
-    PropertyChanged "RowBackColorOdd"
+Const ProcName As String = "RowBackColorOdd"
+Dim failpoint As String
+On Error GoTo Err
+
+TWGrid1.RowBackColorOdd = New_RowBackColorOdd
+PropertyChanged "RowBackColorOdd"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get RowBackColorEven() As OLE_COLOR
-    RowBackColorEven = TWGrid1.RowBackColorEven
+Const ProcName As String = "RowBackColorEven"
+Dim failpoint As String
+On Error GoTo Err
+
+RowBackColorEven = TWGrid1.RowBackColorEven
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let RowBackColorEven(ByVal New_RowBackColorEven As OLE_COLOR)
-    TWGrid1.RowBackColorEven = New_RowBackColorEven
-    PropertyChanged "RowBackColorEven"
+Const ProcName As String = "RowBackColorEven"
+Dim failpoint As String
+On Error GoTo Err
+
+TWGrid1.RowBackColorEven = New_RowBackColorEven
+PropertyChanged "RowBackColorEven"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ScrollBars() As ScrollBarsSettings
-    ScrollBars = TWGrid1.ScrollBars
+Const ProcName As String = "ScrollBars"
+Dim failpoint As String
+On Error GoTo Err
+
+ScrollBars = TWGrid1.ScrollBars
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ScrollBars(ByVal New_ScrollBars As ScrollBarsSettings)
-    TWGrid1.ScrollBars = New_ScrollBars
-    PropertyChanged "ScrollBars"
+Const ProcName As String = "ScrollBars"
+Dim failpoint As String
+On Error GoTo Err
+
+TWGrid1.ScrollBars = New_ScrollBars
+PropertyChanged "ScrollBars"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get SelectedContracts() As Contracts
 Dim scb As ContractsBuilder
 Dim i As Long
 Dim row As Long
+
+Const ProcName As String = "SelectedContracts"
+Dim failpoint As String
+On Error GoTo Err
 
 Set scb = CreateContractsBuilder(mContracts.contractSpecifier)
 
@@ -312,6 +432,11 @@ For i = 1 To mSelectedRows.Count
 Next
 
 Set SelectedContracts = scb.Contracts
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -324,6 +449,10 @@ Dim lRow As Long
 Dim lContract As Contract
 Dim contractSpec As contractSpecifier
 Dim index As Long
+
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
 
 TWGrid1.ClearStructure
 setupGrid
@@ -340,7 +469,7 @@ lRow = -1
 
 For Each lContract In mContracts
     index = index + 1
-    Set contractSpec = lContract.specifier
+    Set contractSpec = lContract.Specifier
     
     If IncludeHistoricalContracts Or Not isExpired(lContract) Then
         lRow = lRow + 1
@@ -370,6 +499,11 @@ TWGrid1.Redraw = True
 mCurrSectype = SecTypeNone
 mCurrCurrency = ""
 mCurrExchange = ""
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -378,22 +512,44 @@ End Sub
 
 Private Sub deselectContract( _
                 ByVal row As Long)
+Const ProcName As String = "deselectContract"
+Dim failpoint As String
+On Error GoTo Err
+
 mSelectedRows.Remove CStr(row)
 highlightRow row
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub deselectSelectedContracts()
 Dim i As Long
 Dim row As Long
 
+Const ProcName As String = "deselectSelectedContracts"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = mSelectedRows.Count To 1 Step -1
     row = mSelectedRows(i)
     deselectContract row
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub highlightRow(ByVal rowNumber As Long)
 Dim i As Long
+
+Const ProcName As String = "highlightRow"
+Dim failpoint As String
+On Error GoTo Err
 
 If rowNumber < 0 Then Exit Sub
 
@@ -412,55 +568,109 @@ TWGrid1.col = 0
 TWGrid1.colSel = ContractsGridColumns.MaxColumn
 TWGrid1.InvertCellColors
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Function isExpired( _
                 ByVal pContract As Contract) As Boolean
-If pContract.specifier.secType = SecTypeFuture Or _
-    pContract.specifier.secType = SecTypeFuturesOption Or _
-    pContract.specifier.secType = SecTypeOption _
+Const ProcName As String = "isExpired"
+Dim failpoint As String
+On Error GoTo Err
+
+If pContract.Specifier.secType = SecTypeFuture Or _
+    pContract.Specifier.secType = SecTypeFuturesOption Or _
+    pContract.Specifier.secType = SecTypeOption _
 Then
-    If Int(pContract.expiryDate) < Int(Now) Then isExpired = True
+    If Int(pContract.ExpiryDate) < Int(Now) Then isExpired = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isFullHeadingSecType( _
                 ByVal secType As SecurityTypes) As Boolean
+Const ProcName As String = "isFullHeadingSecType"
+Dim failpoint As String
+On Error GoTo Err
+
 If secType = SecTypeFuture Or _
     secType = SecTypeFuturesOption Or _
     secType = SecTypeOption _
 Then
     isFullHeadingSecType = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isHeadingWithoutExchangeSecType( _
                 ByVal secType As SecurityTypes)
+Const ProcName As String = "isHeadingWithoutExchangeSecType"
+Dim failpoint As String
+On Error GoTo Err
+
 If secType = SecTypeStock Or _
     secType = SecTypeIndex _
 Then
     isHeadingWithoutExchangeSecType = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isHeadingWithoutCurrencySecType( _
                 ByVal secType As SecurityTypes)
+Const ProcName As String = "isHeadingWithoutCurrencySecType"
+Dim failpoint As String
+On Error GoTo Err
+
 If secType = SecTypeStock Or _
     secType = SecTypeCash Or _
     secType = SecTypeIndex _
 Then
     isHeadingWithoutCurrencySecType = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isRowSelected( _
                 ByVal row As Long) As Boolean
+Const ProcName As String = "isRowSelected"
+Dim failpoint As String
+On Error GoTo Err
+
 On Error Resume Next
 isRowSelected = (CLng(mSelectedRows(CStr(row))) = row)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needFullHeadingRow( _
                 ByVal contractSpec As contractSpecifier) As Boolean
+Const ProcName As String = "needFullHeadingRow"
+Dim failpoint As String
+On Error GoTo Err
+
 If (contractSpec.secType <> mCurrSectype Or _
     contractSpec.currencyCode <> mCurrCurrency Or _
     contractSpec.exchange <> mCurrExchange) And _
@@ -468,10 +678,19 @@ If (contractSpec.secType <> mCurrSectype Or _
 Then
     needFullHeadingRow = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRow( _
                 ByVal contractSpec As contractSpecifier) As Boolean
+Const ProcName As String = "needHeadingRow"
+Dim failpoint As String
+On Error GoTo Err
+
 If needFullHeadingRow(contractSpec) Or _
     needHeadingRowWithoutExchange(contractSpec) Or _
     needHeadingRowWithoutCurrency(contractSpec) Or _
@@ -479,10 +698,19 @@ If needFullHeadingRow(contractSpec) Or _
 Then
     needHeadingRow = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithoutExchange( _
                 ByVal contractSpec As contractSpecifier) As Boolean
+Const ProcName As String = "needHeadingRowWithoutExchange"
+Dim failpoint As String
+On Error GoTo Err
+
 If (contractSpec.secType <> mCurrSectype Or _
     contractSpec.currencyCode <> mCurrCurrency) And _
     isHeadingWithoutExchangeSecType(contractSpec.secType) And _
@@ -490,10 +718,19 @@ If (contractSpec.secType <> mCurrSectype Or _
 Then
     needHeadingRowWithoutExchange = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithoutCurrency( _
                 ByVal contractSpec As contractSpecifier) As Boolean
+Const ProcName As String = "needHeadingRowWithoutCurrency"
+Dim failpoint As String
+On Error GoTo Err
+
 If (contractSpec.secType <> mCurrSectype Or _
     contractSpec.exchange <> mCurrExchange) And _
     isHeadingWithoutCurrencySecType(contractSpec.secType) And _
@@ -501,26 +738,53 @@ If (contractSpec.secType <> mCurrSectype Or _
 Then
     needHeadingRowWithoutCurrency = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithSectypeOnly( _
                 ByVal contractSpec As contractSpecifier) As Boolean
+Const ProcName As String = "needHeadingRowWithSectypeOnly"
+Dim failpoint As String
+On Error GoTo Err
+
 If contractSpec.secType <> mCurrSectype And _
     isHeadingWithoutExchangeSecType(contractSpec.secType) And _
     isHeadingWithoutCurrencySecType(contractSpec.secType) _
 Then
     needHeadingRowWithSectypeOnly = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub selectContract( _
                 ByVal row As Long)
+Const ProcName As String = "selectContract"
+Dim failpoint As String
+On Error GoTo Err
+
 mSelectedRows.Add row, CStr(row)
 highlightRow row
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupGrid()
 'TWGrid1.AllowBigSelection = True
+Const ProcName As String = "setupGrid"
+Dim failpoint As String
+On Error GoTo Err
+
 TWGrid1.Cols = 2
 TWGrid1.GridLineWidth = 0
 TWGrid1.FillStyle = TwGridFillRepeat
@@ -541,6 +805,11 @@ setupGridColumn 0, ContractsGridColumns.currencyCode, ContractsGridColumnWidths.
 setupGridColumn 0, ContractsGridColumns.OptionRight, ContractsGridColumnWidths.OptionRightWidth, "Right", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 'setupGridColumn 0, ContractsGridColumns.Description, ContractsGridColumnWidths.DescriptionWidth, "Description", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 'setupGridColumn 0, ContractsGridColumns.Filler, ContractsGridColumnWidths.FillerWidth, "", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupGridColumn( _
@@ -552,6 +821,10 @@ Private Sub setupGridColumn( _
                 ByVal align As TWControls10.AlignmentSettings)
     
 Dim lColumnWidth As Long
+
+Const ProcName As String = "setupGridColumn"
+Dim failpoint As String
+On Error GoTo Err
 
 With TWGrid1
     .row = rowNumber
@@ -575,21 +848,39 @@ With TWGrid1
 '    .ColAlignmentFixed(columnNumber) = align
 '    .TextMatrix(rowNumber, columnNumber) = columnHeader
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub toggleRowSelection( _
                 ByVal row As Long)
+Const ProcName As String = "toggleRowSelection"
+Dim failpoint As String
+On Error GoTo Err
+
 If isRowSelected(row) Then
     deselectContract row
 Else
     selectContract row
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub writeHeadingRow( _
                 ByVal contractSpec As contractSpecifier)
 Dim excludeExchange As Boolean
 Dim excludeCurrency As Boolean
+
+Const ProcName As String = "writeHeadingRow"
+Dim failpoint As String
+On Error GoTo Err
 
 If isHeadingWithoutExchangeSecType(contractSpec.secType) Then excludeExchange = True
 If isHeadingWithoutCurrencySecType(contractSpec.secType) Then excludeCurrency = True
@@ -627,11 +918,20 @@ If Not excludeExchange Then
     TWGrid1.col = ContractsGridColumns.exchange
     TWGrid1.Text = contractSpec.exchange
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub writeRow( _
                 ByVal pContract As Contract, _
                 ByVal contractSpec As contractSpecifier)
+Const ProcName As String = "writeRow"
+Dim failpoint As String
+On Error GoTo Err
+
 TWGrid1.col = 0
 TWGrid1.colSel = ContractsGridColumns.MaxColumn
 TWGrid1.CellBackColor = vbBlack ' Clear out any cell background colour
@@ -659,19 +959,24 @@ End If
 Select Case contractSpec.secType
     Case SecTypeFuture
         TWGrid1.col = ContractsGridColumns.expiry
-        TWGrid1.Text = FormatDateTime(pContract.expiryDate, vbShortDate)
+        TWGrid1.Text = FormatDateTime(pContract.ExpiryDate, vbShortDate)
     Case SecTypeOption, SecTypeFuturesOption
         TWGrid1.col = ContractsGridColumns.expiry
-        TWGrid1.Text = FormatDateTime(pContract.expiryDate, vbShortDate)
+        TWGrid1.Text = FormatDateTime(pContract.ExpiryDate, vbShortDate)
     
         TWGrid1.col = ContractsGridColumns.OptionRight
         TWGrid1.Text = OptionRightToString(contractSpec.Right)
         
-        TWGrid1.col = ContractsGridColumns.strike
-        TWGrid1.Text = Format(contractSpec.strike, pContract.PriceFormatString)
+        TWGrid1.col = ContractsGridColumns.Strike
+        TWGrid1.Text = pContract.FormatPrice(contractSpec.Strike)
         TWGrid1.CellAlignment = TwGridAlignRightCenter
     'Case SecTypeCombo
 
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub

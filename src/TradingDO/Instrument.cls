@@ -46,7 +46,6 @@ Public Event Valid()
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName               As String = "TradingDO26"
 Private Const ModuleName                As String = "Instrument"
 
 '@===============================================================================
@@ -91,339 +90,700 @@ Private mMaxCurrencyCodeLength As Long
 ' Properties
 '@================================================================================
 
-Public Property Let currencyCode( _
+Public Property Let CurrencyCode( _
                 ByVal value As String)
+Const ProcName As String = "CurrencyCode"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
-mDataObj.ruleBroken BusRuleInstrumentCurrencyCodeValid, _
+mDataObj.RuleBroken BusRuleInstrumentCurrencyCodeValid, _
     Len(value) > mMaxCurrencyCodeLength
 If Len(value) = 0 Then
-    mDataObj.columnValue(InstrumentColumnCurrency) = Null
+    mDataObj.ColumnValue(InstrumentColumnCurrency) = Null
 Else
-    mDataObj.ruleBroken BusRuleInstrumentCurrencyCodeValid, _
+    mDataObj.RuleBroken BusRuleInstrumentCurrencyCodeValid, _
         Not IsValidCurrencyCode(value)
-    mDataObj.columnValue(InstrumentColumnCurrency) = Left$(value, mMaxCurrencyCodeLength)
+    mDataObj.ColumnValue(InstrumentColumnCurrency) = Left$(value, mMaxCurrencyCodeLength)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get currencyCode() As String
+Public Property Get CurrencyCode() As String
+Const ProcName As String = "CurrencyCode"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
-    currencyCode = mDataObj.getColumnValue(InstrumentColumnCurrency, "")
+    CurrencyCode = mDataObj.GetColumnValue(InstrumentColumnCurrency, "")
 Else
-    currencyCode = mDataObj.getColumnValue(InstrumentColumnCurrencyE, "")
+    CurrencyCode = mDataObj.GetColumnValue(InstrumentColumnCurrencyE, "")
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get currencyCodeInheritedFromClass() As Boolean
-currencyCodeInheritedFromClass = (mDataObj.getColumnValue(InstrumentColumnCurrency, "") = "")
+Public Property Get CurrencyCodeInheritedFromClass() As Boolean
+Const ProcName As String = "CurrencyCodeInheritedFromClass"
+Dim failpoint As String
+On Error GoTo Err
+
+CurrencyCodeInheritedFromClass = (mDataObj.GetColumnValue(InstrumentColumnCurrency, "") = "")
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get daysBeforeExpiryToSwitch() As Long
-daysBeforeExpiryToSwitch = mDataObj.getColumnValue(InstrumentColumnSwitchDay, 0)
+Public Property Get DaysBeforeExpiryToSwitch() As Long
+Const ProcName As String = "DaysBeforeExpiryToSwitch"
+Dim failpoint As String
+On Error GoTo Err
+
+DaysBeforeExpiryToSwitch = mDataObj.GetColumnValue(InstrumentColumnSwitchDay, 0)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get exchangeName() As String
+Public Property Get ExchangeName() As String
+Const ProcName As String = "ExchangeName"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mDataObj.IsNew Then
-    exchangeName = mDataObj.getColumnValue(InstrumentColumnExchangeName)
+    ExchangeName = mDataObj.GetColumnValue(InstrumentColumnExchangeName)
 Else
-    If CLng(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
-        exchangeName = mDB.InstrumentClassFactory.loadByID( _
-                                    mDataObj.getColumnValue(InstrumentColumnInstrumentClassID)).exchangeName
+    If CLng(mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
+        ExchangeName = mDB.InstrumentClassFactory.LoadByID( _
+                                    mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID)).ExchangeName
     End If
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get expiryDate() As Date
-expiryDate = mDataObj.getColumnValue(InstrumentColumnExpiry, 0#)
+Public Property Get ExpiryDate() As Date
+Const ProcName As String = "ExpiryDate"
+Dim failpoint As String
+On Error GoTo Err
+
+ExpiryDate = mDataObj.GetColumnValue(InstrumentColumnExpiry, 0#)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let expiryDate(ByVal value As Date)
-mDataObj.columnValue(InstrumentColumnExpiry) = Int(value)
+Public Property Let ExpiryDate(ByVal value As Date)
+Const ProcName As String = "ExpiryDate"
+Dim failpoint As String
+On Error GoTo Err
+
+mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let expiryDateString(ByVal value As String)
+Public Property Let ExpiryDateString(ByVal value As String)
+Const ProcName As String = "ExpiryDateString"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsDate(value) Then
-    expiryDate = CDate(value)
+    ExpiryDate = CDate(value)
 Else
-    mDataObj.ruleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(value)
-    expiryDate = CDate(0)
+    mDataObj.RuleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(value)
+    ExpiryDate = CDate(0)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get hasBarData() As Boolean
+Public Property Get HasBarData() As Boolean
+Const ProcName As String = "HasBarData"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
-    hasBarData = False
+    HasBarData = False
 Else
-    hasBarData = CBool(mDataObj.getColumnValue(InstrumentColumnHasBarData, 0))
+    HasBarData = CBool(mDataObj.GetColumnValue(InstrumentColumnHasBarData, 0))
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get hasTickData() As Boolean
+Public Property Get HasTickData() As Boolean
+Const ProcName As String = "HasTickData"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
-    hasTickData = False
+    HasTickData = False
 Else
-    hasTickData = CBool(mDataObj.getColumnValue(InstrumentColumnHasTickData, 0))
+    HasTickData = CBool(mDataObj.GetColumnValue(InstrumentColumnHasTickData, 0))
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
 Dim instrmnt As instrument
-If mDataObj.ruleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
+Const ProcName As String = "InstrumentClass"
+Dim failpoint As String
+On Error GoTo Err
 
-If name <> "" Then
-    Set instrmnt = mDB.InstrumentFactory.loadByName("""" & value.exchangeName & """/""" & _
-                                                    value.name & """/""" & _
-                                                    name & """")
-    If Not instrmnt Is Nothing Then mDataObj.ruleBroken getBusRuleNameValidId, instrmnt.id <> id
+If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
+
+If Name <> "" Then
+    Set instrmnt = mDB.InstrumentFactory.LoadByName("""" & value.ExchangeName & """/""" & _
+                                                    value.Name & """/""" & _
+                                                    Name & """")
+    If Not instrmnt Is Nothing Then mDataObj.RuleBroken getBusRuleNameValidId, instrmnt.Id <> Id
 End If
-mDataObj.columnValue(InstrumentColumnInstrumentClassID) = value.id
+mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = value.Id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InstrumentClass() As InstrumentClass
-Set InstrumentClass = mDB.InstrumentClassFactory.loadByID(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0))
+Const ProcName As String = "InstrumentClass"
+Dim failpoint As String
+On Error GoTo Err
+
+Set InstrumentClass = mDB.InstrumentClassFactory.LoadByID(mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InstrumentClassId() As Long
-InstrumentClassId = mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)
+Const ProcName As String = "InstrumentClassId"
+Dim failpoint As String
+On Error GoTo Err
+
+InstrumentClassId = mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let instrumentClassName( _
+Public Property Let InstrumentClassName( _
                 ByVal value As String)
-InstrumentClass = mDB.InstrumentClassFactory.loadByName(value)
+Const ProcName As String = "InstrumentClassName"
+Dim failpoint As String
+On Error GoTo Err
+
+InstrumentClass = mDB.InstrumentClassFactory.LoadByName(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get instrumentClassName() As String
+Public Property Get InstrumentClassName() As String
+Const ProcName As String = "InstrumentClassName"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mDataObj.IsNew Then
-    instrumentClassName = mDataObj.getColumnValue(InstrumentColumnInstrumentClassName)
+    InstrumentClassName = mDataObj.GetColumnValue(InstrumentColumnInstrumentClassName)
 Else
-    If CLng(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
-        instrumentClassName = mDB.InstrumentClassFactory.loadByID( _
-                                    mDataObj.getColumnValue(InstrumentColumnInstrumentClassID)).name
+    If CLng(mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
+        InstrumentClassName = mDB.InstrumentClassFactory.LoadByID( _
+                                    mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID)).Name
     End If
 End If
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
-Public Property Get localSymbols() As InstrumentLocalSymbols
+Public Property Get LocalSymbols() As InstrumentLocalSymbols
 'If mLocalSymbols Is Nothing Then
 '    Set mLocalSymbols = New InstrumentLocalSymbols
-'    mLocalSymbols.connectionString = mDB.connectionString
-'    mLocalSymbols.load id
+'    mLocalSymbols.ConnectionString = mDB.ConnectionString
+'    mLocalSymbols.Load Id
 'End If
-'Set localSymbols = mLocalSymbols
+'Set LocalSymbols = mLocalSymbols
 End Property
 
 'Public Property Get month() As String
-'month = format(expiryDate, "yyyymm")
+'month = format(ExpiryDate, "yyyymm")
 'End Property
 
-Public Property Get name() As String
-name = getName
+Public Property Get Name() As String
+Const ProcName As String = "Name"
+Dim failpoint As String
+On Error GoTo Err
+
+Name = GetName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 ' overrides generic property
+Const ProcName As String = "Name"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
-If value = getName Then Exit Property
-If Not mDataObj.ruleBroken(getBusRuleNameValidId, _
+If value = GetName Then Exit Property
+If Not mDataObj.RuleBroken(getBusRuleNameValidId, _
                             Len(value) = 0 Or _
-                            Len(value) > mDataObj.columnMaxLength(GenericColumnName)) Then
-    If instrumentClassName = "" Then
-        mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
-    ElseIf Not mDataObj.ruleBroken(getBusRuleNameValidId, _
-                                    Not mDB.InstrumentFactory.loadByName(exchangeName & "/" & instrumentClassName & "/" & value) Is Nothing) Then
-        mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
+                            Len(value) > mDataObj.ColumnMaxLength(GenericColumnName)) Then
+    If InstrumentClassName = "" Then
+        mDataObj.ColumnValue(GenericColumnName) = Left$(value, mDataObj.ColumnMaxLength(GenericColumnName))
+    ElseIf Not mDataObj.RuleBroken(getBusRuleNameValidId, _
+                                    Not mDB.InstrumentFactory.LoadByName(ExchangeName & "/" & InstrumentClassName & "/" & value) Is Nothing) Then
+        mDataObj.ColumnValue(GenericColumnName) = Left$(value, mDataObj.ColumnMaxLength(GenericColumnName))
     End If
 End If
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
-Public Property Get notes() As String
-notes = mDataObj.getColumnValue(InstrumentColumnNotes, "")
+Public Property Get Notes() As String
+Const ProcName As String = "Notes"
+Dim failpoint As String
+On Error GoTo Err
+
+Notes = mDataObj.GetColumnValue(InstrumentColumnNotes, "")
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let notes(ByVal val As String)
-mDataObj.columnValue(InstrumentColumnNotes) = val
+Public Property Let Notes(ByVal val As String)
+Const ProcName As String = "Notes"
+Dim failpoint As String
+On Error GoTo Err
+
+mDataObj.ColumnValue(InstrumentColumnNotes) = val
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get optionRight() As OptionRights
-optionRight = OptionRightFromString(mDataObj.getColumnValue(InstrumentColumnOptionRight, ""))
+Public Property Get OptionRight() As OptionRights
+Const ProcName As String = "OptionRight"
+Dim failpoint As String
+On Error GoTo Err
+
+OptionRight = OptionRightFromString(mDataObj.GetColumnValue(InstrumentColumnOptionRight, ""))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let optionRight(ByVal value As OptionRights)
+Public Property Let OptionRight(ByVal value As OptionRights)
+Const ProcName As String = "OptionRight"
+Dim failpoint As String
+On Error GoTo Err
+
 validateOptionRight value
-mDataObj.columnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(value), mMaxOptRightLength)
+mDataObj.ColumnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(value), mMaxOptRightLength)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get secType() As SecurityTypes
-secType = gCategoryToSecType(mDataObj.getColumnValue(InstrumentColumnInstrumentCategoryId))
+Public Property Get SecType() As SecurityTypes
+Const ProcName As String = "SecType"
+Dim failpoint As String
+On Error GoTo Err
+
+SecType = gCategoryToSecType(mDataObj.GetColumnValue(InstrumentColumnInstrumentCategoryId))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get sessionEndTime() As Date
+Public Property Get SessionEndTime() As Date
+Const ProcName As String = "SessionEndTime"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mDataObj.IsNew Then
-    sessionEndTime = mDataObj.getColumnValue(InstrumentColumnSessionEndTime, 0)
+    SessionEndTime = mDataObj.GetColumnValue(InstrumentColumnSessionEndTime, 0)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get sessionStartTime() As Date
+Public Property Get SessionStartTime() As Date
+Const ProcName As String = "SessionStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mDataObj.IsNew Then
-    sessionStartTime = mDataObj.getColumnValue(InstrumentColumnSessionStartTime)
+    SessionStartTime = mDataObj.GetColumnValue(InstrumentColumnSessionStartTime)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get shortName() As String
-shortName = mDataObj.getColumnValue(InstrumentColumnShortName, "")
+Public Property Get ShortName() As String
+Const ProcName As String = "ShortName"
+Dim failpoint As String
+On Error GoTo Err
+
+ShortName = mDataObj.GetColumnValue(InstrumentColumnShortName, "")
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let shortName(ByVal value As String)
+Public Property Let ShortName(ByVal value As String)
+Const ProcName As String = "ShortName"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
-mDataObj.ruleBroken BusRuleInstrumentShortNameValid, _
+mDataObj.RuleBroken BusRuleInstrumentShortNameValid, _
     Len(value) = 0 Or Len(value) > mMaxShortNameLength
-mDataObj.columnValue(InstrumentColumnShortName) = Left$(value, mMaxShortNameLength)
+mDataObj.ColumnValue(InstrumentColumnShortName) = Left$(value, mMaxShortNameLength)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get strikePrice() As Double
-strikePrice = mDataObj.getColumnValue(InstrumentColumnStrikePrice, 0#)
+Public Property Get StrikePrice() As Double
+Const ProcName As String = "StrikePrice"
+Dim failpoint As String
+On Error GoTo Err
+
+StrikePrice = mDataObj.GetColumnValue(InstrumentColumnStrikePrice, 0#)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let strikePrice(ByVal value As Double)
+Public Property Let StrikePrice(ByVal value As Double)
+Const ProcName As String = "StrikePrice"
+Dim failpoint As String
+On Error GoTo Err
+
 validateStrikePrice value
-mDataObj.columnValue(InstrumentColumnStrikePrice) = value
+mDataObj.ColumnValue(InstrumentColumnStrikePrice) = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let strikePriceString(ByVal value As String)
+Public Property Let StrikePriceString(ByVal value As String)
+Const ProcName As String = "StrikePriceString"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsNumeric(value) Then
-    strikePrice = CDbl(value)
+    StrikePrice = CDbl(value)
 Else
-    mDataObj.ruleBroken BusRuleInstrumentStrikePriceValid, Not IsNumeric(value)
-    strikePrice = 999.999
+    mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, Not IsNumeric(value)
+    StrikePrice = 999.999
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let symbol(ByVal value As String)
+Public Property Let Symbol(ByVal value As String)
+Const ProcName As String = "Symbol"
+Dim failpoint As String
+On Error GoTo Err
+
 value = Trim$(value)
-mDataObj.ruleBroken BusRuleInstrumentSymbolValid, _
+mDataObj.RuleBroken BusRuleInstrumentSymbolValid, _
                     Len(value) = 0 Or Len(value) > mMaxSymbolLength
-mDataObj.columnValue(InstrumentColumnSymbol) = Left$(value, mMaxSymbolLength)
+mDataObj.ColumnValue(InstrumentColumnSymbol) = Left$(value, mMaxSymbolLength)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get symbol() As String
-symbol = mDataObj.getColumnValue(InstrumentColumnSymbol, "")
+Public Property Get Symbol() As String
+Const ProcName As String = "Symbol"
+Dim failpoint As String
+On Error GoTo Err
+
+Symbol = mDataObj.GetColumnValue(InstrumentColumnSymbol, "")
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let tickSize( _
+Public Property Let TickSize( _
                 ByVal value As Double)
-mDataObj.ruleBroken BusRuleInstrumentTickSizeValid, _
+Const ProcName As String = "TickSize"
+Dim failpoint As String
+On Error GoTo Err
+
+mDataObj.RuleBroken BusRuleInstrumentTickSizeValid, _
                     value < 0
 If value = 0 Then
-    mDataObj.columnValue(InstrumentColumnTickSize) = Null
+    mDataObj.ColumnValue(InstrumentColumnTickSize) = Null
 Else
-    mDataObj.columnValue(InstrumentColumnTickSize) = value
+    mDataObj.ColumnValue(InstrumentColumnTickSize) = value
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get tickSize() As Double
+Public Property Get TickSize() As Double
+Const ProcName As String = "TickSize"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
-    tickSize = mDataObj.getColumnValue(InstrumentColumnTickSize, 0)
+    TickSize = mDataObj.GetColumnValue(InstrumentColumnTickSize, 0)
 Else
-    tickSize = mDataObj.getColumnValue(InstrumentColumnTickSizeE)
+    TickSize = mDataObj.GetColumnValue(InstrumentColumnTickSizeE)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get tickSizeInheritedFromClass() As Boolean
-If mDataObj.getColumnValue(InstrumentColumnTickSize, 0) = 0 Then
-    tickSizeInheritedFromClass = True
+Public Property Get TickSizeInheritedFromClass() As Boolean
+Const ProcName As String = "TickSizeInheritedFromClass"
+Dim failpoint As String
+On Error GoTo Err
+
+If mDataObj.GetColumnValue(InstrumentColumnTickSize, 0) = 0 Then
+    TickSizeInheritedFromClass = True
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let tickSizeString( _
+Public Property Let TickSizeString( _
                 ByVal value As String)
+Const ProcName As String = "TickSizeString"
+Dim failpoint As String
+On Error GoTo Err
+
 If value = "" Then
-    tickSize = 0#
-ElseIf Not mDataObj.ruleBroken(BusRuleInstrumentTickSizeValid, Not IsNumeric(value)) Then
-    tickSize = 999.999
+    TickSize = 0#
+ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickSizeValid, Not IsNumeric(value)) Then
+    TickSize = 999.999
 Else
-    tickSize = CDbl(value)
+    TickSize = CDbl(value)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let tickValue( _
+Public Property Let TickValue( _
                 ByVal value As Double)
-mDataObj.ruleBroken BusRuleInstrumentTickValueValid, value < 0
+Const ProcName As String = "TickValue"
+Dim failpoint As String
+On Error GoTo Err
+
+mDataObj.RuleBroken BusRuleInstrumentTickValueValid, value < 0
 If value = 0 Then
-    mDataObj.columnValue(InstrumentColumnTickValue) = Null
+    mDataObj.ColumnValue(InstrumentColumnTickValue) = Null
 Else
-    mDataObj.columnValue(InstrumentColumnTickValue) = value
+    mDataObj.ColumnValue(InstrumentColumnTickValue) = value
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get tickValue() As Double
+Public Property Get TickValue() As Double
+Const ProcName As String = "TickValue"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
-    tickValue = mDataObj.getColumnValue(InstrumentColumnTickValue, 0)
+    TickValue = mDataObj.GetColumnValue(InstrumentColumnTickValue, 0)
 Else
-    tickValue = mDataObj.getColumnValue(InstrumentColumnTickValueE)
+    TickValue = mDataObj.GetColumnValue(InstrumentColumnTickValueE)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get tickValueInheritedFromClass() As Boolean
-If mDataObj.getColumnValue(InstrumentColumnTickValue, 0) = 0 Then
-    tickValueInheritedFromClass = True
+Public Property Get TickValueInheritedFromClass() As Boolean
+Const ProcName As String = "TickValueInheritedFromClass"
+Dim failpoint As String
+On Error GoTo Err
+
+If mDataObj.GetColumnValue(InstrumentColumnTickValue, 0) = 0 Then
+    TickValueInheritedFromClass = True
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let tickValueString( _
+Public Property Let TickValueString( _
                 ByVal value As String)
+Const ProcName As String = "TickValueString"
+Dim failpoint As String
+On Error GoTo Err
+
 If value = "" Then
-    tickValue = 0#
-ElseIf Not mDataObj.ruleBroken(BusRuleInstrumentTickValueValid, Not IsNumeric(value)) Then
-    tickValue = 999.999
+    TickValue = 0#
+ElseIf Not mDataObj.RuleBroken(BusRuleInstrumentTickValueValid, Not IsNumeric(value)) Then
+    TickValue = 999.999
 Else
-    tickValue = CDbl(value)
+    TickValue = CDbl(value)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TimeZoneName() As String
+Const ProcName As String = "TimeZoneName"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDataObj.IsNew Then
     TimeZoneName = ""
 Else
-    TimeZoneName = mDataObj.getColumnValue(InstrumentColumnTimeZoneName)
+    TimeZoneName = mDataObj.GetColumnValue(InstrumentColumnTimeZoneName)
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function createTickStream( _
+Public Function CreateTickStream( _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date) As TickStream
-Dim failpoint As Long
+Const ProcName As String = "CreateTickStream"
 On Error GoTo Err
 
-Set createTickStream = New TickStream
-createTickStream.initialise mDB, id, fromDate, toDate
+Set CreateTickStream = New TickStream
+CreateTickStream.Initialise mDB, Id, fromDate, toDate
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTickStream", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function createTickWriter( _
+Public Function CreateTickWriter( _
                 ByVal useAsynchronousWrites As Boolean) As TickWriter
-Dim failpoint As Long
+Const ProcName As String = "CreateTickWriter"
+
 On Error GoTo Err
 
-Set createTickWriter = New TickWriter
-createTickWriter.initialise mDB, Me, useAsynchronousWrites
+Set CreateTickWriter = New TickWriter
+CreateTickWriter.Initialise mDB, Me, useAsynchronousWrites
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="createTickWriter", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function fetchBars( _
+Public Function FetchBars( _
                 ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
@@ -435,7 +795,7 @@ Public Function fetchBars( _
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
-Dim failpoint As Long
+Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
 Select Case barTimePeriod.Units
@@ -450,7 +810,7 @@ Case TimePeriodSecond, _
     TimePeriodTickMovement
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "fetchBars", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Bar time unit not supported"
 End Select
 
@@ -464,19 +824,19 @@ specifier.toDate = toDate
 specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
 Set bf = New BarFetcher
-bf.initialise mDB, Me
+bf.Initialise mDB, Me
 
-Set fetchBars = bf.fetchBars(specifier)
+Set FetchBars = bf.FetchBars(specifier)
 Set bf = Nothing
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fetchBars", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
-Public Function fetchbarsAsync( _
+Public Function FetchbarsAsync( _
                 ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
@@ -487,10 +847,11 @@ Public Function fetchbarsAsync( _
                 Optional ByVal barType As BarTypes = BarTypeTrade, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
+Const ProcName As String = "FetchbarsAsync"
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Select Case barTimePeriod.Units
@@ -505,7 +866,7 @@ Case TimePeriodSecond, _
     TimePeriodTickMovement
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "FetchBarsAsync", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Bar time unit not supported"
 End Select
 
@@ -519,37 +880,38 @@ specifier.toDate = toDate
 specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
 Set bf = New BarFetcher
-bf.initialise mDB, Me
+bf.Initialise mDB, Me
 
-Set fetchbarsAsync = bf.fetchbarsAsync(specifier, cookie, taskName)
+Set FetchbarsAsync = bf.FetchbarsAsync(specifier, cookie, taskName)
 Set bf = Nothing
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="fetchbarsAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
+Const ProcName As String = "Initialise"
 
-Dim failpoint As Long
+
+
 On Error GoTo Err
 
-genericInitialise db, rs
+GenericInitialise db, rs
 
-mMaxNameLength = mDataObj.columnMaxLength(InstrumentColumnName)
-mMaxShortNameLength = mDataObj.columnMaxLength(InstrumentColumnShortName)
-mMaxSymbolLength = mDataObj.columnMaxLength(InstrumentColumnSymbol)
-mMaxOptRightLength = mDataObj.columnMaxLength(InstrumentColumnOptionRight)
-mMaxCurrencyCodeLength = mDataObj.columnMaxLength(InstrumentColumnCurrency)
+mMaxNameLength = mDataObj.ColumnMaxLength(InstrumentColumnName)
+mMaxShortNameLength = mDataObj.ColumnMaxLength(InstrumentColumnShortName)
+mMaxSymbolLength = mDataObj.ColumnMaxLength(InstrumentColumnSymbol)
+mMaxOptRightLength = mDataObj.ColumnMaxLength(InstrumentColumnOptionRight)
+mMaxCurrencyCodeLength = mDataObj.ColumnMaxLength(InstrumentColumnCurrency)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub WriteBar( _
@@ -563,12 +925,13 @@ Public Sub WriteBar( _
                 ByVal volume As Long, _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long)
+Const ProcName As String = "WriteBar"
 Dim lBarWriter As New BarWriter
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
-lBarWriter.initialise mDB, id, shortName
+lBarWriter.Initialise mDB, Id, ShortName
 
 lBarWriter.WriteBar timestamp, _
                     barType, _
@@ -584,7 +947,7 @@ lBarWriter.WriteBar timestamp, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBar", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function WriteBarAsync( _
@@ -600,12 +963,13 @@ Public Function WriteBarAsync( _
                 ByVal openInterest As Long, _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
+Const ProcName As String = "WriteBarAsync"
 Dim lBarWriter As New BarWriter
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
-lBarWriter.initialise mDB, id, shortName
+lBarWriter.Initialise mDB, Id, ShortName
 
 Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
                                             barType, _
@@ -623,7 +987,7 @@ Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="WriteBarAsync", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -631,11 +995,14 @@ End Function
 '@================================================================================
 
 Private Function getBusRuleNameValidId() As Long
+Const ProcName As String = "getBusRuleNameValidId"
 getBusRuleNameValidId = BusRuleInstrumentNameValid
 End Function
 
 Private Function getFactory() As DataObjectFactory
-Dim failpoint As Long
+Const ProcName As String = "getFactory"
+
+
 On Error GoTo Err
 
 Set getFactory = mDB.InstrumentFactory
@@ -643,21 +1010,24 @@ Set getFactory = mDB.InstrumentFactory
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getFactory", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setInitialErrors()
+Const ProcName As String = "setInitialErrors"
 ' set errors for fields that are invalid when a new record is created
 ' Note that this is done automatically by the AbstractDataObject for
-' the name field
-mDataObj.ruleBroken BusRuleInstrumentShortNameValid, True
-mDataObj.ruleBroken BusRuleInstrumentSymbolValid, True
+' the Name field
+mDataObj.RuleBroken BusRuleInstrumentShortNameValid, True
+mDataObj.RuleBroken BusRuleInstrumentSymbolValid, True
 End Sub
 
 Private Sub validateOptionRight( _
                 ByVal value As OptionRights)
+Const ProcName As String = "validateOptionRight"
 
-Dim failpoint As Long
+
+
 On Error GoTo Err
 
 Select Case value
@@ -665,36 +1035,38 @@ Case OptNone
 Case OptCall
 Case OptPut
 Case Else
-    mDataObj.ruleBroken BusRuleInstrumentOptionRightvalid, True
+    mDataObj.RuleBroken BusRuleInstrumentOptionRightvalid, True
     Exit Sub
 End Select
 
-mDataObj.ruleBroken BusRuleInstrumentOptionRightvalid, _
-                    ((secType = SecTypeOption Or _
-                        secType = SecTypeFuturesOption) And _
+mDataObj.RuleBroken BusRuleInstrumentOptionRightvalid, _
+                    ((SecType = SecTypeOption Or _
+                        SecType = SecTypeFuturesOption) And _
                     value = OptNone)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="validateOptionRight", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub validateStrikePrice( _
                 ByVal value As Double)
-Dim failpoint As Long
+Const ProcName As String = "validateStrikePrice"
+
+
 On Error GoTo Err
 
-mDataObj.ruleBroken BusRuleInstrumentStrikePriceValid, _
-                    (secType = SecTypeOption Or _
-                        secType = SecTypeFuturesOption) And _
+mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, _
+                    (SecType = SecTypeOption Or _
+                        SecType = SecTypeFuturesOption) And _
                     value <= 0
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="validateStrikePrice", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -713,55 +1085,159 @@ End Sub
 '@================================================================================
 
 Private Sub BusinessDataObject_ApplyEdit()
+Const ProcName As String = "BusinessDataObject_ApplyEdit"
+On Error GoTo Err
+
 ApplyEdit
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub BusinessDataObject_CancelEdit()
+Const ProcName As String = "BusinessDataObject_CancelEdit"
+On Error GoTo Err
+
 CancelEdit
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub BusinessDataObject_Delete()
+Const ProcName As String = "BusinessDataObject_Delete"
+On Error GoTo Err
+
 Delete
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get BusinessDataObject_ErrorList() As ErrorList
+Const ProcName As String = "BusinessDataObject_ErrorList"
+On Error GoTo Err
+
 Set BusinessDataObject_ErrorList = mDataObj.ErrorList
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
+Const ProcName As String = "BusinessDataObject_EventSource"
+On Error GoTo Err
+
 Set BusinessDataObject_EventSource = mDataObj.eventSource
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long
-BusinessDataObject_ID = id
+Const ProcName As String = "BusinessDataObject_ID"
+On Error GoTo Err
+
+BusinessDataObject_ID = Id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
+Const ProcName As String = "BusinessDataObject_IsDeleted"
+On Error GoTo Err
+
 BusinessDataObject_IsDeleted = IsDeleted
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_IsDirty() As Boolean
+Const ProcName As String = "BusinessDataObject_IsDirty"
+On Error GoTo Err
+
 BusinessDataObject_IsDirty = IsDirty
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_IsNew() As Boolean
+Const ProcName As String = "BusinessDataObject_IsNew"
+On Error GoTo Err
+
 BusinessDataObject_IsNew = IsNew
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_IsValid() As Boolean
+Const ProcName As String = "BusinessDataObject_IsValid"
+On Error GoTo Err
+
 BusinessDataObject_IsValid = IsValid
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Let BusinessDataObject_Name(ByVal RHS As String)
-name = RHS
+Const ProcName As String = "BusinessDataObject_Name"
+On Error GoTo Err
+
+Name = RHS
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get BusinessDataObject_Name() As String
-BusinessDataObject_Name = name
+Const ProcName As String = "BusinessDataObject_Name"
+On Error GoTo Err
+
+BusinessDataObject_Name = Name
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub BusinessDataObject_Refresh()
-refresh
+Const ProcName As String = "BusinessDataObject_Refresh"
+On Error GoTo Err
+
+Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@===============================================================================
@@ -769,11 +1245,27 @@ End Sub
 '@===============================================================================
 
 Private Sub mDataObj_Clean()
+Const ProcName As String = "mDataObj_Clean"
+On Error GoTo Err
+
 RaiseEvent Clean
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataObj_Deleted()
+Const ProcName As String = "mDataObj_Deleted"
+On Error GoTo Err
+
 RaiseEvent Deleted
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataObj_Dirty()
@@ -793,27 +1285,75 @@ End Sub
 '@================================================================================
 
 Public Property Get ErrorList() As ErrorList
+Const ProcName As String = "ErrorList"
+On Error GoTo Err
+
 Set ErrorList = mDataObj.ErrorList
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get id() As Long
-id = mDataObj.id
+Public Property Get Id() As Long
+Const ProcName As String = "Id"
+On Error GoTo Err
+
+Id = mDataObj.Id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsValid() As Boolean
+Const ProcName As String = "IsValid"
+On Error GoTo Err
+
 IsValid = mDataObj.IsValid
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsDeleted() As Boolean
+Const ProcName As String = "IsDeleted"
+On Error GoTo Err
+
 IsDeleted = mDataObj.IsDeleted
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsDirty() As Boolean
+Const ProcName As String = "IsDirty"
+On Error GoTo Err
+
 IsDirty = mDataObj.IsDirty
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsNew() As Boolean
+Const ProcName As String = "IsNew"
+On Error GoTo Err
+
 IsNew = mDataObj.IsNew
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -821,7 +1361,9 @@ End Property
 '@================================================================================
 
 Public Sub ApplyEdit()
-Dim failpoint As Long
+Const ProcName As String = "ApplyEdit"
+
+
 On Error GoTo Err
 
 mDataObj.ApplyEdit
@@ -829,11 +1371,13 @@ mDataObj.ApplyEdit
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ApplyEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub CancelEdit()
-Dim failpoint As Long
+Const ProcName As String = "CancelEdit"
+
+
 On Error GoTo Err
 
 mDataObj.CancelEdit
@@ -842,11 +1386,13 @@ If mDataObj.IsNew Then setInitialErrors
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="CancelEdit", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Delete()
-Dim failpoint As Long
+Const ProcName As String = "Delete"
+
+
 On Error GoTo Err
 
 mDataObj.Delete
@@ -854,62 +1400,70 @@ mDataObj.Delete
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Delete", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub genericInitialise( _
+Public Sub GenericInitialise( _
                 ByVal db As Variant, _
                 Optional ByVal rs As ADODB.Recordset)
-Dim failpoint As Long
+Const ProcName As String = "GenericInitialise"
+
+
 On Error GoTo Err
 
 Set mDB = db
 If Not rs Is Nothing Then
-    Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.connectionString)
-    mDataObj.initialiseRs rs
+    Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.ConnectionString)
+    mDataObj.InitialiseRs rs
     If mDataObj.IsNew Then setInitialErrors
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="genericInitialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function getName() As String
-Dim failpoint As Long
+Public Function GetName() As String
+Const ProcName As String = "GetName"
+
+
 On Error GoTo Err
 
-getName = mDataObj.name
+GetName = mDataObj.Name
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Sub refresh()
-Dim failpoint As Long
+Public Sub Refresh()
+Const ProcName As String = "Refresh"
+
+
 On Error GoTo Err
 
-mDataObj.refresh
+mDataObj.Refresh
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="refresh", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub setName(ByVal value As String)
-Dim failpoint As Long
+Public Sub SetName(ByVal value As String)
+Const ProcName As String = "SetName"
+
+
 On Error GoTo Err
 
-mDataObj.name = value
+mDataObj.Name = value
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="setName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

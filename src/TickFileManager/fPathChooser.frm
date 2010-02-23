@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.Form fPathChooser 
    Caption         =   "Choose folder"
    ClientHeight    =   2775
@@ -78,7 +78,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickFileManager26"
 Private Const ModuleName                    As String = "fPathChooser"
 
 '@================================================================================
@@ -101,6 +100,9 @@ End Sub
 
 Private Sub Form_Resize()
 Dim butleft As Long
+Const ProcName As String = "Form_Resize"
+On Error GoTo Err
+
 butleft = Me.ScaleWidth - OKButton.Width - 8 * Screen.TwipsPerPixelX
 If butleft >= 2160 Then
     OKButton.Left = butleft
@@ -113,6 +115,11 @@ If Me.ScaleHeight >= 1560 Then
     PathChooser1.Height = Me.ScaleHeight - 8 * Screen.TwipsPerPixelY - PathChooser1.Top
     NewFolderButton.Top = PathChooser1.Height + PathChooser1.Top - NewFolderButton.Height
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -124,17 +131,41 @@ End Sub
 '@================================================================================
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+On Error GoTo Err
+
 Me.Hide
 mCancelled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NewFolderButton_Click()
+Const ProcName As String = "NewFolderButton_Click"
+On Error GoTo Err
+
 PathChooser1.NewFolder
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OKButton_Click()
+Const ProcName As String = "OKButton_Click"
+On Error GoTo Err
+
 mCancelled = False
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -146,15 +177,39 @@ End Sub
 '@================================================================================
 
 Public Property Get cancelled() As Boolean
+Const ProcName As String = "cancelled"
+On Error GoTo Err
+
 cancelled = mCancelled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let path(ByVal newvalue As String)
+Const ProcName As String = "path"
+On Error GoTo Err
+
 PathChooser1.path = newvalue
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get path() As String
+Const ProcName As String = "path"
+On Error GoTo Err
+
 If Not mCancelled Then path = PathChooser1.path
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

@@ -149,6 +149,10 @@ mCustomSessionEndTime = endTime
 End Sub
 
 Public Function ToString() As String
+Const ProcName As String = "ToString"
+Dim failpoint As String
+On Error GoTo Err
+
 ToString = _
     "    Max Bars:        " & mMaxNumberOfBars & vbCrLf & _
     "    Bar time period: " & mBarTimePeriod.ToString & vbCrLf & _
@@ -159,6 +163,11 @@ ToString = _
         "    Session end:     " & FormatTimestamp(mCustomSessionEndTime, TimestampDateAndTimeISO8601), _
         "") & vbCrLf & _
     "    Contract:       " & mContract.ToString
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================

@@ -277,6 +277,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "fSimpleColorPicker"
+
 Private Const CC_RGBINIT         As Long = &H1
 Private Const CC_FULLOPEN        As Long = &H2
 Private Const CC_PREVENTFULLOPEN As Long = &H4
@@ -338,18 +340,37 @@ End Sub
 '@================================================================================
 
 Private Sub ColorLabel_Click(Index As Integer)
+Const ProcName As String = "ColorLabel_Click"
+On Error GoTo Err
+
 mSelectedColor = ColorLabel(Index).BackColor
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub InitialColorLabel_Click()
+Const ProcName As String = "InitialColorLabel_Click"
+On Error GoTo Err
+
 mSelectedColor = InitialColorLabel.BackColor
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub MoreColorsButton_Click()
 Dim cc As W32CHOOSECOLOR
 
+
+Const ProcName As String = "MoreColorsButton_Click"
+On Error GoTo Err
 
 cc.flags = CC_FULLOPEN Or CC_RGBINIT Or CC_ANYCOLOR
 cc.lStructSize = Len(cc)
@@ -360,11 +381,24 @@ ChooseColor cc
 mSelectedColor = cc.rgbResult
 InitialColorLabel.BackColor = mSelectedColor
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NoColorButton_Click()
+Const ProcName As String = "NoColorButton_Click"
+On Error GoTo Err
+
 mSelectedColor = NullColor
 Me.Hide
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -372,12 +406,28 @@ End Sub
 '@================================================================================
 
 Friend Property Let initialColor(ByVal value As Long)
+Const ProcName As String = "initialColor"
+On Error GoTo Err
+
 InitialColorLabel.BackColor = value
 mSelectedColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get selectedColor() As Long
+Const ProcName As String = "selectedColor"
+On Error GoTo Err
+
 selectedColor = mSelectedColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

@@ -30,8 +30,8 @@ Begin VB.UserControl TickStreamSpecifier
             TabIndex        =   0
             Top             =   0
             Width           =   2535
-            _extentx        =   4471
-            _extenty        =   6509
+            _ExtentX        =   4471
+            _ExtentY        =   6509
          End
       End
    End
@@ -257,6 +257,8 @@ Event TickStreamsSpecified(ByVal pTickfileSpecifiers As TickfileSpecifiers)
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "TickStreamSpecifier"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -282,7 +284,16 @@ Private mSecType                            As SecurityTypes
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 getSupportedTickstreamFormats
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -294,6 +305,10 @@ End Sub
 '@================================================================================
 
 Private Sub CompleteSessionCheck_Click()
+Const ProcName As String = "CompleteSessionCheck_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 If CompleteSessionCheck = vbChecked Then
     UseContractTimesOption.Enabled = True
     UseCustomTimesOption.Enabled = True
@@ -305,40 +320,117 @@ Else
 End If
 adjustCustomTimeFieldAttributes
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
+Const ProcName As String = "ContractSpecBuilder1_NotReady"
+Dim failpoint As String
+On Error GoTo Err
+
 RaiseEvent NotReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_Ready()
+Const ProcName As String = "ContractSpecBuilder1_Ready"
+Dim failpoint As String
+On Error GoTo Err
+
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CustomFromTimeText_Change()
+Const ProcName As String = "CustomFromTimeText_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CustomToTimeText_Change()
+Const ProcName As String = "CustomToTimeText_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FromDateText_Change()
+Const ProcName As String = "FromDateText_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ToDateText_Change()
+Const ProcName As String = "ToDateText_Change"
+Dim failpoint As String
+On Error GoTo Err
+
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UseContractTimesOption_Click()
+Const ProcName As String = "UseContractTimesOption_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 adjustCustomTimeFieldAttributes
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UseCustomTimesOption_Click()
+Const ProcName As String = "UseCustomTimesOption_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 adjustCustomTimeFieldAttributes
 checkReady
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -346,6 +438,10 @@ End Sub
 '@================================================================================
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mContractsLoadTC_Completed"
+Dim failpoint As String
+On Error GoTo Err
+
 Screen.MousePointer = vbDefault
 If ev.errorNumber <> 0 Then
     ErrorLabel.caption = ev.errorMessage
@@ -353,10 +449,24 @@ Else
     Set mContracts = ev.result
     processContracts
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEvent)
+Const ProcName As String = "mContractsLoadTC_Notification"
+Dim failpoint As String
+On Error GoTo Err
+
 ErrorLabel.caption = ev.eventMessage
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -370,6 +480,8 @@ End Sub
 Public Sub load()
 Dim contractSpec As contractSpecifier
 
+Const ProcName As String = "load"
+Dim failpoint As String
 On Error GoTo Err
 
 ErrorLabel.caption = ""
@@ -379,20 +491,17 @@ Screen.MousePointer = vbHourglass
 Set contractSpec = ContractSpecBuilder1.contractSpecifier
 mSecType = contractSpec.secType
 
-Set mContractsLoadTC = TradeBuildAPI.loadContracts(contractSpec)
-
+Set mContractsLoadTC = TradeBuildAPI.LoadContracts(contractSpec)
 
 Exit Sub
 
 Err:
-
 Screen.MousePointer = vbDefault
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     ErrorLabel.caption = Err.Description
-Else
-    Err.Raise Err.Number
+    Exit Sub
 End If
-    
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -400,14 +509,27 @@ End Sub
 '@================================================================================
 
 Private Sub adjustCustomTimeFieldAttributes()
+Const ProcName As String = "adjustCustomTimeFieldAttributes"
+Dim failpoint As String
+On Error GoTo Err
+
 If UseCustomTimesOption Then
     enableCustomTimeFields
 Else
     disableCustomTimeFields
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function checkOk() As Boolean
+
+Const ProcName As String = "checkOk"
+Dim failpoint As String
+On Error GoTo Err
 
 If FormatCombo.ListCount = 0 Then Exit Function
 
@@ -431,28 +553,60 @@ End If
 
 checkOk = True
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Function
 
 Private Sub checkReady()
+Const ProcName As String = "checkReady"
+Dim failpoint As String
+On Error GoTo Err
+
 If checkOk Then
     RaiseEvent Ready
 Else
     RaiseEvent NotReady
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub disableCustomTimeFields()
+Const ProcName As String = "disableCustomTimeFields"
+Dim failpoint As String
+On Error GoTo Err
+
 CustomFromTimeText.Enabled = False
 CustomFromTimeText.backColor = vbButtonFace
 CustomToTimeText.Enabled = False
 CustomToTimeText.backColor = vbButtonFace
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub enableCustomTimeFields()
+Const ProcName As String = "enableCustomTimeFields"
+Dim failpoint As String
+On Error GoTo Err
+
 CustomFromTimeText.Enabled = True
 CustomFromTimeText.backColor = vbWindowBackground
 CustomToTimeText.Enabled = True
 CustomToTimeText.backColor = vbWindowBackground
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub getSupportedTickstreamFormats()
@@ -499,7 +653,7 @@ Dim TickfileFormatID As String
 
 On Error GoTo Err
 
-If mContracts.count = 0 Then
+If mContracts.Count = 0 Then
     ErrorLabel.caption = "No contracts meet this specification"
     Exit Sub
 End If
@@ -508,7 +662,7 @@ If mSecType <> SecurityTypes.SecTypeFuture And _
     mSecType <> SecurityTypes.SecTypeOption And _
     mSecType <> SecurityTypes.SecTypeFuturesOption _
 Then
-    If mContracts.count > 1 Then
+    If mContracts.Count > 1 Then
         ' don't see how this can happen, but just in case!
         ErrorLabel.caption = "More than one contract meets this specification"
         Exit Sub

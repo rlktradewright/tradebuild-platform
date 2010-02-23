@@ -69,12 +69,28 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
+Const ProcName As String = "Count"
+On Error GoTo Err
+
 Count = mPositionManagers.Count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Item(ByVal pKey As String) As PositionManager
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mPositionManagers.Item(pKey)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -82,13 +98,30 @@ End Property
 '@================================================================================
 
 Friend Sub Add(ByVal pPositionManager As PositionManager)
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 mPositionManagers.Add pPositionManager, pPositionManager.Key
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+
+On Error GoTo Err
+
 Set NewEnum = mPositionManagers.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

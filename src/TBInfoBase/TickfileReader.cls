@@ -109,12 +109,13 @@ End Sub
 '@===============================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
+Const ProcName As String = "ITickfileReader_CloseInputFile"
 On Error GoTo Err
 mTickfileServiceProvider.dataReaderFinished Me
 finish
 Exit Sub
 Err:
-handleFatalError "ITickfileReader_CloseInputFile"
+handleFatalError ProcName
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
@@ -122,14 +123,33 @@ Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
 End Property
 
 Private Property Get ITickfileReader_Contract() As Contract
+Const ProcName As String = "ITickfileReader_Contract"
+On Error GoTo Err
+
 Set ITickfileReader_Contract = mContracts.Item(1)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
-Set ITickfileReader_ContractSpecifier = mContracts.Item(1).specifier
+Const ProcName As String = "ITickfileReader_ContractSpecifier"
+On Error GoTo Err
+
+Set ITickfileReader_ContractSpecifier = mContracts.Item(1).Specifier
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
+
+Const ProcName As String = "ITickfileReader_FireNextTick"
+On Error GoTo Err
 
 If Not mFirstTickNotified Then
     mFirstTickNotified = True
@@ -137,10 +157,23 @@ If Not mFirstTickNotified Then
 Else
     getTick
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
+Const ProcName As String = "ITickfileReader_FirstTickFileTime"
+On Error GoTo Err
+
 ITickfileReader_FirstTickFileTime = mFirstTick.TimeStamp
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
@@ -156,11 +189,14 @@ End If
 End Property
 
 Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
+Const ProcName As String = "ITickfileReader_ReplayProgressEventFrequency"
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
 Private Sub ITickfileReader_ReplayTickfile( _
                 ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
+Const ProcName As String = "ITickfileReader_ReplayTickfile"
+
 
 On Error GoTo Err
 Set mInputTickfileSpecifier = tickfileSpecifier
@@ -169,20 +205,20 @@ Set mInputTickfileSpecifier = tickfileSpecifier
 ' in this database
 logMessage pMsg:="Fetching contract", pProcName:="ITickfileReader_ReplayTickfile"
 If mUseSynchronousReads Then
-    Set mContracts = mTradingDB.loadContracts(mInputTickfileSpecifier.Contract.specifier)
+    Set mContracts = mTradingDB.LoadContracts(mInputTickfileSpecifier.Contract.Specifier)
     processContracts
     If Not mTickStream Is Nothing Then
-        mTickStream.startStream False
+        mTickStream.StartStream False
         getTick
     End If
 Else
-    Set mLoadContractsTC = mTradingDB.loadContractsAsync(mInputTickfileSpecifier.Contract.specifier)
+    Set mLoadContractsTC = mTradingDB.LoadContractsAsync(mInputTickfileSpecifier.Contract.Specifier)
 End If
 
 Exit Sub
 
 Err:
-handleFatalError "ITickfileReader_ReplayTickfile"
+handleFatalError ProcName
 End Sub
 
 Private Function ITickfileReader_Supports( _
@@ -200,6 +236,7 @@ End Property
 '@===============================================================================
 
 Private Sub mFetchTicksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mFetchTicksTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -214,14 +251,14 @@ ElseIf IsEmpty(ev.result) Then
                                 mTickfileServiceProvider.handle
 Else
     Set mTickStream = ev.result
-    mTickStream.startStream True
+    mTickStream.StartStream True
     getTick
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mFetchTicksTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -229,6 +266,8 @@ End Sub
 '@===============================================================================
 
 Private Sub mLoadContractsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Const ProcName As String = "mLoadContractsTC_Completed"
+
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -250,7 +289,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mLoadContractsTC_Completed", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -258,6 +297,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mTickStream_DataAvailable()
+Const ProcName As String = "mTickStream_DataAvailable"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -270,7 +310,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="mTickStream_DataAvailable", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -282,10 +322,18 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+Const ProcName As String = "finish"
+On Error GoTo Err
+
 Set mTickStream = Nothing
 Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
 Set mTickfileServiceProvider = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub initialise( _
@@ -298,6 +346,8 @@ Friend Sub initialise( _
                 ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal capabilities As Long, _
                 ByVal useSynchronousReads As Boolean)
+Const ProcName As String = "initialise"
+
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -317,7 +367,7 @@ mUseSynchronousReads = useSynchronousReads
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="initialise", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
@@ -326,12 +376,13 @@ End Sub
 '@===============================================================================
 
 Private Sub getTick()
+Const ProcName As String = "getTick"
 Dim tick As GenericTick
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Do While mTickStream.getNextTick(tick)
+Do While mTickStream.GetNextTick(tick)
     If tick.TimeStamp >= mInputTickfileSpecifier.FromDate Then
         If tick.TimeStamp >= mInputTickfileSpecifier.ToDate Then
             noMoreTicks
@@ -352,7 +403,7 @@ Do While mTickStream.getNextTick(tick)
     End If
 Loop
     
-If mTickStream.eos Then
+If mTickStream.Eos Then
     noMoreTicks
 Else
     logMessage pMsg:="Waiting for ticks", pProcName:="getTick", pLogLevel:=LogLevelHighDetail
@@ -362,7 +413,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getTick", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -375,7 +426,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -392,6 +449,7 @@ gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=
 End Sub
 
 Private Sub noMoreTicks()
+Const ProcName As String = "noMoreTicks"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -406,11 +464,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="noMoreTicks", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub notifyTick( _
                 ByRef tick As GenericTick)
+Const ProcName As String = "notifyTick"
+
 
 On Error GoTo Err
 
@@ -425,10 +485,11 @@ End If
 Exit Sub
 
 Err:
-handleFatalError "notifyTick"
+handleFatalError ProcName
 End Sub
 
 Private Sub processContracts()
+Const ProcName As String = "processContracts"
 Dim st As SessionTimes
 
 Dim failpoint As Long
@@ -457,11 +518,11 @@ Else
     
         logMessage pMsg:="Fetching ticks", pProcName:="processContracts", pLogLevel:=LogLevelHighDetail
         If mUseSynchronousReads Then
-            Set mTickStream = mTradingDB.fetchTicks(mContract.specifier, _
+            Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, _
                                                         .FromDate, _
                                                         .ToDate)
         Else
-            Set mFetchTicksTC = mTradingDB.fetchTicksAsync(mContract.specifier, _
+            Set mFetchTicksTC = mTradingDB.FetchTicksAsync(mContract.Specifier, _
                                                         .FromDate, _
                                                         .ToDate)
         End If
@@ -471,6 +532,6 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="processContracts", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 

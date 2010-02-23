@@ -41,6 +41,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "DataAnalyzer"
+
 Private Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
 '@================================================================================
@@ -81,18 +83,29 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub addDataValue( _
+Public Sub AddDataValue( _
                 ByVal value As Double)
+Const ProcName As String = "AddDataValue"
+On Error GoTo Err
+
 mDataValuesMaxIndex = mDataValuesMaxIndex + 1
 If mDataValuesMaxIndex > UBound(mDataValues) Then
     ReDim Preserve mDataValues(UBound(mDataValues) + 1000) As Double
 End If
 mDataValues(mDataValuesMaxIndex) = value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub analyze()
+Public Sub Analyze()
 Dim i As Long
 Dim diff As Double
+
+Const ProcName As String = "analyze"
+On Error GoTo Err
 
 SortDoubles mDataValues, False, 0, mDataValuesMaxIndex
 
@@ -100,6 +113,11 @@ For i = 0 To mDataValuesMaxIndex - 1
     diff = mDataValues(i + 1) - mDataValues(i)
     If diff <> 0 And diff < mminimumDifference Then mminimumDifference = diff
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

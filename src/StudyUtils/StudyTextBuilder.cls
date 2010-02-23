@@ -31,6 +31,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyTextBuilder"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -66,15 +68,39 @@ End Sub
 '@================================================================================
 
 Public Property Let Position(ByVal value As StudyPoint)
+Const ProcName As String = "Position"
+On Error GoTo Err
+
 mStudyText.Position = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Text(ByVal value As String)
+Const ProcName As String = "Text"
+On Error GoTo Err
+
 mStudyText.Text = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyText() As StudyText
+Const ProcName As String = "StudyText"
+On Error GoTo Err
+
 Set StudyText = mStudyText
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    ClientHeight    =   690
    ClientLeft      =   0
@@ -139,19 +139,23 @@ defaultTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNameDefaultLength, Pr
                                     PropBag.ReadProperty(PropNameDefaultUnits, PropDfltDefaultUnits))
 If Err.Number <> 0 Then
     defaultTimePeriod = GetTimePeriod(PropDfltDefaultLength, PropDfltDefaultUnits)
-    Err.clear
+    Err.Clear
 End If
 
 Enabled = PropBag.ReadProperty(PropNameEnabled, PropDfltEnabled)
 If Err.Number <> 0 Then
     Enabled = PropDfltEnabled
-    Err.clear
+    Err.Clear
 End If
 
 End Sub
 
 Private Sub UserControl_Resize()
 Dim controlWidth
+
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
 
 If UserControl.Width < 1710 Then UserControl.Width = 1710
 If UserControl.Height < 2 * 315 Then UserControl.Height = 2 * 315
@@ -167,12 +171,17 @@ UnitsLabel.Top = UserControl.Height - TimeframeUnitsCombo.Height
 TimeframeUnitsCombo.Top = UnitsLabel.Top
 TimeframeUnitsCombo.Left = LengthLabel.Width
 TimeframeUnitsCombo.Width = controlWidth
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 PropBag.WriteProperty PropNameBackColor, backColor, PropDfltBackColor
 PropBag.WriteProperty PropNameDefaultLength, defaultTimePeriod.length, PropDfltDefaultLength
-PropBag.WriteProperty PropNameDefaultUnits, defaultTimePeriod.units, PropDfltDefaultUnits
+PropBag.WriteProperty PropNameDefaultUnits, defaultTimePeriod.Units, PropDfltDefaultUnits
 PropBag.WriteProperty PropNameEnabled, Enabled, PropDfltEnabled
 PropBag.WriteProperty PropNameForeColor, foreColor, PropDfltForeColor
 End Sub
@@ -225,23 +234,59 @@ End Sub
 
 Public Property Let backColor( _
                 ByVal value As OLE_COLOR)
+Const ProcName As String = "backColor"
+Dim failpoint As String
+On Error GoTo Err
+
 TimeframeLengthText.backColor = value
 TimeframeUnitsCombo.backColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get backColor() As OLE_COLOR
+Const ProcName As String = "backColor"
+Dim failpoint As String
+On Error GoTo Err
+
 backColor = TimeframeUnitsCombo.backColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get DefaultLength() As Long
+Const ProcName As String = "DefaultLength"
+Dim failpoint As String
+On Error GoTo Err
+
 DefaultLength = TimeframeLengthText
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let defaultTimePeriod( _
                 ByVal value As TimePeriod)
+Const ProcName As String = "defaultTimePeriod"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mDefaultTimePeriod = value
 TimeframeLengthText = value.length
-setUnitsSelection value.units
+setUnitsSelection value.Units
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultTimePeriod() As TimePeriod
@@ -249,42 +294,96 @@ Set defaultTimePeriod = mDefaultTimePeriod
 End Property
 
 Public Property Get Enabled() As Boolean
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 Enabled = UserControl.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Enabled(ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 UserControl.Enabled = value
 TimeframeLengthText.Enabled = value
 TimeframeUnitsCombo.Enabled = value
 PropertyChanged PropNameEnabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let foreColor( _
                 ByVal value As OLE_COLOR)
+Const ProcName As String = "foreColor"
+Dim failpoint As String
+On Error GoTo Err
+
 TimeframeLengthText.foreColor = value
 TimeframeUnitsCombo.foreColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get foreColor() As OLE_COLOR
+Const ProcName As String = "foreColor"
+Dim failpoint As String
+On Error GoTo Err
+
 foreColor = TimeframeUnitsCombo.foreColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get isTimeframeValid() As Boolean
 
+Const ProcName As String = "isTimeframeValid"
+Dim failpoint As String
+On Error GoTo Err
+
 If TimeframeLengthText = "" Then Exit Function
 
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(timeframeDesignator) Then isTimeframeValid = True
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(TimeframeDesignator) Then isTimeframeValid = True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
-Public Property Get timeframeDesignator() As TimePeriod
-Set timeframeDesignator = GetTimePeriod(CLng(TimeframeLengthText), TimePeriodUnitsFromString(TimeframeUnitsCombo.selectedItem.Text))
+Public Property Get TimeframeDesignator() As TimePeriod
+Const ProcName As String = "TimeframeDesignator"
+Dim failpoint As String
+On Error GoTo Err
+
+Set TimeframeDesignator = GetTimePeriod(CLng(TimeframeLengthText), TimePeriodUnitsFromString(TimeframeUnitsCombo.SelectedItem.Text))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal pTimePeriod As TimePeriod)
 defaultTimePeriod = pTimePeriod
 End Sub
@@ -296,19 +395,41 @@ End Sub
 Private Sub addItem( _
                 ByVal value As TimePeriodUnits)
 Dim s As String
+Const ProcName As String = "addItem"
+Dim failpoint As String
+On Error GoTo Err
+
 s = TimePeriodUnitsToString(value)
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(GetTimePeriod(1, value)) Then TimeframeUnitsCombo.ComboItems.add , s, s
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(GetTimePeriod(1, value)) Then TimeframeUnitsCombo.ComboItems.Add , s, s
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function setUnitsSelection( _
                 ByVal value As TimePeriodUnits) As Boolean
+Const ProcName As String = "setUnitsSelection"
+Dim failpoint As String
+On Error GoTo Err
+
 If TradeBuildAPI.IsSupportedHistoricalDataPeriod(GetTimePeriod(1, value)) Then
     TimeframeUnitsCombo.ComboItems.item(TimePeriodUnitsToString(value)).Selected = True
     setUnitsSelection = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub setupTimeframeUnitsCombo()
+Const ProcName As String = "setupTimeframeUnitsCombo"
+Dim failpoint As String
+On Error GoTo Err
+
 addItem TimePeriodSecond
 addItem TimePeriodMinute
 addItem TimePeriodHour
@@ -328,5 +449,10 @@ addItem TimePeriodTickMovement
 'Else
 '    setUnitsSelection (TimePeriodYear)
 'End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
 Begin VB.Form fMsgBox 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -98,7 +98,16 @@ Public Sub initialise( _
                 ByVal prompt As String, _
                 ByVal buttons As MsgBoxStyles, _
                 Optional ByVal title As String)
+Const ProcName As String = "initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 TWModelessMsgBox1.initialise prompt, buttons, title
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

@@ -19,11 +19,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
-Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-
-Public Const DummyHigh As Double = MinDouble
-Public Const DummyLow As Double = MaxDouble
+Public Const ProjectName                        As String = "TimeframeUtils26"
+Private Const ModuleName                As String = "Globals"
 
 Public Const OneMicroSecond As Double = 1.15740740740741E-11
 Public Const OneSecond As Double = 1 / 86400
@@ -114,6 +111,10 @@ Public Function gBarEndTime( _
                 ByVal SessionStartTime As Date, _
                 ByVal SessionEndTime As Date) As Date
 Dim startTime As Date
+Const ProcName As String = "gBarEndTime"
+Dim failpoint As String
+On Error GoTo Err
+
 startTime = gBarStartTime( _
                 Timestamp, _
                 BarTimePeriod, _
@@ -147,6 +148,11 @@ calcSessionTimesHelper startTime, SessionStartTime, SessionEndTime, sessStart, s
 If startTime < sessStart And gBarEndTime > sessStart Then
     gBarEndTime = Int(gBarEndTime) + SessionStartTime
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function gBarStartTime( _
@@ -160,6 +166,10 @@ Dim theDate                 As Long
 Dim theTime                 As Double
 Dim theTimeMins             As Long
 Dim theTimeSecs             As Long
+
+Const ProcName As String = "gBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
 
 sessionOffset = Int(1440 * (SessionStartTime + OneMicroSecond - Int(SessionStartTime)))
 
@@ -235,10 +245,19 @@ Case TimePeriodVolume, _
     gBarStartTime = Timestamp
 End Select
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Function
 
 Public Function gCalcBarLength( _
                 ByVal BarTimePeriod As TimePeriod) As Date
+Const ProcName As String = "gCalcBarLength"
+Dim failpoint As String
+On Error GoTo Err
+
 Select Case BarTimePeriod.Units
 Case TimePeriodSecond
     gCalcBarLength = BarTimePeriod.Length * OneSecond
@@ -249,6 +268,11 @@ Case TimePeriodHour
 Case TimePeriodDay
     gCalcBarLength = BarTimePeriod.Length
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function gCalcMonthStartDate( _
@@ -256,8 +280,17 @@ Public Function gCalcMonthStartDate( _
                 ByVal baseDate As Date) As Date
 Dim yearStart As Date
 
+Const ProcName As String = "gCalcMonthStartDate"
+Dim failpoint As String
+On Error GoTo Err
+
 yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
 gCalcMonthStartDate = DateAdd("m", monthNumber - 1, yearStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 
@@ -266,11 +299,20 @@ Public Function gCalcNumberOfBarsInSession( _
                 ByVal SessionStartTime As Date, _
                 ByVal SessionEndTime As Date) As Long
 
+Const ProcName As String = "gCalcNumberOfBarsInSession"
+Dim failpoint As String
+On Error GoTo Err
+
 If SessionEndTime > SessionStartTime Then
     gCalcNumberOfBarsInSession = -Int(-(SessionEndTime - SessionStartTime) / gCalcBarLength(BarTimePeriod))
 Else
     gCalcNumberOfBarsInSession = -Int(-(1 + SessionEndTime - SessionStartTime) / gCalcBarLength(BarTimePeriod))
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function gCalcOffsetBarStartTime( _
@@ -289,6 +331,10 @@ Dim BarsToSessEnd As Long
 Dim i As Long
 Dim BarLengthDays As Date
 Dim numBarsInSession As Long
+
+Const ProcName As String = "gCalcOffsetBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case BarTimePeriod.Units
 Case TimePeriodSecond
@@ -417,6 +463,11 @@ gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
                                         SessionStartTime)
 
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Function
 
 Public Sub gCalcOffsetSessionTimes( _
@@ -430,6 +481,10 @@ Dim datumSessionStart As Date
 Dim datumSessionEnd As Date
 Dim targetWorkingDayNum As Long
 
+Const ProcName As String = "gCalcOffsetSessionTimes"
+Dim failpoint As String
+On Error GoTo Err
+
 gCalcSessionTimes Timestamp, startTime, endTime, datumSessionStart, datumSessionEnd
 
 targetWorkingDayNum = gCalcWorkingDayNumber(datumSessionStart) + offset
@@ -439,6 +494,11 @@ gCalcSessionTimes gCalcWorkingDayDate(targetWorkingDayNum, datumSessionStart), _
                     endTime, _
                     SessionStartTime, _
                     SessionEndTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -452,6 +512,10 @@ Public Sub gCalcSessionTimes( _
                 ByRef SessionStartTime As Date, _
                 ByRef SessionEndTime As Date)
 Dim weekday As Long
+
+Const ProcName As String = "gCalcSessionTimes"
+Dim failpoint As String
+On Error GoTo Err
 
 calcSessionTimesHelper Timestamp, _
                         startTime, _
@@ -480,6 +544,11 @@ Else
     End If
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Sub
 
 Public Function gCalcWeekStartDate( _
@@ -488,6 +557,10 @@ Public Function gCalcWeekStartDate( _
 Dim yearStart As Date
 Dim week1Date As Date
 Dim dow1 As Long    ' day of week of 1st jan of base year
+
+Const ProcName As String = "gCalcWeekStartDate"
+Dim failpoint As String
+On Error GoTo Err
 
 yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
 
@@ -500,6 +573,11 @@ Else
 End If
 
 gCalcWeekStartDate = DateAdd("ww", weekNumber - 1, week1Date)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 
@@ -517,6 +595,10 @@ Dim dow1 As Long    ' day of week of 1st jan of base year
 
 ' number of whole weeks after the first week
 Dim numWholeWeeks As Long
+
+Const ProcName As String = "gCalcWorkingDayDate"
+Dim failpoint As String
+On Error GoTo Err
 
 yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
 
@@ -551,6 +633,11 @@ Else
 End If
 
 gCalcWorkingDayDate = DateAdd("d", doy - 1, yearStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 
@@ -565,6 +652,10 @@ Dim wdN As Long     ' weekdays in last week
 
 Dim dow1 As Long    ' day of week of 1st jan
 Dim dow As Long     ' day of week of sUpplied date
+
+Const ProcName As String = "gCalcWorkingDayNumber"
+Dim failpoint As String
+On Error GoTo Err
 
 doy = DatePart("y", pDate, vbMonday)
 woy = DatePart("ww", pDate, vbMonday)
@@ -592,6 +683,11 @@ End If
 
 gCalcWorkingDayNumber = wd1 + 5 * (woy - 2) + wdN
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+
 End Function
 
 Public Function gNormaliseTime( _
@@ -601,6 +697,10 @@ End Function
 
 Public Function gTimePeriodUnitsFromString( _
                 timeUnits As String) As TimePeriodUnits
+
+Const ProcName As String = "gTimePeriodUnitsFromString"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case UCase$(timeUnits)
 Case UCase$(TimePeriodNameSecond), UCase$(TimePeriodNameSeconds), "SEC", "SECS", "S"
@@ -626,6 +726,11 @@ Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "T", "
 Case Else
     gTimePeriodUnitsFromString = TimePeriodNone
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function gTimePeriodUnitsToString( _
@@ -694,11 +799,20 @@ Private Function calcOffsetDailyBarStartTime( _
 Dim datumBarStart As Date
 Dim targetWorkingDayNum As Long
 
+Const ProcName As String = "calcOffsetDailyBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodDay), SessionStartTime)
 
 targetWorkingDayNum = gCalcWorkingDayNumber(datumBarStart) + offset * BarLength
 
 calcOffsetDailyBarStartTime = gCalcWorkingDayDate(targetWorkingDayNum, datumBarStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Private Function calcOffsetMonthlyBarStartTime( _
@@ -708,9 +822,18 @@ Private Function calcOffsetMonthlyBarStartTime( _
                 ByVal SessionStartTime As Date) As Date
 Dim datumBarStart As Date
 
+Const ProcName As String = "calcOffsetMonthlyBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodMonth), SessionStartTime)
 
 calcOffsetMonthlyBarStartTime = DateAdd("m", offset * BarLength, datumBarStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Private Function calcOffsetWeeklyBarStartTime( _
@@ -724,6 +847,10 @@ Dim yearStart As Date
 Dim yearEnd As Date
 Dim yearEndWeekNumber As Long
 Dim proposedWeekNumber As Long
+
+Const ProcName As String = "calcOffsetWeeklyBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
 
 datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
 datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
@@ -761,6 +888,11 @@ Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
 Loop
 
 calcOffsetWeeklyBarStartTime = gCalcWeekStartDate(proposedWeekNumber, yearStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 
@@ -771,9 +903,18 @@ Private Function calcOffsetYearlyBarStartTime( _
                 ByVal SessionStartTime As Date) As Date
 Dim datumBarStart As Date
 
+Const ProcName As String = "calcOffsetYearlyBarStartTime"
+Dim failpoint As String
+On Error GoTo Err
+
 datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodYear), SessionStartTime)
 
 calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * BarLength, datumBarStart)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Private Sub calcSessionTimesHelper( _
@@ -784,6 +925,10 @@ Private Sub calcSessionTimesHelper( _
                 ByRef SessionEndTime As Date)
 Dim referenceDate As Date
 Dim referenceTime As Date
+
+Const ProcName As String = "calcSessionTimesHelper"
+Dim failpoint As String
+On Error GoTo Err
 
 referenceDate = DateValue(Timestamp)
 referenceTime = TimeValue(Timestamp)
@@ -812,6 +957,11 @@ Else
     SessionStartTime = referenceDate
     SessionEndTime = referenceDate + 1
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 
 End Sub
 

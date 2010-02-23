@@ -104,6 +104,8 @@ Event TickfileCountChanged()
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "TickfileListManager"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -131,6 +133,10 @@ Private mMinHeight As Long
 
 Private Sub UserControl_Initialize()
 
+Const ProcName As String = "UserControl_Initialize"
+Dim failpoint As String
+On Error GoTo Err
+
 SendMessage TickFileList.hWnd, LB_SETHORIZONTALEXTENT, 2000, 0
 
 mMinHeight = 2 * ((UpButton.Height + _
@@ -144,9 +150,18 @@ mMinHeight = 2 * ((UpButton.Height + _
 Set mTickfileSpecifiers = New TickfileSpecifiers
 
 getSupportedTickfileFormats
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
+
+Const ProcName As String = "UserControl_Resize"
+Dim failpoint As String
+On Error GoTo Err
 
 UpButton.Left = UserControl.Width - UpButton.Width
 DownButton.Left = UserControl.Width - DownButton.Width
@@ -163,6 +178,10 @@ RemoveButton.Top = TickFileList.Height / 2 - RemoveButton.Height / 2
 UpButton.Top = RemoveButton.Top - UpButton.Height - 105
 DownButton.Top = RemoveButton.Top + RemoveButton.Height + 105
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -178,6 +197,10 @@ Dim s As String
 Dim d As Long
 Dim i As Long
 
+Const ProcName As String = "DownButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = TickFileList.ListCount - 2 To 0 Step -1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i + 1) Then
         s = TickFileList.List(i)
@@ -190,10 +213,19 @@ For i = TickFileList.ListCount - 2 To 0 Step -1
 Next
 
 setDownButton
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveButton_Click()
 Dim i As Long
+Const ProcName As String = "RemoveButton_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = TickFileList.ListCount - 1 To 0 Step -1
     If TickFileList.Selected(i) Then TickFileList.RemoveItem i
 Next
@@ -202,18 +234,36 @@ UpButton.Enabled = False
 RemoveButton.Enabled = False
 
 RaiseEvent TickfileCountChanged
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TickFileList_Click()
+Const ProcName As String = "TickFileList_Click"
+Dim failpoint As String
+On Error GoTo Err
+
 setDownButton
 setUpButton
 setRemoveButton
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UpButton_Click()
 Dim s As String
 Dim d As Long
 Dim i As Long
+
+Const ProcName As String = "UpButton_Click"
+Dim failpoint As String
+On Error GoTo Err
 
 For i = 1 To TickFileList.ListCount - 1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i - 1) Then
@@ -227,6 +277,11 @@ For i = 1 To TickFileList.ListCount - 1
 Next
 
 setUpButton
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -242,20 +297,38 @@ supportsTickStreams = mSupportsTickStreams
 End Property
 
 Public Property Get tickfileCount() As Long
+Const ProcName As String = "tickfileCount"
+Dim failpoint As String
+On Error GoTo Err
+
 tickfileCount = TickFileList.ListCount
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get TickfileSpecifiers() As TickfileSpecifiers
 Dim i As Long
 Dim tfs As New TickfileSpecifiers
 
+Const ProcName As String = "TickfileSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
 If TickFileList.ListCount = 0 Then Exit Property
 
 For i = 0 To TickFileList.ListCount - 1
-    tfs.add mTickfileSpecifiers.item(TickFileList.itemData(i))
+    tfs.Add mTickfileSpecifiers.item(TickFileList.itemData(i))
 Next
 
 Set TickfileSpecifiers = tfs
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -276,9 +349,9 @@ For i = 0 To UBound(fileNames)
     TickFileList.addItem fileNames(i)
     
     Set tfs = New TickfileSpecifier
-    mTickfileSpecifiers.add tfs
+    mTickfileSpecifiers.Add tfs
     tfs.FileName = fileNames(i)
-    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.count
+    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
 
     ' set up the FormatID - we set it to the first one that matches
     ' the file extension
@@ -306,23 +379,32 @@ Public Sub addTickfileSpecifiers( _
                 ByVal pTickfileSpecifiers As TickfileSpecifiers)
 Dim i As Long
 
-For i = 1 To pTickfileSpecifiers.count
+Const ProcName As String = "addTickfileSpecifiers"
+Dim failpoint As String
+On Error GoTo Err
+
+For i = 1 To pTickfileSpecifiers.Count
     TickFileList.addItem pTickfileSpecifiers.item(i).FileName
-    mTickfileSpecifiers.add pTickfileSpecifiers.item(i)
-    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.count
+    mTickfileSpecifiers.Add pTickfileSpecifiers.item(i)
+    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.Count
 Next
 
 RaiseEvent TickfileCountChanged
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
-Public Sub clear()
+Public Sub Clear()
 
 Set mTickfileSpecifiers = New TickfileSpecifiers ' ensure any 'deleted' specifiers have gone
 
 If TickFileList.ListCount = 0 Then Exit Sub
 
-TickFileList.clear
+TickFileList.Clear
 
 RaiseEvent TickfileCountChanged
 End Sub
@@ -370,6 +452,10 @@ End Sub
 Private Sub setUpButton()
 Dim i As Long
 
+Const ProcName As String = "setUpButton"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 1 To TickFileList.ListCount - 1
     If TickFileList.Selected(i) And Not TickFileList.Selected(i - 1) Then
         UpButton.Enabled = True
@@ -377,10 +463,19 @@ For i = 1 To TickFileList.ListCount - 1
     End If
 Next
 UpButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setDownButton()
 Dim i As Long
+
+Const ProcName As String = "setDownButton"
+Dim failpoint As String
+On Error GoTo Err
 
 For i = 0 To TickFileList.ListCount - 2
     If TickFileList.Selected(i) And Not TickFileList.Selected(i + 1) Then
@@ -389,14 +484,28 @@ For i = 0 To TickFileList.ListCount - 2
     End If
 Next
 DownButton.Enabled = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setRemoveButton()
+Const ProcName As String = "setRemoveButton"
+Dim failpoint As String
+On Error GoTo Err
+
 If TickFileList.SelCount <> 0 Then
     RemoveButton.Enabled = True
 Else
     RemoveButton.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

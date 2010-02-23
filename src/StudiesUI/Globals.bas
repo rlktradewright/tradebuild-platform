@@ -19,13 +19,12 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                                    As String = "StudiesUI26"
+Private Const ModuleName                As String = "Globals"
+
+
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
-
-Public Const RegionNameCustom As String = "$custom"
-Public Const RegionNameDefault As String = "$default"
-Public Const RegionNamePrice As String = "Price"
-Public Const RegionNameVolume As String = "Volume"
 
 Public Const LB_SETHORZEXTENT = &H194
 
@@ -108,8 +107,6 @@ Public Const CustomDisplayMode As String = "(Custom)"
 ' Member variables
 '@================================================================================
 
-Private mDefaultStudyConfigurations As Collection
-
 Public gCustColors(15) As Long
 
 '@================================================================================
@@ -152,6 +149,12 @@ Case LineInsideSolid
 End Select
 End Function
 
+Public Function gLogger() As Logger
+Dim lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Function
+
 Public Function gPointStyleToString( _
                 ByVal value As PointStyles) As String
 Select Case value
@@ -174,7 +177,8 @@ Public Function isInteger( _
                 Optional ByVal maxValue As Long = &H7FFFFFFF) As Boolean
 Dim quantity As Long
 
-On Error GoTo err
+Const ProcName As String = "isInteger"
+On Error GoTo Err
 
 If IsNumeric(value) Then
     quantity = CLng(value)
@@ -187,8 +191,9 @@ End If
                 
 Exit Function
 
-err:
-If err.Number <> VBErrorCodes.VbErrOverflow Then err.Raise err.Number
+Err:
+If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function isPrice( _
@@ -196,7 +201,8 @@ Public Function isPrice( _
                 ByVal ticksize As Double) As Boolean
 Dim theVal As Double
 
-On Error GoTo err
+Const ProcName As String = "isPrice"
+On Error GoTo Err
 
 If IsNumeric(value) Then
     theVal = value
@@ -209,53 +215,18 @@ End If
 
 Exit Function
 
-err:
-If err.Number <> VBErrorCodes.VbErrOverflow Then err.Raise err.Number
-End Function
-
-Public Function loadDefaultStudyConfiguration( _
-                ByVal name As String, _
-                ByVal spName As String) As studyConfiguration
-Dim sc As studyConfiguration
-If mDefaultStudyConfigurations Is Nothing Then
-    Set loadDefaultStudyConfiguration = Nothing
-Else
-    On Error Resume Next
-    Set sc = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
-    On Error GoTo 0
-    If Not sc Is Nothing Then Set loadDefaultStudyConfiguration = sc.Clone
-End If
+Err:
+If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub notImplemented()
 MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
-Public Sub updateDefaultStudyConfiguration( _
-                ByVal value As studyConfiguration)
-Dim sc As studyConfiguration
-
-If mDefaultStudyConfigurations Is Nothing Then
-    Set mDefaultStudyConfigurations = New Collection
-End If
-On Error Resume Next
-mDefaultStudyConfigurations.Remove calcDefaultStudyKey(value.name, value.StudyLibraryName)
-On Error GoTo 0
-
-Set sc = value.Clone
-sc.underlyingStudy = Nothing
-mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(value.name, value.StudyLibraryName)
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function calcDefaultStudyKey( _
-                ByVal studyName As String, _
-                ByVal StudyLibraryName As String) As String
-calcDefaultStudyKey = "$$" & studyName & "$$" & StudyLibraryName & "$$"
-End Function
 
 
 

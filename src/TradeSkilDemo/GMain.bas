@@ -67,12 +67,6 @@ Public Const SSTabInactiveControlAdjustment         As Long = 75000
 ' is loaded)
 Public Const SwitchConfig                           As String = "config"
 
-' command line switch specifying the log filename
-Public Const SwitchLogFilename                      As String = "log"
-
-' command line switch specifying the loglevel
-Public Const SwitchLogLevel                         As String = "loglevel"
-
 Public Const WindowStateMaximized                   As String = "Maximized"
 Public Const WindowStateMinimized                   As String = "Minimized"
 Public Const WindowStateNormal                      As String = "Normal"
@@ -80,6 +74,8 @@ Public Const WindowStateNormal                      As String = "Normal"
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mIsInDev                                    As Boolean
 
 Public gConfigFile                                  As ConfigurationFile
 Public gAppInstanceConfig                           As ConfigurationSection
@@ -89,7 +85,7 @@ Private mMainForm                                   As fTradeSkilDemo
 
 Private mEditConfig                                 As Boolean
 
-Private mListener                                   As LogListener
+Private mFatalErrorHandler                          As FatalErrorHandler
 
 '@================================================================================
 ' Class Event Handlers
@@ -114,8 +110,9 @@ gAppTitle = AppName & _
 End Property
 
 Public Property Get gCommandLineParser() As CommandLineParser
+Const ProcName As String = "gCommandLineParser"
 Static clp As CommandLineParser
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If clp Is Nothing Then Set clp = CreateCommandLineParser(Command)
@@ -124,55 +121,7 @@ Set gCommandLineParser = clp
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gCommandLineParser", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Property
-
-Public Property Get gAppSettingsFolder() As String
-Dim failpoint As Long
-On Error GoTo Err
-
-gAppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                    "\TradeWright\" & _
-                    gAppTitle
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gAppSettingsFolder", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Property
-
-Public Property Get gLogFileName() As String
-Static logFileName As String
-Dim failpoint As Long
-On Error GoTo Err
-
-If logFileName = "" Then
-    If gCommandLineParser.Switch(SwitchLogFilename) Then logFileName = gCommandLineParser.SwitchValue(SwitchLogFilename)
-
-    If logFileName = "" Then
-        logFileName = gAppSettingsFolder & "\log.txt"
-    End If
-End If
-gLogFileName = logFileName
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gLogFileName", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Property
-
-Public Property Get gLogger() As Logger
-Static lLogger As Logger
-Dim failpoint As Long
-On Error GoTo Err
-
-If lLogger Is Nothing Then Set lLogger = GetLogger("log")
-Set gLogger = lLogger
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gLogger", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get gMainForm() As fTradeSkilDemo
@@ -184,38 +133,43 @@ End Property
 '@================================================================================
 
 Public Sub gHandleFatalError()
-
 On Error Resume Next    ' ignore any further errors that might arise
-
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & gLogFileName & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"
 
 ' At this point, we don't know what state things are in, so it's not feasible to return to
 ' the caller. All we can do is terminate abruptly. Note that normally one would use the
-' END statement to terminate a VB6 program abruptly. However the TWUtilities module interferes
-' with the END statement's processing and prevents proper shutdown, so we use the
-' Win32 function GetCurrentProcess and TerminateProcess instead.
+' End statement to terminate a VB6 program abruptly. However the TWUtilities component interferes
+' with the End statement's processing and prevents proper shutdown, so we use the
+' TWUtilities component's EndProcess method instead. (However if we are running in the
+' development environment, then we call End because the EndProcess method kills the
+' entire development environment as well which can have undesirable side effects if other
+' components are also loaded.)
 
-TerminateProcess GetCurrentProcess, 1
+If mIsInDev Then
+    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
+    ' needed here because the End statement will prevent return to TWUtilities
+    UnhandledErrorHandler.Handled = True
+    End
+Else
+    EndProcess
+End If
 
-End Sub
-
-Public Sub gKillLogging()
-GetLogger("").RemoveLogListener mListener
 End Sub
 
 Public Sub gModelessMsgBox( _
                 ByVal prompt As String, _
                 ByVal buttons As MsgBoxStyles, _
                 Optional ByVal title As String)
+Const ProcName As String = "gModelessMsgBox"
 Dim lMsgBox As New fMsgBox
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 lMsgBox.initialise prompt, buttons, title
@@ -225,87 +179,13 @@ lMsgBox.Show vbModeless, gMainForm
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gModelessMsgBox", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Sub gShowStudyPicker( _
-                ByVal chartMgr As ChartManager, _
-                ByVal title As String)
-Dim failpoint As Long
+Public Sub gSetPermittedServiceProviderRoles()
+Const ProcName As String = "gSetPermittedServiceProviderRoles"
+Dim failpoint As String
 On Error GoTo Err
-
-If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
-mStudyPickerForm.initialise chartMgr, title
-mStudyPickerForm.Show vbModeless
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gShowStudyPicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub gSyncStudyPicker( _
-                ByVal chartMgr As ChartManager, _
-                ByVal title As String)
-Dim failpoint As Long
-On Error GoTo Err
-
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise chartMgr, title
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gSyncStudyPicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub gUnloadMainForm()
-Dim failpoint As Long
-On Error GoTo Err
-
-If Not mMainForm Is Nothing Then
-    gLogger.Log LogLevelNormal, "Unloading main form"
-    Unload mMainForm
-    Set mMainForm = Nothing
-End If
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gUnloadMainForm", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub gUnsyncStudyPicker()
-Dim failpoint As Long
-On Error GoTo Err
-
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise Nothing, "Study picker"
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gUnsyncStudyPicker", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub Main()
-Dim failpoint As Long
-On Error GoTo Err
-
-failpoint = 100
-
-InitialiseTWUtilities
-TaskConcurrency = 20
-TaskQuantumMillisecs = 32
-
-If showCommandLineOptions() Then Exit Sub
-
-
-failpoint = 200
-
-If Not getLog() Then Exit Sub
-
-failpoint = 300
 
 TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
                                                 ServiceProviderRoles.SPPrimaryContractData Or _
@@ -315,14 +195,112 @@ TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeDat
                                                 ServiceProviderRoles.SPHistoricalDataInput Or _
                                                 ServiceProviderRoles.SPTickfileInput
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub gShowStudyPicker( _
+                ByVal chartMgr As ChartManager, _
+                ByVal title As String)
+Const ProcName As String = "gShowStudyPicker"
+Dim failpoint As String
+On Error GoTo Err
+
+If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
+mStudyPickerForm.initialise chartMgr, title
+mStudyPickerForm.Show vbModeless
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub gSyncStudyPicker( _
+                ByVal chartMgr As ChartManager, _
+                ByVal title As String)
+Const ProcName As String = "gSyncStudyPicker"
+Dim failpoint As String
+On Error GoTo Err
+
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise chartMgr, title
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub gUnloadMainForm()
+Const ProcName As String = "gUnloadMainForm"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mMainForm Is Nothing Then
+    logMessage "Unloading main form"
+    Unload mMainForm
+    Set mMainForm = Nothing
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub gUnsyncStudyPicker()
+Const ProcName As String = "gUnsyncStudyPicker"
+Dim failpoint As String
+On Error GoTo Err
+
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise Nothing, "Study picker"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub Main()
+Const ProcName As String = "Main"
+Dim failpoint As String
+On Error GoTo Err
+
+failpoint = 100
+
+Debug.Print "Running in development environment: " & CStr(inDev)
+
+InitialiseTWUtilities
+
+Set mFatalErrorHandler = New FatalErrorHandler
+
+If showCommandLineOptions() Then Exit Sub
+
+ApplicationGroupName = "TradeWright"
+applicationName = gAppTitle
+SetupDefaultLogging Command
+
+TaskConcurrency = 20
+TaskQuantumMillisecs = 32
+
+TradeBuildAPI.applicationName = gAppTitle
+
+failpoint = 300
+
+gSetPermittedServiceProviderRoles
+
 If Not getConfigFile Then
-    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    logMessage "Program exiting at user request"
     TerminateTWUtilities
 ElseIf Not getConfig Then
-    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    logMessage "Program exiting at user request"
     TerminateTWUtilities
 ElseIf Not Configure Then
-    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    logMessage "Program exiting at user request"
     TerminateTWUtilities
 Else
     loadMainForm mEditConfig
@@ -331,8 +309,15 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Main", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-gHandleFatalError
+If Err.Number = ErrorCodes.ErrSecurityException Then
+    MsgBox "You don't have write access to the log file:" & vbCrLf & vbCrLf & _
+                DefaultLogFileName & vbCrLf & vbCrLf & _
+                "The program will close", _
+            vbCritical, _
+            "Attention"
+    Exit Sub
+End If
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -340,9 +325,10 @@ End Sub
 '@================================================================================
 
 Private Function Configure() As Boolean
+Const ProcName As String = "Configure"
 Dim userResponse As Long
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If ConfigureTradeBuild(gConfigFile, gAppInstanceConfig.InstanceQualifier) Then
@@ -364,7 +350,7 @@ Else
         mEditConfig = True
         Configure = True
     ElseIf userResponse = vbNo Then
-        gLogger.Log LogLevelNormal, "Creating a new default app instance configuration"
+        logMessage "Creating a new default app instance configuration"
         Set gAppInstanceConfig = AddAppInstanceConfig(gConfigFile, _
                             DefaultAppInstanceConfigName, _
                             includeDefaultStudyLibrary:=True, _
@@ -378,33 +364,34 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Configure", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getConfig() As Boolean
+Const ProcName As String = "getConfig"
 Dim configName As String
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
 
 If configName = "" Then
-    gLogger.Log LogLevelDetail, "Named config not specified - trying default config"
+    logMessage "Named config not specified - trying default config", LogLevelDetail
     configName = "(Default)"
     Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigFile)
     If gAppInstanceConfig Is Nothing Then
-        gLogger.Log LogLevelDetail, "No default config defined"
+        logMessage "No default config defined", LogLevelDetail
     Else
-        gLogger.Log LogLevelDetail, "Using default config: " & gAppInstanceConfig.InstanceQualifier
+        logMessage "Using default config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
     End If
 Else
-    gLogger.Log LogLevelDetail, "Getting config with name '" & configName & "'"
+    logMessage "Getting config with name '" & configName & "'", LogLevelDetail
     Set gAppInstanceConfig = GetAppInstanceConfig(gConfigFile, configName)
     If gAppInstanceConfig Is Nothing Then
-        gLogger.Log LogLevelDetail, "Config '" & configName & "' not found"
+        logMessage "Config '" & configName & "' not found"
     Else
-        gLogger.Log LogLevelDetail, "Config '" & configName & "' located"
+        logMessage "Config '" & configName & "' located", LogLevelDetail
     End If
 End If
 
@@ -422,11 +409,12 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getConfig", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
 Private Function getConfigFile() As Boolean
+Const ProcName As String = "getConfigFile"
 Dim userResponse As Long
 Dim baseConfigFile As TWUtilities30.configFile
 
@@ -448,7 +436,7 @@ If baseConfigFile Is Nothing Then
             vbYesNo Or vbQuestion, _
             "Attention!")
     If userResponse = vbYes Then
-        gLogger.Log LogLevelNormal, "Creating a new default configuration file"
+        logMessage "Creating a new default configuration file"
         Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
         Set gConfigFile = CreateConfigurationFile(baseConfigFile, getConfigFilename)
         InitialiseConfigFile gConfigFile
@@ -468,8 +456,7 @@ Else
         gConfigFile.fileVersion <> ConfigFileVersion Or _
         Not IsValidConfigurationFile(gConfigFile) _
     Then
-        gLogger.Log LogLevelNormal, _
-                    "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
+        logMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
                     "The program will close."
         getConfigFile = False
         Exit Function
@@ -482,63 +469,49 @@ getConfigFile = True
 Exit Function
 
 Err:
-gLogger.Log LogLevelNormal, "The configuration file format is not correct for this program."
+logMessage "The configuration file format is not correct for this program."
 MsgBox "The configuration file is not the correct format for this program" & vbCrLf & vbCrLf & _
         "The program will close."
 End Function
 
 Private Function getConfigFilename() As String
+Const ProcName As String = "getConfigFilename"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 getConfigFilename = gCommandLineParser.Arg(0)
 If getConfigFilename = "" Then
-    getConfigFilename = gAppSettingsFolder & "\settings.xml"
+    getConfigFilename = ApplicationSettingsFolder & "\settings.xml"
 End If
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getConfigFilename", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Function getLog() As Boolean
-
-Dim failpoint As Long
+Private Function inDev() As Boolean
+Const ProcName As String = "inDev"
 On Error GoTo Err
 
-If gCommandLineParser.Switch(SwitchLogLevel) Then
-    DefaultLogLevel = LogLevelFromString(gCommandLineParser.SwitchValue(SwitchLogLevel))
-Else
-    DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
-End If
+mIsInDev = True
+inDev = True
 
-Set mListener = CreateFileLogListener(gLogFileName, _
-                                        CreateBasicLogFormatter, _
-                                        True, _
-                                        False)
-' ensure log entries of all infotypes get written to the log file
-GetLogger("").AddLogListener mListener
-
-getLog = True
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrSecurityException Then
-    MsgBox "You don't have write access to  '" & gLogFileName & "': the program will close", vbCritical, "Attention"
-    getLog = False
-Else
-    HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getLog", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End If
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub loadMainForm( _
                 ByVal showConfigEditor As Boolean)
-Dim failpoint As Long
+Const ProcName As String = "loadMainForm"
+Dim failpoint As String
 On Error GoTo Err
 
-gLogger.Log LogLevelNormal, "Loading main form"
+logMessage "Loading main form"
 If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
 'mMainForm.Show
 mMainForm.initialise showConfigEditor
@@ -547,12 +520,14 @@ mMainForm.Show
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="loadMainForm", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function showCommandLineOptions() As Boolean
+Const ProcName As String = "showCommandLineOptions"
 
-Dim failpoint As Long
+
+Dim failpoint As String
 On Error GoTo Err
 
 If gCommandLineParser.Switch("?") Then
@@ -584,7 +559,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="showCommandLineOptions", pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

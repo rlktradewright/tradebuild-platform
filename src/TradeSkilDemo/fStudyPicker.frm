@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#76.0#0"; "StudiesUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#161.0#0"; "StudiesUI2-6.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -85,8 +85,17 @@ Private Const ModuleName                    As String = "fStudyPicker"
 Friend Sub initialise( _
                 ByVal pChartManager As ChartManager, _
                 ByVal title As String)
+Const ProcName As String = "initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 StudyPicker1.initialise pChartManager
 Me.caption = title
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

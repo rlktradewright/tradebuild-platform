@@ -40,6 +40,8 @@ Implements TradeBuildSP.IStreamingDataConsumer
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "TickfileReader"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -97,10 +99,18 @@ End Sub
 '@================================================================================
 
 Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
+Const ProcName As String = "IStreamingDataConsumer_Tick"
+On Error GoTo Err
+
 mCurrentTick = Tick
 mUnProcessed = True
 mCurrentTick.Timestamp = AdjustTimestamp(mCurrentTick.Timestamp)
 HandleTick
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -108,7 +118,15 @@ End Sub
 '@================================================================================
 
 Private Sub mTimer_TimerExpired()
+Const ProcName As String = "mTimer_TimerExpired"
+On Error GoTo Err
+
 Play
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -116,76 +134,212 @@ End Sub
 '@================================================================================
 
 Friend Property Let Contract(ByVal value As Contract)
+Const ProcName As String = "Contract"
+On Error GoTo Err
+
 mReader.Contract = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get Contract() As Contract
+Const ProcName As String = "Contract"
+On Error GoTo Err
+
 Set Contract = mReader.Contract
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get ContractSpecifier() As ContractSpecifier
+Const ProcName As String = "ContractSpecifier"
+On Error GoTo Err
+
 Set ContractSpecifier = mReader.ContractSpecifier
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let dataConsumer(ByVal value As IStreamingDataConsumer)
+Const ProcName As String = "dataConsumer"
+On Error GoTo Err
+
 Set mDataConsumer = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get firstTickFileTime() As Date
+Const ProcName As String = "firstTickFileTime"
+On Error GoTo Err
+
 firstTickFileTime = mReader.firstTickFileTime
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let percentComplete(ByVal value As Single)
+Const ProcName As String = "percentComplete"
+On Error GoTo Err
+
 mPercentComplete = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ReplayProgressEventFrequency(ByVal value As Long)
+Const ProcName As String = "ReplayProgressEventFrequency"
+On Error GoTo Err
+
 mReader.ReplayProgressEventFrequency = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get ReplayProgressEventFrequency() As Long
+Const ProcName As String = "ReplayProgressEventFrequency"
+On Error GoTo Err
+
 ReplayProgressEventFrequency = mReader.ReplayProgressEventFrequency
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ReplaySpeed(ByVal value As Long)
+Const ProcName As String = "ReplaySpeed"
+On Error GoTo Err
+
 mReplaySpeed = value
 If mState = TickfileStateCodes.TickfilePlaying Then
     setBaseTimes
     Set mTimer = CreateIntervalTimer(1)
     mTimer.StartTimer
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get ReplaySpeed() As Long
+Const ProcName As String = "ReplaySpeed"
+On Error GoTo Err
+
 ReplaySpeed = mReplaySpeed
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ServiceProviderReader(ByVal value As TradeBuildSP.ITickfileReader)
+Const ProcName As String = "ServiceProviderReader"
+On Error GoTo Err
+
 Set mReader = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get State() As TickfileStateCodes
+Const ProcName As String = "State"
+On Error GoTo Err
+
 State = mState
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TickfileSizeBytes() As Long
+Const ProcName As String = "TickfileSizeBytes"
+On Error GoTo Err
+
 TickfileSizeBytes = mReader.TickfileSizeBytes
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let TimestampAdjustmentStart(ByVal value As Double)
+Const ProcName As String = "TimestampAdjustmentStart"
+On Error GoTo Err
+
 mTimestampAdjustmentStart = value / 86400
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get TimestampAdjustmentStart() As Double
+Const ProcName As String = "TimestampAdjustmentStart"
+On Error GoTo Err
+
 TimestampAdjustmentStart = mTimestampAdjustmentStart * 86400
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let TimestampAdjustmentEnd(ByVal value As Double)
+Const ProcName As String = "TimestampAdjustmentEnd"
+On Error GoTo Err
+
 mTimestampAdjustmentEnd = value / 86400
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get TimestampAdjustmentEnd() As Double
+Const ProcName As String = "TimestampAdjustmentEnd"
+On Error GoTo Err
+
 TimestampAdjustmentEnd = mTimestampAdjustmentEnd * 86400
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -193,20 +347,47 @@ End Property
 '@================================================================================
 
 Friend Sub PauseReplay()
+Const ProcName As String = "PauseReplay"
+On Error GoTo Err
+
 If Not mTimer Is Nothing Then mTimer.StopTimer
 mState = TickfileStateCodes.TickfilePaused
 'gPauseTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ReplayTickfile(ByVal tfSpec As TickfileSpecifier)
+Const ProcName As String = "ReplayTickfile"
+On Error GoTo Err
+
 mReader.ReplayTickfile tfSpec
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SkipFile()
+Const ProcName As String = "SkipFile"
+On Error GoTo Err
+
 mSkip = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub StartReplay()
+
+Const ProcName As String = "StartReplay"
+On Error GoTo Err
 
 If mState = TickfileStateCodes.TickfilePlaying Then Exit Sub
 
@@ -218,9 +399,17 @@ Set mElapsedTimer = New ElapsedTimer
 Set mTimer = CreateIntervalTimer(1)
 mTimer.StartTimer
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Friend Sub StopReplay()
+Const ProcName As String = "StopReplay"
+On Error GoTo Err
+
 mUnProcessed = False
 'If mState = TickfileStateCodes.TickfileNotPlaying Then Exit Sub
 If Not mTimer Is Nothing Then mTimer.StopTimer
@@ -228,6 +417,11 @@ mState = TickfileStateCodes.TickfileNotPlaying
 mBaseTimestampUTC = 0
 mReader.CloseInputFile
 Set mReader = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -235,20 +429,39 @@ End Sub
 '@================================================================================
 
 Private Function AdjustTimestamp(ByVal Timestamp As Date) As Date
+Const ProcName As String = "AdjustTimestamp"
+On Error GoTo Err
+
 AdjustTimestamp = Timestamp + _
                 mTimestampAdjustmentStart + _
                 (mTimestampAdjustmentEnd - mTimestampAdjustmentStart) * (mPercentComplete / 100)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Sub CloseInputFile()
+Const ProcName As String = "CloseInputFile"
+On Error GoTo Err
+
 mReader.CloseInputFile
 Set mReader = Nothing
 mState = TickfileStateCodes.TickfileNotPlaying
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub HandleTick()
 Dim delayMillisecs As Long
+
+Const ProcName As String = "HandleTick"
+On Error GoTo Err
 
 mTimed = False
 
@@ -280,9 +493,17 @@ Else
     mTimer.StartTimer
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub Play()
+
+Const ProcName As String = "Play"
+On Error GoTo Err
 
 If mUnProcessed Then
     ProcessTickData
@@ -319,14 +540,30 @@ Then
     mTimer.StartTimer
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub ProcessTickData()
+Const ProcName As String = "ProcessTickData"
+On Error GoTo Err
+
 mDataConsumer.Tick mCurrentTick
 mUnProcessed = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setBaseTimes()
+Const ProcName As String = "setBaseTimes"
+On Error GoTo Err
+
 mBaseTimestampUTC = GetTimestampUTC
 ' note that we don't bother to get the tick time in UTC - this is because
 ' it's not likely that anyone would replay a tickfile that spans a standard
@@ -334,4 +571,9 @@ mBaseTimestampUTC = GetTimestampUTC
 ' the base Timestamp is in UTC because someone might replay a tickfile
 ' during a period that spans such a transition
 mFirstTickTime = mCurrentTick.Timestamp
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub

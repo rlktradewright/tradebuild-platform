@@ -70,6 +70,8 @@ End Type
 
 Private mTickfileServiceProvider As TickfileServiceProvider
 
+Private mHandle As Long
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -116,7 +118,7 @@ Private mVolume As Double
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mFileSys = CreateObject("scripting.filesystemobject")
+Set mFileSys = New FileSystemObject
 mCurrentRecordTableEntry = -1
 mNextFreeRecordTableEntry = 0
 mReplayProgressEventFrequency = 10
@@ -131,14 +133,15 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
+Const ProcName As String = "ITickfileReader_CloseInputFile"
+
 On Error GoTo Err
-finish
+Finish
 mTickfileServiceProvider.dataReaderFinished Me
+
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
@@ -154,13 +157,14 @@ Set ITickfileReader_ContractSpecifier = mContractSpecifier
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
+Const ProcName As String = "ITickfileReader_FireNextTick"
 Dim percentComplete As Single
 Dim pendingTick As GenericTick
 
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_FireNextTick", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 If mRecordsRead = 0 Then
@@ -184,17 +188,20 @@ Else
 End If
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_FireNextTick", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
+Const ProcName As String = "ITickfileReader_FirstTickFileTime"
+On Error GoTo Err
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
+Exit Sub
+Err:
+handleFatalError ProcName
 End Property
 
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
@@ -215,9 +222,10 @@ End Property
 
 Private Sub ITickfileReader_ReplayTickfile( _
                 ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
+Const ProcName As String = "ITickfileReader_ReplayTickfile"
 On Error GoTo Err
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="ITickfileReader_ReplayTickfile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
 
@@ -232,13 +240,11 @@ getFile mInputTickfileSpecifier.filename, _
             mFirstTickFileTime
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="ITickfileReader_ReplayTickfile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure pInfo:="", pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
-                Err.Description
+handleFatalError ProcName
 End Sub
 
 Private Function ITickfileReader_Supports( _
@@ -259,10 +265,6 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let CommonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-End Property
-
 Friend Property Let Contract(ByVal value As Contract)
 If Not value Is Nothing Then
     Set mContract = value
@@ -274,57 +276,85 @@ Set Contract = mContract
 End Property
 
 Friend Property Get FirstTickFileTime() As Date
+Const ProcName As String = "FirstTickFileTime"
+Dim failpoint As String
+On Error GoTo Err
+
 If mInputTickfileFormat = TickfileTradeBuild And _
     mTickFileVersion = TickFileVersions.TradeBuildV5 _
 Then
     FirstTickFileTime = mFirstTickFileTime
 Else
     FirstTickFileTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mFirstTickFileTime), _
-                                            mContract.timezone)
+                                            mContract.Timezone)
 End If
-End Property
 
-Private Function fromFilterRecord() As Boolean
-fromFilterRecord = True
-If mInputTickfileSpecifier.FromDate <> 0 And _
-    mRecordTable(mCurrentRecordTableEntry).timestamp < mInputTickfileSpecifier.FromDate Then
-    fromFilterRecord = False
-    Exit Function
-End If
-End Function
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
 Set InputTickfileSpecifier = mInputTickfileSpecifier
-End Property
-
-Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
-Set mDataConsumer = RHS
-End Property
-
-Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
-Set mServiceConsumer = RHS
-End Property
-
-Friend Property Let TickfileServiceProvider( _
-                ByVal value As TickfileServiceProvider)
-Set mTickfileServiceProvider = value
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub finish()
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mTsIn Is Nothing Then mTsIn.Close
 logMessage "Closed input tickfile: " & mTickdataReadBytes & " bytes read"
 Set mTsIn = Nothing
 Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pHandle As Long, _
+                ByVal Name As String, _
+                ByVal pCommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal pTickfileInputServiceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
+                ByVal pTickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal pStreamingDataConsumer As IStreamingDataConsumer)
+mHandle = mHandle
+Set mCommonServiceConsumer = pCommonServiceConsumer
+Set mServiceConsumer = pTickfileInputServiceConsumer
+Set mTickfileServiceProvider = pTickfileServiceProvider
+Set mDataConsumer = pStreamingDataConsumer
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Function fromFilterRecord() As Boolean
+Const ProcName As String = "fromFilterRecord"
+Dim failpoint As String
+On Error GoTo Err
+
+fromFilterRecord = True
+If mInputTickfileSpecifier.FromDate <> 0 And _
+    mRecordTable(mCurrentRecordTableEntry).timestamp < mInputTickfileSpecifier.FromDate Then
+    fromFilterRecord = False
+    Exit Function
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Function
 
 Private Sub getFile(ByVal filename As String, _
                         ByRef format As TickfileFormats, _
@@ -338,6 +368,10 @@ Dim xmlContract As String
 Dim bytesRead As Long
 Dim f As File
 Dim dataFields() As String
+
+Const ProcName As String = "getFile"
+Dim failpoint As String
+On Error GoTo Err
 
 #If trace Then
     gTracer.EnterProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
@@ -355,7 +389,7 @@ If Err.Number <> 0 Then
     #End If
     Exit Sub
 End If
-On Error GoTo 0
+On Error GoTo Err
 
 
 If ts.AtEndOfStream Then
@@ -423,11 +457,11 @@ Case TickFileVersions.CrescendoV1
     
     Set mContractSpecifier = CreateContractSpecifier( _
                                     , _
-                                    dataFields(TickfileFieldsV1.symbol), _
-                                    dataFields(TickfileFieldsV1.exchange), _
+                                    dataFields(TickfileFieldsV1.Symbol), _
+                                    dataFields(TickfileFieldsV1.Exchange), _
                                     SecTypeFuture, _
                                     , _
-                                    dataFields(TickfileFieldsV1.expiry))
+                                    dataFields(TickfileFieldsV1.Expiry))
     
     FirstTickFileTime = CDate(dataFields(TickfileFieldsV1.TimestampString))
     
@@ -441,11 +475,11 @@ Case TickFileVersions.CrescendoV2
     
     Set mContractSpecifier = CreateContractSpecifier( _
                                     , _
-                                    dataFields(TickfileHeaderFieldsV2.symbol), _
-                                    dataFields(TickfileHeaderFieldsV2.exchange), _
+                                    dataFields(TickfileHeaderFieldsV2.Symbol), _
+                                    dataFields(TickfileHeaderFieldsV2.Exchange), _
                                     SecTypeFuture, _
                                     , _
-                                    dataFields(TickfileHeaderFieldsV2.expiry))
+                                    dataFields(TickfileHeaderFieldsV2.Expiry))
     
     FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.startTime))
     
@@ -456,11 +490,11 @@ Case TickFileVersions.TradeBuildV3, _
     
     Set mContractSpecifier = CreateContractSpecifier( _
                                     , _
-                                    dataFields(TickfileHeaderFieldsV3.symbol), _
-                                    dataFields(TickfileHeaderFieldsV3.exchange), _
+                                    dataFields(TickfileHeaderFieldsV3.Symbol), _
+                                    dataFields(TickfileHeaderFieldsV3.Exchange), _
                                     SecTypeFuture, _
                                     , _
-                                    dataFields(TickfileHeaderFieldsV3.expiry))
+                                    dataFields(TickfileHeaderFieldsV3.Expiry))
     
     FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.startTime))
     
@@ -504,21 +538,35 @@ mServiceConsumer.Ready mInputTickfileSpecifier, filesize
 #If trace Then
     gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
-                ByVal Number As Long, _
-                ByVal Source As String, _
-                ByVal Description As String)
-gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+                ByRef pProcName As String, _
+                Optional ByVal pFailpoint As Long)
+Dim errNum As Long: errNum = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDesc As String: errDesc = Err.Description
 
-mCommonServiceConsumer.NotifyFatalError Number, _
-                                Source, _
-                                Description, _
-                                mTickfileServiceProvider.handle
+On Error GoTo Err
 
-finish
-mTickfileServiceProvider.dataReaderFinished Me
+' re-raise the error to get the calling procedure's procName into the source info
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
+
+' NB: will never get to here so no need for Exit Sub
+
+Err:
+mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
 End Sub
 
 Private Sub initialiseRecordTableEntry(ByVal index As Long)
@@ -561,6 +609,10 @@ Private Function isImpliedTrade(ByVal recordIndex As Long, _
 
 Dim lookAheadRecord As Long
 
+Const ProcName As String = "isImpliedTrade"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 
@@ -595,6 +647,11 @@ If lookAhead(lookAheadRecord) Then
         End If
     End Select
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -607,6 +664,10 @@ gLogger.Log logLevel, _
 End Sub
 
 Private Function lookAhead(lookAheadRecord As Long) As Boolean
+Const ProcName As String = "lookAhead"
+Dim failpoint As String
+On Error GoTo Err
+
 lookAhead = True
 
 If lookAheadRecord = -1 Then
@@ -621,10 +682,19 @@ End If
 
 lookAhead = readRecord(lookAheadRecord)
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Function
 
 Private Function lookForAskSize() As Boolean
 Dim lookAheadRecord As Long
+
+Const ProcName As String = "lookForAskSize"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
@@ -643,10 +713,19 @@ Do While lookAhead(lookAheadRecord)
     End If
 Loop
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Function
 
 Private Function lookForBidSize() As Boolean
 Dim lookAheadRecord As Long
+
+Const ProcName As String = "lookForBidSize"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
@@ -665,10 +744,19 @@ Do While lookAhead(lookAheadRecord)
     End If
 Loop
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Function
 
 Private Sub processDuplicateLast()
 Dim lookAheadRecord As Long
+
+Const ProcName As String = "processDuplicateLast"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
@@ -704,11 +792,20 @@ Do While lookAhead(lookAheadRecord)
         Exit Sub
     End If
 Loop
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processLastSizeCorrection()
 Dim lookAheadRecord As Long
 Dim lookAheadAnotherRecord As Long
+
+Const ProcName As String = "processLastSizeCorrection"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
@@ -767,10 +864,19 @@ Do While lookAhead(lookAheadRecord)
     
 Loop
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+
 End Sub
 
 Private Function processTickData() As Boolean
 Dim tick As GenericTick
+
+Const ProcName As String = "processTickData"
+Dim failpoint As String
+On Error GoTo Err
 
 With mRecordTable(mCurrentRecordTableEntry)
     mCurrentTimestamp = .timestamp
@@ -899,10 +1005,19 @@ Loop
 If mCurrentRecordTableEntry = mNextFreeRecordTableEntry Then
     mCurrentRecordTableEntry = -1
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub processVolume()
 Dim lookAheadRecord As Long
+
+Const ProcName As String = "processVolume"
+Dim failpoint As String
+On Error GoTo Err
 
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
                     FileTickTypes.Last Then Exit Sub
@@ -925,9 +1040,18 @@ Do While lookAhead(lookAheadRecord)
     End If
 Loop
 mPendingImpliedVolumeTick = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function ReadNextFilteredTickRecord() As Boolean
+Const ProcName As String = "ReadNextFilteredTickRecord"
+Dim failpoint As String
+On Error GoTo Err
+
 #If trace Then
     gTracer.EnterProcedure pInfo:="", pProcedureName:="ReadNextFilteredTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
@@ -950,9 +1074,18 @@ Loop
 #If trace Then
     gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextFilteredTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function ReadNextTickRecord() As Boolean
+Const ProcName As String = "ReadNextTickRecord"
+Dim failpoint As String
+On Error GoTo Err
+
 #If trace Then
     gTracer.EnterProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
@@ -992,6 +1125,11 @@ End If
 #If trace Then
     gTracer.ExitProcedure pInfo:="", pProcedureName:="ReadNextTickRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function readRecord(ByRef index As Long) As Boolean
@@ -999,6 +1137,10 @@ Dim buffer As String
 Dim dataFields() As String
 Dim ticktypeStr As String
 Dim anotherRecord As Long
+
+Const ProcName As String = "readRecord"
+Dim failpoint As String
+On Error GoTo Err
 
 #If trace Then
     gTracer.EnterProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
@@ -1073,7 +1215,7 @@ With mRecordTable(index)
         Else
             ' earlier versions were recorded in local time, so convert to timezone
             .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV3.timestamp))), _
-                                            mContract.timezone)
+                                            mContract.Timezone)
         End If
         ticktypeStr = dataFields(TickfileFieldsV3.tickType)
         
@@ -1118,7 +1260,7 @@ With mRecordTable(index)
         End Select
     Case TickFileVersions.CrescendoV2
         .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV2.timestamp))), _
-                                        mContract.timezone)
+                                        mContract.Timezone)
         .tickType = dataFields(TickfileFieldsV2.tickType)
         
         Select Case .tickType
@@ -1154,7 +1296,7 @@ With mRecordTable(index)
         End Select
     Case TickFileVersions.CrescendoV1
         .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString))), _
-                                        mContract.timezone)
+                                        mContract.Timezone)
         .tickType = dataFields(TickfileFieldsV1.tickType)
         
         Select Case .tickType
@@ -1190,7 +1332,7 @@ With mRecordTable(index)
                                                 TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
                                                         Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
                                                         Right$(dataFields(ESignalTickFileFields.TimestampTime), 2))), _
-                                        mContract.timezone)
+                                        mContract.Timezone)
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE
@@ -1243,15 +1385,29 @@ End With
 #If trace Then
     gTracer.ExitProcedure pInfo:="", pProcedureName:="readRecord", pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function toFilterRecord() As Boolean
+Const ProcName As String = "toFilterRecord"
+Dim failpoint As String
+On Error GoTo Err
+
 toFilterRecord = True
 If mInputTickfileSpecifier.ToDate <> 0 And _
     mRecordTable(mCurrentRecordTableEntry).timestamp >= mInputTickfileSpecifier.ToDate Then
     toFilterRecord = False
     Exit Function
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 

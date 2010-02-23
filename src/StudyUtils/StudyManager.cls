@@ -48,7 +48,7 @@ Public Type InputDescriptor
     inputName           As String
     Description         As String
     InputType           As StudyInputTypes
-    isDefault           As Boolean
+    IsDefault           As Boolean
     tickSize            As Double
 End Type
 
@@ -131,21 +131,37 @@ Private mUseLocalTimeForStudies As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 ReDim mInputs(3) As InputDescriptor
 Set mStudyLibraryManager = Globals.StudyLibraryManager
 Set mInputStudies = New Collection
 Set mExchangeTimeZone = GetTimeZone("")
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Class_Terminate()
 Dim lStudy As Study
 Dim i As Long
 
+Const ProcName As String = "Class_Terminate"
+On Error GoTo Err
+
 For i = mInputStudies.Count To 1 Step -1
     Set lStudy = mInputStudies(i)
     Globals.StudiesCollection.Remove lStudy.Id
     mInputStudies.Remove i
 Next
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -156,6 +172,9 @@ Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
 Dim tc As TaskController
 Dim result As ValueReplayResult
+Const ProcName As String = "TaskCompletionListener_taskCompleted"
+On Error GoTo Err
+
 Set result = ev.result
 Set tc = ev.source
 Select Case CLng(tc.cookie)
@@ -163,6 +182,11 @@ Case TaskDiscriminators.TaskAddStudy
     linkSession result.target
 Case TaskDiscriminators.TaskAddStudyValueListener
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -182,16 +206,16 @@ Public Function AddInput( _
                 ByVal inputName As String, _
                 ByVal Description As String, _
                 ByVal InputType As StudyInputTypes, _
-                ByVal isDefault As Boolean, _
+                ByVal IsDefault As Boolean, _
                 ByVal tickSize As Double) As Long
 Dim inpStudy As InputStudy
 
-Dim failpoint As Long
+Const ProcName As String = "AddInput"
 On Error GoTo Err
 
 Set inpStudy = source   ' check the right class
 
-inpStudy.AddInput inputName, Description, InputType, isDefault, tickSize
+inpStudy.AddInput inputName, Description, InputType, IsDefault, tickSize
 
 If mNextInputIndex = UBound(mInputs) Then
     ReDim Preserve mInputs(2 * (UBound(mInputs) + 1) - 1) As InputDescriptor
@@ -200,7 +224,7 @@ Set mInputs(mNextInputIndex).source = source
 mInputs(mNextInputIndex).inputName = inputName
 mInputs(mNextInputIndex).Description = Description
 mInputs(mNextInputIndex).InputType = InputType
-mInputs(mNextInputIndex).isDefault = isDefault
+mInputs(mNextInputIndex).IsDefault = IsDefault
 mInputs(mNextInputIndex).tickSize = tickSize
 AddInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
@@ -208,11 +232,7 @@ mNextInputIndex = mNextInputIndex + 1
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddInput" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function AddSource( _
@@ -221,7 +241,7 @@ Dim inpStudy As InputStudy
 Dim lStudy As Study
 Dim studyEntry As StudyTableEntry
 
-Dim failpoint As Long
+Const ProcName As String = "AddSource"
 On Error GoTo Err
 
 Set inpStudy = New InputStudy
@@ -243,19 +263,12 @@ mInputStudies.Add inpStudy, lStudy.Id
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddSource" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-
-If errNumber = VBErrorCodes.VbErrElementAlreadyExists Then
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     Globals.StudiesCollection.Remove lStudy.Id
     mInputStudies.Remove lStudy.Id
     Resume
 End If
-
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 ''
@@ -291,24 +304,24 @@ Dim inStudy As InputStudy
 Dim params As Parameters
 Dim param As Parameter
 
-Dim failpoint As Long
+Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
 If underlyingStudy Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudyUtils25.StudyManager::AddStudy", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Underlying study must not be nothing"
 End If
 
 On Error Resume Next
 underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.Id)
 If Err.Number <> 0 Then
-    On Error GoTo 0
+    On Error GoTo Err
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudyUtils25.StudyManager::AddStudy", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Underlying study Id is invalid"
 End If
-On Error GoTo 0
+On Error GoTo Err
 
 Set params = mStudyLibraryManager.FetchStudyDefaultParameters(Name, libraryName)
 If Not Parameters Is Nothing Then
@@ -339,7 +352,7 @@ studyEntry.libName = UCase$(libraryName)
 Set lStudy = mStudyLibraryManager.CreateStudy(Name, libraryName)
 
 If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    ProjectName & "." & ModuleName & ":" & "AddStudy", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Can't create study " & Name
                                                 
 Set studyEntry.Study = lStudy
@@ -389,16 +402,12 @@ Set AddStudy = lStudy
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddStudy" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetInputDescriptor( _
                 ByVal inputHandle As Long) As InputDescriptor
-Dim failpoint As Long
+Const ProcName As String = "GetInputDescriptor"
 On Error GoTo Err
 
 GetInputDescriptor = mInputs(inputHandle)
@@ -406,18 +415,14 @@ GetInputDescriptor = mInputs(inputHandle)
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetInputDescriptor" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetUnderlyingStudy( _
                 ByVal pStudy As Study) As Study
 Dim se As StudyTableEntry
 
-Dim failpoint As Long
+Const ProcName As String = "GetUnderlyingStudy"
 On Error GoTo Err
 
 se = Globals.StudiesCollection(pStudy.Id)
@@ -427,11 +432,8 @@ Set GetUnderlyingStudy = se.Study
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GetUnderlyingStudy" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Public Sub MoveStudy(ByVal studyToMove As BarStudy, _
@@ -441,7 +443,7 @@ Dim lStudy As Study
 Dim lStudyEntry As StudyTableEntry
 Dim lInputStudy As Study
 
-Dim failpoint As Long
+Const ProcName As String = "MoveStudy"
 On Error GoTo Err
 
 Set lStudy = studyToMove
@@ -458,11 +460,7 @@ studyToMove.SwitchUnderlyingStudy lInputStudy
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "MoveStudy" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ' Timestamp is in exchange timezone
@@ -472,17 +470,33 @@ Public Sub NotifyInput( _
                 ByVal Timestamp As Date)
 Dim ev As StudyValueEvent
 
+Const ProcName As String = "NotifyInput"
+On Error GoTo Err
+
 ev.sVal.Timestamp = Timestamp
 ev.sVal.value = inputValue
 ev.valueName = mInputs(inputHandle).inputName
 mInputs(inputHandle).source.Notify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetInputTicksize( _
                 ByVal inputHandle As Long, _
                 ByVal tickSize As Double)
+Const ProcName As String = "SetInputTicksize"
+On Error GoTo Err
+
 mInputs(inputHandle).tickSize = tickSize
 mInputs(inputHandle).source.SetInputTicksize mInputs(inputHandle).inputName, tickSize
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -499,12 +513,12 @@ Public Sub SetSessionTimes( _
 Dim lStudy As InputStudy
 Dim lVar As Variant
 
-Dim failpoint As Long
+Const ProcName As String = "SetSessionTimes"
 On Error GoTo Err
 
 If mSessionTimesSet Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "SetSessionTimes", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Session times have already been set"
 
 
@@ -530,11 +544,7 @@ Next
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetSessionTimes" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function StartStudy( _
@@ -545,7 +555,7 @@ Public Function StartStudy( _
 Dim studyEntry As StudyTableEntry
 Dim underlyingStudyEntry As StudyTableEntry
 
-Dim failpoint As Long
+Const ProcName As String = "StartStudy"
 On Error GoTo Err
 
 studyEntry = Globals.StudiesCollection(pStudy.Id)
@@ -575,11 +585,7 @@ End If
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "StartStudy" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -594,6 +600,9 @@ Private Function findStudy(ByVal studyName As String, _
                 ByVal Parameters As Parameters) As Study
 Dim studyEntry As StudyTableEntry
 Dim var As Variant
+
+Const ProcName As String = "findStudy"
+On Error GoTo Err
 
 Set findStudy = Nothing
 
@@ -615,17 +624,28 @@ For Each var In Globals.StudiesCollection
     End If
 Next
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub linkSession( _
                 ByVal pStudy As Study)
 Dim studyEntry As StudyTableEntry
 
+Const ProcName As String = "linkSession"
+On Error GoTo Err
+
 studyEntry = Globals.StudiesCollection(pStudy.Id)
 
 studyEntry.sessionBldr.SetLinkable
 studyEntry.inpStudy.linkSession studyEntry.sessionBldr.Session
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function stringArraysEqual( _
@@ -633,14 +653,23 @@ Private Function stringArraysEqual( _
                 ar2() As String) As Boolean
 Dim i As Long
 
+Const ProcName As String = "stringArraysEqual"
+On Error GoTo Err
+
 On Error Resume Next    ' in case one array has no members
 If UBound(ar1) <> UBound(ar2) Then Exit Function
-On Error GoTo 0
+If Err.Number <> 0 Then Exit Function
+On Error GoTo Err
 
 For i = 0 To UBound(ar1)
     If ar1(i) <> ar2(i) Then Exit Function
 Next
 stringArraysEqual = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

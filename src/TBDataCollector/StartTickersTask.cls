@@ -40,7 +40,6 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TBDataCollector26"
 Private Const ModuleName                    As String = "StartTickersTask"
 
 '@================================================================================
@@ -78,7 +77,7 @@ Private Sub Task_cancel()
 End Sub
 
 Private Sub Task_run()
-Dim contractSpec As contractSpecifier
+Dim contractSpec As ContractSpecifier
 Dim contractConfig As ConfigurationSection
 Dim contractSpecConfig As ConfigurationSection
 
@@ -94,11 +93,13 @@ Dim optRight As OptionRights
 Dim writeBidAskBars As Boolean
 Dim includeMarketDepth As Boolean
 
-Dim failpoint As Long
+Dim failpoint As String
+
+Const ProcName As String = "Task_run"
 On Error GoTo Err
 
-If Not mEnumerator.moveNext Then
-    mTaskContext.Finish "Yield count =" & mTaskContext.yieldCount, False
+If Not mEnumerator.MoveNext Then
+    mTaskContext.Finish "Yield count =" & mTaskContext.YieldCount, False
     Exit Sub
 End If
 
@@ -135,7 +136,7 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
     
     failpoint = 400 '=====================================================
     
-    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & contractSpec.toString
+    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & contractSpec.ToString
     
     Set mTickersTC = mTickers.startTickers( _
                     TickerOptions.TickerOptNoImpliedTrades + _
@@ -153,19 +154,14 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
                     mOutputPath, _
                     1000)
     
-    mTaskContext.suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
+    mTaskContext.Suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
     
 End If
-
 
 Exit Sub
 
 Err:
-mTaskContext.Error Err.Number, _
-                    Err.description, _
-                    ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & _
-                    IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -181,8 +177,16 @@ End Property
 '@================================================================================
 
 Private Sub mTickersTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
-If ev.errorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.errorNumber & " starting tickers: " & ev.ErrorMessage
-mTaskContext.continue
+Const ProcName As String = "mTickersTC_Completed"
+On Error GoTo Err
+
+If ev.errorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.errorNumber & " starting tickers: " & ev.errorMessage
+mTaskContext.Continue
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -200,6 +204,9 @@ Friend Sub initialise( _
                 ByVal writeTicks As Boolean, _
                 ByVal outputFormat As String, _
                 ByVal outputPath As String)
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 Set mTickers = pTickers
 Set mContractsConfig = contractsConfig
 mWritebars = writeBars
@@ -208,6 +215,11 @@ mOutputFormat = outputFormat
 mOutputPath = outputPath
 
 Set mEnumerator = mContractsConfig.ChildEnumerator
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
