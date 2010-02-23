@@ -38,7 +38,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "ContractUtils26"
 Private Const ModuleName                    As String = "ContractSpecifier"
 
 '@================================================================================
@@ -79,39 +78,52 @@ Public Property Get ComboLegs() As ComboLegs
 Set ComboLegs = mComboLegs
 End Property
 
-Friend Property Let currencyCode(ByVal value As String)
+Friend Property Let CurrencyCode(ByVal value As String)
 mCurrency = UCase$(value)
 End Property
 
-Public Property Get currencyCode() As String
-currencyCode = mCurrency
+Public Property Get CurrencyCode() As String
+CurrencyCode = mCurrency
 End Property
 
-Friend Property Let exchange(ByVal value As String)
+Friend Property Let Exchange(ByVal value As String)
 mExchange = UCase$(value)
 End Property
 
-Public Property Get exchange() As String
-exchange = mExchange
+Public Property Get Exchange() As String
+Exchange = mExchange
 End Property
 
-Friend Property Let expiry(ByVal value As String)
+Friend Property Let Expiry(ByVal value As String)
+Const ProcName As String = "Expiry"
+Dim failpoint As String
+On Error GoTo Err
+
 If value = "" Then Exit Property
 If Not gIsValidExpiry(value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "expiry", _
-            "Invalid expiry"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Invalid Expiry"
 End If
 
 mExpiry = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
-Public Property Get expiry() As String
-expiry = mExpiry
+Public Property Get Expiry() As String
+Expiry = mExpiry
 End Property
 
-Public Property Get key() As String
-key = mLocalSymbol & "|" & _
+Public Property Get Key() As String
+Const ProcName As String = "Key"
+Dim failpoint As String
+On Error GoTo Err
+
+Key = mLocalSymbol & "|" & _
     CStr(mSecType) & "|" & _
     mSymbol & "|" & _
     Left$(mExpiry, 6) & "|" & _
@@ -119,46 +131,51 @@ key = mLocalSymbol & "|" & _
     CStr(mRight) & "|" & _
     mExchange & "|" & _
     mCurrency
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Property
 
-Friend Property Let localSymbol(ByVal value As String)
+Friend Property Let LocalSymbol(ByVal value As String)
 mLocalSymbol = UCase$(value)
 End Property
 
-Public Property Get localSymbol() As String
-localSymbol = mLocalSymbol
+Public Property Get LocalSymbol() As String
+LocalSymbol = mLocalSymbol
 End Property
 
-Friend Property Let right(ByVal value As OptionRights)
+Friend Property Let Right(ByVal value As OptionRights)
 mRight = value
 End Property
 
-Public Property Get right() As OptionRights
-right = mRight
+Public Property Get Right() As OptionRights
+Right = mRight
 End Property
 
-Friend Property Let sectype(ByVal value As SecurityTypes)
+Friend Property Let SecType(ByVal value As SecurityTypes)
 mSecType = value
 End Property
 
-Public Property Get sectype() As SecurityTypes
-sectype = mSecType
+Public Property Get SecType() As SecurityTypes
+SecType = mSecType
 End Property
 
-Friend Property Let strike(ByVal value As Double)
+Friend Property Let Strike(ByVal value As Double)
 mStrike = value
 End Property
 
-Public Property Get strike() As Double
-strike = mStrike
+Public Property Get Strike() As Double
+Strike = mStrike
 End Property
 
-Friend Property Let symbol(ByVal value As String)
+Friend Property Let Symbol(ByVal value As String)
 mSymbol = UCase$(value)
 End Property
 
-Public Property Get symbol() As String
-symbol = mSymbol
+Public Property Get Symbol() As String
+Symbol = mSymbol
 End Property
 
 '@================================================================================
@@ -166,18 +183,42 @@ End Property
 '@================================================================================
 
 Public Function Equals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
+Const ProcName As String = "Equals"
+Dim failpoint As String
+On Error GoTo Err
+
+If pContractSpecifier Is Nothing Then Exit Function
 If pContractSpecifier Is Me Then Equals = True
-Equals = (Me.key = pContractSpecifier.key)
+Equals = (Me.Key = pContractSpecifier.Key)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function FuzzyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
-FuzzyEquals = (Me.sectype = pContractSpecifier.sectype And _
-                Me.symbol = pContractSpecifier.symbol)
+Const ProcName As String = "FuzzyEquals"
+Dim failpoint As String
+On Error GoTo Err
+
+If pContractSpecifier Is Nothing Then Exit Function
+FuzzyEquals = (Me.SecType = pContractSpecifier.SecType And _
+                Me.Symbol = pContractSpecifier.Symbol)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function ToString() As String
 Dim comboLegObj As ComboLeg
 Dim i As Long
+
+Const ProcName As String = "ToString"
+Dim failpoint As String
+On Error GoTo Err
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
 ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")
@@ -199,6 +240,11 @@ If Not mComboLegs Is Nothing Then
                     comboLegObj.ToString
     Next
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================

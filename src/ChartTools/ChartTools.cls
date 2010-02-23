@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartTools26"
+
 Private Const ModuleName                    As String = "ChartTools"
 
 '@================================================================================
@@ -70,28 +70,44 @@ Public Function CreateFibRetracementTool( _
                 ByRef pLineSpecs() As FibLineSpecifier, _
                 Optional ByVal Layer As LayerNumbers = -1, _
                 Optional ByVal pTextStyle As TextStyle) As FibRetracementTool
+Const ProcName As String = "CreateFibRetracementTool"
+On Error GoTo Err
+
 If pChart Is Nothing Or Not TypeOf pChart Is ChartController Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateFibRetracementTool", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "You must supply a Chart"
 End If
 
 Set CreateFibRetracementTool = New FibRetracementTool
 CreateFibRetracementTool.Initialise pChart, pLineSpecs, Layer, pTextStyle
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateLineTool( _
                 ByVal pChart As ChartController, _
                 Optional ByVal pLineStyle As LineStyle, _
                 Optional ByVal Layer As LayerNumbers = -1) As LineTool
+Const ProcName As String = "CreateLineTool"
+On Error GoTo Err
+
 If pChart Is Nothing Or Not TypeOf pChart Is ChartController Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateLineTool", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "You must supply a Chart"
 End If
 
 Set CreateLineTool = New LineTool
 CreateLineTool.Initialise pChart, pLineStyle, Layer
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GAccDist"
+
 Public Const AccDistInputPrice As String = "Price"
 Public Const AccDistInputPriceUcase As String = "PRICE"
 
@@ -44,51 +46,75 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
 Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = AccDistName
-    mStudyDefinition.shortName = AccDistShortName
+    mStudyDefinition.ShortName = AccDistShortName
     mStudyDefinition.Description = "Accumulation/Distribution tracks buying and selling " & _
                                 "by combining price movements and volume"
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputPrice)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Price"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputVolume)
-    inputDef.inputType = InputTypeInteger
+    inputDef.InputType = InputTypeInteger
     inputDef.Description = "Volume"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AccDistValueAccDist)
     valueDef.Description = "The Accumulation/Distribution value"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = True
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueType = ValueTypeReal
     
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

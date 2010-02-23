@@ -113,7 +113,7 @@ mBoundingRect.isValid = False
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log LogLevelHighDetail, "Bar terminated"
+'gLogger.Log LogLevelHighDetail, "Bar terminated"
 Debug.Print "Bar terminated"
 End Sub
 
@@ -122,7 +122,8 @@ End Sub
 '================================================================================
 
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
-Dim failpoint As Long
+Const ProcName As String = "IGraphicObject_boundingRectangle"
+Dim failpoint As String
 On Error GoTo Err
 
 setBarSemiWidth
@@ -132,21 +133,41 @@ IGraphicObject_boundingRectangle = mBoundingRect
 Exit Property
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
+Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
+Const ProcName As String = "IGraphicObject_BoundingRectangleInViewport"
+Dim failpoint As String
+On Error GoTo Err
+
+IGraphicObject_BoundingRectangleInViewport = IGraphicObject_boundingRectangle
+RectSetXInterval IGraphicObject_BoundingRectangleInViewport, _
+                IntIntersection(RectGetXInterval(IGraphicObject_BoundingRectangleInViewport), _
+                                RectGetXInterval(mViewport.Boundary))
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Private Property Get IGraphicObject_BoundingRectanglesAt( _
+                ByVal PeriodNumber As Long) As TRectangle()
 '
 End Property
 
 Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
+Const ProcName As String = "IGraphicObject_capabilities"
+Dim failpoint As String
+On Error GoTo Err
+
 IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub IGraphicObject_Click()
@@ -160,25 +181,21 @@ End Sub
 Private Sub IGraphicObject_draw( _
                 ByRef areas() As TRectangle)
 Dim i As Long
-Dim failpoint As Long
+
+Const ProcName As String = "IGraphicObject_draw"
+Dim failpoint As String
 On Error GoTo Err
 
-For i = 0 To UBound(areas)
-    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(i))
+'For i = 0 To UBound(areas)
+'    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(i))
     Draw
-    mCanvas.ClearClippingRegion
-Next
+'    mCanvas.ClearClippingRegion
+'Next
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -199,7 +216,16 @@ IGraphicObject_Handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
+Const ProcName As String = "IGraphicObject_HitTest"
+Dim failpoint As String
+On Error GoTo Err
+
 IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Let IGraphicObject_Handle(ByVal value As Long)
@@ -247,32 +273,32 @@ IGraphicObject_Selected = mIsSelected
 End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
+Const ProcName As String = "IGraphicObject_SeriesID"
+Dim failpoint As String
+On Error GoTo Err
+
 IGraphicObject_SeriesID = mSeries.Id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get IGraphicObject_Timestamp() As Date
 IGraphicObject_Timestamp = mTimestamp
 End Property
 
-'Private Sub IGraphicObject_undraw( _
-'                ByRef area As TRectangle, _
-'                ByVal Hdc As Long)
-'Dim failpoint As Long
-'On Error GoTo Err
-'
-'undraw area
-'
-'Exit Sub
-'
-'Err:
-'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbcrlf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint
-'Dim errDescription As String: errDescription = Err.Description
-'gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-'Err.Raise errNumber, errSource, errDescription
-'
-'
-'End Sub
+Private Property Get IGraphicObject_VerticalRangeInXinterval(ByRef pXInterval As TInterval) As TInterval
+If Not pXInterval.isValid Then Exit Property
+If mX < pXInterval.startValue Then Exit Property
+If mX > pXInterval.endValue Then Exit Property
+
+IGraphicObject_VerticalRangeInXinterval.startValue = mLow
+IGraphicObject_VerticalRangeInXinterval.endValue = mHigh
+IGraphicObject_VerticalRangeInXinterval.isValid = True
+                    
+End Property
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
 mVisible = value
@@ -283,7 +309,8 @@ End Property
 '================================================================================
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
-Dim failpoint As Long
+Const ProcName As String = "mLocalStyle_PropertyChanged"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -309,17 +336,14 @@ Case "UPCOLOR"
     initiateRedraw False, False
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Unhandled property change"
 End Select
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mLocalStyle_PropertyChanged" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -327,10 +351,14 @@ End Sub
 '================================================================================
 
 Public Property Let Color(ByVal value As Long)
+Const ProcName As String = "Color"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "Bar" & ":" & "Color", _
-            "Value is not a valid color or -1"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
 
 If mColor = value And isPropertyOverrideFlagSet(BarIsSetColor) Then Exit Property
 mColor = value
@@ -340,38 +368,88 @@ Else
     clearPropertyOverrideFlag BarIsSetColor
 End If
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+Dim failpoint As String
+On Error GoTo Err
+
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
 If isPropertyOverrideFlagSet(BarIsSetColor) Then Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Thickness(ByVal value As Long)
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
 If mThickness = value And isPropertyOverrideFlagSet(BarIsSetThickness) Then Exit Property
 mThickness = value
 setPropertyOverrideFlag BarIsSetThickness
 initiateRedraw True, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Thickness() As Long
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
 Thickness = mSeries.Thickness
 If Not mLocalStyle Is Nothing Then Thickness = mLocalStyle.Thickness
 If isPropertyOverrideFlagSet(BarIsSetThickness) Then Thickness = mThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Width(ByVal value As Single)
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
 If mWidth = value And isPropertyOverrideFlagSet(BarIsSetWidth) Then Exit Property
 mWidth = value
 setPropertyOverrideFlag BarIsSetWidth
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Width() As Single
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
 Width = mSeries.Width
 If Not mLocalStyle Is Nothing Then Width = mLocalStyle.Width
 If isPropertyOverrideFlagSet(BarIsSetWidth) Then Width = mWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Blank() As Boolean
@@ -383,16 +461,34 @@ ClosePrice = mClose
 End Property
 
 Public Property Let DisplayMode(ByVal value As BarDisplayModes)
+Const ProcName As String = "DisplayMode"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDisplayMode = value And isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then Exit Property
 mDisplayMode = value
 setPropertyOverrideFlag BarIsSetDisplayMode
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
+Const ProcName As String = "DisplayMode"
+Dim failpoint As String
+On Error GoTo Err
+
 DisplayMode = mSeries.DisplayMode
 If Not mLocalStyle Is Nothing Then DisplayMode = mLocalStyle.DisplayMode
 If isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then DisplayMode = mDisplayMode
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DownBar() As Boolean
@@ -400,10 +496,14 @@ DownBar = (mClose <= mOpen)
 End Property
 
 Public Property Let DownColor(ByVal value As Long)
+Const ProcName As String = "DownColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "Bar" & ":" & "downColor", _
-            "Value is not a valid color or -1"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
 
 If mDownColor = value And isPropertyOverrideFlagSet(BarIsSetDownColor) Then Exit Property
 mDownColor = value
@@ -413,13 +513,27 @@ Else
     clearPropertyOverrideFlag BarIsSetDownColor
 End If
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DownColor() As Long
+Const ProcName As String = "DownColor"
+Dim failpoint As String
+On Error GoTo Err
+
 DownColor = mSeries.DownColor
 If Not mLocalStyle Is Nothing Then DownColor = mLocalStyle.DownColor
 If isPropertyOverrideFlagSet(BarIsSetDownColor) Then DownColor = mDownColor
 If DownColor = -1 Then DownColor = UpColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get handle() As Long
@@ -431,17 +545,35 @@ HighPrice = mHigh
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Const ProcName As String = "IncludeInAutoscale"
+Dim failpoint As String
+On Error GoTo Err
+
 If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
 setPropertyOverrideFlag BarIsSetIncludeInAutoscale
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+Dim failpoint As String
+On Error GoTo Err
+
 IncludeInAutoscale = mSeries.IncludeInAutoscale
 If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
 If isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InScope() As Boolean
@@ -465,15 +597,33 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
 If mLayer = value And isPropertyOverrideFlagSet(BarIsSetLayer) Then Exit Property
 mLayer = value
 setPropertyOverrideFlag BarIsSetLayer
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
 Layer = mSeries.Layer
 If isPropertyOverrideFlagSet(BarIsSetLayer) Then Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LocalStyle() As BarStyle
@@ -482,8 +632,17 @@ End Property
 
 Public Property Let LocalStyle( _
                 ByVal value As BarStyle)
+Const ProcName As String = "LocalStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mLocalStyle = value
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LowPrice() As Double
@@ -495,51 +654,123 @@ OpenPrice = mOpen
 End Property
 
 Public Property Let OutlineThickness(ByVal value As Long)
+Const ProcName As String = "OutlineThickness"
+Dim failpoint As String
+On Error GoTo Err
+
 If mOutlineThickness = value And isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then Exit Property
 mOutlineThickness = value
 setPropertyOverrideFlag BarIsSetOutlineThickness
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OutlineThickness() As Long
+Const ProcName As String = "OutlineThickness"
+Dim failpoint As String
+On Error GoTo Err
+
 OutlineThickness = mSeries.OutlineThickness
 If Not mLocalStyle Is Nothing Then OutlineThickness = mLocalStyle.OutlineThickness
 If isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then OutlineThickness = mOutlineThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PreviousBar() As Bar
+Const ProcName As String = "PreviousBar"
+Dim failpoint As String
+On Error GoTo Err
+
 If mPrevBarRef Is Nothing Then Exit Property
 Set PreviousBar = prevBarObj
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let PreviousBar(ByVal value As Bar)
+Const ProcName As String = "PreviousBar"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mPrevBarRef = CreateWeakReference(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let SolidUpBody(ByVal value As Boolean)
+Const ProcName As String = "SolidUpBody"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSolidUpBody = value And isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then Exit Property
 mSolidUpBody = value
 setPropertyOverrideFlag BarIsSetSolidUpBody
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SolidUpBody() As Boolean
+Const ProcName As String = "SolidUpBody"
+Dim failpoint As String
+On Error GoTo Err
+
 SolidUpBody = mSeries.SolidUpBody
 If Not mLocalStyle Is Nothing Then SolidUpBody = mLocalStyle.SolidUpBody
 If isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then SolidUpBody = mSolidUpBody
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let TailThickness(ByVal value As Long)
+Const ProcName As String = "TailThickness"
+Dim failpoint As String
+On Error GoTo Err
+
 If mTailThickness = value And isPropertyOverrideFlagSet(BarIsSetTailThickness) Then Exit Property
 mTailThickness = value
 setPropertyOverrideFlag BarIsSetTailThickness
 initiateRedraw True, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TailThickness() As Long
+Const ProcName As String = "TailThickness"
+Dim failpoint As String
+On Error GoTo Err
+
 TailThickness = mSeries.TailThickness
 If Not mLocalStyle Is Nothing Then TailThickness = mLocalStyle.TailThickness
 If isPropertyOverrideFlagSet(BarIsSetTailThickness) Then TailThickness = mTailThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get UpBar() As Boolean
@@ -547,10 +778,14 @@ UpBar = (mClose >= mOpen)
 End Property
 
 Public Property Let UpColor(ByVal value As Long)
+Const ProcName As String = "UpColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26" & "." & "Bar" & ":" & "upColor", _
-            "Value is not a valid color or -1"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
 
 If mUpColor = value And isPropertyOverrideFlagSet(BarIsSetUpColor) Then Exit Property
 mUpColor = value
@@ -560,12 +795,26 @@ Else
     clearPropertyOverrideFlag BarIsSetUpColor
 End If
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get UpColor() As Long
+Const ProcName As String = "UpColor"
+Dim failpoint As String
+On Error GoTo Err
+
 UpColor = mSeries.UpColor
 If Not mLocalStyle Is Nothing Then UpColor = mLocalStyle.UpColor
 If isPropertyOverrideFlagSet(BarIsSetUpColor) Then UpColor = mUpColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Visible() As Boolean
@@ -573,8 +822,17 @@ Visible = mVisible
 End Property
 
 Friend Property Let X(ByVal value As Double)
+Const ProcName As String = "X"
+Dim failpoint As String
+On Error GoTo Err
+
 mX = value
 calcBoundingRect
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get X() As Double
@@ -586,8 +844,17 @@ End Property
 '================================================================================
 
 Public Sub ClearOverrides()
+Const ProcName As String = "ClearOverrides"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = 0
 initiateRedraw True, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise( _
@@ -595,24 +862,34 @@ Friend Sub Initialise( _
                 ByVal pTimestamp As Date, _
                 ByVal pKey As String, _
                 ByVal pGOSP As GraphObjServiceProvider, _
-                ByVal pviewport As Viewport, _
+                ByVal pViewport As Viewport, _
                 ByVal pLocalStyle As BarStyle)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mSeries = pSeries
 mTimestamp = pTimestamp
 mKey = pKey
 Set mGOSP = pGOSP
-Set mViewport = pviewport
+Set mViewport = pViewport
 Set mCanvas = mViewport.Canvas
 Set mLocalStyle = LocalStyle
 
 setBarSemiWidth
 calcBoundingRect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ResetStyle()
 ' reset the Style to the initial Style (ie the Style for the bar series) with no
 ' local modifications
-Dim failpoint As Long
+Const ProcName As String = "ResetStyle"
+Dim failpoint As String
 On Error GoTo Err
 
 Set mLocalStyle = Nothing
@@ -632,18 +909,16 @@ initiateRedraw True, True
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ResetStyle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Tick(ByVal Price As Double)
 Dim clearRect As TRectangle
 Dim boundsChanged As Boolean
+
+Const ProcName As String = "Tick"
+Dim failpoint As String
+On Error GoTo Err
 
 If Price = mClose Then Exit Sub
 
@@ -697,6 +972,11 @@ mClose = Price
 
 initiateRedraw True, boundsChanged
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 '================================================================================
@@ -706,6 +986,10 @@ End Sub
 Private Sub calcBoundingRect()
 Dim lRect As RECT
 Dim prevBar As Bar
+
+Const ProcName As String = "calcBoundingRect"
+Dim failpoint As String
+On Error GoTo Err
 
 If mBlank Then
     mBoundingRect.isValid = False
@@ -738,16 +1022,39 @@ lRect.Right = lRect.Right + 1
 lRect.Bottom = lRect.Bottom + 1
 
 mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearPropertyOverrideFlag( _
                 ByVal flag As BarPropertyOverrideFlags)
+Const ProcName As String = "clearPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Draw()
+Const ProcName As String = "Draw"
+Dim failpoint As String
+On Error GoTo Err
+
 drawBar IIf(UpBar, UpColor, DownColor), _
         IIf(Color <> -1, Color, IIf(UpBar, UpColor, DownColor))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 
@@ -756,6 +1063,10 @@ Private Sub drawBar( _
                 ByVal outlineColor As Long)
 Dim ThicknessScaleX As Double
 Dim ThicknessScaleY As Double
+
+Const ProcName As String = "drawBar"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mVisible Then Exit Sub
 If Blank Then Exit Sub
@@ -819,31 +1130,38 @@ Else
         ThicknessScaleY = mViewport.ConvertPixelsToLogicalY(Thickness - 1)
         
         If (mOpen - ThicknessScaleY / 2) < mLow Then
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mLow), _
-                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
+            mCanvas.DrawRectangle mX - mBarSemiWidth, _
+                                    mLow, _
+                                    mX + ThicknessScaleX / 2, _
+                                    mLow + ThicknessScaleY
         ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
-                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
+            mCanvas.DrawRectangle mX - mBarSemiWidth, mHigh - ThicknessScaleY, _
+                                    mX + ThicknessScaleX / 2, mHigh
         Else
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
-                                    mViewport.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
+            mCanvas.DrawRectangle mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2, _
+                                    mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2
         End If
         
-        mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
-                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
+        mCanvas.DrawRectangle mX - ThicknessScaleX / 2, mLow, _
+                                mX + ThicknessScaleX / 2, mHigh
         
         If (mClose - ThicknessScaleY / 2) < mLow Then
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
-                                    mViewport.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
+            mCanvas.DrawRectangle mX - ThicknessScaleX / 2, mLow, _
+                                    mX + mBarSemiWidth, mLow + ThicknessScaleY
         ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
-                                    mViewport.NewPoint(mX + mBarSemiWidth, mHigh)
+            mCanvas.DrawRectangle mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY, _
+                                    mX + mBarSemiWidth, mHigh
         Else
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
-                                    mViewport.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
+            mCanvas.DrawRectangle mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2, _
+                                    mX + mBarSemiWidth, mClose + ThicknessScaleY / 2
         End If
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -856,6 +1174,10 @@ Dim barOutlineScaleX As Double
 Dim barOutlineScaleY As Double
 Dim lOutlineThickness As Long
 Dim wholeBody As Boolean
+
+Const ProcName As String = "drawBody"
+Dim failpoint As String
+On Error GoTo Err
 
 If UpBar Then
     If Bottom = mOpen And Top = mClose Then
@@ -880,8 +1202,8 @@ If wholeBody Then
                             lOutlineThickness, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
-    mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
+    mCanvas.DrawRectangle mX - mBarSemiWidth, Bottom, _
+                            mX + mBarSemiWidth, Top
 Else
 
     mCanvas.SetPenAttributes Color, _
@@ -889,15 +1211,15 @@ Else
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
 
-    mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
-                    mViewport.NewPoint(mX + mBarSemiWidth, Top)
+    mCanvas.DrawRectangle mX - mBarSemiWidth, Bottom, _
+                    mX + mBarSemiWidth, Top
 
     mCanvas.SetPenAttributes outlineColor, _
                             1, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
     ' we'll draw the outlines of the bar as filled boxes
-    ' so set the fill color to the outline color
+    ' so set the fill Color to the outline Color
     mCanvas.SetBrushAttributes Color, FillStyles.FillSolid
 
     If Bottom = mOpen Then
@@ -906,8 +1228,8 @@ Else
             mCanvas.DrawLine mX - mBarSemiWidth, Bottom, _
                             mX + mBarSemiWidth, Bottom
         Else
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mViewport.NewPoint(mX + mBarSemiWidth, Bottom + barOutlineScaleY)
+            mCanvas.DrawRectangle mX - mBarSemiWidth, Bottom, _
+                            mX + mBarSemiWidth, Bottom + barOutlineScaleY
         End If
     End If
     If Top = mClose Then
@@ -916,8 +1238,8 @@ Else
             mCanvas.DrawLine mX - mBarSemiWidth, Top, _
                             mX + mBarSemiWidth, Top
         Else
-            mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Top - barOutlineScaleY), _
-                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
+            mCanvas.DrawRectangle mX - mBarSemiWidth, Top - barOutlineScaleY, _
+                            mX + mBarSemiWidth, Top
         End If
     End If
     If lOutlineThickness = 1 Then
@@ -926,12 +1248,17 @@ Else
         mCanvas.DrawLine mX + mBarSemiWidth, Bottom, _
                         mX + mBarSemiWidth, Top
     Else
-        mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, Bottom), _
-                            mViewport.NewPoint(mX - mBarSemiWidth + barOutlineScaleX, Top)
-        mCanvas.DrawRectangle mViewport.NewPoint(mX + mBarSemiWidth - barOutlineScaleX, Bottom), _
-                            mViewport.NewPoint(mX + mBarSemiWidth, Top)
+        mCanvas.DrawRectangle mX - mBarSemiWidth, Bottom, _
+                            mX - mBarSemiWidth + barOutlineScaleX, Top
+        mCanvas.DrawRectangle mX + mBarSemiWidth - barOutlineScaleX, Bottom, _
+                            mX + mBarSemiWidth, Top
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 'Private Sub drawPartialBar( _
@@ -1007,31 +1334,31 @@ End Sub
 '
 '        If mOpen >= Area.Bottom And mOpen <= Area.Top Then
 '            If (mOpen - ThicknessScaleY / 2) < mLow Then
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mLow), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - mBarSemiWidth, mLow), _
 '                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mLow + ThicknessScaleY)
 '            ElseIf (mOpen + ThicknessScaleY / 2) > mHigh Then
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - mBarSemiWidth, mHigh - ThicknessScaleY), _
 '                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mHigh)
 '            Else
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - mBarSemiWidth, mOpen - ThicknessScaleY / 2), _
 '                                mViewport.NewPoint(mX + ThicknessScaleX / 2, mOpen + ThicknessScaleY / 2)
 '            End If
 '        End If
 '
 '        If mClose >= Area.Bottom And mClose <= Area.Top Then
 '            If (mClose - ThicknessScaleY / 2) < mLow Then
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - ThicknessScaleX / 2, mLow), _
 '                                mViewport.NewPoint(mX + mBarSemiWidth, mLow + ThicknessScaleY)
 '            ElseIf (mClose + ThicknessScaleY / 2) > mHigh Then
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - ThicknessScaleX / 2, mHigh - ThicknessScaleY), _
 '                                mViewport.NewPoint(mX + mBarSemiWidth, mHigh)
 '            Else
-'                mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
+'                mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - ThicknessScaleX / 2, mClose - ThicknessScaleY / 2), _
 '                                mViewport.NewPoint(mX + mBarSemiWidth, mClose + ThicknessScaleY / 2)
 '            End If
 '        End If
 '
-'        mCanvas.DrawRectangle mViewport.NewPoint(mX - ThicknessScaleX / 2, IIf(Area.Bottom > mLow, Area.Bottom, mLow)), _
+'        mCanvas.DrawRectangleFromPoints mViewport.NewPoint(mX - ThicknessScaleX / 2, IIf(Area.Bottom > mLow, Area.Bottom, mLow)), _
 '                        mViewport.NewPoint(mX + ThicknessScaleX / 2, IIf(Area.Top < mHigh, Area.Top, mHigh))
 '    End If
 'End If
@@ -1040,6 +1367,10 @@ End Sub
 
 Private Sub drawTail(ByVal Bottom As Double, ByVal Top As Double, ByVal Color As Long)
 Dim tailThicknessScaleX As Double
+Const ProcName As String = "drawTail"
+Dim failpoint As String
+On Error GoTo Err
+
 mCanvas.SetPenAttributes Color, _
                         1, _
                         LineStyles.LineInsideSolid, _
@@ -1047,38 +1378,79 @@ mCanvas.SetPenAttributes Color, _
 If TailThickness > 1 Then
     mCanvas.SetBrushAttributes Color, FillStyles.FillSolid
     tailThicknessScaleX = mViewport.ConvertPixelsToLogicalX(TailThickness - 1)
-    mCanvas.DrawRectangle mViewport.NewPoint(mX - tailThicknessScaleX / 2, Bottom), _
-                    mViewport.NewPoint(mX + tailThicknessScaleX / 2, Top)
+    mCanvas.DrawRectangle mX - tailThicknessScaleX / 2, Bottom, _
+                    mX + tailThicknessScaleX / 2, Top
 Else
     mCanvas.DrawLine mX, Bottom, mX, Top
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initiatePartialRedraw( _
                 ByRef areaToUndraw As TRectangle, _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
+Const ProcName As String = "initiatePartialRedraw"
+Dim failpoint As String
+On Error GoTo Err
+
 If undrawCurrentImage Then undraw areaToUndraw
 If recalcBoundaries Then
     setBarSemiWidth
     calcBoundingRect
 End If
 mGOSP.ObjectChanged mHandle, areaToUndraw
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
+Const ProcName As String = "initiateRedraw"
+Dim failpoint As String
+On Error GoTo Err
+
 initiatePartialRedraw mBoundingRect, undrawCurrentImage, recalcBoundaries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As BarPropertyOverrideFlags) As Boolean
+Const ProcName As String = "isPropertyOverrideFlagSet"
+Dim failpoint As String
+On Error GoTo Err
+
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function prevBarObj() As Bar
+Const ProcName As String = "prevBarObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set prevBarObj = mPrevBarRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setBarSemiWidth()
@@ -1094,16 +1466,34 @@ End Sub
 
 Private Sub setPropertyOverrideFlag( _
                 ByVal flag As BarPropertyOverrideFlags)
+Const ProcName As String = "setPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub undraw(ByRef Area As TRectangle)
+Const ProcName As String = "undraw"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mVisible Then Exit Sub
 If Not Area.isValid Then
     mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Else
     mGOSP.ObjectUndrawn mHandle, Area
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

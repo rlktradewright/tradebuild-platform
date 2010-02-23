@@ -92,6 +92,9 @@ End Sub
 
 Private Function StudyLibrary_createStudy( _
                 ByVal name As String) As Study
+Const ProcName As String = "StudyLibrary_createStudy"
+On Error GoTo Err
+
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_createStudy = New accDist
@@ -128,14 +131,30 @@ Case UCase$(StochName), UCase$(StochShortName)
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set StudyLibrary_createStudy = New Swing
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function StudyLibrary_getImplementedStudyNames() As String()
+Const ProcName As String = "StudyLibrary_getImplementedStudyNames"
+On Error GoTo Err
+
 StudyLibrary_getImplementedStudyNames = mStudyNames
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function StudyLibrary_getStudyDefaultParameters( _
                 ByVal name As String) As Parameters
+Const ProcName As String = "StudyLibrary_getStudyDefaultParameters"
+On Error GoTo Err
+
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_getStudyDefaultParameters = GAccDist.defaultParameters
@@ -172,10 +191,18 @@ Case UCase$(StochName), UCase$(StochShortName)
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set StudyLibrary_getStudyDefaultParameters = GSwing.defaultParameters
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function StudyLibrary_getStudyDefinition( _
                 ByVal name As String) As StudyDefinition
+Const ProcName As String = "StudyLibrary_getStudyDefinition"
+On Error GoTo Err
+
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
@@ -212,27 +239,59 @@ Case UCase$(StochName), UCase$(StochShortName)
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set StudyLibrary_getStudyDefinition = GSwing.StudyDefinition
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub StudyLibrary_initialise( _
                 ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
+Const ProcName As String = "StudyLibrary_initialise"
+On Error GoTo Err
+
 Set gLibraryManager = libManager
 mHandle = handle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let StudyLibrary_name( _
                 ByVal RHS As String)
+Const ProcName As String = "StudyLibrary_name"
+On Error GoTo Err
+
 mName = RHS
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get StudyLibrary_name() As String
+Const ProcName As String = "StudyLibrary_name"
+On Error GoTo Err
+
 StudyLibrary_name = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function StudyLibrary_setStudyDefaultParameters( _
                 ByVal name As String, _
                 ByVal params As Parameters) As Boolean
+
+Const ProcName As String = "StudyLibrary_setStudyDefaultParameters"
+On Error GoTo Err
 
 StudyLibrary_setStudyDefaultParameters = True
 
@@ -275,10 +334,24 @@ Case Else
     StudyLibrary_setStudyDefaultParameters = False
 End Select
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Sub StudyLibrary_terminate()
 ' nothing to do
+Const ProcName As String = "StudyLibrary_terminate"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -290,11 +363,27 @@ End Sub
 '@================================================================================
 
 Public Property Let name(ByVal value As String)
+Const ProcName As String = "name"
+On Error GoTo Err
+
 mName = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get name() As String
+Const ProcName As String = "name"
+On Error GoTo Err
+
 name = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -306,9 +395,17 @@ End Property
 '@================================================================================
 
 Private Sub addStudyName(ByVal name As String)
+Const ProcName As String = "addStudyName"
+On Error GoTo Err
+
 If mStudyNames(0) <> "" Then
     ReDim Preserve mStudyNames(UBound(mStudyNames) + 1) As String
 End If
 mStudyNames(UBound(mStudyNames)) = name
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

@@ -73,7 +73,8 @@ End Sub
 Private Sub Task_run()
 Dim i As Long
 
-Dim failpoint As Long
+Const ProcName As String = "Task_run"
+Dim failpoint As String
 On Error GoTo Err
 
 failpoint = 100
@@ -107,11 +108,7 @@ mTaskContext.Finish Empty, False
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)

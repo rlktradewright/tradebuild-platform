@@ -100,16 +100,27 @@ ChartBackColor = mChartBackColor
 End Property
 
 Public Property Let ChartBackColor(ByVal value As OLE_COLOR)
+Const ProcName As String = "ChartBackColor"
+On Error GoTo Err
+
 mChartBackColor = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingChartBackColor, CStr(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 If Not mConfig Is Nothing Then
-    mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.toString
+    mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.ToString
     mConfig.SetSetting ConfigSettingInitialNumberOfBars, mInitialNumberOfBars
     mConfig.SetBooleanSetting ConfigSettingIncludeBarsOutsideSession, mIncludeBarsOutsideSession
     mConfig.SetSetting ConfigSettingMinimumTicksHeight, mMinimumTicksHeight
@@ -122,62 +133,171 @@ If Not mConfig Is Nothing Then
     mVolumeStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionVolumeStyle)
     mConfig.SetSetting ConfigSettingTwipsPerBar, mTwipsPerBar
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DefaultRegionStyle() As ChartRegionStyle
+Const ProcName As String = "DefaultRegionStyle"
+On Error GoTo Err
+
 Set DefaultRegionStyle = mDefaultRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
+Const ProcName As String = "DefaultYAxisRegionStyle"
+On Error GoTo Err
+
 Set DefaultYAxisRegionStyle = mDefaultYAxisRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let InitialNumberOfBars( _
                 ByVal value As Integer)
+Const ProcName As String = "InitialNumberOfBars"
+On Error GoTo Err
+
 mInitialNumberOfBars = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingInitialNumberOfBars, mInitialNumberOfBars
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InitialNumberOfBars() As Integer
+Const ProcName As String = "InitialNumberOfBars"
+On Error GoTo Err
+
 InitialNumberOfBars = mInitialNumberOfBars
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IncludeBarsOutsideSession() As Boolean
+Const ProcName As String = "IncludeBarsOutsideSession"
+On Error GoTo Err
+
 IncludeBarsOutsideSession = mIncludeBarsOutsideSession
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumTicksHeight() As Integer
+Const ProcName As String = "MinimumTicksHeight"
+On Error GoTo Err
+
 MinimumTicksHeight = mMinimumTicksHeight
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Timeframe() As TimePeriod
+Const ProcName As String = "Timeframe"
+On Error GoTo Err
+
 Set Timeframe = mTimeframe
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Timeframe(ByVal value As TimePeriod)
+Const ProcName As String = "Timeframe"
+On Error GoTo Err
+
 Set mTimeframe = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.toString
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.ToString
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TwipsPerBar() As Long
+Const ProcName As String = "TwipsPerBar"
+On Error GoTo Err
+
 TwipsPerBar = mTwipsPerBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let TwipsPerBar(ByVal value As Long)
+Const ProcName As String = "TwipsPerBar"
+On Error GoTo Err
+
 mTwipsPerBar = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTwipsPerBar, mTwipsPerBar
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get VolumeRegionStyle() As ChartRegionStyle
+Const ProcName As String = "VolumeRegionStyle"
+On Error GoTo Err
+
 Set VolumeRegionStyle = mVolumeRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get VolumeStyle() As DataPointStyle
+Const ProcName As String = "VolumeStyle"
+On Error GoTo Err
+
 Set VolumeStyle = mVolumeStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get XAxisRegionStyle() As ChartRegionStyle
+Const ProcName As String = "XAxisRegionStyle"
+On Error GoTo Err
+
 Set XAxisRegionStyle = mXAxisRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -185,6 +305,9 @@ End Property
 '@================================================================================
 
 Public Function Clone() As ChartSpecifier
+Const ProcName As String = "Clone"
+On Error GoTo Err
+
 Set Clone = New ChartSpecifier
 Clone.Initialise mTimeframe, _
                 mInitialNumberOfBars, _
@@ -198,6 +321,11 @@ Clone.Initialise mTimeframe, _
                 mVolumeStyle
 Clone.ChartBackColor = mChartBackColor
 Clone.TwipsPerBar = mTwipsPerBar
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise( _
@@ -211,6 +339,9 @@ Friend Sub Initialise( _
                 ByVal DefaultYAxisRegionStyle As ChartRegionStyle, _
                 ByVal pBarsStyle As BarStyle, _
                 ByVal VolumeStyle As DataPointStyle)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mTimeframe = Timeframe
 validateTimeFrame Timeframe
 mInitialNumberOfBars = InitialNumberOfBars
@@ -225,12 +356,20 @@ Set mVolumeStyle = VolumeStyle.Clone
 
 mChartBackColor = &H602008
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
 Dim ar() As String
 Dim i As Long
+
+Const ProcName As String = "LoadFromConfig"
+On Error GoTo Err
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
@@ -263,6 +402,11 @@ mChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(&H602008)
 
 mTwipsPerBar = mConfig.GetSetting(ConfigSettingTwipsPerBar, 100)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 '@================================================================================
@@ -270,6 +414,9 @@ End Sub
 '@================================================================================
 
 Private Sub validateTimeFrame(ByVal tf As TimePeriod)
+
+Const ProcName As String = "validateTimeFrame"
+On Error GoTo Err
 
 Select Case tf.Units
 Case TimePeriodUnits.TimePeriodSecond, _
@@ -283,9 +430,14 @@ Case TimePeriodUnits.TimePeriodSecond, _
         TimePeriodUnits.TimePeriodTickMovement
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "validateTimeFrame", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Time period units not supported"
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

@@ -38,6 +38,9 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyConfigurations"
+
+
 Private Const ConfigSectionStudyConfig                  As String = "StudyConfig"
 
 '@================================================================================
@@ -78,14 +81,31 @@ End Sub
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+Dim failpoint As String
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get count() As Long
+Const ProcName As String = "count"
+Dim failpoint As String
+On Error GoTo Err
+
 count = mStudyConfigurations.count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -105,21 +125,43 @@ End Sub
 ' still in use etc
 Friend Sub Finish()
 Dim studyConfig As StudyConfiguration
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each studyConfig In mStudyConfigurations
     studyConfig.Finish
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function Item( _
                 ByVal index As Variant) As StudyConfiguration
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Item = mStudyConfigurations.Item(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
 Dim scSect As ConfigurationSection
 Dim sc As StudyConfiguration
+
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
+On Error GoTo Err
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
@@ -129,6 +171,11 @@ For Each scSect In mConfig
     sc.LoadFromConfig scSect
     mStudyConfigurations.Add sc, sc.ID
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -139,8 +186,17 @@ End Function
 
 Public Sub Remove( _
                 ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
 mStudyConfigurations.Remove studyConfig.ID
 studyConfig.RemoveFromConfig
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -149,16 +205,34 @@ End Sub
 
 Private Sub storeSettings()
 Dim sc As StudyConfiguration
+Const ProcName As String = "storeSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each sc In mStudyConfigurations
     storeStudyConfigSettings sc
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub storeStudyConfigSettings( _
                 ByVal studyConfig As StudyConfiguration)
+Const ProcName As String = "storeStudyConfigSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then
     studyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyConfig & "(" & studyConfig.ID & ")")
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

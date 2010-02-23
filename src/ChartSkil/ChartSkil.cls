@@ -87,6 +87,13 @@ Public Enum DrawModes
     DrawModeXorPen = vbXorPen
 End Enum
 
+Public Enum EllipsisModes
+    EllipsisNone = 0
+    EllipsisEnd = twwin32api.DT_END_ELLIPSIS
+    EllipsisPath = twwin32api.DT_PATH_ELLIPSIS
+    EllipsisWord = twwin32api.DT_WORD_ELLIPSIS
+End Enum
+
 Public Enum FillStyles
     FillSolid = vbFSSolid ' 0 Solid
     FillTransparent = vbFSTransparent ' 1 (Default) Transparent
@@ -171,6 +178,15 @@ Public Enum TextAlignModes
     AlignBoxTopRight
     AlignBoxCentreRight
     AlignBoxBottomRight
+End Enum
+
+Public Enum TextJustifyModes
+    JustifyLeft = twwin32api.DT_LEFT
+    JustifyRight = twwin32api.DT_RIGHT
+    JustifyCentre = twwin32api.DT_CENTER
+    JustifyTop = twwin32api.DT_TOP
+    JustifyVCentre = twwin32api.DT_VCENTER
+    JustifyBottom = twwin32api.DT_BOTTOM
 End Enum
 
 'Public Enum ToolTypes
@@ -258,6 +274,16 @@ Private Const ModuleName                    As String = "ChartSkil"
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function DegreesToRadians( _
+                ByVal degrees As Double) As Double
+DegreesToRadians = gDegreesToRadians(degrees)
+End Function
+
+Public Function RadiansToDegrees( _
+                ByVal radians As Double) As Double
+RadiansToDegrees = gRadiansToDegrees(radians)
+End Function
 
 '@================================================================================
 ' Helper Functions

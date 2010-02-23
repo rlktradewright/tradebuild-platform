@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyConfiguration"
+
 Private Const ConfigSectionParameters                           As String = "Parameters"
 Private Const ConfigSectionStudyConfigs                         As String = "StudyConfigs"
 Private Const ConfigSectionStudyValueConfigurations             As String = "StudyValueConfigurations"
@@ -109,8 +111,17 @@ End Sub
 '@================================================================================
 
 Public Property Let ChartRegionName(ByVal value As String)
+Const ProcName As String = "ChartRegionName"
+Dim failpoint As String
+On Error GoTo Err
+
 mChartRegionName = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ChartRegionName() As String
@@ -119,9 +130,18 @@ End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+Dim failpoint As String
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let HorizontalRulesLineSeries( _
@@ -138,8 +158,17 @@ ID = mIdent
 End Property
 
 Public Property Let InputValueNames(ByRef value() As String)
+Const ProcName As String = "InputValueNames"
+Dim failpoint As String
+On Error GoTo Err
+
 mInputValueNames = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InputValueNames() As String()
@@ -147,8 +176,17 @@ InputValueNames = mInputValueNames
 End Property
 
 Friend Property Let InstanceFullyQualifiedName(ByVal value As String)
+Const ProcName As String = "InstanceFullyQualifiedName"
+Dim failpoint As String
+On Error GoTo Err
+
 mInstanceFullyQualifiedName = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InstanceFullyQualifiedName() As String
@@ -156,8 +194,17 @@ InstanceFullyQualifiedName = mInstanceFullyQualifiedName
 End Property
 
 Public Property Let Name(ByVal value As String)
+Const ProcName As String = "Name"
+Dim failpoint As String
+On Error GoTo Err
+
 mName = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Name() As String
@@ -165,8 +212,17 @@ Name = mName
 End Property
 
 Public Property Let Parameters(ByVal value As Parameters)
+Const ProcName As String = "Parameters"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mParameters = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Parameters() As Parameters
@@ -174,8 +230,17 @@ Set Parameters = mParameters
 End Property
 
 Public Property Let StudyLibraryName(ByVal value As String)
+Const ProcName As String = "StudyLibraryName"
+Dim failpoint As String
+On Error GoTo Err
+
 mStudyLibraryName = value
 storeSettings
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyLibraryName() As String
@@ -189,6 +254,10 @@ End Property
 Public Property Let Study(ByVal value As Study)
 Dim lBarStudy As BarStudy
 
+Const ProcName As String = "Study"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mStudy = value
 If mStudy Is Nothing Then Exit Property
 
@@ -196,6 +265,11 @@ If TypeOf mStudy Is BarStudy Then
     Set lBarStudy = mStudy
     Set mBars = lBarStudy.Bars
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
     
 End Property
 
@@ -228,7 +302,16 @@ Set UnderlyingStudy = mUnderlyingStudy
 End Property
 
 Public Property Get ValueSeries(ByVal value As String) As IGraphicObjectSeries
+Const ProcName As String = "ValueSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ValueSeries = mStudyValueHandlers.Item(value).ValueSeries
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -236,6 +319,10 @@ End Property
 '@================================================================================
 
 Public Function Clone() As StudyConfiguration
+Const ProcName As String = "Clone"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Clone = New StudyConfiguration
 Clone.ChartRegionName = mChartRegionName
 Clone.InputValueNames = mInputValueNames
@@ -290,6 +377,11 @@ Next
 ' don't do a deep copy of the studyValueHandlers because it's
 ' immutable as far as non-Friend callers are concerned
 Clone.StudyValueHandlers = mStudyValueHandlers
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 ' Only called when a chart has been cleared, so no need to worry about whether regions are
@@ -297,6 +389,10 @@ End Function
 Friend Sub Finish()
 Dim svh As StudyValueHandler
 Dim sc As StudyConfiguration
+
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mStudyValueHandlers Is Nothing Then
     For Each svh In mStudyValueHandlers
@@ -308,10 +404,19 @@ End If
 For Each sc In mStudyConfigs
     sc.Finish
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mConfig = config
 
 If mConfig Is Nothing Then Exit Sub
@@ -333,10 +438,24 @@ mStudyHorizontalRules.LoadFromConfig mConfig.AddConfigurationSection(ConfigSecti
 
 Set mStudyConfigs = New StudyConfigurations
 mStudyConfigs.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudyConfigs)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then mConfig.Remove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -344,6 +463,10 @@ End Sub
 '@================================================================================
 
 Private Sub storeSettings()
+Const ProcName As String = "storeSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 If mConfig Is Nothing Then Exit Sub
 
 mConfig.SetSetting ConfigSettingName, mName
@@ -357,4 +480,9 @@ mStudyValueConfigurations.ConfigurationSection = mConfig.AddConfigurationSection
 mStudyHorizontalRules.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyHorizontalRules)
 
 mStudyConfigs.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyConfigs)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub

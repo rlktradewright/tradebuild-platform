@@ -21,19 +21,19 @@ Option Explicit
 ' Types
 '================================================================================
 
-Public Type Execution
-    execId         As String
-    time           As Date
-    AccountIdentifier As String
-    ContractSpecifier As ContractSpecifier
-    FillingExchange As String
-    Action         As OrderActions
-    Quantity       As Long
-    Price          As Double
-    OrderBrokerId  As String
-    OrderTradeBuildId  As String
-    IsLiquidation  As Boolean
-End Type
+'Public Type Execution
+'    ExecId         As String
+'    time           As Date
+'    AccountIdentifier As String
+'    ContractSpecifier As ContractSpecifier
+'    FillingExchange As String
+'    action         As OrderActions
+'    Quantity       As Long
+'    price          As Double
+'    OrderBrokerId  As String
+'    OrderTradeBuildId  As String
+'    IsLiquidation  As Boolean
+'End Type
 
 Public Type HistoricBar
     timestamp       As Date

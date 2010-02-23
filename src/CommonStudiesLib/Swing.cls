@@ -109,6 +109,9 @@ Private Sub customInitialise( _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
 
+Const ProcName As String = "customInitialise"
+On Error GoTo Err
+
 mStudyFoundation.ReplayUsingStudyValues = True
 
 customProcessParameters Parameters
@@ -131,6 +134,11 @@ mLowAfterHighPoint.value = DummyLow
 
 mTrend = TrendDirections.TrendUnknown
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub customNotify( _
@@ -139,7 +147,7 @@ Static sPrevVal As Variant
 Dim prevSwingHigh As SwingPoint
 Dim prevSwingLow As SwingPoint
 
-Dim failpoint As Long
+Const ProcName As String = "customNotify"
 On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
@@ -433,21 +441,25 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
+Const ProcName As String = "customNumberOfBarsRequired"
+On Error GoTo Err
+
 customNumberOfBarsRequired = 0
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
-Dim failpoint As Long
+Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
 
 For Each param In params
@@ -462,16 +474,20 @@ Next
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition
+Const ProcName As String = "customStudyDefinition"
+On Error GoTo Err
+
 Set customStudyDefinition = GSwing.StudyDefinition
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -485,15 +501,26 @@ End Function
 Public Property Get HighAfterLow( _
                 Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
+Const ProcName As String = "HighAfterLow"
+On Error GoTo Err
+
 thePoint = HighAfterLowPoint(excludingCurrentBar).value
 HighAfterLow.barNumber = thePoint.barNumber
 HighAfterLow.timestamp = thePoint.timestamp
 HighAfterLow.value = thePoint.value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get HighAfterLowPoint( _
                 Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
+Const ProcName As String = "HighAfterLowPoint"
+On Error GoTo Err
+
 If excludingCurrentBar Then
     If mSwingLow.value = DummyLow Then
         thePoint = mHighAfterLowPointExcl
@@ -516,20 +543,36 @@ End If
 HighAfterLowPoint.barNumber = thePoint.barNumber
 HighAfterLowPoint.timestamp = thePoint.timestamp
 HighAfterLowPoint.value = thePoint
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LowAfterHigh( _
                 Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
+Const ProcName As String = "LowAfterHigh"
+On Error GoTo Err
+
 thePoint = LowAfterHighPoint(excludingCurrentBar).value
 LowAfterHigh.barNumber = thePoint.barNumber
 LowAfterHigh.timestamp = thePoint.timestamp
 LowAfterHigh.value = thePoint.value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LowAfterHighPoint( _
                 Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
+Const ProcName As String = "LowAfterHighPoint"
+On Error GoTo Err
+
 If excludingCurrentBar Then
     If mSwingHigh.value = DummyHigh Then
         thePoint = mLowAfterHighPointExcl
@@ -552,50 +595,111 @@ End If
 LowAfterHighPoint.barNumber = thePoint.barNumber
 LowAfterHighPoint.timestamp = thePoint.timestamp
 LowAfterHighPoint.value = thePoint
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get swingHighPoint(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "swingHighPoint"
+On Error GoTo Err
+
 swingHighPoint = mSwingHighCache.GetSValue(ref)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get swingHigh(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
+Const ProcName As String = "swingHigh"
+On Error GoTo Err
+
 sh = mSwingHighCache.GetValue(ref)
 swingHigh.barNumber = sh.barNumber
 swingHigh.timestamp = sh.timestamp
 swingHigh.value = sh.value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get swingLowPoint(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "swingLowPoint"
+On Error GoTo Err
+
 swingLowPoint = mSwingLowCache.GetSValue(ref)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get swingLow(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
+Const ProcName As String = "swingLow"
+On Error GoTo Err
+
 sh = mSwingLowCache.GetValue(ref)
 swingLow.barNumber = sh.barNumber
 swingLow.timestamp = sh.timestamp
 swingLow.value = sh.value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Swing(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
+Const ProcName As String = "Swing"
+On Error GoTo Err
+
 sh = mSwingCache.GetValue(ref)
 Swing.barNumber = sh.barNumber
 Swing.timestamp = sh.timestamp
 Swing.value = sh.value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SwingPoint(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
+Const ProcName As String = "SwingPoint"
+On Error GoTo Err
+
 sh = mSwingCache.GetValue(ref)
 Swing.barNumber = sh.barNumber
 Swing.timestamp = sh.timestamp
 Swing.value = sh
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get trend() As TrendDirections
+Const ProcName As String = "trend"
+On Error GoTo Err
+
 trend = mTrend
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -611,6 +715,9 @@ Dim latestSwingLow As Double
 Dim prevSwingLow As Double
 Dim latestSwingHigh As Double
 Dim prevSwingHigh As Double
+
+Const ProcName As String = "calcTrendDirection"
+On Error GoTo Err
 
 mTrend = TrendUnknown
 
@@ -631,10 +738,18 @@ ElseIf (mSwingLow.value < latestSwingLow Or latestSwingLow < prevSwingLow) And _
 Else
     mTrend = TrendDirections.TrendSideways
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createImpliedSwingHigh(ByRef prevSwingHigh As SwingPoint)
 Dim tempSwingHigh As SwingPoint
+
+Const ProcName As String = "createImpliedSwingHigh"
+On Error GoTo Err
 
 If Not mIncludeImplicitSwingPoints Then Exit Sub
 
@@ -684,10 +799,18 @@ mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, tempSwingHigh.barNumber, t
 
 notifySwingLine
 notifySwingHighLine
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createImpliedSwingLow(ByRef prevSwingLow As SwingPoint)
 Dim tempSwingLow As SwingPoint
+
+Const ProcName As String = "createImpliedSwingLow"
+On Error GoTo Err
 
 If Not mIncludeImplicitSwingPoints Then Exit Sub
 
@@ -737,11 +860,19 @@ mSwingLineCache.AddValue mSwingLineBuilder.StudyLine, tempSwingLow.barNumber, te
 
 notifySwingLine
 notifySwingLowLine
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
+Const ProcName As String = "getStudyValue"
+On Error GoTo Err
+
 Select Case UCase$(valueName)
 Case UCase$(SwingValueSwingPoint)
     getStudyValue = Swing(ref)
@@ -756,11 +887,19 @@ Case UCase$(SwingValueSwingHighLine)
 Case UCase$(SwingValueSwingLowLine)
     getStudyValue = mSwingLowLineCache.GetSValue(ref)
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub notifySwingHighLine()
 Dim sv As SValue
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingHighLine"
+On Error GoTo Err
+
 sv = mSwingHighLineCache.GetSValue(0)
 Set evOut.Source = Me
 evOut.sVal.barNumber = sv.barNumber
@@ -769,11 +908,19 @@ evOut.sVal.timestamp = sv.timestamp
 Set evOut.sVal.value = mSwingHighLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingHighLine
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySwingHighPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingHighPoint"
+On Error GoTo Err
+
 sp = mSwingHighCache.GetSValue(0).value
 Set evOut.Source = Me
 evOut.sVal.barNumber = sp.barNumber
@@ -782,11 +929,19 @@ evOut.sVal.timestamp = sp.timestamp
 evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingHighPoint
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySwingLine()
 Dim sv As SValue
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingLine"
+On Error GoTo Err
+
 sv = mSwingLineCache.GetSValue(0)
 Set evOut.Source = Me
 evOut.sVal.barNumber = sv.barNumber
@@ -795,11 +950,19 @@ evOut.sVal.timestamp = sv.timestamp
 Set evOut.sVal.value = mSwingLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingLine
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySwingLowLine()
 Dim sv As SValue
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingLowLine"
+On Error GoTo Err
+
 sv = mSwingLowLineCache.GetSValue(0)
 Set evOut.Source = Me
 evOut.sVal.barNumber = sv.barNumber
@@ -808,11 +971,19 @@ evOut.sVal.timestamp = sv.timestamp
 Set evOut.sVal.value = mSwingLowLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingLowLine
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySwingLowPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingLowPoint"
+On Error GoTo Err
+
 sp = mSwingLowCache.GetSValue(0).value
 Set evOut.Source = Me
 evOut.sVal.barNumber = sp.barNumber
@@ -821,11 +992,19 @@ evOut.sVal.timestamp = sp.timestamp
 evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingLowPoint
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySwingPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
+Const ProcName As String = "notifySwingPoint"
+On Error GoTo Err
+
 sp = mSwingCache.GetSValue(0).value
 Set evOut.Source = Me
 evOut.sVal.barNumber = sp.barNumber
@@ -834,6 +1013,11 @@ evOut.sVal.timestamp = sp.timestamp
 evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingPoint
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -852,12 +1036,20 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
+Const ProcName As String = "Study_addStudy"
+On Error GoTo Err
+
 Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
                             taskName, _
                             taskData)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study_addStudyValueListener( _
@@ -866,32 +1058,73 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
+Const ProcName As String = "Study_addStudyValueListener"
+On Error GoTo Err
+
 Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
                             taskName, _
                             taskData)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_baseStudy() As Study
+Const ProcName As String = "Study_baseStudy"
+On Error GoTo Err
+
 Set Study_baseStudy = Me
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
 'Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
+Const ProcName As String = "Study_getStudyValue"
+On Error GoTo Err
+
 Study_getStudyValue = getStudyValue(valueName, ref)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study_getValueTicksize( _
                 ByVal valueName As String) As Double
 
+Const ProcName As String = "Study_getValueTicksize"
+On Error GoTo Err
+
+
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_id() As String
+Const ProcName As String = "Study_id"
+On Error GoTo Err
+
 Study_id = mStudyFoundation.id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_initialise( _
@@ -901,6 +1134,9 @@ Private Sub Study_initialise( _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
+Const ProcName As String = "Study_initialise"
+On Error GoTo Err
+
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -916,48 +1152,125 @@ customInitialise id, _
                 inputValueNames, _
                 underlyingStudy, _
                 pSession
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_instanceName() As String
+Const ProcName As String = "Study_instanceName"
+On Error GoTo Err
+
 Study_instanceName = mStudyFoundation.InstanceName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get Study_instancePath() As String
+Const ProcName As String = "Study_instancePath"
+On Error GoTo Err
+
 Study_instancePath = mStudyFoundation.InstancePath
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
+Const ProcName As String = "Study_Notify"
+On Error GoTo Err
+
 mStudyFoundation.NotifyInput ev
 customNotify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
+Const ProcName As String = "Study_numberOfBarsRequired"
+On Error GoTo Err
+
 Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_numberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
+Const ProcName As String = "Study_numberOfCachedValues"
+On Error GoTo Err
+
 Study_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_parameters() As Parameters
+Const ProcName As String = "Study_parameters"
+On Error GoTo Err
+
 Set Study_parameters = mStudyFoundation.Parameters
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
+Const ProcName As String = "Study_removeStudyValueListener"
+On Error GoTo Err
+
 mStudyFoundation.RemoveStudyValueListener listener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Study_setInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
+Const ProcName As String = "Study_setInputTicksize"
+On Error GoTo Err
+
 If UCase$(inputName) = UCase$(SwingInputValue) Then mTickSize = tickSize
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_studyDefinition() As StudyDefinition
+Const ProcName As String = "Study_studyDefinition"
+On Error GoTo Err
+
 Set Study_studyDefinition = customStudyDefinition
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 

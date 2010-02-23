@@ -68,8 +68,6 @@ Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
 Private mTradeBuildContract As Contract
 Private mContractWrapper As ContractWrapper
 
-Private mName As String
-
 Private WithEvents mTWSAPI As TWSAPI
 Attribute mTWSAPI.VB_VarHelpID = -1
 
@@ -96,6 +94,7 @@ End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
+Const ProcName As String = "ContractDetailsRequester_contractsLoaded"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -112,12 +111,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ContractDetailsRequester_contractsLoaded", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
+Const ProcName As String = "ContractDetailsRequester_contractSpecifierInvalid"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -128,7 +128,7 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.LOUnknownContract, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="ContractDetailsRequester_contractSpecifierInvalid", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -136,6 +136,7 @@ End Sub
 '================================================================================
 
 Private Function IOrderSubmitter_cancelOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex) As Boolean
+Const ProcName As String = "IOrderSubmitter_cancelOrderPlex"
 Dim entryOrder As TradeBuildSP.IOrder
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
@@ -192,17 +193,18 @@ End If
 ' need some stuff here to cancel if it's an oca group
 Exit Function
 Err:
-handleFatalError "IOrderSubmitter_cancelOrderPlex"
+handleFatalError ProcName
 
 End Function
 
 Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_cancelStopOrder"
 Dim stopOrder As TradeBuildSP.IOrder
 
 On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
 If stopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    "IBTWSSP.OrderSubmitter::cancelStopOrder", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Order plex " & pOrderPlex.key & " has no stop order"
 
 Select Case stopOrder.status
@@ -211,23 +213,24 @@ Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    "IBTWSSP.OrderSubmitter::cancelStopOrder", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Stop order state invalid for cancellation"
 Case Else
     cancelOrder stopOrder, OrderModeStop
 End Select
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_cancelStopOrder"
+handleFatalError ProcName
 End Sub
 
 Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_cancelTargetOrder"
 Dim targetOrder As TradeBuildSP.IOrder
 
 On Error GoTo Err
 Set targetOrder = pOrderPlex.targetOrder
 If targetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Order plex " & pOrderPlex.key & " has no target order"
 
 
@@ -236,14 +239,14 @@ Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
+                                    ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Target order state invalid for cancellation"
 Case Else
     cancelOrder targetOrder, OrderModeTarget
 End Select
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_cancelTargetOrder"
+handleFatalError ProcName
 End Sub
 
 Private Property Let IOrderSubmitter_clockRate(ByVal RHS As Single)
@@ -251,22 +254,29 @@ Private Property Let IOrderSubmitter_clockRate(ByVal RHS As Single)
 End Property
 
 Private Sub IOrderSubmitter_executeOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_executeOrderPlex"
 Dim entryOrder As TradeBuildSP.IOrder
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim transmit As Boolean
+Dim orderPlexId As Long
 
 On Error GoTo Err
 Set entryOrder = pOrderPlex.entryOrder
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
 
+orderPlexId = mTWSAPI.GetNextOrderPlexId
+
 If Not entryOrder Is Nothing Then
+    entryOrder.brokerId = orderPlexId + 1
     transmit = True
     If Not stopOrder Is Nothing Then
+        stopOrder.brokerId = orderPlexId + 2
         If stopOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
     If Not targetOrder Is Nothing Then
+        targetOrder.brokerId = orderPlexId + 3
         If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
     End If
         
@@ -295,14 +305,21 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_executeOrderPlex"
+handleFatalError ProcName
 End Sub
 
 Private Sub IOrderSubmitter_Finish()
+Const ProcName As String = "IOrderSubmitter_Finish"
+On Error GoTo Err
 
+finishIt
 mOrderSubmissionServiceProvider.orderSubmitterFinished Me
-Finish
+Set mOrderSubmissionServiceProvider = Nothing
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmitter_modifyOrderPlex( _
@@ -311,6 +328,8 @@ Private Sub IOrderSubmitter_modifyOrderPlex( _
                 ByVal stopOrderChanged As Boolean, _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
+Const ProcName As String = "IOrderSubmitter_modifyOrderPlex"
+
 
 Dim ocaGroup As String
 Dim parentId As String
@@ -346,7 +365,7 @@ If closeoutOrderChanged Then
 End If
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_modifyOrderPlex"
+handleFatalError ProcName
 End Sub
 
 Private Property Get IOrderSubmitter_permittedOrderAttributes() As Long
@@ -366,6 +385,7 @@ IOrderSubmitter_permittedStopTriggerMethods = mContractWrapper.permittedStopTrig
 End Property
 
 Private Sub IOrderSubmitter_resubmitStopAndTargetOrders(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_resubmitStopAndTargetOrders"
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
@@ -382,10 +402,11 @@ targetOrder.brokerId = "" ' force a new id to be allocated
 placeOrder targetOrder, True, "0", ocaGroup, OrderModeTarget
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_resubmitStopAndTargetOrders"
+handleFatalError ProcName
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_resubmitStopOrder"
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
@@ -403,10 +424,11 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_resubmitStopOrder"
+handleFatalError ProcName
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Const ProcName As String = "IOrderSubmitter_resubmitTargetOrder"
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
@@ -424,7 +446,7 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "IOrderSubmitter_resubmitTargetOrder"
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -432,6 +454,7 @@ End Sub
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+Const ProcName As String = "mTWSAPI_Connected"
 On Error GoTo Err
 
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
@@ -439,52 +462,57 @@ If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
 
 Err:
-handleFatalError "mTWSAPI_Connected"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+Const ProcName As String = "mTWSAPI_ConnectFailed"
 On Error GoTo Err
 
 mServiceConsumer.NotReady
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_ConnectFailed"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_ConnectionToIBClosed()
+Const ProcName As String = "mTWSAPI_ConnectionToIBClosed"
 On Error GoTo Err
 
 mServiceConsumer.NotReady
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_ConnectionToIBClosed"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_ConnectionToIBRecovered()
+Const ProcName As String = "mTWSAPI_ConnectionToIBRecovered"
 On Error GoTo Err
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_ConnectionToIBRecovered"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
+Const ProcName As String = "mTWSAPI_ConnectionToTWSClosed"
 On Error GoTo Err
 
 mServiceConsumer.NotReady
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_ConnectionToTWSClosed"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
+Const ProcName As String = "mTWSAPI_Disconnected"
 On Error GoTo Err
 
 mServiceConsumer.NotReady
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_Disconnected"
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -495,114 +523,104 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub executionDetails( _
-                ByVal pContractSpecifier As ContractSpecifier, _
-                ByVal AccountIdentifier As String, _
-                ByVal Action As TradeBuildSP.OrderActions, _
-                ByVal execId As String, _
-                ByVal FillingExchange As String, _
-                ByVal IsLiquidation As Boolean, _
-                ByVal OrderBrokerId As String, _
-                ByVal OrderTradeBuildId As String, _
-                ByVal Price As Double, _
-                ByVal Quantity As Long, _
-                ByVal fillTime As Date)
+Friend Sub ExecutionReport( _
+                ByVal pExecReport As ExecutionReport)
+Const ProcName As String = "ExecutionReport"
 Dim failpoint As Long
 On Error GoTo Err
 
-mServiceConsumer.executionDetails pContractSpecifier, _
-                                AccountIdentifier, _
-                                Action, _
-                                execId, _
-                                FillingExchange, _
-                                IsLiquidation, _
-                                OrderBrokerId, _
-                                OrderTradeBuildId, _
-                                Price, _
-                                Quantity, _
-                                fillTime
+mServiceConsumer.ExecutionReport pExecReport
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="executionDetails", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
 Dim failpoint As Long
 On Error GoTo Err
 
+finishIt
 Set mOrderSubmissionServiceProvider = Nothing
-Set mCommonServiceConsumer = Nothing
-Set mServiceConsumer = Nothing
-Set mTradeBuildContract = Nothing
-Set mTWSAPI = Nothing
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pOrderSubmissionServiceProvider As IOrderSubmissionSrvcProvider, _
-                ByVal commonServiceConsumer As ICommonServiceConsumer, _
+                ByVal CommonServiceConsumer As ICommonServiceConsumer, _
                 ByVal orderSubmissionServiceConsumer As IOrderSubmissionSrvcConsumer, _
                 ByVal pContract As Contract, _
                 ByVal pTWSAPI As TWSAPI, _
                 ByVal Handle As Long)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mOrderSubmissionServiceProvider = pOrderSubmissionServiceProvider
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = orderSubmissionServiceConsumer
 Set mTradeBuildContract = pContract
 Set mTWSAPI = pTWSAPI
 mHandle = Handle
 
 mTWSAPI.RequestContract mTradeBuildContract.specifier, Me
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub invalidOrder( _
-                ByVal orderId As String, _
+Friend Sub InvalidOrder( _
+                ByVal orderID As String, _
                 ByVal message As String)
+Const ProcName As String = "InvalidOrder"
                 
 Dim failpoint As Long
 On Error GoTo Err
 
-mServiceConsumer.RejectOrder orderId, _
+mServiceConsumer.RejectOrder orderID, _
                         message
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="invalidOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub orderReport( _
-                ByVal lOrderReport As orderReport)
+Friend Sub OrderReport( _
+                ByVal lOrderReport As OrderReport)
+Const ProcName As String = "OrderReport"
 Dim failpoint As Long
 On Error GoTo Err
 
-mServiceConsumer.orderReport lOrderReport
+mServiceConsumer.OrderReport lOrderReport
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="orderReport", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub updateStatus( _
-                ByVal orderId As String, _
-                ByVal status As TradeBuildSP.OrderStatuses)
+Friend Sub OrderStatusReport( _
+                ByVal pOrderStatusReport As OrderStatusReport)
+Const ProcName As String = "OrderStatusReport"
+
 
 Dim failpoint As Long
 On Error GoTo Err
 
-mServiceConsumer.OrderStatus orderId, status
+mServiceConsumer.OrderStatusReport pOrderStatusReport
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="updateStatus", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 '================================================================================
 ' Helper Functions
@@ -611,19 +629,45 @@ End Sub
 Private Sub cancelOrder( _
                 ByVal pOrder As TradeBuildSP.IOrder, _
                 ByRef orderMode As String)
+Const ProcName As String = "cancelOrder"
 Dim failpoint As Long
 On Error GoTo Err
 
 logMessage "Cancel " & orderMode & " order: " & _
             "broker id=" & pOrder.brokerId & _
-            "; TradeBuild id=" & pOrder.tradeBuildId, _
+            "; TradeBuild id=" & pOrder.tradebuildId, _
             "cancelOrder"
+If pOrder.status = OrderStatusPendingSubmit Then
+    ' if an order is cancelled immediately after being placed, and before
+    ' an orderStatus or openOrder notification has been received from TWS,
+    ' TWS sometimes just cancels it without ever sending either of these,
+    ' so we need to generate one as a backstop
+    mTWSAPI.GenerateDeferredOrderCancelNotification pOrder.brokerId, mTWSAPI.clientID
+End If
+
 mTWSAPI.cancelOrder pOrder.brokerId
+
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="cancelOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Sub
+
+Private Sub finishIt()
+Const ProcName As String = "finishIt"
+Dim failpoint As Long
+On Error GoTo Err
+
+Set mCommonServiceConsumer = Nothing
+Set mServiceConsumer = Nothing
+Set mTradeBuildContract = Nothing
+Set mTWSAPI = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -636,7 +680,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
@@ -658,20 +708,25 @@ Private Sub placeOrder( _
                 ByVal parentId As String, _
                 ByVal ocaGroup As String, _
                 ByRef orderMode As String)
+Const ProcName As String = "placeOrder"
 Dim failpoint As Long
 On Error GoTo Err
 
 gLogger.Log LogLevelNormal, _
             "Place " & orderMode & " order: " & _
             "broker id=" & pOrder.brokerId & _
-            "; TradeBuild id=" & pOrder.tradeBuildId
+            "; TradeBuild id=" & pOrder.tradebuildId
 mTWSAPI.placeOrder Me, pOrder, transmit, parentId, ocaGroup, ""
-If pOrder.status = OrderStatusCreated Then mServiceConsumer.OrderStatus pOrder.tradeBuildId, OrderStatusPendingSubmit
+If pOrder.status = OrderStatusCreated Then
+    Dim statusRpt As New OrderStatusReport
+    statusRpt.Initialise pOrder.tradebuildId, OrderStatusPendingSubmit
+    mServiceConsumer.OrderStatusReport statusRpt
+End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="placeOrder", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

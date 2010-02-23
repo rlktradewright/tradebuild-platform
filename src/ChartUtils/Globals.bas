@@ -70,12 +70,6 @@ Private mConfig                             As ConfigurationSection
 ' Properties
 '@================================================================================
 
-Public Property Get gErrorLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("error")
-Set gErrorLogger = lLogger
-End Property
-
 Public Property Get gLogger() As Logger
 Static lLogger As Logger
 If lLogger Is Nothing Then Set lLogger = GetLogger("log")
@@ -90,12 +84,17 @@ Public Function gGetDefaultStudyConfiguration( _
                 ByVal Name As String, _
                 ByVal studyLibName As String) As StudyConfiguration
 Dim studyConfig As StudyConfiguration
+Const ProcName As String = "gGetDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 On Error Resume Next
-Set studyConfig = mDefaultStudyConfigurations.item(calcDefaultStudyKey(Name, studyLibName))
-On Error GoTo 0
+Set studyConfig = mDefaultStudyConfigurations.Item(calcDefaultStudyKey(Name, studyLibName))
+On Error GoTo Err
+
 If Not studyConfig Is Nothing Then
     Set gGetDefaultStudyConfiguration = studyConfig.Clone
 Else
@@ -125,7 +124,7 @@ Else
     If sd.StudyInputDefinitions.count > 1 Then
         Dim i As Long
         For i = 2 To sd.StudyInputDefinitions.count
-            InputValueNames(i - 1) = sd.StudyInputDefinitions.item(i).Name
+            InputValueNames(i - 1) = sd.StudyInputDefinitions.Item(i).Name
         Next
     End If
     studyConfig.InputValueNames = InputValueNames
@@ -134,7 +133,7 @@ Else
     Dim studyValueConfig As StudyValueConfiguration
     
     For Each studyValueDef In sd.StudyValueDefinitions
-        Set studyValueConfig = studyConfig.StudyValueConfigurations.add(studyValueDef.Name)
+        Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(studyValueDef.Name)
 
         studyValueConfig.IncludeInChart = studyValueDef.IncludeInChart
         Select Case studyValueDef.ValueMode
@@ -163,6 +162,11 @@ Else
     gSetDefaultStudyConfiguration studyConfig
     Set gGetDefaultStudyConfiguration = studyConfig
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub gLoadDefaultStudyConfigurationsFromConfig( _
@@ -170,7 +174,9 @@ Public Sub gLoadDefaultStudyConfigurationsFromConfig( _
 Dim sc As StudyConfiguration
 Dim scSect As ConfigurationSection
 
-Dim failpoint As Long
+Const ProcName As String = "gLoadDefaultStudyConfigurationsFromConfig"
+Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -180,28 +186,27 @@ Set mDefaultStudyConfigurations = New Collection
 For Each scSect In mConfig
     Set sc = New StudyConfiguration
     sc.LoadFromConfig scSect
-    mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
+    mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(sc.Name, sc.StudyLibraryName)
 Next
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "gLoadDefaultStudyConfigurationsFromConfig" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-If errNumber = VBErrorCodes.VbErrElementAlreadyExists Then
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     gLogger.Log LogLevelNormal, "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")"
     Resume Next
 End If
-
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub gSetDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)
 Dim sc As StudyConfiguration
 Dim key As String
+
+Const ProcName As String = "gSetDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
 
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
@@ -211,7 +216,7 @@ key = calcDefaultStudyKey(value.Name, value.StudyLibraryName)
 
 On Error Resume Next
 Set sc = mDefaultStudyConfigurations(key)
-On Error GoTo 0
+On Error GoTo Err
 
 If Not sc Is Nothing Then
     sc.RemoveFromConfig
@@ -220,8 +225,13 @@ End If
 
 Set sc = value.Clone
 sc.UnderlyingStudy = Nothing
-mDefaultStudyConfigurations.add sc, key
+mDefaultStudyConfigurations.Add sc, key
 sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

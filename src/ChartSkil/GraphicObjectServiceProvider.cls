@@ -22,7 +22,13 @@ Option Explicit
 '================================================================================
 
 '================================================================================
-' Member variables and constants
+' Constants
+'================================================================================
+
+Private Const ModuleName                As String = "GraphObjServiceProvider"
+
+'================================================================================
+' Member variables
 '================================================================================
 
 Private mRegionRef As WeakReference
@@ -58,36 +64,90 @@ End Property
 
 Friend Sub AddGraphicObject( _
                 ByVal graphObj As IGraphicObject)
+Const ProcName As String = "AddGraphicObject"
+Dim failpoint As String
+On Error GoTo Err
+
 regionObj.GOSP_AddGraphicObject graphObj
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Finish()
 Set mRegionRef = Nothing
 End Sub
 
-Friend Sub ObjectChanged(ByVal Handle As Long, _
+Friend Sub ObjectChanged(ByVal handle As Long, _
                 ByRef areaToRedraw As TRectangle)
-regionObj.GOSP_ObjectChanged Handle, areaToRedraw
+Const ProcName As String = "ObjectChanged"
+Dim failpoint As String
+On Error GoTo Err
+
+regionObj.GOSP_ObjectChanged handle, areaToRedraw
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub ObjectUndrawn(ByVal Handle As Long, _
+Friend Sub ObjectUndrawn(ByVal handle As Long, _
                 ByRef undrawnArea As TRectangle)
-regionObj.GOSP_ObjectUndrawn Handle, undrawnArea
+Const ProcName As String = "ObjectUndrawn"
+Dim failpoint As String
+On Error GoTo Err
+
+regionObj.GOSP_ObjectUndrawn handle, undrawnArea
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub PaintRegion( _
                 ByVal recalculate As Boolean)
+Const ProcName As String = "PaintRegion"
+Dim failpoint As String
+On Error GoTo Err
+
 regionObj.GOSP_PaintRegion recalculate
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RecalcBoundary( _
                 ByVal SeriesID As Long)
+Const ProcName As String = "RecalcBoundary"
+Dim failpoint As String
+On Error GoTo Err
+
 regionObj.GOSP_RecalcBoundary SeriesID
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RemoveObject( _
-                ByVal Handle As Long)
-regionObj.GOSP_RemoveObject Handle
+                ByVal handle As Long)
+Const ProcName As String = "RemoveObject"
+Dim failpoint As String
+On Error GoTo Err
+
+regionObj.GOSP_RemoveObject handle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================

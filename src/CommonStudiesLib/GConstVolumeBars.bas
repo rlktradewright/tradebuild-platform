@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GConstVolumeBars"
+
 Public Const ConstVolBarsInputOpenInterest As String = "Open interest"
 Public Const ConstVolBarsInputOpenInterestUcase As String = "OPEN INTEREST"
 
@@ -52,128 +54,152 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue ConstVolBarsParamVolPerBar, 1000
+    mDefaultParameters.SetParameterValue ConstVolBarsParamVolPerBar, 1000
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
 Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 ReDim ar(6) As Variant
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = ConstVolBarsName
-    mStudyDefinition.needsBars = False
-    mStudyDefinition.shortName = ConstVolBarsShortName
+    mStudyDefinition.NeedsBars = False
+    mStudyDefinition.ShortName = ConstVolBarsShortName
     mStudyDefinition.Description = "Constant volume bars " & _
                         "divide price movement into periods (bars) of equal volume. " & _
                         "For each period the open, high, low and close price values " & _
                         "are determined."
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputPrice)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Price"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTotalVolume)
-    inputDef.inputType = InputTypeInteger
+    inputDef.InputType = InputTypeInteger
     inputDef.Description = "Accumulated volume"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTickVolume)
-    inputDef.inputType = InputTypeInteger
+    inputDef.InputType = InputTypeInteger
     inputDef.Description = "Tick volume"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputOpenInterest)
-    inputDef.inputType = InputTypeInteger
+    inputDef.InputType = InputTypeInteger
     inputDef.Description = "Open interest"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstVolBarsValueBar)
     valueDef.Description = "The constant volume bars"
-    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = DefaultRegionNone
     valueDef.IncludeInChart = True
-    valueDef.valueMode = ValueModeBar
-    valueDef.valueType = ValueTypeReal
+    valueDef.ValueMode = ValueModeBar
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpen)
     valueDef.Description = "Bar open value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHigh)
     valueDef.Description = "Bar high value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueLow)
     valueDef.Description = "Bar low value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueClose)
     valueDef.Description = "Bar close value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.isDefault = True
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.IsDefault = True
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
     valueDef.Description = "Bar volume"
-    valueDef.defaultRegion = DefaultRegionCustom
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeInteger
+    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)
     valueDef.Description = "Bar tick volume"
-    valueDef.defaultRegion = DefaultRegionCustom
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeInteger
+    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpenInterest)
     valueDef.Description = "Bar open interest"
-    valueDef.defaultRegion = DefaultRegionCustom
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeInteger
+    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
     valueDef.Description = "Bar H+L/2 value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHLC3)
     valueDef.Description = "Bar H+L+C/3 value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOHLC4)
     valueDef.Description = "Bar O+H+L+C/4 value"
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstVolBarsParamVolPerBar)
     paramDef.Description = "The volume in each constant volume bar"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

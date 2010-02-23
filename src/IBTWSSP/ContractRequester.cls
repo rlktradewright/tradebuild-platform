@@ -71,18 +71,20 @@ Private mContractsBuilder As ContractsBuilder
 Public Sub ContractDetailsRequester_cancelRequest( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
+Const ProcName As String = "ContractDetailsRequester_cancelRequest"
 On Error GoTo Err
 mNumOutstandingRequests = mNumOutstandingRequests - 1
-mContractsBuilder.unableToLoad reason, mName
+mContractsBuilder.UnableToLoad reason, mName
 checkIfFinished
 Exit Sub
 
 Err:
-handleFatalError "ContractDetailsRequester_cancelRequest"
+handleFatalError ProcName
 End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
+Const ProcName As String = "ContractDetailsRequester_contractsLoaded"
 Dim lContractWrapper As ContractWrapper
 
 On Error GoTo Err
@@ -94,12 +96,13 @@ If mNumOutstandingRequests = 0 Then mContractInfoServiceConsumer.LoadComplete mH
 checkIfFinished
 Exit Sub
 Err:
-handleFatalError "ContractDetailsRequester_contractsLoaded"
+handleFatalError ProcName
 End Sub
 
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
+Const ProcName As String = "ContractDetailsRequester_contractSpecifierInvalid"
 On Error GoTo Err
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 If mNumOutstandingRequests = 0 Then
@@ -115,7 +118,7 @@ checkIfFinished
 Exit Sub
 
 Err:
-handleFatalError "ContractDetailsRequester_contractSpecifierInvalid"
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -131,6 +134,7 @@ End Sub
 '@================================================================================
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -143,17 +147,19 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractInfoServiceProvider As ContractInfoServiceProvider, _
-                ByVal commonServiceConsumer As ICommonServiceConsumer, _
+                ByVal CommonServiceConsumer As ICommonServiceConsumer, _
                 ByVal ContractInfoServiceConsumer As IContractInfoServiceConsumer, _
                 ByVal pTWSAPI As TWSAPI, _
                 ByVal pContractsBuilder As ContractsBuilder, _
                 ByVal Name As String, _
                 ByVal Handle As Long)
+Const ProcName As String = "Initialise"
+
 
 Dim contractSpec As ContractSpecifier
 
@@ -164,7 +170,7 @@ mName = Name
 mHandle = Handle
 
 Set mContractInfoServiceProvider = pContractInfoServiceProvider
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 Set mContractInfoServiceConsumer = ContractInfoServiceConsumer
 
 Set mContractsBuilder = pContractsBuilder
@@ -233,7 +239,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Initialise", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -241,6 +247,7 @@ End Sub
 '@================================================================================
 
 Private Sub checkIfFinished()
+Const ProcName As String = "checkIfFinished"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -252,7 +259,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="checkIfFinished", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -265,7 +272,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 

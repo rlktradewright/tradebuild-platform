@@ -97,9 +97,9 @@ Begin VB.Form fDataCollectorUI
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ConfigDetailsButton"
+      Tab(2).Control(0)=   "Label4"
       Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "Label4"
+      Tab(2).Control(2)=   "ConfigDetailsButton"
       Tab(2).ControlCount=   3
       Begin VB.CommandButton ConfigDetailsButton 
          Caption         =   "Details..."
@@ -355,6 +355,8 @@ Implements TickfileWriterListener
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "fDataCollectorUI"
+
 Private Const TickerScrollMax As Integer = 32767
 Private Const TickerScrollMin As Integer = 0
 
@@ -414,23 +416,42 @@ Private mConfigManager As ConfigManager
 '================================================================================
 
 Private Sub Form_Initialize()
+Const ProcName As String = "Form_Initialize"
+On Error GoTo Err
+
 InitCommonControls
 Set mTimerList = GetGlobalTimerList
 ReDim mTickers(99) As TickerTableEntry
 Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
-gLogger.AddLogListener Me
+GetLogger("log").AddLogListener Me
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
+
 mStartStopButtonInitialLeft = StartStopButton.Left
 TickerScroll.Min = TickerScrollMin
 TickerScroll.Max = TickerScrollMax
 mLineSpacing = ShortNameText(0).Height - Screen.TwipsPerPixelY
 mCurrentHeight = Me.Height
 mCurrentWidth = Me.Width
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+Const ProcName As String = "Form_QueryUnload"
+On Error GoTo Err
+
 Select Case UnloadMode
 Case QueryUnloadConstants.vbAppTaskManager
 Case QueryUnloadConstants.vbAppWindows
@@ -441,28 +462,56 @@ Case QueryUnloadConstants.vbFormControlMenu
                     vbYesNo + vbDefaultButton2 + vbQuestion) = vbNo Then Cancel = True
     End If
 End Select
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Resize()
+
+Const ProcName As String = "Form_Resize"
+On Error GoTo Err
 
 If Me.WindowState = vbMinimized Then Exit Sub
 If Me.Height <> mCurrentHeight Then resizeHeight
 If Me.Width <> mCurrentWidth Then resizeWidth
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub Form_Terminate()
+Const ProcName As String = "Form_Terminate"
+On Error GoTo Err
+
 TerminateTWUtilities
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+Const ProcName As String = "Form_Unload"
+On Error GoTo Err
+
 TradeBuild.TradeBuildAPI.ServiceProviders.RemoveAll
 
-gLogger.Log LogLevelNormal, "Data Collector program exiting"
-gLogger.RemoveLogListener Me
+LogMessage "Data Collector program exiting"
+GetLogger("log").RemoveLogListener Me
 
-gKillLogging
 TerminateTWUtilities
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -472,21 +521,29 @@ End Sub
 Private Sub BarWriterListener_notify(ev As TradeBuild26.WriterEvent)
 Dim tk As ticker
 
+Const ProcName As String = "BarWriterListener_notify"
+On Error GoTo Err
+
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Bar writer not ready for " & _
-                tk.Contract.specifier.localSymbol
+    LogMessage "Bar writer not ready for " & _
+                tk.Contract.Specifier.localSymbol
 Case WriterNotifications.WriterReady
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Bar writer ready for " & _
-                tk.Contract.specifier.localSymbol
+    LogMessage "Bar writer ready for " & _
+                tk.Contract.Specifier.localSymbol
 Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Writing bars for " & _
-                tk.Contract.specifier.localSymbol & _
+    LogMessage "Writing bars for " & _
+                tk.Contract.Specifier.localSymbol & _
                 " to " & ev.filename
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -495,9 +552,21 @@ End Sub
 
 Private Sub LogListener_finish()
 'nothing to do
+Const ProcName As String = "LogListener_finish"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+
+Const ProcName As String = "LogListener_Notify"
+On Error GoTo Err
 
 If Len(LogText.Text) >= 32767 Then
     ' clear some space at the start of the textbox
@@ -511,6 +580,11 @@ LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
 LogText.SelText = mFormatter.FormatRecord(logrec)
 LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -518,39 +592,111 @@ End Sub
 '================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_ask"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_bid"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_high"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_Low"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_openInterest"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_previousClose"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+Const ProcName As String = "QuoteListener_sessionOpen"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_trade"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
+Const ProcName As String = "QuoteListener_volume"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -559,14 +705,40 @@ End Sub
 
 Private Sub RawMarketDepthListener_MarketDepthNotAvailable(ByVal reason As String)
 
+Const ProcName As String = "RawMarketDepthListener_MarketDepthNotAvailable"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub RawMarketDepthListener_resetMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
 
+Const ProcName As String = "RawMarketDepthListener_resetMarketDepth"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub RawMarketDepthListener_updateMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
+Const ProcName As String = "RawMarketDepthListener_updateMarketDepth"
+On Error GoTo Err
+
 processTickEvent ev.Source
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -576,6 +748,9 @@ End Sub
 Private Sub StateChangeListener_Change(ev As StateChangeEvent)
 Dim tli As TimerListItem
 
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
 Set tli = ev.Source
 If Not tli Is Nothing Then
     If ev.State = TimerListItemStates.TimerListItemStateExpired Then
@@ -583,6 +758,11 @@ If Not tli Is Nothing Then
         Set mTickers(tli.Data).tli = Nothing
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -592,21 +772,29 @@ End Sub
 Private Sub TickfileWriterListener_notify(ev As TradeBuild26.WriterEvent)
 Dim tk As ticker
 
+Const ProcName As String = "TickfileWriterListener_notify"
+On Error GoTo Err
+
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Tickfile writer not ready for " & _
-                    tk.Contract.specifier.localSymbol
+    LogMessage "Tickfile writer not ready for " & _
+                    tk.Contract.Specifier.localSymbol
 Case WriterNotifications.WriterReady
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Tickfile writer ready for " & _
-                    tk.Contract.specifier.localSymbol
+    LogMessage "Tickfile writer ready for " & _
+                    tk.Contract.Specifier.localSymbol
 Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
-    gLogger.Log LogLevelNormal, "Writing tickdata for " & _
-                tk.Contract.specifier.localSymbol & _
+    LogMessage "Writing tickdata for " & _
+                tk.Contract.Specifier.localSymbol & _
                 " to " & ev.filename
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -615,31 +803,63 @@ End Sub
 
 Private Sub ConfigDetailsButton_Click()
 Dim f As New fConfig
+Const ProcName As String = "ConfigDetailsButton_Click"
+On Error GoTo Err
+
 Set f = New fConfig
 
 f.initialise mConfigManager, True
 f.Show vbModeless
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+
 End Sub
 
 Private Sub ShowHideMonitorButton_Click()
+Const ProcName As String = "ShowHideMonitorButton_Click"
+On Error GoTo Err
+
 If mActivityMonitorVisible Then
     hideActivityMonitor
 Else
     showActivityMonitor
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StartStopButton_Click()
+Const ProcName As String = "StartStopButton_Click"
+On Error GoTo Err
+
 If mCollectingData Then
     stopCollecting "Data collection stopped by user", True
 Else
     startCollecting "Data collection started by user"
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TickerScroll_Change()
+Const ProcName As String = "TickerScroll_Change"
+On Error GoTo Err
+
 scrollTickers
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -647,11 +867,19 @@ End Sub
 '================================================================================
 
 Private Sub mClock_Tick()
+Const ProcName As String = "mClock_Tick"
+On Error GoTo Err
+
 TicksPerSecText = mTickCount
 TicksPerSecText.Refresh
 mTickCount = 0
 SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
 SecsSinceLastTickText.Refresh
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -660,6 +888,9 @@ End Sub
 
 Private Sub mDataCollector_CollectionStarted()
 Dim s As String
+Const ProcName As String = "mDataCollector_CollectionStarted"
+On Error GoTo Err
+
 If mDataCollector.nextEndTime <> 0 Then
     s = "Collection end: " & _
         FormatDateTime(mDataCollector.nextEndTime, vbShortDate) & " " & _
@@ -675,10 +906,18 @@ End If
 mStartStopTimePanel.Text = s
 
 setStarted
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_CollectionStopped()
 Dim s As String
+Const ProcName As String = "mDataCollector_CollectionStopped"
+On Error GoTo Err
+
 If mDataCollector.nextStartTime <> 0 Then
     s = "Collection start: " & _
         FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
@@ -694,50 +933,110 @@ End If
 mStartStopTimePanel.Text = s
 
 setStopped
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_connected()
+Const ProcName As String = "mDataCollector_connected"
+On Error GoTo Err
+
 ConnectionStatusText.BackColor = vbGreen
 StartStopButton.enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_connectFailed(ByVal description As String)
+Const ProcName As String = "mDataCollector_connectFailed"
+On Error GoTo Err
+
 ConnectionStatusText.BackColor = vbRed
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_ConnectionClosed()
+Const ProcName As String = "mDataCollector_ConnectionClosed"
+On Error GoTo Err
+
 ConnectionStatusText.BackColor = vbRed
 StartStopButton.enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_Error(ev As TWUtilities30.ErrorEvent)
-gLogger.Log LogLevelSevere, _
-            "Error " & ev.errorCode & ": " & vbCrLf & _
-            ev.errorMessage
+Const ProcName As String = "mDataCollector_Error"
+On Error GoTo Err
+
+LogMessage "Error " & ev.ErrorCode & ": " & vbCrLf & _
+            ev.errorMessage, _
+            LogLevelSevere
+
 stopCollecting "Closing due to error", False
 Unload Me
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_ExitProgram()
+Const ProcName As String = "mDataCollector_ExitProgram"
+On Error GoTo Err
+
 Unload Me
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_FatalError(ev As TWUtilities30.ErrorEvent)
-On Error Resume Next
-gLogger.Log LogLevelSevere, _
-            "Fatal error " & ev.errorCode & vbCrLf & _
-            ev.errorMessage
+Const ProcName As String = "mDataCollector_FatalError"
+On Error GoTo Err
 
-' TradeBuild will end the program abruptly if we exit back to it
+gHandleFatalError
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_Reconnecting()
+Const ProcName As String = "mDataCollector_Reconnecting"
+On Error GoTo Err
+
 StartStopButton.enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataCollector_TickerAdded(ByVal ticker As ticker)
 Dim i As Long
 Dim index As Long
+
+Const ProcName As String = "mDataCollector_TickerAdded"
+On Error GoTo Err
 
 index = ticker.Handle
 If index > UBound(mTickers) Then
@@ -763,8 +1062,8 @@ If index > ShortNameText.UBound Then
     Next
 End If
 
-ShortNameText(index) = ticker.Contract.specifier.localSymbol
-ShortNameText(index).ToolTipText = ticker.Contract.specifier.localSymbol
+ShortNameText(index) = ticker.Contract.Specifier.localSymbol
+ShortNameText(index).ToolTipText = ticker.Contract.Specifier.localSymbol
 ShortNameText(index).Visible = True
 DataLightLabel(index).Visible = True
 
@@ -774,6 +1073,11 @@ ticker.AddTickfileWriterListener Me
 ticker.AddBarWriterListener Me
 
 Me.Refresh
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -791,6 +1095,9 @@ Friend Sub initialise( _
                 ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
+
+Const ProcName As String = "initialise"
+On Error GoTo Err
 
 Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
@@ -830,6 +1137,11 @@ Dim s As String
     End If
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 '================================================================================
@@ -839,10 +1151,18 @@ End Sub
 Private Sub clearTickers()
 Dim i As Long
 
+Const ProcName As String = "clearTickers"
+On Error GoTo Err
+
 For i = 0 To ShortNameText.UBound
     ShortNameText(i).Text = ""
     DataLightLabel(i).BackColor = vbButtonFace
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function generateTaskInfo( _
@@ -850,7 +1170,10 @@ Private Function generateTaskInfo( _
 Dim ts As TaskSummary
 Dim s As String
 
-Do While en.moveNext
+Const ProcName As String = "generateTaskInfo"
+On Error GoTo Err
+
+Do While en.MoveNext
     ts = en.current
     s = s & "Name: " & ts.name & _
         "; Priority: " & ts.priority & _
@@ -861,26 +1184,50 @@ Do While en.moveNext
 Loop
     
 generateTaskInfo = s
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub hideActivityMonitor()
+Const ProcName As String = "hideActivityMonitor"
+On Error GoTo Err
+
 ShowHideMonitorButton.Caption = "Show activity monitor"
 mAdjustingSize = True
 Me.Height = Me.Height - ActivityMonitor.Height
 mAdjustingSize = False
 ActivityMonitor.Visible = False
 mActivityMonitorVisible = False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
     
 Private Sub processTickEvent( _
                 pTicker As ticker)
+Const ProcName As String = "processTickEvent"
+On Error GoTo Err
+
 switchDataLightOn pTicker.Handle
 mLastTickTime = GetTimestamp
 mTickCount = mTickCount + 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub resizeHeight()
 Dim heightIncrement As Long
+
+Const ProcName As String = "resizeHeight"
+On Error GoTo Err
 
 If Not mActivityMonitorVisible And Not mAdjustingSize Then
     Me.Height = mCurrentHeight
@@ -907,10 +1254,18 @@ End If
 
 mCurrentHeight = Me.Height
 setupTickerScroll
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub resizeWidth()
 Dim widthIncrement As Long
+
+Const ProcName As String = "resizeWidth"
+On Error GoTo Err
 
 If Not mActivityMonitorVisible And Not mAdjustingSize Then
     Me.Width = mCurrentWidth
@@ -939,9 +1294,17 @@ End If
 
 mCurrentWidth = Me.Width
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub scrollTickers()
+Const ProcName As String = "scrollTickers"
+On Error GoTo Err
+
 If TickersPicture.Height <= TickersContainerPicture.Height Then
     TickersPicture.Top = 0
 ElseIf TickerScroll.Value = TickerScrollMax Then
@@ -949,9 +1312,17 @@ ElseIf TickerScroll.Value = TickerScrollMax Then
 Else
     TickersPicture.Top = -Round((mLinesToScroll / TickerScrollMax) * TickerScroll.Value, 0) * mLineSpacing
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setStarted()
+Const ProcName As String = "setStarted"
+On Error GoTo Err
+
 mCollectingData = True
 StartStopButton.Caption = "Stop"
 StartStopButton.enabled = True
@@ -960,9 +1331,17 @@ mLastTickTime = GetTimestamp
 
 Set mClock = GetClock
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub setStopped()
+
+Const ProcName As String = "setStopped"
+On Error GoTo Err
 
 mCollectingData = False
 StartStopButton.Caption = "Start"
@@ -974,12 +1353,20 @@ clearTickers
 SecsSinceLastTickText = ""
 TicksPerSecText = ""
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub setupTickerScroll()
 Dim totalLines As Long
 Dim linesPerpage As Single
 Dim pagesToScroll As Single
+
+Const ProcName As String = "setupTickerScroll"
+On Error GoTo Err
 
 totalLines = (ShortNameText.UBound + 5) / 5
 linesPerpage = TickersContainerPicture.Height / mLineSpacing
@@ -998,42 +1385,74 @@ Else
     TickerScroll.LargeChange = TickerScrollMax
 End If
 TickerScroll.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showActivityMonitor()
+Const ProcName As String = "showActivityMonitor"
+On Error GoTo Err
+
 ShowHideMonitorButton.Caption = "Hide activity monitor"
 mAdjustingSize = True
 Me.Height = Me.Height + ActivityMonitor.Height
 mAdjustingSize = False
 ActivityMonitor.Visible = True
 mActivityMonitorVisible = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub startCollecting( _
                 ByVal message As String)
                 
-gLogger.Log LogLevelNormal, message
+Const ProcName As String = "startCollecting"
+On Error GoTo Err
+
+LogMessage message
 
 mDataCollector.startCollection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub stopCollecting( _
                 ByVal message As String, _
                 ByVal confirm As Boolean)
+Const ProcName As String = "stopCollecting"
+On Error GoTo Err
+
 If confirm Then
     If MsgBox("Please confirm that you wish to stop data collection", _
                 vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
 End If
 
-gLogger.Log LogLevelNormal, message
+LogMessage message
 
 mDataCollector.stopCollection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub switchDataLightOn( _
                 ByVal index As Long)
+Const ProcName As String = "switchDataLightOn"
+On Error GoTo Err
+
 If Not mActivityMonitorVisible Then Exit Sub
 
 If Not mTickers(index).tli Is Nothing Then
@@ -1047,11 +1466,24 @@ mTickers(index).tli.AddStateChangeListener Me
 DataLightLabel(index).BackColor = vbGreen
 DataLightLabel(index).Refresh
 ConnectionStatusText.BackColor = vbGreen
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub switchDataLightOff( _
                 ByVal index As Long)
+Const ProcName As String = "switchDataLightOff"
+On Error GoTo Err
+
 DataLightLabel(index).BackColor = vbButtonFace
 DataLightLabel(index).Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

@@ -6,6 +6,8 @@ Option Explicit
 '@================================================================================
 
 Public Const ProjectName                    As String = "CmnStudiesLib26"
+Private Const ModuleName                As String = "Globals"
+
 
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
@@ -132,6 +134,9 @@ Public Function gCreateDataPointStyle( _
                 Optional ByVal PointStyle As PointStyles = PointRound, _
                 Optional ByVal UpColor As Long = -1) As DataPointStyle
 Dim style As DataPointStyle
+Const ProcName As String = "gCreateDataPointStyle"
+On Error GoTo Err
+
 Set style = New DataPointStyle
 style.Color = Color
 style.DisplayMode = DisplayMode
@@ -143,6 +148,11 @@ style.Linethickness = Linethickness
 style.PointStyle = PointStyle
 style.UpColor = UpColor
 Set gCreateDataPointStyle = style
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gCreateMA( _
@@ -152,6 +162,9 @@ Public Function gCreateMA( _
 Dim lparams As Parameters
 Dim lStudy As Study
 Dim valueNames(0) As String
+
+Const ProcName As String = "gCreateMA"
+On Error GoTo Err
 
 valueNames(0) = "in"
 
@@ -184,13 +197,26 @@ Case Else
                     Nothing
     Set gCreateMA = lSMA
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gMaTypes() As Variant()
 Dim ar(1) As Variant
+Const ProcName As String = "gMaTypes"
+On Error GoTo Err
+
 ar(0) = EmaShortName
 ar(1) = SmaShortName
 gMaTypes = ar
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

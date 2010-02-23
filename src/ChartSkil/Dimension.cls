@@ -21,6 +21,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "Dimension"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -34,10 +36,11 @@ Option Explicit
 '================================================================================
 
 Private mX As Double
-Private mXAssigned As Boolean
 Private mY As Double
-Private mYAssigned As Boolean
 Private mViewport As Viewport
+
+Private mCoordSystemX As CoordinateSystems
+Private mCoordSystemY As CoordinateSystems
 
 '================================================================================
 ' Class Event Handlers
@@ -55,46 +58,56 @@ Friend Property Get Viewport() As Viewport
 Set Viewport = mViewport
 End Property
 
-Friend Property Let Viewport(ByVal value As Viewport)
-Set mViewport = value
-End Property
-
-Public Property Get IsAssigned() As Boolean
-IsAssigned = (mXAssigned And mYAssigned)
-End Property
-
-Friend Property Get IsAssignedX() As Boolean
-IsAssignedX = mXAssigned
-End Property
-
-Friend Property Get IsAssignedY() As Boolean
-IsAssignedY = mYAssigned
-End Property
-
 Public Property Get X() As Double
 X = mX
 End Property
 
-Friend Property Let X(ByVal value As Double)
-mX = value
-mXAssigned = True
-End Property
-
 Public Property Get XLogical() As Double
-XLogical = mViewport.ConvertDistanceToLogicalX(mX) - mViewport.Boundary.Left
+Const ProcName As String = "XLogical"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystemX
+Case CoordsLogical
+    XLogical = mX
+Case CoordsRelative
+    XLogical = mViewport.ConvertRelativeToLogicalX(mX)
+Case CoordsDistance
+    XLogical = mViewport.ConvertDistanceToLogicalX(mX)
+Case CoordsCounterDistance
+    XLogical = mViewport.ConvertCounterDistanceToLogicalY(mX)
+End Select
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Y() As Double
 Y = mY
 End Property
 
-Friend Property Let Y(ByVal value As Double)
-mY = value
-mYAssigned = True
-End Property
-
 Public Property Get YLogical() As Double
-YLogical = mViewport.ConvertDistanceToLogicalY(mY) - mViewport.Boundary.Bottom
+Const ProcName As String = "YLogical"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystemY
+Case CoordsLogical
+    YLogical = mY
+Case CoordsRelative
+    YLogical = mViewport.ConvertRelativeToLogicalY(mY)
+Case CoordsDistance
+    YLogical = mViewport.ConvertDistanceToLogicalY(mY)
+Case CoordsCounterDistance
+    YLogical = mViewport.ConvertCounterDistanceToLogicalY(mY)
+End Select
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -102,6 +115,10 @@ End Property
 '================================================================================
 
 Public Function Equals(ByVal aDim As Dimension) As Boolean
+Const ProcName As String = "Equals"
+Dim failpoint As String
+On Error GoTo Err
+
 If aDim Is Nothing Then Exit Function
 If aDim Is Me Then
     Equals = True
@@ -109,13 +126,29 @@ If aDim Is Me Then
 End If
 With aDim
     If Not .Viewport Is mViewport Then Exit Function
-    If .IsAssignedX <> mXAssigned Then Exit Function
-    If .IsAssignedY <> mYAssigned Then Exit Function
     If .X <> mX Then Exit Function
     If .Y <> mY Then Exit Function
 End With
 Equals = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
+
+Friend Sub Initialise( _
+                ByVal X As Double, _
+                ByVal Y As Double, _
+                ByVal coordSystemX As CoordinateSystems, _
+                ByVal coordSystemY As CoordinateSystems, _
+                ByVal pViewport As Viewport)
+mX = X
+mY = Y
+mCoordSystemX = coordSystemX
+mCoordSystemY = coordSystemY
+Set mViewport = pViewport
+End Sub
 
 '================================================================================
 ' Helper Functions

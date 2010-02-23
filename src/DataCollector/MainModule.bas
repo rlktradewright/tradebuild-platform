@@ -21,7 +21,10 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                                As String = "TBDataCollector26"
 Public Const AppName                                    As String = "TradeBuild Data Collector"
+
+Private Const ModuleName                                As String = "MainModule"
 
 Public Const AttributeNameBidAskBars                    As String = "WriteBidAndAskBars"
 Public Const AttributeNameEnabled                       As String = "Enabled"
@@ -59,7 +62,6 @@ Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectio
 ' is loaded)
 Public Const SwitchConfig                               As String = "config"
 
-Public Const SwitchLogFilename                          As String = "log"
 Public Const SwitchSetup                                As String = "setup"
 
 Public Const SwitchConcurrency                          As String = "concurrency"
@@ -78,9 +80,9 @@ Public Const SwitchQuantum                              As String = "quantum"
 ' Member variables
 '@================================================================================
 
-Public gStop                                            As Boolean
+Private mIsInDev                                        As Boolean
 
-Public gLogger                                          As Logger
+Public gStop                                            As Boolean
 
 Private mCLParser                                       As CommandLineParser
 
@@ -101,7 +103,7 @@ Private mExitTimeDescriptor                             As String
 
 Private mConfigManager                                  As ConfigManager
 
-Private mListener                                   As LogListener
+Private mFatalErrorHandler                              As FatalErrorHandler
 
 '@================================================================================
 ' Class Event Handlers
@@ -125,48 +127,76 @@ AppTitle = AppName & _
                 App.Major & "." & App.Minor
 End Property
 
-Public Property Get AppSettingsFolder() As String
-AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                    "\TradeWright\" & _
-                    AppTitle
-End Property
-
 Public Property Get configFilename() As String
 Dim fn As String
+Const ProcName As String = "configFilename"
+On Error GoTo Err
+
 If fn = "" Then
     fn = mCLParser.Arg(0)
     If fn = "" Then
-        fn = AppSettingsFolder & "\settings.xml"
+        fn = ApplicationSettingsFolder & "\settings.xml"
     End If
 End If
 configFilename = fn
-End Property
 
-Public Property Get LogFileName() As String
-Dim fn As String
-If fn = "" Then
-    If mCLParser.Switch(SwitchLogFilename) Then fn = mCLParser.SwitchValue(SwitchLogFilename)
-    
-    If fn = "" Then
-        fn = AppSettingsFolder & "\log.txt"
-    End If
-End If
-LogFileName = fn
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub gKillLogging()
-gLogger.RemoveLogListener mListener
+Public Sub gHandleFatalError()
+On Error Resume Next    ' ignore any further errors that might arise
+
+If Not mNoUI Then
+    MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+            "Please email the log file located at" & vbCrLf & vbCrLf & _
+            "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+            "to support@tradewright.com", _
+            vbCritical, _
+            "Fatal error"
+End If
+
+' At this point, we don't know what state things are in, so it's not feasible to return to
+' the caller. All we can do is terminate abruptly. Note that normally one would use the
+' End statement to terminate a VB6 program abruptly. However the TWUtilities component interferes
+' with the End statement's processing and prevents proper shutdown, so we use the
+' TWUtilities component's EndProcess method instead. (However if we are running in the
+' development environment, then we call End because the EndProcess method kills the
+' entire development environment as well which can have undesirable side effects if other
+' components are also loaded.)
+
+If mIsInDev Then
+    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
+    ' needed here because the End statement will prevent return to TWUtilities
+    UnhandledErrorHandler.Handled = True
+    End
+Else
+    EndProcess
+End If
+
 End Sub
 
 Public Sub Main()
 
+Const ProcName As String = "Main"
 On Error GoTo Err
 
+Debug.Print "Running in development environment: " & CStr(inDev)
+
 InitialiseTWUtilities
+
+Set mFatalErrorHandler = New FatalErrorHandler
+
+ApplicationGroupName = "TradeWright"
+ApplicationName = AppTitle
+SetupDefaultLogging Command
+
 RunTasksAtLowerThreadPriority = False
 
 mLeftOffset = -1
@@ -179,8 +209,6 @@ If showHelp Then
     Exit Sub
 End If
 
-getLog
-
 setTaskParameters
 
 TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
@@ -190,7 +218,6 @@ TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeDat
                                                 ServiceProviderRoles.SPTickfileOutput
 
 If Not getConfig Then
-    gKillLogging
     TerminateTWUtilities
     Exit Sub
 End If
@@ -201,7 +228,6 @@ mNoUI = getNoUi
 
 If Not configure Then
     If Not mNoUI Then showConfig
-    gKillLogging
     TerminateTWUtilities
     Exit Sub
 End If
@@ -214,7 +240,7 @@ mNoAutoStart = getNoAutostart
 
 If mNoUI Then
     
-    gLogger.Log LogLevelNormal, "Creating data collector object"
+    LogMessage "Creating data collector object"
     Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
                                             mConfig.InstanceQualifier, _
                                             mStartTimeDescriptor, _
@@ -222,7 +248,7 @@ If mNoUI Then
                                             mExitTimeDescriptor)
     
     If mStartTimeDescriptor = "" Then
-        gLogger.Log LogLevelNormal, "Starting data collection"
+        LogMessage "Starting data collection"
         mDataCollector.startCollection
     End If
     
@@ -230,34 +256,26 @@ If mNoUI Then
         Wait 1000
     Loop
     
-    gLogger.Log LogLevelNormal, "Data Collector program exiting"
+    LogMessage "Data Collector program exiting"
     
-    gKillLogging
     TerminateTWUtilities
     
 Else
-    gLogger.Log LogLevelNormal, "Creating data collector object"
+    LogMessage "Creating data collector object"
     Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
                                             mConfig.InstanceQualifier, _
                                             IIf(mNoAutoStart, "", mStartTimeDescriptor), _
                                             mEndTimeDescriptor, _
                                             mExitTimeDescriptor)
     
-    gLogger.Log LogLevelNormal, "Creating form"
+    LogMessage "Creating form"
     showMainForm
 End If
 
 
 Exit Sub
-
 Err:
-MsgBox "Error " & Err.Number & ": " & Err.description & vbCrLf & _
-        "At " & "DataCollector26" & "." & "MainModule" & "::" & "Main" & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        , _
-        "Error"
-
-
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -267,13 +285,14 @@ End Sub
 Private Function configure() As Boolean
 Dim f As fConfig
 
+Const ProcName As String = "configure"
 On Error GoTo Err
 
 If getConfigToLoad() Is Nothing Then
     notifyError "No configuration is available"
 Else
     Set mConfig = getConfigToLoad
-    gLogger.Log LogLevelNormal, "Configuration in use: " & mConfig.InstanceQualifier
+    LogMessage "Configuration in use: " & mConfig.InstanceQualifier
     configure = True
 End If
 
@@ -284,6 +303,9 @@ configure = False
 End Function
 
 Private Function getConfig() As Boolean
+Const ProcName As String = "getConfig"
+On Error GoTo Err
+
 Set mConfigManager = New ConfigManager
 If mConfigManager.initialise(configFilename) Then
     logConfigFileDetails
@@ -294,60 +316,83 @@ Else
                     ") is not the correct format for this program"
 End If
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getConfigName() As String
+Const ProcName As String = "getConfigName"
+On Error GoTo Err
+
 If mCLParser.Switch(SwitchConfig) Then
     getConfigName = mCLParser.SwitchValue(SwitchConfig)
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getConfigToLoad() As ConfigurationSection
 Static configToLoad As ConfigurationSection
 
+Const ProcName As String = "getConfigToLoad"
+On Error GoTo Err
+
 If configToLoad Is Nothing Then
     On Error Resume Next
     Set configToLoad = getNamedConfig()
     If Err.Number <> 0 Then Exit Function
-    On Error GoTo 0
+    On Error GoTo Err
 
 End If
 
 Set getConfigToLoad = configToLoad
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Function getEndTimeDescriptor() As String
+Const ProcName As String = "getEndTimeDescriptor"
+On Error GoTo Err
+
 If mCLParser.Switch("endAt") Then
     getEndTimeDescriptor = mCLParser.SwitchValue("endAt")
 End If
-gLogger.Log LogLevelNormal, "End at: " & getEndTimeDescriptor
+LogMessage "End at: " & getEndTimeDescriptor
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getExitTimeDescriptor() As String
+Const ProcName As String = "getExitTimeDescriptor"
+On Error GoTo Err
+
 If mCLParser.Switch("exitAt") Then
     getExitTimeDescriptor = mCLParser.SwitchValue("exitAt")
 End If
-gLogger.Log LogLevelNormal, "Exit at: " & getExitTimeDescriptor
+LogMessage "Exit at: " & getExitTimeDescriptor
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub getLog()
-
-If mCLParser.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mCLParser.SwitchValue("LogLevel"))
-
-
-Set gLogger = GetLogger("log")
-
-Set mListener = CreateFileLogListener(LogFileName, _
-                                        CreateBasicLogFormatter, _
-                                        True, _
-                                        True)
-GetLogger("").AddLogListener mListener
-
-logLogFileDetails
-End Sub
-
 Private Function getNamedConfig() As ConfigurationSection
+Const ProcName As String = "getNamedConfig"
+On Error GoTo Err
+
 If getConfigName <> "" Then
     Set getNamedConfig = mConfigManager.appConfig(getConfigName)
     If getNamedConfig Is Nothing Then
@@ -357,45 +402,101 @@ If getConfigName <> "" Then
 Else
     Set getNamedConfig = mConfigManager.defaultAppConfig
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getNoAutostart() As Boolean
+Const ProcName As String = "getNoAutostart"
+On Error GoTo Err
+
 If mCLParser.Switch("noAutoStart") Then
     getNoAutostart = True
 End If
-gLogger.Log LogLevelNormal, "Auto start: " & Not getNoAutostart
+LogMessage "Auto start: " & Not getNoAutostart
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getNoUi() As Boolean
+Const ProcName As String = "getNoUi"
+On Error GoTo Err
+
 If mCLParser.Switch("noui") Then
     getNoUi = True
 End If
-gLogger.Log LogLevelNormal, "Run with UI: " & Not getNoUi
+LogMessage "Run with UI: " & Not getNoUi
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getStartTimeDescriptor() As String
+Const ProcName As String = "getStartTimeDescriptor"
+On Error GoTo Err
+
 If mCLParser.Switch("startAt") Then
     getStartTimeDescriptor = mCLParser.SwitchValue("startAt")
 End If
-gLogger.Log LogLevelNormal, "Start at: " & getStartTimeDescriptor
+LogMessage "Start at: " & getStartTimeDescriptor
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function inDev() As Boolean
+Const ProcName As String = "inDev"
+On Error GoTo Err
+
+mIsInDev = True
+inDev = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub logConfigFileDetails()
-gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Configuration file: " & configFilename
-End Sub
+Const ProcName As String = "logConfigFileDetails"
+On Error GoTo Err
 
-Private Sub logLogFileDetails()
-gLogger.Log LogLevelNormal, "Log file: " & LogFileName
-gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
+LogMessage "Configuration file: " & configFilename
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyError( _
                 ByVal message As String)
-gLogger.Log TWUtilities30.LogLevels.LogLevelSevere, message
+Const ProcName As String = "notifyError"
+On Error GoTo Err
+
+LogMessage message, TWUtilities30.LogLevels.LogLevelSevere
 If Not mNoUI Then MsgBox message & vbCrLf & vbCrLf & "The program will close.", vbCritical, "Attention!"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setTaskParameters()
+
+Const ProcName As String = "setTaskParameters"
+On Error GoTo Err
 
 RunTasksAtLowerThreadPriority = False
 TaskConcurrency = 20
@@ -403,41 +504,63 @@ TaskQuantumMillisecs = 20
 
 If mCLParser.Switch(SwitchConcurrency) Then
     If Not IsInteger(mCLParser.SwitchValue(SwitchConcurrency), 2) Then
-        gLogger.Log LogLevels.LogLevelNormal, _
-                    "Argument '" & SwitchConcurrency & ":" & mCLParser.SwitchValue(SwitchConcurrency) & "' is invalid and has been ignored"
+        LogMessage "Argument '" & SwitchConcurrency & ":" & mCLParser.SwitchValue(SwitchConcurrency) & "' is invalid and has been ignored"
     Else
         TaskConcurrency = CLng(mCLParser.SwitchValue(SwitchConcurrency))
     End If
 End If
-gLogger.Log LogLevels.LogLevelNormal, "Task concurrency=" & TaskConcurrency
+LogMessage "Task concurrency=" & TaskConcurrency
 
 If mCLParser.Switch(SwitchQuantum) Then
     If Not IsInteger(mCLParser.SwitchValue(SwitchQuantum), 1) Then
-        gLogger.Log LogLevels.LogLevelNormal, _
-                    "Argument '" & SwitchQuantum & ":" & mCLParser.SwitchValue(SwitchQuantum) & "' is invalid and has been ignored"
+        LogMessage "Argument '" & SwitchQuantum & ":" & mCLParser.SwitchValue(SwitchQuantum) & "' is invalid and has been ignored"
     Else
         TaskQuantumMillisecs = CLng(mCLParser.SwitchValue(SwitchQuantum))
     End If
 End If
-gLogger.Log LogLevels.LogLevelNormal, "Task quantum (millisecs)=" & TaskQuantumMillisecs
+LogMessage "Task quantum (millisecs)=" & TaskQuantumMillisecs
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Function setup() As Boolean
+Const ProcName As String = "setup"
+On Error GoTo Err
+
 If Not mCLParser.Switch(SwitchSetup) Then Exit Function
 showConfig
 setup = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub showConfig()
 Dim f As fConfig
+Const ProcName As String = "showConfig"
+On Error GoTo Err
+
 Set f = New fConfig
 f.initialise mConfigManager, False
 f.Show vbModeless
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function showHelp() As Boolean
 Dim s As String
+Const ProcName As String = "showHelp"
+On Error GoTo Err
+
 If mCLParser.Switch("?") Then
     s = vbCrLf & _
             "datacollector26 [configfilename]" & vbCrLf & _
@@ -484,11 +607,19 @@ If mCLParser.Switch("?") Then
     MsgBox s, , "Usage"
     showHelp = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub showMainForm()
 Dim posnValue As String
 Dim f As New fDataCollectorUI
+
+Const ProcName As String = "showMainForm"
+On Error GoTo Err
 
 If mCLParser.Switch("posn") Then
     posnValue = mCLParser.SwitchValue("posn")
@@ -516,7 +647,7 @@ Else
     mPosY = Int(Int(Screen.Height / f.Height) * Rnd)
 End If
 
-gLogger.Log LogLevelNormal, "Form position: " & mPosX & "," & mPosY
+LogMessage "Form position: " & mPosX & "," & mPosY
 
 f.initialise mDataCollector, _
                 mConfigManager, _
@@ -529,8 +660,10 @@ f.Top = mPosY * f.Height
 
 f.Visible = True
 
-logLogFileDetails
-logConfigFileDetails
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

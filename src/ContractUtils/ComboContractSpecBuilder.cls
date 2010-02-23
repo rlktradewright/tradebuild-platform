@@ -41,7 +41,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ContractUtils26"
 Private Const ModuleName                    As String = "ComboContractSpecBldr"
 
 '@================================================================================
@@ -57,7 +56,7 @@ Private mComboLegs                          As ComboLegs
 
 Private Sub Class_Initialize()
 Set mContractSpecifier = New ContractSpecifier
-mContractSpecifier.sectype = SecTypeCombo
+mContractSpecifier.SecType = SecTypeCombo
 
 Set mComboLegs = New ComboLegs
 mContractSpecifier.ComboLegs = mComboLegs
@@ -84,15 +83,33 @@ End Property
 '@================================================================================
 
 Public Function AddLeg( _
-                ByVal contractSpec As ContractSpecifier, _
-                ByVal isBuyLeg As Boolean, _
+                ByVal ContractSpec As ContractSpecifier, _
+                ByVal IsBuyLeg As Boolean, _
                 ByVal ratio As Long, _
-                Optional ByVal key As String) As ComboLeg
-Set AddLeg = mComboLegs.AddLeg(contractSpec, isBuyLeg, ratio, key)
+                Optional ByVal Key As String) As ComboLeg
+Const ProcName As String = "AddLeg"
+Dim failpoint As String
+On Error GoTo Err
+
+Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, ratio, Key)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
-Public Sub removeLeg(ByVal index As Variant)
+Public Sub RemoveLeg(ByVal index As Variant)
+Const ProcName As String = "RemoveLeg"
+Dim failpoint As String
+On Error GoTo Err
+
 mComboLegs.Remove index
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

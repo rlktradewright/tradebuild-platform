@@ -41,6 +41,8 @@ Private Const ModuleName                As String = "ChartRegionStyle"
 
 Private Const ConfigSectionGridlineStyle                As String = "GridlineStyle"
 Private Const ConfigSectionGridTextStyle                As String = "GridTextStyle"
+Private Const ConfigSectionSessionEndGridlineStyle      As String = "SessionEndGridlineStyle"
+Private Const ConfigSectionSessionStartGridlineStyle    As String = "SessionStartGridlineStyle"
 Private Const ConfigSectionYAxisTextStyle               As String = "YAxisTextStyle"
 Private Const ConfigSectionYCursorTextStyle             As String = "YCursorTextStyle"
 
@@ -87,6 +89,10 @@ Private WithEvents mGridLineStyle As LineStyle
 Attribute mGridLineStyle.VB_VarHelpID = -1
 Private WithEvents mGridTextStyle As TextStyle
 Attribute mGridTextStyle.VB_VarHelpID = -1
+Private WithEvents mSessionEndGridLineStyle As LineStyle
+Attribute mSessionEndGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionStartGridLineStyle As LineStyle
+Attribute mSessionStartGridLineStyle.VB_VarHelpID = -1
 Private WithEvents mYAxisTextStyle As TextStyle
 Attribute mYAxisTextStyle.VB_VarHelpID = -1
 Private WithEvents mYCursorTextStyle As TextStyle
@@ -99,6 +105,8 @@ Attribute mYCursorTextStyle.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 setInitialGridLineStyle
 setInitialGridTextStyle
+setInitialSessionEndGridLineStyle
+setInitialSessionStartGridLineStyle
 setInitialYAxisTextStyle
 setInitialYCursorTextStyle
 
@@ -135,6 +143,22 @@ firePropertyChanged "GridTextStyle"
 End Sub
 
 '@================================================================================
+' mSessionEndGridLineStyle Event Handlers
+'@================================================================================
+
+Private Sub mSessionEndGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "SessionEndGridLineStyle"
+End Sub
+
+'@================================================================================
+' mSessionStartGridLineStyle Event Handlers
+'@================================================================================
+
+Private Sub mSessionStartGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "SessionStartGridLineStyle"
+End Sub
+
+'@================================================================================
 ' mYAxisTextStyle Event Handlers
 '@================================================================================
 
@@ -158,9 +182,18 @@ Autoscaling = mAutoscaling
 End Property
 
 Public Property Let Autoscaling(ByVal value As Boolean)
+Const ProcName As String = "Autoscaling"
+Dim failpoint As String
+On Error GoTo Err
+
 mAutoscaling = value
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingAutoscaling, mAutoscaling
 firePropertyChanged "Autoscaling"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BackColor() As Long
@@ -168,10 +201,19 @@ BackColor = mBackGradientFillColors(0)
 End Property
 
 Public Property Let BackColor(ByVal value As Long)
+Const ProcName As String = "BackColor"
+Dim failpoint As String
+On Error GoTo Err
+
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = value
 If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
 firePropertyChanged "BackColor"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BackGradientFillColors() As Long()
@@ -181,9 +223,13 @@ End Property
 Public Property Let BackGradientFillColors(ByRef value() As Long)
 Dim numColors As Long
 
+Const ProcName As String = "BackGradientFillColors"
+Dim failpoint As String
+On Error GoTo Err
+
 On Error Resume Next
 numColors = UBound(value) + 1
-On Error GoTo 0
+On Error GoTo Err
 
 If numColors = 0 Then
     Erase mBackGradientFillColors
@@ -192,13 +238,13 @@ End If
 
 If numColors < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
-            "At least 1 background gradient fill color must be supplied"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "At least 1 background gradient fill Color must be supplied"
 End If
 
 If numColors > 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "At most 5 background gradient fill colors may be supplied"
 End If
 
@@ -207,10 +253,19 @@ mBackGradientFillColors = value
 If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
 
 firePropertyChanged "BackGradientFillColors"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+
+Const ProcName As String = "ConfigurationSection"
+Dim failpoint As String
+On Error GoTo Err
 
 If value Is Nothing Then
     RemoveFromConfig
@@ -222,6 +277,8 @@ Set mConfig = value
 
 mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
 mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
+mSessionEndGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+mSessionStartGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
 mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
 mConfig.SetSetting ConfigSettingHasGrid, mHasGrid
@@ -234,6 +291,11 @@ mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
 mConfig.SetSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
 
 setBackGradientFillColorsConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridlineSpacingY() As Double
@@ -241,9 +303,18 @@ GridlineSpacingY = mGridlineSpacingY
 End Property
 
 Public Property Let GridlineSpacingY(ByVal value As Double)
+Const ProcName As String = "GridlineSpacingY"
+Dim failpoint As String
+On Error GoTo Err
+
 mGridlineSpacingY = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
 firePropertyChanged "GridlineSpacingY"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridLineStyle() As LineStyle
@@ -251,9 +322,18 @@ Set GridLineStyle = mGridLineStyle
 End Property
 
 Public Property Let GridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "GridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mGridLineStyle = value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
 firePropertyChanged "GridLineStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridTextStyle() As TextStyle
@@ -261,9 +341,18 @@ Set GridTextStyle = mGridTextStyle
 End Property
 
 Public Property Let GridTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "GridTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mGridTextStyle = value
 If Not mConfig Is Nothing Then mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
 firePropertyChanged "GridTextStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get HasGrid() As Boolean
@@ -271,9 +360,18 @@ HasGrid = mHasGrid
 End Property
 
 Public Property Let HasGrid(ByVal val As Boolean)
+Const ProcName As String = "HasGrid"
+Dim failpoint As String
+On Error GoTo Err
+
 mHasGrid = val
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGrid, mHasGrid
 firePropertyChanged "HasGrid"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get HasGridText() As Boolean
@@ -281,9 +379,18 @@ HasGridText = mHasGridText
 End Property
 
 Public Property Let HasGridText(ByVal val As Boolean)
+Const ProcName As String = "HasGridText"
+Dim failpoint As String
+On Error GoTo Err
+
 mHasGridText = val
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGridText, mHasGridText
 firePropertyChanged "HasGridText"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IntegerYScale() As Boolean
@@ -291,9 +398,18 @@ IntegerYScale = mIntegerYScale
 End Property
 
 Public Property Let IntegerYScale(ByVal value As Boolean)
+Const ProcName As String = "IntegerYScale"
+Dim failpoint As String
+On Error GoTo Err
+
 mIntegerYScale = value
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingIntegerYScale, mIntegerYScale
 firePropertyChanged "IntegerYScale"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumHeight() As Double
@@ -301,19 +417,75 @@ MinimumHeight = mMinimumHeight
 End Property
 
 Public Property Let MinimumHeight(ByVal value As Double)
+Const ProcName As String = "MinimumHeight"
+Dim failpoint As String
+On Error GoTo Err
+
 mMinimumHeight = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
 firePropertyChanged "MinimumHeight"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let CursorSnapsToTickBoundaries(ByVal value As Boolean)
+Const ProcName As String = "CursorSnapsToTickBoundaries"
+Dim failpoint As String
+On Error GoTo Err
+
 mCursorSnapsToTickBoundaries = value
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
 firePropertyChanged "CursorSnapsToTickBoundaries"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get CursorSnapsToTickBoundaries() As Boolean
 CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+End Property
+
+Public Property Get SessionEndGridLineStyle() As LineStyle
+Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+End Property
+
+Public Property Let SessionEndGridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "SessionEndGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mSessionEndGridLineStyle = value
+If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+firePropertyChanged "SessionEndGridLineStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get SessionStartGridLineStyle() As LineStyle
+Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+End Property
+
+Public Property Let SessionStartGridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "SessionStartGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mSessionStartGridLineStyle = value
+If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
+firePropertyChanged "SessionStartGridLineStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YAxisTextStyle() As TextStyle
@@ -321,9 +493,18 @@ Set YAxisTextStyle = mYAxisTextStyle
 End Property
 
 Public Property Let YAxisTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "YAxisTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mYAxisTextStyle = value
 If Not mConfig Is Nothing Then mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
 firePropertyChanged "YAxisTextStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YCursorTextStyle() As TextStyle
@@ -331,9 +512,18 @@ Set YCursorTextStyle = mYCursorTextStyle
 End Property
 
 Public Property Let YCursorTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "YCursorTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mYCursorTextStyle = value
 If Not mConfig Is Nothing Then mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
 firePropertyChanged "YCursorTextStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YScaleQuantum() As Double
@@ -341,9 +531,18 @@ YScaleQuantum = mYScaleQuantum
 End Property
 
 Public Property Let YScaleQuantum(ByVal value As Double)
+Const ProcName As String = "YScaleQuantum"
+Dim failpoint As String
+On Error GoTo Err
+
 mYScaleQuantum = value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYScaleQuantum, mYScaleQuantum
 firePropertyChanged "YScaleQuantum"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -351,6 +550,10 @@ End Property
 '@================================================================================
 
 Public Function clone() As ChartRegionStyle
+Const ProcName As String = "clone"
+Dim failpoint As String
+On Error GoTo Err
+
 Set clone = New ChartRegionStyle
 clone.Autoscaling = mAutoscaling
 clone.BackGradientFillColors = mBackGradientFillColors
@@ -362,9 +565,16 @@ clone.MinimumHeight = mMinimumHeight
 clone.HasGrid = mHasGrid
 clone.HasGridText = mHasGridText
 clone.CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+clone.SessionEndGridLineStyle = mSessionEndGridLineStyle
+clone.SessionStartGridLineStyle = mSessionStartGridLineStyle
 clone.YAxisTextStyle = mYAxisTextStyle
 clone.YCursorTextStyle = mYCursorTextStyle
 clone.YScaleQuantum = mYScaleQuantum
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub LoadFromConfig( _
@@ -372,10 +582,16 @@ Public Sub LoadFromConfig( _
 Dim ar() As String
 Dim i As Long
 
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mConfig = config
 
 getGridLineStyleFromConfig
 getGridTextStyleFromConfig
+getSessionEndGridLineStyleFromConfig
+getSessionStartGridLineStyleFromConfig
 getYAxisTextStyleFromConfig
 getYCursorTextStyleFromConfig
 
@@ -393,11 +609,25 @@ ReDim mBackGradientFillColors(UBound(ar())) As Long
 For i = 0 To UBound(ar())
     mBackGradientFillColors(i) = CLng(ar(i))
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Sub
 
 Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then mConfig.Remove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -406,99 +636,255 @@ End Sub
 
 Private Sub getGridLineStyleFromConfig()
 Dim cs As ConfigurationSection
+Const ProcName As String = "getGridLineStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set cs = mConfig.GetConfigurationSection(ConfigSectionGridlineStyle)
 If Not cs Is Nothing Then
     Set mGridLineStyle = New LineStyle
     mGridLineStyle.LoadFromConfig cs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub getGridTextStyleFromConfig()
 Dim cs As ConfigurationSection
+Const ProcName As String = "getGridTextStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set cs = mConfig.GetConfigurationSection(ConfigSectionGridTextStyle)
 If Not cs Is Nothing Then
     Set mGridTextStyle = New TextStyle
     mGridTextStyle.LoadFromConfig cs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub getSessionEndGridLineStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getSessionEndGridLineStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+If Not cs Is Nothing Then
+    Set mSessionEndGridLineStyle = New LineStyle
+    mSessionEndGridLineStyle.LoadFromConfig cs
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub getSessionStartGridLineStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getSessionStartGridLineStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionStartGridlineStyle)
+If Not cs Is Nothing Then
+    Set mSessionStartGridLineStyle = New LineStyle
+    mSessionStartGridLineStyle.LoadFromConfig cs
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub getYAxisTextStyleFromConfig()
 Dim cs As ConfigurationSection
+Const ProcName As String = "getYAxisTextStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set cs = mConfig.GetConfigurationSection(ConfigSectionYAxisTextStyle)
 If Not cs Is Nothing Then
     Set mYAxisTextStyle = New TextStyle
     mYAxisTextStyle.LoadFromConfig cs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub getYCursorTextStyleFromConfig()
 Dim cs As ConfigurationSection
+Const ProcName As String = "getYCursorTextStyleFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set cs = mConfig.GetConfigurationSection(ConfigSectionYCursorTextStyle)
 If Not cs Is Nothing Then
     Set mYCursorTextStyle = New TextStyle
     mYCursorTextStyle.LoadFromConfig cs
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
 Dim ev As PropertyChangedEvent
 
+Const ProcName As String = "firePropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.Source = Me
 ev.PropertyName = Name
 RaiseEvent PropertyChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setBackGradientFillColorsConfig()
 Dim i As Long
 Dim s As String
+Const ProcName As String = "setBackGradientFillColorsConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To UBound(mBackGradientFillColors)
     If i <> 0 Then s = s & ","
     s = s & CStr(mBackGradientFillColors(i))
 Next
 mConfig.SetSetting ConfigSettingBackGradientFillColors, s
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setInitialGridLineStyle()
+Const ProcName As String = "setInitialGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mGridLineStyle = New LineStyle
 mGridLineStyle.Color = &HC0C0C0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setInitialGridTextStyle()
 Dim aFont As StdFont
 
+Const ProcName As String = "setInitialGridTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mGridTextStyle = New TextStyle
-mGridTextStyle.Box = False
+mGridTextStyle.Box = True
+mGridTextStyle.BoxFillWithBackgroundColor = True
+mGridTextStyle.BoxStyle = LineInvisible
 mGridTextStyle.Color = vbBlack
     
 Set aFont = New StdFont
 aFont.Italic = False
 aFont.Name = "Arial"
-aFont.size = 8
+aFont.Size = 8
 aFont.Underline = False
 aFont.Bold = False
 mGridTextStyle.Font = aFont
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Sub
+
+Private Sub setInitialSessionEndGridLineStyle()
+Const ProcName As String = "setInitialSessionEndGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mSessionEndGridLineStyle = New LineStyle
+mSessionEndGridLineStyle.Color = &HC0C0C0
+mSessionEndGridLineStyle.LineStyle = LineDash
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setInitialSessionStartGridLineStyle()
+Const ProcName As String = "setInitialSessionStartGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mSessionStartGridLineStyle = New LineStyle
+mSessionStartGridLineStyle.Color = &HC0C0C0
+mSessionStartGridLineStyle.Thickness = 3
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setInitialYAxisTextStyle()
 Dim aFont As StdFont
 
+Const ProcName As String = "setInitialYAxisTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mYAxisTextStyle = New TextStyle
+mYAxisTextStyle.Box = True
+mYAxisTextStyle.BoxFillWithBackgroundColor = True
+mYAxisTextStyle.BoxStyle = LineInvisible
 mYAxisTextStyle.Color = vbBlack
     
 Set aFont = New StdFont
 aFont.Italic = False
 aFont.Name = "Arial"
-aFont.size = 8
+aFont.Size = 8
 aFont.Underline = False
 aFont.Bold = False
 mYAxisTextStyle.Font = aFont
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub setInitialYCursorTextStyle()
 Dim aFont As StdFont
+
+Const ProcName As String = "setInitialYCursorTextStyle"
+Dim failpoint As String
+On Error GoTo Err
 
 Set mYCursorTextStyle = New TextStyle
 mYCursorTextStyle.Box = True
@@ -509,14 +895,20 @@ mYCursorTextStyle.BoxThickness = 1
 mYCursorTextStyle.Color = vbBlack
 mYCursorTextStyle.PaddingX = 1
 mYCursorTextStyle.PaddingY = 0
+mYCursorTextStyle.Justification = JustifyCentre
     
 Set aFont = New StdFont
 aFont.Italic = False
 aFont.Name = "Arial"
-aFont.size = 8
+aFont.Size = 8
 aFont.Underline = False
 aFont.Bold = False
 mYCursorTextStyle.Font = aFont
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

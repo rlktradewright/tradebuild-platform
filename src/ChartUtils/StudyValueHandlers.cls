@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyValueHandlers"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -73,7 +75,15 @@ End Sub
 '@================================================================================
 
 Public Property Get count() As Long
+Const ProcName As String = "count"
+On Error GoTo Err
+
 count = mStudyValueHandlers.count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -86,6 +96,9 @@ Friend Function Add( _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
                 ByVal UpdatePerTick As Boolean) As StudyValueHandler
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = New StudyValueHandler
 Add.Initialise chartMgr, _
                 Region, _
@@ -93,21 +106,50 @@ Add.Initialise chartMgr, _
                 studyValueDef, _
                 UpdatePerTick
 mStudyValueHandlers.Add Add, studyValueConfig.ValueName
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Clear()
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
 Set mStudyValueHandlers = New Collection
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function Item( _
                 ByVal index As Variant) As StudyValueHandler
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mStudyValueHandlers.Item(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mStudyValueHandlers.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

@@ -15,6 +15,11 @@ Public Const PlusInfinityDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 Public Const MinusInfinitySingle As Single = -(2 - 2 ^ -23) * 2 ^ 127
 Public Const PlusInfinitySingle As Single = (2 - 2 ^ -23) * 2 ^ 127
 
+Public Const PlusInfinityLong As Long = &H7FFFFFFF
+Public Const MinusInfinityLong As Long = &H80000000
+
+Public Const Log10 As Double = 2.30258509299405
+
 Public Const OneMicroSecond As Double = 1.15740740740741E-11
 
 Public Const MaxSystemColor As Long = &H80000018
@@ -117,11 +122,16 @@ aFont.Bold = pFont.Bold
 aFont.Charset = pFont.Charset
 aFont.Italic = pFont.Italic
 aFont.Name = pFont.Name
-aFont.size = pFont.size
+aFont.Size = pFont.Size
 aFont.Strikethrough = pFont.Strikethrough
 aFont.Underline = pFont.Underline
 aFont.Weight = pFont.Weight
 Set gCloneFont = aFont
+End Function
+
+Public Function gDegreesToRadians( _
+                ByVal degrees As Double) As Double
+gDegreesToRadians = degrees * Pi / 180
 End Function
 
 Public Function gIsValidColor( _
@@ -130,6 +140,11 @@ Public Function gIsValidColor( _
 If value > &HFFFFFF Then Exit Function
 If value < 0 And value > MaxSystemColor Then Exit Function
 gIsValidColor = True
+End Function
+
+Public Function gRadiansToDegrees( _
+                ByVal radians As Double) As Double
+gRadiansToDegrees = radians * 180 / Pi
 End Function
 
 Public Function gRegionTypeToString( _

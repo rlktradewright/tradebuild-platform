@@ -1,16 +1,16 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.2#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fContractSpec 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Contract specifier"
-   ClientHeight    =   4440
+   ClientHeight    =   5445
    ClientLeft      =   45
    ClientTop       =   435
    ClientWidth     =   4200
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   4440
+   ScaleHeight     =   5445
    ScaleWidth      =   4200
    ShowInTaskbar   =   0   'False
    StartUpPosition =   1  'CenterOwner
@@ -19,7 +19,7 @@ Begin VB.Form fContractSpec
       Height          =   375
       Left            =   960
       TabIndex        =   3
-      Top             =   3960
+      Top             =   4920
       Width           =   2055
    End
    Begin VB.CheckBox WriteBidAskBarsCheck 
@@ -27,7 +27,7 @@ Begin VB.Form fContractSpec
       Height          =   375
       Left            =   960
       TabIndex        =   2
-      Top             =   3600
+      Top             =   4560
       Width           =   2055
    End
    Begin VB.CheckBox EnabledCheck 
@@ -36,6 +36,7 @@ Begin VB.Form fContractSpec
       Left            =   960
       TabIndex        =   0
       Top             =   0
+      Value           =   1  'Checked
       Width           =   1695
    End
    Begin VB.CommandButton CancelButton 
@@ -58,13 +59,14 @@ Begin VB.Form fContractSpec
       Width           =   1215
    End
    Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
-      Height          =   2895
+      Height          =   3690
       Left            =   120
       TabIndex        =   1
       Top             =   600
       Width           =   2535
       _ExtentX        =   4471
-      _ExtentY        =   5106
+      _ExtentY        =   6509
+      ModeAdvanced    =   -1  'True
    End
 End
 Attribute VB_Name = "fContractSpec"
@@ -88,7 +90,7 @@ Option Explicit
 '@================================================================================
 
 Event ContractSpecReady( _
-                ByVal contractSpec As contractSpecifier, _
+                ByVal contractSpec As ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
@@ -125,22 +127,54 @@ Private Const ModuleName                    As String = "fContractSpec"
 '@================================================================================
 
 Private Sub CancelButton_Click()
+Const ProcName As String = "CancelButton_Click"
+On Error GoTo Err
+
 Unload Me
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
+Const ProcName As String = "ContractSpecBuilder1_NotReady"
+On Error GoTo Err
+
 SaveButton.enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_ready()
+Const ProcName As String = "ContractSpecBuilder1_ready"
+On Error GoTo Err
+
 SaveButton.enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SaveButton_Click()
-RaiseEvent ContractSpecReady(ContractSpecBuilder1.contractSpecifier, _
-                            IIf(EnabledCheck.value = vbChecked, True, False), _
-                            IIf(WriteBidAskBarsCheck.value = vbChecked, True, False), _
-                            IIf(IncludeMarketDepthCheck.value = vbChecked, True, False))
+Const ProcName As String = "SaveButton_Click"
+On Error GoTo Err
+
+RaiseEvent ContractSpecReady(ContractSpecBuilder1.ContractSpecifier, _
+                            IIf(EnabledCheck.Value = vbChecked, True, False), _
+                            IIf(WriteBidAskBarsCheck.Value = vbChecked, True, False), _
+                            IIf(IncludeMarketDepthCheck.Value = vbChecked, True, False))
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -151,8 +185,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get contractSpec() As contractSpecifier
-Set contractSpec = ContractSpecBuilder1.contractSpecifier
+Public Property Get contractSpec() As ContractSpecifier
+Const ProcName As String = "contractSpec"
+On Error GoTo Err
+
+Set contractSpec = ContractSpecBuilder1.ContractSpecifier
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -160,18 +202,26 @@ End Property
 '@================================================================================
 
 Public Sub initialise( _
-                ByVal contractSpec As contractSpecifier, _
+                ByVal contractSpec As ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 If contractSpec Is Nothing Then
     ContractSpecBuilder1.Clear
 Else
-    ContractSpecBuilder1.contractSpecifier = contractSpec
+    ContractSpecBuilder1.ContractSpecifier = contractSpec
 End If
-EnabledCheck.value = IIf(enabled, vbChecked, vbUnchecked)
-WriteBidAskBarsCheck.value = IIf(writeBidAskBars, vbChecked, vbUnchecked)
-IncludeMarketDepthCheck.value = IIf(includeMktDepth, vbChecked, vbUnchecked)
+EnabledCheck.Value = IIf(enabled, vbChecked, vbUnchecked)
+WriteBidAskBarsCheck.Value = IIf(writeBidAskBars, vbChecked, vbUnchecked)
+IncludeMarketDepthCheck.Value = IIf(includeMktDepth, vbChecked, vbUnchecked)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

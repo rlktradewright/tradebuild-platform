@@ -41,7 +41,9 @@ Option Explicit
 
 Private Const ModuleName                As String = "Canvas"
 
-
+' Used to indicate that there was no currently defined clip region when
+' SaveClippingRegion was called
+Private Const NoClipRegion              As Long = -1
 '================================================================================
 ' Enums
 '================================================================================
@@ -54,45 +56,14 @@ Private Const ModuleName                As String = "Canvas"
 ' External FUnction Declarations
 '================================================================================
 
-'Private Declare Function CreateRectRgn Lib "gdi32" ( _
-'                ByVal x1 As Long, _
-'                ByVal y1 As Long, _
-'                ByVal x2 As Long, _
-'                ByVal y2 As Long) As Long
-'
-'Private Declare Function CreateSolidBrush Lib "gdi32" ( _
-'                ByVal crColor As Long) As Long
-'
-'Private Declare Function DeleteObject Lib "gdi32" ( _
-'                ByVal hObject As Long) As Long
-'
-'Private Declare Function FillRect Lib "user32" ( _
-'                ByVal hDC As Long, _
-'                lpRect As RECT, _
-'                ByVal hBrush As Long) As Long
-'
-'Private Declare Function GetBkColor Lib "gdi32" ( _
-'                ByVal hDC As Long) As Long
-'
-'Private Declare Function GetClipRgn Lib "gdi32" ( _
-'                ByVal hDC As Long, _
-'                ByVal hRgn As Long) As Long
-'
-'Private Declare Function Polygon Lib "gdi32" ( _
-'                ByVal hDC As Long, _
-'                lpPoint As POINTAPI, _
-'                ByVal nCount As Long) As Long
-'
-'Private Declare Function SelectClipRgn Lib "gdi32" ( _
-'                ByVal hDC As Long, _
-'                ByVal hRgn As Long) As Long
-'
 '================================================================================
 ' Member variables
 '================================================================================
 
 Private mSurface As PictureBox
 Attribute mSurface.VB_VarHelpID = -1
+Private mViewport As Viewport
+Private mModeSwitcher As ScaleModeSwitcher
 
 ' pen attributes
 Private mPenColor As Long
@@ -109,9 +80,9 @@ Private mTextColor As Long
 Private mTextFont As StdFont
 Private mTextTransparent As Boolean
 
-Private mClipRegion As Long
-
 Private mRegionType As RegionTypes
+
+Private mSavedClippingRegionHandle As Long
 
 '================================================================================
 ' Class Event Handlers
@@ -135,47 +106,165 @@ End Sub
 '================================================================================
 
 Public Property Get hDC() As Long
+Const ProcName As String = "hDC"
+Dim failpoint As String
+On Error GoTo Err
+
 hDC = mSurface.hDC
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get Height() As Double
+Const ProcName As String = "Height"
+Dim failpoint As String
+On Error GoTo Err
+
 Height = mSurface.Height
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let MouseIcon(ByVal value As IPictureDisp)
+Const ProcName As String = "MouseIcon"
+Dim failpoint As String
+On Error GoTo Err
+
 mSurface.MouseIcon = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let MousePointer(ByVal value As VBRUN.MousePointerConstants)
+Const ProcName As String = "MousePointer"
+Dim failpoint As String
+On Error GoTo Err
+
 mSurface.MousePointer = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MousePointer() As VBRUN.MousePointerConstants
+Const ProcName As String = "MousePointer"
+Dim failpoint As String
+On Error GoTo Err
+
 MousePointer = mSurface.MousePointer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let RegionType(ByVal value As RegionTypes)
+Const ProcName As String = "RegionType"
+Dim failpoint As String
+On Error GoTo Err
+
 mRegionType = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Surface(ByVal value As PictureBox)
+Const ProcName As String = "Surface"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mSurface = value
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+Set mModeSwitcher = New ScaleModeSwitcher
+mModeSwitcher.Initialise mSurface
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get Surface() As PictureBox
+Const ProcName As String = "Surface"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Surface = mSurface
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Friend Property Let Viewport(ByVal value As Viewport)
+Set mViewport = value
 End Property
 
 Friend Property Get Width() As Double
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
 Width = mSurface.Width
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
+Public Sub AddToClippingRegion( _
+                ByRef clipArea As RECT)
+Dim lRegionHandle As Long
+Dim res As Long
+
+Const ProcName As String = "AddToClippingRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+lRegionHandle = CreateRectRgn(clipArea.Left, _
+                        clipArea.Top, _
+                        clipArea.Right, _
+                        clipArea.Bottom)
+If lRegionHandle = 0 Then
+    Err.Raise ErrorCodes.ErrRuntimeException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Failed to create GDI region"
+End If
+
+res = ExtSelectClipRgn(mSurface.hDC, lRegionHandle, RGN_OR)
+
+DeleteObject lRegionHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Friend Sub Clear()
-Dim failpoint As Long
+Const ProcName As String = "Clear"
+Dim failpoint As String
 On Error GoTo Err
 
 mSurface.Cls
@@ -183,53 +272,38 @@ mSurface.Cls
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Clear" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ClearClippingRegion()
-Dim failpoint As Long
+Const ProcName As String = "ClearClippingRegion"
+Dim failpoint As String
 On Error GoTo Err
 
 SelectClipRgn mSurface.hDC, 0
-DeleteObject mClipRegion
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ClearClippingRegion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawCircle( _
                 ByVal centre As Point, _
                 ByVal radius As Double)
-Dim failpoint As Long
+Const ProcName As String = "DrawCircle"
+Dim failpoint As String
 On Error GoTo Err
 
 applyPenSettings
 applyFillSettings
-mSurface.Circle (centre.XLogical, centre.YLogical), radius
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+mSurface.Circle (centre.XLogical, centre.yLogical), radius
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawCircle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawLine( _
@@ -237,119 +311,186 @@ Public Sub DrawLine( _
                 ByVal y1 As Single, _
                 ByVal x2 As Single, _
                 ByVal y2 As Single)
-Dim failpoint As Long
+Const ProcName As String = "DrawLine"
+Dim failpoint As String
 On Error GoTo Err
 
 applyPenSettings
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
 mSurface.Line (x1, y1)-(x2, y2)
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawLine" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawPoint( _
                 ByVal p As Point)
-Dim failpoint As Long
+Const ProcName As String = "DrawPoint"
+Dim failpoint As String
 On Error GoTo Err
 
 applyPenSettings
-mSurface.PSet (p.XLogical, p.YLogical)
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+mSurface.PSet (p.XLogical, p.yLogical)
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawPoint" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawPolygon( _
                 ByRef points() As W32Point)
-Dim failpoint As Long
+Const ProcName As String = "DrawPolygon"
+Dim failpoint As String
 On Error GoTo Err
 
 applyPenSettings
 applyFillSettings
-Polygon mSurface.hDC, points(0), UBound(points) + 1
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+Polygon mSurface.hDC, VarPtr(points(0)), UBound(points) + 1
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawPolygon" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawRectangle( _
+                ByVal x1Logical As Double, _
+                ByVal y1Logical As Double, _
+                ByVal x2Logical As Double, _
+                ByVal y2Logical As Double)
+Const ProcName As String = "DrawRectangle"
+Dim lTRect As TRectangle
+Dim failpoint As String
+On Error GoTo Err
+
+lTRect.Left = x1Logical
+lTRect.Bottom = IIf(y1Logical <= y2Logical, y1Logical, y2Logical)
+lTRect.Right = x2Logical
+lTRect.Top = IIf(y1Logical <= y2Logical, y2Logical, y1Logical)
+RectValidate lTRect, True
+
+DrawRectangleFromTRectangle lTRect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub DrawRectangleFromPoints( _
                 ByVal p1 As Point, _
                 ByVal p2 As Point)
-Dim failpoint As Long
+Const ProcName As String = "DrawRectangleFromPoints"
+Dim lTRect As TRectangle
+Dim failpoint As String
+On Error GoTo Err
+
+lTRect.Left = p1.XLogical
+lTRect.Bottom = p1.yLogical
+lTRect.Right = p2.XLogical
+lTRect.Top = p2.yLogical
+RectValidate lTRect
+
+DrawRectangleFromTRectangle lTRect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub DrawRectangleFromRect( _
+                ByRef pRect As RECT)
+Const ProcName As String = "DrawRectangleFromRect"
+Dim failpoint As String
 On Error GoTo Err
 
 applyPenSettings
 applyFillSettings
-mSurface.Line (p1.XLogical, p1.YLogical)-(p2.XLogical, p2.YLogical), , B
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+Rectangle mSurface.hDC, pRect.Left, pRect.Top, pRect.Right, pRect.Bottom
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawRectangle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
+Public Sub DrawRectangleFromTRectangle( _
+                ByRef pRect As TRectangle)
+Const ProcName As String = "DrawRectangleFromTRectangle"
+Dim failpoint As String
+On Error GoTo Err
 
+If Not pRect.isValid Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Argument is not a valid TRectangle"
+End If
+
+DrawRectangleFromRect mViewport.ConvertTRectangleToRect(pRect)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub DrawText( _
-                ByVal Text As String, _
-                ByVal location As Point)
+                ByVal pText As String, _
+                ByRef pLocation As TPoint, _
+                ByRef pClippingRect As TRectangle, _
+                ByVal pJustification As TextJustifyModes, _
+                ByVal pMultiLine As Boolean, _
+                ByVal pEllipsis As EllipsisModes, _
+                ByVal pExpandTabs As Boolean, _
+                ByVal pTabWidth As Long, _
+                ByVal pWordWrap As Boolean, _
+                ByVal pLeftMargin As DimensionX, _
+                ByVal pRightMargin As DimensionX)
 Dim textLines() As String
 Dim i As Long
-                
-Dim failpoint As Long
+Dim clipRect As RECT
+Dim res As Long
+Dim dtp As DRAWTEXTPARAMS
+
+Const ProcName As String = "DrawText"
+Dim failpoint As String
 On Error GoTo Err
 
 setfont
-    
 mSurface.FontTransparent = mTextTransparent
-mSurface.CurrentX = location.XLogical
-mSurface.CurrentY = location.YLogical
 mSurface.ForeColor = mTextColor
-textLines = Split(Text, vbCrLf)
-For i = 0 To UBound(textLines)
-    mSurface.Print textLines(i)
-    mSurface.CurrentX = location.XLogical
-Next
+
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+
+clipRect = mViewport.ConvertTRectangleToRect(pClippingRect)
+    
+dtp.cbSize = Len(dtp)
+dtp.iTabLength = pTabWidth
+If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.XLogical)
+If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.XLogical)
+
+res = User32.DrawTextEx(mSurface.hDC, _
+                        StrPtr(pText), _
+                        Len(pText), _
+                        VarPtr(clipRect), _
+                        pJustification + _
+                            pEllipsis + _
+                            ((Not pMultiLine) And DT_SINGLELINE) + _
+                            (pExpandTabs And DT_EXPANDTABS) + _
+                            (pWordWrap And DT_WORDBREAK), _
+                        VarPtr(dtp))
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DrawText" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Finish()
@@ -358,12 +499,169 @@ Friend Sub Finish()
 ' to ensure that this ActiveX control's memory is released
 gLogger.Log LogLevelHighDetail, "Canvas finished"
 Set mSurface = Nothing
+
+Set mViewport = Nothing
+End Sub
+
+Public Function GetTextDimensions( _
+                ByVal pText As String, _
+                ByRef pSize As Dimension, _
+                ByVal pJustification As TextJustifyModes, _
+                ByVal pMultiLine As Boolean, _
+                ByVal pEllipsis As EllipsisModes, _
+                ByVal pExpandTabs As Boolean, _
+                ByVal pTabWidth As Long, _
+                ByVal pWordWrap As Boolean, _
+                ByVal pLeftMargin As DimensionX, _
+                ByVal pRightMargin As DimensionX) As Dimension
+Dim textLines() As String
+Dim i As Long
+Dim clipRect As RECT
+Dim res As Long
+Dim dtp As DRAWTEXTPARAMS
+Dim sizeHeight As Long
+Dim sizeWidth As Long
+
+Const ProcName As String = "GetTextDimensions"
+Dim failpoint As String
+On Error GoTo Err
+
+setfont
+mSurface.FontTransparent = mTextTransparent
+mSurface.ForeColor = mTextColor
+
+SetGraphicsMode mSurface.hDC, GM_ADVANCED
+
+If Not pSize Is Nothing Then
+    sizeWidth = mViewport.ConvertLogicalToPixelsX(pSize.XLogical)
+    sizeHeight = mViewport.ConvertLogicalToPixelsY(pSize.yLogical)
+    clipRect.Right = sizeWidth
+    clipRect.Bottom = sizeHeight
+Else
+    clipRect.Right = &H7FFFFFF
+    clipRect.Bottom = 0
+End If
+    
+dtp.cbSize = Len(dtp)
+dtp.iTabLength = pTabWidth
+If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.XLogical)
+If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.XLogical)
+
+res = User32.DrawTextEx(mSurface.hDC, _
+                        StrPtr(pText), _
+                        Len(pText), _
+                        VarPtr(clipRect), _
+                        DT_CALCRECT + _
+                            pJustification + _
+                            pEllipsis + _
+                            ((Not pMultiLine) And DT_SINGLELINE) + _
+                            (pExpandTabs And DT_EXPANDTABS) + _
+                            (pWordWrap And DT_WORDBREAK), _
+                        VarPtr(dtp))
+                        
+If Not pSize Is Nothing Then
+    If sizeHeight <> 0 Then clipRect.Bottom = sizeHeight
+    If sizeWidth <> 0 Then clipRect.Right = sizeWidth
+End If
+
+Set GetTextDimensions = mViewport.NewDimension(mViewport.ConvertPixelsToLogicalX(clipRect.Right), _
+                                            mViewport.ConvertPixelsToLogicalY(clipRect.Bottom), _
+                                            CoordsLogical, _
+                                            CoordsLogical)
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Public Sub IntersectClippingRegion( _
+                ByRef clipArea As RECT)
+Dim lRegionHandle As Long
+Dim res As Long
+
+Const ProcName As String = "IntersectClippingRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+lRegionHandle = CreateRectRgn(clipArea.Left, _
+                        clipArea.Top, _
+                        clipArea.Right, _
+                        clipArea.Bottom)
+If lRegionHandle = 0 Then
+    Err.Raise ErrorCodes.ErrRuntimeException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Failed to create GDI region"
+End If
+
+res = ExtSelectClipRgn(mSurface.hDC, lRegionHandle, RGN_AND)
+
+DeleteObject lRegionHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub RestoreClippingRegion()
+Dim res As Long
+
+Const ProcName As String = "RestoreClippingRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+If mSavedClippingRegionHandle = NoClipRegion Then
+    ClearClippingRegion
+Else
+    res = SelectClipRgn(mSurface.hDC, mSavedClippingRegionHandle)
+    DeleteObject mSavedClippingRegionHandle
+End If
+
+mSavedClippingRegionHandle = 0
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub SaveClippingRegion()
+
+Const ProcName As String = "SaveClippingRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+Dim res As Long
+
+If mSavedClippingRegionHandle <> 0 Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Clipping region has already been saved and not yet restored"
+End If
+
+mSavedClippingRegionHandle = CreateRectRgn(0, 0, 2, 2)
+res = GetClipRgn(mSurface.hDC, mSavedClippingRegionHandle)
+
+If res = -1 Then
+    Err.Raise ErrorCodes.ErrRuntimeException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Failed to get current GDI clipping region"
+ElseIf res = 0 Then
+    ' means there is no current clipping region - see documentation for GetClipRgn
+    DeleteObject mSavedClippingRegionHandle
+    mSavedClippingRegionHandle = NoClipRegion
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetBrushAttributes( _
                 ByVal Color As Long, _
                 ByVal Style As FillStyles)
-Dim failpoint As Long
+Const ProcName As String = "SetBrushAttributes"
+Dim failpoint As String
 On Error GoTo Err
 
 mBrushColor = Color
@@ -372,52 +670,58 @@ mBrushStyle = Style
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetBrushAttributes" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetClippingRegion( _
                 ByRef clipArea As RECT)
+Dim lRegionHandle As Long
 Dim res As Long
-Dim failpoint As Long
+
+Const ProcName As String = "SetClippingRegion"
+Dim failpoint As String
 On Error GoTo Err
 
-
-mClipRegion = CreateRectRgn(clipArea.Left, _
+lRegionHandle = CreateRectRgn(clipArea.Left, _
                         clipArea.Top, _
                         clipArea.Right, _
                         clipArea.Bottom)
-If mClipRegion = 0 Then
+If lRegionHandle = 0 Then
     Err.Raise ErrorCodes.ErrRuntimeException, _
-            ProjectName & "." & ModuleName & ":" & "SetClippingRegion", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Failed to create GDI region"
 End If
 
-res = SelectClipRgn(mSurface.hDC, mClipRegion)
+res = SelectClipRgn(mSurface.hDC, lRegionHandle)
+
+DeleteObject lRegionHandle
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetClippingRegion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetScale(ByRef pBoundary As TRectangle)
+Const ProcName As String = "SetScale"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSurface Is Nothing Then Exit Sub
 mSurface.ScaleHeight = pBoundary.Bottom - pBoundary.Top
 mSurface.ScaleWidth = pBoundary.Right - pBoundary.Left
 mSurface.ScaleTop = pBoundary.Top
 mSurface.ScaleLeft = pBoundary.Left
+
+'now adjust pBoundary to reflect the fact that ScaleHeight etc are singles not doubles
+pBoundary.Top = mSurface.ScaleTop
+pBoundary.Left = mSurface.ScaleLeft
+pBoundary.Bottom = mSurface.ScaleHeight + pBoundary.Top
+pBoundary.Right = mSurface.ScaleWidth + pBoundary.Left
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetPenAttributes( _
@@ -425,31 +729,27 @@ Public Sub SetPenAttributes( _
                 ByVal Width As Long, _
                 ByVal Style As LineStyles, _
                 ByVal mode As DrawModes)
-Dim failpoint As Long
+Const ProcName As String = "SetPenAttributes"
+Dim failpoint As String
 On Error GoTo Err
 
 mPenColor = Color
-mPenWidth = Width
+mPenWidth = IIf(Width <= 0, 1, Width)
 mPenStyle = Style
 mPenMode = mode
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetPenAttributes" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetTextAttributes( _
                 ByVal Color As Long, _
                 ByVal Font As StdFont, _
                 ByVal transparent As Boolean)
-Dim failpoint As Long
+Const ProcName As String = "SetTextAttributes"
+Dim failpoint As String
 On Error GoTo Err
 
 mTextColor = Color
@@ -459,17 +759,12 @@ mTextTransparent = transparent
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetTextAttributes" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function TextHeight(ByVal value As String) As Double
-Dim failpoint As Long
+Const ProcName As String = "TextHeight"
+Dim failpoint As String
 On Error GoTo Err
 
 setfont
@@ -478,17 +773,12 @@ TextHeight = Abs(mSurface.TextHeight(value))
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TextHeight" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function TextWidth(ByVal value As String) As Double
-Dim failpoint As Long
+Const ProcName As String = "TextWidth"
+Dim failpoint As String
 On Error GoTo Err
 
 setfont
@@ -497,18 +787,21 @@ TextWidth = mSurface.TextWidth(value)
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TextWidth" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Function ZOrder( _
-                ByVal position As Integer)
-mSurface.ZOrder position
+                ByVal Position As Integer)
+Const ProcName As String = "ZOrder"
+Dim failpoint As String
+On Error GoTo Err
+
+mSurface.ZOrder Position
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '================================================================================
@@ -516,30 +809,57 @@ End Function
 '================================================================================
 
 Private Sub applyFillSettings()
+Const ProcName As String = "applyFillSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 mSurface.FillColor = mBrushColor
 mSurface.FillStyle = mBrushStyle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub applyPenSettings()
+Const ProcName As String = "applyPenSettings"
+Dim failpoint As String
+On Error GoTo Err
+
 mSurface.ForeColor = mPenColor
 mSurface.DrawWidth = mPenWidth
 mSurface.DrawStyle = mPenStyle
 mSurface.DrawMode = mPenMode
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setfont()
+Const ProcName As String = "setfont"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mTextFont Is Nothing Then
     With mSurface.Font
-        If mTextFont.size < 8 Then .size = mTextFont.size
+        If mTextFont.Size < 8 Then .Size = mTextFont.Size
        .Name = mTextFont.Name
        .Bold = mTextFont.Bold
        .Italic = mTextFont.Italic
-       .size = mTextFont.size
+       .Size = mTextFont.Size
        .Charset = mTextFont.Charset
        .Strikethrough = mTextFont.Strikethrough
        .Underline = mTextFont.Underline
        .Weight = mTextFont.Weight
     End With
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

@@ -57,18 +57,44 @@ Private Const ModuleName                    As String = "DunniganFactory"
 Private Property Let BarFormatterFactory_ConfigurationSection( _
                 ByVal RHS As TWUtilities30.ConfigurationSection)
 'Nothing we need to record in the config
+Const ProcName As String = "BarFormatterFactory_ConfigurationSection"
+On Error GoTo Err
+
+
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function BarFormatterFactory_CreateBarFormatter( _
                 ByVal pBars As TimeframeUtils26.bars) As ChartUtils26.BarFormatter
 Dim bf As New DunniganBarFormatter
+Const ProcName As String = "BarFormatterFactory_CreateBarFormatter"
+On Error GoTo Err
+
 bf.bars = pBars
 Set BarFormatterFactory_CreateBarFormatter = bf
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub BarFormatterFactory_LoadFromConfig( _
                 ByVal config As TWUtilities30.ConfigurationSection)
 'Nothing to load from the config
+Const ProcName As String = "BarFormatterFactory_LoadFromConfig"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

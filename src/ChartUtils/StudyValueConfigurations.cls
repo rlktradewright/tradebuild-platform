@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyValueConfigurations"
+
 Private Const ConfigSectionStudyValueConfig             As String = "StudyValueConfiguration"
 
 '@================================================================================
@@ -80,14 +82,30 @@ End Sub
 
 Friend Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
 Public Property Get count() As Long
+Const ProcName As String = "count"
+On Error GoTo Err
+
 count = mStudyValueConfigurations.count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -96,15 +114,26 @@ End Property
 
 Public Function Add( _
                 ByVal ValueName As String) As StudyValueConfiguration
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = New StudyValueConfiguration
 Add.ValueName = ValueName
 mStudyValueConfigurations.Add Add, ValueName
 storeStudyValueSettings Add
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Clone() As StudyValueConfigurations
 Dim svc As StudyValueConfiguration
 Dim newSvc As StudyValueConfiguration
+
+Const ProcName As String = "Clone"
+On Error GoTo Err
 
 Set Clone = New StudyValueConfigurations
 
@@ -118,12 +147,25 @@ For Each svc In mStudyValueConfigurations
     newSvc.LineStyle = svc.LineStyle
     newSvc.TextStyle = svc.TextStyle
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Item( _
                 ByVal index As Variant) As StudyValueConfiguration
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mStudyValueConfigurations.Item(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub LoadFromConfig( _
@@ -131,6 +173,9 @@ Friend Sub LoadFromConfig( _
                 ByVal pBars As Bars)
 Dim svcSect As ConfigurationSection
 Dim svc As StudyValueConfiguration
+
+Const ProcName As String = "LoadFromConfig"
+On Error GoTo Err
 
 Set mBars = pBars
 Set mConfig = config
@@ -141,12 +186,25 @@ For Each svcSect In mConfig
     svc.LoadFromConfig svcSect, mBars
     mStudyValueConfigurations.Add svc, svc.ValueName
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mStudyValueConfigurations.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -155,16 +213,32 @@ End Function
 
 Private Sub storeSettings()
 Dim svc As StudyValueConfiguration
+Const ProcName As String = "storeSettings"
+On Error GoTo Err
+
 For Each svc In mStudyValueConfigurations
     storeStudyValueSettings svc
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub storeStudyValueSettings( _
                 ByVal studyValueConfig As StudyValueConfiguration)
+Const ProcName As String = "storeStudyValueSettings"
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then
     studyValueConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudyValueConfig & "(" & GenerateGUIDString & ")")
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

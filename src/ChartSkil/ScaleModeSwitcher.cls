@@ -44,6 +44,12 @@ Private Const ModuleName                            As String = "ScaleModeSwitch
 ' Member variables
 '@================================================================================
 
+Private mSurface As PictureBox
+Private mScaleLeft As Double
+Private mScaleWidth As Double
+Private mScaleTop As Double
+Private mScaleHeight As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -63,6 +69,41 @@ Private Const ModuleName                            As String = "ScaleModeSwitch
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pSurface As PictureBox)
+Set mSurface = pSurface
+End Sub
+
+Friend Sub SwitchToPixelMode()
+Const ProcName As String = "SwitchToPixelMode"
+Dim failpoint As String
+On Error GoTo Err
+
+mScaleLeft = mSurface.ScaleLeft
+mScaleWidth = mSurface.ScaleWidth
+mScaleTop = mSurface.ScaleTop
+mScaleHeight = mSurface.ScaleHeight
+
+mSurface.ScaleMode = vbPixels
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub SwitchToUserMode()
+Const ProcName As String = "SwitchToUserMode"
+Dim failpoint As String
+On Error GoTo Err
+
+mSurface.Scale (mScaleLeft, mScaleTop)-(mScaleLeft + mScaleWidth, mScaleTop + mScaleHeight)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 '@================================================================================
 ' Helper Functions

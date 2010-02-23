@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GStandardDeviation"
+
 Public Const SDInputValue As String = "Input"
 
 Public Const SDParamPeriods As String = ParamPeriods
@@ -42,17 +44,33 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue SDParamPeriods, 20
+    mDefaultParameters.SetParameterValue SDParamPeriods, 20
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -60,37 +78,45 @@ Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = SdName
-    mStudyDefinition.shortName = SdShortName
+    mStudyDefinition.ShortName = SdShortName
     mStudyDefinition.Description = "Standard Deviation " & _
                         "calculates the standard deviation of the n most " & _
                         "recent values, where n is given by the Periods parameter."
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SDInputValue)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SDValueStandardDeviation)
     valueDef.Description = "The standard deviation value"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = True
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
+    valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SDParamPeriods)
     paramDef.Description = "The number of standard deviations used to calculate the " & _
                             "standard deviation"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

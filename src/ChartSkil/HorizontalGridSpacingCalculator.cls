@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "HorizontalGridSpacingCalculator"
+Attribute VB_Name = "HorizontalGridSpacer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,11 +38,16 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "HorizontalGridSpacingCalculator"
+Private Const ModuleName                            As String = "HorizontalGridSpacer"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mGridlineSpacingY                           As Double
+Private mYScaleQuantum                              As Double
+
+Private mYScaleGridSpacing                        As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,17 +65,25 @@ Private Const ModuleName                            As String = "HorizontalGridS
 ' Properties
 '@================================================================================
 
+Friend Property Let GridlineSpacingY(ByVal value As Double)
+mGridlineSpacingY = value
+End Property
+
+Friend Property Get YScaleGridSpacing() As Single
+YScaleGridSpacing = mYScaleGridSpacing
+End Property
+
+Friend Property Let YScaleQuantum(ByVal value As Double)
+mYScaleQuantum = value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Sub calcGridSpacings( _
+Friend Function Calculate( _
                 ByVal pHeight As Double, _
-                ByVal pHeightCm As Double)
+                ByVal pHeightCm As Double) As Double
 Dim numGridDivisions As Double
 Dim gridSpacing As Double
 Dim logSpacing As Double
@@ -84,7 +97,7 @@ On Error GoTo Err
 numGridDivisions = pHeightCm / mGridlineSpacingY
 gridSpacing = pHeight / numGridDivisions
 
-logSpacing = Log(gridSpacing) / Log(10#)
+logSpacing = Log(gridSpacing) / Log10
 
 exp = Int(logSpacing)
 mantissa = gridSpacing / 10 ^ exp
@@ -98,48 +111,44 @@ Then
     ' the horizontal grid lines
     If exp >= -1 Then
         If mantissa >= 5 Then
-            mScaleGridSpacingY = 16 * 0.03125
+            mYScaleGridSpacing = 16 * 0.03125
         ElseIf mantissa >= 2.5 Then
-            mScaleGridSpacingY = 8 * 0.03125
+            mYScaleGridSpacing = 8 * 0.03125
         ElseIf mantissa >= 1.25 Then
-            mScaleGridSpacingY = 4 * 0.03125
+            mYScaleGridSpacing = 4 * 0.03125
         ElseIf mantissa >= 0.625 Then
-            mScaleGridSpacingY = 2 * 0.03125
+            mYScaleGridSpacing = 2 * 0.03125
         Else
-            mScaleGridSpacingY = 0.03125
+            mYScaleGridSpacing = 0.03125
         End If
     Else
-        mScaleGridSpacingY = 0.03125
+        mYScaleGridSpacing = 0.03125
     End If
 Else
     If mantissa >= 5 Then
-        mScaleGridSpacingY = 5 * 10 ^ exp
+        mYScaleGridSpacing = 5 * 10 ^ exp
     ElseIf mantissa >= 2.5 Then
-        mScaleGridSpacingY = 2.5 * 10 ^ exp
+        mYScaleGridSpacing = 2.5 * 10 ^ exp
     ElseIf mantissa >= 2# Then
-        mScaleGridSpacingY = 2 * 10 ^ exp
+        mYScaleGridSpacing = 2 * 10 ^ exp
     Else
-        mScaleGridSpacingY = 1 * 10 ^ exp
+        mYScaleGridSpacing = 1 * 10 ^ exp
     End If
 End If
 
-If mScaleGridSpacingY < mYScaleQuantum Then mScaleGridSpacingY = mYScaleQuantum
+If mYScaleGridSpacing < mYScaleQuantum Then mYScaleGridSpacing = mYScaleQuantum
 
-If mIntegerYScale Then
-    mYScaleSubFormatStr = "0"
-Else
-    If mScaleGridSpacingY < 1 Then
-        mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
-    Else
-        mYScaleSubFormatStr = "0.00"
-    End If
-End If
+Calculate = mYScaleGridSpacing
 
-Exit Sub
+Exit Function
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
-End Sub
+End Function
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
 
 

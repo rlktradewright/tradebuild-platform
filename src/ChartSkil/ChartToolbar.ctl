@@ -379,7 +379,7 @@ UserControl.Height = Toolbar1.Height
 End Sub
 
 Private Sub UserControl_Terminate()
-gLogger.Log LogLevelDetail, "ChartToolbar terminated"
+'gLogger.Log LogLevelDetail, "ChartToolbar terminated"
 Debug.Print "ChartToolbar terminated"
 End Sub
 
@@ -388,8 +388,8 @@ End Sub
 '================================================================================
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
-
-Dim failpoint As Long
+Const ProcName As String = "Toolbar1_ButtonClick"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case Button.Key
@@ -472,11 +472,7 @@ End Select
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "TimeframeToolbar_ButtonClick" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -484,7 +480,16 @@ End Sub
 '================================================================================
 
 Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mBarSeries_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -492,7 +497,16 @@ End Sub
 '================================================================================
 
 Private Sub mRegion_AutoscalingChanged()
+Const ProcName As String = "mRegion_AutoscalingChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -501,11 +515,24 @@ End Sub
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 Enabled = UserControl.Enabled
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
 UserControl.Enabled = value
 If Not mController Is Nothing And _
     Not mRegion Is Nothing And _
@@ -516,6 +543,11 @@ Else
     Toolbar1.Enabled = False
 End If
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -526,6 +558,10 @@ Public Sub Initialise( _
                 ByVal pChartController As ChartController, _
                 ByVal pRegion As ChartRegion, _
                 ByVal pBarSeries As BarSeries)
+
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not pChartController Is Nothing And _
     Not pRegion Is Nothing And _
@@ -542,6 +578,11 @@ Else
     Set mBarSeries = Nothing
     Toolbar1.Enabled = False
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -549,6 +590,10 @@ End Sub
 '@================================================================================
 
 Private Sub setupChartNavButtons()
+
+Const ProcName As String = "setupChartNavButtons"
+Dim failpoint As String
+On Error GoTo Err
 
 If mBarSeries Is Nothing Then Exit Sub
 
@@ -564,9 +609,18 @@ End If
 
 Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub setupDisplayModeButtons()
+Const ProcName As String = "setupDisplayModeButtons"
+Dim failpoint As String
+On Error GoTo Err
+
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
     Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
@@ -583,5 +637,10 @@ Else
     Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

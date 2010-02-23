@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#122.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#140.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -260,6 +260,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "ChartForm"
+
 Private Const BarLabelFrequency As Long = 10
 
 '================================================================================
@@ -273,6 +275,12 @@ Private Const BarLabelFrequency As Long = 10
 '================================================================================
 ' Member variables
 '================================================================================
+
+Private WithEvents mUnhandledErrorHandler As UnhandledErrorHandler
+Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
+
+Private mSessionStartTime As Date
+Private mSessionEndTime As Date
 
 Private mBarLength As Long                  ' the length of each bar in minutes
 Private mTickSize As Double                 ' the minimum tick size for the security
@@ -371,29 +379,34 @@ Private mPriceText As Text                  ' displays the current price in the 
 Private mCurrentTool As Object
 
 
-Private Sub FinishButton_Click()
-Chart1.Finish
-clearFields
-ClearButton.Enabled = False
-LoadButton.Enabled = False
-FinishButton.Enabled = False
-End Sub
-
 '================================================================================
 ' Form Event Handlers
 '================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
+Set mUnhandledErrorHandler = UnhandledErrorHandler
 End Sub
 
 Private Sub Form_Load()
+Const ProcName As String = "Form_Load"
+On Error GoTo Err
+
 initialise
 Set mElapsedTimer = New ElapsedTimer
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Resize()
 Dim newChartHeight As Single
+
+Const ProcName As String = "Form_Resize"
+
+On Error GoTo Err
 
 BasePicture.Top = Me.ScaleHeight - BasePicture.Height
 BasePicture.Width = Me.ScaleWidth
@@ -403,16 +416,29 @@ newChartHeight = BasePicture.Top - Chart1.Top
 If Chart1.Height <> newChartHeight And newChartHeight >= 0 Then
     Chart1.Height = newChartHeight
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
-gKillLogging
+'gKillLogging
 TerminateTWUtilities
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+Const ProcName As String = "Form_Unload"
+On Error GoTo Err
+
 If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
 If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -444,6 +470,9 @@ End If
 End Sub
 
 Private Sub ClearButton_Click()
+Const ProcName As String = "ClearButton_Click"
+On Error GoTo Err
+
 If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
 If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
 
@@ -456,12 +485,20 @@ clearFields
 initialise          ' reset the basic properties of the chart
 
 LoadButton.Enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FibRetracementButton_Click()
 Dim ls As LineStyle
 Dim tool As FibRetracementTool
 Dim lineSpecs(4) As FibLineSpecifier
+
+Const ProcName As String = "FibRetracementButton_Click"
+On Error GoTo Err
 
 Set ls = New LineStyle
 
@@ -488,11 +525,35 @@ lineSpecs(4).Percentage = 61.8
 Set tool = CreateFibRetracementTool(Chart1.Controller, lineSpecs, LayerNumbers.LayerHighestUser)
 Set mCurrentTool = tool
 Chart1.SetFocus
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub FinishButton_Click()
+Const ProcName As String = "FinishButton_Click"
+On Error GoTo Err
+
+Chart1.Finish
+clearFields
+ClearButton.Enabled = False
+LoadButton.Enabled = False
+FinishButton.Enabled = False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LineButton_Click()
 Dim tool As LineTool
 Dim ls As LineStyle
+
+Const ProcName As String = "LineButton_Click"
+On Error GoTo Err
 
 Set ls = New LineStyle
 ls.ExtendAfter = True
@@ -500,9 +561,17 @@ ls.ExtendAfter = True
 Set tool = CreateLineTool(Chart1.Controller, ls, LayerBackground)
 Set mCurrentTool = tool
 Chart1.SetFocus
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SelectButton_Click()
+Const ProcName As String = "SelectButton_Click"
+On Error GoTo Err
+
 If Chart1.PointerMode <> PointerModeSelection Then
     Chart1.SetPointerModeSelection
     SelectButton.Caption = "Cursor"
@@ -511,6 +580,11 @@ Else
     SelectButton.Caption = "Select"
 End If
 Chart1.SetFocus
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LoadButton_Click()
@@ -522,6 +596,9 @@ Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle
 Dim lTextStyle As TextStyle
+Const ProcName As String = "LoadButton_Click"
+On Error GoTo Err
+
 ReDim GradientFillColors(1) As Long
 
 LoadButton.Enabled = False  ' prevent the user pressing load again until the chart is cleared
@@ -533,6 +610,12 @@ Chart1.DisableDrawing               ' tells the chart not to draw anything. This
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
 Chart1.BarTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
+
+mSessionStartTime = getSessionTime(SessionStartTimeText.Text)
+mSessionEndTime = getSessionTime(SessionEndTimeText.Text)
+
+Chart1.SessionStartTime = mSessionStartTime
+Chart1.SessionEndTime = mSessionEndTime
 
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
@@ -600,7 +683,7 @@ mClockText.Align = AlignTopRight        ' use the top right corner of the text f
 mClockText.Color = &HA0A0A0             ' draw it grey...
 mClockText.Box = True                   ' ...with a box around it...
 mClockText.BoxStyle = LineInvisible     ' ...whose outline is not visible...
-mClockText.BoxThickness = 1             ' ...and is 1 pixels thick...
+mClockText.BoxThickness = 0             ' ...and is 0 pixels thick...
 mClockText.BoxFillWithBackgroundColor = True    ' ...and fill it with the region's backgruond color(s)...
 mClockText.PaddingX = 1                 ' leave 1 mm padding between the text and the box
 mClockText.Position = mPriceRegion.NewPoint(90, 98, CoordsRelative, CoordsRelative)
@@ -907,6 +990,30 @@ mClockTimer.StartTimer
 
 DrawingToolsFrame.Enabled = True
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
+
+Private Sub SessionEndTimeText_Validate(Cancel As Boolean)
+On Error GoTo Err
+getSessionTime SessionEndTimeText.Text
+
+Exit Sub
+Err:
+MsgBox Err.Description, vbExclamation, "Error"
+Cancel = True
+End Sub
+
+Private Sub SessionStartTimeText_Validate(Cancel As Boolean)
+On Error GoTo Err
+getSessionTime SessionStartTimeText.Text
+
+Exit Sub
+Err:
+MsgBox Err.Description, vbExclamation, "Error"
+Cancel = True
 End Sub
 
 '================================================================================
@@ -914,16 +1021,16 @@ End Sub
 '================================================================================
 
 Private Sub mClockTimer_TimerExpired()
+Const ProcName As String = "mClockTimer_TimerExpired"
+On Error GoTo Err
+
 mClockText.Text = Format(Now, "hh:mm:ss")
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
-
-'================================================================================
-' mPriceRegion Event Handlers
-'================================================================================
-
-'Private Sub mPriceRegion_Click()
-'Debug.Print "Y=" & mPriceRegion.mousePosition.y
-'End Sub
 
 '================================================================================
 ' mTickSimulator Event Handlers
@@ -938,7 +1045,10 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal volume As Long)
 Dim bartime As Date
 
-bartime = BarStartTime(timestamp, GetTimePeriod(BarLengthText, TimePeriodMinute), SessionStartTimeText)
+Const ProcName As String = "mTickSimulator_HistoricalBar"
+On Error GoTo Err
+
+bartime = BarStartTime(timestamp, GetTimePeriod(mBarLength, TimePeriodMinute), mSessionStartTime)
 
 mElapsedTimer.StartTiming
 
@@ -956,7 +1066,7 @@ mBar.Tick closePrice
 
 mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, closePrice, CoordsRelative), _
                         mPriceRegion.YAxisRegion.NewPoint(98, closePrice, CoordsRelative)
-mPriceText.Text = closePrice
+mPriceText.Text = mPriceRegion.FormatYValue(closePrice)
 mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, closePrice)
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
@@ -994,6 +1104,11 @@ setNewStudyPeriod bartime
 
 calculateStudies closePrice
 displayStudyValues
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickSimulator_TickPrice( _
@@ -1005,7 +1120,10 @@ Dim studiesTime As Single
 Dim swingTime As Single
 Dim countTime As Single
 
-bartime = BarStartTime(timestamp, GetTimePeriod(BarLengthText, TimePeriodMinute), SessionStartTimeText)
+Const ProcName As String = "mTickSimulator_TickPrice"
+On Error GoTo Err
+
+bartime = BarStartTime(timestamp, GetTimePeriod(mBarLength, TimePeriodMinute), mSessionStartTime)
 
 If bartime <> mBarTime Then
     mBarTime = bartime
@@ -1026,7 +1144,7 @@ tickTime = mElapsedTimer.ElapsedTimeMicroseconds
 
 mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, price, CoordsRelative), _
                         mPriceRegion.YAxisRegion.NewPoint(98, price, CoordsRelative)
-mPriceText.Text = price
+mPriceText.Text = mPriceRegion.FormatYValue(price)
 mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, price)
 
 calculateStudies price
@@ -1062,15 +1180,35 @@ Debug.Print "Time for tick= " & Format(tickTime, "000000") & _
             " studies=" & Format(studiesTime, "000000") & _
             " swing=" & Format(swingTime, "000000") & _
             " count=" & Format(countTime, "000000")
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickSimulator_TickVolume( _
                 ByVal timestamp As Date, _
                 ByVal volume As Long)
 
+Const ProcName As String = "mTickSimulator_TickVolume"
+On Error GoTo Err
+
 mVolume.datavalue = mVolume.datavalue + volume - mCumVolume
 mCumVolume = volume
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
+' mUnhandledErrorHandler Event Handlers
+'================================================================================
+
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEvent)
+gHandleFatalError
 End Sub
 
 '================================================================================
@@ -1086,13 +1224,24 @@ End Sub
 '================================================================================
 
 Private Sub calculateStudies(ByVal value As Double)
+Const ProcName As String = "calculateStudies"
+On Error GoTo Err
+
 mMA1.datavalue value
 mMA2.datavalue value
 mMa3.datavalue value
 mMACD.datavalue value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearFields()
+Const ProcName As String = "clearFields"
+On Error GoTo Err
+
 Set mPriceRegion = Nothing
 Set mVolumeRegion = Nothing
 Set mMACDRegion = Nothing
@@ -1143,18 +1292,47 @@ Set mPriceText = Nothing
 Set mCurrentTool = Nothing
 
 mBarTime = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub displayStudyValues()
+Const ProcName As String = "displayStudyValues"
+On Error GoTo Err
+
 If Not IsEmpty(mMA1.maValue) Then mMovAvg1Point.datavalue = mMA1.maValue
 If Not IsEmpty(mMA2.maValue) Then mMovAvg2Point.datavalue = mMA2.maValue
 If Not IsEmpty(mMa3.maValue) Then mMovAvg3Point.datavalue = mMa3.maValue
 If Not IsEmpty(mMACD.MACDValue) Then mMACDPoint.datavalue = mMACD.MACDValue
 If Not IsEmpty(mMACD.MACDSignalValue) Then mMACDSignalPoint.datavalue = mMACD.MACDSignalValue
 If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHistValue
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Private Function getSessionTime(ByVal value As String) As Date
+On Error GoTo Err
+getSessionTime = CDate(value)
+On Error GoTo 0
+
+If Int(getSessionTime) > 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be a time only (no date part)"
+
+Exit Function
+
+Err:
+Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Not a valid date/time format"
+End Function
+
 Private Sub initialise()
+
+Const ProcName As String = "initialise"
+On Error GoTo Err
 
 Chart1.Autoscrolling = True            ' requests that the chart should automatically scroll
                                     ' forward one period each time a new period is added
@@ -1199,6 +1377,8 @@ mDataRegionStyle.GridLineStyle.Color = &HC0C0C0    ' sets the colour of the grid
 mDataRegionStyle.GridLineStyle.LineStyle = LineSolid   ' sets the style of the gridlines
 mDataRegionStyle.GridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
 mDataRegionStyle.HasGrid = True          ' indicate that there is a grid
+mDataRegionStyle.SessionStartGridLineStyle.Color = RGB(184, 203, 165)
+mDataRegionStyle.SessionEndGridLineStyle.Color = RGB(241, 135, 148)
 mDataRegionStyle.YAxisTextStyle.Font.Name = "Lucida Console"
 mDataRegionStyle.YAxisTextStyle.Font.Size = 7
 mDataRegionStyle.YCursorTextStyle.BoxFillColor = vbYellow
@@ -1245,9 +1425,17 @@ Set mMACD = New MACD
 mMACD.ShortPeriods = 12
 mMACD.LongPeriods = 24
 mMACD.SignalPeriods = 5
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setNewStudyPeriod(ByVal timestamp As Date)
+Const ProcName As String = "setNewStudyPeriod"
+On Error GoTo Err
+
 mMA1.newPeriod
 If Not IsEmpty(mMA1.maValue) Then
     Set mMovAvg1Point = mMovAvg1Series.Add(timestamp)
@@ -1281,9 +1469,17 @@ If Not IsEmpty(mMACD.MACDHistValue) Then
     Set mMACDHistPoint = mMACDHistSeries.Add(timestamp)
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub swing(ByVal periodNumber As Long, ByVal price As Double)
+Const ProcName As String = "swing"
+On Error GoTo Err
+
 If mSwingingUp Then
     If (mSwingLine.Point2.Y - mSwingLine.Point1.Y) >= mSwingAmountTicks * mTickSize Then
         If price >= mSwingLine.Point2.Y Then
@@ -1343,5 +1539,11 @@ Else
         End If
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
 

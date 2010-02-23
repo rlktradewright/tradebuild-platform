@@ -56,16 +56,8 @@ Friend Property Get Viewport() As Viewport
 Set Viewport = mViewport
 End Property
 
-Friend Property Let Viewport(ByVal value As Viewport)
-Set mViewport = value
-End Property
-
 Public Property Get Y() As Double
 Y = mY
-End Property
-
-Friend Property Let Y(ByVal value As Double)
-mY = value
 End Property
 
 Public Property Get yLogical() As Double
@@ -84,12 +76,10 @@ Case CoordsCounterDistance
     yLogical = mViewport.ConvertCounterDistanceToLogicalY(mY)
 End Select
 
-yLogical = yLogical - mViewport.Boundary.Bottom
-
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -115,14 +105,16 @@ Equals = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise( _
                 ByVal Y As Double, _
-                ByVal coordSystemY As CoordinateSystems)
+                ByVal coordSystemY As CoordinateSystems, _
+                ByVal pViewport As Viewport)
 mY = Y
 mCoordSystemY = coordSystemY
+Set mViewport = pViewport
 End Sub
 
 '================================================================================

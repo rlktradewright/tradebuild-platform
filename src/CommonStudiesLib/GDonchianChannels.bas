@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GDonchianChannels"
+
 Public Const DoncInputPrice As String = "Price"
 
 Public Const DoncParamPeriods As String = ParamPeriods
@@ -43,17 +45,33 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue DoncParamPeriods, 13
+    mDefaultParameters.SetParameterValue DoncParamPeriods, 13
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -61,42 +79,50 @@ Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = DoncName
-    mStudyDefinition.shortName = DoncShortName
+    mStudyDefinition.ShortName = DoncShortName
     mStudyDefinition.Description = "Donchian channels show the highest high and the " & _
                                     "lowest low during the specified preceeding number " & _
                                     "of periods"
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(DoncInputPrice)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueLower)
     valueDef.Description = "The lower channel value"
     valueDef.IncludeInChart = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueUpper)
     valueDef.Description = "The upper channel value"
     valueDef.IncludeInChart = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
-    valueDef.valueType = ValueTypeReal
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(DoncParamPeriods)
     paramDef.Description = "The number of periods used to calculate the channel values"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

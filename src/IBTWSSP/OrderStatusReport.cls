@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IOrderStatusReport
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,24 @@ Private Const ModuleName                            As String = "OrderStatusRepo
 ' Member variables
 '@================================================================================
 
+Private mOrderId As String
+Private mStatus As TradeBuildSP.OrderStatuses
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IOrderStatusReport Interface Members
 '@================================================================================
+
+Private Property Get IOrderStatusReport_OrderId() As String
+IOrderStatusReport_OrderId = mOrderId
+End Property
+
+Private Property Get IOrderStatusReport_Status() As TradeBuildSP.OrderStatuses
+IOrderStatusReport_Status = mStatus
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -63,6 +76,13 @@ Private Const ModuleName                            As String = "OrderStatusRepo
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pOrderId As String, _
+                ByVal pStatus As OrderStatuses)
+mOrderId = pOrderId
+mStatus = pStatus
+End Sub
 
 '@================================================================================
 ' Helper Functions

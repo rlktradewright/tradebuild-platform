@@ -79,12 +79,13 @@ Private mRegions()                                  As RegionTableEntry
 Private mRegionsIndex                               As Long
 Private mNumRegionsInUse                            As Long
 
-Private mRegionHeightReductionFactor                As Double
-
 Private mUpdateSequence                             As Long
 
 Private mDefaultDataRegionStyle                     As ChartRegionStyle
 Private mDefaultYAxisRegionStyle                    As ChartRegionStyle
+
+Private mRegionHeightReductionFactor                As Double
+
 
 '@================================================================================
 ' Class Event Handlers
@@ -126,8 +127,9 @@ Remove mRegions(cookie).Region
 End Sub
 
 Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_Skip"
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-        ProjectName & "." & ModuleName & ":" & "Enumerable_Skip", _
+        ProjectName & "." & ModuleName & ":" & ProcName, _
         "Skip not supported"
 End Function
 
@@ -144,7 +146,16 @@ End Property
 '@================================================================================
 
 Friend Property Let Chart(ByVal value As Chart)
+Const ProcName As String = "Chart"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mChartRef = CreateWeakReference(value)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Count() As Long
@@ -157,8 +168,17 @@ Set mDefaultDataRegionStyle = value
 End Property
 
 Public Property Get DefaultDataRegionStyle() As ChartRegionStyle
+Const ProcName As String = "DefaultDataRegionStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mDefaultDataRegionStyle Is Nothing Then Set mDefaultDataRegionStyle = New ChartRegionStyle
 Set DefaultDataRegionStyle = mDefaultDataRegionStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let DefaultYAxisRegionStyle( _
@@ -185,13 +205,22 @@ End Property
 Public Property Get Item(ByVal Name As String) As ChartRegion
 Attribute Item.VB_UserMemId = 0
 Attribute Item.VB_MemberFlags = "400"
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Item = findRegion(Name)
 
 If Item Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Item", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Item does not exist"
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -207,6 +236,7 @@ Public Function Add( _
 
 Dim YAxisRegion As ChartRegion
 Dim availableheight As Long
+Dim lRegion As ChartRegion
 
 
 '
@@ -214,7 +244,8 @@ Dim availableheight As Long
 ' is available
 '
 
-Dim failpoint As Long
+Const ProcName As String = "Add"
+Dim failpoint As String
 On Error GoTo Err
 
 availableheight = chartObj.availableheight
@@ -225,7 +256,7 @@ If yAxisStyle Is Nothing Then Set yAxisStyle = DefaultYAxisRegionStyle
 If Name <> "" Then
     If Contains(Name) Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
-                "ChartSkil26.Chart::addChartRegion", _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Region " & Name & " already exists"
     End If
 Else
@@ -234,16 +265,16 @@ End If
 
 mRegionsIndex = mRegionsIndex + 1
 
-Set Add = New ChartRegion
-Add.handle = mRegionsIndex
+Set lRegion = New ChartRegion
+lRegion.handle = mRegionsIndex
 
-Add.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(Add.handle), RegionTypeData
+lRegion.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(lRegion.handle), RegionTypeData
 
-Add.MinimumPercentHeight = MinimumPercentHeight
-Add.PercentHeight = PercentHeight
-Add.Style = Style
+lRegion.MinimumPercentHeight = MinimumPercentHeight
+lRegion.PercentHeight = PercentHeight
+lRegion.Style = Style
 
-Set mRegions(mRegionsIndex).Region = Add
+Set mRegions(mRegionsIndex).Region = lRegion
 If PercentHeight <> 100 Then
     mRegions(mRegionsIndex).PercentHeight = mRegionHeightReductionFactor * PercentHeight
 Else
@@ -258,10 +289,10 @@ End If
 Set YAxisRegion = New ChartRegion
 YAxisRegion.handle = mRegionsIndex
 
-YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(Add.handle), RegionTypeYAxis
+YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(lRegion.handle), RegionTypeYAxis
 
 YAxisRegion.Style = yAxisStyle
-Add.YAxisRegion = YAxisRegion
+lRegion.YAxisRegion = YAxisRegion
 
 Set mRegions(mRegionsIndex).Region = YAxisRegion
 
@@ -269,10 +300,10 @@ mNumRegionsInUse = mNumRegionsInUse + 1
 
 If ResizeY(False) Then
     changed
-    fireChange CollItemAdded, Add
+    fireChange CollItemAdded, lRegion
 Else
     ' can't fit this all in! So remove the added region,
-    Set Add = Nothing
+    Set lRegion = Nothing
     Set mRegions(mRegionsIndex).Region = Nothing
     mRegions(mRegionsIndex).PercentHeight = 0
     mRegions(mRegionsIndex).useAvailableSpace = False
@@ -281,22 +312,28 @@ Else
     Exit Function
 End If
 
+Set Add = lRegion
+
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Add" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Contains(ByVal Name As String) As Boolean
 Dim lRegion As ChartRegion
 
+Const ProcName As String = "Contains"
+Dim failpoint As String
+On Error GoTo Err
+
 Set lRegion = findRegion(Name)
 If Not lRegion Is Nothing Then Contains = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -305,37 +342,55 @@ Set mChartRef = Nothing
 End Sub
 
 Friend Function ItemFromHandle(ByVal pHandle As Long) As ChartRegion
+Const ProcName As String = "ItemFromHandle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ItemFromHandle = mRegions(pHandle).Region
 
 If ItemFromHandle Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "ItemFromHandle", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid Handle"
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+Dim failpoint As String
+On Error GoTo Err
+
 Set NewEnum = getEnumerator
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub Remove( _
                 ByVal pRegion As ChartRegion)
-                
-Dim failpoint As Long
+Const ProcName As String = "Remove"
+Dim failpoint As String
 On Error GoTo Err
 
 If pRegion.IsXAxisRegion Or pRegion.IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "Remove", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot remove an axis region"
 End If
 
 If mRegions(pRegion.handle).Region Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "Remove", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Region has already been removed"
 End If
 
@@ -348,14 +403,11 @@ mNumRegionsInUse = mNumRegionsInUse - 1
 
 changed
 fireChange CollItemRemoved, pRegion
+
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "RemoveChartRegion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function ResizeRegion( _
@@ -365,6 +417,10 @@ Dim handle As Long
 Dim newHeight As Long
 Dim prevPercentHeight As Double
 Dim availableheight As Long
+
+Const ProcName As String = "ResizeRegion"
+Dim failpoint As String
+On Error GoTo Err
 
 handle = pRegion.handle
 availableheight = chartObj.availableheight
@@ -392,6 +448,11 @@ Else
     mRegions(handle).PercentHeight = prevPercentHeight
 End If
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Friend Function ResizeY( _
@@ -406,15 +467,11 @@ Dim numAvailableSpaceRegions As Long
 Dim totalMinimumPercents As Double
 Dim nonFixedAvailableSpacePercent As Double
 Dim availableSpacePercent As Double
-Dim HeightReductionFactor As Double
 Dim availableheight As Long
 
-Dim failpoint As Long
-
+Const ProcName As String = "ResizeY"
+Dim failpoint As String
 On Error GoTo Err
-
-'If gLogger.isLoggable(LogLevelHighDetail) Then gLogger.Log LogLevelHighDetail, ProjectName & "." & ModuleName & ":sizeRegions Enter"
-
 
 failpoint = 100
 
@@ -445,12 +502,12 @@ End If
 
 failpoint = 200
 
-HeightReductionFactor = 1
-Do While availableSpacePercent < 0
+mRegionHeightReductionFactor = 1
+Do While availableSpacePercent < 0 And mRegionHeightReductionFactor >= 0.0625
     availableSpacePercent = 100
     nonFixedAvailableSpacePercent = 100
-    mRegionHeightReductionFactor = mRegionHeightReductionFactor * 0.95
-    HeightReductionFactor = HeightReductionFactor * 0.95
+    totalMinimumPercents = 0
+    mRegionHeightReductionFactor = mRegionHeightReductionFactor - 0.0625
     For i = 1 To mRegionsIndex Step 2
         If Not mRegions(i).Region Is Nothing Then
             Set aRegion = mRegions(i).Region
@@ -480,7 +537,6 @@ Do While availableSpacePercent < 0
     If totalMinimumPercents > 100 Then
         ' can't possibly fit this all in!
         ResizeY = False
-        'If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
         Exit Function
     End If
 Loop
@@ -553,16 +609,10 @@ failpoint = 700
 
 ResizeY = True
 
-'If gLogger.isLoggable(LogLevelHighDetail) Then gLogger.Log LogLevelHighDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
-
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ResizeY" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -574,13 +624,26 @@ mUpdateSequence = mUpdateSequence + 1
 End Sub
 
 Private Function chartObj() As Chart
+Const ProcName As String = "chartObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set chartObj = mChartRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedItem As Variant)
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.Source = Me
 ev.changeType = changeType
 If IsObject(affectedItem) Then
@@ -589,10 +652,24 @@ Else
     ev.affectedItem = affectedItem
 End If
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+Dim failpoint As String
+On Error GoTo Err
+
 Set getEnumerator = CreateEnumerator(Me)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function findRegion( _
@@ -600,15 +677,24 @@ Private Function findRegion( _
 Dim en As Enumerator
 Dim lRegion As ChartRegion
 
+Const ProcName As String = "findRegion"
+Dim failpoint As String
+On Error GoTo Err
+
 Name = UCase$(Name)
 
 Set en = getEnumerator
 
-Do While en.moveNext
+Do While en.MoveNext
     Set lRegion = en.current
     If UCase$(lRegion.Name) = Name Then
         Set findRegion = lRegion
         Exit Do
     End If
 Loop
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function

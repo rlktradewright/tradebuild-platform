@@ -59,8 +59,7 @@ Private mBars As TimeframeUtils26.bars
 Private Sub BarFormatter_FormatBar( _
                 ByVal sourceBar As TimeframeUtils26.Bar, _
                 ByVal chartBar As ChartSkil26.Bar)
-
-Dim failpoint As Long
+Const ProcName As String = "BarFormatter_FormatBar"
 On Error GoTo Err
 
 If sourceBar.BarNumber <= 2 Or mBars.Count < 2 Then Exit Sub
@@ -94,10 +93,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "BarFormatter_FormatBar" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -109,7 +105,15 @@ End Sub
 '@================================================================================
 
 Friend Property Let bars(ByVal value As TimeframeUtils26.bars)
+Const ProcName As String = "bars"
+On Error GoTo Err
+
 Set mBars = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
  
 '@================================================================================

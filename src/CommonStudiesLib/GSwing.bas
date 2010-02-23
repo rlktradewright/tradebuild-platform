@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GSwing"
+
 Public Const SwingInputValue As String = "Input"
 
 Public Const SwingParamIncludeImplicitSwingPoints As String = "Include implicit swing points"
@@ -48,18 +50,34 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue SwingParamMinimumSwingTicks, "10"
-    mDefaultParameters.setParameterValue SwingParamIncludeImplicitSwingPoints, "Yes"
+    mDefaultParameters.SetParameterValue SwingParamMinimumSwingTicks, "10"
+    mDefaultParameters.SetParameterValue SwingParamIncludeImplicitSwingPoints, "Yes"
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -67,79 +85,87 @@ Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = SwingName
-    mStudyDefinition.shortName = SwingShortName
+    mStudyDefinition.ShortName = SwingShortName
     mStudyDefinition.Description = "Determines the significant swing points of " & _
                                     "the underlying. For a move to be considered a swing, " & _
                                     "it must move at least the distance specified in the " & _
                                     "Minimum swing (ticks) parameter."
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SwingInputValue)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingPoint)
     valueDef.Description = "Swing points"
-    valueDef.isDefault = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, , , , , 5, PointSquare)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = True
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
     valueDef.Description = "Swing high points"
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, , , , , 5, PointSquare)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
     valueDef.Description = "Swing low points"
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, , , , , 5, PointSquare)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, , , , , 5, PointSquare)
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLine)
     valueDef.Description = "Swing point lines"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeLine
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeLine
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighLine)
     valueDef.Description = "Swing high point lines"
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeLine
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeLine
+    valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowLine)
     valueDef.Description = "Swing low point lines"
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeLine
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeLine
+    valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamMinimumSwingTicks)
     paramDef.Description = "The minimum number of ticks bar clearance from a high/low to " & _
                             "establish a new swing"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamIncludeImplicitSwingPoints)
     paramDef.Description = "Indicates whether to include implied swing points"
-    paramDef.parameterType = ParameterTypeBoolean
+    paramDef.ParameterType = ParameterTypeBoolean
     
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

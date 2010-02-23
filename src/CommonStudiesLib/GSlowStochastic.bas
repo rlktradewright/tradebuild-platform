@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GSlowStochastic"
+
 Public Const SStochInputValue As String = "Input"
 
 Public Const SStochParamKPeriods As String = "%K periods"
@@ -45,19 +47,35 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue SStochParamKPeriods, 5
-    mDefaultParameters.setParameterValue SStochParamKDPeriods, 3
-    mDefaultParameters.setParameterValue SStochParamDPeriods, 3
+    mDefaultParameters.SetParameterValue SStochParamKPeriods, 5
+    mDefaultParameters.SetParameterValue SStochParamKDPeriods, 3
+    mDefaultParameters.SetParameterValue SStochParamDPeriods, 3
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -65,63 +83,71 @@ Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = SStochName
-    mStudyDefinition.shortName = SStochShortName
+    mStudyDefinition.ShortName = SStochShortName
     mStudyDefinition.Description = "Slow stochastic compares the latest price to the " & _
                                 "recent trading range, and smoothes the result, " & _
                                 "giving a value called %K. " & _
                                 "It also has another value, called %D, which is " & _
                                 "calculated by smoothing %K."
                                 
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SStochInputValue)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueK)
     valueDef.Description = "The slow stochastic value (%K)"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
-    valueDef.minimumValue = -5#
-    valueDef.valueStyle = gCreateDataPointStyle(vbBlue)
-    valueDef.maximumValue = 105#
+    valueDef.IsDefault = True
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
+    valueDef.MinimumValue = -5#
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.MaximumValue = 105#
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueD)
     valueDef.Description = "The result of smoothing %K, also known as the signal line (%D)"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = False
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeReal
-    valueDef.minimumValue = -5#
-    valueDef.valueStyle = gCreateDataPointStyle(vbRed)
-    valueDef.maximumValue = 105#
+    valueDef.IsDefault = False
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueType = ValueTypeReal
+    valueDef.MinimumValue = -5#
+    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.MaximumValue = 105#
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamKPeriods)
     paramDef.Description = "The number of periods used to determine the recent " & _
                             "trading range"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamKDPeriods)
     paramDef.Description = "The number of periods of smoothing used in " & _
                             "calculating %K"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamDPeriods)
     paramDef.Description = "The number of periods used to smooth the %K value " & _
                             "to obtain %D"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

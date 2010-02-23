@@ -17,8 +17,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DeferredAction
-
 '================================================================================
 ' Events
 '================================================================================
@@ -53,15 +51,6 @@ Attribute MouseUp.VB_UserMemId = -607
 ' Enums
 '================================================================================
 
-Private Enum DeferredPaintActions
-    DeferredPaintRepaintNone
-    DeferredPaintRepaintChangedAreas
-    DeferredPaintRepaintRegion
-    DeferredPaintChangeGaugeandRepaint
-    DeferredPaintScaleAndRepaint
-    DeferredPaintCalculateAndRepaint
-End Enum
-
 Private Enum PropertyOverrideFlags
     AutoscalingIsSet = 1
     GridTextStyleIsSet = 2
@@ -76,6 +65,8 @@ Private Enum PropertyOverrideFlags
     GridLineStyleIsSet = &H400&
     YCursorTextStyleIsSet = &H800&
     YAxisTextStyleIsSet = &H1000&
+    SessionEndGridLineStyleIsSet = &H2000&
+    SessionStartGridLineStyleIsSet = &H4000&
 End Enum
 
 '================================================================================
@@ -89,17 +80,12 @@ Private Const ModuleName                As String = "ChartRegion"
 ' Types
 '================================================================================
 
-Private Type RedrawObjectsTableEntry
-    graphObj            As IGraphicObject
-    areaToRedraw        As TRectangle
-End Type
-
 '================================================================================
 ' Member variables
 '================================================================================
 
 Private mChartRef As WeakReference
-Private WithEvents mData As ChartRegionData
+Private mData As ChartRegionData
 Attribute mData.VB_VarHelpID = -1
 Private mGraphObjSeriesCollection As GraphObjSeriesCollection
 
@@ -107,7 +93,7 @@ Private mHandle As Long
 
 Private mActualHeight As Long
 
-Private mCleared As Boolean
+Private mIsCleared As Boolean
 
 Private mName As String
 
@@ -148,8 +134,9 @@ Private mPointerIcon As IPictureDisp
 Private mPointerToolStyle As PointerStyles
 Private mPointerToolIcon As IPictureDisp
 
-Private mSessionOffsetMinutes As Date
 Private mVerticalGridTimePeriod As TimePeriod
+
+Private mSessionStartTime As Date
 
 Private mPercentHeight As Double
 Private mMinimumPercentHeight As Double
@@ -167,15 +154,7 @@ Private mCurrX As Single
 Private mCurrY As Single
 
 Private mUseDeferredPainting As Boolean
-Private mDeferredPaintPending As Boolean
-
-Private mDeferredPaintAction As DeferredPaintActions
-
-Private mUndrawnAreas() As TRectangle
-Private mUndrawnAreasIndex As Long
-
-Private mRedrawObjects() As RedrawObjectsTableEntry
-Private mRedrawObjectsIndex As Long
+Private mDeferredPainter As DeferredRegionPainter
 
 Private mSelectedObject As IGraphicObject
 
@@ -188,19 +167,30 @@ Private mYScaleQuantum As Double
 Private mGridlineSpacingY As Double
 Private mMinimumHeight As Double
 Private mCursorSnapsToTickBoundaries As Boolean
-Private mBackGradientFillColors() As Long
-Private WithEvents mGridLineStyle As LineStyle
+Private mBackGradientFillColors()                   As Long
+
+Private WithEvents mGridLineStyle                   As LineStyle
 Attribute mGridLineStyle.VB_VarHelpID = -1
-Private WithEvents mGridTextStyle As TextStyle
+Private WithEvents mGridTextStyle                   As TextStyle
 Attribute mGridTextStyle.VB_VarHelpID = -1
-Private WithEvents mYAxisTextStyle As TextStyle
+Private WithEvents mSessionEndGridLineStyle         As LineStyle
+Attribute mSessionEndGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionStartGridLineStyle       As LineStyle
+Attribute mSessionStartGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mYAxisTextStyle                  As TextStyle
 Attribute mYAxisTextStyle.VB_VarHelpID = -1
-Private WithEvents mYCursorTextStyle As TextStyle
+Private WithEvents mYCursorTextStyle                As TextStyle
 Attribute mYCursorTextStyle.VB_VarHelpID = -1
 
-Private mPropertyOverrideFlags As PropertyOverrideFlags
+Private mPropertyOverrideFlags                      As PropertyOverrideFlags
 
-Private mPaintingInProgress As Boolean
+Private mPaintingInProgress                         As Boolean
+
+Private mPriceFormatter                             As IPriceFormatter
+
+Private mGridHidden                                 As Boolean
+
+Private mHorizontalGridSpacer                       As HorizontalGridSpacer
 
 '================================================================================
 ' Class Event Handlers
@@ -216,10 +206,15 @@ mGraphObjSeriesCollection.Initialise Me
 Set mStyle = New ChartRegionStyle
 
 mUseDeferredPainting = True
-deferredPaint DeferredPaintRepaintNone
+Set mDeferredPainter = New DeferredRegionPainter
+mDeferredPainter.Initialise Me
 
 Set mGraphObjServiceProvider = New GraphObjServiceProvider
 mGraphObjServiceProvider.Region = Me
+
+Set mPriceFormatter = New PriceFormatter
+
+Set mHorizontalGridSpacer = New HorizontalGridSpacer
 
 End Sub
 
@@ -227,138 +222,8 @@ Private Sub Class_Terminate()
 If Not mViewport Is Nothing Then mViewport.Finish
 Set mViewport = Nothing
 
-gLogger.Log LogLevelHighDetail, "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
+'gLogger.Log LogLevelHighDetail, "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
 Debug.Print "ChartRegion terminated (" & gRegionTypeToString(mRegionType) & ")"
-End Sub
-
-'================================================================================
-' DeferredAction Interface Members
-'================================================================================
-
-Private Sub DeferredAction_run(ByVal data As Variant)
-Dim et As ElapsedTimer
-Dim i As Long
-
-Dim failpoint As Long
-On Error GoTo Err
-
-If mCleared Then Exit Sub
-
-'If gIsInDev Or gLogger.isLoggable(LogLevelHighDetail) Then
-If gIsInDev Then
-    If et Is Nothing Then Set et = New ElapsedTimer
-    et.StartTiming
-End If
-
-Select Case mDeferredPaintAction
-Case DeferredPaintRepaintNone
-
-Case DeferredPaintRepaintChangedAreas
-    
-
-    failpoint = 100
-
-    For i = 0 To mUndrawnAreasIndex
-        failpoint = failpoint + i
-        undrawAreaEx mUndrawnAreas(i)
-    Next
-    
-    
-    failpoint = 200
-    
-    For i = 0 To mRedrawObjectsIndex
-        failpoint = failpoint + i
-        redrawObject mRedrawObjects(i).graphObj, mRedrawObjects(i).areaToRedraw
-    Next
-Case DeferredPaintRepaintRegion
-    
-    failpoint = 300
-    
-    Paint
-Case DeferredPaintChangeGaugeandRepaint
-    
-    failpoint = 400
-    
-    mData.CalculateInscopeGaugeDependentObjects
-    
-    failpoint = 500
-    
-    
-    failpoint = 600
-    
-    Paint
-    
-    
-    failpoint = 700
-    
-    If Not mYAxisRegion Is Nothing Then mYAxisRegion.ResizedY
-Case DeferredPaintScaleAndRepaint
-    
-    failpoint = 800
-    
-    calculateVerticalBounds
-    
-    failpoint = 900
-    
-    mData.DetermineVisibleObjects
-    
-    failpoint = 1000
-    
-    Paint
-    
-    failpoint = 1100
-    
-    If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.SetVerticalScaleInternal mViewport.Bottom, mViewport.Top
-    End If
-Case DeferredPaintCalculateAndRepaint
-    
-    failpoint = 1200
-    
-    mData.DetermineInScopeObjects
-    
-    failpoint = 1300
-    
-    If Autoscaling Then
-        calculateVerticalBounds
-    End If
-    
-    failpoint = 1400
-    
-    mData.DetermineVisibleObjects
-    
-    failpoint = 1500
-    
-    Paint
-    
-    failpoint = 1600
-    
-    If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.SetVerticalScaleInternal mViewport.Bottom, mViewport.Top
-    End If
-End Select
-
-
-'If gIsInDev Or gLogger.isLoggable(LogLevelHighDetail) Then
-If gIsInDev Then
-    Dim s As String
-    s = "Deferred paint: " & Format(et.ElapsedTimeMicroseconds, "0")
-    Debug.Print s
-    'gLogger.Log LogLevelHighDetail, s
-End If
-
-deferredPaint DeferredPaintRepaintNone
-
-Exit Sub
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "DeferredAction_run" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
-deferredPaint DeferredPaintRepaintNone
-
 End Sub
 
 '================================================================================
@@ -367,7 +232,8 @@ End Sub
 
 Friend Sub GOSP_AddGraphicObject( _
                 ByVal graphObj As IGraphicObject)
-Dim failpoint As Long
+Const ProcName As String = "GOSP_AddGraphicObject"
+Dim failpoint As String
 On Error GoTo Err
 
 mData.AddGraphicObject graphObj
@@ -375,21 +241,17 @@ mData.AddGraphicObject graphObj
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GOSP_addGraphicObject" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub GOSP_ObjectChanged( _
                 ByVal handle As Long, _
                 ByRef areaToRedraw As TRectangle)
 Dim graphObj As IGraphicObject
+Dim RedrawArea As TRectangle
 
-Dim failpoint As Long
+Const ProcName As String = "GOSP_ObjectChanged"
+Dim failpoint As String
 On Error GoTo Err
 
 Set graphObj = mData.GetGraphicObject(handle)
@@ -402,98 +264,65 @@ If graphObj.NoDraw Then Exit Sub
 
 If mPaintingInProgress Then Exit Sub
 
-areaToRedraw = RectIntersection(areaToRedraw, mViewport.Boundary)
+RedrawArea = RectIntersection(areaToRedraw, mViewport.Boundary)
 
 ' check if the vertical bounds have changed, and redraw if so
-If Not Autoscaling Then
-    redrawChangedObject graphObj, areaToRedraw
-ElseIf Not graphObj.IncludeInAutoscale Then
-    redrawChangedObject graphObj, areaToRedraw
-ElseIf graphObj.BoundingRectangle.Top < mViewport.Boundary.Top And _
-        graphObj.BoundingRectangle.Bottom > (mViewport.Boundary.Bottom) Then
-    redrawChangedObject graphObj, areaToRedraw
-ElseIf mUseDeferredPainting Then
-    deferredPaint DeferredPaintScaleAndRepaint
-Else
-    calculateVerticalBounds
-    mData.DetermineVisibleObjects
-    Paint
+If Autoscaling And graphObj.IncludeInAutoscale Then
+    Dim verticalRangeInViewport As TInterval
+    verticalRangeInViewport = graphObj.VerticalRangeInXinterval(RectGetXInterval(mViewport.Boundary))
+    
+    If verticalRangeInViewport.isValid And _
+        Autoscaling And _
+        (verticalRangeInViewport.endValue > mViewport.Boundary.Top Or _
+            verticalRangeInViewport.startValue < (mViewport.Boundary.Bottom)) Then
+        doScaleAndRepaint
+        Exit Sub
+    End If
 End If
+
+redrawChangedObject graphObj, RedrawArea
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GOSP_objectChanged" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub GOSP_ObjectUndrawn(ByVal handle As Long, undrawnArea As TRectangle)
-
-Dim failpoint As Long
+Const ProcName As String = "GOSP_ObjectUndrawn"
+Dim failpoint As String
 On Error GoTo Err
-
-failpoint = 100
 
 UndrawArea undrawnArea, mData.GetGraphicObject(handle)
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GOSP_objectUndrawn" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub GOSP_PaintRegion( _
                 ByVal recalculate As Boolean)
-
-Dim failpoint As Long
+Const ProcName As String = "GOSP_PaintRegion"
+Dim failpoint As String
 On Error GoTo Err
 
-If Not mIsDrawingEnabled Then Exit Sub
-
-If mUseDeferredPainting Then
-    If recalculate Then
-        deferredPaint DeferredPaintCalculateAndRepaint
-    Else
-        deferredPaint DeferredPaintRepaintRegion
-    End If
+If recalculate Then
+    doCalculateAndRepaint
 Else
-    If recalculate Then
-        mData.DetermineInScopeObjects
-        If Autoscaling Then
-            calculateVerticalBounds
-        End If
-        mData.DetermineVisibleObjects
-    End If
-    Paint
+    doRepaint
 End If
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GOSP_paintRegion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub GOSP_RecalcBoundary( _
                 ByVal SeriesID As Long)
-Dim failpoint As Long
+Const ProcName As String = "GOSP_RecalcBoundary"
+Dim failpoint As String
 On Error GoTo Err
 
 mData.RecalcBoundaryForObjectsInSeries SeriesID
@@ -501,16 +330,21 @@ mData.RecalcBoundaryForObjectsInSeries SeriesID
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "GOSP_recalcBoundary" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub GOSP_RemoveObject( _
                 ByVal handle As Long)
+Const ProcName As String = "GOSP_RemoveObject"
+Dim failpoint As String
+On Error GoTo Err
+
 RemoveGraphicObjectEx mData.GetGraphicObject(handle), True, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -518,17 +352,16 @@ End Sub
 '================================================================================
 
 Private Sub mViewport_BoundaryChanged()
+Const ProcName As String = "mViewport_BoundaryChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 mData.SetViewport mViewport.Boundary
-End Sub
 
-'================================================================================
-' mData Event Handlers
-'================================================================================
+Exit Sub
 
-Private Sub mData_PeriodAdded( _
-                ByVal pPeriodNumber As Long, _
-                ByVal pTimestamp As Date)
-If CDbl(pTimestamp) <> 0 Then setVerticalGridLine pTimestamp, pPeriodNumber
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -536,7 +369,16 @@ End Sub
 '================================================================================
 
 Private Sub mGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mGridLineStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 setGridLineStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -544,7 +386,50 @@ End Sub
 '================================================================================
 
 Private Sub mGridTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mGridTextStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 setGridTextStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
+' mSessionEndGridLineStyle Event Handlers
+'================================================================================
+
+Private Sub mSessionEndGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mSessionEndGridLineStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
+setSessionEndGridLineStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
+' mSessionStartGridLineStyle Event Handlers
+'================================================================================
+
+Private Sub mSessionStartGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mSessionStartGridLineStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
+setSessionStartGridLineStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -552,7 +437,8 @@ End Sub
 '================================================================================
 
 Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
-Dim failpoint As Long
+Const ProcName As String = "mStyle_PropertyChanged"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -578,6 +464,10 @@ Case UCase$("MinimumHeight")
     setMinimumHeight
 Case UCase$("CursorSnapsToTickBoundaries")
     setCursorSnapsToTickBoundaries
+Case UCase$("SessionEndGridLineStyle")
+    setSessionEndGridLineStyle
+Case UCase$("SessionStartGridLineStyle")
+    setSessionStartGridLineStyle
 Case UCase$("YAxisTextStyle")
     setYAxisTextStyle
 Case UCase$("YCursorTextStyle")
@@ -586,17 +476,14 @@ Case UCase$("YScaleQuantum")
     setYScaleQuantum
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Unhandled property change"
 End Select
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -604,7 +491,16 @@ End Sub
 '================================================================================
 
 Private Sub mYAxisTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mYAxisTextStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 setYAxisTextStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -612,7 +508,16 @@ End Sub
 '================================================================================
 
 Private Sub mYCursorTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Const ProcName As String = "mYCursorTextStyle_PropertyChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 setYCursorTextStyle
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -628,92 +533,222 @@ ActualHeight = mActualHeight
 End Property
 
 Public Property Get Autoscaling() As Boolean
+Const ProcName As String = "Autoscaling"
+Dim failpoint As String
+On Error GoTo Err
+
 Autoscaling = mStyle.Autoscaling
 If isPropertyOverrideFlagSet(AutoscalingIsSet) Then Autoscaling = mAutoscaling
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Autoscaling(ByVal value As Boolean)
+Const ProcName As String = "Autoscaling"
+Dim failpoint As String
+On Error GoTo Err
+
 If mAutoscaling = value And isPropertyOverrideFlagSet(AutoscalingIsSet) Then Exit Property
 mAutoscaling = value
 setPropertyOverrideFlag AutoscalingIsSet
 setAutoscaling
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BackColor() As Long
+Const ProcName As String = "BackColor"
+Dim failpoint As String
+On Error GoTo Err
+
 BackColor = mStyle.BackColor
 If isPropertyOverrideFlagSet(BackGradientFillColorsIsSet) Then BackColor = mBackGradientFillColors(0)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let BackColor(ByVal value As Long)
+Const ProcName As String = "BackColor"
+Dim failpoint As String
+On Error GoTo Err
+
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = value
 setPropertyOverrideFlag AutoscalingIsSet
 setBackColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BackGradientFillColors() As Long()
+Const ProcName As String = "BackGradientFillColors"
+Dim failpoint As String
+On Error GoTo Err
+
 BackGradientFillColors = mStyle.BackGradientFillColors
 If isPropertyOverrideFlagSet(BackGradientFillColorsIsSet) Then BackGradientFillColors = mBackGradientFillColors
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let BackGradientFillColors(ByRef value() As Long)
 Dim ar() As Long
+Const ProcName As String = "BackGradientFillColors"
+Dim failpoint As String
+On Error GoTo Err
+
 ar = value
 mBackGradientFillColors = ar
 setPropertyOverrideFlag BackGradientFillColorsIsSet
 setBackGradientFillColors
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Bottom() As Double
+Const ProcName As String = "Bottom"
+Dim failpoint As String
+On Error GoTo Err
+
 Bottom = mViewport.Boundary.Bottom
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Bottom(ByVal value As Double)
+Const ProcName As String = "Bottom"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.Bottom = value
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.Bottom = value
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get Canvas() As Canvas
-Set Canvas = mViewport
+Const ProcName As String = "Canvas"
+Dim failpoint As String
+On Error GoTo Err
+
+Set Canvas = mViewport.Canvas
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let CursorSnapsToTickBoundaries(ByVal value As Boolean)
+Const ProcName As String = "CursorSnapsToTickBoundaries"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "snapCursorToTickBoundaries", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set snapCursorToTickBoundaries for an axis region"
 End If
 If mCursorSnapsToTickBoundaries = value And isPropertyOverrideFlagSet(CursorSnapsToTickBoundariesIsSet) Then Exit Property
 mCursorSnapsToTickBoundaries = value
 setPropertyOverrideFlag CursorSnapsToTickBoundariesIsSet
 setCursorSnapsToTickBoundaries
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get CursorSnapsToTickBoundaries() As Boolean
+Const ProcName As String = "CursorSnapsToTickBoundaries"
+Dim failpoint As String
+On Error GoTo Err
+
 CursorSnapsToTickBoundaries = mStyle.CursorSnapsToTickBoundaries
 If isPropertyOverrideFlagSet(CursorSnapsToTickBoundariesIsSet) Then CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridlineSpacingY() As Double
+Const ProcName As String = "GridlineSpacingY"
+Dim failpoint As String
+On Error GoTo Err
+
 GridlineSpacingY = mStyle.GridlineSpacingY
 If isPropertyOverrideFlagSet(GridlineSpacingYIsSet) Then GridlineSpacingY = mGridlineSpacingY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let GridlineSpacingY(ByVal value As Double)
+Const ProcName As String = "GridlineSpacingY"
+Dim failpoint As String
+On Error GoTo Err
+
 If mGridlineSpacingY = value And isPropertyOverrideFlagSet(GridlineSpacingYIsSet) Then Exit Property
 mGridlineSpacingY = value
 setPropertyOverrideFlag GridlineSpacingYIsSet
 setGridlineSpacingY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridLineStyle() As LineStyle
+Const ProcName As String = "GridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set GridLineStyle = mStyle.GridLineStyle
 If isPropertyOverrideFlagSet(GridLineStyleIsSet) Then Set GridLineStyle = mGridLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let GridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "GridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mGridLineStyle Is value And isPropertyOverrideFlagSet(GridLineStyleIsSet) Then Exit Property
 Set mGridLineStyle = value
 If mGridLineStyle Is Nothing Then
@@ -722,14 +757,32 @@ Else
     setPropertyOverrideFlag GridLineStyleIsSet
 End If
 setGridLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GridTextStyle() As TextStyle
+Const ProcName As String = "GridTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set GridTextStyle = mStyle.GridTextStyle
 If isPropertyOverrideFlagSet(GridTextStyleIsSet) Then Set GridTextStyle = mGridTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let GridTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "GridTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mGridTextStyle Is value And isPropertyOverrideFlagSet(GridTextStyleIsSet) Then Exit Property
 Set mGridTextStyle = value
 If mGridTextStyle Is Nothing Then
@@ -738,6 +791,11 @@ Else
     setPropertyOverrideFlag GridTextStyleIsSet
 End If
 setGridTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let handle(ByVal value As Long)
@@ -749,37 +807,86 @@ handle = mHandle
 End Property
 
 Public Property Get HasGrid() As Boolean
+Const ProcName As String = "HasGrid"
+Dim failpoint As String
+On Error GoTo Err
+
 HasGrid = mStyle.HasGrid
 If isPropertyOverrideFlagSet(HasGridIsSet) Then HasGrid = mHasGrid
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let HasGrid(ByVal value As Boolean)
+Const ProcName As String = "HasGrid"
+Dim failpoint As String
+On Error GoTo Err
+
 If mHasGrid = value And isPropertyOverrideFlagSet(HasGridIsSet) Then Exit Property
 mHasGrid = value
 setPropertyOverrideFlag HasGridIsSet
 setHasGrid
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get HasGridText() As Boolean
+Const ProcName As String = "HasGridText"
+Dim failpoint As String
+On Error GoTo Err
+
 HasGridText = mStyle.HasGridText
 If isPropertyOverrideFlagSet(HasGridTextIsSet) Then HasGridText = mHasGridText
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let HasGridText(ByVal value As Boolean)
+Const ProcName As String = "HasGridText"
+Dim failpoint As String
+On Error GoTo Err
+
 If mHasGridText = value And isPropertyOverrideFlagSet(HasGridTextIsSet) Then Exit Property
 mHasGridText = value
 setPropertyOverrideFlag HasGridTextIsSet
 setHasGridText
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Height() As Double
+Const ProcName As String = "Height"
+Dim failpoint As String
+On Error GoTo Err
+
 Height = mViewport.Height
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let IntegerYScale(ByVal value As Boolean)
+Const ProcName As String = "IntegerYScale"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "integerYScale", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set integerYScale for an axis region"
 End If
 
@@ -787,14 +894,36 @@ If mIntegerYScale = value And isPropertyOverrideFlagSet(IntegerYScaleIsSet) Then
 mIntegerYScale = value
 setPropertyOverrideFlag IntegerYScaleIsSet
 setIntegerYScale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IntegerYScale() As Boolean
+Const ProcName As String = "IntegerYScale"
+Dim failpoint As String
+On Error GoTo Err
+
 IntegerYScale = mStyle.IntegerYScale
 If isPropertyOverrideFlagSet(IntegerYScaleIsSet) Then IntegerYScale = mIntegerYScale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Friend Property Get IsCleared() As Boolean
+IsCleared = mIsCleared
 End Property
 
 Friend Property Let IsDrawingEnabled(ByVal value As Boolean)
+Const ProcName As String = "IsDrawingEnabled"
+Dim failpoint As String
+On Error GoTo Err
+
 If mIsDrawingEnabled = value Then Exit Property
 mIsDrawingEnabled = value
 If Not mIsDrawingEnabled Then
@@ -814,20 +943,16 @@ Else
         showCursor mPrevCursorX, mPrevCursorY
     End If
     
-    If mUseDeferredPainting Then
-        deferredPaint DeferredPaintCalculateAndRepaint
-    Else
-        mData.DetermineInScopeObjects
-        If Autoscaling Then
-            calculateVerticalBounds
-        End If
-        mData.DetermineVisibleObjects
-        Paint
-    End If
+    doCalculateAndRepaint
 End If
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.IsDrawingEnabled = mIsDrawingEnabled
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsXAxisRegion() As Boolean
@@ -839,22 +964,53 @@ IsYAxisRegion = (mRegionType = RegionTypeYAxis)
 End Property
 
 Public Property Get Left() As Double
+Const ProcName As String = "Left"
+Dim failpoint As String
+On Error GoTo Err
+
 Left = mViewport.Left
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Left(ByVal value As Double)
+Const ProcName As String = "Left"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.Left = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumHeight() As Double
+Const ProcName As String = "MinimumHeight"
+Dim failpoint As String
+On Error GoTo Err
+
 MinimumHeight = mStyle.MinimumHeight
 If isPropertyOverrideFlagSet(MinimumHeightIsSet) Then MinimumHeight = mMinimumHeight
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let MinimumHeight(ByVal value As Double)
+Const ProcName As String = "MinimumHeight"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "minimumHeight", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set minimumHeight for an axis region"
 End If
 
@@ -862,6 +1018,11 @@ If mMinimumHeight = value And isPropertyOverrideFlagSet(MinimumHeightIsSet) Then
 mMinimumHeight = value
 setPropertyOverrideFlag MinimumHeightIsSet
 setMinimumHeight
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumPercentHeight() As Double
@@ -873,7 +1034,16 @@ mMinimumPercentHeight = value
 End Property
 
 Public Property Get MousePosition() As Point
+Const ProcName As String = "MousePosition"
+Dim failpoint As String
+On Error GoTo Err
+
 Set MousePosition = NewPoint(mCurrX, mCurrY)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Name() As String
@@ -903,9 +1073,13 @@ End Property
 Friend Property Let PointerCrosshairsColor(ByVal value As Long)
 Dim lUseDeferredPainting As Boolean
 
+Const ProcName As String = "PointerCrosshairsColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "PointerCrosshairsColor", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set PointerCrossHairsColor for an axis region"
 End If
 
@@ -916,6 +1090,11 @@ mUseDeferredPainting = False
 mCrosshairLineHoriz.Color = mPointerCrosshairsColor
 mCrosshairLineVert.Color = mPointerCrosshairsColor
 mUseDeferredPainting = lUseDeferredPainting
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PointerDiscColor() As Long
@@ -923,13 +1102,22 @@ PointerDiscColor = mPointerDiscColor
 End Property
 
 Friend Property Let PointerDiscColor(ByVal value As Long)
+Const ProcName As String = "PointerDiscColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "PointerDiscColor", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set PointerDiscColor for an axis region"
 End If
 
 mPointerDiscColor = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PointerIcon() As IPictureDisp
@@ -937,6 +1125,10 @@ Set PointerIcon = mPointerIcon
 End Property
 
 Public Property Let PointerIcon(ByVal value As IPictureDisp)
+
+Const ProcName As String = "PointerIcon"
+Dim failpoint As String
+On Error GoTo Err
 
 If value Is Nothing Then Exit Property
 If value Is mPointerIcon Then Exit Property
@@ -960,6 +1152,11 @@ If mIsDrawingEnabled Then
     showCursor mPrevCursorX, mPrevCursorY
 End If
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
@@ -968,11 +1165,13 @@ End Property
 
 Public Property Let PointerStyle(ByVal value As PointerStyles)
 Dim failpoint As Long
+Const ProcName As String = "PointerStyle"
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "pointerStyle", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set PointerStyle for an axis region"
 End If
 
@@ -997,23 +1196,102 @@ If mIsDrawingEnabled Then
     setMouseIcon mPointerStyle
     showCursor mPrevCursorX, mPrevCursorY
 End If
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let PriceFormatter(ByVal value As IPriceFormatter)
+If Not value Is Nothing Then
+    Set mPriceFormatter = value
+Else
+    Set mPriceFormatter = New PriceFormatter
+End If
+
+mPriceFormatter.IntegerYScale = IntegerYScale
+mPriceFormatter.YScaleQuantum = YScaleQuantum
+
+If Not mHorizontalGrid Is Nothing Then
+    mHorizontalGrid.PriceFormatter = value
+    doRepaint
+End If
+End Property
+
+Public Property Get PriceFormatter() As IPriceFormatter
+Set PriceFormatter = mHorizontalGrid.PriceFormatter
+End Property
+
+Public Property Get SessionEndGridLineStyle() As LineStyle
+Const ProcName As String = "SessionEndGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set SessionEndGridLineStyle = mStyle.SessionEndGridLineStyle
+If isPropertyOverrideFlagSet(SessionEndGridLineStyleIsSet) Then Set SessionEndGridLineStyle = mSessionEndGridLineStyle
 
 Exit Property
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "PointerStyle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get ScaleGridSpacingY() As Single
-ScaleGridSpacingY = mHorizontalGrid.ScaleGridSpacingY
+Public Property Let SessionEndGridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "SessionEndGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+If mSessionEndGridLineStyle Is value And isPropertyOverrideFlagSet(SessionEndGridLineStyleIsSet) Then Exit Property
+Set mSessionEndGridLineStyle = value
+If mSessionEndGridLineStyle Is Nothing Then
+    clearPropertyOverrideFlag SessionEndGridLineStyleIsSet
+Else
+    setPropertyOverrideFlag SessionEndGridLineStyleIsSet
+End If
+setSessionEndGridLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get SessionStartGridLineStyle() As LineStyle
+Const ProcName As String = "SessionStartGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+Set SessionStartGridLineStyle = mStyle.SessionStartGridLineStyle
+If isPropertyOverrideFlagSet(SessionStartGridLineStyleIsSet) Then Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let SessionStartGridLineStyle(ByVal value As LineStyle)
+Const ProcName As String = "SessionStartGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+If mSessionStartGridLineStyle Is value And isPropertyOverrideFlagSet(SessionStartGridLineStyleIsSet) Then Exit Property
+Set mSessionStartGridLineStyle = value
+If mSessionStartGridLineStyle Is Nothing Then
+    clearPropertyOverrideFlag SessionStartGridLineStyleIsSet
+Else
+    setPropertyOverrideFlag SessionStartGridLineStyleIsSet
+End If
+setSessionStartGridLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let SessionStartTime(ByVal value As Date)
-mSessionOffsetMinutes = calculateMinutesFromMidnight(value) Mod 60
+mSessionStartTime = value
 End Property
 
 Public Property Get Style() As ChartRegionStyle
@@ -1022,13 +1300,13 @@ End Property
 
 Public Property Let Style( _
                 ByVal value As ChartRegionStyle)
-
-Dim failpoint As Long
+Const ProcName As String = "Style"
+Dim failpoint As String
 On Error GoTo Err
 
 If value Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "Style", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value must not be Nothing"
 End If
 
@@ -1041,33 +1319,56 @@ processStyle
 Exit Property
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Title() As Text
+Const ProcName As String = "Title"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "Title", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "An axis region does not have a title"
 End If
 
 If mTitle Is Nothing Then setupTitle
 Set Title = mTitle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Top() As Double
+Const ProcName As String = "Top"
+Dim failpoint As String
+On Error GoTo Err
+
 Top = mViewport.Top
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Top(ByVal value As Double)
+Const ProcName As String = "Top"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.Top = value
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.Top = value
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let VerticalGridTimePeriod(ByVal value As TimePeriod)
@@ -1075,7 +1376,16 @@ Set mVerticalGridTimePeriod = value
 End Property
 
 Public Property Get Width() As Single
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
 Width = mViewport.Width
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -1083,6 +1393,10 @@ YAxisPosition = mYAxisPosition
 End Property
 
 Friend Property Let YAxisRegion(ByVal value As ChartRegion)
+
+Const ProcName As String = "YAxisRegion"
+Dim failpoint As String
+On Error GoTo Err
 
 Set mYAxisRegion = value
 
@@ -1098,10 +1412,16 @@ Dim aTextSeries As New TextSeries
 mYAxisRegion.AddGraphicObjectSeries aTextSeries, LayerNumbers.LayerPointer
 Set mYCursorText = aTextSeries.Add
 mYCursorText.Align = AlignBoxCentreLeft
+mYCursorText.Size = mYAxisRegion.NewDimension(90, 0, CoordsRelative)
 setYCursorTextStyle
 
-mHorizontalGrid.YAxisRegion = mYAxisRegion
+If Not mHorizontalGrid Is Nothing Then mHorizontalGrid.YAxisRegion = mYAxisRegion
 setYAxisTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -1110,11 +1430,24 @@ Set YAxisRegion = mYAxisRegion
 End Property
 
 Public Property Get YAxisTextStyle() As TextStyle
+Const ProcName As String = "YAxisTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set YAxisTextStyle = mStyle.YAxisTextStyle
 If isPropertyOverrideFlagSet(YAxisTextStyleIsSet) Then Set YAxisTextStyle = mYAxisTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let YAxisTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "YAxisTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mYAxisTextStyle Is value And isPropertyOverrideFlagSet(YAxisTextStyleIsSet) Then Exit Property
 Set mYAxisTextStyle = value
 If mYAxisTextStyle Is Nothing Then
@@ -1123,14 +1456,32 @@ Else
     setPropertyOverrideFlag YAxisTextStyleIsSet
 End If
 setYAxisTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YCursorTextStyle() As TextStyle
+Const ProcName As String = "YCursorTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set YCursorTextStyle = mStyle.YCursorTextStyle
 If isPropertyOverrideFlagSet(YCursorTextStyleIsSet) Then Set YCursorTextStyle = mYCursorTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let YCursorTextStyle(ByVal value As TextStyle)
+Const ProcName As String = "YCursorTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mYCursorTextStyle Is value And isPropertyOverrideFlagSet(YCursorTextStyleIsSet) Then Exit Property
 Set mYCursorTextStyle = value
 If mYCursorTextStyle Is Nothing Then
@@ -1139,24 +1490,66 @@ Else
     setPropertyOverrideFlag YCursorTextStyleIsSet
 End If
 setYCursorTextStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get YScaleGridSpacing() As Single
+Const ProcName As String = "YScaleGridSpacing"
+Dim failpoint As String
+On Error GoTo Err
+
+YScaleGridSpacing = mHorizontalGridSpacer.YScaleGridSpacing
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let YScaleQuantum(ByVal value As Double)
+Const ProcName As String = "YScaleQuantum"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "YScaleQuantum", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set YScaleQuantum for an axis region"
+End If
+
+If value <= 0 Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "YScaleQuantum must be greater than zero"
 End If
 
 If mYScaleQuantum = value And isPropertyOverrideFlagSet(YScaleQuantumIsSet) Then Exit Property
 mYScaleQuantum = value
 setPropertyOverrideFlag YScaleQuantumIsSet
 setYScaleQuantum
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get YScaleQuantum() As Double
+Const ProcName As String = "YScaleQuantum"
+Dim failpoint As String
+On Error GoTo Err
+
 YScaleQuantum = mStyle.YScaleQuantum
 If isPropertyOverrideFlagSet(YScaleQuantumIsSet) Then YScaleQuantum = mYScaleQuantum
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -1167,7 +1560,8 @@ Public Function AddGraphicObjectSeries( _
                 ByVal graphObjSeries As IGraphicObjectSeries, _
                 Optional ByVal Layer As Long = -1, _
                 Optional ByVal Name As String) As IGraphicObjectSeries
-Dim failpoint As Long
+Const ProcName As String = "AddGraphicObjectSeries"
+Dim failpoint As String
 On Error GoTo Err
 
 Set AddGraphicObjectSeries = mGraphObjSeriesCollection.Add( _
@@ -1177,45 +1571,83 @@ Set AddGraphicObjectSeries = mGraphObjSeriesCollection.Add( _
                                             mViewport, _
                                             chartObj, _
                                             mGraphObjServiceProvider)
+
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "addGraphicObjectSeries" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function AddLine( _
                 Optional ByVal pLayer As LayerNumbers = -1, _
                 Optional ByVal Style As LineStyle) As Line
 Static miscLines As LineSeries
+Dim lLine As Line
+
+Const ProcName As String = "AddLine"
+Dim failpoint As String
+On Error GoTo Err
+
 If miscLines Is Nothing Then
     Set miscLines = AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerHighestUser - 1)
 End If
-Set AddLine = miscLines.Add
-If pLayer <> -1 Then AddLine.Layer = pLayer
-If Not Style Is Nothing Then AddLine.LocalStyle = Style
+Set lLine = miscLines.Add
+If pLayer <> -1 Then lLine.Layer = pLayer
+If Not Style Is Nothing Then lLine.LocalStyle = Style
+
+Set AddLine = lLine
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Sub AddPeriod(ByVal PeriodNumber As Long, _
+Friend Sub AddPeriod(ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date)
-Dim failpoint As Long
+Const ProcName As String = "AddPeriod"
+Dim failpoint As String
 On Error GoTo Err
 
-mData.AddPeriod PeriodNumber, pTimestamp
+mData.AddPeriod pPeriodNumber, pTimestamp
+If CDbl(pTimestamp) <> 0 Then setVerticalGridLine pTimestamp, pPeriodNumber, False
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "AddPeriod" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
+Friend Sub AddSessionEndGridline( _
+                ByVal pPeriodNumber As Long, _
+                ByVal pTimestamp As Date)
+                
+Const ProcName As String = "AddSessionEndGridline"
+Dim failpoint As String
+On Error GoTo Err
+
+setVerticalGridLine(pTimestamp, pPeriodNumber, True).LocalStyle = SessionEndGridLineStyle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub AddSessionStartGridline( _
+                ByVal pPeriodNumber As Long, _
+                ByVal pTimestamp As Date)
+                
+Const ProcName As String = "AddSessionStartGridline"
+Dim failpoint As String
+On Error GoTo Err
+
+setVerticalGridLine(pTimestamp, pPeriodNumber, True).LocalStyle = SessionStartGridLineStyle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function AddText( _
@@ -1223,21 +1655,69 @@ Public Function AddText( _
                 Optional ByVal pLayer As LayerNumbers = -1, _
                 Optional ByVal Style As TextStyle) As Text
 Static miscTexts As TextSeries
+Dim lText As Text
+
+Const ProcName As String = "AddText"
+Dim failpoint As String
+On Error GoTo Err
+
 If miscTexts Is Nothing Then
     Set miscTexts = AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerHighestUser)
 End If
-Set AddText = miscTexts.Add
-If value <> "" Then AddText.Text = value
-If pLayer <> -1 Then AddText.Layer = pLayer
-If Not Style Is Nothing Then AddText.LocalStyle = Style
+Set lText = miscTexts.Add
+If value <> "" Then lText.Text = value
+If pLayer <> -1 Then lText.Layer = pLayer
+If Not Style Is Nothing Then lText.LocalStyle = Style
+
+Set AddText = lText
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Sub ClearRegion()
-
-Dim failpoint As Long
+Friend Sub CalculateAndRepaint()
+Const ProcName As String = "CalculateAndRepaint"
+Dim failpoint As String
 On Error GoTo Err
 
-If mCleared Then Exit Sub
+mData.DetermineInScopeObjects
+calculateVerticalBounds
+mData.DetermineVisibleObjects
+paint
+
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.SetVerticalScaleInternal mViewport.Bottom, mViewport.Top
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub ChangeGaugeAndRepaint()
+Const ProcName As String = "changeGaugeAndRepaint"
+Dim failpoint As String
+On Error GoTo Err
+
+mData.CalculateInscopeGaugeDependentObjects
+paint
+If Not mYAxisRegion Is Nothing Then mYAxisRegion.NotifyResizedY
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub ClearRegion()
+Const ProcName As String = "ClearRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+If mIsCleared Then Exit Sub
 
 Set mTitle = Nothing
 
@@ -1255,7 +1735,7 @@ Set mXGridTextsCoarse = Nothing
 Set mXGridTexts = Nothing
 Set mXGridLines = Nothing
 
-mCleared = True
+mIsCleared = True
 
 mGraphObjSeriesCollection.Finish
 
@@ -1266,92 +1746,119 @@ Set mChartRef = Nothing
 
 mData.Clear
 Set mData = Nothing
+
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "clearRegion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ClearSelection()
+Const ProcName As String = "ClearSelection"
+Dim failpoint As String
+On Error GoTo Err
+
 deSelectObjectOrSeries mSelectedObject
 Set mSelectedObject = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ClearOverrides()
+Const ProcName As String = "ClearOverrides"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = 0
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Click()
+Const ProcName As String = "Click"
+Dim failpoint As String
+On Error GoTo Err
+
 clickSelectedObjectOrSeries
 RaiseEvent Click
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub DblCLick()
+Const ProcName As String = "DblCLick"
+Dim failpoint As String
+On Error GoTo Err
+
 dblClickSelectedObjectOrSeries
 RaiseEvent DblCLick
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub DrawCursor(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-        Dim yVal As Single
-Dim failpoint As Long
+Const ProcName As String = "DrawCursor"
+Dim failpoint As String
 On Error GoTo Err
 
 If Y = MinusInfinitySingle Then
-    yVal = mViewport.Top + 2 * mViewport.Height  ' make sure the pointer isn't visible
-Else
-    yVal = Y
+    Y = mViewport.Top + 2 * mViewport.Height  ' make sure the pointer isn't visible
 End If
 
 If Round(X) >= YAxisPosition Then Exit Sub
 
 hideCursor
-showCursor Round(X), yVal
+showCursor Round(X), Y
+
+mPrevCursorX = X
+mPrevCursorY = Y
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "drawCursor" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function FormatYValue(ByVal Y As Double) As String
-FormatYValue = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
+Const ProcName As String = "FormatYValue"
+Dim failpoint As String
+On Error GoTo Err
+
+FormatYValue = mPriceFormatter.FormatPrice(Y)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub HideGrid()
-Dim failpoint As Long
+Const ProcName As String = "HideGrid"
+Dim failpoint As String
 On Error GoTo Err
 
-If mHorizontalGrid.Hidden Then Exit Sub
+If mGridHidden Then Exit Sub
 
 mHorizontalGrid.Hidden = True
-If mUseDeferredPainting Then
-    deferredPaint DeferredPaintRepaintRegion
-Else
-    Paint
-End If
+doRepaint
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "hideGrid" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise( _
@@ -1359,6 +1866,10 @@ Friend Sub Initialise( _
                 ByVal pChart As Chart, _
                 ByVal pCanvas As Canvas, _
                 ByVal pRegionType As RegionTypes)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 mName = Name
 
 Set mChartRef = CreateWeakReference(pChart)
@@ -1372,20 +1883,43 @@ mData.Initialise pChart, Me, mGraphObjSeriesCollection
 
 setupCrosshairs
 processStyle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function IsGridHidden() As Boolean
+Const ProcName As String = "IsGridHidden"
+Dim failpoint As String
+On Error GoTo Err
+
 IsGridHidden = mHorizontalGrid.Hidden
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub MouseDown(Button As Integer, _
                 Shift As Integer, _
                 X As Single, _
                 Y As Single)
+Const ProcName As String = "MouseDown"
+Dim failpoint As String
+On Error GoTo Err
+
 mCurrX = X
 mCurrY = Y
 If mPointerMode = PointerModeSelection Then setSelectedObjectOrSeries
 RaiseEvent MouseDown(Button, Shift, X, Y)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
@@ -1404,60 +1938,148 @@ RaiseEvent MouseUp(Button, Shift, X, Y)
 End Sub
 
 Public Function NewDimension(ByVal X As Double, _
-                        ByVal Y As Double) As Dimension
-Dim failpoint As Long
+                        ByVal Y As Double, _
+                        Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance, _
+                        Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As Dimension
+Const ProcName As String = "NewDimension"
+Dim failpoint As String
 On Error GoTo Err
 
-Set NewDimension = mViewport.NewDimension(X, Y)
+Set NewDimension = mViewport.NewDimension(X, Y, coordSystemX, coordSystemY)
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "NewDimension" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewPoint(ByVal X As Double, _
                         ByVal Y As Double, _
                         Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal coordSystemY As CoordinateSystems = CoordinateSystems.CoordsLogical) As Point
-Dim failpoint As Long
+                        Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical, _
+                        Optional ByVal Offset As Dimension) As Point
+Const ProcName As String = "NewPoint"
+Dim failpoint As String
 On Error GoTo Err
 
-Set NewPoint = mViewport.NewPoint(X, Y, coordSystemX, coordSystemY)
+Set NewPoint = mViewport.NewPoint(X, Y, coordSystemX, coordSystemY, Offset)
 
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "NewPoint" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Sub PaintRegion()
-doRepaint
+Friend Sub NotifyResizedY()
+' notifies the region that the physical Height of the canvas has changed.
+' This means the Y gauge will have changed, so we need to recalculate
+' the Position of any in-scope gauge-dependent objects.
+
+Const ProcName As String = "NotifyResizedY"
+Dim failpoint As String
+On Error GoTo Err
+
+mViewport.NotifyResizedY
+
+If mUseDeferredPainting Then
+    mDeferredPainter.ChangeGaugeAndRepaint
+Else
+    ChangeGaugeAndRepaint
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub RepaintAreas( _
+                ByRef pAreas() As TRectangle, _
+                ByVal pCount As Long)
+                
+Const ProcName As String = "RepaintAreas"
+Dim i As Long
+
+Dim failpoint As String
+On Error GoTo Err
+
+mData.MarkObjectsForRedraw pAreas, pCount
+
+For i = 0 To pCount - 1
+    If i = 0 Then
+        mViewport.Canvas.SetClippingRegion mViewport.ConvertTRectangleToRect(pAreas(i))
+    Else
+        mViewport.Canvas.AddToClippingRegion mViewport.ConvertTRectangleToRect(pAreas(i))
+    End If
+Next
+
+mViewport.PaintBackground
+
+Dim numMarkedObjects As Long
+numMarkedObjects = mData.PaintMarkedObjects
+Debug.Print "Region " & mHandle & ": " & numMarkedObjects & " marked objects painted"
+
+mViewport.Canvas.ClearClippingRegion
+
+mViewport.Canvas.Surface.Refresh
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub RepaintRegion()
+Const ProcName As String = "RepaintRegion"
+Dim failpoint As String
+On Error GoTo Err
+
+paint
+If Not mYAxisRegion Is Nothing Then mYAxisRegion.RepaintRegion
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub RedrawObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByRef areaToRedraw As TRectangle)
+'unDrawCursor areaToRedraw
+Const ProcName As String = "RedrawObject"
+Dim failpoint As String
+On Error GoTo Err
+
+drawObject graphObj, areaToRedraw
+RedrawArea areaToRedraw, graphObj.Layer + 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveGraphicObject( _
                 ByVal graphObj As IGraphicObject)
+Const ProcName As String = "RemoveGraphicObject"
+Dim failpoint As String
+On Error GoTo Err
+
 RemoveGraphicObjectEx graphObj, True, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RemoveGraphicObjectEx( _
                 ByVal graphObj As IGraphicObject, _
                 ByVal undraw As Boolean, _
                 ByVal removeFromSeries As Boolean)
-
-Dim failpoint As Long
+Const ProcName As String = "RemoveGraphicObjectEx"
+Dim failpoint As String
 On Error GoTo Err
 
 failpoint = 100
@@ -1472,68 +2094,61 @@ If removeFromSeries Then mGraphObjSeriesCollection.Item(graphObj.SeriesID).Remov
 
 failpoint = 800
 
-If undraw Then UndrawArea graphObj.BoundingRectangle, graphObj
+If undraw Then UndrawArea graphObj.BoundingRectangleInViewport, graphObj
 
 mData.RemoveGraphicObject graphObj
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "RemoveGraphicObjectEx" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
+Const ProcName As String = "RemoveGraphicObjectSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 If pSeries Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "RemoveGraphicObjectSeries", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "The supplied argument is Nothing"
 End If
 
 mGraphObjSeriesCollection.Remove pSeries
-End Sub
-
-Friend Sub ResizedY()
-' notifies the region that the physical Height of the canvas has changed.
-' This means the Y gauge will have changed, so we need to recalculate
-' the Position of any in-scope gauge-dependent objects.
-Dim failpoint As Long
-On Error GoTo Err
-
-mViewport.ResizedY
-
-If mUseDeferredPainting Then
-    deferredPaint DeferredPaintChangeGaugeandRepaint
-Else
-    mData.CalculateInscopeGaugeDependentObjects
-    Paint
-    If Not mYAxisRegion Is Nothing Then mYAxisRegion.ResizedY
-End If
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ResizedY" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
+Friend Sub ScaleAndRepaint()
+Const ProcName As String = "ScaleAndRepaint"
+Dim failpoint As String
+On Error GoTo Err
 
+calculateVerticalBounds
+mData.DetermineVisibleObjects
+paint
+
+If Not mYAxisRegion Is Nothing Then mYAxisRegion.SetVerticalScaleInternal mViewport.Bottom, mViewport.Top
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ScaleUp(ByVal factor As Single)
-Dim failpoint As Long
+Const ProcName As String = "ScaleUp"
+Dim failpoint As String
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "scaleUp", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot scale an axis region"
 End If
 
@@ -1545,22 +2160,17 @@ End With
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "scaleUp" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ScrollVertical(ByVal amount As Single)
-Dim failpoint As Long
+Const ProcName As String = "ScrollVertical"
+Dim failpoint As String
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "scrollVertical", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot scroll an axis region"
 End If
 
@@ -1570,22 +2180,17 @@ SetVerticalScale mViewport.Bottom + amount, mViewport.Top + amount
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "scrollVertical" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ScrollVerticalProportion(ByVal proportion As Single)
-Dim failpoint As Long
+Const ProcName As String = "ScrollVerticalProportion"
+Dim failpoint As String
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "scrollVerticalProportion", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot scroll an axis region"
 End If
 
@@ -1596,13 +2201,7 @@ SetVerticalScale mViewport.Bottom + proportion * mViewport.Height, _
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "scrollVerticalProportion" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetPeriodBackgroundColor( _
@@ -1613,7 +2212,8 @@ Dim index As Long
 Dim periodrect As TRectangle
 Dim redrawAreas(0) As TRectangle
 
-Dim failpoint As Long
+Const ProcName As String = "SetPeriodBackgroundColor"
+Dim failpoint As String
 On Error GoTo Err
 
 mData.PeriodBackColor(PeriodNumber) = Color
@@ -1625,7 +2225,7 @@ If Color = 0 Then Exit Sub
 With mViewport
     .Canvas.SetPenAttributes Color, 1, LineInsideSolid, DrawModeCopyPen
     .Canvas.SetBrushAttributes Color, FillSolid
-    .Canvas.DrawRectangle .NewPoint(PeriodNumber - 0.5, .Bottom), .NewPoint(PeriodNumber + 0.5, .Top)
+    .Canvas.DrawRectangle PeriodNumber - 0.5, .Bottom, PeriodNumber + 0.5, .Top
 
     periodrect.Left = PeriodNumber - 0.5
     periodrect.Right = PeriodNumber + 0.5
@@ -1639,19 +2239,14 @@ mData.RedrawArea periodrect, LayerNumbers.LayerMin
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setPeriodBackgroundColor" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetPeriodsInView( _
                 ByVal minValue As Single, _
                 ByVal maxValue As Single)
-Dim failpoint As Long
+Const ProcName As String = "SetPeriodsInView"
+Dim failpoint As String
 On Error GoTo Err
 
 mMinInViewPeriod = minValue
@@ -1660,32 +2255,19 @@ mYAxisPosition = maxValue + 1
 mViewport.Left = minValue
 mViewport.Right = maxValue + 0.99
 
-If mIsDrawingEnabled Then
-    If mUseDeferredPainting Then
-        deferredPaint DeferredPaintCalculateAndRepaint
-    Else
-        mData.DetermineInScopeObjects
-        If Autoscaling Then
-            calculateVerticalBounds
-        End If
-        mData.DetermineVisibleObjects
-        Paint
-        If Not mYAxisRegion Is Nothing Then mYAxisRegion.PaintRegion
-    End If
-End If
+doCalculateAndRepaint
+
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "SetPeriodsInView" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetPointerModeDefault()
+Const ProcName As String = "SetPointerModeDefault"
+Dim failpoint As String
+On Error GoTo Err
+
 If mPointerMode = PointerModeDefault Then Exit Sub
 
 If mIsDrawingEnabled Then
@@ -1699,9 +2281,18 @@ If mIsDrawingEnabled Then
     setMouseIcon mPointerStyle
     showCursor mPrevCursorX, mPrevCursorY
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetPointerModeSelection()
+Const ProcName As String = "SetPointerModeSelection"
+Dim failpoint As String
+On Error GoTo Err
+
 If mPointerMode = PointerModeSelection Then Exit Sub
 
 If mIsDrawingEnabled Then hideCursor
@@ -1712,11 +2303,20 @@ If mIsDrawingEnabled Then
     setMouseIcon PointerStyles.PointerSelection
     showCursor mPrevCursorX, mPrevCursorY
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetPointerModeTool( _
                 ByVal toolPointerStyle As PointerStyles, _
                 ByVal icon As IPictureDisp)
+
+Const ProcName As String = "SetPointerModeTool"
+Dim failpoint As String
+On Error GoTo Err
 
 If mIsDrawingEnabled Then hideCursor
 
@@ -1728,19 +2328,24 @@ If mIsDrawingEnabled Then
     setMouseIcon mPointerToolStyle
     showCursor mPrevCursorX, mPrevCursorY
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 ' Note that the arguments are ByRef because they may be adjusted
 ' if they are the same when expressed as Singles.
 Public Sub SetVerticalScale(ByRef lowValue As Double, _
                             ByRef highValue As Double)
-
-Dim failpoint As Long
+Const ProcName As String = "SetVerticalScale"
+Dim failpoint As String
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set the scale for an axis region"
 End If
 
@@ -1751,91 +2356,94 @@ SetVerticalScaleInternal lowValue, highValue
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setVerticalScale" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SetVerticalScaleInternal(ByRef lowValue As Double, _
                             ByRef highValue As Double)
-
-Dim failpoint As Long
+Const ProcName As String = "SetVerticalScaleInternal"
+Dim failpoint As String
 On Error GoTo Err
 
 setViewportVerticalBounds lowValue, highValue
 
-If mIsDrawingEnabled Then
-    If mUseDeferredPainting Then
-        deferredPaint DeferredPaintCalculateAndRepaint
-    Else
-        mData.DetermineVisibleObjects
-        Paint
-    End If
-End If
-If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.SetVerticalScaleInternal lowValue, highValue
-End If
+doCalculateAndRepaint
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setVerticalScaleInternal" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub ShowGrid()
-Dim failpoint As Long
+Const ProcName As String = "ShowGrid"
+Dim failpoint As String
 On Error GoTo Err
 
-If Not mHorizontalGrid.Hidden Then Exit Sub
+If Not mGridHidden Then Exit Sub
 
 mHorizontalGrid.Hidden = False
-If mUseDeferredPainting Then
-    deferredPaint DeferredPaintRepaintRegion
-Else
-    Paint
+doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub UndrawAreaEx( _
+                ByRef undrawnArea As TRectangle, _
+                Optional ByVal objToExclude As IGraphicObject)
+Const ProcName As String = "UndrawAreaEx"
+Dim failpoint As String
+On Error GoTo Err
+
+failpoint = 100
+
+' redraw objects in the undrawn area, preserving layering
+If mIsDrawingEnabled And undrawnArea.isValid Then
+    
+    failpoint = 200
+
+    mViewport.UndrawArea undrawnArea
+    
+    failpoint = 400
+    
+    RedrawArea undrawnArea, MinLayer, objToExclude
+    
 End If
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "ShowGrid" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Sub addVerticalGridLine(ByVal PeriodNumber As Long, _
+Private Function addVerticalGridLine(ByVal PeriodNumber As Long, _
                                 ByVal Key As String, _
                                 ByVal label As String, _
                                 ByVal coarseKey As String, _
-                                ByVal coarseLabel As String)
+                                ByVal coarseLabel As String) As ChartSkil26.Line
 Dim vGridLine As ChartSkil26.Line
 Dim vGridText As Text
 Dim vGridTextCoarse As Text
 
+Const ProcName As String = "addVerticalGridLine"
+Dim failpoint As String
+On Error GoTo Err
+
 If HasGrid Then
     On Error Resume Next
     Set vGridLine = mXGridLines.Item(Key)
-    On Error GoTo 0
+    On Error GoTo Err
     If vGridLine Is Nothing Then
         Set vGridLine = mXGridLines.Add(Key)
+        vGridLine.FixedX = False
+        vGridLine.FixedY = True
         vGridLine.SetPosition NewPoint(PeriodNumber - 0.5, _
                                     0, _
                                     CoordsLogical, _
@@ -1856,17 +2464,18 @@ If HasGrid Then
                                         CoordsRelative)
         End If
     End If
+    Set addVerticalGridLine = vGridLine
 End If
 
 If HasGridText Then
     On Error Resume Next
     Set vGridText = mXGridTexts.Item(Key)
-    On Error GoTo 0
+    On Error GoTo Err
     If vGridText Is Nothing Then
         Set vGridText = mXGridTexts.Add(Key)
         vGridText.FixedX = False
         vGridText.FixedY = True
-        vGridText.position = NewPoint(PeriodNumber - 0.5, _
+        vGridText.Position = NewPoint(PeriodNumber - 0.5, _
                                     0#, _
                                     CoordsLogical, _
                                     CoordsDistance)
@@ -1875,12 +2484,12 @@ If HasGridText Then
 
     On Error Resume Next
     Set vGridTextCoarse = mXGridTextsCoarse.Item(coarseKey)
-    On Error GoTo 0
+    On Error GoTo Err
     If vGridTextCoarse Is Nothing Then
         Set vGridTextCoarse = mXGridTextsCoarse.Add(coarseKey)
         vGridTextCoarse.FixedX = False
         vGridTextCoarse.FixedY = True
-        vGridTextCoarse.position = NewPoint(PeriodNumber - 0.5, _
+        vGridTextCoarse.Position = NewPoint(PeriodNumber - 0.5, _
                                     0#, _
                                     CoordsLogical, _
                                     CoordsCounterDistance)
@@ -1888,18 +2497,19 @@ If HasGridText Then
     End If
 End If
 
-End Sub
+Exit Function
 
-Private Function calculateMinutesFromMidnight( _
-                            ByVal Timestamp As Date) As Long
-calculateMinutesFromMidnight = Int((Timestamp - Int(Timestamp) + 1 / 86400000) * 1440)
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Sub calculateVerticalBounds()
 Dim scaleMax As Double
 Dim scaleMin As Double
 
-Dim failpoint As Long
+Const ProcName As String = "calculateVerticalBounds"
+Dim failpoint As String
 On Error GoTo Err
 
 If Not Autoscaling Then Exit Sub
@@ -1928,23 +2538,41 @@ setViewportVerticalBounds scaleMin - (scaleMax - scaleMin) * 0.025, _
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "calculateVerticalBounds" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource & vbCrLf & ".Bottom=" & CStr(scaleMin - (scaleMax - scaleMin) * 0.025)
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function chartObj() As Chart
+Const ProcName As String = "chartObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set chartObj = mChartRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub clearPropertyOverrideFlag( _
                 ByVal flag As PropertyOverrideFlags)
+Const ProcName As String = "clearPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function clickSelectedObjectOrSeries() As Boolean
+Const ProcName As String = "clickSelectedObjectOrSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSelectedObject Is Nothing Then
     clickSelectedObjectOrSeries = False
 ElseIf mSelectedObject.IsSelectable Then
@@ -1956,9 +2584,18 @@ ElseIf mGraphObjSeriesCollection.Item(mSelectedObject.SeriesID).IsSelectable The
 Else
     clickSelectedObjectOrSeries = False
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function dblClickSelectedObjectOrSeries() As Boolean
+Const ProcName As String = "dblClickSelectedObjectOrSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 If mSelectedObject Is Nothing Then
     dblClickSelectedObjectOrSeries = False
 ElseIf mSelectedObject.IsSelectable Then
@@ -1970,9 +2607,18 @@ ElseIf mGraphObjSeriesCollection.Item(mSelectedObject.SeriesID).IsSelectable The
 Else
     dblClickSelectedObjectOrSeries = False
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function deSelectObjectOrSeries(ByVal graphObj As IGraphicObject) As Boolean
+Const ProcName As String = "deSelectObjectOrSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 If graphObj Is Nothing Then
 ElseIf graphObj.IsSelectable Then
     graphObj.Selected = False
@@ -1983,128 +2629,126 @@ ElseIf mGraphObjSeriesCollection.Item(graphObj.SeriesID).IsSelectable Then
 Else
     deSelectObjectOrSeries = False
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub deferredPaint(ByVal action As DeferredPaintActions)
-If action = DeferredPaintRepaintNone Then
-    mDeferredPaintAction = DeferredPaintRepaintNone
-    mDeferredPaintPending = False
-    ReDim mUndrawnAreas(3) As TRectangle
-    mUndrawnAreasIndex = -1
-    ReDim mRedrawObjects(3) As RedrawObjectsTableEntry
-    mRedrawObjectsIndex = -1
-Else
-    Select Case mDeferredPaintAction
-    Case DeferredPaintRepaintNone
-        mDeferredPaintAction = action
-    Case DeferredPaintRepaintChangedAreas
-        If action = DeferredPaintRepaintRegion Or _
-            action = DeferredPaintChangeGaugeandRepaint Or _
-            action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
-        Then mDeferredPaintAction = action
-    Case DeferredPaintRepaintRegion
-        If action = DeferredPaintChangeGaugeandRepaint Or _
-            action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
-        Then mDeferredPaintAction = action
-    Case DeferredPaintChangeGaugeandRepaint
-        If action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
-        Then mDeferredPaintAction = action
-    Case DeferredPaintScaleAndRepaint
-        If action = DeferredPaintCalculateAndRepaint Then mDeferredPaintAction = action
-    Case DeferredPaintCalculateAndRepaint
-        
-    End Select
-    If Not mDeferredPaintPending Then
-        mDeferredPaintPending = True
-        DeferAction Me, Empty, 20, ExpiryTimeUnitMilliseconds
-    End If
-End If
-End Sub
-
 Private Sub doRepaint()
+Const ProcName As String = "doRepaint"
+Dim failpoint As String
+On Error GoTo Err
+
 If mIsDrawingEnabled Then
     If mUseDeferredPainting Then
-        deferredPaint DeferredPaintRepaintRegion
+        mDeferredPainter.RepaintRegion
     Else
-        Paint
+        paint
     End If
-    If Not mYAxisRegion Is Nothing Then mYAxisRegion.PaintRegion
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub doScaleAndRepaint()
+Const ProcName As String = "doScaleAndRepaint"
+Dim failpoint As String
+On Error GoTo Err
+
 If mIsDrawingEnabled Then
     If mUseDeferredPainting Then
-        deferredPaint DeferredPaintScaleAndRepaint
+        mDeferredPainter.ScaleAndRepaint
     Else
-        calculateVerticalBounds
-        mData.DetermineVisibleObjects
-        Paint
+        ScaleAndRepaint
     End If
 End If
-If Not mYAxisRegion Is Nothing Then mYAxisRegion.PaintRegion
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub doCalculateAndRepaint()
+Const ProcName As String = "doCalculateAndRepaint"
+Dim failpoint As String
+On Error GoTo Err
+
+If mIsDrawingEnabled Then
+    If mUseDeferredPainting Then
+        mDeferredPainter.CalculateAndRepaint
+    Else
+        CalculateAndRepaint
+    End If
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawCrosshairsPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
 
+Const ProcName As String = "drawCrosshairsPointer"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mIsDrawingEnabled Then Exit Sub
 
-'    .SetPenAttributes mPointerCrosshairsColor Xor .BackColor, _
-'                        1, _
-'                        LineStyles.LineSolid, _
-'                        DrawModes.DrawModeXorPen
-'    .DrawLine .NewPoint(.Left, Y), .NewPoint(YAxisPosition, Y)
 lineX = Round(X)
-'    .DrawLine .NewPoint(lineX, .Bottom), .NewPoint(lineX, .Top)
-'
+
 mCrosshairLineHoriz.SetPosition NewPoint(0, Y, CoordsRelative), _
                                 NewPoint(100, Y, CoordsRelative)
 mCrosshairLineVert.SetPosition NewPoint(lineX, 0, , CoordsRelative), _
                                 NewPoint(lineX, 100, , CoordsRelative)
     
-mPrevCursorX = X
-mPrevCursorY = Y
+Exit Sub
 
-If Not mYAxisRegion Is Nothing Then
-    mYCursorText.position = mYAxisRegion.NewPoint(15, Y, CoordsLogical, CoordsLogical)
-    mYCursorText.Text = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
-End If
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawCustomPointer(ByVal X As Single, ByVal Y As Single)
 
+Const ProcName As String = "drawCustomPointer"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mIsDrawingEnabled Then Exit Sub
 
-mPrevCursorX = X
-mPrevCursorY = Y
-    
-If Not mYAxisRegion Is Nothing Then
-    mYCursorText.position = mYAxisRegion.NewPoint(15, Y, CoordsLogical, CoordsLogical)
-    mYCursorText.Text = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
-End If
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawDiscPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
-Dim size As Dimension
+Dim Size As Dimension
+
+Const ProcName As String = "drawDiscPointer"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
-    '.MousePointer = vbCrosshair
     lineX = Round(X)
-    Set size = .NewDimension(0.4, 0.4)
+    Set Size = .NewDimension(0.4, 0.4)
     
     .Canvas.SetPenAttributes vbBlack Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .Canvas.DrawLine lineX - size.XLogical, Y, lineX + size.XLogical, Y
-    .Canvas.DrawLine lineX, Y - size.YLogical, lineX, Y + size.YLogical
+    .Canvas.DrawLine lineX - Size.XLogical, Y, lineX + Size.XLogical, Y
+    .Canvas.DrawLine lineX, Y - Size.yLogical, lineX, Y + Size.yLogical
     
     .Canvas.SetPenAttributes mPointerDiscColor Xor .BackColor, _
                         1, _
@@ -2113,78 +2757,100 @@ With mViewport
     .Canvas.SetBrushAttributes mPointerDiscColor Xor .BackColor, FillStyles.FillSolid
     .Canvas.DrawCircle .NewPoint(lineX, Y), .NewDimension(0.8, 0.8).XLogical
     
-    mPrevCursorX = X
-    mPrevCursorY = Y
-    
 End With
 
-If Not mYAxisRegion Is Nothing Then
-    mYCursorText.position = mYAxisRegion.NewPoint(15, Y, CoordsLogical, CoordsLogical)
-    mYCursorText.Text = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
-End If
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawObject( _
                 ByVal graphObj As IGraphicObject, _
                 ByRef areaToRedraw As TRectangle)
 Dim drawAreas(0) As TRectangle
+Const ProcName As String = "drawObject"
+Dim failpoint As String
+On Error GoTo Err
+
 drawAreas(0) = RectIntersection(mViewport.Boundary, areaToRedraw)
 
 graphObj.Draw drawAreas
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawSelectionPointer(ByVal X As Single, ByVal Y As Single)
 
+Const ProcName As String = "drawSelectionPointer"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mIsDrawingEnabled Then Exit Sub
 
 ' nothing to draw since the pointer is a cursor and Windows draws it
-mPrevCursorX = X
-mPrevCursorY = Y
-    
-If Not mYAxisRegion Is Nothing Then
-    mYCursorText.position = mYAxisRegion.NewPoint(15, Y, CoordsLogical, CoordsLogical)
-    mYCursorText.Text = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
-End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawToolPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
-Dim size As Dimension
+Dim Size As Dimension
+
+Const ProcName As String = "drawToolPointer"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
     lineX = Round(X)
-    Set size = .NewDimension(0.4, 0.4)
+    Set Size = .NewDimension(0.4, 0.4)
     
-'    .SetPenAttributes vbBlack Xor .BackColor, _
-'                        1, _
-'                        LineStyles.LineSolid, _
-'                        DrawModes.DrawModeXorPen
-'    .DrawLine .NewPoint(lineX - size.XLogical, Y), .NewPoint(lineX + size.XLogical, Y)
-'    .DrawLine .NewPoint(lineX, Y - size.YLogical), .NewPoint(lineX, Y + size.YLogical)
-    
-mCrosshairLineHoriz.SetPosition .NewPoint(lineX - size.XLogical, Y), .NewPoint(lineX + size.XLogical, Y)
-mCrosshairLineVert.SetPosition .NewPoint(lineX, Y - size.YLogical), .NewPoint(lineX, Y + size.YLogical)
+    mCrosshairLineHoriz.SetPosition .NewPoint(lineX - Size.XLogical, Y), .NewPoint(lineX + Size.XLogical, Y)
+    mCrosshairLineVert.SetPosition .NewPoint(lineX, Y - Size.yLogical), .NewPoint(lineX, Y + Size.yLogical)
 End With
 
-mPrevCursorX = X
-mPrevCursorY = Y
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub drawYCursorText(ByVal Y As Single)
+Const ProcName As String = "drawYCursorText"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mYAxisRegion Is Nothing Then
-    mYCursorText.position = mYAxisRegion.NewPoint(15, Y, CoordsLogical, CoordsLogical)
-    mYCursorText.Text = mHorizontalGrid.GenerateYAxisCursorPositionText(Y)
+    mYCursorText.Position = mYAxisRegion.NewPoint(5, Y, CoordsRelative, CoordsLogical)
+    mYCursorText.Text = mPriceFormatter.FormatPrice(Y)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getPerformanceText() As Text
 Static perfText As Text
 Dim perffont As StdFont
 
+Const ProcName As String = "getPerformanceText"
+Dim failpoint As String
+On Error GoTo Err
+
 If perfText Is Nothing Then
     Set perffont = New StdFont
     perffont.Name = "Lucida Console"
-    perffont.size = 8
+    perffont.Size = 8
     perffont.Underline = False
     perffont.Bold = False
     
@@ -2197,21 +2863,32 @@ If perfText Is Nothing Then
     perfText.BoxThickness = 1
     perfText.BoxFillColor = vbActiveTitleBar
     perfText.BoxFillStyle = FillStyles.FillSolid
-    perfText.position = NewPoint(5, 2, CoordsRelative, CoordsRelative)
+    perfText.Position = NewPoint(5, 2, CoordsRelative, CoordsRelative)
     perfText.FixedX = True
     perfText.FixedY = True
     perfText.Align = TextAlignModes.AlignBottomLeft
     perfText.IncludeInAutoscale = False
+    perfText.MultiLine = True
     perfText.PaddingX = 0.5
     perfText.Layer = LayerTitle
 End If
 Set getPerformanceText = perfText
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub hideCursor()
 Dim lPointerStyle As PointerStyles
 
-mUseDeferredPainting = False
+Const ProcName As String = "hideCursor"
+Dim failpoint As String
+On Error GoTo Err
+
+'mUseDeferredPainting = False
+mUseDeferredPainting = True
 
 If mPointerMode = PointerModeTool Then
     lPointerStyle = mPointerToolStyle
@@ -2237,18 +2914,24 @@ Case PointerCustom
 End Select
 
 mUseDeferredPainting = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub Paint()
+Private Sub paint()
 Static et As ElapsedTimer
 
 Dim numVisibleObjects  As Long
 Dim index As Long
 
-Dim failpoint As Long
+Static repaintCount As Long
+Const ProcName As String = "paint"
+Dim failpoint As String
 On Error GoTo Err
 
-Static repaintCount As Long
 repaintCount = repaintCount + 1
 Debug.Print "Region " & mHandle & " repaint count = " & repaintCount
 
@@ -2263,13 +2946,16 @@ mViewport.PaintBackground
 
 paintPeriodBackgrounds
 
-If Not (IsYAxisRegion Or IsXAxisRegion) Then mHorizontalGrid.Generate mViewport.Bottom, mViewport.Top, mViewport.HeightCm
+paintHorizontalGrid
 
 numVisibleObjects = mData.PaintAllVisibleObjects
+Debug.Print "Region " & mHandle & ": " & numVisibleObjects & " objects painted"
 
 showCursor mPrevCursorX, mPrevCursorY
 
 If mPerformanceTextVisible Then paintPerformanceText numVisibleObjects, et.ElapsedTimeMicroseconds / 1000
+
+mViewport.Canvas.Surface.Refresh
 
 mViewport.ZOrder 0
 
@@ -2279,17 +2965,33 @@ mPaintingInProgress = False
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "paint" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
+Private Sub paintHorizontalGrid()
+Const ProcName As String = "paintHorizontalGrid"
+On Error GoTo Err
+
+If Not (IsYAxisRegion Or IsXAxisRegion) And HasGrid Then
+    mPriceFormatter.YScaleGridSpacing = mHorizontalGridSpacer.Calculate(mViewport.Height, mViewport.HeightCm)
+    
+    mHorizontalGrid.Generate mViewport.Bottom, mViewport.Top, mHorizontalGridSpacer.YScaleGridSpacing
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub paintPerformanceText( _
                 ByVal numberOfObjectsRepainted As Long, _
                 ByVal elapsedTimeMillisecs As Single)
 Dim perfText As Text
+Const ProcName As String = "paintPerformanceText"
+Dim failpoint As String
+On Error GoTo Err
+
 If mPerformanceTextVisible Then
     Set perfText = getPerformanceText
     perfText.Text = "Repaint time: " & Format(elapsedTimeMillisecs, "0.0") & "ms" & vbCrLf & _
@@ -2298,22 +3000,40 @@ If mPerformanceTextVisible Then
     ' need to force the Text to draw now
     perfText.Draw
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub paintPeriodBackgrounds()
 Dim i As Long
+Const ProcName As String = "paintPeriodBackgrounds"
+Dim failpoint As String
+On Error GoTo Err
+
 With mViewport
-    For i = IIf(mMinInViewPeriod < 1, 1, mMinInViewPeriod) To IIf(mData.MaxPeriodNumber < mMaxInViewPeriod, mData.MaxPeriodNumber, mMaxInViewPeriod)
+    For i = IIf(mMinInViewPeriod < mData.MinPeriodNumber, mData.MinPeriodNumber, mMinInViewPeriod) To IIf(mData.MaxPeriodNumber < mMaxInViewPeriod, mData.MaxPeriodNumber, mMaxInViewPeriod)
         If mData.PeriodBackColor(i) <> 0 Then
             .Canvas.SetPenAttributes mData.PeriodBackColor(i), 1, LineInsideSolid, DrawModeCopyPen
             .Canvas.SetBrushAttributes mData.PeriodBackColor(i), FillSolid
-            .Canvas.DrawRectangle .NewPoint(i - 0.5, .Bottom), .NewPoint(i + 0.5, .Top)
+            .Canvas.DrawRectangle i - 0.5, .Bottom, i + 0.5, .Top
         End If
     Next
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processStyle()
+
+Const ProcName As String = "processStyle"
+Dim failpoint As String
+On Error GoTo Err
 
 setBackColor
 setBackGradientFillColors
@@ -2331,14 +3051,19 @@ If Not IsXAxisRegion And Not IsYAxisRegion Then
     setYScaleQuantum
 End If
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub RedrawArea( _
                 ByRef areaToRedraw As TRectangle, _
                 ByVal startLayer As Long, _
                 Optional ByVal objToExclude As IGraphicObject)
-
-Dim failpoint As Long
+Const ProcName As String = "redrawArea"
+Dim failpoint As String
 On Error GoTo Err
 
 failpoint = 100
@@ -2357,10 +3082,7 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "redrawArea" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub redrawChangedObject( _
@@ -2369,40 +3091,31 @@ Private Sub redrawChangedObject( _
 Dim i As Long
 Dim handled As Boolean
 
+Const ProcName As String = "redrawChangedObject"
+Dim failpoint As String
+On Error GoTo Err
+
 If areaToRedraw.isValid Then
     If mUseDeferredPainting Then
-        For i = 0 To mRedrawObjectsIndex
-            If mRedrawObjects(i).graphObj Is graphObj Then
-                mRedrawObjects(i).areaToRedraw = RectUnion(areaToRedraw, mRedrawObjects(i).areaToRedraw)
-                handled = True
-            End If
-        Next
-            
-        If Not handled Then
-            mRedrawObjectsIndex = mRedrawObjectsIndex + 1
-            If mRedrawObjectsIndex > UBound(mRedrawObjects) Then
-                ReDim Preserve mRedrawObjects(2 * (UBound(mRedrawObjects) + 1) - 1) As RedrawObjectsTableEntry
-            End If
-            Set mRedrawObjects(mRedrawObjectsIndex).graphObj = graphObj
-            mRedrawObjects(mRedrawObjectsIndex).areaToRedraw = areaToRedraw
-        End If
-        deferredPaint DeferredPaintRepaintChangedAreas
+        'mDeferredPainter.AddChangedObject graphObj, areaToRedraw
+        mDeferredPainter.AddAreaToRedraw areaToRedraw
     Else
-        redrawObject graphObj, areaToRedraw
+        RedrawObject graphObj, areaToRedraw
     End If
 End If
 
-End Sub
+Exit Sub
 
-Private Sub redrawObject( _
-                ByVal graphObj As IGraphicObject, _
-                ByRef areaToRedraw As TRectangle)
-'unDrawCursor areaToRedraw
-drawObject graphObj, areaToRedraw
-RedrawArea areaToRedraw, graphObj.Layer + 1
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Function selectObjectOrSeries(ByVal graphObj As IGraphicObject) As Boolean
+Const ProcName As String = "selectObjectOrSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 If graphObj.IsSelectable Then
     graphObj.Selected = True
     selectObjectOrSeries = True
@@ -2412,34 +3125,70 @@ ElseIf mGraphObjSeriesCollection.Item(graphObj.SeriesID).IsSelectable Then
 Else
     selectObjectOrSeries = False
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setAutoscaling()
+Const ProcName As String = "setAutoscaling"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "autoScale", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set autoscale for an axis region"
 End If
 
 If Autoscaling Then doScaleAndRepaint
 
 RaiseEvent AutoscalingChanged
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setBackColor()
+Const ProcName As String = "setBackColor"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.BackColor = BackColor
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setBackGradientFillColors()
+Const ProcName As String = "setBackGradientFillColors"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.GradientFillColors = BackGradientFillColors
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setViewportVerticalBounds( _
                 ByRef Bottom As Double, _
                 ByRef Top As Double)
     
+Const ProcName As String = "setViewportVerticalBounds"
+Dim failpoint As String
+On Error GoTo Err
+
 If Bottom > Top Then Exit Sub
     
 With mViewport
@@ -2462,54 +3211,113 @@ With mViewport
     Top = .Top
     Bottom = .Bottom
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setGridlineSpacingY()
+Const ProcName As String = "setGridlineSpacingY"
+Dim failpoint As String
+On Error GoTo Err
+
 If IsXAxisRegion Or IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "gridlineSpacingY", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set gridline spacing for an axis region"
 End If
 
-mHorizontalGrid.GridlineSpacingY = GridlineSpacingY
+mHorizontalGridSpacer.GridlineSpacingY = GridlineSpacingY
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setGridLineStyle()
-setHasGrid
+Const ProcName As String = "setGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mHorizontalGrid Is Nothing Then
+    mHorizontalGrid.GridLineStyle = GridLineStyle
+    doRepaint
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setGridTextStyle()
+Const ProcName As String = "setGridTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 setHasGridText
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setHasGrid()
+Const ProcName As String = "setHasGrid"
+Dim failpoint As String
+On Error GoTo Err
+
 If HasGrid Then
     Set mXGridLines = Me.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid)
     mXGridLines.Style = GridLineStyle
     
-    Set mHorizontalGrid = New HorizontalGrid
-    mHorizontalGrid.Initialise Me, GridLineStyle
+    If mHorizontalGrid Is Nothing Then Set mHorizontalGrid = New HorizontalGrid
+    mHorizontalGrid.Initialise Me
+    mHorizontalGrid.GridLineStyle = GridLineStyle
+    mHorizontalGrid.Hidden = mGridHidden
+    mHorizontalGrid.PriceFormatter = mPriceFormatter
+    mHorizontalGrid.TextStyle = YAxisTextStyle
+    mHorizontalGrid.YAxisRegion = mYAxisRegion
 Else
     Set mXGridLines = Nothing
-    Set mHorizontalGrid = Nothing
+    If Not mHorizontalGrid Is Nothing Then
+        mHorizontalGrid.Finish
+        Set mHorizontalGrid = Nothing
+    End If
 End If
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setHasGridText()
 
+Const ProcName As String = "setHasGridText"
+Dim failpoint As String
+On Error GoTo Err
+
 If HasGridText Then
-    Set mXGridTexts = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
+    Set mXGridTexts = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText + 1)
     mXGridTexts.Style = GridTextStyle
     ' override the Style for the following, but don't change the Style itself
     
     mXGridTexts.Align = AlignBoxBottomCentre
-    If Not IsXAxisRegion Then
+    'If Not IsXAxisRegion Then
         mXGridTexts.Box = True
+        mXGridTexts.BoxThickness = 0
         mXGridTexts.BoxFillWithBackgroundColor = True
         mXGridTexts.BoxStyle = LineInvisible
-    End If
+        mXGridTexts.PaddingY = 0
+        mXGridTexts.PaddingX = 4
+    'End If
     mXGridTexts.Extended = True
 
     Set mXGridTextsCoarse = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
@@ -2517,30 +3325,61 @@ If HasGridText Then
     
     ' override the Style for the following, but don't change the Style itself
     mXGridTextsCoarse.Align = AlignBoxTopCentre
-    If Not IsXAxisRegion Then
+    'If Not IsXAxisRegion Then
         mXGridTextsCoarse.Box = True
+        mXGridTextsCoarse.BoxThickness = 0
         mXGridTexts.BoxFillWithBackgroundColor = True
         mXGridTextsCoarse.BoxStyle = LineInvisible
-    End If
+        mXGridTextsCoarse.PaddingY = 0
+    'End If
     mXGridTextsCoarse.Extended = True
 Else
     Set mXGridTexts = Nothing
     Set mXGridTextsCoarse = Nothing
 End If
 doRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setIntegerYScale()
-mHorizontalGrid.IntegerYScale = IntegerYScale
-doRepaint
+Const ProcName As String = "setIntegerYScale"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mHorizontalGrid Is Nothing Then
+    mPriceFormatter.IntegerYScale = IntegerYScale
+    doRepaint
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setMinimumHeight()
+Const ProcName As String = "setMinimumHeight"
+Dim failpoint As String
+On Error GoTo Err
+
 doScaleAndRepaint
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setMouseIcon( _
                 ByVal PointerStyle As PointerStyles)
+Const ProcName As String = "setMouseIcon"
+Dim failpoint As String
+On Error GoTo Err
+
 mViewport.MousePointer = vbCustom
 Select Case PointerStyle
 Case PointerNone
@@ -2559,25 +3398,40 @@ Case PointerWindowsDefault
     mViewport.MousePointer = vbDefault
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil26.ChartRegion::(let)pointerStyle", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value must be a member of the PointerStyles enum"
 End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSelectedObjectOrSeries()
 Dim newSelectedObject As IGraphicObject
 
+Const ProcName As String = "setSelectedObjectOrSeries"
+Dim failpoint As String
+On Error GoTo Err
+
 Set newSelectedObject = mData.GetNextSelectableObjectOrSeriesAtPoint(mSelectedObject, mCurrX, mCurrY)
 
 If newSelectedObject Is Nothing Then
+    deSelectObjectOrSeries mSelectedObject
     Set mSelectedObject = Nothing
-ElseIf newSelectedObject = mSelectedObject Then
+ElseIf newSelectedObject Is mSelectedObject Then
     
 Else
     deSelectObjectOrSeries mSelectedObject
     Set mSelectedObject = newSelectedObject
     selectObjectOrSeries newSelectedObject
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setCursorSnapsToTickBoundaries()
@@ -2586,15 +3440,52 @@ End Sub
 
 Private Sub setPropertyOverrideFlag( _
                 ByVal flag As PropertyOverrideFlags)
+Const ProcName As String = "setPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSessionEndGridLineStyle()
+Const ProcName As String = "setSessionEndGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+setHasGrid
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSessionStartGridLineStyle()
+Const ProcName As String = "setSessionStartGridLineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+setHasGrid
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupCrosshairs()
+Const ProcName As String = "setupCrosshairs"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mCrosshairLineHoriz = AddLine(LayerNumbers.LayerPointer)
 mCrosshairLineHoriz.Color = vbRed
 mCrosshairLineHoriz.Extended = True
-'mCrosshairLineHoriz.FixedX = True
-'mCrosshairLineHoriz.FixedY = True
 mCrosshairLineHoriz.IncludeInAutoscale = False
 mCrosshairLineHoriz.LineStyle = LineSolid
 mCrosshairLineHoriz.Thickness = 1
@@ -2602,15 +3493,19 @@ mCrosshairLineHoriz.Thickness = 1
 Set mCrosshairLineVert = AddLine(LayerNumbers.LayerPointer)
 mCrosshairLineVert.Color = vbRed
 mCrosshairLineVert.Extended = True
-'mCrosshairLineVert.FixedX = True
-'mCrosshairLineVert.FixedY = True
 mCrosshairLineVert.IncludeInAutoscale = False
 mCrosshairLineVert.LineStyle = LineSolid
 mCrosshairLineVert.Thickness = 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupTitle()
-Dim failpoint As Long
+Const ProcName As String = "setupTitle"
+Dim failpoint As String
 On Error GoTo Err
 
 Set mTitle = AddText(, LayerTitle)
@@ -2620,7 +3515,7 @@ mTitle.BoxStyle = LineStyles.LineInvisible
 mTitle.BoxThickness = 1
 mTitle.BoxFillColor = vbWhite
 mTitle.BoxFillStyle = FillStyles.FillSolid
-mTitle.position = NewPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
+mTitle.Position = NewPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
 mTitle.FixedX = True
 mTitle.FixedY = True
 mTitle.Align = TextAlignModes.AlignBoxTopLeft
@@ -2630,99 +3525,149 @@ mTitle.PaddingX = 0.5
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setupTitle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub setVerticalGridLine(ByVal Timestamp As Date, _
-                            ByVal PeriodNumber As Long)
+Private Function setVerticalGridLine(ByVal Timestamp As Date, _
+                            ByVal PeriodNumber As Long, _
+                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As ChartSkil26.Line
 Dim gridLineTime As Date
 
-If CDbl(Timestamp) = 0 Then Exit Sub
+Const ProcName As String = "setVerticalGridLine"
+Dim failpoint As String
+On Error GoTo Err
+
+If CDbl(Timestamp) = 0 Then Exit Function
+
+If pIgnoreVerticalGridTimePeriod Then
+    ' just draw a vertical gridline at the specified period
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(Timestamp, "yyyymmddhhnnss"), _
+                                                FormatDateTime(Timestamp, vbShortTime), _
+                                                Format(Timestamp, "yyyymmdd"), _
+                                                Format(Timestamp, "d Mmm yy"))
+    Exit Function
+End If
 
 If mVerticalGridTimePeriod Is Nothing Then
     ' just draw a vertical gridline every 10 bars
     If PeriodNumber Mod 10 = 1 Then
-        addVerticalGridLine PeriodNumber, _
-                    Format(Timestamp, "yyyymmddhhnnss"), _
-                    FormatDateTime(Timestamp, vbShortTime), _
-                    Format(Timestamp, "yyyymmdd"), _
-                    Format(Timestamp, "d Mmm yy")
+        Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                    Format(Timestamp, "yyyymmddhhnnss"), _
+                                                    FormatDateTime(Timestamp, vbShortTime), _
+                                                    Format(Timestamp, "yyyymmdd"), _
+                                                    Format(Timestamp, "d Mmm yy"))
     End If
-    Exit Sub
+    Exit Function
 End If
 
-gridLineTime = BarStartTime(Timestamp, mVerticalGridTimePeriod)
+gridLineTime = BarStartTime(Timestamp, mVerticalGridTimePeriod, mSessionStartTime)
     
 Select Case mVerticalGridTimePeriod.Units
 Case TimePeriodSecond
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymmddhhnnss"), _
-                    FormatDateTime(gridLineTime, vbLongTime), _
-                    Format(gridLineTime, "yyyymmdd"), _
-                    Format(gridLineTime, "d Mmm yy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymmddhhnnss"), _
+                                                FormatDateTime(gridLineTime, vbLongTime), _
+                                                Format(gridLineTime, "yyyymmdd"), _
+                                                Format(gridLineTime, "d Mmm yy"))
 Case TimePeriodMinute
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymmddhhnn"), _
-                    FormatDateTime(gridLineTime, vbShortTime), _
-                    Format(gridLineTime, "yyyymmdd"), _
-                    Format(gridLineTime, "d Mmm yy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymmddhhnn"), _
+                                                FormatDateTime(gridLineTime, vbShortTime), _
+                                                Format(gridLineTime, "yyyymmdd"), _
+                                                Format(gridLineTime, "d Mmm yy"))
 Case TimePeriodHour
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymmddhh"), _
-                    FormatDateTime(gridLineTime, vbShortTime), _
-                    Format(gridLineTime, "yyyymmdd"), _
-                    Format(gridLineTime, "d Mmm yy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymmddhh"), _
+                                                FormatDateTime(gridLineTime, vbShortTime), _
+                                                Format(gridLineTime, "yyyymmdd"), _
+                                                Format(gridLineTime, "d Mmm yy"))
 Case TimePeriodDay
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymmdd"), _
-                    Format(gridLineTime, "d"), _
-                    Format(gridLineTime, "yyyymm"), _
-                    Format(gridLineTime, "Mmm yy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymmdd"), _
+                                                Format(gridLineTime, "d"), _
+                                                Format(gridLineTime, "yyyymm"), _
+                                                Format(gridLineTime, "Mmm yy"))
 Case TimePeriodWeek
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymmdd"), _
-                    Format(gridLineTime, "d Mmm"), _
-                    Format(gridLineTime, "yyyy"), _
-                    Format(gridLineTime, "yyyy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymmdd"), _
+                                                Format(gridLineTime, "d Mmm"), _
+                                                Format(gridLineTime, "yyyy"), _
+                                                Format(gridLineTime, "yyyy"))
 Case TimePeriodMonth
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyymm"), _
-                    Format(gridLineTime, "Mmm"), _
-                    Format(gridLineTime, "yyyy"), _
-                    Format(gridLineTime, "yyyy")
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                Format(gridLineTime, "yyyymm"), _
+                                                Format(gridLineTime, "Mmm"), _
+                                                Format(gridLineTime, "yyyy"), _
+                                                Format(gridLineTime, "yyyy"))
 Case TimePeriodYear
-    addVerticalGridLine PeriodNumber, _
-                    Format(gridLineTime, "yyyy"), _
-                    Format(gridLineTime, "YYYY"), _
-                    "$", _
-                    ""
+    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                        Format(gridLineTime, "yyyy"), _
+                                        Format(gridLineTime, "YYYY"), _
+                                        "$", _
+                                        "")
 Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
     If PeriodNumber Mod 10 = 1 Then
-        addVerticalGridLine PeriodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        FormatDateTime(gridLineTime, vbLongTime), _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d Mmm yy")
+        Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
+                                                    Format(gridLineTime, "yyyymmddhhnnss"), _
+                                                    FormatDateTime(gridLineTime, vbLongTime), _
+                                                    Format(gridLineTime, "yyyymmdd"), _
+                                                    Format(gridLineTime, "d Mmm yy"))
     End If
 End Select
-End Sub
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 Private Sub setYAxisTextStyle()
-mHorizontalGrid.TextStyle = YAxisTextStyle
+Const ProcName As String = "setYAxisTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mHorizontalGrid Is Nothing Then
+    mHorizontalGrid.TextStyle = YAxisTextStyle
+    doRepaint
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setYCursorTextStyle()
+Const ProcName As String = "setYCursorTextStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mYCursorText Is Nothing Then mYCursorText.LocalStyle = YCursorTextStyle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setYScaleQuantum()
-mHorizontalGrid.YScaleQuantum = YScaleQuantum
-doRepaint
+Const ProcName As String = "setYScaleQuantum"
+Dim failpoint As String
+On Error GoTo Err
+
+mPriceFormatter.YScaleQuantum = YScaleQuantum
+
+If Not mHorizontalGrid Is Nothing Then
+    mPriceFormatter.YScaleQuantum = YScaleQuantum
+    mHorizontalGridSpacer.YScaleQuantum = YScaleQuantum
+    doRepaint
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showCursor( _
@@ -2730,7 +3675,12 @@ Private Sub showCursor( _
                 ByVal Y As Single)
 Dim PointerStyle As PointerStyles
 
-mUseDeferredPainting = False
+Const ProcName As String = "showCursor"
+Dim failpoint As String
+On Error GoTo Err
+
+'mUseDeferredPainting = False
+mUseDeferredPainting = True
 
 If mPointerMode = PointerModeTool Then
     PointerStyle = mPointerToolStyle
@@ -2755,84 +3705,74 @@ Case PointerCustom
     drawCustomPointer X, Y
 End Select
 
+drawYCursorText Y
+
 mUseDeferredPainting = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As PropertyOverrideFlags) As Boolean
+Const ProcName As String = "isPropertyOverrideFlagSet"
+Dim failpoint As String
+On Error GoTo Err
+
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub UndrawArea( _
                 ByRef undrawnArea As TRectangle, _
                 ByVal objToExclude As IGraphicObject)
+Const ProcName As String = "UndrawArea"
+Dim failpoint As String
+On Error GoTo Err
+
 If mPaintingInProgress Then Exit Sub
 
 If mIsDrawingEnabled And undrawnArea.isValid Then
     If mUseDeferredPainting Then
-        Dim i As Long
-        Dim handled As Boolean
-        For i = 0 To mUndrawnAreasIndex
-            If RectOverlaps(undrawnArea, mUndrawnAreas(i)) Then
-                 mUndrawnAreas(i) = RectUnion(undrawnArea, mUndrawnAreas(i))
-                 handled = True
-            End If
-        Next
-        If Not handled Then
-            mUndrawnAreasIndex = mUndrawnAreasIndex + 1
-            If mUndrawnAreasIndex > UBound(mUndrawnAreas) Then
-                ReDim Preserve mUndrawnAreas(2 * (UBound(mUndrawnAreas) + 1) - 1) As TRectangle
-            End If
-            mUndrawnAreas(mUndrawnAreasIndex) = undrawnArea
-        End If
-        deferredPaint DeferredPaintRepaintChangedAreas
+        mDeferredPainter.AddAreaToRedraw undrawnArea
     Else
-        undrawAreaEx undrawnArea, objToExclude
+        UndrawAreaEx undrawnArea, objToExclude
     End If
-End If
-
-End Sub
-
-Private Sub undrawAreaEx( _
-                ByRef undrawnArea As TRectangle, _
-                Optional ByVal objToExclude As IGraphicObject)
-
-Dim failpoint As Long
-On Error GoTo Err
-
-failpoint = 100
-
-' redraw objects in the undrawn area, preserving layering
-If mIsDrawingEnabled And undrawnArea.isValid Then
-    
-    failpoint = 200
-
-    mViewport.UndrawArea undrawnArea
-    
-    failpoint = 400
-    
-    RedrawArea undrawnArea, MinLayer, objToExclude
-    
 End If
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "undrawAreaEx" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub undrawCrosshairsPointer()
 
-If Not mIsDrawingEnabled Then Exit Sub
 
-mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
-mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
+' nothing to do
 
+'Const ProcName As String = "undrawCrosshairsPointer"
+'Dim failpoint As String
+'On Error GoTo Err
+'
+'If Not mIsDrawingEnabled Then Exit Sub
+'
+'mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
+'                                NewPoint(-1000, 0)
+'mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
+'                                NewPoint(-1000, 0)
+'
+'Exit Sub
+'
+'Err:
+'HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub undrawCustomPointer()
@@ -2842,21 +3782,25 @@ Private Sub undrawCustomPointer()
 End Sub
 
 Private Sub undrawDiscPointer()
-Dim size As Dimension
+Dim Size As Dimension
 Dim prevLineX As Single
+
+Const ProcName As String = "undrawDiscPointer"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
     prevLineX = Round(mPrevCursorX)
-    Set size = .NewDimension(0.4, 0.4)
+    Set Size = .NewDimension(0.4, 0.4)
     
     .Canvas.SetPenAttributes vbBlack Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .Canvas.DrawLine prevLineX - size.XLogical, mPrevCursorY, prevLineX + size.XLogical, mPrevCursorY
-    .Canvas.DrawLine prevLineX, mPrevCursorY - size.YLogical, prevLineX, mPrevCursorY + size.YLogical
+    .Canvas.DrawLine prevLineX - Size.XLogical, mPrevCursorY, prevLineX + Size.XLogical, mPrevCursorY
+    .Canvas.DrawLine prevLineX, mPrevCursorY - Size.yLogical, prevLineX, mPrevCursorY + Size.yLogical
     
     .Canvas.SetPenAttributes mPointerDiscColor Xor .BackColor, _
                         1, _
@@ -2865,6 +3809,11 @@ With mViewport
     .Canvas.SetBrushAttributes mPointerDiscColor Xor .BackColor, FillStyles.FillSolid
     .Canvas.DrawCircle .NewPoint(prevLineX, mPrevCursorY), .NewDimension(0.8, 0.8).XLogical
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2877,12 +3826,21 @@ End Sub
 
 Private Sub undrawToolPointer()
 
+Const ProcName As String = "undrawToolPointer"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mIsDrawingEnabled Then Exit Sub
 
 mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
                                 NewPoint(-1000, 0)
 mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
                                 NewPoint(-1000, 0)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

@@ -76,10 +76,11 @@ Friend Function Add( _
                 ByVal pGraphObjSeries As IGraphicObjectSeries, _
                 ByVal pLayer As Long, _
                 ByVal pName As String, _
-                ByVal pviewport As Viewport, _
+                ByVal pViewport As Viewport, _
                 ByVal pChart As Chart, _
                 ByVal pGOSP As GraphObjServiceProvider) As IGraphicObjectSeries
-Dim failpoint As Long
+Const ProcName As String = "Add"
+Dim failpoint As String
 On Error GoTo Err
 
 Set Add = pGraphObjSeries
@@ -93,7 +94,7 @@ Set mGraphObjSeriesTable(mGraphObjSeriesIndex) = pGraphObjSeries
 If pName = "" Then pName = "Series" & mGraphObjSeriesIndex
 
 pGraphObjSeries.Initialise pName, _
-                        pviewport, _
+                        pViewport, _
                         pLayer, _
                         pChart, _
                         mGraphObjSeriesIndex, _
@@ -104,11 +105,7 @@ mGraphObjSeriesIndex = mGraphObjSeriesIndex + 1
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "addGraphicObjectSeries" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Finish()
@@ -117,6 +114,10 @@ Dim t As GraphObjSeriesRemovalTask
 
 ' remove all graphic object references from the various collections
 Dim graphObjSeries As IGraphicObjectSeries
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = 0 To mGraphObjSeriesIndex - 1
     If Not mGraphObjSeriesTable(i) Is Nothing Then
         mGraphObjSeriesTable(i).Finish
@@ -130,23 +131,55 @@ For i = 0 To mGraphObjSeriesIndex - 1
 Next
 Erase mGraphObjSeriesTable
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Friend Sub Initialise(ByVal pRegion As ChartRegion)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mRegionRef = CreateWeakReference(pRegion)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function Item( _
                 ByVal index As Long) As IGraphicObjectSeries
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Item = mGraphObjSeriesTable(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Remove( _
                 ByVal pSeries As IGraphicObjectSeries)
 Dim t As New GraphObjSeriesRemovalTask
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
 t.Initialise pSeries, regionObj, True
 StartTask t, PriorityLow
 Set mGraphObjSeriesTable(pSeries.SeriesID) = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -154,5 +187,14 @@ End Sub
 '@================================================================================
 
 Private Function regionObj() As ChartRegion
+Const ProcName As String = "regionObj"
+Dim failpoint As String
+On Error GoTo Err
+
 Set regionObj = mRegionRef.Target
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function

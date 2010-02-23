@@ -88,6 +88,18 @@ Public Enum TextPropertyOverrideFlags
     TextIsSetIncludeInAutoscale = &H4000
     TextIsSetExtended = &H8000
     TextIsSetLayer = &H10000
+    TextIsSetSize = &H20000
+    TextIsSetAngle = &H40000
+    TextIsSetJustification = &H80000
+    TextIsSetMultiLine = &H100000
+    TextIsSetEllipsis = &H200000
+    TextIsSetExpandTabs = &H400000
+    TextIsSetTabWidth = &H800000
+    TextIsSetWordWrap = &H1000000
+    TextIsSetLeftMargin = &H2000000
+    TextIsSetRightMargin = &H4000000
+    TextIsSetOffset = &H8000000
+    TextIsSetHideIfBlank = &H10000000
 End Enum
 
 '@================================================================================

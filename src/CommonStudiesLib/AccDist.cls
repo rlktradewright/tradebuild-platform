@@ -90,6 +90,9 @@ Private Sub customInitialise( _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
 
+Const ProcName As String = "customInitialise"
+On Error GoTo Err
+
 Set mSession = pSession
 
 customProcessParameters Parameters
@@ -99,6 +102,11 @@ Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
                         0, _
                         1)
 Set mBars = mBarsBuilder.Bars
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub customNotify( _
@@ -106,7 +114,7 @@ Private Sub customNotify( _
 Static sPrevVal As Variant
 Dim evOut As StudyValueEvent
 
-Dim failpoint As Long
+Const ProcName As String = "customNotify"
 On Error GoTo Err
 
 If mStudyFoundation.IsNewBar Then
@@ -149,23 +157,44 @@ mStudyFoundation.notifyValue evOut
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(errSource <> "", errSource & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
+Const ProcName As String = "customNumberOfBarsRequired"
+On Error GoTo Err
+
 customNumberOfBarsRequired = mAccDistCache.CyclicSize
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 
+Const ProcName As String = "customProcessParameters"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition
+Const ProcName As String = "customStudyDefinition"
+On Error GoTo Err
+
 Set customStudyDefinition = GAccDist.StudyDefinition
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -177,7 +206,15 @@ End Function
 '@================================================================================
 
 Public Property Get accDist(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "accDist"
+On Error GoTo Err
+
 accDist = mAccDistCache.GetSValue(ref)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -189,12 +226,20 @@ End Property
 '@================================================================================
 
 Private Sub calcAccDist()
+Const ProcName As String = "calcAccDist"
+On Error GoTo Err
+
 If mCurrentBar.highValue <> mCurrentBar.lowValue Then
     mAccDist = mAccDistAtBarStart + _
             mCurrentBarVolume * _
             (mCurrentBar.CloseValue - mCurrentBar.OpenValue) / _
             (mCurrentBar.highValue - mCurrentBar.lowValue)
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 
@@ -214,12 +259,20 @@ Private Function Study_addStudy( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
+Const ProcName As String = "Study_addStudy"
+On Error GoTo Err
+
 Set Study_addStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
                             taskName, _
                             taskData)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study_addStudyValueListener( _
@@ -228,31 +281,72 @@ Private Function Study_addStudyValueListener( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
+Const ProcName As String = "Study_addStudyValueListener"
+On Error GoTo Err
+
 Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
                             taskName, _
                             taskData)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_baseStudy() As Study
+Const ProcName As String = "Study_baseStudy"
+On Error GoTo Err
+
 Set Study_baseStudy = Me
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
+Const ProcName As String = "Study_getStudyValue"
+On Error GoTo Err
+
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function Study_getValueTicksize( _
                 ByVal valueName As String) As Double
 
+Const ProcName As String = "Study_getValueTicksize"
+On Error GoTo Err
+
+
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_id() As String
+Const ProcName As String = "Study_id"
+On Error GoTo Err
+
 Study_id = mStudyFoundation.id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_initialise( _
@@ -262,6 +356,9 @@ Private Sub Study_initialise( _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
+
+Const ProcName As String = "Study_initialise"
+On Error GoTo Err
 
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
@@ -278,48 +375,126 @@ customInitialise id, _
                 inputValueNames, _
                 underlyingStudy, _
                 pSession
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_instanceName() As String
+Const ProcName As String = "Study_instanceName"
+On Error GoTo Err
+
 Study_instanceName = mStudyFoundation.InstanceName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get Study_instancePath() As String
+Const ProcName As String = "Study_instancePath"
+On Error GoTo Err
+
 Study_instancePath = mStudyFoundation.InstancePath
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
+Const ProcName As String = "Study_Notify"
+On Error GoTo Err
+
 mStudyFoundation.NotifyInput ev
 customNotify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_numberOfBarsRequired() As Long
+Const ProcName As String = "Study_numberOfBarsRequired"
+On Error GoTo Err
+
 Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Study_numberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
+Const ProcName As String = "Study_numberOfCachedValues"
+On Error GoTo Err
+
 Study_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Get Study_parameters() As Parameters
+Const ProcName As String = "Study_parameters"
+On Error GoTo Err
+
 Set Study_parameters = mStudyFoundation.Parameters
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
+Const ProcName As String = "Study_removeStudyValueListener"
+On Error GoTo Err
+
 mStudyFoundation.RemoveStudyValueListener listener
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Study_setInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
 
+Const ProcName As String = "Study_setInputTicksize"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get Study_studyDefinition() As StudyDefinition
+Const ProcName As String = "Study_studyDefinition"
+On Error GoTo Err
+
 Set Study_studyDefinition = customStudyDefinition
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 

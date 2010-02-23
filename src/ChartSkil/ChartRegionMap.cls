@@ -104,9 +104,10 @@ Remove cookie
 End Sub
 
 Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_Skip"
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-        ProjectName & "." & ModuleName & ":" & "Enumerable_Skip", _
-        "Skip not supported"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Skip not supported"
 End Function
 
 Private Property Get Enumerable_UpdateSequence() As Long
@@ -122,7 +123,16 @@ End Property
 '@================================================================================
 
 Friend Property Get Item(ByVal handle As Long) As ChartRegion
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
+
 Set Item = mRegions(handle).Region
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -130,20 +140,42 @@ End Property
 '@================================================================================
 
 Friend Function Append(ByVal Region As ChartRegion) As Long
+Const ProcName As String = "Append"
+Dim failpoint As String
+On Error GoTo Err
+
 Append = allocateEntry
 Set mRegions(Append).Region = Region
 
 insertEntryBefore Append, mLastIndex
 
 changed
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Function IsFirst(ByVal handle As Long)
+Const ProcName As String = "IsFirst"
+Dim failpoint As String
+On Error GoTo Err
+
 IsFirst = (nextEntryIndex(mFirstIndex) = handle)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub MoveDown(ByVal handle As Long)
 Dim newLocation As Long
+
+Const ProcName As String = "MoveDown"
+Dim failpoint As String
+On Error GoTo Err
 
 If nextEntryIndex(handle) = mLastIndex Then Exit Sub
 newLocation = nextEntryIndex(nextEntryIndex(handle))
@@ -153,10 +185,19 @@ deleteEntry handle
 insertEntryBefore handle, newLocation
 
 changed
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub MoveUp(ByVal handle As Long)
 Dim newLocation As Long
+
+Const ProcName As String = "MoveUp"
+Dim failpoint As String
+On Error GoTo Err
 
 If previousEntryIndex(previousEntryIndex(handle)) = mFirstIndex Then Exit Sub
 newLocation = previousEntryIndex(handle)
@@ -166,6 +207,11 @@ deleteEntry handle
 insertEntryBefore handle, newLocation
 
 changed
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -175,9 +221,18 @@ Set NewEnum = getEnumerator
 End Function
 
 Friend Sub Remove(ByVal handle As Long)
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
 releaseEntry handle
 deleteEntry handle
 changed
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -185,9 +240,18 @@ End Sub
 '@================================================================================
 
 Private Function allocateEntry() As Long
+Const ProcName As String = "allocateEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 mRegionsIndex = mRegionsIndex + 1
 If mRegionsIndex > UBound(mRegions) Then ReDim Preserve mRegions(2 * (UBound(mRegions) + 1) - 1) As RegionTableEntry
 allocateEntry = mRegionsIndex
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub changed()
@@ -195,43 +259,115 @@ mUpdateSequence = mUpdateSequence + 1
 End Sub
 
 Private Sub deleteEntry(ByVal index As Long)
+Const ProcName As String = "deleteEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 nextEntryIndex(previousEntryIndex(index)) = nextEntryIndex(index)
 previousEntryIndex(nextEntryIndex(index)) = previousEntryIndex(index)
 nextEntryIndex(index) = 0
 previousEntryIndex(index) = 0
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getEnumerator() As Enumerator
+Const ProcName As String = "getEnumerator"
+Dim failpoint As String
+On Error GoTo Err
+
 Set getEnumerator = CreateEnumerator(Me)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub insertEntryBefore( _
                 ByVal newIndex As Long, _
                 ByVal index As Long)
+Const ProcName As String = "insertEntryBefore"
+Dim failpoint As String
+On Error GoTo Err
+
 previousEntryIndex(newIndex) = previousEntryIndex(index)
 nextEntryIndex(newIndex) = index
 nextEntryIndex(previousEntryIndex(index)) = newIndex
 previousEntryIndex(index) = newIndex
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Property Let nextEntryIndex(ByVal index As Long, ByVal value As Long)
+Const ProcName As String = "nextEntryIndex"
+Dim failpoint As String
+On Error GoTo Err
+
 mRegions(index).next = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get nextEntryIndex(ByVal index As Long) As Long
+Const ProcName As String = "nextEntryIndex"
+Dim failpoint As String
+On Error GoTo Err
+
 nextEntryIndex = mRegions(index).next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Let previousEntryIndex(ByVal index As Long, ByVal value As Long)
+Const ProcName As String = "previousEntryIndex"
+Dim failpoint As String
+On Error GoTo Err
+
 mRegions(index).prev = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get previousEntryIndex(ByVal index As Long) As Long
+Const ProcName As String = "previousEntryIndex"
+Dim failpoint As String
+On Error GoTo Err
+
 previousEntryIndex = mRegions(index).prev
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub releaseEntry(ByVal handle As Long)
+Const ProcName As String = "releaseEntry"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mRegions(handle).Region = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

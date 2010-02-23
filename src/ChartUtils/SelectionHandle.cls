@@ -107,27 +107,59 @@ Friend Function HitTest( _
                 ByVal X As Double, _
                 ByVal Y As Double) As Boolean
 
+Const ProcName As String = "HitTest"
+On Error GoTo Err
+
 HitTest = mGraphObj.HitTest(X, Y)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise( _
                 ByVal dp As DataPoint, _
                 ByVal AllowXMove As Boolean, _
                 ByVal AllowYMove As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mdp = dp
 Set mGraphObj = dp
 mAllowXMove = AllowXMove
 mAllowYMove = AllowYMove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub StartMove()
+Const ProcName As String = "StartMove"
+On Error GoTo Err
+
 mStartX = X
 mStartY = Y
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub UndoMove()
+Const ProcName As String = "UndoMove"
+On Error GoTo Err
+
 X = mStartX
 Y = mStartY
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

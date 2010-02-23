@@ -42,7 +42,13 @@ Event CollectionChanged( _
 '@================================================================================
 
 '@================================================================================
-' Member variables and constants
+' Constants
+'@================================================================================
+
+Private Const ModuleName                As String = "ComboLegs"
+
+'@================================================================================
+' Member variables
 '@================================================================================
 
 Private mComboLegs As Collection
@@ -79,36 +85,72 @@ End Property
 '@================================================================================
 
 Friend Sub Add(ByVal pComboLeg As ComboLeg, _
-                Optional ByVal key As String)
-If key <> "" Then
-    mComboLegs.Add pComboLeg, key
+                Optional ByVal Key As String)
+Const ProcName As String = "Add"
+Dim failpoint As String
+On Error GoTo Err
+
+If Key <> "" Then
+    mComboLegs.Add pComboLeg, Key
 Else
     mComboLegs.Add pComboLeg
 End If
 fireChange CollItemAdded, pComboLeg
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Const ProcName As String = "AddCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 mChangeListeners.Add value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Friend Function AddLeg( _
-                ByVal contractSpec As ContractSpecifier, _
-                ByVal isBuyLeg As Boolean, _
+                ByVal ContractSpec As ContractSpecifier, _
+                ByVal IsBuyLeg As Boolean, _
                 ByVal ratio As Long, _
-                ByVal key As String) As ComboLeg
+                ByVal Key As String) As ComboLeg
+
+Const ProcName As String = "AddLeg"
+Dim failpoint As String
+On Error GoTo Err
 
 Set AddLeg = New ComboLeg
-AddLeg.initialise contractSpec, isBuyLeg, ratio
-Add AddLeg, key
+AddLeg.Initialise ContractSpec, IsBuyLeg, ratio
+Add AddLeg, Key
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function Item(ByVal index As Variant) As ComboLeg
 Attribute Item.VB_UserMemId = 0
 Dim theItem As ComboLeg
+Const ProcName As String = "Item"
+Dim failpoint As String
+On Error GoTo Err
+
 Set theItem = mComboLegs(index)
 Item = theItem
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -119,16 +161,34 @@ End Function
 
 Public Sub Remove(ByVal index As Variant)
 Dim lComboLeg As ComboLeg
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
 Set lComboLeg = mComboLegs(index)
 mComboLegs.Remove index
 fireChange CollItemRemoved, lComboLeg
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
+Const ProcName As String = "RemoveCollectionChangeListener"
+Dim failpoint As String
+On Error GoTo Err
+
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -141,6 +201,10 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEvent
+Const ProcName As String = "fireChange"
+Dim failpoint As String
+On Error GoTo Err
+
 Set ev.Source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
@@ -149,6 +213,11 @@ For i = 1 To mChangeListeners.Count
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 

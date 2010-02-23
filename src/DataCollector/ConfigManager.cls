@@ -81,7 +81,15 @@ Private mConfigNames                        As Collection
 '@================================================================================
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 Set mConfigNames = New Collection
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -90,6 +98,9 @@ End Sub
 
 Private Sub ChangeListener_Change( _
                 ev As TWUtilities30.ChangeEvent)
+Const ProcName As String = "ChangeListener_Change"
+On Error GoTo Err
+
 If ev.Source Is mConfigFile Then
     Select Case ev.changeType
     Case ConfigChangeTypes.ConfigClean
@@ -98,6 +109,11 @@ If ev.Source Is mConfigFile Then
         RaiseEvent Dirty
     End Select
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -110,7 +126,15 @@ End Sub
 
 Public Property Get appConfig( _
                 ByVal name As String) As ConfigurationSection
+Const ProcName As String = "appConfig"
+On Error GoTo Err
+
 Set appConfig = findConfig(name)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ConfigurationFile() As ConfigurationFile
@@ -118,25 +142,57 @@ Set ConfigurationFile = mConfigFile
 End Property
 
 Public Property Get Dirty() As Boolean
+Const ProcName As String = "Dirty"
+On Error GoTo Err
+
 If Not mConfigFile Is Nothing Then Dirty = mConfigFile.Dirty
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get currentAppConfig() As ConfigurationSection
+Const ProcName As String = "currentAppConfig"
+On Error GoTo Err
+
 Set currentAppConfig = mCurrAppConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultAppConfig() As ConfigurationSection
+Const ProcName As String = "defaultAppConfig"
+On Error GoTo Err
+
 Set defaultAppConfig = mDefaultAppConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get firstAppConfig() As ConfigurationSection
 Dim appConfig As ConfigurationSection
+
+Const ProcName As String = "firstAppConfig"
+On Error GoTo Err
 
 For Each appConfig In mAppConfigs
     Exit For
 Next
 
 Set firstAppConfig = appConfig
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -145,12 +201,23 @@ End Property
 '@================================================================================
 
 Public Sub clearCurrent()
+Const ProcName As String = "clearCurrent"
+On Error GoTo Err
+
 Set mCurrAppConfig = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function addNew( _
                 Optional ByVal configName As String) As ConfigurationSection
 Dim i As Long
+
+Const ProcName As String = "addNew"
+On Error GoTo Err
 
 If configName = "" Then
     configName = NewConfigNameStub
@@ -175,13 +242,26 @@ mCurrAppConfig.addConfigurationSection ConfigSectionContracts
 mConfigNames.Add configName, configName
 
 Set addNew = mCurrAppConfig
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub deleteCurrent()
+Const ProcName As String = "deleteCurrent"
+On Error GoTo Err
+
 RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
 If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
 mConfigNames.Remove mCurrAppConfig.InstanceQualifier
 Set mCurrAppConfig = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function initialise( _
@@ -189,13 +269,16 @@ Public Function initialise( _
 Dim baseConfigFile As TWUtilities30.ConfigFile
 Dim appConfig As ConfigurationSection
 
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 mConfigFilename = configFilename
 
 On Error Resume Next
 Set baseConfigFile = LoadXMLConfigurationFile(mConfigFilename)
-On Error GoTo 0
+On Error GoTo Err
 If baseConfigFile Is Nothing Then
-    gLogger.Log LogLevelNormal, "No configuration exists - creating skeleton configuration file"
+    LogMessage "No configuration exists - creating skeleton configuration file"
     Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
     Set mConfigFile = CreateConfigurationFile(baseConfigFile, mConfigFilename)
     InitialiseConfigFile mConfigFile
@@ -216,11 +299,11 @@ If baseConfigFile Is Nothing Then
 Else
     Set mConfigFile = CreateConfigurationFile(baseConfigFile, _
                                             mConfigFilename)
-    If mConfigFile.applicationName <> App.ProductName Or _
+    If mConfigFile.ApplicationName <> App.ProductName Or _
         mConfigFile.fileVersion <> ConfigFileVersion Or _
         Not IsValidConfigurationFile(mConfigFile) _
     Then
-        gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
+        LogMessage "The configuration file is not the correct format for this program"
         Exit Function
     End If
 End If
@@ -236,16 +319,32 @@ For Each appConfig In mAppConfigs
 Next
 
 initialise = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mAppConfigs.NewEnum
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function renameCurrent( _
                 ByVal newName As String) As Boolean
+Const ProcName As String = "renameCurrent"
+On Error GoTo Err
+
 If newName = "" Then Exit Function
 
 If newName = mCurrAppConfig.InstanceQualifier Then Exit Function
@@ -256,22 +355,46 @@ mConfigNames.Remove mCurrAppConfig.InstanceQualifier
 mCurrAppConfig.InstanceQualifier = newName
 mConfigNames.Add newName, newName
 renameCurrent = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub saveConfigFile( _
                 Optional ByVal filename As String)
+Const ProcName As String = "saveConfigFile"
+On Error GoTo Err
+
 If filename <> "" Then
     mConfigFilename = filename
 End If
-mConfigFile.save mConfigFilename
+mConfigFile.Save mConfigFilename
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub setCurrent( _
                 ByVal cs As ConfigurationSection)
+Const ProcName As String = "setCurrent"
+On Error GoTo Err
+
 Set mCurrAppConfig = cs
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub toggleDefaultConfig()
+Const ProcName As String = "toggleDefaultConfig"
+On Error GoTo Err
+
 If mCurrAppConfig Is mDefaultAppConfig Then
     UnsetDefaultAppInstanceConfig mConfigFile
     Set mDefaultAppConfig = Nothing
@@ -280,6 +403,11 @@ Else
     
     Set mDefaultAppConfig = mCurrAppConfig
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -288,15 +416,31 @@ End Sub
 
 Private Function findConfig( _
                 ByVal name As String) As ConfigurationSection
+Const ProcName As String = "findConfig"
+On Error GoTo Err
+
 Set findConfig = mAppConfigs.GetConfigurationSection(ConfigNameAppConfig & "(" & name & ")")
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function nameAlreadyInUse( _
                 ByVal name As String) As Boolean
 Dim s As String
+Const ProcName As String = "nameAlreadyInUse"
+On Error GoTo Err
+
 On Error Resume Next
 s = mConfigNames(name)
 If s <> "" Then nameAlreadyInUse = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

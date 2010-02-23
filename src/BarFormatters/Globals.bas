@@ -49,12 +49,6 @@ Private Const ModuleName                                As String = "Globals"
 ' Properties
 '@================================================================================
 
-Public Property Get gErrorLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("error")
-Set gErrorLogger = lLogger
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================

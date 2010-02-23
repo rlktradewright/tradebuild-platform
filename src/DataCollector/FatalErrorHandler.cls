@@ -51,6 +51,10 @@ Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mUnhandledErrorHandler = UnhandledErrorHandler
+End Sub
+
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================

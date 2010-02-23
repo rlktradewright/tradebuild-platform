@@ -91,6 +91,10 @@ Private mPointerIcon                        As IPictureDisp
 
 Private Sub mChartEV_KeyDown(KeyCode As Integer, Shift As Integer)
 
+Const ProcName As String = "mChartEV_KeyDown"
+Dim failpoint As String
+On Error GoTo Err
+
 Select Case KeyCode
 Case vbKeyDelete
     If IsSelected Then
@@ -101,16 +105,34 @@ Case vbKeyDelete
 Case vbKeyEscape
     If Undo Then KeyCode = 0
 End Select
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mChartEV_PointerModeChanged()
+Const ProcName As String = "mChartEV_PointerModeChanged"
+Dim failpoint As String
+On Error GoTo Err
+
 If mChart.PointerMode = PointerModeDefault Then
     Deselected
     mTool.Deselected
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mChartEV_RegionSelected(ByVal Region As ChartSkil26.ChartRegion)
+Const ProcName As String = "mChartEV_RegionSelected"
+Dim failpoint As String
+On Error GoTo Err
+
 If mRegion Is Nothing Then
     
     Set mTool = mToolRef.Target ' convert to a strong ref for efficiency, now that we know
@@ -130,6 +152,11 @@ If mRegion Is Nothing Then
     Set mSelectionHandles = New Collection
     
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -137,11 +164,24 @@ End Sub
 '@================================================================================
 
 Private Sub mRegionEV_DblCLick()
+Const ProcName As String = "mRegionEV_DblCLick"
+Dim failpoint As String
+On Error GoTo Err
+
 mTool.DblClick
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mRegionEV_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim obj As IGraphicObject
+
+Const ProcName As String = "mRegionEV_MouseDown"
+Dim failpoint As String
+On Error GoTo Err
 
 Debug.Print "x=" & X & " y=" & Y
 
@@ -183,6 +223,10 @@ Case Else
 
 End Select
 
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mRegionEV_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -190,6 +234,10 @@ Private Sub mRegionEV_MouseMove(Button As Integer, Shift As Integer, X As Single
 Dim selHandle As SelectionHandle
 
 'If Not CBool(Button And MouseButtonConstants.vbLeftButton) Then Exit Sub
+Const ProcName As String = "mRegionEV_MouseMove"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mToolInControl Then Exit Sub
 
 Debug.Print "x=" & X & " y=" & Y
@@ -217,6 +265,11 @@ Case Else
     If selHandle.AllowXMove Then selHandle.X = X
     If selHandle.AllowYMove Then selHandle.Y = Y
 End Select
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mRegionEV_MouseUp( _
@@ -225,7 +278,16 @@ Private Sub mRegionEV_MouseUp( _
                 X As Single, _
                 Y As Single)
 
+Const ProcName As String = "mRegionEV_MouseUp"
+Dim failpoint As String
+On Error GoTo Err
+
 mTool.Click X, Y
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -249,7 +311,16 @@ End Property
 
 Public Sub AddSelectableObject( _
                 ByVal obj As IGraphicObject)
+Const ProcName As String = "AddSelectableObject"
+Dim failpoint As String
+On Error GoTo Err
+
 mSelectableObjects.Add obj
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddSelectionHandle( _
@@ -260,14 +331,27 @@ Public Sub AddSelectionHandle( _
 Dim dp As DataPoint
 Dim selHandle As New SelectionHandle
 
+Const ProcName As String = "AddSelectionHandle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set dp = mSelectionHandleSeries.Add(CDate(0))
 dp.X = X
 dp.DataValue = Y
 selHandle.Initialise dp, AllowXMove, AllowYMove
 mSelectionHandles.Add selHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Finish()
+
+Const ProcName As String = "Finish"
+Dim failpoint As String
+On Error GoTo Err
 
 mToolInControl = False
 
@@ -286,18 +370,32 @@ End Select
 
 mChart.SetPointerModeSelection
 mTool.EndResize
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pChart As ChartController, _
                 ByVal tool As IChartTool, _
                 ByVal pointerIcon As IPictureDisp)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mChart = pChart
 Set mChartEV = pChart
 Set mToolRef = CreateWeakReference(tool)
 Set mPointerIcon = pointerIcon
 Set mSelectableObjects = New Collection
 mChart.SetPointerModeTool
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub MoveSelectionHandle( _
@@ -305,18 +403,36 @@ Public Sub MoveSelectionHandle( _
                 ByVal X As Double, _
                 ByVal Y As Double)
 Dim selHandle As SelectionHandle
+Const ProcName As String = "MoveSelectionHandle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set selHandle = mSelectionHandles.Item(index)
 selHandle.X = Round(X)
 selHandle.Y = Y
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function SetSelected() As Boolean
+Const ProcName As String = "SetSelected"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mSelMode = SelectionModeCreate Then
     mSelMode = SelectionModeTool
     Set mRegionEV = mRegion
     Set mChartEV = mChart
     SetSelected = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -325,6 +441,10 @@ End Function
 
 Private Sub Delete()
 Dim selHandle As SelectionHandle
+Const ProcName As String = "Delete"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each selHandle In mSelectionHandles
     mRegion.RemoveGraphicObject selHandle.DataPoint
 Next
@@ -334,10 +454,19 @@ mChart.SetPointerModeSelection
 Set mTool = Nothing
 Set mRegionEV = Nothing
 Set mChartEV = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Deselected()
 Dim selHandle As SelectionHandle
+Const ProcName As String = "Deselected"
+Dim failpoint As String
+On Error GoTo Err
+
 mSelMode = SelectionModeNone
 For Each selHandle In mSelectionHandles
     mRegion.RemoveGraphicObject selHandle.DataPoint
@@ -345,6 +474,11 @@ Next
 Set mSelectionHandles = New Collection
 Set mRegionEV = Nothing
 Set mChartEV = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function SelectionHandleHit( _
@@ -353,6 +487,10 @@ Private Function SelectionHandleHit( _
 Dim i As Long
 Dim selHandle As SelectionHandle
 Dim graphObj As IGraphicObject
+
+Const ProcName As String = "SelectionHandleHit"
+Dim failpoint As String
+On Error GoTo Err
 
 For i = 1 To mSelectionHandles.count
     Set selHandle = mSelectionHandles(i)
@@ -363,18 +501,36 @@ For i = 1 To mSelectionHandles.count
         SelectionHandleHit = True
     End If
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub StartMove()
 Dim selHandle As SelectionHandle
 
+Const ProcName As String = "StartMove"
+Dim failpoint As String
+On Error GoTo Err
+
 For Each selHandle In mSelectionHandles
     selHandle.StartMove
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function Undo() As Boolean
 Dim selHandle As SelectionHandle
+
+Const ProcName As String = "Undo"
+Dim failpoint As String
+On Error GoTo Err
 
 Select Case mSelMode
 Case SelectionModeNone
@@ -403,6 +559,11 @@ Case Else
         Undo = True
     End If
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 

@@ -68,14 +68,13 @@ End Enum
 
 Public Type CurrencyDescriptor
     code                As String
-    description         As String
+    Description         As String
 End Type
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ContractUtils26"
 Private Const ModuleName                    As String = "GlobalClass"
 
 '@================================================================================
@@ -98,168 +97,235 @@ Private Const ModuleName                    As String = "GlobalClass"
 ' Properties
 '@================================================================================
 
+Public Property Let ExactSixtyFourthIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gExactSixtyFourthIndicators = ar
+End Property
+                
+Public Property Get ExactSixtyFourthIndicators() As String()
+ExactSixtyFourthIndicators = gExactSixtyFourthIndicators
+End Property
+                
+Public Property Let ExactThirtySecondIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gExactThirtySecondIndicators = ar
+End Property
+                
+Public Property Get ExactThirtySecondIndicators() As String()
+ExactThirtySecondIndicators = gExactThirtySecondIndicators
+End Property
+                
+Public Property Let HalfSixtyFourthIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gHalfSixtyFourthIndicators = ar
+End Property
+                
+Public Property Get HalfSixtyFourthIndicators() As String()
+HalfSixtyFourthIndicators = gHalfSixtyFourthIndicators
+End Property
+                
+Public Property Let HalfThirtySecondIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gHalfThirtySecondIndicators = ar
+End Property
+                
+Public Property Get HalfThirtySecondIndicators() As String()
+HalfThirtySecondIndicators = gHalfThirtySecondIndicators
+End Property
+                
+Public Property Let QuarterThirtySecondIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gQuarterThirtySecondIndicators = ar
+End Property
+                
+Public Property Get QuarterThirtySecondIndicators() As String()
+QuarterThirtySecondIndicators = gQuarterThirtySecondIndicators
+End Property
+                
+Public Property Let SixtyFourthsAndFractionsSeparators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gSixtyFourthsAndFractionsSeparators = ar
+End Property
+                
+Public Property Get SixtyFourthsAndFractionsSeparators() As String()
+SixtyFourthsAndFractionsSeparators = gSixtyFourthsAndFractionsSeparators
+End Property
+                
+Public Property Let SixtyFourthsAndFractionsTerminators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gSixtyFourthsAndFractionsTerminators = ar
+End Property
+                
+Public Property Get SixtyFourthsAndFractionsTerminators() As String()
+SixtyFourthsAndFractionsTerminators = gSixtyFourthsAndFractionsTerminators
+End Property
+                
+Public Property Let SixtyFourthsSeparators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gSixtyFourthsSeparators = ar
+End Property
+                
+Public Property Get SixtyFourthsSeparators() As String()
+SixtyFourthsSeparators = gSixtyFourthsSeparators
+End Property
+                
+Public Property Let SixtyFourthsTerminators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gSixtyFourthsTerminators = ar
+End Property
+                
+Public Property Get SixtyFourthsTerminators() As String()
+SixtyFourthsTerminators = gSixtyFourthsTerminators
+End Property
+                
+Public Property Let ThirtySecondsAndFractionsSeparators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gThirtySecondsAndFractionsSeparators = ar
+End Property
+                
+Public Property Get ThirtySecondsAndFractionsSeparators() As String()
+ThirtySecondsAndFractionsSeparators = gThirtySecondsAndFractionsSeparators
+End Property
+                
+Public Property Let ThirtySecondsAndFractionsTerminators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gThirtySecondsAndFractionsTerminators = ar
+End Property
+                
+Public Property Get ThirtySecondsAndFractionsTerminators() As String()
+ThirtySecondsAndFractionsTerminators = gThirtySecondsAndFractionsTerminators
+End Property
+                
+Public Property Let ThirtySecondsSeparators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gThirtySecondsSeparators = ar
+End Property
+                
+Public Property Get ThirtySecondsSeparators() As String()
+ThirtySecondsSeparators = gThirtySecondsSeparators
+End Property
+                
+Public Property Let ThirtySecondsTerminators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gThirtySecondsTerminators = ar
+End Property
+                
+Public Property Get ThirtySecondsTerminators() As String()
+ThirtySecondsTerminators = gThirtySecondsTerminators
+End Property
+                
+Public Property Let ThreeQuarterThirtySecondIndicators( _
+                ByRef value() As String)
+Dim ar() As String
+ar = value
+gThreeQuarterThirtySecondIndicators = ar
+End Property
+                
+Public Property Get ThreeQuarterThirtySecondIndicators() As String()
+ThreeQuarterThirtySecondIndicators = gThreeQuarterThirtySecondIndicators
+End Property
+                
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Function CreateContractBuilder( _
-                ByVal specifier As ContractSpecifier) As ContractBuilder
-Dim failpoint As Long
+                ByVal Specifier As ContractSpecifier) As ContractBuilder
+Const ProcName As String = "CreateContractBuilder"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateContractBuilder = New ContractBuilder
-CreateContractBuilder.initialise specifier
+CreateContractBuilder.Initialise Specifier
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "CreateContractBuilder" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateContractBuilderFromContract( _
                 ByVal pContract As Contract) As ContractBuilder
-Dim failpoint As Long
+Const ProcName As String = "CreateContractBuilderFromContract"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateContractBuilderFromContract = New ContractBuilder
-CreateContractBuilderFromContract.initialise pContract.specifier
-CreateContractBuilderFromContract.buildFrom pContract
+CreateContractBuilderFromContract.Initialise pContract.Specifier
+CreateContractBuilderFromContract.BuildFrom pContract
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "CreateContractBuilderFromContract" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateContractsBuilder( _
-                ByVal specifier As ContractSpecifier) As ContractsBuilder
-Dim failpoint As Long
+                ByVal Specifier As ContractSpecifier) As ContractsBuilder
+Const ProcName As String = "CreateContractsBuilder"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateContractsBuilder = New ContractsBuilder
-CreateContractsBuilder.initialise specifier
+CreateContractsBuilder.Initialise Specifier
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "CreateContractsBuilder" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateContractSpecifier( _
-                Optional ByVal localSymbol As String, _
-                Optional ByVal symbol As String, _
-                Optional ByVal exchange As String, _
-                Optional ByVal sectype As SecurityTypes = SecTypeNone, _
-                Optional ByVal currencyCode As String, _
-                Optional ByVal expiry As String, _
-                Optional ByVal strike As Double, _
-                Optional ByVal right As OptionRights = OptNone) As ContractSpecifier
-
-Dim failpoint As Long
+                Optional ByVal LocalSymbol As String, _
+                Optional ByVal Symbol As String, _
+                Optional ByVal Exchange As String, _
+                Optional ByVal SecType As SecurityTypes = SecTypeNone, _
+                Optional ByVal CurrencyCode As String, _
+                Optional ByVal Expiry As String, _
+                Optional ByVal Strike As Double, _
+                Optional ByVal Right As OptionRights = OptNone) As ContractSpecifier
+Const ProcName As String = "CreateContractSpecifier"
+Dim failpoint As String
 On Error GoTo Err
 
-If localSymbol = "" And symbol = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-            "Symbol must be supplied if localSymbol is not supplied"
-End If
-
-If exchange <> "" And _
-    Not IsValidExchangeCode(exchange) _
-Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-            "'" & exchange & "' is not a valid exchange code"
-End If
-
-If expiry <> "" Then
-    If Not gIsValidExpiry(expiry) Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-                "'" & expiry & "' is not a valid expiry format"
-    End If
-End If
-
-Select Case sectype
-Case 0  ' ie not supplied
-Case SecTypeStock
-Case SecTypeFuture
-    If expiry <> "" Then
-' need to write a function to validate the expiry format
-'        err.Raise ErrorCodes.ErrIllegalArgumentException, _
-'                    source, _
-'                    "expiry must be supplied"
-    End If
-Case SecTypeOption, SecTypeFuturesOption
-    If expiry <> "" Then
-' need to write a function to validate the expiry format
-'        err.Raise ErrorCodes.ErrIllegalArgumentException, _
-'                    source, _
-'                    "expiry must be supplied"
-    End If
-    If strike < 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-                "strike must be > 0"
-    End If
-    Select Case right
-    Case OptCall
-    Case OptPut
-    Case OptNone
-    Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-                "'" & right & "' is not a valid option right"
-    End Select
-Case SecTypeCash
-Case SecTypeCombo
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-            "Sectype 'combo' is not permissible"
-Case SecTypeIndex
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
-            "'" & sectype & "' is not a valid secType"
-End Select
-
-Set CreateContractSpecifier = New ContractSpecifier
-With CreateContractSpecifier
-    .localSymbol = localSymbol
-    .symbol = symbol
-    .exchange = exchange
-    .sectype = sectype
-    .currencyCode = currencyCode
-    .expiry = expiry
-    .strike = strike
-    .right = right
-End With
+Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateContractFromXML( _
                 ByVal xmlString As String) As Contract
-Dim failpoint As Long
+Const ProcName As String = "CreateContractFromXML"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateContractFromXML = New Contract
@@ -268,32 +334,26 @@ CreateContractFromXML.FromXML xmlString
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "CreateContractFromXML" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function GetCurrencyDescriptor( _
-                ByVal currencyCode As String) As CurrencyDescriptor
-Dim failpoint As Long
+                ByVal CurrencyCode As String) As CurrencyDescriptor
+Const ProcName As String = "GetCurrencyDescriptor"
+Dim failpoint As String
 On Error GoTo Err
 
-GetCurrencyDescriptor = gGetCurrencyDescriptor(currencyCode)
+GetCurrencyDescriptor = gGetCurrencyDescriptor(CurrencyCode)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "GetCurrencyDescriptor" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function GetCurrencyDescriptors() As CurrencyDescriptor()
-Dim failpoint As Long
+Const ProcName As String = "GetCurrencyDescriptors"
+Dim failpoint As String
 On Error GoTo Err
 
 GetCurrencyDescriptors = gGetCurrencyDescriptors
@@ -301,15 +361,12 @@ GetCurrencyDescriptors = gGetCurrencyDescriptors
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "GetCurrencyDescriptors" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function GetExchangeCodes() As String()
-Dim failpoint As Long
+Const ProcName As String = "GetExchangeCodes"
+Dim failpoint As String
 On Error GoTo Err
 
 GetExchangeCodes = gGetExchangeCodes
@@ -317,31 +374,25 @@ GetExchangeCodes = gGetExchangeCodes
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "GetExchangeCodes" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
-Public Function IsValidCurrencyCode(ByVal currencyCode As String) As Boolean
-Dim failpoint As Long
+Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
+Const ProcName As String = "IsValidCurrencyCode"
+Dim failpoint As String
 On Error GoTo Err
 
-IsValidCurrencyCode = gIsValidCurrencyCode(currencyCode)
+IsValidCurrencyCode = gIsValidCurrencyCode(CurrencyCode)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "IsValidCurrencyCode" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function IsValidExchangeCode(ByVal ExchangeCode As String) As Boolean
-Dim failpoint As Long
+Const ProcName As String = "IsValidExchangeCode"
+Dim failpoint As String
 On Error GoTo Err
 
 IsValidExchangeCode = gIsValidExchangeCode(ExchangeCode)
@@ -349,33 +400,27 @@ IsValidExchangeCode = gIsValidExchangeCode(ExchangeCode)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "IsValidExchangeCode" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
-Public Function isValidExpiry( _
+Public Function IsValidExpiry( _
                 ByVal value As String) As Boolean
-Dim failpoint As Long
+Const ProcName As String = "IsValidExpiry"
+Dim failpoint As String
 On Error GoTo Err
 
-isValidExpiry = gIsValidExpiry(value)
+IsValidExpiry = gIsValidExpiry(value)
 
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "isValidExpiry" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function IsValidSecType( _
                 ByVal value As Long) As Boolean
-Dim failpoint As Long
+Const ProcName As String = "IsValidSecType"
+Dim failpoint As String
 On Error GoTo Err
 
 IsValidSecType = gIsValidSecType(value)
@@ -383,16 +428,13 @@ IsValidSecType = gIsValidSecType(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "IsValidSecType" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function OptionRightFromString( _
                 ByVal value As String) As OptionRights
-Dim failpoint As Long
+Const ProcName As String = "OptionRightFromString"
+Dim failpoint As String
 On Error GoTo Err
 
 OptionRightFromString = gOptionRightFromString(value)
@@ -400,16 +442,13 @@ OptionRightFromString = gOptionRightFromString(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "OptionRightFromString" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function OptionRightToString( _
                 ByVal value As OptionRights) As String
-Dim failpoint As Long
+Const ProcName As String = "OptionRightToString"
+Dim failpoint As String
 On Error GoTo Err
 
 OptionRightToString = gOptionRightToString(value)
@@ -417,16 +456,13 @@ OptionRightToString = gOptionRightToString(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "OptionRightToString" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function SecTypeFromString( _
                 ByVal value As String) As SecurityTypes
-Dim failpoint As Long
+Const ProcName As String = "SecTypeFromString"
+Dim failpoint As String
 On Error GoTo Err
 
 SecTypeFromString = gSecTypeFromString(value)
@@ -434,16 +470,13 @@ SecTypeFromString = gSecTypeFromString(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "SecTypeFromString" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function SecTypeToShortString( _
                 ByVal value As SecurityTypes) As String
-Dim failpoint As Long
+Const ProcName As String = "SecTypeToShortString"
+Dim failpoint As String
 On Error GoTo Err
 
 SecTypeToShortString = gSecTypeToShortString(value)
@@ -451,16 +484,13 @@ SecTypeToShortString = gSecTypeToShortString(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "SecTypeToShortString" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function SecTypeToString( _
                 ByVal value As SecurityTypes) As String
-Dim failpoint As Long
+Const ProcName As String = "SecTypeToString"
+Dim failpoint As String
 On Error GoTo Err
 
 SecTypeToString = gSecTypeToString(value)
@@ -468,11 +498,7 @@ SecTypeToString = gSecTypeToString(value)
 Exit Function
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "SecTypeToString" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.description
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================

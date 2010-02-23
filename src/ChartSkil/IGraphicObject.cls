@@ -65,6 +65,10 @@ Public Property Get BoundingRectangle() As TRectangle
 
 End Property
 
+Public Property Get BoundingRectangleInViewport() As TRectangle
+
+End Property
+
 Public Property Get BoundingRectanglesAt( _
                 ByVal PeriodNumber As Long) As TRectangle()
 
@@ -131,6 +135,10 @@ Public Property Get SeriesID() As Long
 End Property
 
 Public Property Get Timestamp() As Date
+
+End Property
+
+Public Property Get VerticalRangeInXinterval(ByRef pXInterval As TInterval) As TInterval
 
 End Property
 

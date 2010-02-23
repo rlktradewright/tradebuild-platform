@@ -18,8 +18,8 @@ Begin VB.Form fConfig
       TabIndex        =   0
       Top             =   120
       Width           =   10095
-      _extentx        =   17806
-      _extenty        =   7223
+      _ExtentX        =   17806
+      _ExtentY        =   7223
    End
 End
 Attribute VB_Name = "fConfig"
@@ -66,6 +66,9 @@ Private Const ModuleName                    As String = "fConfig"
 '@================================================================================
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+Const ProcName As String = "Form_QueryUnload"
+On Error GoTo Err
+
 If ConfigViewer1.changesPending Then
     If MsgBox("Apply these changes?" & vbCrLf & _
             "If you click No, your changes to this configuration item will be lost", _
@@ -82,11 +85,23 @@ If ConfigViewer1.Dirty Then
         ConfigViewer1.saveConfigFile
     End If
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
-gKillLogging
+Const ProcName As String = "Form_Unload"
+On Error GoTo Err
+
 TerminateTWUtilities
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -108,8 +123,16 @@ End Sub
 Public Function initialise( _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 setCaption readonly
 ConfigViewer1.initialise pconfigManager, readonly
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -118,6 +141,14 @@ End Function
 
 Private Sub setCaption( _
                 ByVal readonly As Boolean)
+Const ProcName As String = "setCaption"
+On Error GoTo Err
+
 Me.Caption = App.ProductName & " settings" & IIf(readonly, " (Read only)", "")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

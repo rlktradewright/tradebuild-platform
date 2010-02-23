@@ -71,6 +71,8 @@ Private mBoundingRect As TRectangle
 Private mStartArrowRect As TRectangle
 Private mEndArrowRect As TRectangle
 
+Private mBoundingRectInViewport As TRectangle
+
 Private mViewportBoundary As TRectangle
 Private mTruncatedViewportBoundary As TRectangle
 
@@ -117,6 +119,13 @@ Private mExtended As Boolean
 
 Private mPoint1 As Point
 Private mPoint2 As Point
+Private mOffset1 As Dimension
+Private mOffset2 As Dimension
+Private mX1 As Double
+Private mY1 As Double
+Private mX2 As Double
+Private mY2 As Double
+
 Private mDirection As Quadrants
 Private mVertical As Verticals
 Private mLeftToRight As Boolean
@@ -167,7 +176,7 @@ mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log LogLevelHighDetail, "Line terminated"
+'gLogger.Log LogLevelHighDetail, "Line terminated"
 Debug.Print "Line terminated"
 End Sub
 
@@ -177,9 +186,10 @@ End Sub
 
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 
-Dim viewportChanges As Long
+Dim viewportChanges As ViewportComparisonCodes
 
-Dim failpoint As Long
+Const ProcName As String = "IGraphicObject_boundingRectangle"
+Dim failpoint As String
 On Error GoTo Err
 
 viewportChanges = mViewport.CompareTo(mGaugeX, mGaugeY, mViewportBoundary)
@@ -196,10 +206,13 @@ If (viewportChanges And ViewportComparisonCodes.GaugeChangedX) Or _
     mSeriesUpdateNumber <> mSeries.SeriesUpdateNumber _
 Then
     mSeriesUpdateNumber = mSeries.SeriesUpdateNumber
+    getCoordinatesLogical1
+    getCoordinatesLogical2
     calcConstants
     calcEndArrowConstants
     calcStartArrowConstants
     calcCurrentBoundingRect
+    calcBoundingRectInViewport
 End If
 
 IGraphicObject_boundingRectangle = mBoundingRect
@@ -207,19 +220,28 @@ IGraphicObject_boundingRectangle = mBoundingRect
 Exit Property
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
 
+Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
+Const ProcName As String = "IGraphicObject_BoundingRectangleInViewport"
+Dim failpoint As String
+On Error GoTo Err
+
+IGraphicObject_BoundingRectangleInViewport = mBoundingRectInViewport
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
 Dim periodrect As TRectangle
 Dim rects() As TRectangle
 
-Dim failpoint As Long
+Const ProcName As String = "IGraphicObject_BoundingRectanglesAt"
+Dim failpoint As String
 On Error GoTo Err
 
 If mBlank Then Exit Property
@@ -326,19 +348,22 @@ IGraphicObject_BoundingRectanglesAt = rects
 Exit Property
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectanglesAt" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
 'IGraphicObject_capabilities = GraphicObjectCapabilities.ComplexBounding Or _
 '                            GraphicObjectCapabilities.PartialRedraw
+Const ProcName As String = "IGraphicObject_capabilities"
+Dim failpoint As String
+On Error GoTo Err
+
 IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub IGraphicObject_Click()
@@ -355,7 +380,8 @@ Dim i As Long
 Dim j As Long
 Dim areasToRedraw() As TRectangle
 
-Dim failpoint As Long
+Const ProcName As String = "IGraphicObject_draw"
+Dim failpoint As String
 On Error GoTo Err
 
 ReDim areasToRedraw(UBound(areas)) As TRectangle
@@ -372,20 +398,15 @@ For i = 1 To UBound(areas)
 Next
 
 For i = j To 0 Step -1
-    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areasToRedraw(i))
+'    mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areasToRedraw(i))
     Draw areasToRedraw(i)
-    mCanvas.ClearClippingRegion
+'    mCanvas.ClearClippingRegion
 Next
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -413,7 +434,11 @@ Dim lineX As Double
 Dim lineY As Double
 Dim hitTestRect As TRectangle
 
-hitTestRect = mBoundingRect
+Const ProcName As String = "IGraphicObject_HitTest"
+Dim failpoint As String
+On Error GoTo Err
+
+hitTestRect = mBoundingRectInViewport
 hitTestRect.Left = hitTestRect.Left - mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels)
 hitTestRect.Right = hitTestRect.Right + mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels)
 hitTestRect.Bottom = hitTestRect.Bottom - mViewport.ConvertPixelsToLogicalY(HitTestTolerancePixels)
@@ -428,6 +453,11 @@ Else
     lineX = (Y - mB) / mA
     If Abs(X - lineX) <= mViewport.ConvertPixelsToLogicalX(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -452,11 +482,10 @@ IGraphicObject_noDraw = mHidden Or mBlank
 End Property
 
 Private Property Get IGraphicObject_PeriodNumber() As Long
-IGraphicObject_PeriodNumber = -1
+IGraphicObject_PeriodNumber = &H80000000
 If isExtended Then Exit Sub
 If mPoint1 Is Nothing Then Exit Sub
-If Not mPoint1.IsAssigned Then Exit Sub
-IGraphicObject_PeriodNumber = Int(mPoint1.XLogical + 0.5)
+IGraphicObject_PeriodNumber = Int(mX1)
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
@@ -476,11 +505,24 @@ IGraphicObject_Selected = mIsSelected
 End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
+Const ProcName As String = "IGraphicObject_SeriesID"
+Dim failpoint As String
+On Error GoTo Err
+
 IGraphicObject_SeriesID = mSeries.Id
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Property Get IGraphicObject_Timestamp() As Date
 IGraphicObject_Timestamp = 0
+End Property
+
+Private Property Get IGraphicObject_VerticalRangeInXinterval(pXInterval As TInterval) As TInterval
+IGraphicObject_VerticalRangeInXinterval = RectGetYInterval(calcBoundingRectForXInterval(pXInterval))
 End Property
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
@@ -492,7 +534,8 @@ End Property
 '================================================================================
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
-Dim failpoint As Long
+Const ProcName As String = "mLocalStyle_PropertyChanged"
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -540,18 +583,14 @@ Case "THICKNESS"
     initiateRedraw True, True
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & "mLocalStyle_PropertyChanged", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Unhandled property change"
 End Select
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -559,6 +598,10 @@ End Sub
 '================================================================================
 
 Public Property Get ArrowEndColor() As Long
+Const ProcName As String = "ArrowEndColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then
     ArrowEndColor = mArrowEndColor
 ElseIf Not mLocalStyle Is Nothing Then
@@ -566,169 +609,399 @@ ElseIf Not mLocalStyle Is Nothing Then
 Else
     ArrowEndColor = mSeries.ArrowEndColor
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndColor(ByVal value As Long)
+Const ProcName As String = "ArrowEndColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then Exit Property
 mArrowEndColor = value
 setPropertyOverrideFlag LineIsSetArrowEndColor
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowEndFillColor() As Long
+Const ProcName As String = "ArrowEndFillColor"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowEndFillColor = mSeries.ArrowEndFillColor
 If Not mLocalStyle Is Nothing Then ArrowEndFillColor = mLocalStyle.ArrowEndFillColor
 If isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then ArrowEndFillColor = mArrowEndFillColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndFillColor(ByVal value As Long)
+Const ProcName As String = "ArrowEndFillColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then Exit Property
 mArrowEndFillColor = value
 setPropertyOverrideFlag LineIsSetArrowEndFillColor
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
+Const ProcName As String = "ArrowEndFillStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowEndFillStyle = mSeries.ArrowEndFillStyle
 If Not mLocalStyle Is Nothing Then ArrowEndFillStyle = mLocalStyle.ArrowEndFillStyle
 If isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then ArrowEndFillStyle = mArrowEndFillStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndFillStyle(ByVal value As FillStyles)
+Const ProcName As String = "ArrowEndFillStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndFillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then Exit Property
 mArrowEndFillStyle = value
 setPropertyOverrideFlag LineIsSetArrowEndFillStyle
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowEndLength() As Long
+Const ProcName As String = "ArrowEndLength"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowEndLength = mSeries.ArrowEndLength
 If Not mLocalStyle Is Nothing Then ArrowEndLength = mLocalStyle.ArrowEndLength
 If isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then ArrowEndLength = mArrowEndLength
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndLength(ByVal value As Long)
+Const ProcName As String = "ArrowEndLength"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndLength = value And isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then Exit Property
 mArrowEndLength = value
 setPropertyOverrideFlag LineIsSetArrowEndLength
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
+Const ProcName As String = "ArrowEndStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowEndStyle = mSeries.ArrowEndStyle
 If Not mLocalStyle Is Nothing Then ArrowEndStyle = mLocalStyle.ArrowEndStyle
 If isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then ArrowEndStyle = mArrowEndStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndStyle(ByVal value As ArrowStyles)
+Const ProcName As String = "ArrowEndStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then Exit Property
 mArrowEndStyle = value
 setPropertyOverrideFlag LineIsSetArrowEndStyle
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowEndWidth() As Long
+Const ProcName As String = "ArrowEndWidth"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowEndWidth = mSeries.ArrowEndWidth
 If Not mLocalStyle Is Nothing Then ArrowEndWidth = mLocalStyle.ArrowEndWidth
 If isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then ArrowEndWidth = mArrowEndWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowEndWidth(ByVal value As Long)
+Const ProcName As String = "ArrowEndWidth"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowEndWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then Exit Property
 mArrowEndWidth = value
 setPropertyOverrideFlag LineIsSetArrowEndWidth
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartColor() As Long
+Const ProcName As String = "ArrowStartColor"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartColor = mSeries.ArrowStartColor
 If Not mLocalStyle Is Nothing Then ArrowStartColor = mLocalStyle.ArrowStartColor
 If isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then ArrowStartColor = mArrowStartColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartColor(ByVal value As Long)
+Const ProcName As String = "ArrowStartColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then Exit Property
 mArrowStartColor = value
 setPropertyOverrideFlag LineIsSetArrowStartColor
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartFillColor() As Long
+Const ProcName As String = "ArrowStartFillColor"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartFillColor = mSeries.ArrowStartFillColor
 If Not mLocalStyle Is Nothing Then ArrowStartFillColor = mLocalStyle.ArrowStartFillColor
 If isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then ArrowStartFillColor = mArrowStartFillColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartFillColor(ByVal value As Long)
+Const ProcName As String = "ArrowStartFillColor"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then Exit Property
 mArrowStartFillColor = value
 setPropertyOverrideFlag LineIsSetArrowStartFillColor
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
+Const ProcName As String = "ArrowStartFillStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartFillStyle = mSeries.ArrowStartFillStyle
 If Not mLocalStyle Is Nothing Then ArrowStartFillStyle = mLocalStyle.ArrowStartFillStyle
 If isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then ArrowStartFillStyle = mArrowStartfillStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartFillStyle(ByVal value As FillStyles)
+Const ProcName As String = "ArrowStartFillStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartfillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then Exit Property
 mArrowStartfillStyle = value
 setPropertyOverrideFlag LineIsSetArrowStartFillStyle
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartLength() As Long
+Const ProcName As String = "ArrowStartLength"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartLength = mSeries.ArrowStartLength
 If Not mLocalStyle Is Nothing Then ArrowStartLength = mLocalStyle.ArrowStartLength
 If isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then ArrowStartLength = mArrowStartLength
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartLength(ByVal value As Long)
+Const ProcName As String = "ArrowStartLength"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartLength = value And isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then Exit Property
 mArrowStartLength = value
 setPropertyOverrideFlag LineIsSetArrowStartLength
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
+Const ProcName As String = "ArrowStartStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartStyle = mSeries.ArrowStartStyle
 If Not mLocalStyle Is Nothing Then ArrowStartStyle = mLocalStyle.ArrowStartStyle
 If isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then ArrowStartStyle = mArrowStartStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartStyle(ByVal value As ArrowStyles)
+Const ProcName As String = "ArrowStartStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then Exit Property
 mArrowStartStyle = value
 setPropertyOverrideFlag LineIsSetArrowStartStyle
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ArrowStartWidth() As Long
+Const ProcName As String = "ArrowStartWidth"
+Dim failpoint As String
+On Error GoTo Err
+
 ArrowStartWidth = mSeries.ArrowStartWidth
 If Not mLocalStyle Is Nothing Then ArrowStartWidth = mLocalStyle.ArrowStartWidth
 If isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then ArrowStartWidth = mArrowStartWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ArrowStartWidth(ByVal value As Long)
+Const ProcName As String = "ArrowStartWidth"
+Dim failpoint As String
+On Error GoTo Err
+
 If mArrowStartWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then Exit Property
 mArrowStartWidth = value
 setPropertyOverrideFlag LineIsSetArrowStartWidth
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+Dim failpoint As String
+On Error GoTo Err
+
 Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
 If isPropertyOverrideFlagSet(LineIsSetColor) Then Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Color(ByVal value As Long)
+Const ProcName As String = "Color"
+Dim failpoint As String
+On Error GoTo Err
+
 If mColor = value And isPropertyOverrideFlagSet(LineIsSetColor) Then Exit Property
 mColor = value
 setPropertyOverrideFlag LineIsSetColor
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Direction() As Quadrants
@@ -736,68 +1009,158 @@ Direction = mDirection
 End Property
 
 Public Property Get ExtendAfter() As Boolean
+Const ProcName As String = "ExtendAfter"
+Dim failpoint As String
+On Error GoTo Err
+
 ExtendAfter = mSeries.ExtendAfter
 If Not mLocalStyle Is Nothing Then ExtendAfter = mLocalStyle.ExtendAfter
 If isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then ExtendAfter = mExtendAfter
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ExtendAfter(ByVal value As Boolean)
+Const ProcName As String = "ExtendAfter"
+Dim failpoint As String
+On Error GoTo Err
+
 If mExtendAfter = value And isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then Exit Property
 mExtendAfter = value
 setPropertyOverrideFlag LineIsSetExtendAfter
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ExtendBefore() As Boolean
+Const ProcName As String = "ExtendBefore"
+Dim failpoint As String
+On Error GoTo Err
+
 ExtendBefore = mSeries.ExtendBefore
 If Not mLocalStyle Is Nothing Then ExtendBefore = mLocalStyle.ExtendBefore
 If isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then ExtendBefore = mExtendBefore
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ExtendBefore(ByVal value As Boolean)
+Const ProcName As String = "ExtendBefore"
+Dim failpoint As String
+On Error GoTo Err
+
 If mExtendBefore = value And isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then Exit Property
 mExtendBefore = value
 setPropertyOverrideFlag LineIsSetExtendBefore
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Extended() As Boolean
+Const ProcName As String = "Extended"
+Dim failpoint As String
+On Error GoTo Err
+
 Extended = mSeries.Extended
 If Not mLocalStyle Is Nothing Then Extended = mLocalStyle.Extended
 If isPropertyOverrideFlagSet(LineIsSetExtended) Then Extended = mExtended
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Extended(ByVal value As Boolean)
+Const ProcName As String = "Extended"
+Dim failpoint As String
+On Error GoTo Err
+
 If mExtended = value And isPropertyOverrideFlagSet(LineIsSetExtended) Then Exit Property
 mExtended = value
 setPropertyOverrideFlag LineIsSetExtended
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get FixedX() As Boolean
+Const ProcName As String = "FixedX"
+Dim failpoint As String
+On Error GoTo Err
+
 FixedX = mSeries.FixedX
 If Not mLocalStyle Is Nothing Then FixedX = mLocalStyle.FixedX
 If isPropertyOverrideFlagSet(LineIsSetFixedX) Then FixedX = mFixedX
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let FixedX(ByVal value As Boolean)
+Const ProcName As String = "FixedX"
+Dim failpoint As String
+On Error GoTo Err
+
 If mFixedX = value And isPropertyOverrideFlagSet(LineIsSetFixedX) Then Exit Property
 mFixedX = value
 setPropertyOverrideFlag LineIsSetFixedX
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get FixedY() As Boolean
+Const ProcName As String = "FixedY"
+Dim failpoint As String
+On Error GoTo Err
+
 FixedY = mSeries.FixedY
 If Not mLocalStyle Is Nothing Then FixedY = mLocalStyle.FixedY
 If isPropertyOverrideFlagSet(LineIsSetFixedY) Then FixedY = mFixedY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let FixedY(ByVal value As Boolean)
+Const ProcName As String = "FixedY"
+Dim failpoint As String
+On Error GoTo Err
+
 If mFixedY = value And isPropertyOverrideFlagSet(LineIsSetFixedY) Then Exit Property
 mFixedY = value
 setPropertyOverrideFlag LineIsSetFixedY
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get handle() As Long
@@ -809,21 +1172,48 @@ Hidden = mHidden
 End Property
 
 Public Property Let Hidden(ByVal value As Boolean)
+Const ProcName As String = "Hidden"
+Dim failpoint As String
+On Error GoTo Err
+
 If mHidden = value Then Exit Property
 mHidden = value
 initiateRedraw IIf(mHidden, True, False), False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+Dim failpoint As String
+On Error GoTo Err
+
 IncludeInAutoscale = mSeries.IncludeInAutoscale
 If isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Const ProcName As String = "IncludeInAutoscale"
+Dim failpoint As String
+On Error GoTo Err
+
 If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then Exit Property
 mIncludeInAutoscale = value
 setPropertyOverrideFlag LineIsSetIncludeInAutoscale
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get InScope() As Boolean
@@ -847,28 +1237,64 @@ Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
 If mLayer = value And isPropertyOverrideFlagSet(LineIsSetLayer) Then Exit Property
 mLayer = value
 setPropertyOverrideFlag LineIsSetLayer
 initiateRedraw False, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
 Layer = mSeries.Layer
 If isPropertyOverrideFlagSet(LineIsSetLayer) Then Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LineStyle() As LineStyles
+Const ProcName As String = "LineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 LineStyle = mSeries.LineStyle
 If Not mLocalStyle Is Nothing Then LineStyle = mLocalStyle.LineStyle
 If isPropertyOverrideFlagSet(LineIsSetLineStyle) Then LineStyle = mLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let LineStyle(ByVal value As LineStyles)
+Const ProcName As String = "LineStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 If mLineStyle = value And isPropertyOverrideFlagSet(LineIsSetLineStyle) Then Exit Property
 mLineStyle = value
 setPropertyOverrideFlag LineIsSetLineStyle
 initiateRedraw True, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LocalStyle() As LineStyle
@@ -878,8 +1304,67 @@ End Property
 Public Property Let LocalStyle( _
                 ByVal value As LineStyle)
 
+Const ProcName As String = "LocalStyle"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mLocalStyle = value
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Offset1() As Dimension
+Set Offset1 = mOffset1
+End Property
+
+Public Property Let Offset1(ByVal value As Dimension)
+Const ProcName As String = "Offset1"
+Dim failpoint As String
+On Error GoTo Err
+
+If value Is Nothing Then
+    Set mOffset1 = Nothing
+ElseIf Not mOffset1 Is Nothing Then
+    If value.Equals(mOffset1) Then Exit Property
+Else
+    Set mOffset1 = value
+End If
+If Not mPoint1 Is Nothing Then getCoordinatesLogical1
+initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Offset2() As Dimension
+Set Offset2 = mOffset2
+End Property
+
+Public Property Let Offset2(ByVal value As Dimension)
+Const ProcName As String = "Offset2"
+Dim failpoint As String
+On Error GoTo Err
+
+If value Is Nothing Then
+    Set mOffset2 = Nothing
+ElseIf Not mOffset2 Is Nothing Then
+    If value.Equals(mOffset2) Then Exit Property
+Else
+    Set mOffset2 = value
+End If
+If Not mPoint2 Is Nothing Then getCoordinatesLogical2
+initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Point1() As Point
@@ -887,31 +1372,32 @@ Set Point1 = mPoint1
 End Property
 
 Public Property Let Point1(ByVal value As Point)
+Const ProcName As String = "Point1"
+On Error GoTo Err
+
 If value Is Nothing Then
-    Set mPoint1 = Nothing
-    mBlank = True
-    initiateRedraw True, True
-    Exit Property
-ElseIf Not value.IsAssigned Then
     Set mPoint1 = Nothing
     mBlank = True
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPoint1 Is Nothing Then
     If value.Equals(mPoint1) Then
-        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical Then Exit Property
+        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical Then
+            Exit Property
+        End If
     End If
 End If
 
 Set mPoint1 = value
-If mFixedX Then ConvertPositionX
-If mFixedY Then ConvertPositionY
 
 If mPoint2 Is Nothing Then Exit Property
-If Not mPoint2.IsAssigned Then Exit Property
-setDirection
 mBlank = False
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Point2() As Point
@@ -919,44 +1405,63 @@ Set Point2 = mPoint2
 End Property
 
 Public Property Let Point2(ByVal value As Point)
+Const ProcName As String = "Point2"
+On Error GoTo Err
+
 If value Is Nothing Then
-    Set mPoint2 = Nothing
-    mBlank = True
-    initiateRedraw True, True
-    Exit Property
-ElseIf Not value.IsAssigned Then
     Set mPoint2 = Nothing
     mBlank = True
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPoint2 Is Nothing Then
     If value.Equals(mPoint2) Then
-        If mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then Exit Property
+        If mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then
+            Exit Property
+        End If
     End If
 End If
 
 Set mPoint2 = value
-If mFixedX Then ConvertPositionX
-If mFixedY Then ConvertPositionY
 
 If mPoint1 Is Nothing Then Exit Property
-If Not mPoint1.IsAssigned Then Exit Property
-setDirection
 mBlank = False
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Thickness() As Long
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
 Thickness = mSeries.Thickness
 If Not mLocalStyle Is Nothing Then Thickness = mLocalStyle.Thickness
 If isPropertyOverrideFlagSet(LineIsSetThickness) Then Thickness = mThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Thickness(ByVal value As Long)
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
 If mThickness = value And isPropertyOverrideFlagSet(LineIsSetThickness) Then Exit Property
 mThickness = value
 setPropertyOverrideFlag LineIsSetThickness
 initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Vertical() As Verticals
@@ -972,109 +1477,181 @@ End Property
 '================================================================================
 
 Public Sub ClearOverrides()
+Const ProcName As String = "ClearOverrides"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = 0
 initiateRedraw True, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pSeries As LineSeries, _
                 ByVal pKey As String, _
                 ByVal pGOSP As GraphObjServiceProvider, _
-                ByVal pviewport As Viewport, _
+                ByVal pViewport As Viewport, _
                 ByVal pLocalStyle As LineStyle)
                 
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mSeries = pSeries
 mKey = pKey
 Set mGOSP = pGOSP
-Set mViewport = pviewport
+Set mViewport = pViewport
 Set mCanvas = mViewport.Canvas
 Set mLocalStyle = pLocalStyle
 
 calcCurrentBoundingRect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetPosition( _
-                ByVal Point1 As Point, _
-                ByVal Point2 As Point)
-Dim failpoint As Long
+                ByVal pPoint1 As Point, _
+                ByVal pPoint2 As Point, _
+                Optional ByVal pOffset1 As Dimension, _
+                Optional ByVal pOffset2 As Dimension)
+Const ProcName As String = "SetPosition"
 On Error GoTo Err
 
-If Point1 Is Nothing Or Point2 Is Nothing Then
+Set mOffset1 = pOffset1
+Set mOffset2 = pOffset2
 
-    failpoint = 100
-
-    Set mPoint1 = Point1
-    Set mPoint2 = Point2
+If pPoint1 Is Nothing Or pPoint2 Is Nothing Then
+    Set mPoint1 = pPoint1
+    Set mPoint2 = pPoint2
     mBlank = True
     initiateRedraw True, True
-    Exit Sub
-ElseIf (Not Point1.IsAssigned) Then
-
-    failpoint = 200
-
-    Set mPoint1 = Nothing
-    Set mPoint2 = Point2
-    mBlank = True
-    initiateRedraw True, True
-    Exit Sub
-ElseIf (Not Point2.IsAssigned) Then
-
-    failpoint = 300
-
-    Set mPoint1 = Point1
-    Set mPoint2 = Nothing
-    mBlank = True
-    initiateRedraw True, True
-    Exit Sub
-ElseIf (Not mPoint1 Is Nothing) And (Not mPoint2 Is Nothing) Then
-
-    failpoint = 400
     
-    If Point1.Equals(mPoint1) And Point2.Equals(mPoint2) Then
-        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical And mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then Exit Sub
+    Exit Sub
+    
+ElseIf (Not mPoint1 Is Nothing) And (Not mPoint2 Is Nothing) Then
+    If pPoint1.Equals(mPoint1) And pPoint2.Equals(mPoint2) Then
+        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical And mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then
+            Exit Sub
+        End If
     End If
 End If
 
-failpoint = 500
+Set mPoint1 = pPoint1
+Set mPoint2 = pPoint2
 
-Set mPoint1 = Point1
-Set mPoint2 = Point2
-
-failpoint = 600
-
-If mFixedX Then ConvertPositionX
-If mFixedY Then ConvertPositionY
-
-failpoint = 800
-
-setDirection
 mBlank = False
-
-failpoint = 900
 
 initiateRedraw True, True
 
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "setPosition" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
+Private Sub adjustRectForLineThickness( _
+                ByRef pTRect As TRectangle, _
+                ByRef pXInterval As TInterval)
+Dim lRect As RECT
+Dim t As Long
+Const ProcName As String = "adjustRectForLineThickness"
+Dim failpoint As String
+On Error GoTo Err
+
+lRect = mViewport.ConvertTRectangleToRect(pTRect)
+t = Thickness
+With lRect
+    If .Left <> MinusInfinityLong Then .Left = .Left - Int(t / 2)
+    If .Right <> PlusInfinityLong Then .Right = .Right + Int(t / 2) + 1
+    If .Bottom <> PlusInfinityLong Then .Bottom = .Bottom + Int(t / 2) + 1
+    If .Top <> MinusInfinityLong Then .Top = .Top - Int(t / 2)
+End With
+
+pTRect = mViewport.ConvertRectToTRectangle(lRect)
+RectSetXInterval pTRect, IntIntersection(pXInterval, RectGetXInterval(pTRect))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub calcBoundingRectInViewport()
+Const ProcName As String = "calcBoundingRectInviewport"
+Dim failpoint As String
+On Error GoTo Err
+
+mBoundingRectInViewport = calcBoundingRectForXInterval(RectGetXInterval(mViewport.Boundary))
+RectSetYInterval mBoundingRectInViewport, IntIntersection(RectGetYInterval(mBoundingRectInViewport), RectGetYInterval(mViewport.Boundary))
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Function calcBoundingRectForXInterval( _
+                ByRef pXInterval As TInterval) As TRectangle
+Const ProcName As String = "calcBoundingRectForXInterval"
+Dim failpoint As String
+On Error GoTo Err
+
+If mBlank Then Exit Function
+
+calcBoundingRectForXInterval = calcBoundingRectInXIntervalForLine(pXInterval)
+If Not calcBoundingRectForXInterval.isValid Then Exit Function
+
+adjustRectForLineThickness calcBoundingRectForXInterval, pXInterval
+If Not calcBoundingRectForXInterval.isValid Then Exit Function
+    
+If ArrowEndStyle <> ArrowNone Then calcBoundingRectForXInterval = RectUnion(calcBoundingRectForXInterval, mEndArrowRect)
+If ArrowStartStyle <> ArrowNone Then calcBoundingRectForXInterval = RectUnion(calcBoundingRectForXInterval, mStartArrowRect)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Function
+
+Private Function calcBoundingRectInXIntervalForLine( _
+                ByRef pXInterval As TInterval) As TRectangle
+Const ProcName As String = "calcBoundingRectInXIntervalForLine"
+Dim failpoint As String
+On Error GoTo Err
+
+calcBoundingRectInXIntervalForLine.isValid = True
+RectSetXInterval calcBoundingRectInXIntervalForLine, IntIntersection(pXInterval, getHorizontalTInterval)
+If Not calcBoundingRectInXIntervalForLine.isValid Then Exit Function
+
+If Vertical Then
+    RectSetYInterval calcBoundingRectInXIntervalForLine, getVerticalTInterval
+Else
+    RectSetYInterval calcBoundingRectInXIntervalForLine, mapDomainInterval(RectGetXInterval(calcBoundingRectInXIntervalForLine))
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Function
+
 Private Sub calcConstants()
-Dim x1 As Double
-Dim x2 As Double
-Dim y1 As Double
-Dim y2 As Double
+
+Const ProcName As String = "calcConstants"
+Dim failpoint As String
+On Error GoTo Err
 
 If mBlank Then Exit Sub
 
@@ -1092,17 +1669,8 @@ ElseIf mVertical = VerticalDown Then
     Exit Sub
 End If
 
-With mPoint1
-    x1 = .XLogical
-    y1 = .YLogical
-End With
-With mPoint2
-    x2 = .XLogical
-    y2 = .YLogical
-End With
-
-mA = (y2 - y1) / (x2 - x1)
-mB = (x2 * y1 - x1 * y2) / (x2 - x1)
+mA = (mY2 - mY1) / (mX2 - mX1)
+mB = (mX2 * mY1 - mX1 * mY2) / (mX2 - mX1)
 
 Select Case mDirection
 Case NE
@@ -1118,92 +1686,39 @@ End Select
 mLineAngleSin = Sin(mLineAngle)
 mLineAngleCos = Cos(mLineAngle)
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub calcCurrentBoundingRect()
-Dim lineInt As TInterval
-Dim regionInt As TInterval
-Dim lRect As RECT
+Dim lTInt As TInterval
 
-Dim x1 As Double
-Dim x2 As Double
-Dim y1 As Double
-Dim y2 As Double
+Const ProcName As String = "calcCurrentBoundingRect"
+Dim failpoint As String
+On Error GoTo Err
 
-mBoundingRect.isValid = False
-If mBlank Then Exit Sub
+lTInt.startValue = MinusInfinityDouble
+lTInt.endValue = PlusInfinityDouble
+lTInt.isValid = True
+mBoundingRect = calcBoundingRectForXInterval(lTInt)
 
-With mPoint1
-    x1 = .XLogical
-    y1 = .YLogical
-End With
-With mPoint2
-    x2 = .XLogical
-    y2 = .YLogical
-End With
+Exit Sub
 
-If isVertical Then
-    RectSetYInterval mBoundingRect, getYIntervalInViewport
-    mBoundingRect.Left = x1
-    mBoundingRect.Right = x1
-    mBoundingRect.isValid = True
-    
-    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
-    
-    With lRect
-        .Left = .Left - Int(mThickness / 2)
-        .Right = .Right + mThickness - Int(mThickness / 2)
-        .Bottom = .Bottom + Int(mThickness / 2)
-        .Top = .Top - Int(mThickness / 2)
-    End With
-    
-    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
-    
-ElseIf isHorizontal Then
-    RectSetXInterval mBoundingRect, getXIntervalInViewport
-    mBoundingRect.Bottom = y1
-    mBoundingRect.Top = y1
-    mBoundingRect.isValid = True
-    
-    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
-    
-    With lRect
-        .Left = .Left - Int(mThickness / 2)
-        .Right = .Right + Int(mThickness / 2)
-        .Bottom = .Bottom + mThickness - Int(mThickness / 2)
-        .Top = .Top - Int(mThickness / 2)
-    End With
-    
-    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
-    
-Else
-    RectSetXInterval mBoundingRect, getXIntervalInViewport
-    RectSetYInterval mBoundingRect, getYIntervalInViewport
-    mBoundingRect.isValid = True
-    
-    lRect = mViewport.ConvertTRectangleToRect(mBoundingRect)
-    
-    With lRect
-        .Left = .Left - Int((mThickness - 1) / 2)
-        .Right = .Right + Int((mThickness - 1) / 2)
-        .Bottom = .Bottom + Int((mThickness - 1) / 2)
-        .Top = .Top - Int((mThickness - 1) / 2)
-    End With
-    
-    mBoundingRect = mViewport.ConvertRectToTRectangle(lRect)
-    
-End If
-
-If ArrowEndStyle <> ArrowNone Then mBoundingRect = RectUnion(mBoundingRect, mEndArrowRect)
-If ArrowStartStyle <> ArrowNone Then mBoundingRect = RectUnion(mBoundingRect, mStartArrowRect)
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub calcEndArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim X As Double
-Dim Y As Double
+
+Const ProcName As String = "calcEndArrowConstants"
+Dim failpoint As String
+On Error GoTo Err
 
 If ArrowEndStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
@@ -1215,47 +1730,49 @@ mEndArrowY1Offset = -hyp * Sin(mLineAngle - halfAngle) * mGaugeY
 mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mEndArrowY2Offset = -hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
-With mPoint2
-    X = .XLogical
-    Y = .YLogical
-End With
-
 With mEndArrowRect
     Select Case mDirection
     Case NE
-        .Bottom = Y + mEndArrowY2Offset - mThicknessOffsetY
-        .Left = X + mEndArrowX1Offset - mThicknessOffsetX
-        .Top = Y + IIf(mEndArrowY1Offset > 0, mEndArrowY1Offset, 0) + mThicknessOffsetY
-        .Right = X + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
+        .Bottom = mY2 + mEndArrowY2Offset - mThicknessOffsetY
+        .Left = mX2 + mEndArrowX1Offset - mThicknessOffsetX
+        .Top = mY2 + IIf(mEndArrowY1Offset > 0, mEndArrowY1Offset, 0) + mThicknessOffsetY
+        .Right = mX2 + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
         .isValid = True
     Case NW
-        .Bottom = Y + mEndArrowY1Offset - mThicknessOffsetY
-        .Left = X + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
-        .Top = Y + IIf(mEndArrowY2Offset > 0, mEndArrowY2Offset, 0) + mThicknessOffsetY
-        .Right = X + mEndArrowX2Offset + mThicknessOffsetX
+        .Bottom = mY2 + mEndArrowY1Offset - mThicknessOffsetY
+        .Left = mX2 + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
+        .Top = mY2 + IIf(mEndArrowY2Offset > 0, mEndArrowY2Offset, 0) + mThicknessOffsetY
+        .Right = mX2 + mEndArrowX2Offset + mThicknessOffsetX
         .isValid = True
     Case SW
-        .Bottom = Y + IIf(mEndArrowY1Offset < 0, mEndArrowY1Offset, 0) - mThicknessOffsetY
-        .Left = X + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
-        .Top = Y + mEndArrowY2Offset + mThicknessOffsetY
-        .Right = X + mEndArrowX1Offset + mThicknessOffsetX
+        .Bottom = mY2 + IIf(mEndArrowY1Offset < 0, mEndArrowY1Offset, 0) - mThicknessOffsetY
+        .Left = mX2 + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
+        .Top = mY2 + mEndArrowY2Offset + mThicknessOffsetY
+        .Right = mX2 + mEndArrowX1Offset + mThicknessOffsetX
         .isValid = True
     Case SE
-        .Bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .Left = X + mEndArrowX2Offset - mThicknessOffsetX
-        .Top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .Right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .Bottom = mY2 + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
+        .Left = mX2 + mEndArrowX2Offset - mThicknessOffsetX
+        .Top = mY2 + mEndArrowY1Offset + mThicknessOffsetY
+        .Right = mX2 + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
         .isValid = True
     End Select
     'Debug.Assert (.Right - .Left) < 5 And (.Top - .Bottom) < 5
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub calcStartArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim X As Double
-Dim Y As Double
+
+Const ProcName As String = "calcStartArrowConstants"
+Dim failpoint As String
+On Error GoTo Err
 
 If ArrowStartStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
@@ -1267,173 +1784,77 @@ mStartArrowY1Offset = hyp * Sin(mLineAngle - halfAngle) * mGaugeY
 mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mStartArrowY2Offset = hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
-With mPoint1
-    X = .XLogical
-    Y = .YLogical
-End With
-
 With mStartArrowRect
     Select Case mDirection
     Case NE
-        .Bottom = Y + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
-        .Left = X + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
-        .Top = Y + mStartArrowY2Offset + mThicknessOffsetY
-        .Right = X + mStartArrowX1Offset + mThicknessOffsetY
+        .Bottom = mY1 + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
+        .Left = mX1 + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
+        .Top = mY1 + mStartArrowY2Offset + mThicknessOffsetY
+        .Right = mX1 + mStartArrowX1Offset + mThicknessOffsetY
         .isValid = True
     Case NW
-        .Bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .Left = X + mEndArrowX2Offset - mThicknessOffsetX
-        .Top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .Right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .Bottom = mY1 + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
+        .Left = mX1 + mEndArrowX2Offset - mThicknessOffsetX
+        .Top = mY1 + mEndArrowY1Offset + mThicknessOffsetY
+        .Right = mX1 + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
         .isValid = True
     Case SW
-        .Bottom = Y + mStartArrowY2Offset - mThicknessOffsetY
-        .Left = X + mStartArrowX1Offset - mThicknessOffsetX
-        .Top = Y + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
-        .Right = X + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
+        .Bottom = mY1 + mStartArrowY2Offset - mThicknessOffsetY
+        .Left = mX1 + mStartArrowX1Offset - mThicknessOffsetX
+        .Top = mY1 + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
+        .Right = mX1 + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
         .isValid = True
     Case SE
-        .Bottom = Y + mStartArrowY1Offset - mThicknessOffsetY
-        .Left = X + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
-        .Top = Y + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
-        .Right = X + mStartArrowX2Offset + mThicknessOffsetX
+        .Bottom = mY1 + mStartArrowY1Offset - mThicknessOffsetY
+        .Left = mX1 + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
+        .Top = mY1 + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
+        .Right = mX1 + mStartArrowX2Offset + mThicknessOffsetX
         .isValid = True
         
     End Select
     'Debug.Assert (.Right - .Left) < 5 And (.Top - .Bottom) < 5
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearPropertyOverrideFlag( _
                 ByVal flag As LinePropertyOverrideFlags)
+Const ProcName As String = "clearPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub ConvertPositionX()
-ConvertPosition1X
-ConvertPosition2X
-End Sub
+Private Function convertPosition(ByVal pPoint As Point) As Point
+Const ProcName As String = "convertPosition"
+On Error GoTo Err
 
-Private Sub ConvertPositionY()
-ConvertPosition1Y
-ConvertPosition2Y
-End Sub
+If pPoint Is Nothing Then Exit Function
+Set convertPosition = pPoint.ChangeCoordinateSystem(IIf(FixedX, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
+                                                    IIf(FixedY, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical))
 
-Private Sub ConvertPosition1X()
-If mPoint1 Is Nothing Then Exit Sub
-If mFixedX Then
-    If mPoint1.CoordinateSystemX = CoordsLogical Then
-        mPoint1.CoordinateSystemX = CoordsRelative
-    End If
-Else
-    If mPoint1.CoordinateSystemX <> CoordsLogical Then
-        mPoint1.CoordinateSystemX = CoordsLogical
-    End If
-End If
-End Sub
+Exit Function
 
-Private Sub ConvertPosition1Y()
-If mPoint1 Is Nothing Then Exit Sub
-If mFixedY Then
-    If mPoint1.CoordinateSystemY = CoordsLogical Then
-        mPoint1.CoordinateSystemY = CoordsRelative
-    End If
-Else
-    If mPoint1.CoordinateSystemY <> CoordsLogical Then
-        mPoint1.CoordinateSystemY = CoordsLogical
-    End If
-End If
-End Sub
-
-Private Sub ConvertPosition2X()
-If mPoint2 Is Nothing Then Exit Sub
-If FixedX Then
-    If mPoint2.CoordinateSystemX = CoordsLogical Then
-        mPoint2.CoordinateSystemX = CoordsRelative
-    End If
-Else
-    If mPoint2.CoordinateSystemX <> CoordsLogical Then
-        mPoint2.CoordinateSystemX = CoordsLogical
-    End If
-End If
-End Sub
-
-Private Sub ConvertPosition2Y()
-If mPoint2 Is Nothing Then Exit Sub
-If FixedY Then
-    If mPoint2.CoordinateSystemY = CoordsLogical Then
-        mPoint2.CoordinateSystemY = CoordsRelative
-    End If
-Else
-    If mPoint2.CoordinateSystemY <> CoordsLogical Then
-        mPoint2.CoordinateSystemY = CoordsLogical
-    End If
-End If
-End Sub
-
-Private Function convertHorizontalLineToTInterval() As TInterval
-With convertHorizontalLineToTInterval
-    If mLeftToRight Then
-        If ExtendBefore Then
-            .startValue = MinusInfinityDouble
-        Else
-            .startValue = mPoint1.XLogical
-        End If
-        If ExtendAfter Then
-            .endValue = PlusInfinityDouble
-        Else
-            .endValue = mPoint2.XLogical
-        End If
-    Else
-        If ExtendAfter Then
-            .startValue = MinusInfinityDouble
-        Else
-            .startValue = mPoint2.XLogical
-        End If
-        If ExtendBefore Then
-            .endValue = PlusInfinityDouble
-        Else
-            .endValue = mPoint1.XLogical
-        End If
-    End If
-    .isValid = True
-End With
-End Function
-
-Private Function convertVerticalLineToTInterval() As TInterval
-With convertVerticalLineToTInterval
-    If mBottomToTop Then
-        If ExtendBefore Then
-            .startValue = MinusInfinityDouble
-        Else
-            .startValue = mPoint1.YLogical
-        End If
-        If ExtendAfter Then
-            .endValue = PlusInfinityDouble
-        Else
-            .endValue = mPoint2.YLogical
-        End If
-    Else
-        If ExtendAfter Then
-            .startValue = MinusInfinityDouble
-        Else
-            .startValue = mPoint2.YLogical
-        End If
-        If ExtendBefore Then
-            .endValue = PlusInfinityDouble
-        Else
-            .endValue = mPoint1.YLogical
-        End If
-    End If
-    .isValid = True
-End With
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub Draw(ByRef Area As TRectangle)
 Dim includeStartArrow As Boolean
 Dim includeEndArrow As Boolean
 
-Dim failpoint As Long
+Const ProcName As String = "Draw"
+Dim failpoint As String
 On Error GoTo Err
 
 If mBlank Or mHidden Then Exit Sub
@@ -1441,8 +1862,8 @@ If Not mVisible Then
     Exit Sub
 End If
 
-includeStartArrow = RectContainsPoint(mTruncatedViewportBoundary, Point1.XLogical, Point1.YLogical)
-includeEndArrow = RectContainsPoint(mTruncatedViewportBoundary, Point2.XLogical, Point2.YLogical)
+includeStartArrow = RectContainsPoint(mTruncatedViewportBoundary, mX1, mY1)
+includeEndArrow = RectContainsPoint(mTruncatedViewportBoundary, mX2, mY2)
 
 If isVertical Then
     drawVerticalLine
@@ -1471,25 +1892,15 @@ End If
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-    
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawArrowEnd(ByRef Area As TRectangle)
-Dim X As Double
-Dim Y As Double
 Dim vertices(2) As Point
 
-With mPoint2
-    X = .XLogical
-    Y = .YLogical
-End With
+Const ProcName As String = "drawArrowEnd"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not RectOverlaps(mEndArrowRect, Area) Then Exit Sub
 
@@ -1502,8 +1913,8 @@ Case ArrowSingleOpen
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    mCanvas.DrawLine X, Y, X + mEndArrowX1Offset, Y + mEndArrowY1Offset
-    mCanvas.DrawLine X, Y, X + mEndArrowX2Offset, Y + mEndArrowY2Offset
+    mCanvas.DrawLine mX2, mY2, mX2 + mEndArrowX1Offset, mY2 + mEndArrowY1Offset
+    mCanvas.DrawLine mX2, mY2, mX2 + mEndArrowX2Offset, mY2 + mEndArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
@@ -1515,11 +1926,11 @@ Case ArrowClosed
     With mViewport
         .Canvas.SetBrushAttributes ArrowEndFillColor, ArrowEndFillStyle
         
-        Set vertices(0) = .NewPoint(X, Y)
-        Set vertices(1) = .NewPoint(X + mEndArrowX1Offset, _
-                                    Y + mEndArrowY1Offset)
-        Set vertices(2) = .NewPoint(X + mEndArrowX2Offset, _
-                                    Y + mEndArrowY2Offset)
+        Set vertices(0) = .NewPoint(mX2, mY2)
+        Set vertices(1) = .NewPoint(mX2 + mEndArrowX1Offset, _
+                                    mY2 + mEndArrowY1Offset)
+        Set vertices(2) = .NewPoint(mX2 + mEndArrowX2Offset, _
+                                    mY2 + mEndArrowY2Offset)
         .Canvas.DrawPolygon .ConvertPointsToWin32Points(vertices)
     End With
 Case ArrowSingleBar
@@ -1534,17 +1945,19 @@ Case ArrowBarb
 
 End Select
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub drawArrowStart(ByRef Area As TRectangle)
-Dim X As Double
-Dim Y As Double
 Dim vertices(2) As Point
 
-With mPoint1
-    X = .XLogical
-    Y = .YLogical
-End With
+Const ProcName As String = "drawArrowStart"
+Dim failpoint As String
+On Error GoTo Err
 
 If Not RectOverlaps(mStartArrowRect, Area) Then Exit Sub
 
@@ -1557,8 +1970,8 @@ Case ArrowSingleOpen
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
-    mCanvas.DrawLine X, Y, X + mStartArrowX1Offset, Y + mStartArrowY1Offset
-    mCanvas.DrawLine X, Y, X + mStartArrowX2Offset, Y + mStartArrowY2Offset
+    mCanvas.DrawLine mX1, mY1, mX1 + mStartArrowX1Offset, mY1 + mStartArrowY1Offset
+    mCanvas.DrawLine mX1, mY1, mX1 + mStartArrowX2Offset, mY1 + mStartArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
@@ -1570,11 +1983,11 @@ Case ArrowClosed
     With mViewport
         .Canvas.SetBrushAttributes ArrowStartFillColor, ArrowStartFillStyle
         
-        Set vertices(0) = .NewPoint(X, Y)
-        Set vertices(1) = .NewPoint(X + mStartArrowX1Offset, _
-                                    Y + mStartArrowY1Offset)
-        Set vertices(2) = .NewPoint(X + mStartArrowX2Offset, _
-                                    Y + mStartArrowY2Offset)
+        Set vertices(0) = .NewPoint(mX1, mY1)
+        Set vertices(1) = .NewPoint(mX1 + mStartArrowX1Offset, _
+                                    mY1 + mStartArrowY1Offset)
+        Set vertices(2) = .NewPoint(mX1 + mStartArrowX2Offset, _
+                                    mY1 + mStartArrowY2Offset)
         .Canvas.DrawPolygon .ConvertPointsToWin32Points(vertices)
     End With
 Case ArrowSingleBar
@@ -1589,12 +2002,21 @@ Case ArrowBarb
 
 End Select
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub drawGeometricLine()
 Dim x1 As Double
 Dim x2 As Double
 Dim vertices(3) As Point
+
+Const ProcName As String = "drawGeometricLine"
+Dim failpoint As String
+On Error GoTo Err
 
 setDrawingAttributes
 
@@ -1646,11 +2068,20 @@ mViewport.Canvas.DrawLine x1, mapPoint(x1), _
 '    .Canvas.DrawPoint .NewPoint(x2, mapPoint(x2))
 '
 'End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub DrawLine()
 Dim x1 As Double
 Dim x2 As Double
+
+Const ProcName As String = "DrawLine"
+Dim failpoint As String
+On Error GoTo Err
 
 setDrawingAttributes
 
@@ -1659,13 +2090,22 @@ x2 = getEndX
 
 mViewport.Canvas.DrawLine x1, mapPoint(x1), _
                         x2, mapPoint(x2)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawVerticalLine()
 Dim y1 As Double
 Dim y2 As Double
 
-If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), Point1.XLogical) Then Exit Sub
+Const ProcName As String = "drawVerticalLine"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), mX1) Then Exit Sub
 
 setDrawingAttributes
 
@@ -1676,7 +2116,7 @@ If ExtendBefore Then
         y1 = mTruncatedViewportBoundary.Top
     End If
 Else
-    y1 = Point1.YLogical
+    y1 = Point1.yLogical
 End If
 
 If ExtendAfter Then
@@ -1686,31 +2126,87 @@ If ExtendAfter Then
         y2 = mTruncatedViewportBoundary.Bottom
     End If
 Else
-    y2 = Point2.YLogical
+    y2 = Point2.yLogical
 End If
 
-mViewport.Canvas.DrawLine Point1.XLogical, y1, _
-                        Point1.XLogical, y2
+mViewport.Canvas.DrawLine mX1, y1, _
+                        mX1, y2
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub getCoordinatesLogical1()
+Const ProcName As String = "getCoordinatesLogical1"
+Dim failpoint As String
+On Error GoTo Err
+
+If mPoint1 Is Nothing Then Exit Sub
+mX1 = mPoint1.XLogical
+mY1 = mPoint1.yLogical
+If Not mOffset1 Is Nothing Then
+    mX1 = mX1 + mOffset1.XLogical
+    mY1 = mY1 + mOffset1.yLogical
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub getCoordinatesLogical2()
+Const ProcName As String = "getCoordinatesLogical2"
+Dim failpoint As String
+On Error GoTo Err
+
+If mPoint2 Is Nothing Then Exit Sub
+mX2 = mPoint2.XLogical
+mY2 = mPoint2.yLogical
+If Not mOffset2 Is Nothing Then
+    mX2 = mX2 + mOffset2.XLogical
+    mY2 = mY2 + mOffset2.yLogical
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getDomainInViewport( _
                 ByRef Area As TRectangle) As TInterval
 Dim yRange As TInterval
 
+Const ProcName As String = "getDomainInViewport"
+Dim failpoint As String
+On Error GoTo Err
+
 getDomainInViewport.isValid = False
 If Vertical Then
-    If IntContains(RectXIntersection(Area, mTruncatedViewportBoundary), Point1.XLogical) Then
-        getDomainInViewport.startValue = Point1.XLogical
-        getDomainInViewport.endValue = Point1.XLogical
+    If IntContains(RectXIntersection(Area, mTruncatedViewportBoundary), mX1) Then
+        getDomainInViewport.startValue = mX1
+        getDomainInViewport.endValue = mX1
         getDomainInViewport.isValid = True
     End If
 Else
     yRange = mapDomainInterval(RectXIntersection(Area, mTruncatedViewportBoundary))
     getDomainInViewport = inverseMapRangeInterval(IntIntersection(yRange, RectGetYInterval(Area)))
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getEndX() As Double
+Const ProcName As String = "getEndX"
+Dim failpoint As String
+On Error GoTo Err
+
 If ExtendAfter Then
     If mLeftToRight Then
         getEndX = mTruncatedViewportBoundary.Right
@@ -1718,15 +2214,63 @@ If ExtendAfter Then
         getEndX = mTruncatedViewportBoundary.Left
     End If
 Else
-    If mLeftToRight And Point2.XLogical > mTruncatedViewportBoundary.Right Then
+    If mLeftToRight And mX2 > mTruncatedViewportBoundary.Right Then
         getEndX = mTruncatedViewportBoundary.Right
     Else
-        getEndX = Point2.XLogical
+        getEndX = mX2
     End If
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function getHorizontalTInterval() As TInterval
+Const ProcName As String = "getHorizontalTInterval"
+Dim failpoint As String
+On Error GoTo Err
+
+With getHorizontalTInterval
+    If mLeftToRight Then
+        If ExtendBefore Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mX1
+        End If
+        If ExtendAfter Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mX2
+        End If
+    Else
+        If ExtendAfter Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mX2
+        End If
+        If ExtendBefore Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mX1
+        End If
+    End If
+    
+    .isValid = True
+End With
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getStartX() As Double
+Const ProcName As String = "getStartX"
+Dim failpoint As String
+On Error GoTo Err
+
 If ExtendBefore Then
     If mLeftToRight Then
         getStartX = mTruncatedViewportBoundary.Left
@@ -1734,27 +2278,97 @@ If ExtendBefore Then
         getStartX = mTruncatedViewportBoundary.Right
     End If
 Else
-    If Not mLeftToRight And Point1.XLogical > mTruncatedViewportBoundary.Right Then
+    If Not mLeftToRight And mX1 > mTruncatedViewportBoundary.Right Then
         getStartX = mTruncatedViewportBoundary.Right
     Else
-        getStartX = Point1.XLogical
+        getStartX = mX1
     End If
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getTruncatedViewportBoundary() As TRectangle
+Const ProcName As String = "getTruncatedViewportBoundary"
+Dim failpoint As String
+On Error GoTo Err
+
 getTruncatedViewportBoundary = mViewport.Boundary
 getTruncatedViewportBoundary.Right = Int(getTruncatedViewportBoundary.Right)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function getVerticalTInterval() As TInterval
+Const ProcName As String = "getVerticalTInterval"
+Dim failpoint As String
+On Error GoTo Err
+
+With getVerticalTInterval
+    If mBottomToTop Then
+        If ExtendBefore Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint1.yLogical
+        End If
+        If ExtendAfter Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint2.yLogical
+        End If
+    Else
+        If ExtendAfter Then
+            .startValue = MinusInfinityDouble
+        Else
+            .startValue = mPoint2.yLogical
+        End If
+        If ExtendBefore Then
+            .endValue = PlusInfinityDouble
+        Else
+            .endValue = mPoint1.yLogical
+        End If
+    End If
+    .isValid = True
+End With
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getXIntervalInViewport() As TInterval
+Const ProcName As String = "getXIntervalInViewport"
+Dim failpoint As String
+On Error GoTo Err
+
 getXIntervalInViewport = IntIntersection(RectGetXInterval(mTruncatedViewportBoundary), _
-                                        convertHorizontalLineToTInterval)
+                                        getHorizontalTInterval)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getYIntervalInViewport() As TInterval
+Const ProcName As String = "getYIntervalInViewport"
+Dim failpoint As String
+On Error GoTo Err
+
 getYIntervalInViewport = IntIntersection(RectGetYInterval(mTruncatedViewportBoundary), _
-                                        convertVerticalLineToTInterval)
+                                        getVerticalTInterval)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function isHorizontal() As Boolean
@@ -1768,37 +2382,74 @@ End Function
 Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
+Const ProcName As String = "initiateRedraw"
+Dim failpoint As String
+On Error GoTo Err
+
 If mHandle = 0 Then
     ' haven't yet been added to chart region
     Exit Sub
 End If
 If undrawCurrentImage Then undraw
+
+If mBlank Then Exit Sub
+
 If recalcBoundaries Then
+    Set mPoint1 = convertPosition(mPoint1)
+    Set mPoint2 = convertPosition(mPoint2)
+    getCoordinatesLogical1
+    getCoordinatesLogical2
+    
+    setDirection
     calcConstants
     calcEndArrowConstants
     calcStartArrowConstants
     calcCurrentBoundingRect
+    calcBoundingRectInViewport
 End If
 mGOSP.ObjectChanged mHandle, mBoundingRect
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function InverseMapPoint( _
                 ByVal Y As Double) As Double
+Const ProcName As String = "InverseMapPoint"
+Dim failpoint As String
+On Error GoTo Err
+
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & "mapPoint", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Invalid for vertical line"
                  
 InverseMapPoint = (Y - mB) / mA
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function inverseMapRangeInterval( _
                 ByRef yRange As TInterval) As TInterval
+Const ProcName As String = "inverseMapRangeInterval"
+Dim failpoint As String
+On Error GoTo Err
+
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & "mapDomainInterval", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Invalid for vertical line"
                  
 inverseMapRangeInterval.startValue = InverseMapPoint(yRange.startValue)
 inverseMapRangeInterval.endValue = InverseMapPoint(yRange.endValue)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function isExtended() As Boolean
@@ -1807,29 +2458,79 @@ End Function
 
 Private Function isPropertyOverrideFlagSet( _
                 ByVal flag As LinePropertyOverrideFlags) As Boolean
+Const ProcName As String = "isPropertyOverrideFlagSet"
+Dim failpoint As String
+On Error GoTo Err
+
 isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function mapDomainInterval( _
                 ByRef xDomain As TInterval) As TInterval
+Const ProcName As String = "mapDomainInterval"
+Dim failpoint As String
+On Error GoTo Err
+
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & "mapDomainInterval", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Invalid for vertical line"
                  
 mapDomainInterval.startValue = mapPoint(xDomain.startValue)
 mapDomainInterval.endValue = mapPoint(xDomain.endValue)
+mapDomainInterval.isValid = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function mapPoint( _
                 ByVal X As Double) As Double
+Const ProcName As String = "mapPoint"
+Dim failpoint As String
+On Error GoTo Err
+
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & "mapPoint", _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Invalid for vertical line"
                  
-mapPoint = mA * X + mB
+If X = MinusInfinityDouble Then
+    If mA > 0 Then
+        mapPoint = MinusInfinityDouble
+    ElseIf mA < 0 Then
+        mapPoint = PlusInfinityDouble
+    Else
+        mapPoint = mB
+    End If
+ElseIf X = PlusInfinityDouble Then
+    If mA > 0 Then
+        mapPoint = PlusInfinityDouble
+    ElseIf mA < 0 Then
+        mapPoint = MinusInfinityDouble
+    Else
+        mapPoint = mB
+    End If
+Else
+    mapPoint = mA * X + mB
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setDrawingAttributes()
+Const ProcName As String = "setDrawingAttributes"
+Dim failpoint As String
+On Error GoTo Err
+
 If Thickness = 1 Then
     mCanvas.SetPenAttributes Color, _
                             Thickness, _
@@ -1841,26 +2542,20 @@ Else
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setDirection()
-Dim x1 As Double
-Dim y1 As Double
-Dim x2 As Double
-Dim y2 As Double
+Const ProcName As String = "setDirection"
+Dim failpoint As String
+On Error GoTo Err
 
-With mPoint1
-    x1 = .XLogical
-    y1 = .YLogical
-End With
-
-With mPoint2
-    x2 = .XLogical
-    y2 = .YLogical
-End With
-
-If x1 = x2 Then
-    If y1 <= y2 Then
+If mX1 = mX2 Then
+    If mY1 <= mY2 Then
         mVertical = VerticalUp
     Else
         mVertical = VerticalDown
@@ -1868,8 +2563,8 @@ If x1 = x2 Then
 Else
     mVertical = VerticalNot
 End If
-If x1 <= x2 Then
-    If y1 <= y2 Then
+If mX1 <= mX2 Then
+    If mY1 <= mY2 Then
         mDirection = NE
         mLeftToRight = True
         mBottomToTop = True
@@ -1879,7 +2574,7 @@ If x1 <= x2 Then
         mBottomToTop = False
     End If
 Else
-    If y1 <= y2 Then
+    If mY1 <= mY2 Then
         mDirection = NW
         mLeftToRight = False
         mBottomToTop = True
@@ -1889,18 +2584,40 @@ Else
         mBottomToTop = False
     End If
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setPropertyOverrideFlag( _
                 ByVal flag As LinePropertyOverrideFlags)
+Const ProcName As String = "setPropertyOverrideFlag"
+Dim failpoint As String
+On Error GoTo Err
+
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub undraw()
 
+Const ProcName As String = "undraw"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not mVisible Then Exit Sub
-mGOSP.ObjectUndrawn mHandle, mBoundingRect
+mGOSP.ObjectUndrawn mHandle, mBoundingRectInViewport
+
 Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

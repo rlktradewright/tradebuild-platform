@@ -60,9 +60,26 @@ Private Const ModuleName                            As String = "IPriceFormatter
 ' Properties
 '@================================================================================
 
+Public Property Let IntegerYScale(ByVal value As Boolean)
+
+End Property
+
+Public Property Let YScaleGridSpacing(ByVal value As Double)
+
+End Property
+
+Public Property Let YScaleQuantum(ByVal value As Double)
+
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function FormatPrice( _
+                ByVal pValue As Double) As String
+
+End Function
 
 '@================================================================================
 ' Helper Functions

@@ -41,7 +41,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ContractUtils26"
 Private Const ModuleName                    As String = "ContractsBuilder"
 
 '@================================================================================
@@ -75,36 +74,99 @@ End Property
 '@================================================================================
 
 Public Sub AddContract(ByVal pContract As Contract)
+Const ProcName As String = "AddContract"
+Dim failpoint As String
+On Error GoTo Err
+
 mContracts.Add pContract
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub ContractSpecifierInvalid(ByVal reason As String)
+Const ProcName As String = "ContractSpecifierInvalid"
+Dim failpoint As String
+On Error GoTo Err
+
 mContracts.ContractSpecifierInvalid reason
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
-Friend Sub initialise( _
-                ByVal contractSpec As ContractSpecifier)
+Friend Sub Initialise( _
+                ByVal ContractSpec As ContractSpecifier)
+Const ProcName As String = "Initialise"
+Dim failpoint As String
+On Error GoTo Err
+
 Set mContracts = New Contracts
-mContracts.initialise contractSpec
+mContracts.Initialise ContractSpec
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Public Sub LoadComplete()
+Const ProcName As String = "LoadComplete"
+Dim failpoint As String
+On Error GoTo Err
+
 mContracts.LoadComplete
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
-Public Sub notify( _
+Public Sub Notify( _
                 ByRef ev As NotificationEvent)
-mContracts.notify ev
+Const ProcName As String = "Notify"
+Dim failpoint As String
+On Error GoTo Err
+
+mContracts.Notify ev
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
-Public Sub remove(ByVal index As Variant)
-mContracts.remove index
+Public Sub Remove(ByVal index As Variant)
+Const ProcName As String = "Remove"
+Dim failpoint As String
+On Error GoTo Err
+
+mContracts.Remove index
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
-Public Sub unableToLoad( _
+Public Sub UnableToLoad( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
-mContracts.serviceProviderCantHandle reason, serviceProviderName
+Const ProcName As String = "UnableToLoad"
+Dim failpoint As String
+On Error GoTo Err
+
+mContracts.ServiceProviderCantHandle reason, serviceProviderName
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

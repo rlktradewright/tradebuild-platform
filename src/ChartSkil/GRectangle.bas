@@ -141,6 +141,11 @@ PointSubtract.X = pPoint1.X - pPoint2.X
 PointSubtract.Y = pPoint1.Y - pPoint2.Y
 End Function
 
+Public Function PointToString( _
+                ByRef pPoint As TPoint) As String
+PointToString = "X=" & pPoint.X & "; Y=" & pPoint.Y
+End Function
+
 Public Function RectBottomCentre( _
                 ByRef pRect As TRectangle) As TPoint
 RectBottomCentre.X = (pRect.Right + pRect.Left) / 2
@@ -230,15 +235,15 @@ End Sub
 Public Sub RectExpandDim( _
                 ByRef pRect As TRectangle, _
                 ByVal pDim As Dimension)
-RectExpand pRect, pDim.XLogical, pDim.YLogical
+RectExpand pRect, pDim.xLogical, pDim.yLogical
 End Sub
 
 Public Function RectGetXInterval( _
                 ByRef pRect As TRectangle) As TInterval
 With RectGetXInterval
-.startValue = pRect.Left
-.endValue = pRect.Right
-.isValid = pRect.isValid
+    .startValue = pRect.Left
+    .endValue = pRect.Right
+    .isValid = pRect.isValid
 End With
 End Function
 
@@ -287,39 +292,45 @@ RectOverlaps = IntOverlaps(RectGetXInterval(rect1), RectGetXInterval(rect2)) And
             
 End Function
 
-Public Sub RectOffsetDim( _
+Public Sub RectOffset( _
                 ByRef pRect As TRectangle, _
-                ByRef pOffset As Dimension)
-Dim p As TPoint
+                ByVal pdX As Double, _
+                ByVal pdY As Double)
 
 If Not pRect.isValid Then Exit Sub
 
-p.X = pOffset.XLogical
-p.Y = pOffset.YLogical
-RectOffsetPoint pRect, p
+With pRect
+    .Left = .Left + pdX
+    .Right = .Right + pdX
+    .Bottom = .Bottom + pdY
+    .Top = .Top + pdY
+End With
+End Sub
+
+Public Sub RectOffsetDim( _
+                ByRef pRect As TRectangle, _
+                ByRef pOffset As Dimension)
+RectOffset pRect, pOffset.xLogical, pOffset.yLogical
 End Sub
 
 Public Sub RectOffsetPoint( _
                 ByRef pRect As TRectangle, _
                 ByRef pOffset As TPoint)
-
-If Not pRect.isValid Then Exit Sub
-
-With pRect
-    .Left = .Left + pOffset.X
-    .Right = .Right + pOffset.X
-    .Bottom = .Bottom + pOffset.Y
-    .Top = .Top + pOffset.Y
-End With
+RectOffset pRect, pOffset.X, pOffset.Y
 End Sub
 
 Public Sub RectSetXInterval( _
                 ByRef pRect As TRectangle, _
                 ByRef interval As TInterval)
 With pRect
-    .Left = interval.startValue
-    .Right = interval.endValue
-    .isValid = interval.isValid
+    If interval.startValue <= interval.endValue Then
+        .Left = interval.startValue
+        .Right = interval.endValue
+    Else
+        .Left = interval.endValue
+        .Right = interval.startValue
+    End If
+    .isValid = .isValid And interval.isValid
 End With
 End Sub
 
@@ -327,8 +338,13 @@ Public Sub RectSetYInterval( _
                 ByRef pRect As TRectangle, _
                 ByRef interval As TInterval)
 With pRect
-    .Bottom = interval.startValue
-    .Top = interval.endValue
+    If interval.startValue <= interval.endValue Then
+        .Bottom = interval.startValue
+        .Top = interval.endValue
+    Else
+        .Bottom = interval.endValue
+        .Top = interval.startValue
+    End If
     .isValid = interval.isValid
 End With
 End Sub
@@ -350,6 +366,20 @@ Public Function RectTopRight( _
 RectTopRight.X = pRect.Right
 RectTopRight.Y = pRect.Top
 End Function
+
+Public Function RectToString( _
+                ByRef pRect As TRectangle) As String
+RectToString = IIf(pRect.isValid, "Valid: ", "Invalid: ") & "Bottom=" & pRect.Bottom & "; Left=" & pRect.Left & "; Top=" & pRect.Top & "; Right=" & pRect.Right
+End Function
+
+Public Sub RectTranslate( _
+                ByRef pRect As TRectangle, _
+                ByRef pDisplacement As TPoint)
+pRect.Bottom = pRect.Bottom + pDisplacement.Y
+pRect.Left = pRect.Left + pDisplacement.X
+pRect.Top = pRect.Top + pDisplacement.Y
+pRect.Right = pRect.Right + pDisplacement.X
+End Sub
 
 Public Function RectUnion( _
                 ByRef rect1 As TRectangle, _
@@ -414,7 +444,14 @@ Public Function RectYIntersection( _
 RectYIntersection = IntIntersection(RectGetYInterval(rect1), RectGetYInterval(rect2))
 End Function
 
+Public Sub TPointMultiply( _
+                ByRef pPoint As TPoint, _
+                ByVal pFactor As Double)
+pPoint.X = pPoint.X * pFactor
+pPoint.Y = pPoint.Y * pFactor
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+

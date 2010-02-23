@@ -91,7 +91,8 @@ Public Function CreateAbstractChartTool( _
                 ByVal pChart As ChartController, _
                 ByVal tool As IChartTool, _
                 Optional ByVal pointerIcon As IPictureDisp) As AbstractChartTool
-Dim failpoint As Long
+Const ProcName As String = "CreateAbstractChartTool"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateAbstractChartTool = New AbstractChartTool
@@ -100,17 +101,14 @@ CreateAbstractChartTool.Initialise pChart, tool, pointerIcon
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateAbstractChartTool" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateChartManager( _
                 ByVal studyManager As studyManager, _
                 ByVal pChart As ChartController) As ChartManager
-Dim failpoint As Long
+Const ProcName As String = "CreateChartManager"
+Dim failpoint As String
 On Error GoTo Err
 
 Set CreateChartManager = New ChartManager
@@ -119,11 +117,7 @@ CreateChartManager.Initialise studyManager, pChart
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateChartManager" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CreateChartSpecifier( _
@@ -137,8 +131,8 @@ Public Function CreateChartSpecifier( _
                 Optional ByVal DefaultYAxisRegionStyle As ChartRegionStyle, _
                 Optional ByVal pBarsStyle As BarStyle, _
                 Optional ByVal VolumeStyle As DataPointStyle) As ChartSpecifier
-
-Dim failpoint As Long
+Const ProcName As String = "CreateChartSpecifier"
+Dim failpoint As String
 On Error GoTo Err
 
 If Timeframe Is Nothing Then Set Timeframe = GetTimePeriod(5, TimePeriodMinute)
@@ -158,27 +152,33 @@ CreateChartSpecifier.Initialise Timeframe, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateChartSpecifier" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetDefaultStudyConfiguration( _
                 ByVal Name As String, _
                 ByVal studyLibName As String) As StudyConfiguration
+Const ProcName As String = "GetDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 Set GetDefaultStudyConfiguration = gGetDefaultStudyConfiguration(Name, studyLibName)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function LoadChartSpecifierFromConfig( _
                 ByVal config As ConfigurationSection) As ChartSpecifier
-Dim failpoint As Long
+Const ProcName As String = "LoadChartSpecifierFromConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 If config Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "LoadChartSpecifierFromConfig", _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "config argument is Nothing"
 End If
 
@@ -188,21 +188,35 @@ LoadChartSpecifierFromConfig.LoadFromConfig config
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = IIf(Err.source <> "", Err.source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "LoadChartSpecifierFromConfig" & "." & failpoint
-Dim errDescription As String: errDescription = Err.Description
-gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub LoadDefaultStudyConfigurationsFromConfig( _
                 ByVal config As ConfigurationSection)
+Const ProcName As String = "LoadDefaultStudyConfigurationsFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 gLoadDefaultStudyConfigurationsFromConfig config
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub SetDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)
+Const ProcName As String = "SetDefaultStudyConfiguration"
+Dim failpoint As String
+On Error GoTo Err
+
 gSetDefaultStudyConfiguration value
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

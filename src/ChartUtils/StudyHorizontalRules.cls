@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyHorizontalRules"
+
 Private Const ConfigSectionHorizontalRule                   As String = "HorizontalRule"
 
 '@================================================================================
@@ -78,14 +80,30 @@ End Sub
 
 Friend Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
+On Error GoTo Err
+
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
 
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
 Public Property Get count() As Long
+Const ProcName As String = "count"
+On Error GoTo Err
+
 count = mStudyHorizRules.count
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -93,14 +111,25 @@ End Property
 '@================================================================================
 
 Public Function Add() As StudyHorizontalRule
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Set Add = New StudyHorizontalRule
 mStudyHorizRules.Add Add
 storeRuleSettings Add
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Clone() As StudyHorizontalRules
 Dim hr As StudyHorizontalRule
 Dim newHr As StudyHorizontalRule
+Const ProcName As String = "Clone"
+On Error GoTo Err
+
 Set Clone = New StudyHorizontalRules
 For Each hr In mStudyHorizRules
     newHr = Clone.Add
@@ -109,18 +138,34 @@ For Each hr In mStudyHorizRules
     newHr.Thickness = hr.Thickness
     newHr.Y = hr.Y
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Item( _
                 ByVal index As Long) As StudyHorizontalRule
 Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
 Set Item = mStudyHorizRules.Item(index)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
 Dim shrSect As ConfigurationSection
 Dim shr As StudyHorizontalRule
+
+Const ProcName As String = "LoadFromConfig"
+On Error GoTo Err
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
@@ -130,12 +175,25 @@ For Each shrSect In mConfig
     shr.LoadFromConfig shrSect
     mStudyHorizRules.Add shr
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
+Const ProcName As String = "NewEnum"
+On Error GoTo Err
+
 Set NewEnum = mStudyHorizRules.[_NewEnum]
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -144,16 +202,32 @@ End Function
 
 Private Sub storeSettings()
 Dim shr As StudyHorizontalRule
+Const ProcName As String = "storeSettings"
+On Error GoTo Err
+
 For Each shr In mStudyHorizRules
     storeRuleSettings shr
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub storeRuleSettings( _
                 ByVal shr As StudyHorizontalRule)
+Const ProcName As String = "storeRuleSettings"
+On Error GoTo Err
+
 If Not mConfig Is Nothing Then
     shr.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionHorizontalRule & "(" & GenerateGUIDString & ")")
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

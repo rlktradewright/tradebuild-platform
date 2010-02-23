@@ -45,7 +45,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartTools26"
+
 Private Const ModuleName                    As String = "FibRetracementTool"
 
 '@================================================================================
@@ -102,6 +102,9 @@ Private mPrevY                              As Double
 '@================================================================================
 
 Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
+Const ProcName As String = "IChartTool_Click"
+On Error GoTo Err
+
 If mLineSeries Is Nothing Then
     
     Set mControlPoint1 = mRegion.NewPoint(X, Y)
@@ -150,18 +153,44 @@ Else
     Set mStartPoint2 = Nothing
     mAbstractTool.Finish
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
 
+Const ProcName As String = "IChartTool_Create"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_DblClick()
 
+Const ProcName As String = "IChartTool_DblClick"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_Delete()
 Dim ln As ChartSkil26.Line
+Const ProcName As String = "IChartTool_Delete"
+On Error GoTo Err
+
 For Each ln In mLineSeries
     mRegion.RemoveGraphicObject ln
 Next
@@ -171,18 +200,44 @@ For Each txt In mTextSeries
     mRegion.RemoveGraphicObject txt
 Next
 mRegion.RemoveGraphicObjectSeries mTextSeries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_Deselected()
 
+Const ProcName As String = "IChartTool_Deselected"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_EndResize()
 
+Const ProcName As String = "IChartTool_EndResize"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
 Dim ln As ChartSkil26.Line
+
+Const ProcName As String = "IChartTool_Move"
+On Error GoTo Err
 
 Set mControlPoint1 = mRegion.NewPoint(mControlPoint1.X + X - mPrevX, mControlPoint1.Y + Y - mPrevY)
 Set mControlPoint2 = mRegion.NewPoint(mControlPoint2.X + X - mPrevX, mControlPoint2.Y + Y - mPrevY)
@@ -200,9 +255,17 @@ For i = 1 To mTextSeries.Count
 Next
 mPrevX = X
 mPrevY = Y
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
+Const ProcName As String = "IChartTool_MoveResize"
+On Error GoTo Err
+
 If selHandleIndex = 1 Then
     Set mControlPoint1 = mRegion.NewPoint(X, Y)
 ElseIf selHandleIndex = 2 Then
@@ -224,16 +287,29 @@ Else
 End If
 drawLines
 moveSelectionhandles
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
 Dim i As Long
+Const ProcName As String = "IChartTool_Region"
+On Error GoTo Err
+
 Set mRegion = RHS
 For i = 0 To UBound(mLineSpecs)
     If mLineSpecs(i).Style Is Nothing Then
         Set mLineSpecs(i).Style = New LineStyle
     End If
 Next
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
@@ -241,6 +317,9 @@ Dim ln As ChartSkil26.Line
 Dim txt As Text
 Dim i As Long
 Dim retr As Double
+
+Const ProcName As String = "IChartTool_ResizeCreate"
+On Error GoTo Err
 
 If mLineSeries Is Nothing Then Exit Sub
 
@@ -256,17 +335,38 @@ For i = 1 To mLineSeries.Count
     SetText txt, i
 Next
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub IChartTool_StartMove(ByVal X As Single, ByVal Y As Single)
+Const ProcName As String = "IChartTool_StartMove"
+On Error GoTo Err
+
 mPrevX = X
 mPrevY = Y
 
 startMove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
+Const ProcName As String = "IChartTool_StartResize"
+On Error GoTo Err
+
 startMove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IChartTool_Undo()
@@ -274,6 +374,9 @@ Dim ln As ChartSkil26.Line
 Dim txt As Text
 Dim i As Long
 Dim retr As Double
+
+Const ProcName As String = "IChartTool_Undo"
+On Error GoTo Err
 
 Set mControlPoint1 = mStartPoint1
 Set mControlPoint2 = mStartPoint2
@@ -292,6 +395,11 @@ Next
 
 Set mStartPoint1 = Nothing
 Set mStartPoint2 = Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -299,35 +407,99 @@ End Sub
 '@================================================================================
 
 Private Sub mLine1_SelectionStateChanged()
+Const ProcName As String = "mLine1_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine1.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine2_SelectionStateChanged()
+Const ProcName As String = "mLine2_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine2.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine3_SelectionStateChanged()
+Const ProcName As String = "mLine3_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine3.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine4_SelectionStateChanged()
+Const ProcName As String = "mLine4_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine4.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine5_SelectionStateChanged()
+Const ProcName As String = "mLine5_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine5.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine6_SelectionStateChanged()
+Const ProcName As String = "mLine6_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine6.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine7_SelectionStateChanged()
+Const ProcName As String = "mLine7_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine7.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mLine8_SelectionStateChanged()
+Const ProcName As String = "mLine8_SelectionStateChanged"
+On Error GoTo Err
+
 If mLine8.IsSelected Then notifySelected
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -343,10 +515,18 @@ Friend Sub Initialise( _
                 ByRef pLineSpecs() As FibLineSpecifier, _
                 ByVal Layer As Long, _
                 ByVal pTextStyle As TextStyle)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 mLineSpecs = pLineSpecs
 mLayer = Layer
 Set mTextStyle = pTextStyle
 Set mAbstractTool = CreateAbstractChartTool(pChart, Me)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -359,6 +539,9 @@ Private Function addRetracementLine( _
                 ByVal Y As Double)
 Dim ln As ChartSkil26.Line
 Dim txt As ChartSkil26.Text
+
+Const ProcName As String = "addRetracementLine"
+On Error GoTo Err
 
 Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
 ln.IsSelectable = True
@@ -373,9 +556,17 @@ txt.offset = mRegion.NewDimension(0.2, 0)
 txt.Text = mLineSpecs(index).Percentage & "%"
 
 Set addRetracementLine = ln
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub createSelectionhandles()
+Const ProcName As String = "createSelectionhandles"
+On Error GoTo Err
+
 mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint1.Y, True, True
 mAbstractTool.AddSelectionHandle (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint1.Y, False, True
 mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint1.Y, True, True
@@ -386,6 +577,11 @@ mAbstractTool.AddSelectionHandle mControlPoint2.X, (mControlPoint1.Y + mControlP
 mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint2.Y, True, True
 mAbstractTool.AddSelectionHandle (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint2.Y, False, True
 mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y, True, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub drawLines()
@@ -393,6 +589,9 @@ Dim i As Long
 Dim ln As ChartSkil26.Line
 Dim txt As ChartSkil26.Text
 Dim retr As Double
+
+Const ProcName As String = "drawLines"
+On Error GoTo Err
 
 For i = 1 To mLineSeries.Count
     Set ln = mLineSeries(i)
@@ -403,9 +602,17 @@ For i = 1 To mLineSeries.Count
     txt.position = ln.Point2
     SetText txt, i
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub moveSelectionhandles()
+Const ProcName As String = "moveSelectionhandles"
+On Error GoTo Err
+
 mAbstractTool.MoveSelectionHandle 1, mControlPoint1.X, mControlPoint1.Y
 mAbstractTool.MoveSelectionHandle 2, (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint1.Y
 mAbstractTool.MoveSelectionHandle 3, mControlPoint2.X, mControlPoint1.Y
@@ -416,10 +623,16 @@ mAbstractTool.MoveSelectionHandle 5, mControlPoint2.X, (mControlPoint1.Y + mCont
 mAbstractTool.MoveSelectionHandle 6, mControlPoint1.X, mControlPoint2.Y
 mAbstractTool.MoveSelectionHandle 7, (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint2.Y
 mAbstractTool.MoveSelectionHandle 8, mControlPoint2.X, mControlPoint2.Y
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifySelected()
-Dim failpoint As Long
+Const ProcName As String = "notifySelected"
+
 On Error GoTo Err
 
 If Not mAbstractTool.IsSelected Then
@@ -429,23 +642,30 @@ If Not mAbstractTool.IsSelected Then
         mRegion.ClearSelection
     End If
 End If
-
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "notifySelected" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub SetText( _
                 ByVal txt As Text, _
                 ByVal index As Long)
+Const ProcName As String = "SetText"
+On Error GoTo Err
+
 txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.position.Y) & ")"
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub startMove()
+Const ProcName As String = "startMove"
+On Error GoTo Err
+
 Set mStartPoint1 = mControlPoint1
 Set mStartPoint2 = mControlPoint2
 
@@ -457,4 +677,9 @@ Dim txt As ChartSkil26.Text
 For Each txt In mTextSeries
     txt.Layer = LayerNumbers.LayerMax
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub

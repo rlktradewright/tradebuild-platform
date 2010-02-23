@@ -112,8 +112,16 @@ Private mReadOnly                           As Boolean
 '@================================================================================
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -125,32 +133,80 @@ End Sub
 '@================================================================================
 
 Private Sub AddButton_Click()
+Const ProcName As String = "AddButton_Click"
+On Error GoTo Err
+
 mActionAdd = True
 showContractSpecForm Nothing, True, False, False
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractsTV_DblClick()
+Const ProcName As String = "ContractsTV_DblClick"
+On Error GoTo Err
+
 If Not ContractsTV.SelectedItem Is Nothing Then editItem
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractsTV_NodeCheck(ByVal Node As MSComctlLib.Node)
 Dim cs As ConfigurationSection
+Const ProcName As String = "ContractsTV_NodeCheck"
+On Error GoTo Err
+
 Set cs = Node.Tag
 cs.setAttribute AttributeNameEnabled, IIf(Node.Checked, "True", "False")
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractsTV_NodeClick(ByVal Node As MSComctlLib.Node)
+Const ProcName As String = "ContractsTV_NodeClick"
+On Error GoTo Err
+
 If Not mReadOnly Then EditButton.enabled = True
 If Not mReadOnly Then RemoveButton.enabled = True
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub EditButton_Click()
+Const ProcName As String = "EditButton_Click"
+On Error GoTo Err
+
 editItem
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveButton_Click()
+Const ProcName As String = "RemoveButton_Click"
+On Error GoTo Err
+
 mContractsConfig.RemoveConfigurationSection ContractsTV.SelectedItem.Tag
 ContractsTV.Nodes.Remove ContractsTV.SelectedItem.index
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -158,11 +214,14 @@ End Sub
 '@================================================================================
 
 Private Sub mContractSpecForm_ContractSpecReady( _
-                ByVal contractSpec As ContractUtils26.contractSpecifier, _
+                ByVal contractSpec As ContractUtils26.ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
 Dim cs As ConfigurationSection
+
+Const ProcName As String = "mContractSpecForm_ContractSpecReady"
+On Error GoTo Err
 
 If mActionAdd Then
     Set cs = addConfigurationSection
@@ -174,6 +233,11 @@ Else
     updateListItem ContractsTV.SelectedItem
     Unload mContractSpecForm
 End If
+
+Exit Sub
+
+Err:
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -189,6 +253,9 @@ Public Sub initialise( _
                 ByVal readonly As Boolean)
 Dim contractConfig As ConfigurationSection
 
+Const ProcName As String = "initialise"
+On Error GoTo Err
+
 mReadOnly = readonly
 If mReadOnly Then AddButton.enabled = False
 
@@ -199,6 +266,11 @@ ContractsTV.Nodes.Clear
 For Each contractConfig In mContractsConfig
     updateListItem addListItem(contractConfig)
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -206,20 +278,36 @@ End Sub
 '@================================================================================
 
 Private Function addConfigurationSection() As ConfigurationSection
+Const ProcName As String = "addConfigurationSection"
+On Error GoTo Err
+
 Set addConfigurationSection = mContractsConfig.addConfigurationSection(ConfigSectionContract & "(" & GenerateGUIDString & ")")
 addConfigurationSection.addConfigurationSection ConfigSectionContractspecifier
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function addListItem( _
                 ByVal contractCS As ConfigurationSection) As Node
 Dim n As Node
+Const ProcName As String = "addListItem"
+On Error GoTo Err
+
 Set n = ContractsTV.Nodes.Add
 Set n.Tag = contractCS
 Set addListItem = n
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function ConfigurationSectionToContractSpec( _
-                ByVal contractCS As ConfigurationSection) As contractSpecifier
+                ByVal contractCS As ConfigurationSection) As ContractSpecifier
 Dim localSymbol As String
 Dim symbol As String
 Dim exchange As String
@@ -228,6 +316,9 @@ Dim currencyCode As String
 Dim expiry As String
 Dim strikePrice As Double
 Dim optRight As OptionRights
+
+Const ProcName As String = "ConfigurationSectionToContractSpec"
+On Error GoTo Err
 
 With contractCS
     localSymbol = .GetSetting(ConfigSettingContractSpecLocalSYmbol, "")
@@ -248,35 +339,59 @@ With contractCS
                                                             strikePrice, _
                                                             optRight)
 End With
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Function
 
 Private Sub editItem()
 Dim cs As ConfigurationSection
+Const ProcName As String = "editItem"
+On Error GoTo Err
+
 mActionAdd = False
 Set cs = ContractsTV.SelectedItem.Tag
 showContractSpecForm ConfigurationSectionToContractSpec(cs), _
                        CBool(cs.getAttribute(AttributeNameEnabled, "False")), _
                        CBool(cs.getAttribute(AttributeNameBidAskBars, "False")), _
                        CBool(cs.getAttribute(AttributeNameIncludeMktDepth, "False"))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showContractSpecForm( _
-                ByVal contractSpec As contractSpecifier, _
+                ByVal contractSpec As ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
+Const ProcName As String = "showContractSpecForm"
+On Error GoTo Err
+
 Set mContractSpecForm = New fContractSpec
 mContractSpecForm.initialise contractSpec, enabled, writeBidAskBars, includeMktDepth
 mContractSpecForm.Show vbModal
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateConfigurationSection( _
                 ByVal contractCS As ConfigurationSection, _
-                ByVal contractSpec As contractSpecifier, _
+                ByVal contractSpec As ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
+Const ProcName As String = "updateConfigurationSection"
+On Error GoTo Err
+
 contractCS.setAttribute AttributeNameEnabled, IIf(enabled, "True", "False")
 contractCS.setAttribute AttributeNameBidAskBars, IIf(writeBidAskBars, "True", "False")
 contractCS.setAttribute AttributeNameIncludeMktDepth, IIf(includeMktDepth, "True", "False")
@@ -287,17 +402,25 @@ With contractCS
     .SetSetting ConfigSettingContractSpecSecType, SecTypeToString(contractSpec.sectype)
     .SetSetting ConfigSettingContractSpecCurrency, contractSpec.currencyCode
     .SetSetting ConfigSettingContractSpecExpiry, contractSpec.expiry
-    .SetSetting ConfigSettingContractSpecStrikePrice, contractSpec.strike
+    .SetSetting ConfigSettingContractSpecStrikePrice, contractSpec.Strike
     .SetSetting ConfigSettingContractSpecRight, OptionRightToString(contractSpec.Right)
 End With
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Sub
 
 Private Sub updateListItem( _
                 ByVal pNode As Node)
 Dim contractCS As ConfigurationSection
+Const ProcName As String = "updateListItem"
+On Error GoTo Err
+
 Set contractCS = pNode.Tag
-pNode.Text = ConfigurationSectionToContractSpec(contractCS).toString & _
+pNode.Text = ConfigurationSectionToContractSpec(contractCS).ToString & _
                                     IIf(CBool(contractCS.getAttribute(AttributeNameBidAskBars, "False")), _
                                         "Bid/Ask bars;", _
                                         "") & _
@@ -305,5 +428,10 @@ pNode.Text = ConfigurationSectionToContractSpec(contractCS).toString & _
                                         "Mkt depth;", _
                                         "")
 pNode.Checked = CBool(contractCS.getAttribute(AttributeNameEnabled, "False"))
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

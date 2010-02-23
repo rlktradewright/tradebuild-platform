@@ -90,6 +90,11 @@ Public Enum TWSSocketInMsgTypes
     REAL_TIME_BARS = 50
     FUNDAMENTAL_DATA = 51
     CONTRACT_DATA_END = 52
+    OPEN_ORDER_END = 53
+    ACCT_DOWNLOAD_END = 54
+    EXECUTION_DATA_END = 55
+    DELTA_NEUTRAL_VALIDATION = 56
+    TICK_SNAPSHOT_END = 57
     MAX_SOCKET_INMSG
 End Enum
 
@@ -217,7 +222,15 @@ Private mLogTokens(9) As String
 
 Public Property Let gCommonServiceConsumer( _
                 ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
+Const ProcName As String = "gCommonServiceConsumer"
+On Error GoTo Err
+
 Set mCommonServiceConsumer = RHS
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Sub gLog(ByRef pMsg As String, _
@@ -226,6 +239,9 @@ Public Sub gLog(ByRef pMsg As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "gLog"
+On Error GoTo Err
+
 If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
 mLogTokens(0) = "["
 mLogTokens(1) = pProjName
@@ -244,6 +260,11 @@ Else
 End If
 
 gLogger.Log pLogLevel, Join(mLogTokens, "")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Property Get gLogger() As Logger
@@ -262,6 +283,7 @@ Public Function gGetTWSAPIInstance( _
                 ByVal ProviderKey As String, _
                 ByVal ConnectionRetryIntervalSecs As Long, _
                 ByVal TWSLogLevel As TWSLogLevels) As TWSAPI
+Const ProcName As String = "gGetTWSAPIInstance"
 Dim i As Long
 
 Dim failpoint As Long
@@ -307,7 +329,7 @@ Set gGetTWSAPIInstance = mTWSAPITable(mTWSAPITableNextIndex).TWSAPI
 
 mTWSAPITableNextIndex = mTWSAPITableNextIndex + 1
 
-gGetTWSAPIInstance.commonServiceConsumer = mCommonServiceConsumer
+gGetTWSAPIInstance.CommonServiceConsumer = mCommonServiceConsumer
 gGetTWSAPIInstance.Server = Server
 gGetTWSAPIInstance.Port = Port
 gGetTWSAPIInstance.clientID = clientID
@@ -319,20 +341,39 @@ gGetTWSAPIInstance.Connect
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gGetTWSAPIInstance", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Function
 
 Public Function gHistDataCapabilities() As Long
+Const ProcName As String = "gHistDataCapabilities"
+On Error GoTo Err
+
 gHistDataCapabilities = 0
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
+Const ProcName As String = "gHistDataSupports"
+On Error GoTo Err
+
 gHistDataSupports = (gHistDataCapabilities And capabilities)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gInputMessageIdToString( _
                 ByVal msgId As TWSSocketInMsgTypes) As String
+Const ProcName As String = "gInputMessageIdToString"
+On Error GoTo Err
+
 Select Case msgId
 Case TICK_PRICE
     gInputMessageIdToString = "TICK_PRICE"
@@ -393,11 +434,19 @@ Case CONTRACT_DATA_END
 Case Else
     gInputMessageIdToString = "?????"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Function
 
 Public Function gOutputMessageIdToString( _
                 ByVal msgId As TWSSocketOutMsgTypes) As String
+Const ProcName As String = "gOutputMessageIdToString"
+On Error GoTo Err
+
 Select Case msgId
 Case REQ_MKT_DATA
     gOutputMessageIdToString = "REQ_MKT_DATA"
@@ -458,10 +507,16 @@ Case CANCEL_REAL_TIME_BARS
 Case Else
     gOutputMessageIdToString = "?????"
 End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gParseClientId( _
                 value As String) As Long
+Const ProcName As String = "gParseClientId"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -469,7 +524,7 @@ If value = "" Then
     gParseClientId = -1
 ElseIf Not IsInteger(value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid 'Client Id' parameter: value must be an integer"
 Else
     gParseClientId = CLng(value)
@@ -478,11 +533,12 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseClientId", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseConnectionRetryInterval( _
                 value As String) As Long
+Const ProcName As String = "gParseConnectionRetryInterval"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -490,7 +546,7 @@ If value = "" Then
     gParseConnectionRetryInterval = 0
 ElseIf Not IsInteger(value, 0) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
 Else
     gParseConnectionRetryInterval = CLng(value)
@@ -499,11 +555,12 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseConnectionRetryInterval", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseKeepConnection( _
                 value As String) As Boolean
+Const ProcName As String = "gParseKeepConnection"
 On Error GoTo Err
 If value = "" Then
     gParseKeepConnection = False
@@ -514,12 +571,13 @@ Exit Function
 
 Err:
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-        , _
+        ProjectName & "." & ModuleName & ":" & ProcName, _
         "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
 End Function
 
 Public Function gParsePort( _
                 value As String) As Long
+Const ProcName As String = "gParsePort"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -527,7 +585,7 @@ If value = "" Then
     gParsePort = 7496
 ElseIf Not IsInteger(value, 1024, 65535) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
 Else
     gParsePort = CLng(value)
@@ -536,11 +594,13 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParsePort", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseRole( _
                 value As String) As String
+Const ProcName As String = "gParseRole"
+
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -552,18 +612,19 @@ Case "S", "SEC", "SECOND", "SECONDARY"
     gParseRole = "SECONDARY"
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseRole", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseTwsLogLevel( _
                 value As String) As TWSLogLevels
+Const ProcName As String = "gParseTwsLogLevel"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -577,7 +638,7 @@ Exit Function
 Err:
 If Err.number = ErrorCodes.ErrIllegalArgumentException Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
             "Invalid 'Tws Log Level' parameter: value must be one of " & _
             TWSLogLevelSystemString & ", " & _
             TWSLogLevelErrorString & ", " & _
@@ -586,18 +647,22 @@ If Err.number = ErrorCodes.ErrIllegalArgumentException Then
             TWSLogLevelDetailString
 End If
 
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gParseTwsLogLevel", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Public Function gRealtimeDataCapabilities() As Long
+Const ProcName As String = "gRealtimeDataCapabilities"
 gRealtimeDataCapabilities = TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition
 End Function
 
 Public Function gRealtimeDataSupports(ByVal capabilities As Long) As Boolean
+Const ProcName As String = "gRealtimeDataSupports"
 gRealtimeDataSupports = (gRealtimeDataCapabilities And capabilities)
 End Function
 
 Public Sub gReleaseAllTWSAPIInstances()
+Const ProcName As String = "gReleaseAllTWSAPIInstances"
+
 
 Dim i As Long
 
@@ -620,13 +685,15 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gReleaseAllTWSAPIInstances", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
                 
 End Sub
 
 Public Sub gReleaseTWSAPIInstance( _
                 ByVal instance As TWSAPI, _
                 Optional ByVal forceDisconnect As Boolean)
+Const ProcName As String = "gReleaseTWSAPIInstance"
+
 
 Dim i As Long
 
@@ -639,7 +706,7 @@ For i = 0 To mTWSAPITableNextIndex - 1
         If mTWSAPITable(i).usageCount = 0 Or _
             forceDisconnect _
         Then
-            If mTWSAPITable(i).TWSAPI.connectionState <> ConnNotConnected Then
+            If mTWSAPITable(i).TWSAPI.ConnectionState <> ConnNotConnected Then
                 mTWSAPITable(i).TWSAPI.Disconnect "release", forceDisconnect
             End If
             Set mTWSAPITable(i).TWSAPI = Nothing
@@ -656,17 +723,21 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gReleaseTWSAPIInstance", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
                 
 End Sub
 
 Public Function gRoundTimeToSecond( _
                 ByVal timestamp As Date) As Date
+Const ProcName As String = "gRoundTimeToSecond"
 gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
 Public Function gSocketInMsgTypeToString( _
                 ByVal value As TWSSocketInMsgTypes) As String
+Const ProcName As String = "gSocketInMsgTypeToString"
+On Error GoTo Err
+
 Select Case value
 Case TICK_PRICE
     gSocketInMsgTypeToString = "Tick price          "
@@ -728,18 +799,40 @@ Case Else
     gSocketInMsgTypeToString = "Msg type " & Format(value, "00         ")
 End Select
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
                 
 Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
+Const ProcName As String = "gTruncateTimeToNextMinute"
+On Error GoTo Err
+
 gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
+Const ProcName As String = "gTruncateTimeToMinute"
+On Error GoTo Err
+
 gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function gTwsLogLevelFromString( _
                 ByVal value As String) As TWSLogLevels
+Const ProcName As String = "gTwsLogLevelFromString"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -755,13 +848,15 @@ Case UCase$(TWSLogLevelSystemString)
 Case UCase$(TWSLogLevelWarningString)
     gTwsLogLevelFromString = TWSLogLevelWarning
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "value invalid"
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="gTwsLogLevelFromString", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 '================================================================================
@@ -770,6 +865,7 @@ End Function
 
 Private Function clientIdAlreadyInUse( _
                 ByVal value As Long) As Boolean
+Const ProcName As String = "clientIdAlreadyInUse"
 Dim i As Long
 Dim failpoint As Long
 On Error GoTo Err
@@ -784,12 +880,13 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="clientIdAlreadyInUse", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
                 
 End Function
 
 Private Function getRandomClientId( _
                 ByVal designator As String) As Long
+Const ProcName As String = "getRandomClientId"
                 
 Dim failpoint As Long
 On Error GoTo Err
@@ -820,7 +917,7 @@ mRandomClientIds.add getRandomClientId, CStr(designator)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="getRandomClientId", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Function
 

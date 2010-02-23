@@ -40,7 +40,6 @@ Implements IOrderReport
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "IBTWSSP26"
 Private Const ModuleName                    As String = "OrderReport"
 
 '@================================================================================
@@ -70,7 +69,7 @@ Private morigin As TradeBuildSP.OrderOrigins
 Private moriginatorRef As String
 Private moverrideConstraints As Boolean
 Private mProviderProperties As Parameters
-Private mquantity As Long
+Private mQuantity As Long
 Private msettlingFirm As String
 Private mStatus As TradeBuildSP.OrderStatuses
 Private mstopTriggerMethod As TradeBuildSP.StopTriggerMethods
@@ -284,11 +283,11 @@ Set IOrderReport_providerProperties = mProviderProperties
 End Property
 
 Private Property Let IOrderReport_quantity(ByVal value As Long)
-mquantity = value
+mQuantity = value
 End Property
 
 Private Property Get IOrderReport_quantity() As Long
-IOrderReport_quantity = mquantity
+IOrderReport_quantity = mQuantity
 End Property
 
 Private Property Let IOrderReport_settlingFirm(ByVal value As String)

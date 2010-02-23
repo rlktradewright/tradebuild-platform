@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "ExponentialMovingAverage"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -74,16 +76,32 @@ Private mFirstValueReceived As Boolean
 '================================================================================
 
 Public Property Get maValue() As Variant
+Const ProcName As String = "maValue"
+On Error GoTo Err
+
 If mPeriodCount < mPeriods Then
     maValue = Empty
 Else
     maValue = mMa
 End If
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let periods(ByVal value As Long)
+Const ProcName As String = "periods"
+On Error GoTo Err
+
 mPeriods = value
 mExpFactor = 2 / (value + 1)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -91,16 +109,32 @@ End Property
 '================================================================================
 
 Public Sub datavalue(ByVal value As Double)
+Const ProcName As String = "datavalue"
+On Error GoTo Err
+
 If Not mFirstValueReceived Then
     mPrevPeriodMa = value
     mFirstValueReceived = True
 End If
 mMa = (mExpFactor * value) + mPrevPeriodMa * (1 - mExpFactor)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub newPeriod()
+Const ProcName As String = "newPeriod"
+On Error GoTo Err
+
 mPeriodCount = mPeriodCount + 1
 mPrevPeriodMa = mMa
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================

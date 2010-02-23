@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "GRSI"
+
 Public Const RsiInputValue As String = "Input"
 
 Public Const RsiParamPeriods As String = ParamPeriods
@@ -43,18 +45,34 @@ Private mStudyDefinition As StudyDefinition
 
 Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 Set mDefaultParameters = value.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get defaultParameters() As Parameters
+Const ProcName As String = "defaultParameters"
+On Error GoTo Err
+
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue RsiParamPeriods, 14
-    mDefaultParameters.setParameterValue RsiParamMovingAverageType, SmaName
+    mDefaultParameters.SetParameterValue RsiParamPeriods, 14
+    mDefaultParameters.SetParameterValue RsiParamMovingAverageType, SmaName
 End If
 
 ' now create a clone of the default parameters for the caller
 Set defaultParameters = mDefaultParameters.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -62,42 +80,50 @@ Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
+Const ProcName As String = "StudyDefinition"
+On Error GoTo Err
+
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = RsiName
-    mStudyDefinition.shortName = RsiShortName
+    mStudyDefinition.ShortName = RsiShortName
     mStudyDefinition.Description = "Relative Strength Indicator shows strength or " & _
                                     "weakness based on the gains and losses made " & _
                                     "during the specified number of periods"
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(RsiInputValue)
-    inputDef.inputType = InputTypeReal
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(RsiValueRsi)
     valueDef.Description = "The Relative Strength Index value"
     valueDef.IncludeInChart = True
-    valueDef.isDefault = True
-    valueDef.defaultRegion = DefaultRegionNone
-    valueDef.maximumValue = 105
-    valueDef.minimumValue = -5
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueStyle = gCreateDataPointStyle(&H4040C0)
-    valueDef.valueType = ValueTypeReal
+    valueDef.IsDefault = True
+    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.MaximumValue = 105
+    valueDef.MinimumValue = -5
+    valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&H4040C0)
+    valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamPeriods)
     paramDef.Description = "The number of periods used to calculate the RSI"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamMovingAverageType)
     paramDef.Description = "The type of moving average used to smooth the RSI"
-    paramDef.parameterType = ParameterTypeString
+    paramDef.ParameterType = ParameterTypeString
 
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================

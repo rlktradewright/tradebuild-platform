@@ -87,7 +87,8 @@ Public Function AddAppInstanceConfig( _
                 Optional ByVal connectionRetryIntervalSecs As Long = 10, _
                 Optional ByVal twsLogLevel As String = "ERROR", _
                 Optional ByVal tickfilesPath As String) As ConfigurationSection
-Dim failpoint As Long
+Const ProcName As String = "AddAppInstanceConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 Set AddAppInstanceConfig = addNewAppConfig(pConfigFile, _
@@ -104,17 +105,17 @@ Set AddAppInstanceConfig = addNewAppConfig(pConfigFile, _
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "AddAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function ConfigureTradeBuild( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal appInstanceConfigName As String) As Boolean
 Dim config As ConfigurationSection
+
+Const ProcName As String = "ConfigureTradeBuild"
+Dim failpoint As String
+On Error GoTo Err
 
 Set config = GetAppInstanceConfig(pConfigFile, appInstanceConfigName)
 If config Is Nothing Then
@@ -142,12 +143,18 @@ If ConfigureTradeBuild Then
 Else
     log "Failed to load configuration: " & config.InstanceQualifier, LogLevelNormal
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal name As String) As ConfigurationSection
-Dim failpoint As Long
+Const ProcName As String = "GetAppInstanceConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 Set GetAppInstanceConfig = pConfigFile.GetConfigurationSection(generateSectionPath(name))
@@ -155,17 +162,17 @@ Set GetAppInstanceConfig = pConfigFile.GetConfigurationSection(generateSectionPa
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "GetAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetDefaultAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
 Dim sections As ConfigurationSection
 Dim section As ConfigurationSection
+
+Const ProcName As String = "GetDefaultAppInstanceConfig"
+Dim failpoint As String
+On Error GoTo Err
 
 Set sections = getAppInstanceConfigsSection(pConfigFile)
 For Each section In sections
@@ -175,12 +182,19 @@ For Each section In sections
     End If
 Next
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Public Function InitialiseConfigFile( _
                 ByVal pConfigFile As ConfigurationFile) As ConfigurationFile
 Dim sections As ConfigurationSection
-Dim failpoint As Long
+
+Const ProcName As String = "InitialiseConfigFile"
+Dim failpoint As String
 On Error GoTo Err
 
 Set sections = getAppInstanceConfigsSection(pConfigFile)
@@ -197,26 +211,32 @@ Set InitialiseConfigFile = pConfigFile
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateConfigurationFile" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function IsValidConfigurationFile( _
                 ByVal pConfigFile As ConfigurationFile) As Boolean
+Const ProcName As String = "IsValidConfigurationFile"
+Dim failpoint As String
+On Error GoTo Err
+
 If getAppInstanceConfigsSection(pConfigFile) Is Nothing Then
     IsValidConfigurationFile = False
 Else
     IsValidConfigurationFile = True
 End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub RemoveAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal name As String)
-Dim failpoint As Long
+Const ProcName As String = "RemoveAppInstanceConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 pConfigFile.RemoveConfigurationSection generateSectionPath(name)
@@ -224,18 +244,14 @@ pConfigFile.RemoveConfigurationSection generateSectionPath(name)
 Exit Sub
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function SetDefaultAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal name As String) As ConfigurationSection
-
-Dim failpoint As Long
+Const ProcName As String = "SetDefaultAppInstanceConfig"
+Dim failpoint As String
 On Error GoTo Err
 
 checkValidConfigurationFile pConfigFile
@@ -253,18 +269,23 @@ setDefault pConfigFile, SetDefaultAppInstanceConfig
 Exit Function
 
 Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetDefaultAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
-Dim errDescription As String: errDescription = Err.Description
-log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
-Err.Raise errNumber, errSource, errDescription
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub UnsetDefaultAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile)
 Dim defaultConfig As ConfigurationSection
+Const ProcName As String = "UnsetDefaultAppInstanceConfig"
+Dim failpoint As String
+On Error GoTo Err
+
 Set defaultConfig = GetDefaultAppInstanceConfig(pConfigFile)
 If Not defaultConfig Is Nothing Then defaultConfig.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -284,6 +305,10 @@ Private Function addNewAppConfig( _
                 Optional ByVal tickfilesPath As String) As ConfigurationSection
 Dim newAppConfigSection As ConfigurationSection
 Dim newAppTradeBuildSection As ConfigurationSection
+
+Const ProcName As String = "addNewAppConfig"
+Dim failpoint As String
+On Error GoTo Err
 
 checkValidConfigurationFile pConfigFile
 
@@ -311,49 +336,112 @@ End If
 
 Set addNewAppConfig = newAppConfigSection
 
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Function
 
 Private Sub checkValidConfigurationFile( _
                 ByVal pConfigFile As ConfigurationFile)
+Const ProcName As String = "checkValidConfigurationFile"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not IsValidConfigurationFile(pConfigFile) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "checkValidConfigurationFile", _
             "Configuration file has not been correctly intialised"
 End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function generateSectionPath( _
                 ByVal name As String) As String
+Const ProcName As String = "generateSectionPath"
+Dim failpoint As String
+On Error GoTo Err
+
 generateSectionPath = ConfigSectionPathSeparator & ConfigNameAppConfigs & ConfigSectionPathSeparator & ConfigNameAppConfig & "(" & name & ")"
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getAppInstanceConfigsPath() As String
+Const ProcName As String = "getAppInstanceConfigsPath"
+Dim failpoint As String
+On Error GoTo Err
+
 getAppInstanceConfigsPath = ConfigSectionPathSeparator & ConfigNameAppConfigs
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getAppInstanceConfigsSection( _
                 ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
+Const ProcName As String = "getAppInstanceConfigsSection"
+Dim failpoint As String
+On Error GoTo Err
+
 Set getAppInstanceConfigsSection = pConfigFile.GetConfigurationSection(getAppInstanceConfigsPath)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub log( _
                 ByVal message As String, _
                 Optional ByVal level As LogLevels = LogLevelDetail)
 Static lLogger As Logger
+Const ProcName As String = "log"
+Dim failpoint As String
+On Error GoTo Err
+
 If lLogger Is Nothing Then Set lLogger = GetLogger("configutils.log")
 
 lLogger.log level, message
 
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Private Sub removeServiceProviders()
+Const ProcName As String = "removeServiceProviders"
+Dim failpoint As String
+On Error GoTo Err
+
 If Not TradeBuildAPI Is Nothing Then TradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function setupServiceProviders( _
                 ByVal config As ConfigurationSection) As Boolean
 Dim tradebuildEntry As ConfigurationSection
+
+Const ProcName As String = "setupServiceProviders"
+Dim failpoint As String
+On Error GoTo Err
 
 Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
 
@@ -361,21 +449,32 @@ If tradebuildEntry Is Nothing Then
     log "No service providers defined in this configuration", LogLevelNormal
     setupServiceProviders = True
 Else
-    On Error GoTo Err
+    On Error GoTo ConfigErr
     TradeBuildAPI.ServiceProviders.LoadServiceProviderConfiguration tradebuildEntry
     setupServiceProviders = True
 End If
 
 Exit Function
 
-Err:
-log "Service provider configuration failed: " & Err.Description, LogLevelNormal
+ConfigErr:
+log "Service provider configuration failed: " & Err.Description & vbCrLf & _
+    Err.Source, _
+    LogLevelSevere
 setupServiceProviders = False
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function setupStudyLibraries( _
                 ByVal config As ConfigurationSection) As Boolean
 Dim tradebuildEntry As ConfigurationSection
+
+Const ProcName As String = "setupStudyLibraries"
+Dim failpoint As String
+On Error GoTo Err
 
 Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
 
@@ -383,16 +482,23 @@ If tradebuildEntry Is Nothing Then
     log "No study libraries defined in this configuration", LogLevelNormal
     setupStudyLibraries = True
 Else
-    On Error GoTo Err
+    On Error GoTo ConfigErr
     LoadStudyLibraryConfiguration tradebuildEntry
     setupStudyLibraries = True
 End If
 
 Exit Function
 
-Err:
-log "Study library configuration failed: " & Err.Description, LogLevelNormal
+ConfigErr:
+log "Study library configuration failed: " & Err.Description & vbCrLf & _
+    Err.Source, _
+    LogLevelSevere
 setupStudyLibraries = False
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setDefault( _
@@ -400,6 +506,10 @@ Private Sub setDefault( _
                 ByVal targetSection As ConfigurationSection)
 Dim sections As ConfigurationSection
 Dim section As ConfigurationSection
+
+Const ProcName As String = "setDefault"
+Dim failpoint As String
+On Error GoTo Err
 
 Set sections = getAppInstanceConfigsSection(pConfigFile)
 For Each section In sections
@@ -413,6 +523,11 @@ For Each section In sections
         End If
     End If
 Next
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 

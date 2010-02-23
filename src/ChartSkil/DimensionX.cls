@@ -56,40 +56,30 @@ Friend Property Get Viewport() As Viewport
 Set Viewport = mViewport
 End Property
 
-Friend Property Let Viewport(ByVal value As Viewport)
-Set mViewport = value
-End Property
-
 Public Property Get X() As Double
 X = mX
 End Property
 
-Friend Property Let X(ByVal value As Double)
-mX = value
-End Property
-
-Public Property Get xLogical() As Double
+Public Property Get XLogical() As Double
 Const ProcName As String = "XLogical"
 Dim failpoint As String
 On Error GoTo Err
 
 Select Case mCoordSystemX
 Case CoordsLogical
-    xLogical = mX
+    XLogical = mX
 Case CoordsRelative
-    xLogical = mViewport.ConvertRelativeToLogicalX(mX)
+    XLogical = mViewport.ConvertRelativeToLogicalX(mX)
 Case CoordsDistance
-    xLogical = mViewport.ConvertDistanceToLogicalX(mX)
+    XLogical = mViewport.ConvertDistanceToLogicalX(mX)
 Case CoordsCounterDistance
-    xLogical = mViewport.ConvertCounterDistanceToLogicalY(mX)
+    XLogical = mViewport.ConvertCounterDistanceToLogicalY(mX)
 End Select
-
-xLogical = xLogical - mViewport.Boundary.Left
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -115,14 +105,16 @@ Equals = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pNumber:=Err.Number, pSource:=Err.Source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise( _
                 ByVal X As Double, _
-                ByVal coordSystemX As CoordinateSystems)
+                ByVal coordSystemX As CoordinateSystems, _
+                ByVal pViewport As Viewport)
 mX = X
 mCoordSystemX = coordSystemX
+Set mViewport = pViewport
 End Sub
 
 '================================================================================

@@ -129,7 +129,7 @@ Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)
 Dim spe As ServiceProviderError
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTB.GetServiceProviderError
-    gCon.writeErrorLine "Service provider error: " & spe.message
+    gCon.writeErrorLine "Service provider error: " & spe.Message
 Else
     gCon.writeErrorLine "TradeBuild notification: " & ev.eventMessage
 End If
@@ -154,7 +154,7 @@ mDone = False
 Set mContracts = Nothing
 Set mContractSpec = contractSpec
 mLineNumber = lineNumber
-Set mContractsTC = TradeBuildAPI.loadContracts(contractSpec)
+Set mContractsTC = TradeBuildAPI.LoadContracts(contractSpec)
 
 ' now hang around until we've got the info, but don't exit this proc
 ' because we don't want to process the next line of input till this one's done
@@ -166,23 +166,22 @@ Loop
 If mContracts.Count <> 0 Then
     For Each lContract In mContracts
         gCon.writeLine formatName(lContract, nametemplate) & OutputSep & _
-                        lContract.specifier.localSymbol & OutputSep & _
-                        lContract.specifier.symbol & OutputSep & _
-                        lContract.specifier.expiry & OutputSep & _
-                        lContract.specifier.strike & OutputSep & _
-                        OptionRightToString(lContract.specifier.Right) & OutputSep & _
-                        SecTypeToString(lContract.specifier.sectype) & OutputSep & _
-                        lContract.specifier.exchange & OutputSep & _
-                        lContract.specifier.currencyCode & OutputSep & _
+                        lContract.Specifier.LocalSymbol & OutputSep & _
+                        lContract.Specifier.symbol & OutputSep & _
+                        lContract.Specifier.expiry & OutputSep & _
+                        lContract.Specifier.strike & OutputSep & _
+                        OptionRightToString(lContract.Specifier.Right) & OutputSep & _
+                        SecTypeToString(lContract.Specifier.sectype) & OutputSep & _
+                        lContract.Specifier.exchange & OutputSep & _
+                        lContract.Specifier.currencyCode & OutputSep & _
                         lContract.TickSize & OutputSep & _
-                        lContract.tickValue & OutputSep & _
-                        Format(lContract.sessionStartTime, "hh:mm") & OutputSep & _
-                        Format(lContract.sessionEndTime, "hh:mm") & OutputSep & _
-                        lContract.timezone.standardName & OutputSep & _
-                        lContract.daysBeforeExpiryToSwitch & OutputSep & _
-                        lContract.numberOfDecimals & OutputSep & _
-                        lContract.priceFormatString & OutputSep & _
-                        lContract.multiplier
+                        lContract.TickValue & OutputSep & _
+                        Format(lContract.SessionStartTime, "hh:mm") & OutputSep & _
+                        Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
+                        lContract.Timezone.standardName & OutputSep & _
+                        lContract.DaysBeforeExpiryToSwitch & OutputSep & _
+                        lContract.NumberOfDecimals & OutputSep & _
+                        lContract.Multiplier
     Next
 End If
 
@@ -234,23 +233,23 @@ Do While Not s.eos
                     End If
                 Loop
             End If
-            If Not pContract.expiryDate = 0 Then bldr.Append Format(pContract.expiryDate, formatString)
+            If Not pContract.ExpiryDate = 0 Then bldr.Append Format(pContract.ExpiryDate, formatString)
         Case "s"          'symbol
-            bldr.Append pContract.specifier.symbol
+            bldr.Append pContract.Specifier.symbol
         Case "S"          'shortname"
-            bldr.Append pContract.specifier.localSymbol
+            bldr.Append pContract.Specifier.LocalSymbol
         Case "e"          'exchange"
-            bldr.Append pContract.specifier.exchange
+            bldr.Append pContract.Specifier.exchange
         Case "c"          'currency"
-            bldr.Append pContract.specifier.currencyCode
+            bldr.Append pContract.Specifier.currencyCode
         Case "t"          'sectype (abbreviated)"
-            bldr.Append SecTypeToShortString(pContract.specifier.sectype)
+            bldr.Append SecTypeToShortString(pContract.Specifier.sectype)
         Case "T"          'sectype (in full)"
-            bldr.Append SecTypeToString(pContract.specifier.sectype)
+            bldr.Append SecTypeToString(pContract.Specifier.sectype)
         Case "p"          'strike price"
-            If pContract.specifier.strike <> 0 Then bldr.Append pContract.specifier.strike
+            If pContract.Specifier.strike <> 0 Then bldr.Append pContract.Specifier.strike
         Case "r"          'right"
-            bldr.Append OptionRightToString(pContract.specifier.Right)
+            bldr.Append OptionRightToString(pContract.Specifier.Right)
         Case "n"          'supplied name"
             bldr.Append pContract.Description
         Case Else
