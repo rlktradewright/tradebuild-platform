@@ -4288,7 +4288,7 @@ End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 handleFatalErrorEx Err.number, Err.source, Err.Description, pProcName, pFailpoint
 End Sub
 
@@ -4297,7 +4297,7 @@ Private Sub handleFatalErrorEx( _
                 ByRef errSource As String, _
                 ByRef errDesc As String, _
                 ByRef pProcName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 On Error GoTo Err
 
 errSource = errSource & vbCrLf & _
