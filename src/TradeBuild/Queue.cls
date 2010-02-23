@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const S_OK = 0
+Private Const ModuleName                As String = "Queue"
 
 '================================================================================
 ' Enums
@@ -64,17 +64,6 @@ Private Type QueueEntry
     itemKey             As String
     itemRemoved         As Boolean
 End Type
-
-'================================================================================
-' External Function Declarations
-'================================================================================
-
-Private Declare Function CoCreateGuid Lib "OLE32.dll" (pGUID As GUID) As Long
-
-Private Declare Function StringFromGUID2 Lib "OLE32.dll" ( _
-                            ByRef rguid As GUID, _
-                            ByRef lpsz As GUIDString, _
-                            ByVal cchMax As Long) As Integer
 
 '================================================================================
 ' Member variables
@@ -106,19 +95,38 @@ Private mCapacityIncrement As Long
 '================================================================================
 
 Friend Property Get capacity() As Long
+Const ProcName As String = "capacity"
+On Error GoTo Err
+
 capacity = UBound(mEntries) + 1
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let capacityIncrement(ByVal value As Long)
-If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "IBTWSSP.Queue::capacityIncrement", _
+Const ProcName As String = "capacityIncrement"
+On Error GoTo Err
+
+If value < 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Capaciy increment must be >0"
 mCapacityIncrement = value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get frontKey() As String
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                                "Queue::frontKey", _
+Const ProcName As String = "frontKey"
+On Error GoTo Err
+
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "Queue empty"
 
 Do While mEntries(mFirstEntry).itemRemoved
@@ -126,19 +134,40 @@ Do While mEntries(mFirstEntry).itemRemoved
 Loop
 
 frontKey = mEntries(mFirstEntry).itemKey
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let initialCapacity(ByVal value As Long)
-If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "IBTWSSP.Queue::initialCapacity", _
+Const ProcName As String = "initialCapacity"
+On Error GoTo Err
+
+If value < 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Initial capaciy must be >0"
 ReDim mEntries(value - 1) As QueueEntry
 If mCapacityIncrement = 0 Then mCapacityIncrement = value
 mInitialised = True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get size() As Long
+Const ProcName As String = "size"
+On Error GoTo Err
+
 size = mSize
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================
@@ -146,23 +175,36 @@ End Property
 '================================================================================
 
 Friend Function addToEnd(ByVal Entry As Variant) As String
-If Not mInitialised Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                                "Queue::addToEnd", _
+Const ProcName As String = "addToEnd"
+Dim failpoint As Long
+On Error GoTo Err
+
+If Not mInitialised Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "Queue not initialised"
 If mNextEntry = mFirstEntry And mSize <> 0 Then resize
-addToEnd = generateGUIDString
+addToEnd = GenerateGUIDString
 mEntries(mNextEntry).item = Entry
 mEntries(mNextEntry).itemKey = addToEnd
 mNextEntry = (mNextEntry + 1) Mod (UBound(mEntries) + 1)
 mSize = mSize + 1
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Friend Sub remove(ByVal itemRef As Variant)
+Const ProcName As String = "remove"
 Dim i As Long
 Dim maxIndex As Long
 
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                                "Queue::remove", _
+Dim failpoint As Long
+On Error GoTo Err
+
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "Queue empty"
 
 If mFirstEntry < mNextEntry Then
@@ -190,25 +232,30 @@ ElseIf VarType(itemRef) = vbObject Then
         End If
     Next
 Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "Queue::remove", _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Argument type must be string or object"
 End If
 
-If i > maxIndex Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "Queue::remove", _
+If i > maxIndex Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "Specified item not in queue"
 
 mSize = mSize - 1
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Function removeFromFront() As Variant
+Const ProcName As String = "removeFromFront"
 Dim failpoint As Long
+On Error GoTo Err
 
-On Error GoTo err
-
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                                "Queue::removeFromFront", _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                                ProjectName & "." & ModuleName & ":" & ProcName, _
                                 "Queue empty"
 
 Do While mEntries(mFirstEntry).itemRemoved
@@ -226,42 +273,17 @@ mSize = mSize - 1
 
 Exit Function
 
-err:
-err.Raise err.Number, , "Queue::removeFromFront(failpoint=" & failpoint & "): " & err.Description
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Function generateGUID() As GUID
-Dim lReturn As Long
-
-lReturn = CoCreateGuid(generateGUID)
-
-If (lReturn <> S_OK) Then
-    err.Raise ErrorCodes.ErrRuntimeException, _
-                "Queue::generateGUID", _
-                "Can't create GUID"
-End If
-
-End Function
-
-Private Function generateGUIDString() As String
-generateGUIDString = GUIDToString(generateGUID)
-End Function
-
-Private Function GUIDToString(ByRef pGUID As GUID) As String
-Dim GUIDString As GUIDString
-Dim iChars As Integer
-
-' convert binary GUID to string form
-iChars = StringFromGUID2(pGUID, GUIDString, Len(GUIDString))
-' convert string to ANSI
-GUIDToString = StrConv(GUIDString.GUIDProper, vbFromUnicode)
-End Function
 
 Private Sub resize()
+Const ProcName As String = "resize"
 Dim i As Long
 Dim currUbound As Long
 
@@ -279,6 +301,7 @@ If mNextEntry <= mFirstEntry Then
     mNextEntry = (mNextEntry + currUbound + 1) Mod (UBound(mEntries) + 1)
 End If
 End Sub
+
 
 
 
