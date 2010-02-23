@@ -86,6 +86,8 @@ End Sub
 Private Sub IRealtimeDataReader_StartData( _
                 ByVal Contract As ContractUtils26.Contract, _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
+Const ProcName As String = "IRealtimeDataReader_StartData"
+
 
 On Error GoTo Err
 If DomEventsRequired = DOMNone Then
@@ -93,8 +95,8 @@ ElseIf DomEventsRequired = DOMByPosition Then
     mIncludeMarketDepth = True
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "IBTWSSP.RealtimeDataReader::StartData", _
-    "Only market depth by position is supported"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Only market depth by position is supported"
 End If
 
 Set mContract = Contract
@@ -105,7 +107,7 @@ If mContract.specifier.sectype = SecTypeCombo Then
                                 mHandle
 End If
 
-If mTWSAPI.connectionState = ConnConnected Then
+If mTWSAPI.ConnectionState = ConnConnected Then
     logMessage "Requesting market data for: " & mContract.specifier.ToString, "IRealtimeDataReader_StartData"
     mTickerId = mTWSAPI.RequestMarketData(mContract, Me, mDataConsumer, mIncludeMarketDepth)
 Else
@@ -113,41 +115,44 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "IRealtimeDataReader_StartData"
+handleFatalError ProcName
 
 End Sub
 
 Private Sub IRealtimeDataReader_StartMarketDepth( _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
+Const ProcName As String = "IRealtimeDataReader_StartMarketDepth"
 On Error GoTo Err
 If DomEventsRequired <> DOMByPosition Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "IBTWSSP.RealtimeDataReader::StartMarketDepth", _
-    "Only market depth by position is supported"
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Only market depth by position is supported"
 
 mIncludeMarketDepth = True
 mTWSAPI.RequestMarketDepth mTickerId
 Exit Sub
 Err:
-handleFatalError "IRealtimeDataReader_StartMarketDepth"
+handleFatalError ProcName
 End Sub
 
 Private Sub IRealtimeDataReader_StopData()
+Const ProcName As String = "IRealtimeDataReader_StopData"
 On Error GoTo Err
 mRealtimeDataServiceProvider.dataReaderFinished Me
 Finish
 Exit Sub
 Err:
-handleFatalError "IRealtimeDataReader_StopData"
+handleFatalError ProcName
 End Sub
 
 Private Sub IRealtimeDataReader_StopMarketDepth()
+Const ProcName As String = "IRealtimeDataReader_StopMarketDepth"
 On Error GoTo Err
 mIncludeMarketDepth = False
 mTWSAPI.CancelMarketDepth mTickerId
 Exit Sub
 Err:
-handleFatalError "IRealtimeDataReader_StopMarketDepth"
+handleFatalError ProcName
 End Sub
 
 Private Function IRealtimeDataReader_Supports( _
@@ -164,6 +169,7 @@ End Function
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+Const ProcName As String = "mTWSAPI_Connected"
 On Error GoTo Err
 If mReconnecting Then
     ' the market data request will be re-sent automatically by TWSAPI
@@ -174,11 +180,12 @@ Else
 End If
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_Connected"
+handleFatalError ProcName
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
+Const ProcName As String = "mTWSAPI_ConnectionToTWSClosed"
 On Error GoTo Err
 If reconnecting Then
     logMessage "Waiting for TWS re-connection: contract is: " & mContract.specifier.ToString, "mTWSAPI_ConnectionToTWSClosed"
@@ -186,7 +193,7 @@ If reconnecting Then
 End If
 Exit Sub
 Err:
-handleFatalError "mTWSAPI_ConnectionToTWSClosed"
+handleFatalError ProcName
 End Sub
 
 '================================================================================
@@ -198,6 +205,7 @@ End Sub
 '================================================================================
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -214,21 +222,22 @@ Set mContract = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Finish", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pRealtimeDataServiceProvider As IRealtimeDataServiceProvider, _
-                ByVal commonServiceConsumer As ICommonServiceConsumer, _
+                ByVal CommonServiceConsumer As ICommonServiceConsumer, _
                 ByVal realtimeDataInputServiceConsumer As IRealtimeDataInputServiceConsumer, _
                 ByVal streamingDataConsumer As IStreamingDataConsumer, _
                 ByVal pTWSAPI As TWSAPI, _
                 ByVal Handle As Long)
+Const ProcName As String = "Initialise"
 Dim failpoint As Long
 On Error GoTo Err
 
 Set mRealtimeDataServiceProvider = pRealtimeDataServiceProvider
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = realtimeDataInputServiceConsumer
 Set mDataConsumer = streamingDataConsumer
 Set mTWSAPI = pTWSAPI
@@ -237,10 +246,11 @@ mHandle = Handle
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="Initialise", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub marketDataRequestFailed(ByVal reason As String)
+Const ProcName As String = "marketDataRequestFailed"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -256,10 +266,11 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="marketDataRequestFailed", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub marketDepthRequestFailed(ByVal reason As String)
+Const ProcName As String = "marketDepthRequestFailed"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -270,7 +281,7 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.RTMarketDepthRequestFailed, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:="marketDepthRequestFailed", pNumber:=Err.number, pSource:=Err.source, pDescription:=Err.Description, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=failpoint
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 
@@ -288,7 +299,13 @@ Dim errDesc As String: errDesc = Err.Description
 On Error GoTo Err
 
 ' re-raise the error to get the calling procedure's procName into the source info
-HandleUnexpectedError pReRaise:=True, pLog:=True, pProcedureName:=pProcName, pNumber:=errNum, pSource:=errSource, pDescription:=errDesc, pProjectName:=ProjectName, pModuleName:=ModuleName, pFailpoint:=pFailpoint
+errSource = errSource & vbCrLf & _
+            ProjectName & "." & _
+            ModuleName & ":" & _
+            pProcName & _
+            IIf(pFailpoint <> "", " At " & pFailpoint, "")
+
+Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
 
