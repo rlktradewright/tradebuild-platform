@@ -22,6 +22,8 @@ vb6 /m StudiesUI\StudiesUI.vbp
 rem pause
 vb6 /m ChartTools\ChartTools.vbp
 rem pause
+vb6 /m BarFormatters\BarFormatters.vbp
+rem pause
 
 
 vb6 /m TradingDO\TradingDO.vbp
