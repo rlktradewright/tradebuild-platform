@@ -269,15 +269,15 @@ Set targetOrder = pOrderPlex.targetOrder
 orderPlexId = mTWSAPI.GetNextOrderPlexId
 
 If Not entryOrder Is Nothing Then
-    entryOrder.brokerId = orderPlexId + 1
+    entryOrder.BrokerId = orderPlexId + 1
     transmit = True
     If Not stopOrder Is Nothing Then
-        stopOrder.brokerId = orderPlexId + 2
-        If stopOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then transmit = False
+        stopOrder.BrokerId = orderPlexId + 2
+        If stopOrder.OrderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
     If Not targetOrder Is Nothing Then
-        targetOrder.brokerId = orderPlexId + 3
-        If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
+        targetOrder.BrokerId = orderPlexId + 3
+        If targetOrder.OrderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
     End If
         
     placeOrder entryOrder, transmit, "0", "", OrderModeEntry
@@ -285,18 +285,18 @@ If Not entryOrder Is Nothing Then
     If Not stopOrder Is Nothing Then
         transmit = True
         If Not targetOrder Is Nothing Then
-            If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
+            If targetOrder.OrderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
         End If
         
-        If stopOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then
+        If stopOrder.OrderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
-            placeOrder stopOrder, transmit, entryOrder.brokerId, "", OrderModeStop
+            placeOrder stopOrder, transmit, entryOrder.BrokerId, "", OrderModeStop
         End If
     End If
     
     If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then
-            placeOrder targetOrder, True, entryOrder.brokerId, "", OrderModeTarget
+        If targetOrder.OrderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then
+            placeOrder targetOrder, True, entryOrder.BrokerId, "", OrderModeTarget
         End If
     End If
     
@@ -342,13 +342,13 @@ Case OrderStatusFilled, _
         OrderStatusCancelled
     parentId = "0"
 Case Else
-    parentId = pOrderPlex.entryOrder.brokerId
+    parentId = pOrderPlex.entryOrder.BrokerId
 End Select
 
-If pOrderPlex.entryOrder.quantityRemaining = 0 Then parentId = "0"
+If pOrderPlex.entryOrder.QuantityRemaining = 0 Then parentId = "0"
 
-If Not pOrderPlex.stopOrder Is Nothing Then ocaGroup = pOrderPlex.stopOrder.providerProperties.GetParameterValue("OCA group")
-If ocaGroup = "" And Not pOrderPlex.targetOrder Is Nothing Then ocaGroup = pOrderPlex.targetOrder.providerProperties.GetParameterValue("OCA group")
+If Not pOrderPlex.stopOrder Is Nothing Then ocaGroup = pOrderPlex.stopOrder.ProviderProperties.GetParameterValue("OCA group")
+If ocaGroup = "" And Not pOrderPlex.targetOrder Is Nothing Then ocaGroup = pOrderPlex.targetOrder.ProviderProperties.GetParameterValue("OCA group")
 If ocaGroup = "" Then ocaGroup = GenerateGUIDString
 
 If entryOrderChanged Then
@@ -361,7 +361,7 @@ If targetOrderChanged Then
     placeOrder pOrderPlex.targetOrder, True, parentId, ocaGroup, OrderModeTarget
 End If
 If closeoutOrderChanged Then
-    placeOrder pOrderPlex.closeoutOrder, True, "0", "", OrderModeCloseout
+    placeOrder pOrderPlex.CloseoutOrder, True, "0", "", OrderModeCloseout
 End If
 Exit Sub
 Err:
@@ -394,11 +394,11 @@ On Error GoTo Err
 ocaGroup = GenerateGUIDString
 
 Set stopOrder = pOrderPlex.stopOrder
-stopOrder.brokerId = ""   ' force a new id to be allocated
+stopOrder.BrokerId = ""   ' force a new id to be allocated
 placeOrder stopOrder, False, "0", ocaGroup, OrderModeStop
 
 Set targetOrder = pOrderPlex.targetOrder
-targetOrder.brokerId = "" ' force a new id to be allocated
+targetOrder.BrokerId = "" ' force a new id to be allocated
 placeOrder targetOrder, True, "0", ocaGroup, OrderModeTarget
 Exit Sub
 Err:
@@ -414,7 +414,7 @@ Dim ocaGroup As String
 On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
-stopOrder.brokerId = ""     ' force a new id to be allocated
+stopOrder.BrokerId = ""     ' force a new id to be allocated
 If targetOrder Is Nothing Then
     placeOrder stopOrder, True, "0", "", OrderModeStop
 Else
@@ -436,7 +436,7 @@ Dim ocaGroup As String
 On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
-targetOrder.brokerId = ""   ' force a new id to be allocated
+targetOrder.BrokerId = ""   ' force a new id to be allocated
 If stopOrder Is Nothing Then
     placeOrder targetOrder, True, "0", "", OrderModeTarget
 Else
@@ -593,6 +593,22 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
+Friend Sub OrderDeferred( _
+                ByVal orderID As String, _
+                ByVal message As String)
+Const ProcName As String = "OrderDeferred"
+
+Dim failpoint As Long
+On Error GoTo Err
+
+mServiceConsumer.notifyEvent StandardSPEventCodes.LOOrderDeferred, message, mHandle
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Sub
+
 Friend Sub OrderReport( _
                 ByVal lOrderReport As OrderReport)
 Const ProcName As String = "OrderReport"
@@ -634,7 +650,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 logMessage "Cancel " & orderMode & " order: " & _
-            "broker id=" & pOrder.brokerId & _
+            "broker id=" & pOrder.BrokerId & _
             "; TradeBuild id=" & pOrder.tradebuildId, _
             "cancelOrder"
 If pOrder.status = OrderStatusPendingSubmit Then
@@ -642,10 +658,10 @@ If pOrder.status = OrderStatusPendingSubmit Then
     ' an orderStatus or openOrder notification has been received from TWS,
     ' TWS sometimes just cancels it without ever sending either of these,
     ' so we need to generate one as a backstop
-    mTWSAPI.GenerateDeferredOrderCancelNotification pOrder.brokerId, mTWSAPI.clientID
+    mTWSAPI.GenerateDeferredOrderCancelNotification pOrder.BrokerId, mTWSAPI.clientID
 End If
 
-mTWSAPI.cancelOrder pOrder.brokerId
+mTWSAPI.cancelOrder pOrder.BrokerId
 
 
 Exit Sub
@@ -672,7 +688,7 @@ End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 Dim errNum As Long: errNum = Err.number
 Dim errSource As String: errSource = Err.source
 Dim errDesc As String: errDesc = Err.Description
@@ -714,7 +730,7 @@ On Error GoTo Err
 
 gLogger.Log LogLevelNormal, _
             "Place " & orderMode & " order: " & _
-            "broker id=" & pOrder.brokerId & _
+            "broker id=" & pOrder.BrokerId & _
             "; TradeBuild id=" & pOrder.tradebuildId
 mTWSAPI.placeOrder Me, pOrder, transmit, parentId, ocaGroup, ""
 If pOrder.status = OrderStatusCreated Then

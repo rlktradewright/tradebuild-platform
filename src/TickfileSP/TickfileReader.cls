@@ -547,7 +547,7 @@ End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDesc As String: errDesc = Err.Description

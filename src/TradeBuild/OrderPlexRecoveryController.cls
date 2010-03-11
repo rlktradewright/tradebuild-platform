@@ -44,6 +44,9 @@ Implements TaskCompletionListener
 
 Private Const ModuleName                            As String = "OrderPlexRecoveryCtlr"
 
+Private Const OrderInfoDelete                       As String = "DELETE"
+Private Const OrderInfoData                         As String = "DATA"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -61,6 +64,11 @@ Private mOrderIdToOrderPlexRecoverer                As Collection
 
 Private mStartRecoveryFrom                          As Date
 
+Private mOrderPersistenceDataGroups                 As EnumerableCollection
+
+Private mExecutionReportsComplete                   As Boolean
+Private mOrderReportsComplete                       As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -69,6 +77,7 @@ Private Sub Class_Initialize()
 Set mOrderPlexRecoverers = New Collection
 Set mOrderIdMap = New OrderIdMap
 Set mOrderIdToOrderPlexRecoverer = New Collection
+Set mOrderPersistenceDataGroups = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -76,31 +85,30 @@ End Sub
 '@================================================================================
 
 Private Sub IOrderPersistenceServiceConsumer_PersistedOrderInfo( _
-                ByVal pTimestamp As Date, _
-                pKey As String, _
                 orderInfo As String)
 
 Const ProcName As String = "IOrderPersistenceServiceConsumer_PersistedOrderInfo"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Processing persisted order info", pMsgQualifier:=orderInfo, pProcName:=ProcName, pLogLevel:=LogLevelDetail
+Dim opItem As OrderPersistenceItem
+ParseJSON orderInfo, opItem
 
-mOrderPersistenceServiceProvider.SaveOrderInfo pTimestamp, pKey, orderInfo
-
-Dim obj As Object
-ParseJSON orderInfo, obj
-
-If TypeOf obj Is OrderPlexSummary Then
-    processOrderPlexSummary obj
-ElseIf TypeOf obj Is OrderSummary Then
-    processOrderSummary obj
-ElseIf TypeOf obj Is Execution Then
-    processExecution obj
-Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Unknown order info type"
+If opItem.ItemType = OrderInfoData Then
+    Dim opg As OrderPersistenceDataGroup
+    On Error Resume Next
+    Set opg = mOrderPersistenceDataGroups.Item(opItem.Key)
+    On Error GoTo Err
+    
+    If opg Is Nothing Then
+        Set opg = New OrderPersistenceDataGroup
+        mOrderPersistenceDataGroups.Add opg, opItem.Key
+    End If
+    opg.Add opItem
+ElseIf opItem.ItemType = OrderInfoDelete Then
+    On Error Resume Next
+    mOrderPersistenceDataGroups.Remove opItem.Key
+    On Error GoTo Err
 End If
 
 Exit Sub
@@ -111,25 +119,27 @@ End Sub
 
 Private Sub IOrderPersistenceServiceConsumer_PersistedOrderInfoEnd()
 Dim opr As OrderPlexRecoverer
+Dim opItem As OrderPersistenceItem
 
 Const ProcName As String = "IOrderPersistenceServiceConsumer_PersistedOrderInfoEnd"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Persisted order info processing completed", pProcName:=ProcName
-'For Each opr In mOrderPlexRecoverers
-'    opr.PersistedOrderInfoProcessingComplete
-'Next
+mOrderPersistenceServiceProvider.StartSession gTB.sessionId
+
+Do While getNextOrderPersistenceItem(opItem)
+    Dim opItemJSON As String
+    opItemJSON = opItem.ToJSON
+    logMessage "Processing persisted order info", pMsgQualifier:=opItemJSON, pProcName:=ProcName, pLogLevel:=LogLevelDetail
+
+    If processOrderPersistenceItem(opItem) Then
+        mOrderPersistenceServiceProvider.SaveOrderInfo opItemJSON
+    End If
+Loop
 
 If Not mOrderSubmissionSrvcProvider Is Nothing Then
     mOrderSubmissionSrvcProvider.StartOrderRecovery Me, mStartRecoveryFrom
 End If
-
-'!!!!!!!!!!!!!!!!!!!!!!! more here?? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-' eg do we want to delay the next statement until we know we've had all
-' the OrderReports etc from TWS?
-
-'mOrderPersistenceServiceProvider.StartSession
 
 Exit Sub
 
@@ -148,8 +158,17 @@ Dim failpoint As String
 On Error GoTo Err
 
 Dim opr As OrderPlexRecoverer
+Dim tbId As String
 
-pExecutionReport.OrderTradeBuildId = mOrderIdMap.GetTradeBuildId(pExecutionReport.OrderBrokerId)
+tbId = mOrderIdMap.GetTradeBuildId(pExecutionReport.OrderBrokerId)
+
+If tbId = "" Then
+    ' this can happen if the order recovery info has been deleted, so just
+    ' ignore
+    Exit Sub
+End If
+
+pExecutionReport.OrderTradeBuildId = tbId
 Set opr = mOrderIdToOrderPlexRecoverer.Item(pExecutionReport.OrderTradeBuildId)
 
 opr.NotifyExecutionReport pExecutionReport
@@ -157,11 +176,19 @@ opr.NotifyExecutionReport pExecutionReport
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then
-    ' this can happen if the order recovery info has been deleted, so just
-    ' ignore
-    Exit Sub
-End If
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub IOrderRecoveryServiceConsumer_ExecutionReportsComplete()
+Const ProcName As String = "IOrderRecoveryServiceConsumer_ExecutionReportsComplete"
+On Error GoTo Err
+
+mExecutionReportsComplete = True
+If mOrderReportsComplete Then FinishRecovery
+
+Exit Sub
+
+Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
@@ -174,8 +201,8 @@ On Error GoTo Err
 
 Dim opr As OrderPlexRecoverer
 
-pOrderReport.tradeBuildId = mOrderIdMap.GetTradeBuildId(pOrderReport.BrokerId)
-Set opr = mOrderIdToOrderPlexRecoverer.Item(pOrderReport.tradeBuildId)
+pOrderReport.TradeBuildId = mOrderIdMap.GetTradeBuildId(pOrderReport.BrokerId)
+Set opr = mOrderIdToOrderPlexRecoverer.Item(pOrderReport.TradeBuildId)
 
 opr.NotifyOrderReport pOrderReport
 
@@ -187,6 +214,19 @@ If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then
     ' ignore
     Exit Sub
 End If
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub IOrderRecoveryServiceConsumer_OrderReportsComplete()
+Const ProcName As String = "IOrderRecoveryServiceConsumer_OrderReportsComplete"
+On Error GoTo Err
+
+mOrderReportsComplete = True
+If mExecutionReportsComplete Then FinishRecovery
+
+Exit Sub
+
+Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
@@ -226,6 +266,25 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub DeleteRecoveryInfo( _
+                ByRef pKey As String)
+Const ProcName As String = "SaveRecoveryInfo"
+On Error GoTo Err
+
+If Not mOrderPersistenceServiceProvider Is Nothing Then
+    Dim opItem As New OrderPersistenceItem
+    opItem.ItemType = OrderInfoDelete
+    opItem.Key = pKey
+    opItem.Timestamp = GetTimestamp
+    mOrderPersistenceServiceProvider.SaveOrderInfo opItem.ToJSON
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Friend Sub RecoverOrders(ByVal sessionName As String)
 Const ProcName As String = "RecoverOrders"
 Dim failpoint As String
@@ -241,8 +300,12 @@ If mOrderPersistenceServiceProvider Is Nothing Then
     setupDefaultOrderPersistenceSP
 End If
 
+logMessage "Persisted order info processing started", pProcName:=ProcName
+
 mOrderPersistenceServiceProvider.RequestOrderInfo sessionName
 mRecovered = True
+
+logMessage "Persisted order info processing completed", pProcName:=ProcName
 
 Exit Sub
 
@@ -253,10 +316,29 @@ End Sub
 
 Friend Sub SaveRecoveryInfo( _
                 ByRef pKey As String, _
-                ByRef info As String)
-If Not mOrderPersistenceServiceProvider Is Nothing Then
-    mOrderPersistenceServiceProvider.SaveOrderInfo GetTimestamp, pKey, info
+                ByRef info As Object)
+Const ProcName As String = "SaveRecoveryInfo"
+On Error GoTo Err
+
+If pKey = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "pKey cannot be blank"
 End If
+
+If Not mOrderPersistenceServiceProvider Is Nothing Then
+    Dim opItem As New OrderPersistenceItem
+    opItem.Data = info
+    opItem.ItemType = OrderInfoData
+    opItem.Key = pKey
+    opItem.Timestamp = GetTimestamp
+    mOrderPersistenceServiceProvider.SaveOrderInfo opItem.ToJSON
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -291,6 +373,87 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Private Sub FinishRecovery()
+Static lFinished As Boolean
+
+Dim opr As OrderPlexRecoverer
+
+Const ProcName As String = "finishRecovery"
+On Error GoTo Err
+
+If lFinished Then Exit Sub
+lFinished = True
+
+For Each opr In mOrderPlexRecoverers
+    opr.FinishRecovery
+Next
+
+Set mOrderPlexRecoverers = Nothing
+
+Dim en As Enumerator
+Dim pm As PositionManager
+Set en = gGetPositionManagersEnumerator
+Do While en.MoveNext
+    Set pm = en.current
+    pm.FinishRecovery
+Loop
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Function getNextOrderPersistenceDataGroupEnumerator( _
+                ByRef en As Enumerator) As Boolean
+Static orderPersistenceDataGroupsEn As Enumerator
+Dim opg As OrderPersistenceDataGroup
+
+Const ProcName As String = "getNextOrderPersistenceDataGroupEnumerator"
+
+Dim failpoint As String
+On Error GoTo Err
+
+If orderPersistenceDataGroupsEn Is Nothing Then Set orderPersistenceDataGroupsEn = mOrderPersistenceDataGroups.Enumerator
+
+If Not orderPersistenceDataGroupsEn.MoveNext Then Exit Function
+
+Set opg = orderPersistenceDataGroupsEn.current
+Set en = opg.Enumerator
+
+getNextOrderPersistenceDataGroupEnumerator = True
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function getNextOrderPersistenceItem( _
+                ByRef pOpItem As OrderPersistenceItem) As Boolean
+Static opgEn As Enumerator
+
+Const ProcName As String = "getNextOrderPersistenceItem"
+Dim failpoint As String
+On Error GoTo Err
+
+If opgEn Is Nothing Then
+    If Not getNextOrderPersistenceDataGroupEnumerator(opgEn) Then Exit Function
+End If
+
+Do While Not opgEn.MoveNext
+    If Not getNextOrderPersistenceDataGroupEnumerator(opgEn) Then Exit Function
+Loop
+
+Set pOpItem = opgEn.current
+
+getNextOrderPersistenceItem = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
 Private Sub logMessage( _
                 ByRef pMsg As String, _
                 ByRef pProcName As String, _
@@ -315,6 +478,33 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function processOrderPersistenceItem( _
+                ByVal pOpItem As OrderPersistenceItem) As Boolean
+Const ProcName As String = "processOrderPersistenceItem"
+On Error GoTo Err
+
+processOrderPersistenceItem = True
+
+If TypeOf pOpItem.Data Is OrderPlexSummary Then
+    processOrderPlexSummary pOpItem.Data
+ElseIf TypeOf pOpItem.Data Is OrderSummary Then
+    If Not processOrderSummary(pOpItem.Data) Then processOrderPersistenceItem = False
+ElseIf TypeOf pOpItem.Data Is Execution Then
+    processExecution pOpItem.Data
+ElseIf TypeOf pOpItem.Data Is PositionManagerSummary Then
+    processPositionManagerSummary pOpItem.Data, pOpItem.Key
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Unknown order info type"
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 Private Sub processOrderPlexSummary(ByVal ops As OrderPlexSummary)
 Const ProcName As String = "processOrderPlexSummary"
@@ -346,18 +536,54 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub processOrderSummary(ByVal os As OrderSummary)
+Private Function processOrderSummary(ByVal os As OrderSummary) As Boolean
 Const ProcName As String = "processOrderSummary"
 Dim opr As OrderPlexRecoverer
 
 Dim failpoint As String
 On Error GoTo Err
 
+On Error Resume Next
 Set opr = mOrderIdToOrderPlexRecoverer.Item(os.Id)
+On Error GoTo Err
+
+If opr Is Nothing Then
+    ' this can happen because order cancellations for stop/target orders
+    ' may be received after the execution for the target/stop order
+    ' have been received. If the target/stop order made the position
+    ' flat, then a 'DELETE' item would have been recorded, but only those
+    ' items recorded before the delete are actually delete.
+    Exit Function
+End If
 
 mOrderIdMap.Add os.Id, os.BrokerId
 
 opr.UpdateOrder os
+
+processOrderSummary = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Sub processPositionManagerSummary( _
+                ByVal pms As PositionManagerSummary, _
+                ByRef pKey As String)
+Const ProcName As String = "processPositionManagerSummary"
+Dim pm As PositionManager
+
+Dim failpoint As String
+On Error GoTo Err
+
+Set pm = gGetPositionManager(pKey)
+If pm Is Nothing Then
+    Set pm = gCreatePositionManager(pKey, gTB.WorkSpaces.Item(pms.WorkspaceName))
+    pm.StartRecovery
+End If
+
+pm.SyncToSummary pms
 
 Exit Sub
 
@@ -372,7 +598,7 @@ On Error GoTo Err
 
 gTB.ServiceProviders.Add ProjectName & ".OrderPersistenceSP", _
                         True, _
-                        "RecoveryFilePath=" & gTB.AppSettingsFolder
+                        "RecoveryFilePath=" & ApplicationSettingsFolder
 
 Exit Sub
 
@@ -388,7 +614,7 @@ On Error GoTo Err
 
 If Not opr.orderPlex.CloseoutOrder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.CloseoutOrder.Id
 If Not opr.orderPlex.EntryOrder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.EntryOrder.Id
-If Not opr.orderPlex.stoporder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.stoporder.Id
+If Not opr.orderPlex.Stoporder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.Stoporder.Id
 If Not opr.orderPlex.TargetOrder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.TargetOrder.Id
 
 Exit Sub

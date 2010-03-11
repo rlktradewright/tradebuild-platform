@@ -104,6 +104,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Public Function gGetPositionManagersEnumerator() As Enumerator
+Const ProcName As String = "gGetPositionManagersEnumerator"
+On Error GoTo Err
+
+Set gGetPositionManagersEnumerator = mPositionManagers.Enumerator
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
 Public Function gGetPositionManagerSimulated( _
                 ByVal pKey As String) As PositionManager
 Const ProcName As String = "gGetPositionManagerSimulated"
@@ -113,6 +125,18 @@ On Error GoTo Err
 On Error Resume Next
 Set gGetPositionManagerSimulated = mPositionManagersSimulated.Item(pKey)
 On Error GoTo Err
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Public Function gGetPositionManagersSimulatedEnumerator() As Enumerator
+Const ProcName As String = "gGetPositionManagersSimulatedEnumerator"
+On Error GoTo Err
+
+Set gGetPositionManagersSimulatedEnumerator = mPositionManagersSimulated.Enumerator
 
 Exit Function
 

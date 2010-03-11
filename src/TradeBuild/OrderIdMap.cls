@@ -75,9 +75,17 @@ End Sub
 Friend Sub Add( _
                 ByRef pTradeBuildId As String, _
                 ByRef pBrokerId As String)
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 On Error Resume Next
 mTradeBuildIds.Add pTradeBuildId, pBrokerId
 mBrokerIds.Add pBrokerId, pTradeBuildId
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function GetBrokerId( _
@@ -86,7 +94,9 @@ Const ProcName As String = "GetBrokerId"
 Dim failpoint As String
 On Error GoTo Err
 
+On Error Resume Next
 GetBrokerId = mBrokerIds.Item(pTradeBuildId)
+On Error GoTo Err
 
 Exit Function
 
@@ -100,8 +110,10 @@ Const ProcName As String = "GetTradeBuildId"
 Dim failpoint As String
 On Error GoTo Err
 
+On Error Resume Next
 GetTradeBuildId = mTradeBuildIds.Item(pBrokerId)
-
+On Error GoTo Err
+    
 Exit Function
 
 Err:

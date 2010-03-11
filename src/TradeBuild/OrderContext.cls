@@ -797,8 +797,11 @@ On Error GoTo Err
 
 pOrderPlex.Ticker = mTicker
 pOrderPlex.orderSubmitter = mOrderSubmitter
-mActiveOrderPlexes.Add pOrderPlex
-
+If pOrderPlex.IsComplete Then
+    NotifyOrderPlexClosed pOrderPlex
+Else
+    mActiveOrderPlexes.Add pOrderPlex
+End If
 pOrderPlex.Activate
 
 Exit Sub
@@ -895,7 +898,7 @@ Public Function Buy(ByRef number As Long, _
                     ByVal targetPrice As Double, _
                     ByVal targetOffset As Long, _
                     ByVal targetTriggerPrice As Double, _
-                    Optional ByVal cancelPrice As Double, _
+                    Optional ByVal CancelPrice As Double, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
@@ -922,7 +925,7 @@ GLogLogger.Log pMsg:="Buy", _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
-                "; cancelPrice=" & cancelPrice & _
+                "; cancelPrice=" & CancelPrice & _
                 "; entryTIF=" & GOrderTIFToString(entryTIF) & _
                 "; stopTIF=" & GOrderTIFToString(stopTIF) & _
                 "; targetTIF=" & GOrderTIFToString(targetTIF) & _
@@ -947,10 +950,10 @@ Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 targetTriggerPrice)
                                 
 Buy.EntryOrder.TimeInForce = entryTIF
-If Not Buy.stoporder Is Nothing Then Buy.stoporder.TimeInForce = stopTIF
+If Not Buy.Stoporder Is Nothing Then Buy.Stoporder.TimeInForce = stopTIF
 If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = targetTIF
 
-ExecuteOrderPlex Buy, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
+ExecuteOrderPlex Buy, True, CancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
@@ -1066,7 +1069,7 @@ Friend Function CreateOrderPlex(ByVal action As OrderActions, _
                     
 Dim lOrderPlex As orderPlex
 Dim EntryOrder As Order
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 Dim lEntryPrice As Double
 Dim lTriggerPrice As Double
@@ -1214,18 +1217,18 @@ lEntryPrice = EntryOrder.LimitPrice
 lTriggerPrice = EntryOrder.TriggerPrice
 
 If StopOrderType <> StopOrderTypeNone Then
-    Set stoporder = lOrderPlex.createStopOrder
-    stoporder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
-    stoporder.Quantity = number
+    Set Stoporder = lOrderPlex.CreateStopOrder
+    Stoporder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
+    Stoporder.Quantity = number
     
-    stoporder.OrderType = GStopOrderTypeToOrderType(StopOrderType)
+    Stoporder.OrderType = GStopOrderTypeToOrderType(StopOrderType)
     Select Case StopOrderType
     Case StopOrderTypeStop
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The stopTrigger price must not be zero for this order type"
         
-        stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        Stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
     Case StopOrderTypeStopLimit
         If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
@@ -1234,23 +1237,23 @@ If StopOrderType <> StopOrderTypeNone Then
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "The stopLimit price must not be zero for this order type"
         
-        stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
-        stoporder.LimitPrice = stopLimitPrice
+        Stoporder.TriggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        Stoporder.LimitPrice = stopLimitPrice
     Case StopOrderTypeBid
-        stoporder.TriggerPrice = mTicker.BidPrice + stopOffset * mTickSize
+        Stoporder.TriggerPrice = mTicker.BidPrice + stopOffset * mTickSize
         
     Case StopOrderTypeAsk
-        stoporder.TriggerPrice = mTicker.AskPrice + stopOffset * mTickSize
+        Stoporder.TriggerPrice = mTicker.AskPrice + stopOffset * mTickSize
     Case StopOrderTypeLast
-        stoporder.TriggerPrice = mTicker.TradePrice + stopOffset * mTickSize
+        Stoporder.TriggerPrice = mTicker.TradePrice + stopOffset * mTickSize
     Case StopOrderTypeAuto
-        stoporder.Offset = stopOffset * mTickSize
+        Stoporder.Offset = stopOffset * mTickSize
     End Select
-    lStopPrice = stoporder.TriggerPrice
+    lStopPrice = Stoporder.TriggerPrice
 End If
 
 If TargetOrderType <> TargetOrderTypeNone Then
-    Set TargetOrder = lOrderPlex.createTargetOrder
+    Set TargetOrder = lOrderPlex.CreateTargetOrder
     TargetOrder.action = IIf(action = ActionBuy, OrderActions.ActionSell, OrderActions.ActionBuy)
     TargetOrder.Quantity = number
     
@@ -1354,7 +1357,7 @@ End Function
 
 Public Sub ExecuteOrderPlex(ByVal pOrderPlex As orderPlex, _
                     Optional checkMoneyManagement As Boolean, _
-                    Optional cancelPrice As Double, _
+                    Optional CancelPrice As Double, _
                     Optional StopStrategy As StopManagementStrategy, _
                     Optional ExitStrategy As PositionManagementStrategy, _
                     Optional ScalingStrategy As PositionManagementStrategy)
@@ -1421,7 +1424,8 @@ GLogOrder "Execute order plex " & _
             Me
 
 mActiveOrderPlexes.Add pOrderPlex
-pOrderPlex.Execute cancelPrice
+mPositionManager.OrderPlexes.Add pOrderPlex
+pOrderPlex.Execute CancelPrice
 
 Exit Sub
 
@@ -1588,21 +1592,25 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Function orderPlexClosed( _
+Friend Function NotifyOrderPlexClosed( _
                 ByVal pOrderPlex As orderPlex)
-Const ProcName As String = "orderPlexClosed"
+Const ProcName As String = "NotifyOrderPlexClosed"
 Dim failpoint As Long
 On Error GoTo Err
 
-mClosedOrderPlexes.Add pOrderPlex
+On Error Resume Next
 mActiveOrderPlexes.Remove pOrderPlex
-mCompletedSize = mCompletedSize + pOrderPlex.size
-' now check if there are any active order plexes left -
-' if not, need to tell the Position Manager
-If mActiveOrderPlexes.Count = 0 Then
-    mPositionManager.NotifyOrderContextInactive Me
-End If
+On Error GoTo Err
 
+If Not mClosedOrderPlexes.Contains(pOrderPlex.Key) Then
+    mClosedOrderPlexes.Add pOrderPlex
+    mCompletedSize = mCompletedSize + pOrderPlex.size
+    ' now check if there are any active order plexes left -
+    ' if not, need to tell the Position Manager
+    If mActiveOrderPlexes.Count = 0 Then
+        mPositionManager.NotifyOrderContextInactive Me
+    End If
+End If
 Exit Function
 
 Err:
@@ -1622,7 +1630,7 @@ Public Function Sell(ByRef number As Long, _
                     ByVal targetPrice As Double, _
                     ByVal targetOffset As Long, _
                     ByVal targetTriggerPrice As Double, _
-                    Optional ByVal cancelPrice As Double, _
+                    Optional ByVal CancelPrice As Double, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
@@ -1649,7 +1657,7 @@ GLogLogger.Log pMsg:="Sell", _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
-                "; cancelPrice=" & cancelPrice & _
+                "; cancelPrice=" & CancelPrice & _
                 "; entryTIF=" & GOrderTIFToString(entryTIF) & _
                 "; stopTIF=" & GOrderTIFToString(stopTIF) & _
                 "; targetTIF=" & GOrderTIFToString(targetTIF) & _
@@ -1674,10 +1682,10 @@ Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 targetTriggerPrice)
 
 Sell.EntryOrder.TimeInForce = entryTIF
-If Not Sell.stoporder Is Nothing Then Sell.stoporder.TimeInForce = stopTIF
+If Not Sell.Stoporder Is Nothing Then Sell.Stoporder.TimeInForce = stopTIF
 If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = targetTIF
 
-ExecuteOrderPlex Sell, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
+ExecuteOrderPlex Sell, True, CancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
@@ -1730,7 +1738,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If IsReady Then
-    mPermittedOrderAttributes = mOrderSubmitter.permittedOrderAttributes
+    mPermittedOrderAttributes = mOrderSubmitter.PermittedOrderAttributes
     mPermittedOrderTifs = mOrderSubmitter.PermittedOrderTifs
     mPermittedOrderTypes = mOrderSubmitter.permittedOrderTypes
     mPermittedStopTriggerMethods = mOrderSubmitter.permittedStopTriggerMethods
@@ -1752,7 +1760,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 currID = currID + 1
-nextPlexKey = gTB.SessionID & "/" & currID
+nextPlexKey = gTB.sessionId & "/" & currID
 
 Exit Function
 

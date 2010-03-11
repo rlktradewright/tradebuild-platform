@@ -46,14 +46,14 @@ Private Const ModuleName                As String = "PositionManagers"
 ' Member variables
 '@================================================================================
 
-Private mPositionManagers As Collection
+Private mPositionManagers As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mPositionManagers = New Collection
+Set mPositionManagers = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -78,6 +78,10 @@ Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Set Enumerator = mPositionManagers.Enumerator
 End Property
 
 Public Property Get Item(ByVal pKey As String) As PositionManager
@@ -116,7 +120,7 @@ Const ProcName As String = "NewEnum"
 
 On Error GoTo Err
 
-Set NewEnum = mPositionManagers.[_NewEnum]
+Set NewEnum = mPositionManagers.Enumerator
 
 Exit Function
 

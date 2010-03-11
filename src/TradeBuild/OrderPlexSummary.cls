@@ -81,6 +81,11 @@ Private mCreationTime As Date
 
 Private mPreventUnprotectedPosition As Boolean
 
+Private mCumBuyPrice As Double
+Private mCumSellPrice As Double
+
+Private mIsDirty As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -102,6 +107,7 @@ End Function
 '@================================================================================
 
 Public Property Let cancelPrice(ByVal value As Double)
+If mCancelPrice <> value Then setDirty
 mCancelPrice = value
 End Property
 
@@ -110,6 +116,7 @@ cancelPrice = mCancelPrice
 End Property
 
 Public Property Let CancelTime(ByVal value As Date)
+If mCancelTime <> value Then setDirty
 mCancelTime = value
 End Property
 
@@ -118,6 +125,7 @@ CancelTime = mCancelTime
 End Property
 
 Public Property Let CloseoutOrderId(ByVal value As String)
+If CloseoutOrderId <> value Then setDirty
 mCloseoutOrderId = value
 End Property
 
@@ -126,6 +134,7 @@ CloseoutOrderId = mCloseoutOrderId
 End Property
 
 Public Property Let CreationTime(ByVal value As Date)
+If mCreationTime <> value Then setDirty
 mCreationTime = value
 End Property
 
@@ -133,7 +142,26 @@ Public Property Get CreationTime() As Date
 CreationTime = mCreationTime
 End Property
 
+Public Property Let CumBuyPrice(ByVal value As Double)
+If mCumBuyPrice <> value Then setDirty
+mCumBuyPrice = value
+End Property
+
+Public Property Get CumBuyPrice() As Double
+CumBuyPrice = mCumBuyPrice
+End Property
+
+Public Property Let CumSellPrice(ByVal value As Double)
+If mCumSellPrice <> value Then setDirty
+mCumSellPrice = value
+End Property
+
+Public Property Get CumSellPrice() As Double
+CumSellPrice = mCumSellPrice
+End Property
+
 Public Property Let Description(ByVal value As String)
+If mDescription <> value Then setDirty
 mDescription = value
 End Property
 
@@ -142,6 +170,7 @@ Description = mDescription
 End Property
 
 Public Property Let DrawdownNotificationThreshold(ByVal value As Currency)
+If mDrawdownNotificationThreshold <> value Then setDirty
 mDrawdownNotificationThreshold = value
 End Property
 
@@ -150,6 +179,7 @@ DrawdownNotificationThreshold = mDrawdownNotificationThreshold
 End Property
 
 Public Property Let EntryOrderId(ByVal value As String)
+If mEntryOrderId <> value Then setDirty
 mEntryOrderId = value
 End Property
 
@@ -158,6 +188,7 @@ EntryOrderId = mEntryOrderId
 End Property
 
 Public Property Let EntryReason(ByVal value As String)
+If mEntryReason <> value Then setDirty
 mEntryReason = value
 End Property
 
@@ -165,7 +196,12 @@ Public Property Get EntryReason() As String
 EntryReason = mEntryReason
 End Property
 
+Public Property Get IsDirty() As Boolean
+IsDirty = mIsDirty
+End Property
+
 Public Property Let Key(ByVal value As String)
+If mKey <> value Then setDirty
 mKey = value
 End Property
 
@@ -174,6 +210,7 @@ Key = mKey
 End Property
 
 Public Property Let LossNotificationThreshold(ByVal value As Currency)
+If mLossNotificationThreshold <> value Then setDirty
 mLossNotificationThreshold = value
 End Property
 
@@ -182,6 +219,7 @@ LossNotificationThreshold = mLossNotificationThreshold
 End Property
 
 Public Property Let MaxProfit(ByVal value As Currency)
+If mMaxProfit <> value Then setDirty
 mMaxProfit = value
 End Property
 
@@ -190,6 +228,7 @@ MaxProfit = mMaxProfit
 End Property
 
 Public Property Let PreventUnprotectedPosition(ByVal value As Boolean)
+If mPreventUnprotectedPosition <> value Then setDirty
 mPreventUnprotectedPosition = value
 End Property
 
@@ -198,6 +237,7 @@ PreventUnprotectedPosition = mPreventUnprotectedPosition
 End Property
 
 Public Property Let ProfitNotificationThreshold(ByVal value As Currency)
+If mProfitNotificationThreshold <> value Then setDirty
 mProfitNotificationThreshold = value
 End Property
 
@@ -206,6 +246,7 @@ ProfitNotificationThreshold = mProfitNotificationThreshold
 End Property
 
 Public Property Let size(ByVal value As Long)
+If mSize <> value Then setDirty
 mSize = value
 End Property
 
@@ -214,6 +255,7 @@ size = mSize
 End Property
 
 Public Property Let State(ByVal value As OrderPlexStateCodes)
+If mState <> value Then setDirty
 mState = value
 End Property
 
@@ -222,6 +264,7 @@ State = mState
 End Property
 
 Public Property Let StopOrderId(ByVal value As String)
+If mStopOrderId <> value Then setDirty
 mStopOrderId = value
 End Property
 
@@ -230,6 +273,7 @@ StopOrderId = mStopOrderId
 End Property
 
 Public Property Let StopReason(ByVal value As String)
+If mStopReason <> value Then setDirty
 mStopReason = value
 End Property
 
@@ -238,6 +282,7 @@ StopReason = mStopReason
 End Property
 
 Public Property Let TargetOrderId(ByVal value As String)
+If mTargetOrderId <> value Then setDirty
 mTargetOrderId = value
 End Property
 
@@ -246,6 +291,7 @@ TargetOrderId = mTargetOrderId
 End Property
 
 Public Property Let TargetReason(ByVal value As String)
+If mTargetReason <> value Then setDirty
 mTargetReason = value
 End Property
 
@@ -254,6 +300,7 @@ TargetReason = mTargetReason
 End Property
 
 Public Property Let TickerKey(ByVal value As String)
+If mTickerKey <> value Then setDirty
 mTickerKey = value
 End Property
 
@@ -262,6 +309,7 @@ TickerKey = mTickerKey
 End Property
 
 Public Property Let WorkspaceName(ByVal value As String)
+If mWorkspaceName <> value Then setDirty
 mWorkspaceName = value
 End Property
 
@@ -272,6 +320,10 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub setClean()
+mIsDirty = False
+End Sub
 
 Friend Function ToJSON() As String
 Dim jb As JSONBuilder
@@ -293,6 +345,12 @@ jb.EncodeValue mCloseoutOrderId
 
 jb.EncodeName "CreationTime"
 jb.EncodeValue mCreationTime
+
+jb.EncodeName "CumBuyPrice"
+jb.EncodeValue mCumBuyPrice
+
+jb.EncodeName "CumSellPrice"
+jb.EncodeValue mCumSellPrice
 
 jb.EncodeName "Description"
 jb.EncodeValue mDescription
@@ -353,4 +411,9 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub setDirty()
+mIsDirty = True
+End Sub
+
 

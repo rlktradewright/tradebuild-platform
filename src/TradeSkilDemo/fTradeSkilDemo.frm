@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#229.1#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67633155
+         Format          =   20709379
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   67633155
+         Format          =   20709379
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -891,7 +891,7 @@ ToDatePicker.value = Now
 
 SendMessage TickfileList.hWnd, LB_SETHORZEXTENT, 2000, 0
 
-logMessage "Main form loaded successfully", LogLevelDetail
+LogMessage "Main form loaded successfully", LogLevelDetail
 
 Exit Sub
 
@@ -954,7 +954,7 @@ Dim f As Form
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Unloading program"
+LogMessage "Unloading program"
 
 finishUIControls
 
@@ -962,7 +962,7 @@ For Each f In Forms
     If Not f Is Me Then Unload f
 Next
 
-logMessage "Stopping tickers"
+LogMessage "Stopping tickers"
 If Not mTickers Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
@@ -1157,9 +1157,9 @@ Case ControlsTabIndexNumbers.ControlsTabIndexTickers
     LiveContractSearch.SetFocus
     If TickerGrid1.SelectedTickers.Count > 0 Then Chart1Button.Default = True
 Case ControlsTabIndexNumbers.ControlsTabIndexTickfileReplay
-    SelectTickfilesButton.Default = True
-    If Not mTickfileManager Is Nothing Then
-        SelectTickfilesButton.Default = False
+    If mTickfileManager Is Nothing Then
+        SelectTickfilesButton.Default = True
+    Else
         If PlayTickFileButton.Enabled Then
             PlayTickFileButton.Default = True
         ElseIf StopReplayButton.Enabled Then
@@ -1198,9 +1198,9 @@ On Error GoTo Err
 Select Case FeaturesSSTAB.Tab
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexLog
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
-    ModifyOrderPlexButton.Default = True
-    If Not ModifyOrderPlexButton.Enabled Then
-        ModifyOrderPlexButton.Default = False
+    If ModifyOrderPlexButton.Enabled Then
+        ModifyOrderPlexButton.Default = True
+    Else
         If CancelOrderPlexButton.Enabled Then CancelOrderPlexButton.Default = True
     End If
 Case FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexExecutions
@@ -1316,7 +1316,7 @@ Const ProcName As String = "LiveOrdersSummary_SelectionChanged"
 Dim failpoint As String
 On Error GoTo Err
 
-setLiveOrdersSelection
+setOrdersSelection LiveOrdersSummary
 
 Exit Sub
 
@@ -1412,11 +1412,11 @@ Select Case OrdersSummaryTabStrip.SelectedItem.index
 Case OrdersTabIndexNumbers.OrdersTabIndexLive
     LiveOrdersSummary.Visible = True
     SimulatedOrdersSummary.Visible = False
-    setLiveOrdersSelection
+    setOrdersSelection LiveOrdersSummary
 Case OrdersTabIndexNumbers.OrdersTabIndexSimulated
     LiveOrdersSummary.Visible = False
     SimulatedOrdersSummary.Visible = True
-    setSimulatedOrdersSelection
+    setOrdersSelection SimulatedOrdersSummary
 End Select
 
 Exit Sub
@@ -1468,7 +1468,7 @@ On Error GoTo Err
 
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
-logMessage "Tickfile replay paused"
+LogMessage "Tickfile replay paused"
 mTickfileManager.PauseReplay
 
 Exit Sub
@@ -1493,9 +1493,9 @@ ReplayProgressBar.Visible = True
 
 If mTickfileManager.Ticker Is Nothing Then
     mTickfileManager.ReplayProgressEventIntervalMillisecs = 250
-    logMessage "Tickfile replay started"
+    LogMessage "Tickfile replay started"
 Else
-    logMessage "Tickfile replay resumed"
+    LogMessage "Tickfile replay resumed"
 End If
 mTickfileManager.ReplaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
 
@@ -1589,7 +1589,7 @@ Const ProcName As String = "SimulatedOrdersSummary_Click"
 Dim failpoint As String
 On Error GoTo Err
 
-setSimulatedOrdersSelection
+setOrdersSelection SimulatedOrdersSummary
 
 Exit Sub
 
@@ -1603,7 +1603,7 @@ Const ProcName As String = "SkipReplayButton_Click"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Tickfile skipped"
+LogMessage "Tickfile skipped"
 mTickfileManager.SkipTickfile
 
 Exit Sub
@@ -1797,7 +1797,7 @@ ReplayProgressBar.Visible = False
 ReplayContractLabel.caption = ""
 ReplayProgressLabel.caption = ""
 
-logMessage "Tickfile replay completed"
+LogMessage "Tickfile replay completed"
 
 Exit Sub
 
@@ -1866,25 +1866,32 @@ On Error GoTo Err
 
 Select Case ev.eventCode
 Case ApiNotifyCodes.ApiNotifyInvalidRequest
-    logMessage "Request failed: " & _
+    LogMessage "Request failed: " & _
                 ev.eventMessage & vbCrLf
     gModelessMsgBox "Request failed: " & _
                 ev.eventMessage & vbCrLf, _
                 MsgBoxExclamation, _
                 "Attention"
 Case ApiNotifyCodes.ApiNotifyOrderRejected
-    logMessage "Order rejected: " & _
+    LogMessage "Order rejected: " & _
                 ev.eventMessage & vbCrLf
     gModelessMsgBox "Order rejected: " & _
                 ev.eventMessage & vbCrLf, _
                 MsgBoxExclamation, _
                 "Attention"
+Case ApiNotifyCodes.ApiNotifyOrderDeferred
+    LogMessage "Order deferred: " & _
+                ev.eventMessage & vbCrLf
+    gModelessMsgBox "Order deferred: " & _
+                ev.eventMessage & vbCrLf, _
+                MsgBoxExclamation, _
+                "Attention"
 Case ApiNotifyCodes.ApiNotifyServiceProviderError
     Set spError = mTradeBuildAPI.GetServiceProviderError
-    logMessage "Error from " & _
+    LogMessage "Error from " & _
                         spError.ServiceProviderName & _
                         ": code " & spError.errorCode & _
-                        ": " & spError.message
+                        ": " & spError.Message
 
 End Select
 
@@ -1922,7 +1929,7 @@ loadAppInstanceConfig
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function LoadConfig( _
@@ -1989,7 +1996,7 @@ Const ProcName As String = "applyInstanceSettings"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Loading configuration: positioning main form"
+LogMessage "Loading configuration: positioning main form"
 Select Case gAppInstanceConfig.GetSetting(ConfigSettingMainFormWindowstate, WindowStateNormal)
 Case WindowStateMaximized
     Me.WindowState = FormWindowStateConstants.vbMaximized
@@ -2016,13 +2023,13 @@ Else
     showFeatures
 End If
 
-logMessage "Loading configuration: starting tickers"
+LogMessage "Loading configuration: starting tickers"
 TickerGrid1.LoadFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionTickerGrid)
 
-logMessage "Loading configuration: loading default study configurations"
+LogMessage "Loading configuration: loading default study configurations"
 LoadDefaultStudyConfigurationsFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
 
-logMessage "Loading configuration: starting charts"
+LogMessage "Loading configuration: starting charts"
 Dim chartConfig As ConfigurationSection
 For Each chartConfig In gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
     createChartFromConfig chartConfig
@@ -2475,30 +2482,30 @@ Const ProcName As String = "loadAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Loading configuration: " & gAppInstanceConfig.InstanceQualifier
+LogMessage "Loading configuration: " & gAppInstanceConfig.InstanceQualifier
 
 Set mTickers = mTradeBuildAPI.Tickers
 
-logMessage "Loading configuration: Setting up ticker grid"
+LogMessage "Loading configuration: Setting up ticker grid"
 setupTickerGrid
 
-logMessage "Loading configuration: Setting up order summaries"
+LogMessage "Loading configuration: Setting up order summaries"
 setupOrderSummaries
 
-logMessage "Loading configuration: Setting up execution summaries"
+LogMessage "Loading configuration: Setting up execution summaries"
 setupExecutionSummaries
 
-logMessage "Loading configuration: Setting up timeframeselectors"
+LogMessage "Loading configuration: Setting up timeframeselectors"
 setupTimeframeSelectors
 
-logMessage "Recovering orders from last session"
+LogMessage "Recovering orders from last session"
 mTradeBuildAPI.RecoverOrders gAppInstanceConfig.InstanceQualifier
 
 applyInstanceSettings
 
 FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
 
-logMessage "Loaded configuration: " & gAppInstanceConfig.InstanceQualifier
+LogMessage "Loaded configuration: " & gAppInstanceConfig.InstanceQualifier
 CurrentConfigNameText = gAppInstanceConfig.InstanceQualifier
 Me.caption = gAppTitle & _
             " - " & gAppInstanceConfig.InstanceQualifier
@@ -2574,7 +2581,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If gConfigFile.dirty Then
-    logMessage "Saving configuration"
+    LogMessage "Saving configuration"
     gConfigFile.Save
 End If
 
@@ -2620,59 +2627,38 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub setLiveOrdersSelection()
-Const ProcName As String = "setLiveOrdersSelection"
+Private Sub setOrdersSelection( _
+                ByVal pOrdersSummary As OrdersSummary)
+Const ProcName As String = "setOrdersSelection"
 Dim selection As OrderPlex
 
 Dim failpoint As String
 On Error GoTo Err
 
-Set selection = LiveOrdersSummary.SelectedItem
-
-If selection Is Nothing Then
-    CancelOrderPlexButton.Enabled = False
-    ModifyOrderPlexButton.Enabled = False
-Else
-    If LiveOrdersSummary.SelectedOrderIndex = 0 Then
-        CancelOrderPlexButton.Enabled = True
-    Else
-        CancelOrderPlexButton.Enabled = False
-    End If
-    If LiveOrdersSummary.IsSelectedItemModifiable Then
-        ModifyOrderPlexButton.Enabled = True
-    Else
-        ModifyOrderPlexButton.Enabled = False
-    End If
+If pOrdersSummary.IsEditing Then
+    pOrdersSummary.Default = True
+    Exit Sub
 End If
 
-Exit Sub
+pOrdersSummary.Default = False
 
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Private Sub setSimulatedOrdersSelection()
-Const ProcName As String = "setSimulatedOrdersSelection"
-Dim selection As OrderPlex
-
-Dim failpoint As String
-On Error GoTo Err
-
-Set selection = SimulatedOrdersSummary.SelectedItem
+Set selection = pOrdersSummary.SelectedItem
 
 If selection Is Nothing Then
     CancelOrderPlexButton.Enabled = False
     ModifyOrderPlexButton.Enabled = False
 Else
-    If SimulatedOrdersSummary.SelectedOrderIndex = 0 Then
+    If pOrdersSummary.SelectedOrderIndex = 0 Then
         CancelOrderPlexButton.Enabled = True
     Else
         CancelOrderPlexButton.Enabled = False
     End If
-    If SimulatedOrdersSummary.IsSelectedItemModifiable Then
+    If pOrdersSummary.IsSelectedItemModifiable Then
         ModifyOrderPlexButton.Enabled = True
+        ModifyOrderPlexButton.Default = True
     Else
         ModifyOrderPlexButton.Enabled = False
+        ModifyOrderPlexButton.Default = False
     End If
 End If
 

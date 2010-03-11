@@ -106,6 +106,8 @@ Public Enum ApiNotifyCodes
     ApiNotifyRetryConnectContractDataSource
     
     ApiNotifyOrderRejected
+    ApiNotifyOrderDeferred
+    
     
 End Enum
 
@@ -267,29 +269,29 @@ End Enum
 
 Public Enum OrderTypes
     OrderTypeNone = 0
-    OrderTypeMarket = 1&
-    OrderTypeMarketOnClose = 2&
-    OrderTypeLimit = 4&
-    OrderTypeLimitOnClose = 8&
-    OrderTypePeggedToMarket = &H10&
-    OrderTypeStop = &H20&
-    OrderTypeStopLimit = &H40&
-    OrderTypeTrail = &H80&
-    OrderTypeRelative = &H100&
-    OrderTypeVWAP = &H200&
-    OrderTypeMarketToLimit = &H400&
-    OrderTypeQuote = &H800&
-    OrderTypeAutoStop = &H1000&
-    OrderTypeAutoLimit = &H2000&
-    OrderTypeAdjust = &H4000&
-    OrderTypeAlert = &H8000&
-    OrderTypeLimitIfTouched = &H10000
-    OrderTypeMarketIfTouched = &H20000
-    OrderTypeTrailLimit = &H40000
-    OrderTypeMarketWithProtection = &H80000
-    OrderTypeMarketOnOpen = &H100000
-    OrderTypeLimitOnOpen = &H200000
-    OrderTypePeggedToPrimary = &H400000
+    OrderTypeMarket = TradeBuildSP.OrderTypes.OrderTypeMarket
+    OrderTypeMarketOnClose = TradeBuildSP.OrderTypes.OrderTypeMarketOnClose
+    OrderTypeLimit = TradeBuildSP.OrderTypes.OrderTypeLimit
+    OrderTypeLimitOnClose = TradeBuildSP.OrderTypes.OrderTypeLimitOnClose
+    OrderTypePeggedToMarket = TradeBuildSP.OrderTypes.OrderTypePeggedToMarket
+    OrderTypeStop = TradeBuildSP.OrderTypes.OrderTypeStop
+    OrderTypeStopLimit = TradeBuildSP.OrderTypes.OrderTypeStopLimit
+    OrderTypeTrail = TradeBuildSP.OrderTypes.OrderTypeTrail
+    OrderTypeRelative = TradeBuildSP.OrderTypes.OrderTypeRelative
+    OrderTypeVWAP = TradeBuildSP.OrderTypes.OrderTypeVWAP
+    OrderTypeMarketToLimit = TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
+    OrderTypeQuote = TradeBuildSP.OrderTypes.OrderTypeQuote
+    OrderTypeAutoStop = TradeBuildSP.OrderTypes.OrderTypeAutoStop
+    OrderTypeAutoLimit = TradeBuildSP.OrderTypes.OrderTypeAutoLimit
+    OrderTypeAdjust = TradeBuildSP.OrderTypes.OrderTypeAdjust
+    OrderTypeAlert = TradeBuildSP.OrderTypes.OrderTypeAlert
+    OrderTypeLimitIfTouched = TradeBuildSP.OrderTypes.OrderTypeLimitIfTouched
+    OrderTypeMarketIfTouched = TradeBuildSP.OrderTypes.OrderTypeMarketIfTouched
+    OrderTypeTrailLimit = TradeBuildSP.OrderTypes.OrderTypeTrailLimit
+    OrderTypeMarketWithProtection = TradeBuildSP.OrderTypes.OrderTypeMarketWithProtection
+    OrderTypeMarketOnOpen = TradeBuildSP.OrderTypes.OrderTypeMarketOnOpen
+    OrderTypeLimitOnOpen = TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
+    OrderTypePeggedToPrimary = TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
 End Enum
 
 Public Enum PositionManagerChangeTypes
@@ -375,39 +377,39 @@ End Enum
 '   timezone. Note that this only has effect when the contract service provider
 '   supplies exchange timezone information (the IB contract service provider does not).
 ' @param TickerOptWriteTickData
-'   Indicates that tick data for this Ticker (excluding market depth data) is to
+'   Indicates that tick Data for this Ticker (excluding market depth Data) is to
 '   be written to a tickfile. Note that the nature of this tickfile is governed by
 '   the currently configured Tickfile Service Provider.
 ' @param TickerOptWriteTradeBarData
-'   Indicates that bar data for trades notified via this Ticker is to
-'   be written to a historical data store. Note that the nature of this data store, and
+'   Indicates that bar Data for trades notified via this Ticker is to
+'   be written to a historical Data store. Note that the nature of this Data store, and
 '   the timeframes of the bars recorded, is governed by the currently configured
 '   Historical Data Service Provider.
 ' @param TickerOptWriteBidAndAskBarData
-'   Indicates that bar data for bids and asks notified via this Ticker is to
-'   be written to a historical data store. Note that the nature of this data store, and
+'   Indicates that bar Data for bids and asks notified via this Ticker is to
+'   be written to a historical Data store. Note that the nature of this Data store, and
 '   the timeframes of the bars recorded, is governed by the currently configured
 '   Historical Data Service Provider.
 ' @param TickerOptUpdateLatestBar
-'   Indicates that where the latest bar written to the historical data store is still
-'   open (ie the end of the bar has not yet been reached), then the data from this Ticker
-'   is to be used to update that bar. If not set, the previously recorded data for that bar
+'   Indicates that where the latest bar written to the historical Data store is still
+'   open (ie the end of the bar has not yet been reached), then the Data from this Ticker
+'   is to be used to update that bar. If not set, the previously recorded Data for that bar
 '   is overwritten. This value is ignored if <code>TickerOptWriteTradeBarData</code> and
 '   <code>TickerOptWriteBidAndAskBarData</code> are not set.
 ' @param TickerOptIncludeMarketDepthInTickfile
-'   Indicates that market depth data is to be included in the tickfile. This value is
+'   Indicates that market depth Data is to be included in the tickfile. This value is
 '   ignored if <code>TickerOptWriteTickData</code> is not set.
 ' @param TickerOptNoImpliedTrades
 '   If set, the Ticker does not attempt to deduce the existence of unreported trades
-'   which may be indicated by the Ticker data received from the data source. For example,
+'   which may be indicated by the Ticker Data received from the Data source. For example,
 '   if Volume is incremented by an amount equal to the last reported Trade, but no
 '   Trade is reported, then an implied Trade exists - setting this option prevents
 '   that implied Trade being notified.
 ' @param TickerOptNoVolumeAdjustments
-'   If set, the Ticker reports all Volume ticks exactly as received from the data source.
+'   If set, the Ticker reports all Volume ticks exactly as received from the Data source.
 '   Otherwise, the Ticker may adjust Volume figures to ensure that Volume notified by the
 '   Ticker is always increasing (this adjustment is to eliminate the backward movement in
-'   total Volume that occurs sometimes with some data sources).
+'   total Volume that occurs sometimes with some Data sources).
 '@/
 Public Enum TickerOptions
     TickerOptOrdersAreLive = 1
@@ -468,7 +470,7 @@ End Type
 Public Type InfoEvent
     source          As Object
     valueType       As Long
-    data            As Variant
+    Data            As Variant
 End Type
 
 Public Type PriceChangeEvent
@@ -637,6 +639,11 @@ End Function
 Public Function OrderTIFToString( _
                 ByVal value As OrderTifs) As String
 OrderTIFToString = GOrderTIFToString(value)
+End Function
+
+Public Function OrderTypeToShortString( _
+                ByVal value As OrderTypes) As String
+OrderTypeToShortString = gOrderTypeToShortString(value)
 End Function
 
 Public Function OrderTypeToString( _

@@ -127,6 +127,20 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Friend Sub Clear()
+
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
+Set mOrderPlexes = New Collection
+fireChange CollCollectionCleared, Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Public Function Contains(ByVal index As Variant) As Boolean
 Dim op As orderPlex
 On Error Resume Next

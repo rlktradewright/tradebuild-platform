@@ -68,7 +68,7 @@ Private mDbID As String
 '@================================================================================
 
 Private Sub Class_Terminate()
-gLogger.Log LogLevelDetail, "TradingDB: number of connection requests serviced: " & mNumberOfConnections
+'gLogger.Log LogLevelDetail, "TradingDB: number of connection requests serviced: " & mNumberOfConnections
 End Sub
 
 '@================================================================================

@@ -53,16 +53,13 @@ Private mCancel                                     As Boolean
 
 Private mOrderPlex                                  As orderPlex
 
-Private mEntryOrderOutstanding                      As Boolean
-Private mStopOrderOutstanding                       As Boolean
-Private mTargetOrderOutstanding                     As Boolean
-Private mCloseoutOrderOutstanding                   As Boolean
-
 Private mWorkspace                                  As Workspace
 Private mTickerKey                                  As String
 
 Private mPositionManager                            As PositionManager
 Private mOSSC                                       As IOrderSubmissionSrvcConsumer
+
+Private mOrderContext                               As OrderContext
 
 '@================================================================================
 ' Class Event Handlers
@@ -154,6 +151,23 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub FinishRecovery()
+
+Const ProcName As String = "FinishRecovery"
+On Error GoTo Err
+
+setUnrecoveredOrderAsCancelled mOrderPlex.EntryOrder
+setUnrecoveredOrderAsCancelled mOrderPlex.Stoporder
+setUnrecoveredOrderAsCancelled mOrderPlex.TargetOrder
+setUnrecoveredOrderAsCancelled mOrderPlex.CloseoutOrder
+
+mOrderPlex.CheckComplete
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pKey As String, _
                 ByVal pWorkspaceName As String, _
@@ -183,10 +197,13 @@ End Sub
 Friend Sub NotifyExecutionReport( _
                 ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
-Dim failpoint As String
+Dim lOrder As Order
+
 On Error GoTo Err
 
 mOSSC.ExecutionReport pExecutionReport
+
+Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
@@ -199,30 +216,30 @@ Const ProcName As String = "NotifyOrderReport"
 Dim failpoint As String
 On Error GoTo Err
 
-If orderIdIsForEntryOrder(pOrderReport.tradeBuildId) Then
+If orderIdIsForEntryOrder(pOrderReport.TradeBuildId) Then
     mOrderPlex.EntryOrder.SyncToOrderReport pOrderReport, mPositionManager.Key
-    mEntryOrderOutstanding = True
-    mOrderPlex.ResyncEntryOrder
-ElseIf orderIdIsForStopOrder(pOrderReport.tradeBuildId) Then
-    mOrderPlex.stoporder.SyncToOrderReport pOrderReport, mPositionManager.Key
-    mStopOrderOutstanding = True
-    mOrderPlex.ResyncStopOrder
+    mOrderPlex.EntryOrder.NeedsRecovery = False
+    'mOrderPlex.ResyncEntryOrder
+ElseIf orderIdIsForStopOrder(pOrderReport.TradeBuildId) Then
+    mOrderPlex.Stoporder.SyncToOrderReport pOrderReport, mPositionManager.Key
+    mOrderPlex.Stoporder.NeedsRecovery = False
+    'mOrderPlex.ResyncStopOrder
     
-    If mOrderPlex.stoporder.Status = OrderStatusSubmitted Then
+    If mOrderPlex.Stoporder.Status = OrderStatusSubmitted Then
         mOrderPlex.EntryOrder.UpdateStatus OrderStatusFilled, mPositionManager.Key
     End If
-ElseIf orderIdIsForTargetOrder(pOrderReport.tradeBuildId) Then
+ElseIf orderIdIsForTargetOrder(pOrderReport.TradeBuildId) Then
     mOrderPlex.TargetOrder.SyncToOrderReport pOrderReport, mPositionManager.Key
-    mTargetOrderOutstanding = True
-    mOrderPlex.ResyncTargetOrder
+    mOrderPlex.TargetOrder.NeedsRecovery = False
+    'mOrderPlex.ResyncTargetOrder
 
     If mOrderPlex.TargetOrder.Status = OrderStatusSubmitted Then
         mOrderPlex.EntryOrder.UpdateStatus OrderStatusFilled, mPositionManager.Key
     End If
-ElseIf orderIdIsForCloseoutOrder(pOrderReport.tradeBuildId) Then
+ElseIf orderIdIsForCloseoutOrder(pOrderReport.TradeBuildId) Then
     mOrderPlex.CloseoutOrder.SyncToOrderReport pOrderReport, mPositionManager.Key
-    mCloseoutOrderOutstanding = True
-    mOrderPlex.ResyncCloseoutOrder
+    mOrderPlex.CloseoutOrder.NeedsRecovery = False
+    'mOrderPlex.ResyncCloseoutOrder
 
     If mOrderPlex.CloseoutOrder.Status = OrderStatusSubmitted Then
         mOrderPlex.EntryOrder.UpdateStatus OrderStatusFilled, mPositionManager.Key
@@ -259,7 +276,7 @@ On Error GoTo Err
 If orderIdIsForEntryOrder(os.Id) Then
     Set lOrder = mOrderPlex.EntryOrder
 ElseIf orderIdIsForStopOrder(os.Id) Then
-    Set lOrder = mOrderPlex.stoporder
+    Set lOrder = mOrderPlex.Stoporder
 ElseIf orderIdIsForTargetOrder(os.Id) Then
     Set lOrder = mOrderPlex.TargetOrder
 ElseIf orderIdIsForCloseoutOrder(os.Id) Then
@@ -304,6 +321,7 @@ lOrder.SweepToFill = os.SweepToFill
 lOrder.TimeInForce = os.TimeInForce
 lOrder.TriggerPrice = os.TriggerPrice
 
+lOrder.NeedsRecovery = lOrder.IsActive
 Exit Sub
 
 Err:
@@ -316,23 +334,7 @@ Const ProcName As String = "UpdateOrderPlex"
 Dim failpoint As String
 On Error GoTo Err
 
-mOrderPlex.cancelPrice = ops.cancelPrice
-mOrderPlex.CancelTime = ops.CancelTime
-If ops.CloseoutOrderId <> "" And mOrderPlex.CloseoutOrder Is Nothing Then mOrderPlex.CloseoutOrder = createOrder(ops.CloseoutOrderId)
-mOrderPlex.CreationTime = ops.CreationTime
-mOrderPlex.Description = ops.Description
-mOrderPlex.DrawdownNotificationThreshold = ops.DrawdownNotificationThreshold
-If ops.EntryOrderId <> "" And mOrderPlex.EntryOrder Is Nothing Then mOrderPlex.EntryOrder = createOrder(ops.EntryOrderId)
-mOrderPlex.EntryReason = ops.EntryReason
-mOrderPlex.LossNotificationThreshold = ops.LossNotificationThreshold
-mOrderPlex.PreventUnprotectedPosition = ops.PreventUnprotectedPosition
-mOrderPlex.ProfitNotificationThreshold = ops.ProfitNotificationThreshold
-mOrderPlex.size = ops.size
-mOrderPlex.State = ops.State
-If ops.StopOrderId <> "" And mOrderPlex.stoporder Is Nothing Then mOrderPlex.stoporder = createOrder(ops.StopOrderId)
-mOrderPlex.StopReason = ops.StopReason
-If ops.TargetOrderId <> "" And mOrderPlex.TargetOrder Is Nothing Then mOrderPlex.TargetOrder = createOrder(ops.TargetOrderId)
-mOrderPlex.TargetReason = ops.TargetOrderId
+mOrderPlex.SyncToSummary ops
 
 Exit Sub
 
@@ -352,18 +354,12 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not mOrderPlex.EntryOrder Is Nothing Then mOrderPlex.EntryOrder.Ticker = pTicker
-If Not mOrderPlex.stoporder Is Nothing Then mOrderPlex.stoporder.Ticker = pTicker
+If Not mOrderPlex.Stoporder Is Nothing Then mOrderPlex.Stoporder.Ticker = pTicker
 If Not mOrderPlex.TargetOrder Is Nothing Then mOrderPlex.TargetOrder.Ticker = pTicker
 If Not mOrderPlex.CloseoutOrder Is Nothing Then mOrderPlex.CloseoutOrder.Ticker = pTicker
 
-pTicker.DefaultOrderContext.ActivateOrderPlex mOrderPlex
-
-'notifyOutstandingExecutions
-
-If mEntryOrderOutstanding Then mOrderPlex.ResyncEntryOrder
-If mStopOrderOutstanding Then mOrderPlex.ResyncStopOrder
-If mTargetOrderOutstanding Then mOrderPlex.ResyncTargetOrder
-If mCloseoutOrderOutstanding Then mOrderPlex.ResyncCloseoutOrder
+Set mOrderContext = pTicker.DefaultOrderContext
+mOrderContext.ActivateOrderPlex mOrderPlex
 
 Exit Sub
 
@@ -387,64 +383,6 @@ Exit Function
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Private Function closeoutOrderFinished() As Boolean
-Const ProcName As String = "closeoutOrderFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-If mOrderPlex.CloseoutOrder Is Nothing Then
-    closeoutOrderFinished = True
-ElseIf Not mOrderPlex.CloseoutOrder.Active Then
-    closeoutOrderFinished = True
-ElseIf mCloseoutOrderOutstanding And orderPlexActive Then
-    closeoutOrderFinished = True
-End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Private Function entryOrderFinished() As Boolean
-Const ProcName As String = "entryOrderFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-If Not mOrderPlex.EntryOrder.Active Then
-    entryOrderFinished = True
-ElseIf mEntryOrderOutstanding And orderPlexActive Then
-    entryOrderFinished = True
-End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Private Function finished() As Boolean
-Const ProcName As String = "finished"
-Dim failpoint As String
-On Error GoTo Err
-
-If mOrderPlex.State = OrderPlexStateClosed Then
-    finished = True
-ElseIf entryOrderFinished And _
-    stopOrderFinished And _
-    targetOrderFinished And _
-    closeoutOrderFinished _
-Then
-    finished = True
-End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
 End Function
 
 Private Sub logMessage( _
@@ -491,8 +429,8 @@ Const ProcName As String = "orderIdIsForStopOrder"
 Dim failpoint As String
 On Error GoTo Err
 
-If mOrderPlex.stoporder Is Nothing Then Exit Function
-orderIdIsForStopOrder = (pId = mOrderPlex.stoporder.Id)
+If mOrderPlex.Stoporder Is Nothing Then Exit Function
+orderIdIsForStopOrder = (pId = mOrderPlex.Stoporder.Id)
 
 Exit Function
 
@@ -564,7 +502,10 @@ If tckr Is Nothing Then
     ' the ticker has not yet been started but may yet be
     mWorkspace.Tickers.AddCollectionChangeListener Me
     
-    Set mPositionManager = gCreatePositionManager(mTickerKey, mWorkspace)
+    Set mPositionManager = gGetPositionManager(mTickerKey)
+    If mPositionManager Is Nothing Then
+        Set mPositionManager = gCreatePositionManager(mTickerKey, mWorkspace)
+    End If
 ElseIf tckr.State = TickerStateReady Or tckr.State = TickerStateRunning Then
     Set mPositionManager = tckr.PositionManager
     ActivateOrderPlex tckr
@@ -573,6 +514,8 @@ Else
     Set mPositionManager = tckr.PositionManager
     tckr.AddStateChangeListener Me
 End If
+
+mPositionManager.StartRecovery
 
 Set mOSSC = mPositionManager
 mOrderPlex.PositionManager = mPositionManager
@@ -583,42 +526,11 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function stopOrderFinished() As Boolean
-Const ProcName As String = "stopOrderFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-If mOrderPlex.stoporder Is Nothing Then
-    stopOrderFinished = True
-ElseIf Not mOrderPlex.stoporder.Active Then
-    stopOrderFinished = True
-ElseIf mStopOrderOutstanding And orderPlexActive Then
-    stopOrderFinished = True
+Private Sub setUnrecoveredOrderAsCancelled(ByVal pOrder As Order)
+If pOrder Is Nothing Then Exit Sub
+If pOrder.NeedsRecovery Then
+    pOrder.Status = OrderStatusCancelled
+    pOrder.NeedsRecovery = False
 End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Private Function targetOrderFinished() As Boolean
-Const ProcName As String = "targetOrderFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-If mOrderPlex.TargetOrder Is Nothing Then
-    targetOrderFinished = True
-ElseIf Not mOrderPlex.TargetOrder.Active Then
-    targetOrderFinished = True
-ElseIf mTargetOrderOutstanding And orderPlexActive Then
-    targetOrderFinished = True
-End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
+End Sub
 

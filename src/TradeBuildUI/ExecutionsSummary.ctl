@@ -75,9 +75,9 @@ Private Enum ExecutionsColumns
     ExecId = 1
     orderId
     Action
-    quantity
+    Quantity
     symbol
-    price
+    Price
     Time
 End Enum
 
@@ -106,12 +106,12 @@ Set mMonitoredWorkspaces = New Collection
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec id"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec Id"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.orderId, , "ID"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Action, , "Action"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.quantity, , "Quant"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Quantity, , "Quant"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.symbol, , "Symb"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.price, , "Price"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Price, , "Price"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
 
 ExecutionsList.SortKey = ExecutionsColumns.Time - 1
@@ -141,13 +141,13 @@ ExecutionsList.ColumnHeaders(ExecutionsColumns.orderId).Width = _
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Action).Width = _
     ExecutionsActionWidth * ExecutionsList.Width / 100
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.quantity).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.Quantity).Width = _
     ExecutionsQuantityWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.symbol).Width = _
     ExecutionsSymbolWidth * ExecutionsList.Width / 100
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.price).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.Price).Width = _
     ExecutionsPriceWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Time).Width = _
@@ -191,8 +191,8 @@ End If
 
 listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
 listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.OrderBrokerId
-listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
-listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
+listItem.SubItems(ExecutionsColumns.Price - 1) = exec.Price
+listItem.SubItems(ExecutionsColumns.Quantity - 1) = exec.Quantity
 listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.SecurityName
 listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
 

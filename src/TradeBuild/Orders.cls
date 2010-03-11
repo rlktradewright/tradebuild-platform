@@ -127,6 +127,20 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Friend Sub Clear()
+
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
+Set mOrders = New Collection
+fireChange CollCollectionCleared, Nothing
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Public Function Contains(index As Variant) As Boolean
 Const ProcName As String = "Contains"
 Dim lOrder As Order

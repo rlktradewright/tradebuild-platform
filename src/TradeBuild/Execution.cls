@@ -282,7 +282,7 @@ Const ProcName As String = "SaveRecoveryInfo"
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
-gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, ToJSON
+gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, Me
 
 Exit Sub
 

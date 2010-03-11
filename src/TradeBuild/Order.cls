@@ -104,6 +104,8 @@ Private mFirmQuoteOnly              As Boolean
 Private mNBBOPriceCap               As Double
 Private mOverrideConstraints        As Boolean
     
+Private mNeedsRecovery              As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -272,12 +274,6 @@ End Property
 
 Public Property Get action() As OrderActions
 action = mAction
-End Property
-
-Friend Property Get Active() As Boolean
-Active = (mStatus = OrderStatusPendingSubmit) Or _
-        (mStatus = OrderStatusPreSubmitted) Or _
-        (mStatus = OrderStatusSubmitted)
 End Property
 
 Public Property Let AllOrNone(ByVal value As Boolean)
@@ -556,6 +552,12 @@ Public Property Get IgnoreRegularTradingHours() As Boolean
 IgnoreRegularTradingHours = mIgnoreRegularTradingHours
 End Property
 
+Friend Property Get IsActive() As Boolean
+IsActive = (mStatus = OrderStatusPendingSubmit) Or _
+        (mStatus = OrderStatusPreSubmitted) Or _
+        (mStatus = OrderStatusSubmitted)
+End Property
+
 Public Property Get IsDirty() As Boolean
 IsDirty = mIsDirty
 End Property
@@ -622,6 +624,14 @@ End Property
 
 Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
+End Property
+
+Friend Property Let NeedsRecovery(ByVal value As Boolean)
+mNeedsRecovery = value
+End Property
+
+Friend Property Get NeedsRecovery() As Boolean
+NeedsRecovery = mNeedsRecovery
 End Property
 
 Friend Property Let Offset(ByVal value As Long)
@@ -970,7 +980,10 @@ mQuantityFilled = mQuantityFilled + exec.Quantity
 mQuantityRemaining = mQuantityRemaining - exec.Quantity
 mLastFillPrice = exec.price
 mFillTime = exec.Time
-If mQuantityRemaining = 0 Then mStatus = OrderStatusFilled
+If mQuantityRemaining = 0 Then
+    mStatus = OrderStatusFilled
+    NeedsRecovery = False
+End If
 SaveRecoveryInfo persistenceKey
 RaiseEvent Fill(exec)
 If mStatus = OrderStatusFilled Then RaiseEvent StatusChanged
@@ -1117,54 +1130,6 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-' commented out 22/5/6
-'Friend Sub openOrder(ByVal Action As OrderActions, _
-'                        ByVal quantity As Long, _
-'                        ByVal orderType As OrderTypes, _
-'                        ByVal lmtPrice As Double, _
-'                        ByVal auxPrice As Double, _
-'                        ByVal tif As OrderTifs, _
-'                        ByVal ocaGroup As String)
-'
-'mTWSAction = Action
-'If Action <> mAction Then
-'    mDifferent = True
-'End If
-'
-'mTWSQuantity = quantity
-'If quantity <> mQuantity Then
-'    mDifferent = True
-'End If
-'
-'mTWSOrderType = orderType
-'If orderType <> mOrderType Then
-'    mDifferent = True
-'End If
-'If orderType = OrderTypes.OrderTypeLimit Or _
-'    orderType = OrderTypes.OrderTypeStopLimit _
-'Then
-'    mTWSLimitPrice = lmtPrice
-'    If lmtPrice <> mLimitPrice Then
-'        mDifferent = True
-'    End If
-'Else
-'    mTWSLimitPrice = 0
-'End If
-'If orderType = OrderTypes.OrderTypeStop Or _
-'    orderType = OrderTypes.OrderTypeStopLimit _
-'Then
-'    mTWSTriggerPrice = auxPrice
-'    If auxPrice <> mTriggerPrice Then
-'        mDifferent = True
-'    End If
-'Else
-'    mTWSTriggerPrice = 0
-'End If
-'' NB: mDifferent will be cleared when UpdateStatus is called (this always
-'' happens shortly after openOrder)
-''If mDifferent Then Stop
-'End Sub
-
 Friend Sub SaveRecoveryInfo(pKey As String)
 Dim summary As OrderSummary
 
@@ -1215,7 +1180,7 @@ summary.SweepToFill = mSweepToFill
 summary.TimeInForce = mTimeInForce
 summary.TriggerPrice = mTriggerPrice
 
-gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, summary.ToJSON
+gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, summary
 
 Exit Sub
 
@@ -1331,7 +1296,7 @@ With OrderReport
     If .Origin <> mOrigin Then mOrigin = .Origin: changed = True
     If .OriginatorRef <> moriginatorRef Then moriginatorRef = .OriginatorRef: changed = True
     If .OverrideConstraints <> mOverrideConstraints Then mOverrideConstraints = .OverrideConstraints: changed = True
-    Set mProviderProperties = .ProviderProperties
+    If Not propertiesEqual(mProviderProperties, .ProviderProperties) Then Set mProviderProperties = .ProviderProperties: changed = True
     If .Quantity <> mQuantity Then mQuantity = .Quantity: changed = True
     If .SettlingFirm <> mSettlingFirm Then mSettlingFirm = .SettlingFirm: changed = True
     If .StopTriggerMethod <> mStopTriggerMethod Then mStopTriggerMethod = .StopTriggerMethod: changed = True
@@ -1360,7 +1325,7 @@ End Sub
 '@/
 Friend Sub UpdateStatus( _
                 ByVal pStatus As OrderStatuses, _
-                Optional ByRef persistenceKey As String)
+                ByRef persistenceKey As String)
 
 Const ProcName As String = "UpdateStatus"
 Dim failpoint As Long
@@ -1368,6 +1333,7 @@ On Error GoTo Err
 
 If pStatus <> mStatus Then
     mStatus = pStatus
+    If Not IsActive Then NeedsRecovery = False
     SaveRecoveryInfo persistenceKey
     RaiseEvent StatusChanged
 End If
@@ -1416,6 +1382,18 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function propertiesEqual( _
+                ByVal pParams1 As Parameters, _
+                ByVal pParams2 As Parameters) As Boolean
+If pParams1 Is Nothing And pParams2 Is Nothing Then
+    propertiesEqual = True
+ElseIf pParams1 Is Nothing Or pParams2 Is Nothing Then
+    propertiesEqual = False
+Else
+    propertiesEqual = pParams1.Equals(pParams2)
+End If
+End Function
 
 ''
 ' Set the 'dirty' flag, and raise a Dirty event if one has not alReady

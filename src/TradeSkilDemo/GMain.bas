@@ -240,7 +240,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not mMainForm Is Nothing Then
-    logMessage "Unloading main form"
+    LogMessage "Unloading main form"
     Unload mMainForm
     Set mMainForm = Nothing
 End If
@@ -287,20 +287,18 @@ SetupDefaultLogging Command
 TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
-TradeBuildAPI.applicationName = gAppTitle
-
 failpoint = 300
 
 gSetPermittedServiceProviderRoles
 
 If Not getConfigFile Then
-    logMessage "Program exiting at user request"
+    LogMessage "Program exiting at user request"
     TerminateTWUtilities
 ElseIf Not getConfig Then
-    logMessage "Program exiting at user request"
+    LogMessage "Program exiting at user request"
     TerminateTWUtilities
 ElseIf Not Configure Then
-    logMessage "Program exiting at user request"
+    LogMessage "Program exiting at user request"
     TerminateTWUtilities
 Else
     loadMainForm mEditConfig
@@ -350,7 +348,7 @@ Else
         mEditConfig = True
         Configure = True
     ElseIf userResponse = vbNo Then
-        logMessage "Creating a new default app instance configuration"
+        LogMessage "Creating a new default app instance configuration"
         Set gAppInstanceConfig = AddAppInstanceConfig(gConfigFile, _
                             DefaultAppInstanceConfigName, _
                             includeDefaultStudyLibrary:=True, _
@@ -377,21 +375,21 @@ On Error GoTo Err
 If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
 
 If configName = "" Then
-    logMessage "Named config not specified - trying default config", LogLevelDetail
+    LogMessage "Named config not specified - trying default config", LogLevelDetail
     configName = "(Default)"
     Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigFile)
     If gAppInstanceConfig Is Nothing Then
-        logMessage "No default config defined", LogLevelDetail
+        LogMessage "No default config defined", LogLevelDetail
     Else
-        logMessage "Using default config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
+        LogMessage "Using default config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
     End If
 Else
-    logMessage "Getting config with name '" & configName & "'", LogLevelDetail
+    LogMessage "Getting config with name '" & configName & "'", LogLevelDetail
     Set gAppInstanceConfig = GetAppInstanceConfig(gConfigFile, configName)
     If gAppInstanceConfig Is Nothing Then
-        logMessage "Config '" & configName & "' not found"
+        LogMessage "Config '" & configName & "' not found"
     Else
-        logMessage "Config '" & configName & "' located", LogLevelDetail
+        LogMessage "Config '" & configName & "' located", LogLevelDetail
     End If
 End If
 
@@ -436,7 +434,7 @@ If baseConfigFile Is Nothing Then
             vbYesNo Or vbQuestion, _
             "Attention!")
     If userResponse = vbYes Then
-        logMessage "Creating a new default configuration file"
+        LogMessage "Creating a new default configuration file"
         Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
         Set gConfigFile = CreateConfigurationFile(baseConfigFile, getConfigFilename)
         InitialiseConfigFile gConfigFile
@@ -456,7 +454,7 @@ Else
         gConfigFile.fileVersion <> ConfigFileVersion Or _
         Not IsValidConfigurationFile(gConfigFile) _
     Then
-        logMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
+        LogMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
                     "The program will close."
         getConfigFile = False
         Exit Function
@@ -469,7 +467,7 @@ getConfigFile = True
 Exit Function
 
 Err:
-logMessage "The configuration file format is not correct for this program."
+LogMessage "The configuration file format is not correct for this program."
 MsgBox "The configuration file is not the correct format for this program" & vbCrLf & vbCrLf & _
         "The program will close."
 End Function
@@ -511,7 +509,7 @@ Const ProcName As String = "loadMainForm"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Loading main form"
+LogMessage "Loading main form"
 If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
 'mMainForm.Show
 mMainForm.initialise showConfigEditor

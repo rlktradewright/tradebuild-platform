@@ -47,22 +47,24 @@ Event Disconnected(ByVal reason As String)
 ' Constants
 '================================================================================
 
-Private Const ProjectName                As String = "IBTWSSP26"
-Private Const ModuleName                As String = "TWSAPI"
+Private Const ProjectName                   As String = "IBTWSSP26"
+Private Const ModuleName                    As String = "TWSAPI"
 
-Private Const ClientVersion As Long = 38
+Private Const ClientVersion As Long = 45
 Private Const ReqdServerVersion As Long = 38
-
-Private Const ContractDataReqIdBase As Long = &H1000000
 
 Private Const ErrHistGenerationFailed = vbObjectError + &H7FFF
 
-Private Const HistoricalDataReqIdBase As Long = &H410000
-Private Const HistoricalDataReqIdIncrement As Long = &H100
 
 Private Const IncarnationIncrement As Long = &H1000&
 
-Private Const MarketDepthReqIdBase As Long = &H400000
+Private Const IdBaseContractDataReq As Long = &H1000000
+Private Const IdBaseMarketDepthReq As Long = &H400000
+Private Const IdBaseReqHistoricalData As Long = &H410000
+Private Const HistoricalDataReqIdIncrement As Long = &H100
+Private Const IdBaseExecutionsReq As Long = &H420000
+Private Const IdBaseOrderPlex As Long = &H10000000
+Private Const OrderPlexIdIncrement As Long = &H100
 
 'Private Const MaxConcurrentHistDataRequests As Long = 50 ' limit imposed by IB
 Private Const MaxConcurrentHistDataRequests As Long = 1 ' try serialising them
@@ -78,14 +80,14 @@ Private Const MIN_SERVER_VER_FUNDAMENTAL_DATA As Long = 40
 Private Const MIN_SERVER_VER_UNDER_COMP As Long = 40
 Private Const MIN_SERVER_VER_CONTRACT_DATA_CHAIN As Long = 40
 Private Const MIN_SERVER_VER_SCALE_ORDERS2 As Long = 40
+Private Const MIN_SERVER_VER_ALGO_ORDERS As Long = 41
+Private Const MIN_SERVER_VER_EXECUTION_DATA_CHAIN As Long = 42
+Private Const MIN_SERVER_VER_NOT_HELD As Long = 44
 
 Private Const NumDaysInWeek As Long = 5
 Private Const NumDaysInMonth  As Long = 22
 Private Const NumDaysInYear As Long = 260
 Private Const NumMonthsInYear As Long = 12
-
-Private Const OrderPlexIdBase As Long = &H10000000
-Private Const OrderPlexIdIncrement As Long = &H100
 
 Private Const TWSWhatToShowAsk As String = "ASK"
 Private Const TWSWhatToShowBid As String = "BID"
@@ -104,6 +106,7 @@ Private Enum IdTypes
     IdTypeHistoricalData
     IdTypeOrder
     IdTypeContractData
+    IdTypeExecution
 End Enum
 
 Private Enum InternalErrorCodes
@@ -187,12 +190,15 @@ Private mConnectionRetryIntervalSecs As Long
 Private mDisconnectedByApplication As Boolean
 
 Private mSocketInputData() As Byte
-Private mBufferOut() As Byte
-Private mIndexOut As Long
-Private mBufferIn() As Byte
-Private mIndexIn As Long
-Private mInputIndex As Long
-Private mInputIndexChk As Long
+
+Private mOutputBuffer() As Byte
+Private mOutputBufferIndex As Long
+
+Private mInputBuffer() As Byte
+Private mInputBufferNextFreeIndex As Long
+
+Private mInputParseIndex As Long
+Private mInputParseIndexChk As Long
 Private mCheckPointNumber As Long
 
 Private mServerVersion As Long
@@ -261,8 +267,8 @@ Private Declare Sub MoveMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
 Private Sub Class_Initialize()
 
 ReDim mTickerTable(3) As TickerTableEntry
-ReDim mBufferIn(1023) As Byte
-ReDim mBufferOut(15) As Byte
+ReDim mInputBuffer(1023) As Byte
+ReDim mOutputBuffer(15) As Byte
 
 createLoggers
 
@@ -413,9 +419,9 @@ End If
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
 
-mIndexIn = 0
-mIndexOut = 0
-mInputIndex = 0
+mInputBufferNextFreeIndex = 0
+mOutputBufferIndex = 0
+mInputParseIndex = 0
 mCheckPointNumber = 0
 
 logMessage "Connecting to TWS: negotiating versions and client id", pProcName:="mSocket_Connect"
@@ -447,35 +453,35 @@ If mSocketLogger.IsLoggable(LogLevelMediumDetail) Then
                         showBuffer("In buf: ", mSocketInputData)
 End If
 
-If mIndexIn = mInputIndex Then
+If mInputBufferNextFreeIndex = mInputParseIndex Then
     ' no unprocessed data so start at the beginning of the buffer again
     'Debug.Print "Reverting to start of buffer (no unprocessed data)"
-    mIndexIn = 0
-    mInputIndex = 0
-    mInputIndexChk = 0
+    mInputBufferNextFreeIndex = 0
+    mInputParseIndex = 0
+    mInputParseIndexChk = 0
 End If
 
-If mIndexIn + bytesReceived > UBound(mBufferIn) + 1 Then
-    If bytesReceived <= (UBound(mBufferIn) + 1 - mIndexIn + mInputIndex) Then
+If mInputBufferNextFreeIndex + bytesReceived > UBound(mInputBuffer) + 1 Then
+    If bytesReceived <= (UBound(mInputBuffer) + 1 - mInputBufferNextFreeIndex + mInputParseIndex) Then
         ' copy the existing contents down to the start of the buffer
-        'Debug.Print "Moving unprocessed data (" & mIndexIn - mInputIndex & " bytes) from " & mInputIndex & " to start of buffer"
-        MoveMemory mBufferIn(0), mBufferIn(mInputIndex), mIndexIn - mInputIndex
-        mIndexIn = mIndexIn - mInputIndex
-        mInputIndex = 0
-        mInputIndexChk = 0
+        'Debug.Print "Moving unprocessed data (" & mInputBufferNextFreeIndex - mInputParseIndex & " bytes) from " & mInputParseIndex & " to start of buffer"
+        MoveMemory mInputBuffer(0), mInputBuffer(mInputParseIndex), mInputBufferNextFreeIndex - mInputParseIndex
+        mInputBufferNextFreeIndex = mInputBufferNextFreeIndex - mInputParseIndex
+        mInputParseIndex = 0
+        mInputParseIndexChk = 0
     Else
         If mSocketLogger.IsLoggable(LogLevelHighDetail) Then
             mSocketLogger.Log LogLevels.LogLevelHighDetail, _
                             "Extending socket buffer by " & IIf(bytesReceived > 1024, bytesReceived, 1024) & " bytes"
         End If
-        ReDim Preserve mBufferIn(UBound(mBufferIn) + IIf(bytesReceived > 1024, bytesReceived, 1024)) As Byte
+        ReDim Preserve mInputBuffer(UBound(mInputBuffer) + IIf(bytesReceived > 1024, bytesReceived, 1024)) As Byte
     End If
 End If
-'Debug.Print "Appending socket message to buffer at " & mIndexIn
-CopyMemory mBufferIn(mIndexIn), mSocketInputData(0), bytesReceived
-mIndexIn = mIndexIn + bytesReceived
+'Debug.Print "Appending socket message to buffer at " & mInputBufferNextFreeIndex
+CopyMemory mInputBuffer(mInputBufferNextFreeIndex), mSocketInputData(0), bytesReceived
+mInputBufferNextFreeIndex = mInputBufferNextFreeIndex + bytesReceived
 
-If mIndexIn <> mInputIndex Then
+If mInputBufferNextFreeIndex <> mInputParseIndex Then
     If processingMessages Then
         ' this is a re-entrant call to DataArrival. We don't want to call checkMessages
         ' here, because the current call to it will process the data we've just
@@ -782,7 +788,7 @@ End With
 
 addMsgId CANCEL_MKT_DEPTH
 addData version, "Version"
-addData MarketDepthReqIdBase + tickerId, "Ticker id"
+addData IdBaseMarketDepthReq + tickerId, "Ticker id"
 send
 Exit Sub
 Err:
@@ -923,7 +929,7 @@ End If
 On Error Resume Next
 Set mapEntry.order = pOrder
 Set mapEntry.OrderSubmitter = OrderSubmitter
-mOrderIDMap.add mapEntry, generateTwsOrderKey(pOrder.brokerId, mClientID)
+mOrderIDMap.add mapEntry, generateTwsOrderKey(pOrder.BrokerId, mClientID)
 On Error GoTo Err
 
 sendOrder pOrder, transmit, parentId, ocaGroup, routingHint
@@ -1110,6 +1116,8 @@ End Sub
 
 Friend Sub RequestExecutions(ByVal filter As ExecutionFilter)
 Const ProcName As String = "RequestExecutions"
+
+Static reqId As Long
 Dim theFilter As ExecutionFilter
 
 On Error GoTo Err
@@ -1119,10 +1127,14 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
                 "Not connected"
 End If
 
-Const version = 2
+Const version = 3
 
 addMsgId REQ_EXECUTIONS
 addData version, "Version"
+
+If mServerVersion >= MIN_SERVER_VER_EXECUTION_DATA_CHAIN Then
+    addData reqId + IdBaseExecutionsReq, "ReqId"
+End If
 
 If mServerVersion >= 9 Then
     If filter Is Nothing Then
@@ -1460,11 +1472,11 @@ addData IIf(val, 1, 0), fieldName
 End Sub
 
 Private Sub addByte(ByVal value As Integer)
-If mIndexOut > UBound(mBufferOut) Then
-    ReDim Preserve mBufferOut(2 * (UBound(mBufferOut) + 1) - 1) As Byte
+If mOutputBufferIndex > UBound(mOutputBuffer) Then
+    ReDim Preserve mOutputBuffer(2 * (UBound(mOutputBuffer) + 1) - 1) As Byte
 End If
-mBufferOut(mIndexOut) = value
-mIndexOut = mIndexOut + 1
+mOutputBuffer(mOutputBufferIndex) = value
+mOutputBufferIndex = mOutputBufferIndex + 1
 End Sub
 
 Private Sub addData( _
@@ -1698,12 +1710,12 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     'Debug.Print "Set checkpoint number=" & 1000
 End If
 
-Do While mInputIndex < mIndexIn
+Do While mInputParseIndex < mInputBufferNextFreeIndex
     
     If mCheckPointNumber = 1000 Then
         Dim tmpStartIndex As Long
         tmpStartIndex = startIndex
-        startIndex = mInputIndex
+        startIndex = mInputParseIndex
         prevMsgID = msgId
         
         createInMessageBuilder
@@ -1815,8 +1827,8 @@ Do While mInputIndex < mIndexIn
             "prevMsgID=" & prevMsgID & _
             " prevVersion=" & prevVersion & _
             " prevStartindex=" & prevStartIndex & vbCrLf & _
-            "mIndexIn=" & mIndexIn & _
-            " mInputIndex=" & mInputIndex & vbCrLf & _
+            "mIndexIn=" & mInputBufferNextFreeIndex & _
+            " mInputIndex=" & mInputParseIndex & vbCrLf & _
             "Buffer contents: " & vbCrLf & _
             formatBuffer
         
@@ -1848,7 +1860,7 @@ Do While mInputIndex < mIndexIn
     
     checkpointBuffer
     mCheckPointNumber = 1000
-    'Debug.Print "Set checkpoint number=" & 1000 & " minputindex=" & mInputIndex
+    'Debug.Print "Set checkpoint number=" & 1000 & " minputindex=" & mInputParseIndex
 Loop
 
 Exit Sub
@@ -1875,8 +1887,8 @@ s = "msgID=" & msgId & _
     "prevMsgID=" & prevMsgID & _
     " prevVersion=" & prevVersion & _
     " prevStartindex=" & prevStartIndex & vbCrLf & _
-    "mIndexIn=" & mIndexIn & _
-    " mInputIndex=" & mInputIndex & vbCrLf & _
+    "mInputBufferNextFreeIndex=" & mInputBufferNextFreeIndex & _
+    " mInputParseIndex=" & mInputParseIndex & vbCrLf & _
     "Buffer contents: " & vbCrLf & _
     formatBuffer
 
@@ -1889,7 +1901,7 @@ handleFatalErrorEx errNum, errSource, errDesc, "checkMessages"
 End Sub
 
 Private Sub checkpointBuffer()
-mInputIndexChk = mInputIndex
+mInputParseIndexChk = mInputParseIndex
 End Sub
 
 Private Sub clearPrevPrices( _
@@ -1995,14 +2007,14 @@ Const ProcName As String = "formatBuffer"
 On Error GoTo Err
 
 Set s = CreateStringBuilder
-Do While i < mIndexIn
+Do While i < mInputBufferNextFreeIndex
     s.Append Format(i, "0000  ")
     For j = i To i + 49
-        If j = mIndexIn Then Exit For
-        s.Append IIf(mBufferIn(j) <> 0, Chr$(mBufferIn(j)), "_")
+        If j = mInputBufferNextFreeIndex Then Exit For
+        s.Append IIf(mInputBuffer(j) <> 0, Chr$(mInputBuffer(j)), "_")
     Next
     i = i + 50
-    If j < mIndexIn Then s.AppendLine ""
+    If j < mInputBufferNextFreeIndex Then s.AppendLine ""
 Loop
 formatBuffer = s.ToString
 
@@ -2016,7 +2028,7 @@ Private Function generateHistDataRequestId(ByVal index As Long) As Long
 Const ProcName As String = "generateHistDataRequestId"
 On Error GoTo Err
 
-generateHistDataRequestId = index + HistoricalDataReqIdBase + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataReqIdIncrement
+generateHistDataRequestId = index + IdBaseReqHistoricalData + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataReqIdIncrement
 
 Exit Function
 
@@ -2333,11 +2345,11 @@ Private Function getString( _
 Dim s As String
 Dim i As Long
 
-For i = mInputIndex To mIndexIn - 1
-    If mBufferIn(i) = 0 Then
+For i = mInputParseIndex To mInputBufferNextFreeIndex - 1
+    If mInputBuffer(i) = 0 Then
         ' we've found our next string
-        'Debug.Print "Got string: mInputIndex=" & mInputIndex & " value=" & s
-        mInputIndex = i + 1
+        'Debug.Print "Got string: mInputIndex=" & mInputParseIndex & " value=" & s
+        mInputParseIndex = i + 1
         getString = s
         If Not mInMessageBuilder Is Nothing Then
             mInMessageBuilder.Append fieldName
@@ -2347,7 +2359,11 @@ For i = mInputIndex To mIndexIn - 1
         End If
         Exit Function
     End If
-    s = s & Chr$(mBufferIn(i))
+    ' NB: I've tried various other means of generating the string
+    ' without using string concatenation, but for the lengths of the
+    ' fields in the TWSAPI protocol (except for error messages) they are all much slower
+    ' than string concatenation
+    s = s & Chr$(mInputBuffer(i))
 Next
 
 ' we've got to the end of the current data, so raise an error to abort
@@ -2438,6 +2454,8 @@ If (version >= 2) Then
     getBoolean "Next Option Partial"
     getString "Notes"
 End If
+If version >= 4 Then getString "longName"
+
 
 logSocketInputMessage
 
@@ -2654,6 +2672,13 @@ Else
     End If
 End If
 
+If version >= 4 Then getLong "UnderConId"
+
+If version >= 5 Then
+   lContractBuilder.Description = getString("Long name")
+   getString "Primary exchange"
+End If
+
 logSocketInputMessage
 
 If Not ignore Then
@@ -2666,12 +2691,14 @@ If Not ignore Then
     
     lContractBuilder.expiryDate = expiryDate
     
-    lContractBuilder.Description = symbol & _
-                                " (" & SecTypeToShortString(sectype) & ")" & _
-                                IIf(expiryDate <> 0, Format(expiryDate, " dd mmm yy"), "") & _
-                                IIf(optRight <> OptNone, " " & optionRightToString(optRight), "") & _
-                                IIf(strike <> 0#, " " & strike, "")
-
+    If lContractBuilder.Contract.Description = "" Then
+        lContractBuilder.Description = symbol & _
+                                    " (" & SecTypeToShortString(sectype) & ")" & _
+                                    IIf(expiryDate <> 0, Format(expiryDate, " dd mmm yy"), "") & _
+                                    IIf(optRight <> OptNone, " " & optionRightToString(optRight), "") & _
+                                    IIf(strike <> 0#, " " & strike, "")
+    End If
+    
     lContractBuilder.multiplier = multiplier / lContractWrapper.priceMagnifier
     lContractBuilder.TickSize = minimumTick * lContractWrapper.priceMagnifier
 
@@ -2792,7 +2819,7 @@ Case 101
 Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
     121, 125, 126, 127, 128, 129, 130, 132, 137, 140, 141, 144, _
     152, 153, 154, 157, 160, 201, 312, 313, 314, 315, 325, 328, _
-    334, 337, 338, 339, 343, 355, 361, 382, 383, 388, 391, 451
+    334, 337, 338, 339, 343, 355, 361, 382, 383, 387, 388, 391, 395, 396, 397, 451
     
     failpoint = 400
 
@@ -2801,7 +2828,6 @@ Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
     On Error GoTo Err
     If Not mapEntry.order Is Nothing Then
         mapEntry.OrderSubmitter.InvalidOrder mapEntry.order.tradebuildId, errorMsg
-        'mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
     End If
 Case 162    ' historical data request problem
     failpoint = 500
@@ -2858,7 +2884,7 @@ Case 200    ' security definition not known
     Case IdTypeMarketDepth
         failpoint = 710
 
-        mTickerTable(id - MarketDepthReqIdBase).dataReader.marketDepthRequestFailed errorMsg
+        mTickerTable(id - IdBaseMarketDepthReq).dataReader.marketDepthRequestFailed errorMsg
     Case IdTypeHistoricalData
         failpoint = 720
 
@@ -2877,20 +2903,8 @@ Case 200    ' security definition not known
         On Error GoTo Err
         If Not mapEntry.order Is Nothing Then
             mapEntry.OrderSubmitter.InvalidOrder mapEntry.order.tradebuildId, errorMsg
-            'mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
         End If
     End Select
-Case 201
-    failpoint = 750
-
-    On Error Resume Next
-    mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    On Error GoTo Err
-    If Not mapEntry.order Is Nothing Then
-        mapEntry.OrderSubmitter.InvalidOrder mapEntry.order.tradebuildId, errorMsg
-        'mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
-    End If
-Case 202
     failpoint = 800
 
     On Error Resume Next
@@ -2900,13 +2914,12 @@ Case 202
         Dim osp As New OrderStatusReport
         osp.Initialise mapEntry.order.tradebuildId, OrderStatuses.OrderStatusCancelled
         mapEntry.OrderSubmitter.OrderStatusReport osp
-        'mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
     End If
 Case 309
     ' max market depth requests exceeded
     failpoint = 900
 
-    mTickerTable(id - MarketDepthReqIdBase).dataReader.marketDepthRequestFailed "Max market depth requests exceeded"
+    mTickerTable(id - IdBaseMarketDepthReq).dataReader.marketDepthRequestFailed "Max market depth requests exceeded"
 Case 316
     failpoint = 1000
 
@@ -2959,6 +2972,16 @@ Case 354    ' no market data subscription
 
     End Select
     
+Case 399
+    
+    failpoint = 100
+
+    On Error Resume Next
+    mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+    On Error GoTo Err
+    If Not mapEntry.order Is Nothing Then
+        mapEntry.OrderSubmitter.OrderDeferred mapEntry.order.tradebuildId, errorMsg
+    End If
 
 Case 1100
     failpoint = 1300
@@ -3027,6 +3050,8 @@ Private Sub getExecutionData(ByVal version As Long)
 Const ProcName As String = "getExecutionData"
 Dim timeString  As String
 
+Dim reqId As Long
+
 Dim symbol As String
 Dim localSymbol As String
 Dim sectype As String ' keep the socket string for logging
@@ -3056,6 +3081,8 @@ Dim execRpt As New ExecutionReport
 Dim failpoint As Long
 
 On Error GoTo Err
+
+If (version >= 7) Then reqId = getLong("ReqId")
 
 id = getLong("Id")
 
@@ -3136,7 +3163,7 @@ Else
         Dim qtyRemaining As Long
         Dim statusRpt As New OrderStatusReport
         
-        qtyRemaining = mapEntry.order.quantityRemaining
+        qtyRemaining = mapEntry.order.QuantityRemaining
         
         mapEntry.OrderSubmitter.ExecutionReport execRpt
         
@@ -3176,6 +3203,7 @@ On Error GoTo Err
 reqId = getLong("reqId")
 logSocketInputMessage
 
+If Not mOrderRecoveryServiceConsumer Is Nothing Then mOrderRecoveryServiceConsumer.ExecutionReportsComplete
 Exit Sub
 
 Err:
@@ -3223,8 +3251,8 @@ If checkPointNumber = 0 Then
     totalVolume = 0
     
     requestID = getLong("Request id")
-    index = (requestID - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
-    reqNo = Int((requestID - HistoricalDataReqIdBase) / HistoricalDataReqIdIncrement)
+    index = (requestID - IdBaseReqHistoricalData) Mod HistoricalDataReqIdIncrement
+    reqNo = Int((requestID - IdBaseReqHistoricalData) / HistoricalDataReqIdIncrement)
     
     If mHistoricalDataTable(index).barSpecifier.CustomSessionStartTime <> 0 Or _
         mHistoricalDataTable(index).barSpecifier.CustomSessionEndTime <> 0 _
@@ -3243,7 +3271,7 @@ End If
 
 If checkPointNumber = 100 Then
     If version >= 2 Then
-        getString ("Start date")      ' startDateStr
+        getString "Start date"      ' startDateStr
     End If
     checkpointBuffer
     checkPointNumber = 110
@@ -3251,7 +3279,7 @@ End If
 
 If checkPointNumber = 110 Then
     If version >= 2 Then
-        getString ("End date")      ' endDateStr
+        getString "End date"      ' endDateStr
     End If
     checkpointBuffer
     checkPointNumber = 120
@@ -3425,7 +3453,7 @@ Private Function getHistDataTableIndexFromRequestId(ByVal id As Long) As Long
 Const ProcName As String = "getHistDataTableIndexFromRequestId"
 On Error GoTo Err
 
-getHistDataTableIndexFromRequestId = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
+getHistDataTableIndexFromRequestId = (id - IdBaseReqHistoricalData) Mod HistoricalDataReqIdIncrement
 
 Exit Function
 
@@ -3438,13 +3466,15 @@ Private Function getIdType( _
 Const ProcName As String = "getIdType"
 On Error GoTo Err
 
-If id >= OrderPlexIdBase Then
+If id >= IdBaseOrderPlex Then
     getIdType = IdTypeOrder
-ElseIf id >= ContractDataReqIdBase Then
+ElseIf id >= IdBaseExecutionsReq Then
+    getIdType = IdTypeExecution
+ElseIf id >= IdBaseContractDataReq Then
     getIdType = IdTypeContractData
-ElseIf id >= HistoricalDataReqIdBase Then
+ElseIf id >= IdBaseReqHistoricalData Then
     getIdType = IdTypeHistoricalData
-ElseIf id >= MarketDepthReqIdBase Then
+ElseIf id >= IdBaseMarketDepthReq Then
     getIdType = IdTypeMarketDepth
 ElseIf id >= 0 Then
     getIdType = IdTypeRealtimeData
@@ -3491,7 +3521,7 @@ tick.size = getLong("Size")
 
 logSocketInputMessage
 
-With mTickerTable(id - MarketDepthReqIdBase)
+With mTickerTable(id - IdBaseMarketDepthReq)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -3526,7 +3556,7 @@ tick.size = getLong("Size")
 
 logSocketInputMessage
 
-With mTickerTable(id - MarketDepthReqIdBase)
+With mTickerTable(id - IdBaseMarketDepthReq)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -3573,7 +3603,7 @@ mNextOrderPlexID = OrderPlexIdIncrement * Int((getLong("Next id") + OrderPlexIdI
 
 logSocketInputMessage
 
-If mNextOrderPlexID < OrderPlexIdBase Then mNextOrderPlexID = OrderPlexIdBase
+If mNextOrderPlexID < IdBaseOrderPlex Then mNextOrderPlexID = IdBaseOrderPlex
 
 Exit Sub
 
@@ -3612,7 +3642,7 @@ Set lOrderReport = New OrderReport
 id = getLong("Id")
 
 ' read contract fields
-If version >= 17 Then setproperty lOrderReport.providerProperties, "conId"
+If version >= 17 Then setproperty lOrderReport.ProviderProperties, "conId"
 symbol = getString("Symbol")
 sectype = getString("Sec type")
 expiry = getString("Expiry")
@@ -3634,148 +3664,168 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
 
 ' read order fields
 With lOrderReport
-    .brokerId = id
+    .BrokerId = id
     .ContractSpecifier = lContractSpecifier
     .action = orderActionFromString(getString("Action"))
     .Quantity = getLong("Quantity")
-    .orderType = orderTypeFromString(getString("Order type"))
-    .limitPrice = getDouble("Limit price")
-    .triggerPrice = getDouble("Aux price")
-    .timeInForce = orderTIFFromString(getString("Time in force"))
-    setproperty .providerProperties, "OCA group"
-    setproperty .providerProperties, "Account"   ' .account
-    setproperty .providerProperties, "Open/close"   ' .openClose
-    .origin = getLong("Origin")
-    .originatorRef = getString("Order ref")
+    .OrderType = orderTypeFromString(getString("Order type"))
+    .LimitPrice = getDouble("Limit price")
+    .TriggerPrice = getDouble("Aux price")
+    .TimeInForce = orderTIFFromString(getString("Time in force"))
+    setproperty .ProviderProperties, "OCA group"
+    setproperty .ProviderProperties, "Account"   ' .account
+    setproperty .ProviderProperties, "Open/close"   ' .openClose
+    .Origin = getLong("Origin")
+    .OriginatorRef = getString("Order ref")
     If version >= 3 Then clientID = getLong("Client id")
     
     If version >= 4 Then
-        setproperty .providerProperties, "Perm id"    ' .permId =
-        .ignoreRegularTradingHours = getBoolean("Outside RTH")
+        setproperty .ProviderProperties, "Perm id"    ' .permId =
+        .IgnoreRegularTradingHours = getBoolean("Outside RTH")
         .Hidden = getBoolean("Hidden")
-        .discretionaryAmount = getDouble("Discr amt")
+        .DiscretionaryAmount = getDouble("Discr amt")
     End If
 
     If version >= 5 Then
         dateString = getString("Good after time")
-        If dateString <> "" Then .goodAfterTime = CDate(Left$(dateString, 4) & "/" & _
+        If dateString <> "" Then .GoodAfterTime = CDate(Left$(dateString, 4) & "/" & _
                                                         Mid$(dateString, 5, 2) & "/" & _
                                                         Mid$(dateString, 7, 2) & " " & _
                                                         Right$(dateString, 8))
     End If
     
-    If version >= 6 Then setproperty .providerProperties, "Shares allocation"  ' .sharesAllocation
+    If version >= 6 Then setproperty .ProviderProperties, "Shares allocation"  ' .sharesAllocation
     
     If version >= 7 Then
-        setproperty .providerProperties, "FA Group"   ' .FAGroup
-        setproperty .providerProperties, "FA method"  ' .FAMethod
-        setproperty .providerProperties, "FA Percentage"  ' .FAPercentage
-        setproperty .providerProperties, "FA Profile"  ' .FAProfile
+        setproperty .ProviderProperties, "FA Group"   ' .FAGroup
+        setproperty .ProviderProperties, "FA method"  ' .FAMethod
+        setproperty .ProviderProperties, "FA Percentage"  ' .FAPercentage
+        setproperty .ProviderProperties, "FA Profile"  ' .FAProfile
     End If
     
     If version >= 8 Then
         dateString = getString("Good till date")
-        If dateString <> "" Then .goodTillDate = CDate(Left$(dateString, 4) & "/" & _
+        If dateString <> "" Then .GoodTillDate = CDate(Left$(dateString, 4) & "/" & _
                                                         Mid$(dateString, 5, 2) & "/" & _
                                                         Mid$(dateString, 7, 2) & " " & _
                                                         Right$(dateString, 8))
     End If
     
     If version >= 9 Then
-        setproperty .providerProperties, "Rule80A"          ' rule80A
-        setproperty .providerProperties, "Percent Offset"
-        .settlingFirm = getString("Settling Firm")
-        setproperty .providerProperties, "shortSaleSlot"
-        setproperty .providerProperties, "designatedLocation"
-        setproperty .providerProperties, "Auction Strategy"
-        setproperty .providerProperties, "starting Price"
-        setproperty .providerProperties, "stockRefPrice"
-        setproperty .providerProperties, "delta"
-        setproperty .providerProperties, "stockRangeLower"
-        setproperty .providerProperties, "stockRangeUpper"
-        .displaySize = getLong("displaySize")
+        setproperty .ProviderProperties, "Rule80A"          ' rule80A
+        setproperty .ProviderProperties, "Percent Offset"
+        .SettlingFirm = getString("Settling Firm")
+        setproperty .ProviderProperties, "shortSaleSlot"
+        setproperty .ProviderProperties, "designatedLocation"
+        setproperty .ProviderProperties, "Auction Strategy"
+        setproperty .ProviderProperties, "starting Price"
+        setproperty .ProviderProperties, "stockRefPrice"
+        setproperty .ProviderProperties, "delta"
+        setproperty .ProviderProperties, "stockRangeLower"
+        setproperty .ProviderProperties, "stockRangeUpper"
+        .DisplaySize = getLong("displaySize")
         'setproperty .providerProperties, "rthOnly"
-        .blockOrder = getBoolean("blockOrder")
-        .sweepToFill = getBoolean("sweepToFill")
-        .allOrNone = getBoolean("allOrNone")
-        .minimumQuantity = getLong("minQty")
-        setproperty .providerProperties, "ocaType"
-        .eTradeOnly = getBoolean("eTradeOnly")
-        .firmQuoteOnly = getBoolean("firmQuoteOnly")
+        .BlockOrder = getBoolean("blockOrder")
+        .SweepToFill = getBoolean("sweepToFill")
+        .AllOrNone = getBoolean("allOrNone")
+        .MinimumQuantity = getLong("minQty")
+        setproperty .ProviderProperties, "ocaType"
+        .ETradeOnly = getBoolean("eTradeOnly")
+        .FirmQuoteOnly = getBoolean("firmQuoteOnly")
         .NbboPriceCap = getDouble("nbboPriceCap")
     End If
 
     If version >= 10 Then
-        setproperty .providerProperties, "parentId"
-        .stopTriggerMethod = orderStopTriggerMethodFromString(getString("triggerMethod"))
+        setproperty .ProviderProperties, "parentId"
+        .StopTriggerMethod = orderStopTriggerMethodFromString(getString("triggerMethod"))
     End If
 
     If version >= 11 Then
-        setproperty .providerProperties, "volatility"
-        setproperty .providerProperties, "volatilityType"
+        setproperty .ProviderProperties, "volatility"
+        setproperty .ProviderProperties, "volatilityType"
         If version = 11 Then
-            setproperty .providerProperties, "receivedInt"
+            setproperty .ProviderProperties, "receivedInt"
         Else ' version 12 and up
-            setproperty .providerProperties, "deltaNeutralOrderType"
-            setproperty .providerProperties, "deltaNeutralAuxPrice"
+            setproperty .ProviderProperties, "deltaNeutralOrderType"
+            setproperty .ProviderProperties, "deltaNeutralAuxPrice"
         End If
-        setproperty .providerProperties, "continuousUpdate"
+        setproperty .ProviderProperties, "continuousUpdate"
         If mServerVersion = 26 Then
-            setproperty .providerProperties, "stockRangeLower"
-            setproperty .providerProperties, "stockRangeUpper"
+            setproperty .ProviderProperties, "stockRangeLower"
+            setproperty .ProviderProperties, "stockRangeUpper"
         End If
-        setproperty .providerProperties, "referencePriceType"
+        setproperty .ProviderProperties, "referencePriceType"
     End If
     
     If version >= 13 Then
-        setproperty .providerProperties, "trailStopPrice"
+        setproperty .ProviderProperties, "trailStopPrice"
     End If
 
     If version >= 14 Then
-        setproperty .providerProperties, "basisPoints"
-        setproperty .providerProperties, "basisPointsType"
-        setproperty .providerProperties, "comboLegsDescrip"
+        setproperty .ProviderProperties, "basisPoints"
+        setproperty .ProviderProperties, "basisPointsType"
+        setproperty .ProviderProperties, "comboLegsDescrip"
     End If
 
     If (version >= 15) Then
         If (version >= 20) Then
-            setproperty .providerProperties, "Scale Init Level Size"
-            setproperty .providerProperties, "Scale Subs Level Size"
+            setproperty .ProviderProperties, "Scale Init Level Size"
+            setproperty .ProviderProperties, "Scale Subs Level Size"
         Else
-            setproperty .providerProperties, "Scale Init Level Size"
+            setproperty .ProviderProperties, "Scale Init Level Size"
         End If
-        setproperty .providerProperties, "Scale Price Increment"
+        setproperty .ProviderProperties, "Scale Price Increment"
     End If
     
     If (version >= 19) Then
-        setproperty .providerProperties, "Clearing Account"
-        setproperty .providerProperties, "Clearing Intent"
+        setproperty .ProviderProperties, "Clearing Account"
+        setproperty .ProviderProperties, "Clearing Intent"
+    End If
+    
+    If version >= 22 Then
+        setproperty .ProviderProperties, "Not held"
     End If
     
     If (version >= 20) Then
-        setproperty .providerProperties, "UnderComp"
-        If CBool(.providerProperties.GetParameterValue("UnderComp")) Then
+        setproperty .ProviderProperties, "UnderComp"
+        If CBool(.ProviderProperties.GetParameterValue("UnderComp")) Then
             'UnderComp underComp = new UnderComp()
-            setproperty .providerProperties, "UnderComp ConId"
-            setproperty .providerProperties, "UnderComp Delta"
-            setproperty .providerProperties, "UnderComp Price"
+            setproperty .ProviderProperties, "UnderComp ConId"
+            setproperty .ProviderProperties, "UnderComp Delta"
+            setproperty .ProviderProperties, "UnderComp Price"
             'Contract.underComp = underComp
+        End If
+    End If
+    
+    If version >= 21 Then
+        Dim algoStrategy As String
+        algoStrategy = getString("Algo strategy")
+        If algoStrategy <> "" Then
+            Dim algoParamsCount As Long
+            algoParamsCount = getLong("Algo params count")
+            If algoParamsCount > 0 Then
+                Dim i As Long
+                For i = 1 To algoParamsCount
+                    getString "Tag"
+                    getString "Value"
+                Next
+            End If
         End If
     End If
     
     If (version >= 16) Then
 
-        setproperty .providerProperties, "What If"
+        setproperty .ProviderProperties, "What If"
 
         .status = orderStatusFromString(getString("Status"))
-        setproperty .providerProperties, "Init Margin"
-        setproperty .providerProperties, "Maint Margin"
-        setproperty .providerProperties, "Equity With Loan"
-        setproperty .providerProperties, "Commission"
-        setproperty .providerProperties, "Min Commission"
-        setproperty .providerProperties, "Max Commission"
-        setproperty .providerProperties, "Commission Currency"
-        setproperty .providerProperties, "Warning Text"
+        setproperty .ProviderProperties, "Init Margin"
+        setproperty .ProviderProperties, "Maint Margin"
+        setproperty .ProviderProperties, "Equity With Loan"
+        setproperty .ProviderProperties, "Commission"
+        setproperty .ProviderProperties, "Min Commission"
+        setproperty .ProviderProperties, "Max Commission"
+        setproperty .ProviderProperties, "Commission Currency"
+        setproperty .ProviderProperties, "Warning Text"
     End If
 End With
 
@@ -3811,6 +3861,7 @@ On Error GoTo Err
 
 logSocketInputMessage
 
+If Not mOrderRecoveryServiceConsumer Is Nothing Then mOrderRecoveryServiceConsumer.OrderReportsComplete
 Exit Sub
 
 Err:
@@ -3905,12 +3956,21 @@ Dim lContractSpecifier As ContractSpecifier
 Dim failpoint As Long
 On Error GoTo Err
 
+If version >= 6 Then getLong "Contract id"
+
 symbol = getString("Symbol")
 sectype = getString("Sec type")
 expiry = getString("Expiry")
 strike = getDouble("Strike")
 rightString = getString("Right")
+
+If version >= 7 Then
+    getString "Multiplier"
+    getString "Primary exchg"
+End If
+
 currencyCode = getString("Currency")
+
 If version >= 2 Then localSymbol = getString("Locale symbol")
 
 Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
@@ -3933,7 +3993,9 @@ If version >= 3 Then
     unrealizedPNL = getDouble("Unrealized PNL")
     realizedPNL = getDouble("Realized PNL")
 End If
+
 Dim accountName As String: If version >= 4 Then accountName = getString("Account Name")
+
 If version = 6 And mServerVersion = 39 Then getString "Primary exchange"
 
 logSocketInputMessage
@@ -4921,7 +4983,7 @@ addData version, "Version"
 
 If mServerVersion >= MIN_SERVER_VER_CONTRACT_DATA_CHAIN Then
     reqId = reqId + 1
-    addData ContractDataReqIdBase + reqId, "Request id"
+    addData IdBaseContractDataReq + reqId, "Request id"
 End If
 
 With ContractSpecifier
@@ -5132,7 +5194,7 @@ On Error GoTo Err
 
 addMsgId REQ_MKT_DEPTH
 addData version, "Version"
-addData tickerId + MarketDepthReqIdBase, "Request id"
+addData tickerId + IdBaseMarketDepthReq, "Request id"
 With contractSpec
     addData .symbol, "Symbol"
     addData secTypeToString(.sectype), "Sec type"
@@ -5198,8 +5260,8 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName
 End Sub
 
 Private Sub rollbackBuffer()
-'Debug.Print "Rollback: mInputIndex=" & mInputIndexChk
-mInputIndex = mInputIndexChk
+'Debug.Print "Rollback: mInputIndex=" & mInputParseIndexChk
+mInputParseIndex = mInputParseIndexChk
 End Sub
 
 Private Function secTypeFromString(ByVal value As String) As SecurityTypes
@@ -5243,14 +5305,14 @@ On Error GoTo Err
 
 logSocketOutputMessage ignoreLogLevel
 
-ReDim Preserve mBufferOut(mIndexOut - 1) As Byte
+ReDim Preserve mOutputBuffer(mOutputBufferIndex - 1) As Byte
 If mSocketLogger.IsLoggable(LogLevelMediumDetail) Then
     mSocketLogger.Log LogLevels.LogLevelMediumDetail, _
-                        showBuffer("Out buf: ", mBufferOut)
+                        showBuffer("Out buf: ", mOutputBuffer)
 End If
-mSocket.SendData mBufferOut
-ReDim mBufferOut(15) As Byte
-mIndexOut = 0
+mSocket.SendData mOutputBuffer
+ReDim mOutputBuffer(15) As Byte
+mOutputBufferIndex = 0
 
 Exit Sub
 
@@ -5277,7 +5339,7 @@ Set specifier = pOrder.Contract.specifier
 Const version = 26
 addMsgId PLACE_ORDER
 addData version, "Version"
-addData pOrder.brokerId, "Order id"
+addData pOrder.BrokerId, "Order id"
 
 ' send contract fields
 With specifier
@@ -5301,35 +5363,35 @@ With pOrder
     ' send main order fields
     addData orderActionToString(.action), "Action"
     addData .Quantity, "Quantity"
-    addData orderTypeToString(.orderType), "Order type"
+    addData orderTypeToString(.OrderType), "Order type"
     If mServerVersion <= 10 And _
         (UCase$(specifier.exchange) = "LIFFE" Or _
         UCase$(specifier.exchange) = "LSE") _
     Then
-        addDouble .limitPrice / 100, "Price"
-        addDouble .triggerPrice / 100, "Aux price"
+        addDouble .LimitPrice / 100, "Price"
+        addDouble .TriggerPrice / 100, "Aux price"
     Else
-        addDouble .limitPrice, "Price"
-        addDouble .triggerPrice, "Aux price"
+        addDouble .LimitPrice, "Price"
+        addDouble .TriggerPrice, "Aux price"
     End If
     ' send extended order fields
-    addData orderTIFToString(.timeInForce), "TIF"
+    addData orderTIFToString(.TimeInForce), "TIF"
     addData ocaGroup, "Oca Group"
     addData "", "Account"
     addData "", "OpenClose"
-    addData .origin, "Origin"
-    addData .originatorRef, "Originator ref"
+    addData .Origin, "Origin"
+    addData .OriginatorRef, "Originator ref"
     addBoolean transmit, "Transmit"
     If mServerVersion >= 4 Then addData parentId, "Parent id"
     If mServerVersion >= 5 Then
-        addBoolean .blockOrder, "Block order"
-        addBoolean .sweepToFill, "Sweep to fill"
-        addData .displaySize, "Display size"
-        addData orderStopTriggerMethodToString(.stopTriggerMethod), "Stop trigger method"
+        addBoolean .BlockOrder, "Block order"
+        addBoolean .SweepToFill, "Sweep to fill"
+        addData .DisplaySize, "Display size"
+        addData orderStopTriggerMethodToString(.StopTriggerMethod), "Stop trigger method"
         If mServerVersion < 38 Then
             addBoolean False, "Ignore RTH"
         Else
-            addBoolean .ignoreRegularTradingHours, "Ignore RTH"
+            addBoolean .IgnoreRegularTradingHours, "Ignore RTH"
         End If
     End If
     If mServerVersion >= 7 Then addBoolean .Hidden, "Hidden"
@@ -5359,21 +5421,21 @@ End If
 With pOrder
     If mServerVersion >= 9 Then addData "", "Shares Allocation"
     
-    If mServerVersion >= 10 Then addData .discretionaryAmount, "Discretionary amount"
+    If mServerVersion >= 10 Then addData .DiscretionaryAmount, "Discretionary amount"
     
     If mServerVersion >= 11 Then
-        If .goodAfterTime = 0 Then
+        If .GoodAfterTime = 0 Then
             addData "", "Good after time"
         Else
-            addData Format(.goodAfterTime, "yyyymmdd hh\:nn\:ss ") & .goodAfterTimeTZ, "Good after time"
+            addData Format(.GoodAfterTime, "yyyymmdd hh\:nn\:ss ") & .GoodAfterTimeTZ, "Good after time"
         End If
     End If
     
     If mServerVersion >= 12 Then
-        If .goodTillDate = 0 Then
+        If .GoodTillDate = 0 Then
             addData "", "Good till date"
         Else
-            addData Format(.goodTillDate, "yyyymmdd hh\:nn\:ss ") & .goodTillDateTZ, "Good till date"
+            addData Format(.GoodTillDate, "yyyymmdd hh\:nn\:ss ") & .GoodTillDateTZ, "Good till date"
         End If
     End If
     
@@ -5396,11 +5458,11 @@ With pOrder
         End If
         addBoolean False, "Rule 80A"
         addData "", "Settling firm"
-        addBoolean .allOrNone, "All or none"
-        addData .minimumQuantity, "Minimum quantity"
+        addBoolean .AllOrNone, "All or none"
+        addData .MinimumQuantity, "Minimum quantity"
         addData "", "Percent Offset"
-        addBoolean .eTradeOnly, "E-trade only"
-        addBoolean .firmQuoteOnly, "Firm quote only"
+        addBoolean .ETradeOnly, "E-trade only"
+        addBoolean .FirmQuoteOnly, "Firm quote only"
         addData .NbboPriceCap, "NBBO price cap"
         addData "", "Auction strategy"
         addData "", "Starting price"
@@ -5410,7 +5472,7 @@ With pOrder
         addData "", "Stock range upper"
     End If
     
-    If mServerVersion >= 22 Then addBoolean .overrideConstraints, "Override constraints"
+    If mServerVersion >= 22 Then addBoolean .OverrideConstraints, "Override constraints"
 
     If mServerVersion >= 26 Then ' Volatility orders
         addData "", "Volatility"
@@ -5453,6 +5515,10 @@ With pOrder
         addData "", "Clearing intent"
     End If
 
+    If (mServerVersion >= MIN_SERVER_VER_NOT_HELD) Then
+        addBoolean False, "Not held"
+    End If
+
     If (mServerVersion >= MIN_SERVER_VER_UNDER_COMP) Then
 '        if (contract.m_underComp != null) then
 '            underComp underComp = Contract.m_underComp
@@ -5464,6 +5530,22 @@ With pOrder
 '        Else
             addBoolean False, "under comp"
 '        End If
+    End If
+
+    If (mServerVersion >= MIN_SERVER_VER_ALGO_ORDERS) Then
+        addData "", "Algo strategy"
+'        if( !IsEmpty(order.m_algoStrategy)) {
+'            java.util.Vector algoParams = order.m_algoParams;
+'            int algoParamsCount = algoParams == null ? 0 : algoParams.size();
+'            send( algoParamsCount);
+'            if( algoParamsCount > 0) {
+'                for( int i = 0; i < algoParamsCount; ++i) {
+'                    TagValue tagValue = (TagValue)algoParams.get(i);
+'                    send( tagValue.m_tag);
+'                    send( tagValue.m_value);
+'                }
+'            }
+'        }
     End If
 
     If (mServerVersion >= MIN_SERVER_VER_WHAT_IF_ORDERS) Then

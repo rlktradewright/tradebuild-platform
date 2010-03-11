@@ -2214,7 +2214,11 @@ If Not mConfig Is Nothing Then
     Then
         Set tickersConfigSection = mConfig.AddPrivateConfigurationSection(ConfigSectionTickers)
         Set tickerConfigSection = tickersConfigSection.AddConfigurationSection(ConfigSectionTicker & "(" & pTicker.Key & ")")
+        tickerConfigSection.SetSetting ConfigSettingOptions, pTicker.Options
+        tickerConfigSection.SetSetting ConfigSettingHistorical, CStr(pTicker.IsHistorical)
+        
         pTicker.Contract.SaveToConfig tickerConfigSection.AddConfigurationSection(ConfigSectionContract)
+        
         gLogger.Log "Added Ticker to config " & pTicker.Key & "={" & pTicker.Contract.Specifier.ToString & "}", ProcName, ModuleName, LogLevelNormal
         
         ' if there is still an obsolete ContractSpecifier config section, get rid of it
@@ -2316,7 +2320,7 @@ On Error GoTo Err
 Set lTicker = ev.Source
 TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = col
-TickerGrid.Text = ev.size
+TickerGrid.Text = ev.Size
 
 If ev.sizeChange = ValueChangeNone Then
     If ev.recentSizeChange = ValueChangeUp Then
@@ -2751,12 +2755,12 @@ On Error GoTo Err
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Selector)) = ""
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TickerName)) = "Name"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.currencyCode)) = "Curr"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.BidSize)) = "Bid size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.BidSize)) = "Bid Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Bid)) = "Bid"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Ask)) = "Ask"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.AskSize)) = "Ask size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.AskSize)) = "Ask Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Trade)) = "Last"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TradeSize)) = "Last size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.TradeSize)) = "Last Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Volume)) = "Volume"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Change)) = "Chg"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.ChangePercent)) = "Chg %"
@@ -2833,12 +2837,12 @@ On Error GoTo Err
 
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Selector)) = ""
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TickerName)) = "Name"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.BidSize)) = "Bid size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.BidSize)) = "Bid Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Bid)) = "Bid"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Ask)) = "Ask"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.AskSize)) = "Ask size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.AskSize)) = "Ask Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Trade)) = "Last"
-TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TradeSize)) = "Last size"
+TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.TradeSize)) = "Last Size"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Volume)) = "Volume"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Change)) = "Chg"
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.ChangePercent)) = "Chg %"

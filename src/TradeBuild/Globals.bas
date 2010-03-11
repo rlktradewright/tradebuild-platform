@@ -639,6 +639,63 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Public Function gOrderTypeToShortString(ByVal value As OrderTypes) As String
+Const ProcName As String = "gOrderTypeToShortString"
+On Error GoTo Err
+
+Select Case value
+Case OrderTypes.OrderTypeMarket
+    gOrderTypeToShortString = "MKT"
+Case OrderTypes.OrderTypeMarketOnClose
+    gOrderTypeToShortString = "MKTCLS"
+Case OrderTypes.OrderTypeLimit
+    gOrderTypeToShortString = "LMT"
+Case OrderTypes.OrderTypeLimitOnClose
+    gOrderTypeToShortString = "LMTCLS"
+Case OrderTypes.OrderTypePeggedToMarket
+    gOrderTypeToShortString = "PEGMKT"
+Case OrderTypes.OrderTypeStop
+    gOrderTypeToShortString = "STP"
+Case OrderTypes.OrderTypeStopLimit
+    gOrderTypeToShortString = "STPLMT"
+Case OrderTypes.OrderTypeTrail
+    gOrderTypeToShortString = "TRAIL"
+Case OrderTypes.OrderTypeRelative
+    gOrderTypeToShortString = "REL"
+Case OrderTypes.OrderTypeVWAP
+    gOrderTypeToShortString = "VWAP"
+Case OrderTypes.OrderTypeMarketToLimit
+    gOrderTypeToShortString = "MTL"
+Case OrderTypes.OrderTypeQuote
+    gOrderTypeToShortString = "QUOTE"
+Case OrderTypes.OrderTypeAdjust
+    gOrderTypeToShortString = "ADJUST"
+Case OrderTypes.OrderTypeAlert
+    gOrderTypeToShortString = "ALERT"
+Case OrderTypes.OrderTypeLimitIfTouched
+    gOrderTypeToShortString = "LIT"
+Case OrderTypes.OrderTypeMarketIfTouched
+    gOrderTypeToShortString = "MIT"
+Case OrderTypes.OrderTypeTrailLimit
+    gOrderTypeToShortString = "TRAILLMT"
+Case OrderTypes.OrderTypeMarketWithProtection
+    gOrderTypeToShortString = "MKTPROT"
+Case OrderTypes.OrderTypeMarketOnOpen
+    gOrderTypeToShortString = "MOO"
+Case OrderTypes.OrderTypeLimitOnOpen
+    gOrderTypeToShortString = "LOO"
+Case OrderTypes.OrderTypePeggedToPrimary
+    gOrderTypeToShortString = "PEGPRI"
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException
+End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
 Public Function GOrderTypeToString(ByVal value As OrderTypes) As String
 Const ProcName As String = "GOrderTypeToString"
 On Error GoTo Err

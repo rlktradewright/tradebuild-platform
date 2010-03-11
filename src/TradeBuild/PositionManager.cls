@@ -70,6 +70,7 @@ Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mWorkspaceRef As WeakReference
 
+Private mOrderPlexes As OrderPlexes
 Private mOrders As Orders
 Private mExecutions As Executions
 
@@ -138,6 +139,9 @@ Private mChangeListeners As Collection
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
 
+Private mRecovering As Boolean
+
+Private mTradingSessionStartTime As Date
 
 '@================================================================================
 ' Class Event Handlers
@@ -146,6 +150,7 @@ Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
 Private Sub Class_Initialize()
 mIndexApplication = GPositionManager.gNextApplicationIndex
 
+Set mOrderPlexes = New OrderPlexes
 Set mOrders = New Orders
 Set mExecutions = New Executions
 
@@ -206,7 +211,7 @@ If lExec Is Nothing Then
         mOrders.Item(lExec.OrderTradeBuildId).NotifyFill lExec, mKey
     End If
     
-    processExecution pExecutionReport
+    processExecution lExec
 Else
     ' we've already had this notification
     lExec.SyncToExecutionReport pExecutionReport, mKey
@@ -257,7 +262,7 @@ Const ProcName As String = "IOrderSubmissionSrvcConsumer_OrderReport"
 Dim failpoint As Long
 On Error GoTo Err
 
-mOrders(OrderReport.tradeBuildId).SyncToOrderReport OrderReport, mKey
+mOrders(OrderReport.TradeBuildId).SyncToOrderReport OrderReport, mKey
 
 Exit Sub
 
@@ -357,7 +362,7 @@ If ev.price = mLastAsk Then Exit Sub
 
 mLastAsk = ev.price
 
-If mQuantityOutstanding < 0 Then
+If mQuantityOutstanding <= 0 Then
     calcTradeProfit ev.price
     checkCloseall
 End If
@@ -381,7 +386,7 @@ If ev.price = mLastBid Then Exit Sub
 
 mLastBid = ev.price
 
-If mQuantityOutstanding > 0 Then
+If mQuantityOutstanding >= 0 Then
     calcTradeProfit ev.price
     checkCloseall
 End If
@@ -419,26 +424,8 @@ Const ProcName As String = "QuoteListener_Trade"
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.price = 0 Then Exit Sub  ' can occur at start of Session
-
-If mQuantityOutstanding = 0 Then Exit Sub
-If ev.price >= mLastAsk Then
-    If mQuantityOutstanding < 0 Then
-        mLastAsk = ev.price ' because the Ask price must have gone at least that High
-    Else
-        Exit Sub
-    End If
-End If
-If ev.price <= mLastBid Then
-    If mQuantityOutstanding > 0 Then
-        mLastBid = ev.price
-    Else
-        Exit Sub
-    End If
-End If
-    
-calcTradeProfit ev.price
-checkCloseall
+If ev.price > mLastAsk Then QuoteListener_Ask ev    ' because the Ask price must have gone at least that high
+If ev.price < mLastBid Then QuoteListener_Bid ev    ' because the Bid price must have gone at least that low
 
 Exit Sub
 
@@ -542,7 +529,11 @@ Const ProcName As String = "mTicker_TradingSessionStarted"
 Dim failpoint As Long
 On Error GoTo Err
 
-mProfitProfileBarStartTime = mTicker.Timestamp
+If mRecovering Then Exit Sub
+
+If mTicker.Session.CurrentSessionStartTime = mTradingSessionStartTime Then Exit Sub
+
+If Not needExistingOrderPlexes Then setupNewSession
 
 Exit Sub
 
@@ -567,8 +558,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get DrawdownlastTrade() As Currency
-DrawdownlastTrade = mDrawdownLastTrade
+Public Property Get DrawdownLastTrade() As Currency
+DrawdownLastTrade = mDrawdownLastTrade
 End Property
 
 Public Property Get DrawdownThisTrade() As Currency
@@ -625,6 +616,10 @@ End Property
 
 Public Property Get OrderContexts() As OrderContexts
 Set OrderContexts = mOrderContexts
+End Property
+
+Public Property Get OrderPlexes() As OrderPlexes
+Set OrderPlexes = mOrderPlexes
 End Property
 
 Public Property Get Orders() As Orders
@@ -757,12 +752,73 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddChangeListener(ByVal value As ChangeListener)
-mChangeListeners.Add value
+Public Sub AddChangeListener(ByVal pListener As ChangeListener)
+mChangeListeners.Add pListener
 End Sub
 
-Public Sub AddProfitListener(ByVal value As ProfitListener)
-mProfitListeners.Add value
+Public Sub AddProfitListener(ByVal pListener As ProfitListener)
+Const ProcName As String = "AddProfitListener"
+On Error GoTo Err
+
+mProfitListeners.Add pListener
+
+Dim ev As ProfitEvent
+
+Set ev.source = Me
+ev.currencyCode = mcurrencyCode
+
+If mProfit <> 0 Then
+    ev.ProfitAmount = mProfit
+    ev.profitType = ProfitTypes.ProfitTypeSessionProfit
+    pListener.ProfitAmount ev
+End If
+
+If mMaxProfit <> 0 Then
+    ev.ProfitAmount = mMaxProfit
+    ev.profitType = ProfitTypes.ProfitTypeSessionMaxProfit
+    pListener.ProfitAmount ev
+End If
+
+If mMaxLoss <> 0 Then
+    ev.ProfitAmount = mMaxLoss
+    ev.profitType = ProfitTypes.ProfitTypeSessionMaxLoss
+    pListener.ProfitAmount ev
+End If
+
+If mDrawdown <> 0 Then
+    ev.ProfitAmount = mDrawdown
+    ev.profitType = ProfitTypes.ProfitTypeSessionDrawdown
+    pListener.ProfitAmount ev
+End If
+
+If mProfitThisTrade <> 0 Then
+    ev.ProfitAmount = mProfitThisTrade
+    ev.profitType = ProfitTypes.ProfitTypeTradeProfit
+    pListener.ProfitAmount ev
+End If
+
+If mMaxProfitThisTrade <> 0 Then
+    ev.ProfitAmount = mMaxProfitThisTrade
+    ev.profitType = ProfitTypes.ProfitTypeTradeMaxProfit
+    pListener.ProfitAmount ev
+End If
+
+If mMaxLossThisTrade <> 0 Then
+    ev.ProfitAmount = mMaxLossThisTrade
+    ev.profitType = ProfitTypes.ProfitTypeTradeMaxLoss
+    pListener.ProfitAmount ev
+End If
+
+If mDrawdownThisTrade <> 0 Then
+    ev.ProfitAmount = mDrawdownThisTrade
+    ev.profitType = ProfitTypes.ProfitTypeTradeDrawdown
+    pListener.ProfitAmount ev
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddStudy( _
@@ -880,6 +936,27 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Friend Sub FinishRecovery()
+Const ProcName As String = "FinishRecovery"
+On Error GoTo Err
+
+mRecovering = False
+
+If needExistingOrderPlexes Then
+    setupSessionOrderPlexes
+    calcTradeProfit 0
+ElseIf Not inRecoveredTradingSession Then
+    setupNewSession
+Else
+    calcTradeProfit 0
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pKey As String, _
                 ByVal pWorkspace As Workspace)
@@ -977,6 +1054,43 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Friend Sub StartRecovery()
+Const ProcName As String = "StartRecovery"
+On Error GoTo Err
+
+mRecovering = True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub SyncToSummary( _
+                ByVal pSummary As PositionManagerSummary)
+Const ProcName As String = "SyncToSummary"
+On Error GoTo Err
+
+mCumBuyPrice = pSummary.CumBuyPrice
+mCumSellPrice = pSummary.CumSellPrice
+mDrawdownLastTrade = pSummary.DrawdownLastTrade
+ProfitProfileIncrementTicks = pSummary.ProfitIncrementTicks
+mProfitLastFlat = pSummary.ProfitLastFlat
+mProfitLastTrade = pSummary.ProfitLastTrade
+mProfitProfileBarClose = pSummary.ProfitProfileBarClose
+mProfitProfileBarHigh = pSummary.ProfitProfileBarHigh
+mProfitProfileBarLow = pSummary.ProfitProfileBarLow
+mProfitProfileBarNumber = pSummary.ProfitProfileBarNumber
+mProfitProfileBarOpen = pSummary.ProfitProfileBarOpen
+mProfitProfileBarStartTime = pSummary.ProfitProfileBarStartTime
+mTradingSessionStartTime = pSummary.TradingSessionStartTime
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -991,6 +1105,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If mTickSize = 0 Then Exit Sub
+If mCumSellPrice = 0 And mCumBuyPrice = 0 And mQuantityOutstanding = 0 Then Exit Sub
 
 Profit = mTickValue * (mCumSellPrice + mQuantityOutstanding * price - mCumBuyPrice) / mTickSize
 
@@ -1016,7 +1131,7 @@ If mProfit > mMaxProfit Then
 End If
 If mProfit < mMaxLoss Then
     mMaxLoss = mProfit
-    fireProfit mMaxLoss, ProfitTypes.ProfitTypeSessionMaxProfit
+    fireProfit mMaxLoss, ProfitTypes.ProfitTypeSessionMaxLoss
     GLogMaxLoss mMaxLoss, mIsSimulated, Me
 End If
 If mProfit < mMaxProfit Then
@@ -1062,6 +1177,7 @@ Then
     mProfitProfileBarHigh = mProfit
     mProfitProfileBarLow = mProfit
     mProfitProfileBarClose = mProfit
+    SaveRecoveryInfo
 Else
     If mProfit > mProfitProfileBarHigh Then mProfitProfileBarHigh = mProfit
     If mProfit < mProfitProfileBarLow Then mProfitProfileBarLow = mProfit
@@ -1078,7 +1194,7 @@ End Sub
 Private Sub checkCloseall()
 
 Dim msg As String
-Dim EndSession As Boolean
+Dim endSession As Boolean
 
 Const ProcName As String = "checkCloseall"
 Dim failpoint As Long
@@ -1093,14 +1209,14 @@ If Not mMoneyManager Is Nothing Then
                                 mMaxProfitThisTrade - mProfitThisTrade, _
                                 mTicker.Timestamp, _
                                 msg, _
-                                EndSession) _
+                                endSession) _
     Then
         If Not mClosingPosition Then
             GLogMoneyManagement "Close all positions: " & msg, mIsSimulated, Me
             ClosePositions
         End If
     Else
-        If EndSession And Not mClosingPosition Then
+        If endSession And Not mClosingPosition Then
             If Not mEndSession Then
                 mEndSession = True
                 GLogMoneyManagement "Ending Session: " & msg, mIsSimulated, Me
@@ -1158,6 +1274,55 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Private Function inRecoveredTradingSession() As Boolean
+
+Const ProcName As String = "inRecoveredTradingSession"
+On Error GoTo Err
+
+If mTicker.Session.CurrentSessionStartTime = 0 Then
+    ' the ticker hasn't got started yet, so assume True
+    inRecoveredTradingSession = True
+Else
+    inRecoveredTradingSession = (mTicker.Session.CurrentSessionStartTime = mTradingSessionStartTime)
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function needExistingOrderPlexes() As Boolean
+Const ProcName As String = "needExistingOrderPlexes"
+On Error GoTo Err
+
+needExistingOrderPlexes = Not (noActiveOrderPlexes And mQuantityOutstanding = 0)
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function noActiveOrderPlexes() As Boolean
+Const ProcName As String = "noActiveOrderPlexes"
+
+Dim oc As OrderContext
+
+On Error GoTo Err
+
+For Each oc In mOrderContexts
+    If oc.ActiveOrderPlexes.Count <> 0 Then Exit Function
+Next
+
+noActiveOrderPlexes = True
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
 Private Sub placeBalancingOrder()
 Const ProcName As String = "placeBalancingOrder"
 Dim failpoint As Long
@@ -1195,7 +1360,7 @@ End Sub
 
 Private Sub processExecution(ByVal pExec As Execution)
 
-Const ProcName As String = "NotifyExecution"
+Const ProcName As String = "processExecution"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1244,11 +1409,16 @@ Else
     mMaxProfitThisTrade = 0
     mMaxLossThisTrade = 0
     mProfitLastFlat = mProfit
+    mDrawdownThisTrade = 0
+    
+    If Not mMoneyManager Is Nothing Then mMoneyManager.Flat
+    
+    If Not mIsSimulated And Not mRecovering And noActiveOrderPlexes Then
+        gTB.OrderPlexRecoveryController.DeleteRecoveryInfo mKey
+    End If
 End If
 
-If mQuantityOutstanding = 0 Then
-    If Not mMoneyManager Is Nothing Then mMoneyManager.Flat
-End If
+If Not mRecovering Then SaveRecoveryInfo
 
 fireChange PositionManagerChangeTypes.PositionSizeChanged
 RaiseEvent PositionChanged
@@ -1259,5 +1429,111 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Private Sub SaveRecoveryInfo()
+Dim summary As PositionManagerSummary
 
+Const ProcName As String = "SaveRecoveryInfo"
+Dim failpoint As String
+On Error GoTo Err
+
+If mIsSimulated Then Exit Sub
+
+Set summary = New PositionManagerSummary
+
+If mTradingSessionStartTime = 0 Then mTradingSessionStartTime = mTicker.Session.CurrentSessionStartTime
+
+summary.TradingSessionStartTime = mTradingSessionStartTime
+summary.CumBuyPrice = mCumBuyPrice
+summary.CumSellPrice = mCumSellPrice
+summary.DrawdownLastTrade = mDrawdownLastTrade
+summary.ProfitIncrementTicks = mProfitIncrementTicks
+summary.ProfitLastFlat = mProfitLastFlat
+summary.ProfitLastTrade = mProfitLastTrade
+summary.ProfitProfileBarClose = mProfitProfileBarClose
+summary.ProfitProfileBarHigh = mProfitProfileBarHigh
+summary.ProfitProfileBarLow = mProfitProfileBarLow
+summary.ProfitProfileBarNumber = mProfitProfileBarNumber
+summary.ProfitProfileBarOpen = mProfitProfileBarOpen
+summary.ProfitProfileBarStartTime = mProfitProfileBarStartTime
+summary.WorkspaceName = Workspace.name
+
+gTB.OrderPlexRecoveryController.SaveRecoveryInfo mKey, summary
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setupNewSession()
+
+Const ProcName As String = "setupNewSession"
+On Error GoTo Err
+
+If mIsSimulated Then Exit Sub
+
+mOrderPlexes.Clear
+mOrders.Clear
+mExecutions.Clear
+
+mTradingSessionStartTime = mTicker.Session.CurrentSessionStartTime
+
+mProfitProfileBarStartTime = mTradingSessionStartTime
+mProfitProfileBarOpen = 0
+mProfitProfileBarHigh = 0
+mProfitProfileBarLow = 0
+mProfitProfileBarClose = 0
+mProfitProfileBarNumber = 0
+
+mCumBuyPrice = 0
+mCumSellPrice = 0
+mQuantityOutstanding = 0
+
+mProfitLastTrade = mProfitThisTrade
+mDrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
+mProfitThisTrade = 0
+mMaxProfitThisTrade = 0
+mMaxLossThisTrade = 0
+mProfitLastFlat = mProfit
+
+mProfit = 0
+mMaxProfit = 0
+mMaxLoss = 0
+mDrawdown = 0
+
+mDrawdownThisTrade = 0
+mTradeStartTime = mTradingSessionStartTime
+
+gTB.OrderPlexRecoveryController.DeleteRecoveryInfo mKey
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setupSessionOrderPlexes()
+
+Const ProcName As String = "setupSessionOrderPlexes"
+On Error GoTo Err
+
+Dim oc As OrderContext
+Dim op As orderPlex
+
+For Each oc In mOrderContexts
+    For Each op In oc.ActiveOrderPlexes
+        mOrderPlexes.Add op
+    Next
+
+    For Each op In oc.ClosedOrderPlexes
+        mOrderPlexes.Add op
+    Next
+Next
+
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 

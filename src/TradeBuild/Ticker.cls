@@ -778,7 +778,7 @@ On Error GoTo Err
 
 mInEventHandler = True
 
-GLogLogger.Log "Stopping tick data writer", ProcName, ModuleName
+GLogLogger.Log "Stopping tick Data writer", ProcName, ModuleName
 
 mTickWriter.CloseOutputFile
 Set mTickWriter = Nothing
@@ -1384,7 +1384,7 @@ End Sub
 
 Friend Function AddTimer(ByVal expiryTime As Variant, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
-                        ByVal data As Variant) As TimerListItem
+                        ByVal Data As Variant) As TimerListItem
 Const ProcName As String = "AddTimer"
 Dim failpoint As Long
 On Error GoTo Err
@@ -1392,7 +1392,7 @@ On Error GoTo Err
 If mTimerList Is Nothing Then
     Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
 End If
-Set AddTimer = mTimerList.Add(data, expiryTime, expiryTimeUnits)
+Set AddTimer = mTimerList.Add(Data, expiryTime, expiryTimeUnits)
 
 Exit Function
 
@@ -1978,14 +1978,14 @@ GLogLogger.Log pMsg:="Stopping ticker", pProcName:=ProcName, pModName:=ModuleNam
 
 If Not mTickWriter Is Nothing Then
     If mTickWriter.NumberOfPendingWrites = 0 Then
-        GLogLogger.Log pMsg:="Stopping tick data writer", pProcName:=ProcName, pModName:=ModuleName
+        GLogLogger.Log pMsg:="Stopping tick Data writer", pProcName:=ProcName, pModName:=ModuleName
         mTickWriter.CloseOutputFile
         Set mTickWriter = Nothing
     Else
-        ' we've Finished processing the input data before the service provider
+        ' we've Finished processing the input Data before the service provider
         ' writer is Ready - so delay releasing the writer until the
         ' service provider writer has had a chance to Finish initialising
-        GLogLogger.Log pMsg:="Deferring stop tick data writer", pProcName:=ProcName, pModName:=ModuleName
+        GLogLogger.Log pMsg:="Deferring stop tick Data writer", pProcName:=ProcName, pModName:=ModuleName
         Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
         mTickWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this Ticker isn't released
@@ -2002,7 +2002,7 @@ Then
         Set mTickfileManager = Nothing
     ElseIf Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StopData
-        GLogLogger.Log pMsg:="Stopping realtime data reader", pProcName:=ProcName, pModName:=ModuleName
+        GLogLogger.Log pMsg:="Stopping realtime Data reader", pProcName:=ProcName, pModName:=ModuleName
         Set mRealtimeDataReader = Nothing
     End If
 Else
@@ -2014,7 +2014,7 @@ mTimeframes.Finish
 Set mTimeframes = Nothing
 
 If Not mBarWriter Is Nothing Then
-    GLogLogger.Log pMsg:="Stopping bar data writer", pProcName:=ProcName, pModName:=ModuleName
+    GLogLogger.Log pMsg:="Stopping bar Data writer", pProcName:=ProcName, pModName:=ModuleName
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
@@ -2168,7 +2168,7 @@ If mBarWriter Is Nothing Then
     mWriteBidAskBarData = False
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
-    ev.eventMessage = "Can't create historic data writer"
+    ev.eventMessage = "Can't create historic Data writer"
     gTB.notify ev
 End If
 
@@ -3046,7 +3046,7 @@ Else
         Else
             Set ev.source = Me
             ev.eventCode = ApiNotifyCodes.ApiNotifyNoRealtimeDataSource
-            ev.eventMessage = "Can't create realtime data reader"
+            ev.eventMessage = "Can't create realtime Data reader"
             gTB.notify ev
             StopTicker
         End If

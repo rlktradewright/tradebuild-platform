@@ -82,7 +82,7 @@ End Sub
 
 Private Function IOrderSubmitter_cancelOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex) As Boolean
 Dim EntryOrder As Order
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 
 Const ProcName As String = "IOrderSubmitter_cancelOrderPlex"
@@ -100,9 +100,9 @@ Case Else
     IOrderSubmitter_cancelOrderPlex = True
 End Select
 
-Set stoporder = pOrderPlex.stoporder
-If Not stoporder Is Nothing Then
-    Select Case stoporder.Status
+Set Stoporder = pOrderPlex.Stoporder
+If Not Stoporder Is Nothing Then
+    Select Case Stoporder.Status
     Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusFilled, _
         OrderStatuses.OrderStatusCancelling, _
@@ -112,7 +112,7 @@ If Not stoporder Is Nothing Then
         Case OrderStatuses.OrderStatusFilled, _
             OrderStatuses.OrderStatusCancelling, _
             OrderStatuses.OrderStatusCancelled
-            mSimulator.CancelOrder stoporder.BrokerId
+            mSimulator.CancelOrder Stoporder.BrokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
     End Select
@@ -146,17 +146,17 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As Order
+Dim Stoporder As Order
 
 Const ProcName As String = "IOrderSubmitter_cancelStopOrder"
 On Error GoTo Err
 
-Set stoporder = pOrderPlex.stoporder
-If stoporder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+Set Stoporder = pOrderPlex.Stoporder
+If Stoporder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Order plex has no stop order"
 
-Select Case stoporder.Status
+Select Case Stoporder.Status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
@@ -165,7 +165,7 @@ Case OrderStatuses.OrderStatusCreated, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "Stop order state invalid for cancellation"
 Case Else
-    mSimulator.CancelOrder stoporder.BrokerId
+    mSimulator.CancelOrder Stoporder.BrokerId
 End Select
 
 Exit Sub
@@ -217,7 +217,7 @@ End Property
 
 Private Sub IOrderSubmitter_executeOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
 Dim EntryOrder As Order
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 Dim transmit As Boolean
 Dim OcaGroup As String
@@ -226,13 +226,13 @@ Const ProcName As String = "IOrderSubmitter_executeOrderPlex"
 On Error GoTo Err
 
 Set EntryOrder = pOrderPlex.EntryOrder
-Set stoporder = pOrderPlex.stoporder
+Set Stoporder = pOrderPlex.Stoporder
 Set TargetOrder = pOrderPlex.TargetOrder
 
 If Not EntryOrder Is Nothing Then
     transmit = True
-    If Not stoporder Is Nothing Then
-        If stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then transmit = False
+    If Not Stoporder Is Nothing Then
+        If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
     If Not TargetOrder Is Nothing Then
         If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
@@ -242,15 +242,15 @@ If Not EntryOrder Is Nothing Then
     
     OcaGroup = GenerateTextID
 
-    If Not stoporder Is Nothing Then
+    If Not Stoporder Is Nothing Then
         transmit = True
         If Not TargetOrder Is Nothing Then
             If TargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
         End If
         
-        If stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then
+        If Stoporder.OrderType <> OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
-            placeOrder stoporder, EntryOrder.Id, OcaGroup, transmit
+            placeOrder Stoporder, EntryOrder.Id, OcaGroup, transmit
         End If
     End If
     
@@ -300,11 +300,11 @@ If entryOrderChanged Then
     placeOrder pOrderPlex.EntryOrder, "", "", True
 End If
 If stopOrderChanged Then
-    Set lOrder = pOrderPlex.stoporder
+    Set lOrder = pOrderPlex.Stoporder
     placeOrder lOrder, "", "", True
 End If
 If targetOrderChanged Then
-    Set lOrder = pOrderPlex.stoporder
+    Set lOrder = pOrderPlex.Stoporder
     placeOrder lOrder, "", "", True
 End If
 If closeoutOrderChanged Then
@@ -385,7 +385,7 @@ End Property
 
 Private Sub IOrderSubmitter_resubmitStopAndTargetOrders(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
 Dim OcaGroup As String
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 
 Const ProcName As String = "IOrderSubmitter_resubmitStopAndTargetOrders"
@@ -393,9 +393,9 @@ On Error GoTo Err
 
 OcaGroup = GenerateTextID
 
-Set stoporder = pOrderPlex.stoporder
-stoporder.BrokerId = ""    ' force a new id to be allocated
-placeOrder stoporder, "", OcaGroup, False
+Set Stoporder = pOrderPlex.Stoporder
+Stoporder.BrokerId = ""    ' force a new id to be allocated
+placeOrder Stoporder, "", OcaGroup, False
 
 Set TargetOrder = pOrderPlex.TargetOrder
 TargetOrder.BrokerId = "" ' force a new id to be allocated
@@ -408,19 +408,19 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 
 Const ProcName As String = "IOrderSubmitter_resubmitStopOrder"
 On Error GoTo Err
 
-Set stoporder = pOrderPlex.stoporder
+Set Stoporder = pOrderPlex.Stoporder
 Set TargetOrder = pOrderPlex.TargetOrder
-stoporder.BrokerId = ""     ' force a new id to be allocated
+Stoporder.BrokerId = ""     ' force a new id to be allocated
 If Not pOrderPlex.TargetOrder Is Nothing Then
-    placeOrder stoporder, "", mSimulator.GetOrder(TargetOrder.Id), True
+    placeOrder Stoporder, "", mSimulator.GetOrder(TargetOrder.Id), True
 Else
-    placeOrder stoporder, "", "", True
+    placeOrder Stoporder, "", "", True
 End If
 
 Exit Sub
@@ -430,17 +430,17 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As Order
+Dim Stoporder As Order
 Dim TargetOrder As Order
 
 Const ProcName As String = "IOrderSubmitter_resubmitTargetOrder"
 On Error GoTo Err
 
-Set stoporder = pOrderPlex.stoporder
+Set Stoporder = pOrderPlex.Stoporder
 Set TargetOrder = pOrderPlex.TargetOrder
 TargetOrder.BrokerId = ""   ' force a new id to be allocated
-If Not pOrderPlex.stoporder Is Nothing Then
-    placeOrder TargetOrder, "", mSimulator.GetOrder(stoporder.Id), True
+If Not pOrderPlex.Stoporder Is Nothing Then
+    placeOrder TargetOrder, "", mSimulator.GetOrder(Stoporder.Id), True
 Else
     placeOrder TargetOrder, "", "", True
 End If

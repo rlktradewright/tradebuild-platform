@@ -170,12 +170,12 @@ On Error GoTo Err
 
 Set mTaskContext = value
 
-If IsObject(mTaskContext.data) Then
-    Set obj = mTaskContext.data
+If IsObject(mTaskContext.Data) Then
+    Set obj = mTaskContext.Data
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Supplied data is not a contractSpecifier or contracts object"
+            "Supplied Data is not a contractSpecifier or contracts object"
 End If
 
 If TypeOf obj Is ContractSpecifier Then
@@ -185,7 +185,7 @@ ElseIf TypeOf obj Is Contracts Then
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Supplied data is not a contractSpecifier or contracts object"
+            "Supplied Data is not a contractSpecifier or contracts object"
 End If
 
 Exit Property

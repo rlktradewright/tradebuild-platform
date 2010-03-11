@@ -93,7 +93,7 @@ Private mData()                         As Byte
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 Debug.Print "TickDataWriter terminated"
-If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
+'If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
 '@===============================================================================

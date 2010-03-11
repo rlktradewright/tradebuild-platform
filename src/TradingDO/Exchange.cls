@@ -118,6 +118,7 @@ Const ProcName As String = "TimeZone"
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleExchangeTimezoneValid, value Is Nothing
+mDataObj.ColumnValue(ExchangeColumnTimeZoneID) = value.Id
 
 Exit Property
 

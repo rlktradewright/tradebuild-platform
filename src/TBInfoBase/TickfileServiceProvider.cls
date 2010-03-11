@@ -483,7 +483,7 @@ End Sub
 
 Private Sub handleFatalError( _
                 ByRef pProcName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 Const ProcName As String = "handleFatalError"
 Dim errNum As Long: errNum = Err.Number
 Dim errSource As String: errSource = Err.Source

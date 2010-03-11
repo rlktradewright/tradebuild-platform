@@ -1572,11 +1572,19 @@ ev = mSessionBuilder.SetSessionCurrentTime(pTimestamp)
 
 For Each Region In mRegions
     Region.AddPeriod pPeriodNumber, pTimestamp
-    If ev.changeType = SessionChangeEnd Then
-        Region.AddSessionEndGridline pPeriodNumber, ev.Timestamp
-    ElseIf ev.changeType = SessionChangeStart Then
-        Region.AddSessionStartGridline pPeriodNumber, ev.Timestamp
-    End If
+    Select Case mBarTimePeriod.Units
+    Case TimePeriodSecond, _
+            TimePeriodMinute, _
+            TimePeriodHour, _
+            TimePeriodTickMovement, _
+            TimePeriodTickVolume, _
+            TimePeriodVolume
+        If ev.changeType = SessionChangeEnd Then
+            Region.AddSessionEndGridline pPeriodNumber, ev.Timestamp
+        ElseIf ev.changeType = SessionChangeStart Then
+            Region.AddSessionStartGridline pPeriodNumber, ev.Timestamp
+        End If
+    End Select
 Next
 
 mXAxisRegion.AddPeriod pPeriodNumber, pTimestamp

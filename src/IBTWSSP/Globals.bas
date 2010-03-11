@@ -431,6 +431,16 @@ Case FUNDAMENTAL_DATA
     gInputMessageIdToString = "FUNDAMENTAL_DATA"
 Case CONTRACT_DATA_END
     gInputMessageIdToString = "CONTRACT_DATA_END"
+Case OPEN_ORDER_END
+    gInputMessageIdToString = "OPEN_ORDER_END"
+Case ACCT_DOWNLOAD_END
+    gInputMessageIdToString = "ACCT_DOWNLOAD_END"
+Case EXECUTION_DATA_END
+    gInputMessageIdToString = "EXECUTION_DATA_END"
+Case DELTA_NEUTRAL_VALIDATION
+    gInputMessageIdToString = "DELTA_NEUTRAL_VALIDATION"
+Case TICK_SNAPSHOT_END
+    gInputMessageIdToString = "TICK_SNAPSHOT_END"
 Case Else
     gInputMessageIdToString = "?????"
 End Select
@@ -795,6 +805,16 @@ Case FUNDAMENTAL_DATA
     gSocketInMsgTypeToString = "Fundamental data    "
 Case CONTRACT_DATA_END
     gSocketInMsgTypeToString = "Contract data end   "
+Case OPEN_ORDER_END
+    gSocketInMsgTypeToString = "Open order end      "
+Case ACCT_DOWNLOAD_END
+    gSocketInMsgTypeToString = "Account download end"
+Case EXECUTION_DATA_END
+    gSocketInMsgTypeToString = "Execution data end  "
+Case DELTA_NEUTRAL_VALIDATION
+    gSocketInMsgTypeToString = "Delta neutral validn"
+Case TICK_SNAPSHOT_END
+    gSocketInMsgTypeToString = "Tick snapshot end   "
 Case Else
     gSocketInMsgTypeToString = "Msg type " & Format(value, "00         ")
 End Select

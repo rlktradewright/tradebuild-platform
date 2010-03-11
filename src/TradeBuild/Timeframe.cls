@@ -167,14 +167,14 @@ End Sub
 ' DeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_run(ByVal data As Variant)
+Private Sub DeferredAction_run(ByVal Data As Variant)
 Dim bar2Write As BarToWrite
 
 Const ProcName As String = "DeferredAction_run"
 Dim failpoint As Long
 On Error GoTo Err
 
-bar2Write = data
+bar2Write = Data
 
 WriteBar bar2Write.theBar, bar2Write.barType
 
@@ -190,13 +190,13 @@ End Sub
 '@================================================================================
 
 Private Sub IBarDataConsumer_Bar( _
-                ByVal data As Bar, _
+                ByVal Data As Bar, _
                 ByVal barTimePeriod As TimePeriod)
 Const ProcName As String = "IBarDataConsumer_Bar"
 Dim failpoint As Long
 On Error GoTo Err
 
-Set mHistoricBar = data
+Set mHistoricBar = Data
 If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
@@ -508,7 +508,7 @@ On Error GoTo Err
 
 Set mContract = value
 
-mInputStudy.name = getName & " (historical data)"
+mInputStudy.name = getName & " (historical Data)"
 studyMgr.SetInputTicksize mBidInputHandle, mContract.TickSize
 studyMgr.SetInputTicksize mAskInputHandle, mContract.TickSize
 studyMgr.SetInputTicksize mTradeInputHandle, mContract.TickSize
@@ -863,7 +863,7 @@ If mBarReader Is Nothing Then
     StartStudies
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
-    ev.eventMessage = "Timeframe: Can't create historic data reader (" & getName & ")"
+    ev.eventMessage = "Timeframe: Can't create historic Data reader (" & getName & ")"
     GLogLogger.Log pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:=ProcName, pModName:=ModuleName
     gTB.notify ev
     fireStateChange TimeframeStateLoaded
@@ -1141,7 +1141,7 @@ If mContract Is Nothing Then
     sourceName = GenerateGUIDString
     TickSize = 0
 Else
-    sourceName = getName & " (historical data)"
+    sourceName = getName & " (historical Data)"
     TickSize = mContract.TickSize
 End If
 
@@ -1200,7 +1200,7 @@ On Error GoTo Err
 #End If
 
 
-' ensure that fetching the historical data occurs after the current call has completed,
+' ensure that fetching the historical Data occurs after the current call has completed,
 ' since this is within the Timeframes.Add call, otherwise the caller may miss the
 ' BarsLoaded event.
 

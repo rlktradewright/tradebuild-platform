@@ -45,8 +45,6 @@ Private Const ModuleName                    As String = "TradeBuildAPI"
 ' Member variables
 '@================================================================================
 
-Private mApplicationName                As String
-
 Private mServiceProviderError           As ServiceProviderError
 
 Private mServiceProviders               As ServiceProviders
@@ -98,36 +96,6 @@ Dim failpoint As Long
 On Error GoTo Err
 
 AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Let ApplicationName( _
-                ByVal value As String)
-mApplicationName = value
-End Property
-
-Public Property Get ApplicationName() As String
-ApplicationName = mApplicationName
-End Property
-
-Public Property Get AppSettingsFolder() As String
-Const ProcName As String = "AppSettingsFolder"
-Dim failpoint As String
-On Error GoTo Err
-
-If mApplicationName = "" Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "The TradeBuildAPI object's ApplicationName property has not been set"
-End If
-
-AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                    "\TradeWright\" & _
-                    mApplicationName
 
 Exit Property
 

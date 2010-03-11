@@ -152,7 +152,7 @@ Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
 Case TradeBuildSP.StandardSPEventCodes.TFRetryConnectDataSource
     ' don't need to move on to next tickfile - the user can do
     ' that if they want to, or they can fix the reason for
-    ' failing to connect (eg start the data source software)
+    ' failing to connect (eg start the Data source software)
 End Select
 
 gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle

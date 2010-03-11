@@ -145,19 +145,16 @@ Private mCancelTime As Date
 Private WithEvents mEntryOrder As Order
 Attribute mEntryOrder.VB_VarHelpID = -1
 Private mEntryOrderCopy As Order
-Private mEntryOrderFinished As Boolean
 
 Private WithEvents mStopOrder As Order
 Attribute mStopOrder.VB_VarHelpID = -1
 Private mStopOrderCopy As Order
 Attribute mStopOrderCopy.VB_VarHelpID = -1
-Private mStopOrderFinished As Boolean
 
 Private WithEvents mTargetOrder As Order
 Attribute mTargetOrder.VB_VarHelpID = -1
 Private mTargetOrderCopy As Order
 Attribute mTargetOrderCopy.VB_VarHelpID = -1
-Private mTargetOrderFinished As Boolean
 
 Private WithEvents mCloseoutOrder As Order
 Attribute mCloseoutOrder.VB_VarHelpID = -1
@@ -258,10 +255,6 @@ Set mProfitListeners = New Collection
 Set mStateEngine = CreateStateEngine(GOrderPlex.TableBuilder, _
                                     OrderPlexStateCodes.OrderPlexStateCreated)
                                     
-mEntryOrderFinished = True
-mStopOrderFinished = True
-mTargetOrderFinished = True
-
 End Sub
 
 Private Sub Class_Terminate()
@@ -334,6 +327,8 @@ Const ProcName As String = "QuoteListener_Ask"
 Dim failpoint As Long
 On Error GoTo Err
 
+If ev.price = mLastAsk Then Exit Sub
+
 If Not LongPosition Then calcProfitLoss ev.price
 
 mLastAsk = ev.price
@@ -348,6 +343,8 @@ Private Sub QuoteListener_Bid(ev As QuoteEvent)
 Const ProcName As String = "QuoteListener_Bid"
 Dim failpoint As Long
 On Error GoTo Err
+
+If ev.price = mLastBid Then Exit Sub
 
 If LongPosition Then calcProfitLoss ev.price
 
@@ -395,6 +392,9 @@ Dim cancelPriceHit As Boolean
 
 Dim failpoint As Long
 On Error GoTo Err
+
+If ev.price > mLastAsk Then QuoteListener_Ask ev    ' because the Ask price must have gone at least that high
+If ev.price < mLastBid Then QuoteListener_Bid ev    ' because the Bid price must have gone at least that low
 
 If mCancelPrice = 0 Then Exit Sub
 
@@ -458,6 +458,7 @@ logOrderMessage "Closeout order fill: (id=" & _
 
 RaiseEvent CloseoutOrderPartiallyFilled
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -508,6 +509,7 @@ Select Case mCloseoutOrder.Status
                             mCloseoutOrder.Id & ")"
 End Select
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -589,6 +591,7 @@ RaiseEvent EntryOrderPartiallyFilled
 
 handleStimulus OpStimuli.StimEntryOrderFill
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -625,7 +628,6 @@ Select Case mEntryOrder.Status
         
         RaiseEvent EntryOrderFilled
         
-        mEntryOrderFinished = True
         checkAllOrdersComplete
     
     Case OrderStatuses.OrderStatusPendingSubmit
@@ -637,17 +639,16 @@ Select Case mEntryOrder.Status
             placePeggedOrders
         End If
     Case OrderStatuses.OrderStatusCancelled
-        mEntryOrderFinished = True
         logOrderMessage "Entry order cancelled (id=" & mEntryOrder.Id & ")"
         handleStimulus OpStimuli.StimEntryOrderCancelled
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
-        mEntryOrderFinished = True
         logOrderMessage "Entry order rejected (id=" & mEntryOrder.Id & ")"
         handleStimulus OpStimuli.StimEntryOrderCancelled
         checkAllOrdersComplete
 End Select
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -665,6 +666,7 @@ On Error GoTo Err
 
 handleStimulus OpStimuli.StimTimeoutExpired
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -712,6 +714,7 @@ End If
 
 RaiseEvent StopOrderPartiallyFilled
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -746,7 +749,6 @@ Select Case mStopOrder.Status
         
         RaiseEvent StopOrderFilled
         
-        mStopOrderFinished = True
         checkAllOrdersComplete
     
     Case OrderStatuses.OrderStatusPendingSubmit
@@ -754,19 +756,18 @@ Select Case mStopOrder.Status
     Case OrderStatuses.OrderStatusPreSubmitted
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
-        mStopOrderFinished = True
         logOrderMessage "Stop order cancelled (id=" & mStopOrder.Id & ")"
         mStateEngine.SetConditions OpConditions.CondStopOrderCancelled
         handleStimulus OpStimuli.StimStopOrderCancelled
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
-        mStopOrderFinished = True
         logOrderMessage "Stop order rejected (id=" & mStopOrder.Id & ")"
         mStateEngine.SetConditions OpConditions.CondStopOrderCancelled
         handleStimulus OpStimuli.StimStopOrderCancelled
         checkAllOrdersComplete
 End Select
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -814,6 +815,7 @@ End If
 
 RaiseEvent TargetOrderPartiallyFilled
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -848,20 +850,17 @@ Select Case mTargetOrder.Status
         
         RaiseEvent TargetOrderFilled
         
-        mTargetOrderFinished = True
         checkAllOrdersComplete
     
     Case OrderStatuses.OrderStatusCancelling
     Case OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
-        mTargetOrderFinished = True
         logOrderMessage "Target order cancelled (id=" & mTargetOrder.Id & ")"
         mStateEngine.SetConditions OpConditions.CondTargetOrderCancelled
         handleStimulus OpStimuli.StimTargetOrderCancelled
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
-        mTargetOrderFinished = True
         logOrderMessage "Target order rejected (id=" & mTargetOrder.Id & ")"
         mStateEngine.SetConditions OpConditions.CondTargetOrderCancelled
         handleStimulus OpStimuli.StimTargetOrderCancelled
@@ -869,6 +868,7 @@ Select Case mTargetOrder.Status
     
 End Select
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -890,6 +890,7 @@ fireChange OrderPlexSelfCancelled
 RaiseEvent SelfCancelled
 CancelAfter = 0
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -910,26 +911,19 @@ If value <> 0 Then
     Set mTimerEntry = mTicker.AddTimer(value, expiryTimeUnits.ExpiryTimeUnitSeconds, Nothing)
 
     mSummary.CancelTime = mCancelTime
-    SaveRecoveryInfo
 ElseIf Not mTimerEntry Is Nothing Then
     mCancelTime = 0
     mTicker.RemoveTimer mTimerEntry
     Set mTimerEntry = Nothing
 
     mSummary.CancelTime = mCancelTime
-    SaveRecoveryInfo
 End If
 
+SaveRecoveryInfo
 Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Let cancelPrice(ByVal value As Double)
-Const ProcName As String = "cancelPrice"
-mCancelPrice = value
-mSummary.cancelPrice = value
 End Property
 
 Friend Property Let CancelTime(ByVal value As Date)
@@ -938,23 +932,11 @@ mCancelTime = value
 mSummary.CancelTime = value
 End Property
 
-Public Property Get ClosedOut() As Boolean
-Const ProcName As String = "ClosedOut"
-Dim failpoint As Long
-On Error GoTo Err
-
-ClosedOut = (mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed)
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
 Friend Property Let CloseoutOrder(ByVal value As Order)
 Const ProcName As String = "CloseoutOrder"
 Set mCloseoutOrder = value
 mSummary.CloseoutOrderId = mCloseoutOrder.Id
+mOrders.Add mCloseoutOrder
 End Property
 
 Public Property Get CloseoutOrder() As Order
@@ -984,6 +966,16 @@ End Property
 Public Property Get CreationTime() As Date
 Const ProcName As String = "CreationTime"
 CreationTime = mCreationTime
+End Property
+
+Friend Property Let CumBuyPrice(ByVal value As Double)
+mCumBuyPrice = value
+mSummary.CumBuyPrice = value
+End Property
+
+Friend Property Let CumSellPrice(ByVal value As Double)
+mCumSellPrice = value
+mSummary.CumSellPrice = value
 End Property
 
 Public Property Let Description(ByVal value As String)
@@ -1016,6 +1008,13 @@ Friend Property Let EntryOrder(ByVal value As Order)
 Const ProcName As String = "EntryOrder"
 Set mEntryOrder = value
 mSummary.EntryOrderId = mEntryOrder.Id
+
+If mOrders.Count >= 1 Then
+    mOrders.Add mEntryOrder, , 1
+Else
+    mOrders.Add mEntryOrder
+End If
+
 End Property
 
 Public Property Get EntryOrder() As Order
@@ -1063,6 +1062,19 @@ End Property
 Public Property Get IndexApplication() As Long
 Const ProcName As String = "IndexApplication"
 IndexApplication = mIndexApplication
+End Property
+
+Public Property Get IsComplete() As Boolean
+Const ProcName As String = "IsComplete"
+Dim failpoint As Long
+On Error GoTo Err
+
+IsComplete = (mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed)
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsRiskUnlimited() As Boolean
@@ -1839,8 +1851,7 @@ End Property
 
 Friend Property Let size(ByVal value As Long)
 Const ProcName As String = "size"
-mSize = value
-mSummary.size = value
+setSize value
 End Property
 
 Public Property Get size() As Long
@@ -1863,6 +1874,7 @@ Const ProcName As String = "State"
 Set mStateEngine = CreateStateEngine(GOrderPlex.TableBuilder, _
                                     value)
 mSummary.State = value
+If IsComplete Then doCompletionActions
 End Property
 
 Public Property Get State() As OrderPlexStateCodes
@@ -1878,15 +1890,27 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let stoporder(ByVal value As Order)
-Const ProcName As String = "stoporder"
+Friend Property Let Stoporder(ByVal value As Order)
+Const ProcName As String = "Stoporder"
 Set mStopOrder = value
 mSummary.StopOrderId = mStopOrder.Id
+
+mStateEngine.SetConditions OpConditions.CondStopOrderExists
+mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
+
+If Not mEntryOrder Is Nothing Then
+    mOrders.Add mStopOrder, , , 1
+ElseIf Not mTargetOrder Is Nothing Then
+    mOrders.Add mStopOrder, , 1
+Else
+    mOrders.Add mStopOrder
+End If
+
 End Property
 
-Public Property Get stoporder() As Order
-Const ProcName As String = "stoporder"
-Set stoporder = mStopOrder
+Public Property Get Stoporder() As Order
+Const ProcName As String = "Stoporder"
+Set Stoporder = mStopOrder
 End Property
 
 Public Property Let StopReason(ByVal value As String)
@@ -1920,6 +1944,22 @@ Friend Property Let TargetOrder(ByVal value As Order)
 Const ProcName As String = "TargetOrder"
 Set mTargetOrder = value
 mSummary.TargetOrderId = mTargetOrder.Id
+
+mStateEngine.SetConditions OpConditions.CondTargetOrderExists
+mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
+
+If mEntryOrder Is Nothing And _
+    mStopOrder Is Nothing _
+Then
+    mOrders.Add mTargetOrder
+ElseIf mEntryOrder Is Nothing Then
+    mOrders.Add mTargetOrder, , , 1
+ElseIf mStopOrder Is Nothing Then
+    mOrders.Add mTargetOrder, , , 1
+Else
+    mOrders.Add mTargetOrder, , , 2
+End If
+
 End Property
 
 Public Property Get TargetOrder() As Order
@@ -2080,6 +2120,7 @@ Else
     Cancel = handleStimulus(OpStimuli.StimCancelIfNoFill)
 End If
 
+SaveRecoveryInfo
 Exit Function
 
 Err:
@@ -2121,6 +2162,20 @@ mDirty = False
 fireChange OrderPlexChangeTypes.OrderPlexChangesCancelled
 RaiseEvent ChangesCancelled
 RaiseEvent Clean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub CheckComplete()
+
+Const ProcName As String = "CheckComplete"
+On Error GoTo Err
+
+checkAllOrdersComplete
+SaveRecoveryInfo
 
 Exit Sub
 
@@ -2174,6 +2229,7 @@ logOrderMessage "Closing out: " & _
 
 handleStimulus OpStimuli.StimCloseout
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -2196,6 +2252,8 @@ End Function
 
 Friend Function CreateEntryOrder() As Order
 Const ProcName As String = "CreateEntryOrder"
+Dim lOrder As Order
+
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -2204,18 +2262,10 @@ If Not mEntryOrder Is Nothing Then _
                 ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Entry order alReady exists"
 
-Set mEntryOrder = mOrderContext.NewOrder
-mSummary.EntryOrderId = mEntryOrder.Id
+Set lOrder = mOrderContext.NewOrder
+EntryOrder = lOrder
 
 Set CreateEntryOrder = mEntryOrder
-
-If mOrders.Count >= 1 Then
-    mOrders.Add mEntryOrder, , 1
-Else
-    mOrders.Add mEntryOrder
-End If
-
-mEntryOrderFinished = False
 
 Exit Function
 
@@ -2223,8 +2273,11 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Function createStopOrder() As Order
-Const ProcName As String = "createStopOrder"
+Friend Function CreateStopOrder() As Order
+Const ProcName As String = "CreateStopOrder"
+
+Dim lOrder As Order
+
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -2233,22 +2286,9 @@ If Not mStopOrder Is Nothing Then _
                 ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Stop order alReady exists"
 
-Set mStopOrder = mOrderContext.NewOrder
-mSummary.StopOrderId = mStopOrder.Id
-
-Set createStopOrder = mStopOrder
-mStateEngine.SetConditions OpConditions.CondStopOrderExists
-mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
-
-If Not mEntryOrder Is Nothing Then
-    mOrders.Add mStopOrder, , , 1
-ElseIf Not mTargetOrder Is Nothing Then
-    mOrders.Add mStopOrder, , 1
-Else
-    mOrders.Add mStopOrder
-End If
-
-mStopOrderFinished = False
+Set lOrder = mOrderContext.NewOrder
+Stoporder = lOrder
+Set CreateStopOrder = mStopOrder
 
 Exit Function
 
@@ -2256,8 +2296,11 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Function createTargetOrder() As Order
-Const ProcName As String = "createTargetOrder"
+Friend Function CreateTargetOrder() As Order
+Const ProcName As String = "CreateTargetOrder"
+
+Dim lOrder As Order
+
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -2266,27 +2309,9 @@ If Not mTargetOrder Is Nothing Then _
                 ProjectName & "." & ModuleName & ":" & ProcName, _
                 "Target order alReady exists"
 
-Set mTargetOrder = mOrderContext.NewOrder
-mSummary.TargetOrderId = mTargetOrder.Id
-
-Set createTargetOrder = mTargetOrder
-mStateEngine.SetConditions OpConditions.CondTargetOrderExists
-mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
-
-If mEntryOrder Is Nothing And _
-    mStopOrder Is Nothing _
-Then
-    mOrders.Add mTargetOrder
-ElseIf mEntryOrder Is Nothing Then
-    mOrders.Add mTargetOrder, , , 1
-ElseIf mStopOrder Is Nothing Then
-    mOrders.Add mTargetOrder, , , 1
-Else
-    mOrders.Add mTargetOrder, , , 2
-End If
-
-mTargetOrderFinished = False
-
+Set lOrder = mOrderContext.NewOrder
+TargetOrder = lOrder
+Set CreateTargetOrder = mTargetOrder
 Exit Function
 
 Err:
@@ -2310,11 +2335,15 @@ mSummary.cancelPrice = mCancelPrice
 mCreationTime = mTicker.Timestamp
 mSummary.CreationTime = mCreationTime
 
-SaveRecoveryInfo
-
 fireChange OrderPlexChangeTypes.OrderPlexCreated
+
+SaveRecoveryInfo    ' ensure the OrderPlex is recorded before
+                    ' doing the state change, which will cause
+                    ' the orders to be recorded
+                    
 handleStimulus OpStimuli.StimExecute
 
+SaveRecoveryInfo
 Exit Sub
 
 Err:
@@ -2375,13 +2404,13 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Friend Sub NotifyExecution( _
-                ByVal pExec As Execution, _
+                ByVal pExec As IExecutionReport, _
                 Optional ByVal pCloseout As Boolean)
 Const ProcName As String = "NotifyExecution"
 Dim failpoint As Long
 On Error GoTo Err
 
-processExecution pExec.SignedQuantity, pExec.price, pExec.Time, pExec.Timezone, pCloseout
+processExecution IIf(pExec.action = ActionBuy, pExec.Quantity, -1 * pExec.Quantity), pExec.price, pExec.FillTime, pExec.Timezone, pCloseout
 
 Exit Sub
 
@@ -2439,45 +2468,117 @@ End Sub
 
 Friend Sub ResyncCloseoutOrder()
 Const ProcName As String = "ResyncCloseoutOrder"
+On Error GoTo Err
+
 If mOrderSubmitter Is Nothing Then Exit Sub
 If mCloseoutOrder Is Nothing Then Exit Sub
-If Not mCloseoutOrder.Active Then Exit Sub
-mOrderSubmitter.modifyOrderPlex Me, False, False, False, True
+If Not mCloseoutOrder.IsActive Then Exit Sub
+mOrderSubmitter.ModifyOrderPlex Me, False, False, False, True
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ResyncEntryOrder()
 Const ProcName As String = "ResyncEntryOrder"
+On Error GoTo Err
+
 If mOrderSubmitter Is Nothing Then Exit Sub
 If mEntryOrder Is Nothing Then Exit Sub
-If Not mEntryOrder.Active Then Exit Sub
+If Not mEntryOrder.IsActive Then Exit Sub
 
-mOrderSubmitter.modifyOrderPlex Me, True, False, False, False
+mOrderSubmitter.ModifyOrderPlex Me, True, False, False, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ResyncStopOrder()
 Const ProcName As String = "ResyncStopOrder"
+On Error GoTo Err
+
 If mOrderSubmitter Is Nothing Then Exit Sub
 If mStopOrder Is Nothing Then Exit Sub
-If Not mStopOrder.Active Then Exit Sub
+If Not mStopOrder.IsActive Then Exit Sub
 
-mOrderSubmitter.modifyOrderPlex Me, False, True, False, False
+mOrderSubmitter.ModifyOrderPlex Me, False, True, False, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ResyncTargetOrder()
 Const ProcName As String = "ResyncTargetOrder"
+On Error GoTo Err
+
 If mOrderSubmitter Is Nothing Then Exit Sub
 If mTargetOrder Is Nothing Then Exit Sub
-If Not mTargetOrder.Active Then Exit Sub
+If Not mTargetOrder.IsActive Then Exit Sub
 
-mOrderSubmitter.modifyOrderPlex Me, False, False, True, False
+mOrderSubmitter.ModifyOrderPlex Me, False, False, True, False
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SaveRecoveryInfo()
 Const ProcName As String = "SaveRecoveryInfo"
-If mIsSimulated Then Exit Sub
-If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateCreated Then Exit Sub
+On Error GoTo Err
 
-gTB.OrderPlexRecoveryController.SaveRecoveryInfo mPositionManager.Key, mSummary.ToJSON
+If mIsSimulated Then Exit Sub
+If Not mSummary.IsDirty Then Exit Sub
+
+gTB.OrderPlexRecoveryController.SaveRecoveryInfo mPositionManager.Key, mSummary
+mSummary.setClean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub SyncToSummary(ByVal ops As OrderPlexSummary)
+Const ProcName As String = "UpdateOrderPlex"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mSummary = ops
+
+mCancelPrice = mSummary.cancelPrice
+mCancelTime = mSummary.CancelTime
+If mSummary.CloseoutOrderId <> "" And mCloseoutOrder Is Nothing Then CloseoutOrder = createRawOrder(mSummary.CloseoutOrderId)
+mCreationTime = mSummary.CreationTime
+mCumBuyPrice = mSummary.CumBuyPrice
+mCumSellPrice = mSummary.CumSellPrice
+mDescription = mSummary.Description
+mDrawdownNotificationThreshold = mSummary.DrawdownNotificationThreshold
+If mSummary.EntryOrderId <> "" And mEntryOrder Is Nothing Then EntryOrder = createRawOrder(mSummary.EntryOrderId)
+mEntryReason = mSummary.EntryReason
+mLossNotificationThreshold = mSummary.LossNotificationThreshold
+mPreventUnprotectedPosition = mSummary.PreventUnprotectedPosition
+mProfitNotificationThreshold = mSummary.ProfitNotificationThreshold
+mSize = mSummary.size
+State = mSummary.State
+If mSummary.StopOrderId <> "" And mStopOrder Is Nothing Then Stoporder = createRawOrder(mSummary.StopOrderId)
+mStopReason = mSummary.StopReason
+If mSummary.TargetOrderId <> "" And mTargetOrder Is Nothing Then TargetOrder = createRawOrder(mSummary.TargetOrderId)
+mTargetReason = mSummary.TargetReason
+
+mSummary.setClean
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Sub
 
 Public Sub Update()
@@ -2510,7 +2611,7 @@ End If
 logOrderMessage "Update order plex"
 
 If State <> OrderPlexStateCreated Then
-    mOrderSubmitter.modifyOrderPlex Me, updateEntry, updateStop, updateTarget, False
+    mOrderSubmitter.ModifyOrderPlex Me, updateEntry, updateStop, updateTarget, False
 End If
 
 Checkpoint
@@ -2550,7 +2651,9 @@ Dim notifyDrawdown As Boolean
 Dim failpoint As Long
 On Error GoTo Err
 
-Profit = (mCumSellPrice - size * value - mCumBuyPrice) * mValueFactor
+If value = 0 Then Exit Function
+
+Profit = (mCumSellPrice + size * value - mCumBuyPrice) * mValueFactor
 
 If Profit <> mProfit Then
     mProfit = Profit
@@ -2588,7 +2691,6 @@ If notifyProfit Then
         RaiseEvent ProfitThresholdExceeded
         mProfitNotificationThreshold = 0
         mSummary.ProfitNotificationThreshold = 0
-        SaveRecoveryInfo
     End If
     
     If mLossNotificationThreshold <> 0 And _
@@ -2598,7 +2700,6 @@ If notifyProfit Then
         RaiseEvent LossThresholdExceeded
         mLossNotificationThreshold = 0
         mSummary.LossNotificationThreshold = 0
-        SaveRecoveryInfo
 End If
 
     If mDrawdownNotificationThreshold <> 0 And _
@@ -2608,10 +2709,10 @@ End If
         RaiseEvent DrawdownThresholdExceeded
         mDrawdownNotificationThreshold = 0
         mSummary.DrawdownNotificationThreshold = 0
-        SaveRecoveryInfo
     End If
 End If
 
+SaveRecoveryInfo
 Exit Function
 
 Err:
@@ -2631,7 +2732,7 @@ mCancelPrice = 0
 
 Select Case mEntryOrder.Status
 Case OrderStatuses.OrderStatusCreated
-    mEntryOrder.UpdateStatus OrderStatuses.OrderStatusCancelled
+    mEntryOrder.UpdateStatus OrderStatuses.OrderStatusCancelled, mPositionManager.Key
 
     cancelOrders = True
 End Select
@@ -2639,7 +2740,7 @@ End Select
 If Not mStopOrder Is Nothing Then
     Select Case mStopOrder.Status
     Case OrderStatuses.OrderStatusCreated
-        mStopOrder.UpdateStatus OrderStatuses.OrderStatusCancelled
+        mStopOrder.UpdateStatus OrderStatuses.OrderStatusCancelled, mPositionManager.Key
         cancelOrders = True
     End Select
 End If
@@ -2647,12 +2748,12 @@ End If
 If Not mTargetOrder Is Nothing Then
     Select Case mTargetOrder.Status
     Case OrderStatuses.OrderStatusCreated
-        mTargetOrder.UpdateStatus OrderStatuses.OrderStatusCancelled
+        mTargetOrder.UpdateStatus OrderStatuses.OrderStatusCancelled, mPositionManager.Key
         cancelOrders = True
     End Select
 End If
 
-If mOrderSubmitter.cancelOrderPlex(Me) Then
+If mOrderSubmitter.CancelOrderPlex(Me) Then
     cancelOrders = True
     
     If Not mStopOrder Is Nothing Then StopOrderId = mStopOrder.Id
@@ -2691,7 +2792,7 @@ On Error GoTo Err
 If mStopOrder Is Nothing Then Exit Function
 Select Case mStopOrder.Status
 Case OrderStatuses.OrderStatusCreated
-    mStopOrder.UpdateStatus OrderStatuses.OrderStatusCancelled
+    mStopOrder.UpdateStatus OrderStatuses.OrderStatusCancelled, mPositionManager.Key
 Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
@@ -2714,7 +2815,7 @@ On Error GoTo Err
 If mTargetOrder Is Nothing Then Exit Function
 Select Case mTargetOrder.Status
 Case OrderStatuses.OrderStatusCreated
-    mTargetOrder.UpdateStatus OrderStatuses.OrderStatusCancelled
+    mTargetOrder.UpdateStatus OrderStatuses.OrderStatusCancelled, mPositionManager.Key
 Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
@@ -2734,13 +2835,25 @@ Const ProcName As String = "checkAllOrdersComplete"
 Dim failpoint As Long
 On Error GoTo Err
 
-If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed Then Exit Sub
-If mEntryOrderFinished And _
-    mStopOrderFinished And _
-    mTargetOrderFinished _
-Then
-    handleStimulus OpStimuli.StimAllOrdersComplete
+If IsComplete Then Exit Sub
+
+If Not mEntryOrder Is Nothing Then
+    If mEntryOrder.IsActive Then Exit Sub
 End If
+
+If Not mStopOrder Is Nothing Then
+    If mStopOrder.IsActive Then Exit Sub
+End If
+
+If Not mTargetOrder Is Nothing Then
+    If mTargetOrder.IsActive Then Exit Sub
+End If
+
+If Not mCloseoutOrder Is Nothing Then
+    If mCloseoutOrder.IsActive Then Exit Sub
+End If
+
+handleStimulus OpStimuli.StimAllOrdersComplete
 
 Exit Sub
 
@@ -2892,18 +3005,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function completionActions()
-Const ProcName As String = "completionActions"
-Dim failpoint As Long
+Private Function createRawOrder(ByVal Id As String) As Order
+Dim lOrder As Order
+Const ProcName As String = "createRawOrder"
+Dim failpoint As String
 On Error GoTo Err
 
-mOrderContext.orderPlexClosed Me
-fireChange OrderPlexCompleted
-RaiseEvent Completed
-Set mStopStrategy = Nothing
-Set mScalingStrategy = Nothing
-Set mExitStrategy = Nothing
-If size = 0 Then If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
+Set lOrder = New Order
+lOrder.Id = Id
+Set createRawOrder = lOrder
+
+mPositionManager.Orders.Add lOrder
 
 Exit Function
 
@@ -2938,7 +3050,7 @@ For Each action In pActions
     Case OpActions.ActPlaceCloseoutOrder
         doActions = placeCloseoutOrder
     Case OpActions.ActCompletionActions
-        doActions = completionActions
+        doActions = doCompletionActions
     Case OpActions.ActAlarm
         ' need to put something in here
     Case OpActions.ActSetTimeout
@@ -2951,6 +3063,25 @@ For Each action In pActions
                     "Invalid Action " & action
     End Select
 Next
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Private Function doCompletionActions()
+Const ProcName As String = "doCompletionActions"
+Dim failpoint As Long
+On Error GoTo Err
+
+mOrderContext.NotifyOrderPlexClosed Me
+fireChange OrderPlexCompleted
+RaiseEvent Completed
+Set mStopStrategy = Nothing
+Set mScalingStrategy = Nothing
+Set mExitStrategy = Nothing
+If size = 0 Then If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
 
 Exit Function
 
@@ -3032,10 +3163,8 @@ On Error GoTo Err
 
 currState = mStateEngine.State
 lActions = mStateEngine.NotifyStimulus(stimulus)
-If mStateEngine.State <> currState Then
-    mSummary.State = State
-    SaveRecoveryInfo
-End If
+mSummary.State = State
+
 handleStimulus = doActions(lActions)
 If mStateEngine.State <> currState Then
     fireChange OrderPlexChangeTypes.OrderPlexStateChanged
@@ -3116,24 +3245,22 @@ End Sub
 
 Private Function placeCloseoutOrder()
 Const ProcName As String = "placeCloseoutOrder"
-' place an order to closeout the filled part
+
+Dim lOrder As Order
+
 Dim failpoint As Long
 On Error GoTo Err
 
-Set mCloseoutOrder = mOrderContext.NewOrder
-mSummary.CloseoutOrderId = mCloseoutOrder.Id
-SaveRecoveryInfo
+Set lOrder = mOrderContext.NewOrder
+CloseoutOrder = lOrder
 
 mCloseoutOrder.action = IIf(LongPosition, OrderActions.ActionSell, OrderActions.ActionBuy)
 mCloseoutOrder.Quantity = Abs(size)
 mCloseoutOrder.OrderType = OrderTypes.OrderTypeMarket
 mCloseoutOrder.TimeInForce = OrderTifs.TIFGoodTillCancelled
 
-mOrders.Add mCloseoutOrder
-
 fireChange OrderPlexCloseoutOrderCreated
-mOrderSubmitter.modifyOrderPlex Me, False, False, False, True
-                                
+mOrderSubmitter.ModifyOrderPlex Me, False, False, False, True
 
 Exit Function
 
@@ -3201,7 +3328,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub processExecution( _
+Friend Sub processExecution( _
                 ByVal pSignedQuantity As Long, _
                 ByVal pPrice As Double, _
                 ByVal pTimestamp As Date, _
@@ -3219,9 +3346,9 @@ End If
 setSize size + pSignedQuantity
 
 If pSignedQuantity > 0 Then
-    mCumBuyPrice = mCumBuyPrice + pSignedQuantity * pPrice
+    CumBuyPrice = mCumBuyPrice + pSignedQuantity * pPrice
 Else
-    mCumSellPrice = mCumSellPrice - pSignedQuantity * pPrice
+    CumSellPrice = mCumSellPrice - pSignedQuantity * pPrice
 End If
     
 If size > 0 Then
@@ -3251,7 +3378,6 @@ mOrderSubmitter.resubmitStopOrder Me
 logOrderMessage "Resubmit stop order: id=" & mStopOrder.Id & _
             "; new broker id=" & mStopOrder.BrokerId
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
-mStopOrderFinished = False
 
 Exit Function
 
@@ -3270,9 +3396,7 @@ logOrderMessage "Resubmit stop order: id=" & mStopOrder.Id & _
 logOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
             "; new broker id=" & mTargetOrder.BrokerId
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
-mStopOrderFinished = False
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
-mTargetOrderFinished = False
 
 Exit Function
 
@@ -3290,7 +3414,6 @@ mOrderSubmitter.resubmitTargetOrder Me
 logOrderMessage "Resubmit target order: id=" & mTargetOrder.Id & _
             "; new broker id=" & mTargetOrder.BrokerId
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
-mTargetOrderFinished = False
 
 Exit Function
 
@@ -3327,7 +3450,6 @@ On Error GoTo Err
 
 mSize = value
 mSummary.size = value
-SaveRecoveryInfo
 
 If mSize <> 0 Then
     mStateEngine.SetConditions OpConditions.CondSizeNonZero

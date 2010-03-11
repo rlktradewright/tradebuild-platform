@@ -106,11 +106,11 @@ Private Const PropertyNameTwsLogLevel               As String = "TWS Log Level"
 
 Private Const ServiceProvidersRenderer              As String = "TradeBuildUI26.SPConfigurer"
 
-Private Const SrvcProviderNameRealtimeData          As String = "Realtime data"
-Private Const SrvcProviderNamePrimaryContractData   As String = "Primary contract data"
-Private Const SrvcProviderNameSecondaryContractData As String = "Secondary contract data"
-Private Const SrvcProviderNameHistoricalDataInput   As String = "Historical bar data retrieval"
-Private Const SrvcProviderNameHistoricalDataOutput  As String = "Historical bar data storage"
+Private Const SrvcProviderNameRealtimeData          As String = "Realtime Data"
+Private Const SrvcProviderNamePrimaryContractData   As String = "Primary contract Data"
+Private Const SrvcProviderNameSecondaryContractData As String = "Secondary contract Data"
+Private Const SrvcProviderNameHistoricalDataInput   As String = "Historical bar Data retrieval"
+Private Const SrvcProviderNameHistoricalDataOutput  As String = "Historical bar Data storage"
 Private Const SrvcProviderNameBrokerLive            As String = "Broker - live orders"
 Private Const SrvcProviderNameBrokerSimulated       As String = "Broker - simulated orders"
 Private Const SrvcProviderNameTickfileInput         As String = "Tickfile replay"
@@ -876,6 +876,8 @@ Case LODisconnectedFromBroker
     ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromBroker
 Case LOConnectedToBroker
     ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToBroker
+Case LOOrderDeferred
+    ev.eventCode = ApiNotifyCodes.ApiNotifyOrderDeferred
 Case Else
     ev.eventCode = ApiNotifyCodes.ApiNotifyNonSpecificNotification
 End Select

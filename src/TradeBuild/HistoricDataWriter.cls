@@ -108,7 +108,7 @@ Friend Sub ReleaseDataStore()
 Const ProcName As String = "ReleaseDataStore"
 On Error GoTo Err
 
-GLogLogger.Log pMsg:="Releasing data store", pProcName:=ProcName, pModName:=ModuleName
+GLogLogger.Log pMsg:="Releasing Data store", pProcName:=ProcName, pModName:=ModuleName
 mWriter.ReleaseDataStore
 
 Set mSelfRef = Me

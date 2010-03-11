@@ -89,7 +89,7 @@ End Enum
 Private mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 
-Private mContract As Contract
+Private mcontract As Contract
 Private mInitialPrice As Double
 Private mPriceIncrement As Double
 Private mNumberOfVisibleRows As Long
@@ -252,15 +252,15 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mInitialPrice = 0 Then
-    mInitialPrice = ev.price
+    mInitialPrice = ev.Price
     setupRows
     centreRow mInitialPrice
 ElseIf Not firstCentre And ev.Type = DOMUpdateLast Then
-    centreRow ev.price
+    centreRow ev.Price
     firstCentre = True
 End If
 
-setDOMCell ev.Type, ev.price, ev.size
+setDOMCell ev.Type, ev.Price, ev.Size
 
 Exit Sub
 
@@ -278,9 +278,9 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mInitialPrice = 0 Then
-    Debug.Print "DOMDisplay centre timer expired - initial price is 0"
+    Debug.Print "DOMDisplay centre timer expired - initial Price is 0"
 Else
-    Debug.Print "DOMDisplay centre timer expired - centring display at price " & mInitialPrice
+    Debug.Print "DOMDisplay centre timer expired - centring display at Price " & mInitialPrice
     centreRow mInitialPrice
 End If
 Set mCentreTimer = Nothing
@@ -344,8 +344,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set mTicker = value
-Set mContract = mTicker.Contract
-mPriceIncrement = mContract.tickSize
+Set mcontract = mTicker.Contract
+mPriceIncrement = mcontract.tickSize
 
 If mTicker.TradePrice <> 0 Then
     initialPrice = mTicker.TradePrice
@@ -419,16 +419,16 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function calcRowNumber(ByVal price As Double) As Long
-calcRowNumber = ((mCeilingPrice - price) / mPriceIncrement) + 1
+Private Function calcRowNumber(ByVal Price As Double) As Long
+calcRowNumber = ((mCeilingPrice - Price) / mPriceIncrement) + 1
 End Function
 
-Private Sub centreRow(ByVal price As Double)
-Debug.Print ModuleName & ":centreRow price=" & price & "; num rows=" & mNumberOfVisibleRows
-DOMGrid.TopRow = calcRowNumber(IIf(price <> 0, price, (mCeilingPrice + mBasePrice) / 2)) - Int((mNumberOfVisibleRows - 1) / 2)
+Private Sub centreRow(ByVal Price As Double)
+Debug.Print ModuleName & ":centreRow price=" & Price & "; num rows=" & mNumberOfVisibleRows
+DOMGrid.TopRow = calcRowNumber(IIf(Price <> 0, Price, (mCeilingPrice + mBasePrice) / 2)) - Int((mNumberOfVisibleRows - 1) / 2)
 End Sub
 
-Private Sub checkEnoughRows(ByVal price As Double)
+Private Sub checkEnoughRows(ByVal Price As Double)
 Dim i As Long
 Dim rowprice As Double
 
@@ -436,9 +436,9 @@ Const ProcName As String = "checkEnoughRows"
 Dim failpoint As String
 On Error GoTo Err
 
-If price = 0 Then Exit Sub
+If Price = 0 Then Exit Sub
 
-If (price - mBasePrice) / mPriceIncrement <= 5 Then
+If (Price - mBasePrice) / mPriceIncrement <= 5 Then
     ' Add some new list entries at the start
     DOMGrid.Redraw = False
     Do
@@ -449,13 +449,13 @@ If (price - mBasePrice) / mPriceIncrement <= 5 Then
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.FormatPrice(rowprice)
         Next
         mBasePrice = rowprice
-    Loop Until (price - mBasePrice) / mPriceIncrement > 5
+    Loop Until (Price - mBasePrice) / mPriceIncrement > 5
     
     centreRow mCurrentLast
     DOMGrid.Redraw = True
 End If
 
-If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
+If (mCeilingPrice - Price) / mPriceIncrement <= 5 Then
     ' Add some new list entries at the end
     DOMGrid.Redraw = False
     Do
@@ -466,7 +466,7 @@ If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
             setCellContents 1, DOMColumns.PriceRight, mTicker.FormatPrice(rowprice)
         Next
         mCeilingPrice = rowprice
-    Loop Until (mCeilingPrice - price) / mPriceIncrement > 5
+    Loop Until (mCeilingPrice - Price) / mPriceIncrement > 5
 
     centreRow mCurrentLast
     DOMGrid.Redraw = True
@@ -479,19 +479,19 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pPr
 
 End Sub
 
-Private Sub clearDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double)
+Private Sub clearDisplay(ByVal updateType As DOMUpdateTypes, ByVal Price As Double)
 Const ProcName As String = "clearDisplay"
 Dim failpoint As String
 On Error GoTo Err
 
-checkEnoughRows price
+checkEnoughRows Price
 Select Case updateType
 Case DOMUpdateTypes.DOMUpdateAsk
-    setCellContents calcRowNumber(price), DOMColumns.AskSize, ""
+    setCellContents calcRowNumber(Price), DOMColumns.AskSize, ""
 Case DOMUpdateTypes.DOMUpdateBid
-    setCellContents calcRowNumber(price), DOMColumns.BidSize, ""
+    setCellContents calcRowNumber(Price), DOMColumns.BidSize, ""
 Case DOMUpdateTypes.DOMUpdateLast
-    setCellContents calcRowNumber(price), DOMColumns.LastSize, ""
+    setCellContents calcRowNumber(Price), DOMColumns.LastSize, ""
 End Select
 
 Exit Sub
@@ -610,8 +610,8 @@ End Sub
 
 Private Sub setDOMCell( _
                 ByVal updateType As DOMUpdateTypes, _
-                ByVal price As Double, _
-                ByVal size As Long)
+                ByVal Price As Double, _
+                ByVal Size As Long)
 Const ProcName As String = "setDOMCell"
 Dim failpoint As String
 On Error GoTo Err
@@ -620,10 +620,10 @@ If mHalted Then
     mHalted = False
     RaiseEvent Resumed
 End If
-If size > 0 Then
-    setDisplay updateType, price, size
+If Size > 0 Then
+    setDisplay updateType, Price, Size
 Else
-    clearDisplay updateType, price
+    clearDisplay updateType, Price
 End If
 
 Exit Sub
@@ -632,20 +632,20 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
                 
-Private Sub setDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double, ByVal size As Long)
+Private Sub setDisplay(ByVal updateType As DOMUpdateTypes, ByVal Price As Double, ByVal Size As Long)
 Const ProcName As String = "setDisplay"
 Dim failpoint As String
 On Error GoTo Err
 
-checkEnoughRows price
+checkEnoughRows Price
 Select Case updateType
 Case DOMUpdateTypes.DOMUpdateAsk
-    setCellContents calcRowNumber(price), DOMColumns.AskSize, size
+    setCellContents calcRowNumber(Price), DOMColumns.AskSize, Size
 Case DOMUpdateTypes.DOMUpdateBid
-    setCellContents calcRowNumber(price), DOMColumns.BidSize, size
+    setCellContents calcRowNumber(Price), DOMColumns.BidSize, Size
 Case DOMUpdateTypes.DOMUpdateLast
-    setCellContents calcRowNumber(price), DOMColumns.LastSize, size
-    mCurrentLast = price
+    setCellContents calcRowNumber(Price), DOMColumns.LastSize, Size
+    mCurrentLast = Price
 End Select
 
 Exit Sub
@@ -656,7 +656,7 @@ End Sub
 
 Private Sub setupRows()
 Dim i As Long
-Dim price As Double
+Dim Price As Double
 
 Const ProcName As String = "setupRows"
 Dim failpoint As String
@@ -668,9 +668,9 @@ mCeilingPrice = mBasePrice + (DOMGrid.Rows - 2) * mPriceIncrement
 DOMGrid.Redraw = False
 
 For i = DOMGrid.Rows - 1 To 1 Step -1
-    price = mBasePrice + (DOMGrid.Rows - 1 - i) * mPriceIncrement
-    setCellContents i, DOMColumns.PriceLeft, mTicker.FormatPrice(price)
-    setCellContents i, DOMColumns.PriceRight, mTicker.FormatPrice(price)
+    Price = mBasePrice + (DOMGrid.Rows - 1 - i) * mPriceIncrement
+    setCellContents i, DOMColumns.PriceLeft, mTicker.FormatPrice(Price)
+    setCellContents i, DOMColumns.PriceRight, mTicker.FormatPrice(Price)
 Next
 
 DOMGrid.Redraw = True

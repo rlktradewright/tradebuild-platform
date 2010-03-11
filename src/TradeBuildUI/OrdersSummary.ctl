@@ -7,6 +7,7 @@ Begin VB.UserControl OrdersSummary
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   12810
+   DefaultCancel   =   -1  'True
    ScaleHeight     =   4245
    ScaleWidth      =   12810
    Begin VB.TextBox EditText 
@@ -96,6 +97,7 @@ Option Explicit
 Implements ChangeListener
 Implements CollectionChangeListener
 Implements ProfitListener
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -125,7 +127,7 @@ End Enum
 
 Private Enum OPGridOrderPlexColumns
     CreationTime = OPGridColumns.OtherColumns
-    size
+    Size
     profit
     MaxProfit
     Drawdown
@@ -134,7 +136,7 @@ End Enum
 
 Private Enum OPGridPositionColumns
     exchange = OPGridColumns.OtherColumns
-    size
+    Size
     profit
     MaxProfit
     Drawdown
@@ -143,18 +145,19 @@ End Enum
 
 Private Enum OPGridOrderColumns
     typeInPlex = OPGridColumns.OtherColumns
-    size
-    AveragePrice
-    Status
     Action
-    QuantityRemaining
+    Quantity
     OrderType
-    price
-    auxPrice
+    Price
+    AuxPrice
+    Status
+    Size
+    QuantityRemaining
+    AveragePrice
     LastFillTime
     LastFillPrice
-    id
-    VendorId
+    Id
+    BrokerId
 End Enum
 
 Private Enum OPGridColumnWidths
@@ -163,37 +166,38 @@ Private Enum OPGridColumnWidths
 End Enum
 
 Private Enum OPGridOrderPlexColumnWidths
-    CreationTimeWidth = 17
-    SizeWidth = 5
-    ProfitWidth = 8
-    MaxProfitWidth = 8
-    DrawdownWidth = 8
-    CurrencyCodeWidth = 3
+    CreationTimeWidth = 15
+    SizeWidth = 6
+    ProfitWidth = 9
+    MaxProfitWidth = 9
+    DrawdownWidth = 9
+    CurrencyCodeWidth = 4
 End Enum
 
 Private Enum OPGridPositionColumnWidths
     ExchangeWidth = 9
-    SizeWidth = 5
-    ProfitWidth = 8
-    MaxProfitWidth = 8
-    DrawdownWidth = 8
+    SizeWidth = 6
+    ProfitWidth = 9
+    MaxProfitWidth = 9
+    DrawdownWidth = 9
     CurrencyCodeWidth = 5
 End Enum
 
 Private Enum OPGridOrderColumnWidths
     TypeInPlexWidth = 9
-    SizeWidth = 5
+    SizeWidth = 6
     AveragePriceWidth = 9
-    StatusWidth = 15
-    ActionWidth = 5
-    QuantityWidth = 7
-    OrderTypeWidth = 7
+    StatusWidth = 13
+    ActionWidth = 4
+    QuantityWidth = 6
+    QuantityRemainingWidth = 5
+    OrderTypeWidth = 5
     PriceWidth = 9
     AuxPriceWidth = 9
-    LastFillTimeWidth = 17
+    LastFillTimeWidth = 15
     LastFillPriceWidth = 9
-    IdWidth = 10
-    VendorIdWidth = 10
+    IdWidth = 40
+    BrokerIdWidth = 11
 End Enum
 
 '@================================================================================
@@ -219,7 +223,6 @@ Private Type OrderPlexGridMappingEntry
 End Type
 
 Private Type PositionManagerGridMappingEntry
-    'pm                  As PositionManager
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -256,7 +259,7 @@ Private mSimulated                                      As Boolean
 
 Private mInitialised                                    As Boolean
 
-Private mEditing                                        As Boolean
+Private mIsEditing                                        As Boolean
 Private mEditedOrderPlex                                As OrderPlex
 Private mEditedOrderIndex                               As Long
 Private mEditedCol                                      As Long
@@ -264,6 +267,20 @@ Private mEditedCol                                      As Long
 '@================================================================================
 ' User Control Event Handlers
 '@================================================================================
+
+Private Sub UserControl_AccessKeyPress(KeyAscii As Integer)
+Const ProcName As String = "UserControl_AccessKeyPress"
+On Error GoTo Err
+
+If Not mIsEditing Then Exit Sub
+
+handleEditingTerminationKey KeyAscii
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 Private Sub UserControl_Initialize()
 Dim widthString As String
@@ -291,7 +308,6 @@ Exit Sub
 
 Err:
 UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -303,8 +319,16 @@ Simulated = PropBag.ReadProperty("simulated", False)
 End Sub
 
 Private Sub UserControl_Resize()
+Const ProcName As String = "UserControl_Resize"
+On Error GoTo Err
+
 OrderPlexGrid.Width = UserControl.Width
 OrderPlexGrid.Height = UserControl.Height
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -342,10 +366,10 @@ If TypeOf ev.Source Is OrderPlex Then
         
         Case OrderPlexChangeTypes.OrderPlexCompleted
             If op Is mEditedOrderPlex Then endEdit
-            If op.size = 0 Then op.RemoveChangeListener Me
+            If op.Size = 0 Then op.RemoveChangeListener Me
         Case OrderPlexChangeTypes.OrderPlexSelfCancelled
             If op Is mEditedOrderPlex Then endEdit
-            If op.size = 0 Then op.RemoveChangeListener Me
+            If op.Size = 0 Then op.RemoveChangeListener Me
         Case OrderPlexChangeTypes.OrderPlexEntryOrderChanged
             If op Is mEditedOrderPlex Then endEdit
             displayOrderValues .gridIndex + .entryGridOffset, op.entryOrder
@@ -384,11 +408,11 @@ If TypeOf ev.Source Is OrderPlex Then
     
         Case OrderPlexChangeTypes.OrderPlexSizeChanged
             If op Is mEditedOrderPlex Then endEdit
-            OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.size) = op.size
+            OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.Size) = op.Size
         Case OrderPlexChangeTypes.OrderPlexStateChanged
             If op Is mEditedOrderPlex Then endEdit
             If op.State = OrderPlexStateCodes.OrderPlexStateSubmitted Then
-                OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.CreationTime) = op.CreationTime
+                OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.CreationTime) = formattedTime(op.CreationTime)
             End If
             If op.State <> OrderPlexStateCodes.OrderPlexStateCreated And _
                 op.State <> OrderPlexStateCodes.OrderPlexStateSubmitted _
@@ -417,7 +441,7 @@ ElseIf TypeOf ev.Source Is PositionManager Then
     Case PositionManagerChangeTypes.PositionSizeChanged
         pmIndex = findPositionManagerTableIndex(pm)
         OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(pmIndex).gridIndex, _
-                                OPGridPositionColumns.size) = pm.PositionSize
+                                OPGridPositionColumns.Size) = pm.PositionSize
     End Select
 End If
 
@@ -439,7 +463,7 @@ Const ProcName As String = "CollectionChangeListener_Change"
 Dim failpoint As String
 On Error GoTo Err
 
-If TypeOf ev.affectedItem Is OrderPlex Then
+If TypeOf ev.Source Is OrderPlexes Then
     Dim op As OrderPlex
     Set op = ev.affectedItem
     
@@ -451,23 +475,21 @@ If TypeOf ev.affectedItem Is OrderPlex Then
         op.RemoveChangeListener Me
         op.RemoveProfitListener Me
     End Select
-ElseIf TypeOf ev.affectedItem Is Ticker Then
+ElseIf TypeOf ev.Source Is Tickers Then
     Dim lTicker As Ticker
     Set lTicker = ev.affectedItem
     
-    Select Case ev.changeType
-    Case CollItemAdded
-        If mSimulated Then
-            lTicker.PositionManagerSimulated.AddChangeListener Me
-            lTicker.PositionManagerSimulated.AddProfitListener Me
-        Else
-            lTicker.PositionManager.AddChangeListener Me
-            lTicker.PositionManager.AddProfitListener Me
-        End If
-    Case CollItemRemoved
-        ' nothing to do here as the Ticker has already
-        ' tidied everything up
-    End Select
+    If lTicker.State = TickerStateReady Or lTicker.State = TickerStateRunning Then
+        Select Case ev.changeType
+        Case CollItemAdded
+            listenForProfit lTicker
+        Case CollItemRemoved
+            ' nothing to do here as the Ticker has already
+            ' tidied everything up
+        End Select
+    Else
+        lTicker.addStateChangeListener Me
+    End If
 End If
 
 adjustEditBox
@@ -542,6 +564,21 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pPr
 End Sub
 
 '@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As TWUtilities30.StateChangeEvent)
+If TypeOf ev.Source Is Ticker Then
+    If ev.State = TickerStates.TickerStateReady Then
+        Dim lTicker As Ticker
+        Set lTicker = ev.Source
+        listenForProfit lTicker
+        lTicker.removeStateChangeListener Me
+    End If
+End If
+End Sub
+
+'@================================================================================
 ' Form Control Event Handlers
 '@================================================================================
 
@@ -550,12 +587,7 @@ Const ProcName As String = "EditText_KeyDown"
 Dim failpoint As String
 On Error GoTo Err
 
-Select Case KeyCode
-Case KeyCodeConstants.vbKeyEscape   ' ESC: hide, return focus to MSHFlexGrid.
-    endEdit
-Case KeyCodeConstants.vbKeyReturn   ' ENTER return focus to MSHFlexGrid.
-    updateOrderPlex
-End Select
+handleEditingTerminationKey KeyCode
 
 Exit Sub
 
@@ -614,14 +646,14 @@ Else
             If mSelectedOrderIndex <> 0 Then
                 Set selectedOrder = op.Order(mSelectedOrderIndex)
                 If selectedOrder.IsModifiable Then
-                    If (OrderPlexGrid.MouseCol = OPGridOrderColumns.price And _
+                    If (OrderPlexGrid.MouseCol = OPGridOrderColumns.Price And _
                             selectedOrder.IsAttributeModifiable(OrderAttributeIds.OrderAttLimitPrice)) Or _
-                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.auxPrice And _
+                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.AuxPrice And _
                             selectedOrder.IsAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice)) Or _
-                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.QuantityRemaining And _
+                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.Quantity And _
                         selectedOrder.IsAttributeModifiable(OrderAttributeIds.OrderAttQuantity)) _
                     Then
-                        mEditing = True
+                        mIsEditing = True
                         Set mEditedOrderPlex = op
                         mEditedOrderIndex = mSelectedOrderIndex
                         mEditedCol = OrderPlexGrid.MouseCol
@@ -685,6 +717,10 @@ Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Property
+
+Public Property Get IsEditing() As Boolean
+IsEditing = mIsEditing
 End Property
 
 Public Property Get IsSelectedItemModifiable() As Boolean
@@ -802,11 +838,11 @@ On Error GoTo Err
 If Not mInitialised Then setupOrderPlexGrid
 
 pWorkspace.Tickers.AddCollectionChangeListener Me
-If mSimulated Then
-    pWorkspace.OrderPlexesSimulated.AddCollectionChangeListener Me
-Else
-    pWorkspace.OrderPlexes.AddCollectionChangeListener Me
-End If
+'If mSimulated Then
+'    pWorkspace.OrderPlexesSimulated.AddCollectionChangeListener Me
+'Else
+'    pWorkspace.OrderPlexes.AddCollectionChangeListener Me
+'End If
 mMonitoredWorkspaces.Add pWorkspace
 
 Exit Sub
@@ -954,7 +990,7 @@ Const ProcName As String = "adjustEditBox"
 Dim failpoint As String
 On Error GoTo Err
 
-If mEditing Then
+If mIsEditing Then
     opIndex = findOrderPlexTableIndex(mEditedOrderPlex)
     OrderPlexGrid.row = mOrderPlexGridMappingTable(opIndex).gridIndex + mEditedOrderIndex
     OrderPlexGrid.col = mEditedCol
@@ -982,7 +1018,7 @@ On Error GoTo Err
 
 With mOrderPlexGridMappingTable(index)
     
-    If mEditing And .op Is mEditedOrderPlex Then endEdit
+    If mIsEditing And .op Is mEditedOrderPlex Then endEdit
     
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
@@ -1059,17 +1095,18 @@ On Error GoTo Err
 Set lTicker = pOrder.Ticker
 
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Action) = OrderActionToString(pOrder.Action)
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.auxPrice) = lTicker.FormatPrice(pOrder.TriggerPrice, True)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.AuxPrice) = lTicker.FormatPrice(pOrder.TriggerPrice, True)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.AveragePrice) = lTicker.FormatPrice(pOrder.AveragePrice, True)
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.id) = pOrder.id
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Id) = pOrder.Id
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.LastFillPrice) = lTicker.FormatPrice(pOrder.LastFillPrice, True)
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.LastFillTime) = IIf(pOrder.FillTime <> 0, pOrder.FillTime, "")
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.OrderType) = OrderTypeToString(pOrder.OrderType)
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.price) = lTicker.FormatPrice(pOrder.LimitPrice, True)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.LastFillTime) = formattedTime(pOrder.FillTime)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.OrderType) = OrderTypeToShortString(pOrder.OrderType)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Price) = lTicker.FormatPrice(pOrder.LimitPrice, True)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Quantity) = pOrder.Quantity
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.QuantityRemaining) = pOrder.QuantityRemaining
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.size) = IIf(pOrder.QuantityFilled <> 0, pOrder.QuantityFilled, 0)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Size) = IIf(pOrder.QuantityFilled <> 0, pOrder.QuantityFilled, 0)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Status) = OrderStatusToString(pOrder.Status)
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.VendorId) = pOrder.BrokerId
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.BrokerId) = pOrder.BrokerId
 
 Exit Sub
 
@@ -1107,7 +1144,7 @@ On Error GoTo Err
 
 EditText.Text = ""
 EditText.Visible = False
-mEditing = False
+mIsEditing = False
 Set mEditedOrderPlex = Nothing
 mEditedOrderIndex = -1
 mEditedCol = -1
@@ -1264,7 +1301,7 @@ With mOrderPlexGridMappingTable(opIndex)
         
         Set .op = op
         .gridIndex = addOrderPlexEntryToOrderPlexGrid(op.Contract.Specifier.localSymbol, opIndex)
-        OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.CreationTime) = op.CreationTime
+        OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.CreationTime) = formattedTime(op.CreationTime)
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.currencyCode) = op.Contract.Specifier.currencyCode
         
         Set lOrder = op.entryOrder
@@ -1318,18 +1355,18 @@ End Function
 
 Private Function findPositionManagerTableIndex(ByVal pm As PositionManager) As Long
 Dim pmIndex As Long
-Dim symbol As String
 
 Const ProcName As String = "findPositionManagerTableIndex"
 Dim failpoint As String
 On Error GoTo Err
 
-symbol = pm.Ticker.Contract.Specifier.localSymbol
 pmIndex = pm.IndexApplication
-If pmIndex > UBound(mPositionManagerGridMappingTable) Then
+Do While pmIndex > UBound(mPositionManagerGridMappingTable)
     ReDim Preserve mPositionManagerGridMappingTable(2 * (UBound(mPositionManagerGridMappingTable) + 1) - 1) As PositionManagerGridMappingEntry
-End If
+Loop
 If pmIndex > mMaxPositionManagerGridMappingTableIndex Then mMaxPositionManagerGridMappingTableIndex = pmIndex
+
+findPositionManagerTableIndex = pmIndex
 
 With mPositionManagerGridMappingTable(pmIndex)
     If .gridIndex = 0 Then
@@ -1344,20 +1381,44 @@ With mPositionManagerGridMappingTable(pmIndex)
         OrderPlexGrid.CellFontBold = True
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.exchange) = pm.Ticker.Contract.Specifier.exchange
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.currencyCode) = pm.Ticker.Contract.Specifier.currencyCode
-        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.size) = pm.PositionSize
+        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.Size) = pm.PositionSize
         OrderPlexGrid.col = OPGridColumns.ExpandIndicator
         OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
         Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
         .isExpanded = True
     End If
 End With
-findPositionManagerTableIndex = pmIndex
 
 Exit Function
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
+
+Private Function formattedTime(ByVal pTime As Date) As String
+formattedTime = IIf(pTime = 0, _
+                    "", _
+                    IIf(Int(pTime) = Int(Now), _
+                        FormatTimestamp(pTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs), _
+                        FormatTimestamp(pTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)))
+End Function
+
+Private Sub handleEditingTerminationKey(ByVal KeyCode As Long)
+Const ProcName As String = "handleEditingTerminationKey"
+On Error GoTo Err
+
+Select Case KeyCode
+Case KeyCodeConstants.vbKeyEscape   ' ESC: hide, return focus to MSHFlexGrid.
+    endEdit
+Case KeyCodeConstants.vbKeyReturn   ' ENTER return focus to MSHFlexGrid.
+    updateOrderPlex
+End Select
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 Private Sub invertEntryColors(ByVal rowNumber As Long)
 Dim foreColor As Long
@@ -1400,6 +1461,19 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pPr
 
 End Sub
 
+Private Sub listenForProfit( _
+                ByVal pTicker As Ticker)
+If mSimulated Then
+    pTicker.PositionManagerSimulated.AddChangeListener Me
+    pTicker.PositionManagerSimulated.AddProfitListener Me
+    pTicker.PositionManagerSimulated.OrderPlexes.AddCollectionChangeListener Me
+Else
+    pTicker.PositionManager.AddChangeListener Me
+    pTicker.PositionManager.AddProfitListener Me
+    pTicker.PositionManager.OrderPlexes.AddCollectionChangeListener Me
+End If
+End Sub
+
 Private Sub setupOrderPlexGrid()
 Const ProcName As String = "setupOrderPlexGrid"
 Dim failpoint As String
@@ -1422,28 +1496,29 @@ With OrderPlexGrid
     setupOrderPlexGridColumn 0, OPGridPositionColumns.exchange, OPGridPositionColumnWidths.ExchangeWidth, "Exchange", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 0, OPGridPositionColumns.MaxProfit, OPGridPositionColumnWidths.MaxProfitWidth, "Max", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 0, OPGridPositionColumns.profit, OPGridPositionColumnWidths.ProfitWidth, "Profit", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 0, OPGridPositionColumns.size, OPGridPositionColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 0, OPGridPositionColumns.Size, OPGridPositionColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
     
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.CreationTime, OPGridOrderPlexColumnWidths.CreationTimeWidth, "Creation Time", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.currencyCode, OPGridOrderPlexColumnWidths.CurrencyCodeWidth, "Curr", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.Drawdown, OPGridOrderPlexColumnWidths.DrawdownWidth, "Drawdown", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.MaxProfit, OPGridOrderPlexColumnWidths.MaxProfitWidth, "Max", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.profit, OPGridOrderPlexColumnWidths.ProfitWidth, "Profit", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.size, OPGridOrderPlexColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.Size, OPGridOrderPlexColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
     
     setupOrderPlexGridColumn 2, OPGridOrderColumns.Action, OPGridOrderColumnWidths.ActionWidth, "Action", True, AlignmentSettings.flexAlignLeftCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.auxPrice, OPGridOrderColumnWidths.AuxPriceWidth, "Trigger", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.AveragePrice, OPGridOrderColumnWidths.AveragePriceWidth, "Avg", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.id, OPGridOrderColumnWidths.IdWidth, "Id", True, AlignmentSettings.flexAlignLeftCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.LastFillPrice, OPGridOrderColumnWidths.LastFillPriceWidth, "Fill", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.AuxPrice, OPGridOrderColumnWidths.AuxPriceWidth, "Trigger", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.AveragePrice, OPGridOrderColumnWidths.AveragePriceWidth, "Avg fill", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.Id, OPGridOrderColumnWidths.IdWidth, "Id", True, AlignmentSettings.flexAlignLeftCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.LastFillPrice, OPGridOrderColumnWidths.LastFillPriceWidth, "Last fill", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.LastFillTime, OPGridOrderColumnWidths.LastFillTimeWidth, "Last fill time", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.OrderType, OPGridOrderColumnWidths.OrderTypeWidth, "Order type", True, AlignmentSettings.flexAlignLeftCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.price, OPGridOrderColumnWidths.PriceWidth, "Price", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.QuantityRemaining, OPGridOrderColumnWidths.QuantityWidth, "Rem Qty", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.size, OPGridOrderColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.OrderType, OPGridOrderColumnWidths.OrderTypeWidth, "Type", True, AlignmentSettings.flexAlignLeftCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.Price, OPGridOrderColumnWidths.PriceWidth, "Price", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.Quantity, OPGridOrderColumnWidths.QuantityWidth, "Qty", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.QuantityRemaining, OPGridOrderColumnWidths.QuantityRemainingWidth, "Rem", False, AlignmentSettings.flexAlignRightCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.Size, OPGridOrderColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.Status, OPGridOrderColumnWidths.StatusWidth, "Status", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.typeInPlex, OPGridOrderColumnWidths.TypeInPlexWidth, "Mode", True, AlignmentSettings.flexAlignLeftCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.VendorId, OPGridOrderColumnWidths.VendorIdWidth, "Vendor id", True, AlignmentSettings.flexAlignLeftCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.BrokerId, OPGridOrderColumnWidths.BrokerIdWidth, "Broker Id", True, AlignmentSettings.flexAlignLeftCenter
     
     .MergeCells = flexMergeFree
     .MergeCol(OPGridColumns.symbol) = True
@@ -1473,6 +1548,7 @@ Private Sub setupOrderPlexGridColumn( _
                 ByVal align As AlignmentSettings)
     
 Dim lColumnWidth As Long
+Dim i As Long
 
 Const ProcName As String = "setupOrderPlexGridColumn"
 Dim failpoint As String
@@ -1481,8 +1557,10 @@ On Error GoTo Err
 With OrderPlexGrid
     .row = rowNumber
     If (columnNumber + 1) > .Cols Then
-        .Cols = columnNumber + 1
-        .colWidth(columnNumber) = 0
+        For i = .Cols To columnNumber
+            .Cols = i + 1
+            .colWidth(i) = 0
+        Next
     End If
     
     If isLetters Then
@@ -1507,7 +1585,7 @@ End Sub
 
 Private Sub updateOrderPlex()
 Dim orderNumber As Long
-Dim price As Double
+Dim Price As Double
 
 Const ProcName As String = "updateOrderPlex"
 Dim failpoint As String
@@ -1516,15 +1594,15 @@ On Error GoTo Err
 If Not EditText.Visible Then Exit Sub
 
 orderNumber = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(OrderPlexGrid.rowdata(OrderPlexGrid.row) - RowDataOrderPlexBase).gridIndex
-If OrderPlexGrid.col = OPGridOrderColumns.price Then
-    If mSelectedOrderPlex.Contract.ParsePrice(EditText.Text, price) Then
-        mSelectedOrderPlex.NewOrderPrice(orderNumber) = price
+If OrderPlexGrid.col = OPGridOrderColumns.Price Then
+    If mSelectedOrderPlex.Contract.ParsePrice(EditText.Text, Price) Then
+        mSelectedOrderPlex.NewOrderPrice(orderNumber) = Price
     End If
-ElseIf OrderPlexGrid.col = OPGridOrderColumns.auxPrice Then
-    If mSelectedOrderPlex.Contract.ParsePrice(EditText.Text, price) Then
-        mSelectedOrderPlex.NewOrderTriggerPrice(orderNumber) = price
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.AuxPrice Then
+    If mSelectedOrderPlex.Contract.ParsePrice(EditText.Text, Price) Then
+        mSelectedOrderPlex.NewOrderTriggerPrice(orderNumber) = Price
     End If
-ElseIf OrderPlexGrid.col = OPGridOrderColumns.QuantityRemaining Then
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.Quantity Then
     If IsNumeric(EditText.Text) Then
         mSelectedOrderPlex.NewQuantity = EditText.Text
     End If

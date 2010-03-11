@@ -784,7 +784,7 @@ Attribute mTicker.VB_VarHelpID = -1
 Private WithEvents mOrderContext                        As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
-Private mContract                                       As Contract
+Private mcontract                                       As Contract
 
 Private mOrderAction                                    As OrderActions
 
@@ -888,7 +888,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 AskText = GetFormattedPriceFromQuoteEvent(ev)
-AskSizeText = ev.size
+AskSizeText = ev.Size
 setPriceFields
 
 Exit Sub
@@ -903,7 +903,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 BidText = GetFormattedPriceFromQuoteEvent(ev)
-BidSizeText = ev.size
+BidSizeText = ev.Size
 setPriceFields
 
 Exit Sub
@@ -947,7 +947,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 LastText = GetFormattedPriceFromQuoteEvent(ev)
-LastSizeText = ev.size
+LastSizeText = ev.Size
 setPriceFields
 
 Exit Sub
@@ -961,7 +961,7 @@ Const ProcName As String = "QuoteListener_volume"
 Dim failpoint As String
 On Error GoTo Err
 
-VolumeText = ev.size
+VolumeText = ev.Size
 
 Exit Sub
 
@@ -1066,7 +1066,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If IsNumeric(OffsetText(index)) Then
-    OffsetValueText(index) = OffsetText(index) * mContract.tickSize
+    OffsetValueText(index) = OffsetText(index) * mcontract.tickSize
 Else
     OffsetValueText(index) = ""
 End If
@@ -1187,12 +1187,12 @@ End Sub
 Private Sub PriceText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim price As Double
+Dim Price As Double
 
-' allow blank price to prevent user irritation if they place the caret
-' in the price field when the order type is limit, and then decide they
+' allow blank Price to prevent user irritation if they place the caret
+' in the Price field when the order type is limit, and then decide they
 ' want to change the order type - if space is not allowed then they
-' would have to enter a valid price before being able to get to the order
+' would have to enter a valid Price before being able to get to the order
 ' type combo
 Const ProcName As String = "PriceText_Validate"
 Dim failpoint As String
@@ -1203,7 +1203,7 @@ If PriceText(index) = "" Then Exit Sub
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         PriceText(index) <> "" _
     ) Or _
-    Not mContract.ParsePrice(PriceText(index), price) _
+    Not mcontract.ParsePrice(PriceText(index), Price) _
 Then
     Cancel = True
     Exit Sub
@@ -1212,11 +1212,11 @@ End If
 If Not mOrderPlex Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.NewEntryPrice = price
+        mOrderPlex.NewEntryPrice = Price
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.NewStopPrice = price
+        mOrderPlex.NewStopPrice = Price
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.NewTargetPrice = price
+        mOrderPlex.NewTargetPrice = Price
     End Select
 End If
 
@@ -1229,7 +1229,7 @@ End Sub
 Private Sub QuantityText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim quantity As Long
+Dim Quantity As Long
 Dim max As Long
 
 Const ProcName As String = "QuantityText_Validate"
@@ -1243,7 +1243,7 @@ Then
     Exit Sub
 End If
 
-Select Case mContract.Specifier.secType
+Select Case mcontract.Specifier.secType
 Case SecTypeStock
     max = 100000
 Case SecTypeFuture
@@ -1265,10 +1265,10 @@ If Not IsInteger(QuantityText(index), 1, max) Then
     Exit Sub
 End If
 
-quantity = CLng(QuantityText(index))
+Quantity = CLng(QuantityText(index))
 
 If mOrderPlex Is Nothing Then
-    If quantity = 0 Then
+    If Quantity = 0 Then
         Cancel = True
         Exit Sub
     End If
@@ -1276,19 +1276,19 @@ If mOrderPlex Is Nothing Then
     If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder Then
         Select Case index
         Case BracketIndexes.BracketEntryOrder
-            QuantityText(BracketIndexes.BracketStopOrder) = quantity
-            QuantityText(BracketIndexes.BracketTargetOrder) = quantity
+            QuantityText(BracketIndexes.BracketStopOrder) = Quantity
+            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity
         Case BracketIndexes.BracketStopOrder
-            QuantityText(BracketIndexes.BracketEntryOrder) = quantity
-            QuantityText(BracketIndexes.BracketTargetOrder) = quantity
+            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity
+            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity
         Case BracketIndexes.BracketTargetOrder
-            QuantityText(BracketIndexes.BracketEntryOrder) = quantity
-            QuantityText(BracketIndexes.BracketStopOrder) = quantity
+            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity
+            QuantityText(BracketIndexes.BracketStopOrder) = Quantity
         End Select
     End If
     
 Else
-    mOrderPlex.NewQuantity = quantity
+    mOrderPlex.NewQuantity = Quantity
 End If
 
 Exit Sub
@@ -1332,7 +1332,7 @@ End Sub
 Private Sub StopPriceText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim price As Double
+Dim Price As Double
 
 Const ProcName As String = "StopPriceText_Validate"
 Dim failpoint As String
@@ -1341,7 +1341,7 @@ On Error GoTo Err
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         StopPriceText(index) <> "" _
     ) Or _
-    Not mTicker.ParsePrice(StopPriceText(index), price) _
+    Not mTicker.ParsePrice(StopPriceText(index), Price) _
 Then
     Cancel = True
     Exit Sub
@@ -1350,11 +1350,11 @@ End If
 If Not mOrderPlex Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.NewEntryTriggerPrice = price
+        mOrderPlex.NewEntryTriggerPrice = Price
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.NewStopTriggerPrice = price
+        mOrderPlex.NewStopTriggerPrice = Price
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.NewTargetTriggerPrice = price
+        mOrderPlex.NewTargetTriggerPrice = Price
     End Select
 End If
 
@@ -1542,7 +1542,7 @@ If value Is mTicker Then Exit Property
 If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
 
 Set mTicker = value
-Set mContract = mTicker.Contract
+Set mcontract = mTicker.Contract
 
 If mTicker.OrdersAreLive Then
     Set mOrderContext = mTicker.DefaultOrderContext
@@ -1688,7 +1688,7 @@ On Error GoTo Err
 enableOrderFields index
 OrderIDText(index) = ""
 ActionCombo(index).ListIndex = 0
-Select Case mContract.Specifier.secType
+Select Case mcontract.Specifier.secType
 Case SecTypeStock
     QuantityText(index) = 100
 Case SecTypeFuture
@@ -2050,13 +2050,13 @@ End Sub
 
 Private Function getPrice( _
                 ByVal priceString As String) As Double
-Dim price As Double
+Dim Price As Double
 Const ProcName As String = "getPrice"
 Dim failpoint As String
 On Error GoTo Err
 
-mContract.ParsePrice priceString, price
-getPrice = price
+mcontract.ParsePrice priceString, Price
+getPrice = Price
 
 Exit Function
 
@@ -2080,12 +2080,12 @@ End Function
 
 Private Function isValidPrice( _
                 ByVal priceString As String) As Boolean
-Dim price As Double
+Dim Price As Double
 Const ProcName As String = "isValidPrice"
 Dim failpoint As String
 On Error GoTo Err
 
-isValidPrice = mContract.ParsePrice(priceString, price)
+isValidPrice = mcontract.ParsePrice(priceString, Price)
 
 Exit Function
 
@@ -2375,7 +2375,7 @@ With pOrder
     'If pOrder.isAttributeModifiable(OrderAttOrderType) Then .orderType = comboItemData(TypeCombo(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = OrderRefText(orderIndex)
     If pOrder.IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = (OverrideCheck(orderIndex) = vbChecked)
-    If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .quantity = QuantityText(orderIndex)
+    If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .Quantity = QuantityText(orderIndex)
     If pOrder.IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(orderIndex))
     If pOrder.IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(orderIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = comboItemData(TIFCombo(orderIndex))
@@ -2403,10 +2403,10 @@ End If
 clearOrderFields orderIndex
 
 With pOrder
-    setOrderId orderIndex, .id
+    setOrderId orderIndex, .Id
     
     ActionCombo(orderIndex).Text = OrderActionToString(.Action)
-    QuantityText(orderIndex) = .quantity
+    QuantityText(orderIndex) = .Quantity
     TypeCombo(orderIndex).Text = OrderTypeToString(.OrderType)
     PriceText(orderIndex) = IIf(.LimitPrice <> 0, .LimitPrice, "")
     StopPriceText(orderIndex) = IIf(.TriggerPrice <> 0, .TriggerPrice, "")
@@ -2510,13 +2510,13 @@ End Sub
 
 Private Sub setOrderId( _
                 ByVal index As Long, _
-                ByVal id As String)
+                ByVal Id As String)
 Const ProcName As String = "setOrderId"
 Dim failpoint As String
 On Error GoTo Err
 
 enableControl OrderIDText(index)
-OrderIDText(index) = id
+OrderIDText(index) = Id
 disableControl OrderIDText(index)
 
 Exit Sub
@@ -2622,7 +2622,7 @@ Case BracketIndexes.BracketTargetOrder
 End Select
 
 If IsNumeric(OffsetText(index)) Then
-    offset = OffsetText(index) * mContract.tickSize
+    offset = OffsetText(index) * mcontract.tickSize
 End If
 
 PriceText(index) = mTicker.FormatPrice(basePrice + offset)
@@ -2704,9 +2704,9 @@ Const ProcName As String = "setupTicker"
 Dim failpoint As String
 On Error GoTo Err
 
-SymbolLabel.caption = mContract.Specifier.localSymbol & _
+SymbolLabel.caption = mcontract.Specifier.localSymbol & _
                         " on " & _
-                        mContract.Specifier.exchange
+                        mcontract.Specifier.exchange
                         
 setupTifCombo BracketIndexes.BracketEntryOrder
 setupTifCombo BracketIndexes.BracketStopOrder

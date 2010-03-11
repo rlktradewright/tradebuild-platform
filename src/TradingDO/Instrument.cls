@@ -264,9 +264,9 @@ On Error GoTo Err
 If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If Name <> "" Then
-    Set instrmnt = mDB.InstrumentFactory.LoadByName("""" & value.ExchangeName & """/""" & _
-                                                    value.Name & """/""" & _
-                                                    Name & """")
+    Set instrmnt = mDB.InstrumentFactory.LoadByName(value.ExchangeName & "/" & _
+                                                    value.Name & "/" & _
+                                                    Name)
     If Not instrmnt Is Nothing Then mDataObj.RuleBroken getBusRuleNameValidId, instrmnt.Id <> Id
 End If
 mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = value.Id

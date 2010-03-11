@@ -93,7 +93,7 @@ Const ProcName As String = "CollectionChangeListener_Change"
 Dim failpoint As String
 On Error GoTo Err
 
-If TypeOf ev.affectedItem Is Ticker Then
+If TypeOf ev.source Is Tickers Then
     Dim lTicker As Ticker
     Set lTicker = ev.affectedItem
     Select Case ev.changeType
@@ -105,7 +105,7 @@ If TypeOf ev.affectedItem Is Ticker Then
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
-ElseIf TypeOf ev.affectedItem Is OrderContext Then
+ElseIf TypeOf ev.source Is OrderContexts Then
     Dim lOrderContext As OrderContext
     Set lOrderContext = ev.affectedItem
     Select Case ev.changeType
@@ -114,7 +114,7 @@ ElseIf TypeOf ev.affectedItem Is OrderContext Then
     Case CollectionChangeTypes.CollItemRemoved
         lOrderContext.ActiveOrderPlexes.RemoveCollectionChangeListener Me
     End Select
-ElseIf TypeOf ev.affectedItem Is orderPlex Then
+ElseIf TypeOf ev.source Is OrderPlexes Then
     Dim lOrderPlex As orderPlex
     Set lOrderPlex = ev.affectedItem
     Select Case ev.changeType
@@ -128,7 +128,7 @@ ElseIf TypeOf ev.affectedItem Is orderPlex Then
         ' do nothing here because we don't care whether the order plex
         ' is active or not
     End Select
-ElseIf TypeOf ev.affectedItem Is Execution Then
+ElseIf TypeOf ev.source Is Executions Then
     Dim lExec As Execution
     Set lExec = ev.affectedItem
     Select Case ev.changeType
