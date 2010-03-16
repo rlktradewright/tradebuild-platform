@@ -2932,8 +2932,17 @@ Case 321    ' invalid request
     failpoint = 1200
 
     Select Case getIdType(id)
-    Case IdTypeNone, IdTypeContractData
-        ' this must relate to a RequestContract
+    Case IdTypeNone
+        If mServerVersion < MIN_SERVER_VER_CONTRACT_DATA_CHAIN And _
+            Not mContractDetailsRequest.contractSpec Is Nothing _
+        Then
+            ' this probably relates to a RequestContract
+            processContractError errorMsg
+        Else
+            logMessage "Error (" & errorCode & "; id=" & id & ") from TWS: " & errorMsg, pProcName:="getErrorMsg"
+            mCommonServiceConsumer.NotifyRecoverableError errorCode, errorMsg, -1
+        End If
+    Case IdTypeContractData
         processContractError errorMsg
     Case IdTypeRealtimeData
     Case IdTypeMarketDepth
@@ -3036,7 +3045,7 @@ Case 2103, 2104, 2105, 2106, 2107, 2108
 Case Else
     failpoint = 1700
 
-    logMessage "Error (" & errorCode & ") from TWS: " & errorMsg, pProcName:="getErrorMsg"
+    logMessage "Error (" & errorCode & "; id=" & id & ") from TWS: " & errorMsg, pProcName:="getErrorMsg"
     mCommonServiceConsumer.NotifyRecoverableError errorCode, errorMsg, -1
 End Select
 
