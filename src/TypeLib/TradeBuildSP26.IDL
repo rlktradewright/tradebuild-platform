@@ -33,10 +33,14 @@ library TradeBuildSP
     interface ICommonServiceProvider;
     interface IContractInfoServiceConsumer;
     interface IContractInfoServiceProvider;
+	interface IExecutionReport;
     interface IOrder;
-    interface IOrderReport;
+	interface IOrderPersistenceServiceProvider;
     interface IOrderPlex;
-    interface IOrderSubmissionSrvcConsumer;
+	interface IOrderRecoveryServiceConsumer;
+    interface IOrderReport;
+	interface IOrderStatusReport;
+	interface IOrderSubmissionSrvcConsumer;
     interface IOrderSubmissionSrvcProvider;
     interface IOrderSubmitter;
     interface IRealtimeDataInputServiceConsumer;
@@ -131,6 +135,27 @@ library TradeBuildSP
 		OriginFirm = 1,
 		OriginUnknown = 2
     } OrderOrigins;
+
+    typedef [uuid(376DC92E-BB75-43D4-82E0-B20D1CE35011), version(1.0)]
+    enum {
+		[helpstring("This state indicates that the order plex has been created but none of the orders have yet been placed.")]
+		OrderPlexStateCreated = 1,
+	    
+		[helpstring("This state indicates that all the orders in the order plex have been placed.")]
+		OrderPlexStateSubmitted,
+	    
+		[helpstring("This state indicates that the order plex is in the process of being cancelled.")]
+		OrderPlexStateCancelling,
+	    
+		[helpstring("This state indicates that the order plex is being closed out. (When an order plex has been closed out, there are no outstanding orders and no net size - note that this may require a closeout order to be placed to negate any existing size.)")]
+		OrderPlexStateClosingOut,
+	        
+		[helpstring("This state indicates that all orders have been completed.")]
+		OrderPlexStateClosed,
+
+		[helpstring("This state indicates that a cancellation notification for either the stop order or the target order, when both exist, has been received.")]
+		OrderPlexStateAwaitingOtherOrderCancel
+	} OrderPlexStateCodes;
 
     typedef [uuid(da605462-9db7-48cd-a876-777c58e18ac6), version(1.0)]
     enum {
@@ -335,20 +360,17 @@ library TradeBuildSP
 		[helpstring("Unknown contract")]
     	LOUnknownContract = 2404,
 
-		[helpstring("Invalid order")]
-    	LOInvalidOrder = 2405,
-
 		[helpstring("Not unique contract")]
     	LONotUniqueContract = 2406,
-
-		[helpstring("Insufficient funds")]
-    	LOInsufficientFunds = 2407,
 
 		[helpstring("Disconnected from the broker")]
     	LODisconnectedFromBroker = 2408,
 
 		[helpstring("Connected to the broker")]
-    	LOConnectedToBroker = 2409
+    	LOConnectedToBroker = 2409,
+
+		[helpstring("Order deferred")]
+    	LOOrderDeferred = 2410
 
    } StandardSPEventCodes;
 
@@ -452,8 +474,8 @@ library TradeBuildSP
 		// Methods =====================================================
 
         HRESULT Bar(
-            [in] Bar* data,
-			[in] TimePeriod* barTimePeriod);
+            [in] Bar* pData,
+			[in] TimePeriod* pBarTimePeriod);
 
     };
 
@@ -467,18 +489,18 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
 		HRESULT Ready();
 
         HRESULT BarDataComplete();
 
         HRESULT Progress(
-			[in] long barsRetrieved,
-			[in] float percentComplete);
+			[in] long pBarsRetrieved,
+			[in] float pPercentComplete);
 
     };
 
@@ -495,21 +517,21 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
         HRESULT NotReady();
 
         HRESULT OutputBarfileCreated(
-            [in] BSTR filename);
+            [in] BSTR pFilename);
 
         HRESULT Ready();
 
 		HRESULT RequiredTimePeriod(
-			[in] TimePeriod* timeframe,
-			[in] long saveIntervalSeconds);
+			[in] TimePeriod* pTimeframe,
+			[in] long pSaveIntervalSeconds);
 
     };
 
@@ -536,14 +558,14 @@ library TradeBuildSP
 		HRESULT CancelFetch();
 
 		HRESULT FetchBars(
-				[in] BarDataSpecifier* barSpecifier);
+				[in] BarDataSpecifier* pBarSpecifier);
 
 		HRESULT ReleaseDataStore();
 
 		HRESULT FireNextBar();
 
         HRESULT Supports(
-                        [in] long capabilities, 
+                        [in] long pCapabilities, 
                         [out, retval] VARIANT_BOOL* );
     };
 
@@ -564,22 +586,22 @@ library TradeBuildSP
 		// Methods =====================================================
 
         HRESULT CreateBarDataReader(
-			[in] IBarDataConsumer* dataConsumer,
-			[in] IBarDataInputServiceConsumer* serviceConsumer,
+			[in] IBarDataConsumer* pDataConsumer,
+			[in] IBarDataInputServiceConsumer* pServiceConsumer,
 			[out, retval] IBarDataReader** );
 
         HRESULT CreateBarDataWriter(
-			[in] IBarDataOutputServiceConsumer* serviceConsumer,
+			[in] IBarDataOutputServiceConsumer* pServiceConsumer,
 			[in] Contract* pContract,
-            [in, optional, defaultvalue("")] BSTR location, 
+            [in, optional, defaultvalue("")] BSTR pLocation, 
             [out, retval] IBarDataWriter** );
 
 		HRESULT IsSupportedTimePeriod(
-            [in] TimePeriod* period, 
+            [in] TimePeriod* pPeriod, 
             [out, retval] VARIANT_BOOL* );
 
         HRESULT Supports(
-            [in] long capabilities, 
+            [in] long pCapabilities, 
             [out, retval] VARIANT_BOOL* );
 
     };
@@ -602,9 +624,9 @@ library TradeBuildSP
 		HRESULT ReleaseDataStore();
 
         HRESULT WriteBar(
-			[in] Bar* data,
-			[in] BarTypes barType,
-			[in] TimePeriod* barTimePeriod);
+			[in] Bar* pData,
+			[in] BarTypes pBarType,
+			[in] TimePeriod* pBarTimePeriod);
 
     };
 
@@ -618,20 +640,25 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
-		HRESULT FatalServiceProviderError(
-			[in] long errorCode,
-			[in] BSTR source,
-			[in] BSTR errorMessage,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
+
+		HRESULT NotifyFatalError(
+			[in] long pErrorCode,
+			[in] BSTR pSsource,
+			[in] BSTR pErrorMessage,
+			[in] long pServiceProviderHandle);
+
+		HRESULT NotifyRecoverableError(
+			[in] long pErrorCode,
+			[in] BSTR pErrorMessage,
+			[in] long pServiceProviderHandle);
 
 		HRESULT RegisterServiceProvider(
-			[in] long handle,
-			[in] ServiceProviderTypes spType);
-
-		HRESULT ServiceProviderError(
-			[in] long errorCode,
-			[in] BSTR errorMessage,
-			[in] long serviceProviderHandle);
+			[in] long pHandle,
+			[in] ServiceProviderTypes pSpType);
 
     };
 
@@ -657,9 +684,9 @@ library TradeBuildSP
 	// Methods =====================================================
 
         HRESULT Link(
-			[in] ICommonServiceConsumer* commonServiceConsumer,
-			[in] long handle,
-			[in] Parameters* params);
+			[in] ICommonServiceConsumer* pCommonServiceConsumer,
+			[in] long pHandle,
+			[in] Parameters* pParams);
 
 		HRESULT Terminate();
 
@@ -678,15 +705,13 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-            [in] ContractsBuilder* pContractsBuilder,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
 		HRESULT LoadComplete(
-			[in] long handle,
-            [in] ContractsBuilder* pContractsBuilder);
+			[in] long pServiceProviderHandle);
 
     };
 
@@ -700,24 +725,74 @@ library TradeBuildSP
 
 		// Properties ==================================================
 
-        [propput]
-        HRESULT ContractInfoServiceConsumer([in] IContractInfoServiceConsumer* rhs);
-
 		// Methods =====================================================
 
         HRESULT RequestContractDetails(
-                        [in] ContractsBuilder* pContractsBuilder);
+			[in] IContractInfoServiceConsumer* pServiceConsumer,
+			[in] ContractsBuilder* pContractsBuilder);
 
 		HRESULT StoreContractDetails(
+			[in] IContractInfoServiceConsumer* pServiceConsumer,
 			[in] Contract* pContract);
 
         HRESULT Supports(
-                        [in] long capabilities, 
+                        [in] long pCapabilities, 
                         [out, retval] VARIANT_BOOL* );
 
     };
 
- 	[
+	[
+      uuid(86AAA34F-66D8-46D7-AC1E-AC094F83169F),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by ExecutionReport classes")
+    ]
+    interface IExecutionReport : IUnknown {
+
+	// Properties ==================================================
+
+		[propget]
+        HRESULT AccountIdentifier([out, retval] BSTR*  );
+
+		[propget]
+        HRESULT Action([out, retval] OrderActions*  );
+
+		[propget]
+        HRESULT ExecId([out, retval] BSTR*  );
+
+		[propget]
+        HRESULT FillingExchange([out, retval] BSTR* );
+
+		[propget]
+        HRESULT FillTime([out, retval] DATE* );
+
+		[propget]
+        HRESULT IsLiquidation([out, retval] VARIANT_BOOL* );
+
+		[propget]
+        HRESULT OrderBrokerId([out, retval] BSTR* );
+
+		[propput]
+        HRESULT OrderTradeBuildId([in] BSTR );
+
+		[propget]
+        HRESULT OrderTradeBuildId([out, retval] BSTR* );
+
+		[propget]
+        HRESULT Price([out, retval] double* );
+
+		[propget]
+        HRESULT Quantity([out, retval] long* );
+
+        [propget]
+        HRESULT SecurityName([out, retval] BSTR* ); 
+
+		[propget]
+		HRESULT Timezone([out, retval] BSTR*);
+
+	};
+
+	[
       uuid(a0f1ab28-facb-4c2c-ad04-0cc504cbcca2),
       version(1.0),
       nonextensible,
@@ -728,110 +803,154 @@ library TradeBuildSP
 	// Properties ==================================================
 
         [propget]
-        HRESULT action([out, retval] OrderActions* );
+        HRESULT Action([out, retval] OrderActions* );
 
         [propget]
-        HRESULT allOrNone([out, retval] VARIANT_BOOL* );
+        HRESULT AllOrNone([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT blockOrder([out, retval] VARIANT_BOOL* );
+        HRESULT BlockOrder([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT brokerId([in] BSTR );
+        HRESULT BrokerId([in] BSTR );
 
         [propget]
-        HRESULT brokerId([out, retval] BSTR* );
+        HRESULT BrokerId([out, retval] BSTR* );
 
         [propget]
         HRESULT Contract([out, retval] Contract** );
 
         [propget]
-        HRESULT displaySize([out, retval] long* );
+        HRESULT DisplaySize([out, retval] long* );
 
         [propget]
-        HRESULT discretionaryAmount([out, retval] double* );
+        HRESULT DiscretionaryAmount([out, retval] double* );
 
         [propget]
-        HRESULT eTradeOnly([out, retval] VARIANT_BOOL* );
+        HRESULT ETradeOnly([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT firmQuoteOnly([out, retval] VARIANT_BOOL* );
+        HRESULT FirmQuoteOnly([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT goodAfterTime([out, retval] DATE* );
+        HRESULT GoodAfterTime([out, retval] DATE* );
 
         [propget]
-        HRESULT goodAfterTimeTZ([out, retval] BSTR* );
+        HRESULT GoodAfterTimeTZ([out, retval] BSTR* );
 
         [propget]
-        HRESULT goodTillDate([out, retval] DATE* );
+        HRESULT GoodTillDate([out, retval] DATE* );
 
         [propget]
-        HRESULT goodTillDateTZ([out, retval] BSTR* );
+        HRESULT GoodTillDateTZ([out, retval] BSTR* );
 
         [propget]
-        HRESULT hidden([out, retval] VARIANT_BOOL* );
+        HRESULT Hidden([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT ignoreRegularTradingHours([out, retval] VARIANT_BOOL* );
+        HRESULT IgnoreRegularTradingHours([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT limitPrice([out, retval] double* );
+        HRESULT LimitPrice([out, retval] double* );
 
         [propget]
-        HRESULT minimumQuantity([out, retval] long* );
+        HRESULT MinimumQuantity([out, retval] long* );
 
         [propget]
         HRESULT NbboPriceCap([out, retval] double* );
 
         [propget]
-        HRESULT originatorRef([out, retval] BSTR* );
+        HRESULT OriginatorRef([out, retval] BSTR* );
 
         [propget]
-        HRESULT orderType([out, retval] OrderTypes* );
+        HRESULT OrderType([out, retval] OrderTypes* );
 
         [propget]
-        HRESULT origin([out, retval] OrderOrigins* );
+        HRESULT Origin([out, retval] OrderOrigins* );
 
         [propget]
-        HRESULT overrideConstraints([out, retval] VARIANT_BOOL* );
+        HRESULT OverrideConstraints([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT providerProperties([out,retval] Parameters** );
+        HRESULT ProviderProperties([out,retval] Parameters** );
 
         [propget]
-        HRESULT quantity([out, retval] long* );
+        HRESULT Quantity([out, retval] long* );
 
         [propget]
-        HRESULT quantityFilled([out, retval] long* );
+        HRESULT QuantityFilled([out, retval] long* );
 
         [propget]
-        HRESULT quantityRemaining([out, retval] long* );
+        HRESULT QuantityRemaining([out, retval] long* );
 
         [propget]
-        HRESULT settlingFirm([out, retval] BSTR* );
+        HRESULT SettlingFirm([out, retval] BSTR* );
 
         [propget]
-        HRESULT status([out, retval] OrderStatuses* );
+        HRESULT Status([out, retval] OrderStatuses* );
 
 		[propget]
-        HRESULT stopTriggerMethod([out, retval] StopTriggerMethods* );
+        HRESULT StopTriggerMethod([out, retval] StopTriggerMethods* );
 
         [propget]
-        HRESULT sweepToFill([out, retval] VARIANT_BOOL* );
+        HRESULT SweepToFill([out, retval] VARIANT_BOOL* );
 
         [propget]
-        HRESULT timeInForce([out, retval] OrderTifs* );
+        HRESULT TimeInForce([out, retval] OrderTifs* );
 
         [propget]
-        HRESULT tradeBuildId([out, retval] BSTR* );
+        HRESULT TradeBuildId([out, retval] BSTR* );
 
         [propget]
-        HRESULT triggerPrice([out, retval] double* );
+        HRESULT TriggerPrice([out, retval] double* );
 
 	// Methods =====================================================
 
     };
+
+ 	[
+      uuid(B5539FC7-B705-40EE-A253-14D8D4F5D635),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by the Order Persistence Service Consumer")
+    ]
+    interface IOrderPersistenceServiceConsumer : IUnknown {
+
+	// Methods =====================================================
+
+		HRESULT PersistedOrderInfo(
+			[in] BSTR* pOrderInfo);
+
+		HRESULT PersistedOrderInfoEnd();
+
+	};
+
+ 	[
+      uuid(F377F6B1-E06F-4B7B-B5BC-19156B5A8A37),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by Order Persistence Service Providers")
+    ]
+    interface IOrderPersistenceServiceProvider : IUnknown {
+
+	// Properties ==================================================
+
+		[propput]
+		HRESULT OrderPersistenceServiceConsumer(
+			[in] IOrderPersistenceServiceConsumer pOrderPersistenceServiceConsumer);
+
+	// Methods =====================================================
+
+		HRESULT SaveOrderInfo(
+			[in] BSTR* pOrderInfo);
+
+		HRESULT RequestOrderInfo(
+			[in] BSTR* pScopeName);
+
+		HRESULT StartSession(
+			[in] BSTR* pSessionId);
+
+	};
 
     [
       uuid(049129f6-ba7c-4373-a92d-580ac0714ba0),
@@ -839,36 +958,61 @@ library TradeBuildSP
       nonextensible,
       helpstring("Defines the interface of the Order Plex object")
     ]
-interface IOrderPlex : IDispatch {
+	interface IOrderPlex : IDispatch {
 
 	// Properties ==================================================
 
 	[propget]
-	HRESULT closeoutOrder([out, retval] IOrder** );
+	HRESULT CloseoutOrder([out, retval] IOrder** );
 
 	[propget]
-	HRESULT entryOrder([out, retval] IOrder** );
+	HRESULT EntryOrder([out, retval] IOrder** );
 
 	[propget]
-	HRESULT key([out, retval] BSTR* );
+	HRESULT Key([out, retval] BSTR* );
 
 	[propget]
 	HRESULT Order(
-		[in] long index, 
+		[in] long pIndex, 
 		[out, retval] IOrder** );
 
 	[propget]
-	HRESULT numberOfOrders([out, retval] long* );
+	HRESULT NumberOfOrders([out, retval] long* );
 
 	[propget]
-	HRESULT stoporder([out, retval] IOrder** );
+	HRESULT State([out,retval] OrderPlexStateCodes*);
 
 	[propget]
-	HRESULT targetOrder([out, retval] IOrder** );
+	HRESULT Stoporder([out, retval] IOrder** );
+
+	[propget]
+	HRESULT TargetOrder([out, retval] IOrder** );
 
     };
 
  	[
+      uuid(2a20fdd3-8d84-4046-bdcf-a76d856b565c),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by the Order Recovery Service Consumer")
+    ]
+    interface IOrderRecoveryServiceConsumer : IUnknown {
+
+	// Methods =====================================================
+
+		HRESULT OrderReport(
+			[in] IOrderReport* pOrderReport);
+
+		HRESULT ExecutionReport(
+			[in] IExecutionReport* pExecutionReport );
+
+		HRESULT ExecutionReportsComplete();
+
+		HRESULT OrderReportsComplete();
+
+	};
+
+	[
       uuid(58e09650-1764-492b-8734-953c9ad09689),
       version(1.0),
       nonextensible,
@@ -879,28 +1023,28 @@ interface IOrderPlex : IDispatch {
 	// Properties ==================================================
 
         [propget]
-        HRESULT action([out, retval] OrderActions* );
+        HRESULT Action([out, retval] OrderActions* );
 
         [propput]
-        HRESULT action([in] OrderActions );
+        HRESULT Action([in] OrderActions );
 
         [propget]
-        HRESULT allOrNone([out, retval] VARIANT_BOOL* );
+        HRESULT AllOrNone([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT allOrNone([in] VARIANT_BOOL );
+        HRESULT AllOrNone([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT blockOrder([out, retval] VARIANT_BOOL* );
+        HRESULT BlockOrder([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT blockOrder([in] VARIANT_BOOL );
+        HRESULT BlockOrder([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT brokerId([out, retval] BSTR* );
+        HRESULT BrokerId([out, retval] BSTR* );
 
         [propput]
-        HRESULT brokerId([in] BSTR );
+        HRESULT BrokerId([in] BSTR );
 
         [propget]
         HRESULT ContractSpecifier([out, retval] ContractSpecifier** );
@@ -909,76 +1053,76 @@ interface IOrderPlex : IDispatch {
         HRESULT ContractSpecifier([in] ContractSpecifier* );
 
         [propget]
-        HRESULT displaySize([out, retval] long* );
+        HRESULT DisplaySize([out, retval] long* );
 
         [propput]
-        HRESULT displaySize([in] long );
+        HRESULT DisplaySize([in] long );
 
         [propget]
-        HRESULT discretionaryAmount([out, retval] double* );
+        HRESULT DiscretionaryAmount([out, retval] double* );
 
         [propput]
-        HRESULT discretionaryAmount([in] double );
+        HRESULT DiscretionaryAmount([in] double );
 
         [propget]
-        HRESULT eTradeOnly([out, retval] VARIANT_BOOL* );
+        HRESULT ETradeOnly([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT eTradeOnly([in] VARIANT_BOOL );
+        HRESULT ETradeOnly([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT firmQuoteOnly([out, retval] VARIANT_BOOL* );
+        HRESULT FirmQuoteOnly([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT firmQuoteOnly([in] VARIANT_BOOL );
+        HRESULT FirmQuoteOnly([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT goodAfterTime([out, retval] DATE* );
+        HRESULT GoodAfterTime([out, retval] DATE* );
 
         [propput]
-        HRESULT goodAfterTime([in] DATE );
+        HRESULT GoodAfterTime([in] DATE );
 
         [propget]
-        HRESULT goodAfterTimeTZ([out, retval] BSTR* );
+        HRESULT GoodAfterTimeTZ([out, retval] BSTR* );
 
         [propput]
-        HRESULT goodAfterTimeTZ([in] BSTR );
+        HRESULT GoodAfterTimeTZ([in] BSTR );
 
         [propget]
-        HRESULT goodTillDate([out, retval] DATE* );
+        HRESULT GoodTillDate([out, retval] DATE* );
 
         [propput]
-        HRESULT goodTillDate([in] DATE );
+        HRESULT GoodTillDate([in] DATE );
 
         [propget]
-        HRESULT goodTillDateTZ([out, retval] BSTR* );
+        HRESULT GoodTillDateTZ([out, retval] BSTR* );
 
         [propput]
-        HRESULT goodTillDateTZ([in] BSTR );
+        HRESULT GoodTillDateTZ([in] BSTR );
 
         [propget]
-        HRESULT hidden([out, retval] VARIANT_BOOL* );
+        HRESULT Hidden([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT hidden([in] VARIANT_BOOL );
+        HRESULT Hidden([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT ignoreRegularTradingHours([out, retval] VARIANT_BOOL* );
+        HRESULT IgnoreRegularTradingHours([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT ignoreRegularTradingHours([in] VARIANT_BOOL );
+        HRESULT IgnoreRegularTradingHours([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT limitPrice([out, retval] double* );
+        HRESULT LimitPrice([out, retval] double* );
 
         [propput]
-        HRESULT limitPrice([in] double );
+        HRESULT LimitPrice([in] double );
 
         [propget]
-        HRESULT minimumQuantity([out, retval] long* );
+        HRESULT MinimumQuantity([out, retval] long* );
 
         [propput]
-        HRESULT minimumQuantity([in] long );
+        HRESULT MinimumQuantity([in] long );
 
         [propget]
         HRESULT NbboPriceCap([out, retval] double* );
@@ -987,86 +1131,103 @@ interface IOrderPlex : IDispatch {
         HRESULT NbboPriceCap([in] double );
 
         [propget]
-        HRESULT originatorRef([out, retval] BSTR* );
+        HRESULT OriginatorRef([out, retval] BSTR* );
 
         [propput]
-        HRESULT originatorRef([in] BSTR );
+        HRESULT OriginatorRef([in] BSTR );
 
         [propget]
-        HRESULT orderType([out, retval] OrderTypes* );
+        HRESULT OrderType([out, retval] OrderTypes* );
 
         [propput]
-        HRESULT orderType([in] OrderTypes );
+        HRESULT OrderType([in] OrderTypes );
 
         [propget]
-        HRESULT origin([out, retval] OrderOrigins* );
+        HRESULT Origin([out, retval] OrderOrigins* );
 
         [propput]
-        HRESULT origin([in] OrderOrigins );
+        HRESULT Origin([in] OrderOrigins );
 
         [propget]
-        HRESULT overrideConstraints([out, retval] VARIANT_BOOL* );
+        HRESULT OverrideConstraints([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT overrideConstraints([in] VARIANT_BOOL );
+        HRESULT OverrideConstraints([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT providerProperties([out,retval] Parameters** );
+        HRESULT ProviderProperties([out,retval] Parameters** );
 
         [propput]
-        HRESULT providerProperties([in] Parameters* );
+        HRESULT ProviderProperties([in] Parameters* );
 
         [propget]
-        HRESULT quantity([out, retval] long* );
+        HRESULT Quantity([out, retval] long* );
 
         [propput]
-        HRESULT quantity([in] long );
+        HRESULT Quantity([in] long );
 
         [propget]
-        HRESULT settlingFirm([out, retval] BSTR* );
+        HRESULT SettlingFirm([out, retval] BSTR* );
 
         [propput]
-        HRESULT settlingFirm([in] BSTR );
+        HRESULT SettlingFirm([in] BSTR );
 
         [propget]
-        HRESULT status([out, retval] OrderStatuses* );
+        HRESULT Status([out, retval] OrderStatuses* );
 
         [propput]
-        HRESULT status([in] OrderStatuses );
+        HRESULT Status([in] OrderStatuses );
 
 		[propget]
-        HRESULT stopTriggerMethod([out, retval] StopTriggerMethods* );
+        HRESULT StopTriggerMethod([out, retval] StopTriggerMethods* );
 
 		[propput]
-        HRESULT stopTriggerMethod([in] StopTriggerMethods );
+        HRESULT StopTriggerMethod([in] StopTriggerMethods );
 
         [propget]
-        HRESULT sweepToFill([out, retval] VARIANT_BOOL* );
+        HRESULT SweepToFill([out, retval] VARIANT_BOOL* );
 
         [propput]
-        HRESULT sweepToFill([in] VARIANT_BOOL );
+        HRESULT SweepToFill([in] VARIANT_BOOL );
 
         [propget]
-        HRESULT timeInForce([out, retval] OrderTifs* );
+        HRESULT TimeInForce([out, retval] OrderTifs* );
 
         [propput]
-        HRESULT timeInForce([in] OrderTifs );
+        HRESULT TimeInForce([in] OrderTifs );
 
         [propget]
-        HRESULT tradeBuildId([out, retval] BSTR* );
+        HRESULT TradeBuildId([out, retval] BSTR* );
 
         [propput]
-        HRESULT tradeBuildId([in] BSTR );
+        HRESULT TradeBuildId([in] BSTR );
 
         [propget]
-        HRESULT triggerPrice([out, retval] double* );
+        HRESULT TriggerPrice([out, retval] double* );
 
         [propput]
-        HRESULT triggerPrice([in] double );
+        HRESULT TriggerPrice([in] double );
 
 	// Methods =====================================================
 
     };
+
+	[
+      uuid(92E9A7DC-1BD1-44C8-965E-4279EED83265),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by OrderStatusReport classes")
+    ]
+    interface IOrderStatusReport : IUnknown {
+
+	// Properties ==================================================
+
+        [propget]
+        HRESULT OrderId([out, retval] BSTR* ); 
+
+		[propget]
+        HRESULT Status([out, retval] OrderStatuses* );
+	};
 
     [
       uuid(19cc1663-8606-49c7-ba8b-9ecdce6dedc0),
@@ -1079,49 +1240,38 @@ interface IOrderPlex : IDispatch {
 	// Methods =====================================================
 
 	HRESULT CancelTickData(
-		[in] IStreamingDataConsumer* consumer);
+		[in] IStreamingDataConsumer* pConsumer);
 
-	HResult NotifyEvent(
-		[in] StandardSPEventCodes eventCode,
-		[in] BSTR eventMessage,
-		[in] long serviceProviderHandle);
+	HRESULT NotifyEvent(
+		[in] StandardSPEventCodes pEventCode,
+		[in] BSTR pEventMessage,
+		[in] long pServiceProviderHandle);
 
-	HRESULT ExecutionDetails(
-		[in] ContractSpecifier* pContractSpecifier, 
-		[in] BSTR accountIdentifier,
-		[in] OrderActions action,
-		[in] BSTR execId,
-		[in] BSTR fillingExchange,
-		[in] VARIANT_BOOL isLiquidation,
-		[in] BSTR orderBrokerId,
-		[in] BSTR orderTradeBuildId,
-		[in] double price,
-		[in] long quantity,
-		[in] DATE fillTime);
+	HRESULT ExecutionReport(
+		[in] IExecutionReport* pExecutionReport );
 
 	HRESULT NotReady();
 
 	HRESULT OrderReport(
-		[in] IOrderReport* OrderReport );
+		[in] IOrderReport* pOrderReport );
 
-	HRESULT OrderStatus(
-		[in] BSTR orderId, 
-		[in] OrderStatuses status);
+	HRESULT OrderStatusReport(
+		[in] IOrderStatusReport* pOrderStatusReport );
 
 	HRESULT PreFill(
-		[in] BSTR orderId, 
-		[in, out] double* fillPrice, 
-		[in, out] long* fillSize);
+		[in] BSTR pOrderId, 
+		[in, out] double* pFillPrice, 
+		[in, out] long* pFillSize);
 
 	HRESULT Ready();
 
 	HRESULT RejectOrder(
-		[in] BSTR orderId, 
-		[in] BSTR reason);
+		[in] BSTR pOrderId, 
+		[in] BSTR pReason);
 
 	HRESULT RequestTickData(
-		[in] IStreamingDataConsumer* consumer, 
-		[in] VARIANT_BOOL includeMarketDepth);
+		[in] IStreamingDataConsumer* pConsumer, 
+		[in] VARIANT_BOOL pIncludeMarketDepth);
 
 	};
 
@@ -1133,13 +1283,20 @@ interface IOrderPlex : IDispatch {
     ]
     interface IOrderSubmissionSrvcProvider : IUnknown {
 
+	// Properties ==================================================
+
 	// Methods =====================================================
 
 	HRESULT CreateOrderSubmitter(
-		[in] IOrderSubmissionSrvcConsumer* serviceConsumer, 
+		[in] IOrderSubmissionSrvcConsumer* pServiceConsumer, 
 		[in] Contract* pContract, 
 		[out, retval] IOrderSubmitter** );
-    };
+
+	HRESULT StartOrderRecovery(
+		[in] IOrderRecoveryServiceConsumer* pOrderRecoveryServiceConsumer,
+		[in] Date pStartFrom);
+
+	};
 
     [
       uuid(bc237c88-18c2-4594-8558-686c5a36ee63),
@@ -1152,46 +1309,46 @@ interface IOrderPlex : IDispatch {
 	// Properties ==================================================
 
 	[propput]
-	HRESULT clockRate([in] float);
+	HRESULT ClockRate([in] float);
 
 	[propget]
-	HRESULT permittedOrderAttributes([out, retval] long* );
+	HRESULT PermittedOrderAttributes([out, retval] long* );
 
 	[propget]
-	HRESULT permittedOrderTifs([out, retval] long* );
+	HRESULT PermittedOrderTifs([out, retval] long* );
 
 	[propget]
-	HRESULT permittedOrderTypes([out, retval] long* );
+	HRESULT PermittedOrderTypes([out, retval] long* );
 
 	[propget]
-	HRESULT permittedStopTriggerMethods([out, retval] long* );
+	HRESULT PermittedStopTriggerMethods([out, retval] long* );
 
 	// Methods =====================================================
 
-	HRESULT cancelOrderPlex(
+	HRESULT CancelOrderPlex(
 		[in] IOrderPlex* pOrderPlex, 
 		[out, retval] VARIANT_BOOL* );
 
-	HRESULT cancelStopOrder([in] IOrderPlex* pOrderPlex);
+	HRESULT CancelStopOrder([in] IOrderPlex* pOrderPlex);
 
-	HRESULT cancelTargetOrder([in] IOrderPlex* pOrderPlex);
+	HRESULT CancelTargetOrder([in] IOrderPlex* pOrderPlex);
 
-	HRESULT executeOrderPlex([in] IOrderPlex* pOrderPlex);
+	HRESULT ExecuteOrderPlex([in] IOrderPlex* pOrderPlex);
 
-	HRESULT modifyOrderPlex(
+	HRESULT ModifyOrderPlex(
 		[in] IOrderPlex* pOrderPlex, 
-		[in] VARIANT_BOOL entryOrderChanged, 
-		[in] VARIANT_BOOL stopOrderChanged, 
-		[in] VARIANT_BOOL targetOrderChanged, 
-		[in] VARIANT_BOOL closeoutOrderChanged);
+		[in] VARIANT_BOOL pEntryOrderChanged, 
+		[in] VARIANT_BOOL pStopOrderChanged, 
+		[in] VARIANT_BOOL pTargetOrderChanged, 
+		[in] VARIANT_BOOL pCloseoutOrderChanged);
 
-	HRESULT finish();
+	HRESULT Finish();
 
-	HRESULT resubmitStopAndTargetOrders([in] IOrderPlex* pOrderPlex);
+	HRESULT ResubmitStopAndTargetOrders([in] IOrderPlex* pOrderPlex);
 
-	HRESULT resubmitStopOrder([in] IOrderPlex* pOrderPlex);
+	HRESULT ResubmitStopOrder([in] IOrderPlex* pOrderPlex);
 
-	HRESULT resubmitTargetOrder([in] IOrderPlex* pOrderPlex);
+	HRESULT ResubmitTargetOrder([in] IOrderPlex* pOrderPlex);
 };
 
      [
@@ -1204,10 +1361,10 @@ interface IOrderPlex : IDispatch {
 
 	// Methods =====================================================
 
-	HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+	HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
     };
 
@@ -1224,17 +1381,17 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT StartData(
 						[in] Contract* contract, 
-			[in] DOMEventTypes DomEventsRequired);
+			[in] DOMEventTypes pDomEventsRequired);
 
 		HRESULT StartMarketDepth(
-			[in] DOMEventTypes DomEventsRequired);
+			[in] DOMEventTypes pDomEventsRequired);
 
 		HRESULT StopData();
 
 		HRESULT StopMarketDepth();
 
 		HRESULT Supports(
-						[in] long capabilities, 
+						[in] long pCapabilities, 
 						[out, retval] VARIANT_BOOL* );
 
     };
@@ -1251,12 +1408,12 @@ interface IOrderPlex : IDispatch {
 		// Methods =====================================================
 
         HRESULT CreateRealtimeDataReader(
-			[in] IStreamingDataConsumer* dataConsumer,
-			[in] IRealtimeDataInputServiceConsumer* serviceConsumer,
+			[in] IStreamingDataConsumer* pDataConsumer,
+			[in] IRealtimeDataInputServiceConsumer* pServiceConsumer,
 			[out, retval] IRealtimeDataReader** );
 
         HRESULT Supports(
-                        [in] long capabilities, 
+                        [in] long pCapabilities, 
                         [out, retval] VARIANT_BOOL* );
 
     };
@@ -1272,7 +1429,7 @@ interface IOrderPlex : IDispatch {
 		// Methods =====================================================
 
 		HRESULT Tick(
-			[in, out] GenericTick* tick);
+			[in, out] GenericTick* pTick);
 
     };
 
@@ -1286,21 +1443,21 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-		HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
 		HRESULT Ready(                            
-			[in] ITickfileSpecifier* tickfileSpec,
-			[in] long tickfileSizeBytes);
+			[in] ITickfileSpecifier* pTickfileSpec,
+			[in] long pTickfileSizeBytes);
 
         HRESULT TickfileReplayComplete();
 
         HRESULT ReplayProgress(
-			[in] DATE timestamp,
-			[in] long eventsPlayed,
-			[in] float percentComplete);
+			[in] DATE pTimestamp,
+			[in] long pEventsPlayed,
+			[in] float pPercentComplete);
 
     };
 
@@ -1316,17 +1473,17 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-		HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+		HRESULT NotifyEvent(
+			[in] StandardSPEventCodes pEventCode,
+			[in] BSTR pEventMessage,
+			[in] long pServiceProviderHandle);
 
         HRESULT NotReady();
 
         HRESULT Ready();
 
         HRESULT OutputTickfileCreated(
-                        [in] BSTR filename);
+                        [in] BSTR pFilename);
 
     };
 
@@ -1378,11 +1535,11 @@ interface IOrderPlex : IDispatch {
 		HRESULT FireNextTick();
 
         HRESULT ReplayTickfile(
-                        [in] ITickfileSpecifier* tickfileSpecifier);
+                        [in] ITickfileSpecifier* pTickfileSpecifier);
 
         HRESULT Supports(
-                        [in] long capabilities, 
-                        [in, optional] BSTR FormatIdentifier, 
+                        [in] long pCapabilities, 
+                        [in, optional] BSTR pFormatIdentifier, 
                         [out, retval] VARIANT_BOOL* );
     };
 
@@ -1404,21 +1561,21 @@ interface IOrderPlex : IDispatch {
 
 
         HRESULT CreateTickfileReader(
-			[in] IStreamingDataConsumer* dataConsumer,
-			[in] ITickfileInputServiceConsumer* serviceConsumer,
-            [in] BSTR formatIdentifier, 
+			[in] IStreamingDataConsumer* pDataConsumer,
+			[in] ITickfileInputServiceConsumer* pServiceConsumer,
+            [in] BSTR pFormatIdentifier, 
 			[out, retval] ITickfileReader** );
 
         HRESULT CreateTickfileWriter(
-			[in] ITickfileOutputServiceConsumer* serviceConsumer,
+			[in] ITickfileOutputServiceConsumer* pServiceConsumer,
 			[in] Contract* pContract,
-            [in, optional, defaultvalue("")] BSTR formatIdentifier, 
-            [in, optional, defaultvalue("")] BSTR location, 
+            [in, optional, defaultvalue("")] BSTR pFormatIdentifier, 
+            [in, optional, defaultvalue("")] BSTR pLocation, 
             [out, retval] ITickfileWriter** );
 
         HRESULT Supports(
-                        [in] long capabilities, 
-                        [in, optional] BSTR FormatIdentifier, 
+                        [in] long pCapabilities, 
+                        [in, optional] BSTR pFormatIdentifier, 
                         [out, retval] VARIANT_BOOL* );
 
     };
@@ -1496,7 +1653,7 @@ interface IOrderPlex : IDispatch {
         HRESULT CloseOutputFile();
 
 		HRESULT WriteTick(
-			[in, out] GenericTick* tick);
+			[in, out] GenericTick* pTick);
 
 
     };
