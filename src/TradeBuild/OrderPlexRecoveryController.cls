@@ -125,7 +125,7 @@ Const ProcName As String = "IOrderPersistenceServiceConsumer_PersistedOrderInfoE
 Dim failpoint As String
 On Error GoTo Err
 
-mOrderPersistenceServiceProvider.StartSession gTB.sessionId
+mOrderPersistenceServiceProvider.StartSession gTB.SessionId
 
 Do While getNextOrderPersistenceItem(opItem)
     Dim opItemJSON As String

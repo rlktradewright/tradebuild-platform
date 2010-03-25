@@ -1,5 +1,5 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{6DDDD14A-0661-45BC-9192-7FE80727EA97}#12.0#0#..\..\TradingDO\TradingDO2-6.dll#TradeWright TradeBuild Trading Data Objects v2.6
 Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#a.1#0#..\..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v3.0
 Reference=*\G{1BA891E6-89EE-4C3B-9C71-4838FE019692}#3.0#0#..\..\..\TradeWright Common\BusObjUtils\BusObjUtils1-0.dll#TradeWright Business Object Utilities v1.0
@@ -15,7 +15,7 @@ Description="Get Exchange Details"
 CompatibleMode="0"
 MajorVer=2
 MinorVer=6
-RevisionVer=7
+RevisionVer=8
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionCompanyName="TradeWright Software Systems"

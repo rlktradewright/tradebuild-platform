@@ -898,7 +898,7 @@ Public Function Buy(ByRef number As Long, _
                     ByVal targetPrice As Double, _
                     ByVal targetOffset As Long, _
                     ByVal targetTriggerPrice As Double, _
-                    Optional ByVal CancelPrice As Double, _
+                    Optional ByVal cancelPrice As Double, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
@@ -925,7 +925,7 @@ GLogLogger.Log pMsg:="Buy", _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
-                "; cancelPrice=" & CancelPrice & _
+                "; cancelPrice=" & cancelPrice & _
                 "; entryTIF=" & GOrderTIFToString(entryTIF) & _
                 "; stopTIF=" & GOrderTIFToString(stopTIF) & _
                 "; targetTIF=" & GOrderTIFToString(targetTIF) & _
@@ -953,7 +953,7 @@ Buy.EntryOrder.TimeInForce = entryTIF
 If Not Buy.Stoporder Is Nothing Then Buy.Stoporder.TimeInForce = stopTIF
 If Not Buy.TargetOrder Is Nothing Then Buy.TargetOrder.TimeInForce = targetTIF
 
-ExecuteOrderPlex Buy, True, CancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
+ExecuteOrderPlex Buy, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
@@ -1357,7 +1357,7 @@ End Function
 
 Public Sub ExecuteOrderPlex(ByVal pOrderPlex As orderPlex, _
                     Optional checkMoneyManagement As Boolean, _
-                    Optional CancelPrice As Double, _
+                    Optional cancelPrice As Double, _
                     Optional StopStrategy As StopManagementStrategy, _
                     Optional ExitStrategy As PositionManagementStrategy, _
                     Optional ScalingStrategy As PositionManagementStrategy)
@@ -1425,7 +1425,7 @@ GLogOrder "Execute order plex " & _
 
 mActiveOrderPlexes.Add pOrderPlex
 mPositionManager.OrderPlexes.Add pOrderPlex
-pOrderPlex.Execute CancelPrice
+pOrderPlex.Execute cancelPrice
 
 Exit Sub
 
@@ -1630,7 +1630,7 @@ Public Function Sell(ByRef number As Long, _
                     ByVal targetPrice As Double, _
                     ByVal targetOffset As Long, _
                     ByVal targetTriggerPrice As Double, _
-                    Optional ByVal CancelPrice As Double, _
+                    Optional ByVal cancelPrice As Double, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
                     Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled, _
@@ -1657,7 +1657,7 @@ GLogLogger.Log pMsg:="Sell", _
                 "; targetPrice=" & targetPrice & _
                 "; targetOffset=" & targetOffset & _
                 "; targetTriggerPrice=" & targetTriggerPrice & _
-                "; cancelPrice=" & CancelPrice & _
+                "; cancelPrice=" & cancelPrice & _
                 "; entryTIF=" & GOrderTIFToString(entryTIF) & _
                 "; stopTIF=" & GOrderTIFToString(stopTIF) & _
                 "; targetTIF=" & GOrderTIFToString(targetTIF) & _
@@ -1685,7 +1685,7 @@ Sell.EntryOrder.TimeInForce = entryTIF
 If Not Sell.Stoporder Is Nothing Then Sell.Stoporder.TimeInForce = stopTIF
 If Not Sell.TargetOrder Is Nothing Then Sell.TargetOrder.TimeInForce = targetTIF
 
-ExecuteOrderPlex Sell, True, CancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
+ExecuteOrderPlex Sell, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStrategy
 
 Exit Function
 
@@ -1760,7 +1760,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 currID = currID + 1
-nextPlexKey = gTB.sessionId & "/" & currID
+nextPlexKey = gTB.SessionId & "/" & currID
 
 Exit Function
 

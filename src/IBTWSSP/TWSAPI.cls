@@ -2603,7 +2603,8 @@ For i = 0 To UBound(orderTypesStr)
             permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
         Case "SWEEP"
             permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
-        Case "ALLOC", _
+        Case "ACTIVETIM", _
+            "ALLOC", _
             "ALGO", _
             "AVGCOST", _
             "AUC", _
@@ -2613,6 +2614,7 @@ For i = 0 To UBound(orderTypesStr)
             "CONSCOST", _
             "DARKPOLL", _
             "DEACT", _
+            "DEACTDIS", _
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
@@ -3477,10 +3479,10 @@ On Error GoTo Err
 
 If id >= IdBaseOrderPlex Then
     getIdType = IdTypeOrder
-ElseIf id >= IdBaseExecutionsReq Then
-    getIdType = IdTypeExecution
 ElseIf id >= IdBaseContractDataReq Then
     getIdType = IdTypeContractData
+ElseIf id >= IdBaseExecutionsReq Then
+    getIdType = IdTypeExecution
 ElseIf id >= IdBaseReqHistoricalData Then
     getIdType = IdTypeHistoricalData
 ElseIf id >= IdBaseMarketDepthReq Then

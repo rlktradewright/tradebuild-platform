@@ -183,6 +183,7 @@ If contractSpec.sectype = SecTypeNone Then
     '       Futures
     '       Indexes
     '       Stocks
+    '       Cash
     mTWSAPI.RequestContract CreateContractSpecifier(contractSpec.localSymbol, _
                                                     contractSpec.symbol, _
                                                     contractSpec.exchange, _

@@ -205,8 +205,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get SessionID() As String
-SessionID = mSessionID
+Public Property Get SessionId() As String
+SessionId = mSessionID
 End Property
 
 Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()

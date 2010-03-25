@@ -24,7 +24,7 @@ Public Function AllowOrder(ByVal currentSize As Long, _
                             ByVal tradeDrawdown As Currency, _
                             ByVal Timestamp As Date, _
                             ByRef Message As String, _
-                            ByRef endSession As Boolean) As Boolean
+                            ByRef EndSession As Boolean) As Boolean
 End Function
 
 Public Function CloseAll(ByVal dayProfit As Currency, _
@@ -33,7 +33,7 @@ Public Function CloseAll(ByVal dayProfit As Currency, _
                         ByVal tradeDrawdown As Currency, _
                         ByVal Timestamp As Date, _
                         ByRef Message As String, _
-                        ByRef endSession As Boolean) As Boolean
+                        ByRef EndSession As Boolean) As Boolean
 End Function
 
 Public Sub Flat()

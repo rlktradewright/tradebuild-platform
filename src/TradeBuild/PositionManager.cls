@@ -1194,7 +1194,7 @@ End Sub
 Private Sub checkCloseall()
 
 Dim msg As String
-Dim endSession As Boolean
+Dim EndSession As Boolean
 
 Const ProcName As String = "checkCloseall"
 Dim failpoint As Long
@@ -1209,14 +1209,14 @@ If Not mMoneyManager Is Nothing Then
                                 mMaxProfitThisTrade - mProfitThisTrade, _
                                 mTicker.Timestamp, _
                                 msg, _
-                                endSession) _
+                                EndSession) _
     Then
         If Not mClosingPosition Then
             GLogMoneyManagement "Close all positions: " & msg, mIsSimulated, Me
             ClosePositions
         End If
     Else
-        If endSession And Not mClosingPosition Then
+        If EndSession And Not mClosingPosition Then
             If Not mEndSession Then
                 mEndSession = True
                 GLogMoneyManagement "Ending Session: " & msg, mIsSimulated, Me
