@@ -64,7 +64,12 @@ End Sub
 '@================================================================================
 
 Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEvent)
+
 gHandleFatalError
+
+' Tell TWUtilities that we've now handled this unhandled error. Not actually
+' needed here because gHandleFatalError never returns anyway
+UnhandledErrorHandler.Handled = True
 End Sub
 
 '@================================================================================

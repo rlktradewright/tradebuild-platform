@@ -137,24 +137,23 @@ On Error Resume Next    ' ignore any further errors that might arise
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"
 
 ' At this point, we don't know what state things are in, so it's not feasible to return to
-' the caller. All we can do is terminate abruptly. Note that normally one would use the
-' End statement to terminate a VB6 program abruptly. However the TWUtilities component interferes
-' with the End statement's processing and prevents proper shutdown, so we use the
-' TWUtilities component's EndProcess method instead. (However if we are running in the
-' development environment, then we call End because the EndProcess method kills the
-' entire development environment as well which can have undesirable side effects if other
-' components are also loaded.)
+' the caller. All we can do is terminate abruptly.
+'
+' Note that normally one would use the End statement to terminate a VB6 program abruptly. But
+' the TWUtilities component interferes with the End statement's processing and may prevent
+' proper shutdown, so we use the TWUtilities component's EndProcess method instead.
+'
+' However if we are running in the development environment, then we call End because the
+' EndProcess method kills the entire development environment as well which can have undesirable
+' side effects if other components are also loaded.
 
 If mIsInDev Then
-    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
-    ' needed here because the End statement will prevent return to TWUtilities
-    UnhandledErrorHandler.Handled = True
     End
 Else
     EndProcess
@@ -281,7 +280,7 @@ Set mFatalErrorHandler = New FatalErrorHandler
 If showCommandLineOptions() Then Exit Sub
 
 ApplicationGroupName = "TradeWright"
-applicationName = gAppTitle
+ApplicationName = gAppTitle
 SetupDefaultLogging Command
 
 TaskConcurrency = 20
@@ -309,7 +308,7 @@ Exit Sub
 Err:
 If Err.Number = ErrorCodes.ErrSecurityException Then
     MsgBox "You don't have write access to the log file:" & vbCrLf & vbCrLf & _
-                DefaultLogFileName & vbCrLf & vbCrLf & _
+                DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
                 "The program will close", _
             vbCritical, _
             "Attention"
@@ -414,7 +413,7 @@ End Function
 Private Function getConfigFile() As Boolean
 Const ProcName As String = "getConfigFile"
 Dim userResponse As Long
-Dim baseConfigFile As TWUtilities30.configFile
+Dim baseConfigFile As TWUtilities30.ConfigFile
 
 On Error Resume Next
 Set baseConfigFile = LoadXMLConfigurationFile(getConfigFilename)
@@ -450,7 +449,7 @@ If baseConfigFile Is Nothing Then
 Else
     Set gConfigFile = CreateConfigurationFile(baseConfigFile, _
                                             getConfigFilename)
-    If gConfigFile.applicationName <> App.ProductName Or _
+    If gConfigFile.ApplicationName <> App.ProductName Or _
         gConfigFile.fileVersion <> ConfigFileVersion Or _
         Not IsValidConfigurationFile(gConfigFile) _
     Then

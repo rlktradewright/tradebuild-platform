@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#161.0#0"; "StudiesUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#231.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#167.0#0"; "StudiesUI2-6.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -624,9 +624,9 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Public Function initialise( _
-                ByVal configFile As ConfigurationFile, _
-                ByVal applicationName As String, _
-                ByVal expectedConfigFileVersion As String) As Boolean
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pApplicationName As String, _
+                ByVal pExpectedConfigFileVersion As String) As Boolean
 Dim appConfig As ConfigurationSection
 Dim newnode As Node
 
@@ -634,15 +634,15 @@ Const ProcName As String = "initialise"
 Dim failpoint As String
 On Error GoTo Err
 
-logMessage "Initialising ConfigManager", LogLevelDetail
+LogMessage "Initialising ConfigManager", LogLevelDetail
 
-Set mConfigFile = configFile
+Set mConfigFile = pConfigFile
     
-If mConfigFile.applicationName <> applicationName Or _
-    mConfigFile.fileVersion <> expectedConfigFileVersion Or _
+If mConfigFile.applicationName <> pApplicationName Or _
+    mConfigFile.fileVersion <> pExpectedConfigFileVersion Or _
     Not IsValidConfigurationFile(mConfigFile) _
 Then
-    logMessage "The configuration file is not the correct format for this program"
+    LogMessage "The configuration file is not the correct format for this program"
     Exit Function
 End If
     
@@ -653,11 +653,11 @@ If mConfigFile.dirty Then
     SaveConfigMenu.Enabled = True
 End If
 
-logMessage "Locating config definitions in config file", LogLevelDetail
+LogMessage "Locating config definitions in config file", LogLevelDetail
 
 Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
 
-logMessage "Loading config definitions into ConfigManager control", LogLevelDetail
+LogMessage "Loading config definitions into ConfigManager control", LogLevelDetail
 
 Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigFile)
 
@@ -676,7 +676,7 @@ ElseIf ConfigsTV.Nodes.Count > 0 Then
 End If
 If Not ConfigsTV.SelectedItem Is Nothing Then ConfigsTV_NodeClick ConfigsTV.SelectedItem
 initialise = True
-logMessage "ConfigManager initialised ok", LogLevelDetail
+LogMessage "ConfigManager initialised ok", LogLevelDetail
 
 Exit Function
 

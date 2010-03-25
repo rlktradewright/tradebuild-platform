@@ -11,16 +11,16 @@ library TradeBuildSP
     importlib("stdole2.tlb");
 
 	// TradeWright Utilities
-	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities30.dll");
+	importlib("E:\Projects\TradeWright Common\TWUtilities\TWUtilities30.dll");
 	
 	// TradeWright Contract Utilities
-	importlib("C:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
+	importlib("E:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
 	
 	// TradeWright Timeframe Utilities
-	importlib("C:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
+	importlib("E:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
 	
 	// TradeWright Tick Utilities
-	importlib("C:\Projects\TradeBuild Platform\TickUtils\TickUtils26.dll");
+	importlib("E:\Projects\TradeBuild Platform\TickUtils\TickUtils26.dll");
 	
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
