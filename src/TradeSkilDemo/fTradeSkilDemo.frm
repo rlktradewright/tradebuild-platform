@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#229.1#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#231.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -15,62 +15,62 @@ Begin VB.Form fTradeSkilDemo
    Begin VB.PictureBox ShowFeaturesPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
-      Height          =   240
+      Height          =   480
       Left            =   16320
       MouseIcon       =   "fTradeSkilDemo.frx":0000
       MousePointer    =   99  'Custom
       Picture         =   "fTradeSkilDemo.frx":0152
-      ScaleHeight     =   240
-      ScaleWidth      =   240
+      ScaleHeight     =   480
+      ScaleWidth      =   480
       TabIndex        =   57
       ToolTipText     =   "Show features"
       Top             =   9345
-      Width           =   240
+      Width           =   480
    End
    Begin VB.PictureBox HideFeaturesPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
-      Height          =   240
+      Height          =   480
       Left            =   16320
       MouseIcon       =   "fTradeSkilDemo.frx":0594
       MousePointer    =   99  'Custom
       Picture         =   "fTradeSkilDemo.frx":06E6
-      ScaleHeight     =   240
-      ScaleWidth      =   240
+      ScaleHeight     =   480
+      ScaleWidth      =   480
       TabIndex        =   56
       ToolTipText     =   "Hide features"
       Top             =   5040
-      Width           =   240
+      Width           =   480
    End
    Begin VB.PictureBox ShowControlsPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
-      Height          =   240
+      Height          =   480
       Left            =   0
       MouseIcon       =   "fTradeSkilDemo.frx":0B28
       MousePointer    =   99  'Custom
       Picture         =   "fTradeSkilDemo.frx":0C7A
-      ScaleHeight     =   240
-      ScaleWidth      =   240
+      ScaleHeight     =   480
+      ScaleWidth      =   480
       TabIndex        =   55
       ToolTipText     =   "Show controls"
       Top             =   440
-      Width           =   240
+      Width           =   480
    End
    Begin VB.PictureBox HideControlsPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
-      Height          =   240
+      Height          =   480
       Left            =   3900
       MouseIcon       =   "fTradeSkilDemo.frx":10BC
       MousePointer    =   99  'Custom
       Picture         =   "fTradeSkilDemo.frx":120E
-      ScaleHeight     =   240
-      ScaleWidth      =   240
+      ScaleHeight     =   480
+      ScaleWidth      =   480
       TabIndex        =   54
       ToolTipText     =   "Hide controls"
       Top             =   440
-      Width           =   240
+      Width           =   480
    End
    Begin TabDlg.SSTab FeaturesSSTAB 
       Height          =   4455
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   64552963
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   20709379
+         Format          =   64552963
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -1950,7 +1950,7 @@ closeChartsAndMarketDepthForms
 CurrentConfigNameText.Text = ""
 Me.caption = gAppTitle
 
-mTradeBuildAPI.endSession
+mTradeBuildAPI.EndSession
 
 gSetPermittedServiceProviderRoles
 
@@ -2149,10 +2149,8 @@ ReDim GradientFillColors(1) As Long
 If defaultRegionStyle Is Nothing Then
     Set defaultRegionStyle = New ChartRegionStyle
     defaultRegionStyle.Autoscaling = True
-'    gradientFillColors(0) = &H82DFE6    ' RGB(230, 223, 130)
-'    gradientFillColors(1) = &HEBFAFB    ' RGB(251, 250, 235)
-    GradientFillColors(0) = &H643232    ' RGB(50, 50, 100)
-    GradientFillColors(1) = &HF0F0F0
+    GradientFillColors(0) = RGB(50, 50, 100)
+    GradientFillColors(1) = RGB(248, 248, 248)
     defaultRegionStyle.BackGradientFillColors = GradientFillColors
     defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
     defaultRegionStyle.GridlineSpacingY = 1.8
@@ -2171,15 +2169,15 @@ If xAxisRegionStyle Is Nothing Then
     Set xAxisRegionStyle = defaultRegionStyle.Clone
     xAxisRegionStyle.HasGrid = False
     xAxisRegionStyle.HasGridText = True
-    GradientFillColors(0) = &HCFECE6 ' Color.FromArgb(230, 236, 207)
-    GradientFillColors(1) = &HD7ECDE ' Color.FromArgb(222, 236, 215)
+    GradientFillColors(0) = RGB(230, 236, 207)
+    GradientFillColors(1) = RGB(222, 236, 215)
     xAxisRegionStyle.BackGradientFillColors = GradientFillColors
 End If
 
 If defaultYAxisRegionStyle Is Nothing Then
     Set defaultYAxisRegionStyle = defaultRegionStyle.Clone
-    GradientFillColors(0) = &HFEF6EA ' Color.FromArgb(234, 246, 254)
-    GradientFillColors(1) = &HFFF6E2 ' Color.FromArgb(226, 246, 255)
+    GradientFillColors(0) = RGB(234, 246, 254)
+    GradientFillColors(1) = RGB(226, 246, 255)
     defaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
     defaultYAxisRegionStyle.HasGrid = False
 End If

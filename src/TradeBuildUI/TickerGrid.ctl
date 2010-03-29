@@ -32,7 +32,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-Option Explicit
+    Option Explicit
 
 '@================================================================================
 ' Description
@@ -1917,6 +1917,8 @@ Dim lTicker As Ticker
 
 On Error GoTo Err
 
+gLogger.Log "Finishing TickerGrid", ProcName, ModuleName, LogLevelDetail
+
 For Each lTicker In mTickers
     lTicker.RemoveQuoteListener Me
     lTicker.RemovePriceChangeListener Me
@@ -1996,7 +1998,9 @@ On Error GoTo Err
 
 Set mConfig = config
 
+TickerGrid.Redraw = False
 TickerGrid.LoadFromConfig mConfig.AddPrivateConfigurationSection(ConfigSectionGrid)
+TickerGrid.Redraw = True
 
 loadColumnMap
 setupDefaultTickerGridHeaders
@@ -2070,15 +2074,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Public Sub monitorWorkspace( _
+Public Sub MonitorWorkspace( _
                 ByVal pWorkspace As Workspace)
-Const ProcName As String = "monitorWorkspace"
+Const ProcName As String = "MonitorWorkspace"
 Dim failpoint As Long
 On Error GoTo Err
 
 If Not mTickers Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                             ProjectName & "." & ModuleName & ":" & ProcName, _
                                             "A workspace is already being monitored"
+gLogger.Log "TickerGrid monitoring workspace " & pWorkspace.name, ProcName, ModuleName, LogLevelDetail
+
 Set mWorkspace = pWorkspace
 Set mTickers = pWorkspace.Tickers
 
@@ -2708,11 +2714,14 @@ End Sub
 Private Sub setupDefaultTickerGridColumns()
 Const ProcName As String = "setupDefaultTickerGridColumns"
 
-
 Dim failpoint As Long
 On Error GoTo Err
 
+gLogger.Log "Setting up default ticker grid columns", ProcName, ModuleName, LogLevelDetail
+
 setupColumnMap TickerGridColumns.MaxColumn
+
+TickerGrid.Redraw = False
 
 setupTickerGridColumn TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.TickerName, TickerGridColumnWidths.NameWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
@@ -2738,6 +2747,10 @@ setupTickerGridColumn TickerGridColumns.expiry, TickerGridColumnWidths.ExpiryWid
 setupTickerGridColumn TickerGridColumns.exchange, TickerGridColumnWidths.ExchangeWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn TickerGridColumns.Strike, TickerGridColumnWidths.StrikeWidth, False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+
+TickerGrid.Redraw = True
+
+gLogger.Log "Default ticker grid columns setup completed", ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 

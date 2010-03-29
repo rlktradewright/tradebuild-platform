@@ -266,6 +266,9 @@ End Sub
 
 Public Sub Main()
 Const ProcName As String = "Main"
+
+Dim lSplash As fSplash
+
 Dim failpoint As String
 On Error GoTo Err
 
@@ -286,6 +289,8 @@ SetupDefaultLogging Command
 TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
+Set lSplash = showSplashScreen
+
 failpoint = 300
 
 gSetPermittedServiceProviderRoles
@@ -303,6 +308,7 @@ Else
     loadMainForm mEditConfig
 End If
 
+Unload lSplash
 Exit Sub
 
 Err:
@@ -559,4 +565,19 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Private Function showSplashScreen() As Form
+Dim lSplash As New fSplash
+Const ProcName As String = "showSplashScreen"
+On Error GoTo Err
 
+lSplash.Show vbModeless
+lSplash.Refresh
+Set showSplashScreen = lSplash
+SetWindowLong lSplash.hWnd, GWL_EXSTYLE, GetWindowLong(lSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST
+SetWindowPos lSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function

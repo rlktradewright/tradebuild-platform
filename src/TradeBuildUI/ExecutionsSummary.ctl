@@ -296,9 +296,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Public Sub monitorWorkspace( _
+Public Sub MonitorWorkspace( _
                 ByVal pWorkspace As Workspace)
-Const ProcName As String = "monitorWorkspace"
+Const ProcName As String = "MonitorWorkspace"
 Dim failpoint As String
 On Error GoTo Err
 

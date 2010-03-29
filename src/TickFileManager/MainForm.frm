@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#231.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.6"
    ClientHeight    =   7875
@@ -49,26 +49,26 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ReplayProgressLabel"
-      Tab(1).Control(1)=   "ReplayContractLabel"
-      Tab(1).Control(2)=   "ReplayProgressBar"
-      Tab(1).Control(3)=   "ConvertButton"
+      Tab(1).Control(0)=   "Frame4"
+      Tab(1).Control(1)=   "SelectTickfilesButton"
+      Tab(1).Control(2)=   "ClearTickfileListButton"
+      Tab(1).Control(3)=   "TickfileList"
+      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(5)=   "TickfileList"
-      Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "ClearTickfileListButton"
-      Tab(1).Control(7)=   "SelectTickfilesButton"
-      Tab(1).Control(8)=   "Frame4"
+      Tab(1).Control(5)=   "ConvertButton"
+      Tab(1).Control(6)=   "ReplayProgressBar"
+      Tab(1).Control(7)=   "ReplayContractLabel"
+      Tab(1).Control(8)=   "ReplayProgressLabel"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label11"
-      Tab(2).Control(1)=   "ContractDetailsText"
-      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(0)=   "ContractSpecBuilder1"
+      Tab(2).Control(1)=   "Frame2"
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "Frame2"
-      Tab(2).Control(4)=   "ContractSpecBuilder1"
+      Tab(2).Control(3)=   "ContractDetailsText"
+      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(4)=   "Label11"
       Tab(2).ControlCount=   5
       Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
          Height          =   2895
@@ -1095,7 +1095,7 @@ mMonths(12) = "Dec"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Load()
@@ -1139,7 +1139,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
@@ -1188,7 +1188,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
@@ -1206,7 +1206,7 @@ mTickfilesSelected = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigureButton_Click()
@@ -1219,7 +1219,7 @@ TickfileList.Clear
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractFromServiceProviderOption_Click()
@@ -1231,7 +1231,7 @@ ContractSpecBuilder1.SetFocus
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractInTickfileOption_Click()
@@ -1243,7 +1243,7 @@ GetContractButton.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
@@ -1255,7 +1255,7 @@ GetContractButton.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ContractSpecBuilder1_ready()
@@ -1271,7 +1271,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConvertButton_Click()
@@ -1308,7 +1308,7 @@ mTickfileManager.StartReplay
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DatabaseInputOption_Click()
@@ -1322,7 +1322,7 @@ disableContractDatabaseFields
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DatabaseOutputOption_Click()
@@ -1336,7 +1336,7 @@ disableContractDatabaseFields
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FileInputOption_Click()
@@ -1354,7 +1354,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FileOutputOption_Click()
@@ -1372,7 +1372,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FormatList_Click()
@@ -1391,7 +1391,7 @@ Next
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub GetContractButton_Click()
@@ -1403,7 +1403,7 @@ LogMessage "Requesting contract details"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OutputPathButton_Click()
@@ -1421,7 +1421,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OutputPathText_Change()
@@ -1433,7 +1433,7 @@ mOutputPath = OutputPathText.Text
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub QtInputOption_Click()
@@ -1451,7 +1451,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
@@ -1478,7 +1478,7 @@ checkOkToConvert
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1495,7 +1495,7 @@ mTickfileManager.StopReplay
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub WriteBarDataCheck_Click()
@@ -1507,7 +1507,7 @@ checkOkToConvert
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub WriteTickDataCheck_Click()
@@ -1519,7 +1519,7 @@ checkOkToConvert
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1536,7 +1536,7 @@ LogMessage "Invalid contract specifier: " & _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
@@ -1612,7 +1612,7 @@ mTimer.StartTimer
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1628,7 +1628,7 @@ If ev.Action = WriterFileCreated Then LogMessage "Created output tickfile: " & e
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1656,7 +1656,7 @@ mEt.StartTiming
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
@@ -1679,7 +1679,7 @@ If mRun Then Unload Me
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1702,7 +1702,7 @@ ReplayProgressLabel.Caption = tickfileTimestamp & _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
@@ -1716,7 +1716,7 @@ mTicker.OutputTickfileFormat = mOutputFormat
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickfileManager_TickfileCompleted( _
@@ -1734,7 +1734,7 @@ LogMessage "Ticks per second: " & CLng(mTicker.TickNumber / (elapsed / 1000000))
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1757,7 +1757,7 @@ mTickfileManager.StartReplay
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1780,7 +1780,7 @@ On Error GoTo Err
 
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTradeBuildAPI.GetServiceProviderError
-    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.ErrorCode & ": " & spe.message
+    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.errorCode & ": " & spe.Message
 Else
     LogMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
 End If
@@ -1788,7 +1788,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -2054,7 +2054,7 @@ On Error Resume Next    ' ignore any further errors that might arise
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"
@@ -2157,7 +2157,7 @@ End If
 Set mLogFormatter = CreateBasicLogFormatter(TimestampTimeOnlyISO8601)
 GetLogger("log").AddLogListener Me
 
-LogMessage "Log file: " & DefaultLogFileName
+LogMessage "Log file: " & DefaultLogFileName(Command)
 
 If mArguments.Switch("noui") Then
     mNoUI = True

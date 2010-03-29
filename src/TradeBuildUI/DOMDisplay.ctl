@@ -278,9 +278,9 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mInitialPrice = 0 Then
-    Debug.Print "DOMDisplay centre timer expired - initial Price is 0"
+    Debug.Print "DOMDisplay Centre timer expired - initial Price is 0"
 Else
-    Debug.Print "DOMDisplay centre timer expired - centring display at Price " & mInitialPrice
+    Debug.Print "DOMDisplay Centre timer expired - centring display at Price " & mInitialPrice
     centreRow mInitialPrice
 End If
 Set mCentreTimer = Nothing
@@ -318,9 +318,9 @@ If mInitialPrice <> 0 Then Exit Property
 mInitialPrice = value
 End Property
 
-Public Property Let numberOfRows(ByVal value As Long)
+Public Property Let NumberOfRows(ByVal value As Long)
 
-Const ProcName As String = "numberOfRows"
+Const ProcName As String = "NumberOfRows"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -391,8 +391,8 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub centre()
-Const ProcName As String = "centre"
+Public Sub Centre()
+Const ProcName As String = "Centre"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -479,27 +479,6 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pPr
 
 End Sub
 
-Private Sub clearDisplay(ByVal updateType As DOMUpdateTypes, ByVal Price As Double)
-Const ProcName As String = "clearDisplay"
-Dim failpoint As String
-On Error GoTo Err
-
-checkEnoughRows Price
-Select Case updateType
-Case DOMUpdateTypes.DOMUpdateAsk
-    setCellContents calcRowNumber(Price), DOMColumns.AskSize, ""
-Case DOMUpdateTypes.DOMUpdateBid
-    setCellContents calcRowNumber(Price), DOMColumns.BidSize, ""
-Case DOMUpdateTypes.DOMUpdateLast
-    setCellContents calcRowNumber(Price), DOMColumns.LastSize, ""
-End Select
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
 Private Sub reset()
 Const ProcName As String = "reset"
 Dim failpoint As String
@@ -532,12 +511,16 @@ Static prevHeight As Long
 
 Dim i As Long
 Dim colWidth As Long
+Dim et As ElapsedTimer
 
 Const ProcName As String = "resize"
 Dim failpoint As String
 On Error GoTo Err
 
 If UserControl.Width = prevWidth And UserControl.Height = prevHeight Then Exit Sub
+
+Set et = New ElapsedTimer
+et.StartTiming
 
 DOMGrid.Redraw = False
 
@@ -560,6 +543,7 @@ End If
 
 DOMGrid.Redraw = True
 
+gLogger.Log "Time to resize (millisecs): " & et.ElapsedTimeMicroseconds / 1000, ProcName, ModuleName, LogLevelHighDetail
 Exit Sub
 
 Err:
@@ -620,32 +604,24 @@ If mHalted Then
     mHalted = False
     RaiseEvent Resumed
 End If
-If Size > 0 Then
-    setDisplay updateType, Price, Size
-Else
-    clearDisplay updateType, Price
-End If
-
-Exit Sub
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-                
-Private Sub setDisplay(ByVal updateType As DOMUpdateTypes, ByVal Price As Double, ByVal Size As Long)
-Const ProcName As String = "setDisplay"
-Dim failpoint As String
-On Error GoTo Err
 
 checkEnoughRows Price
+
+Dim sizeString As String
+If Size > 0 Then
+    sizeString = CStr(Size)
+Else
+    sizeString = ""
+End If
+
 Select Case updateType
 Case DOMUpdateTypes.DOMUpdateAsk
-    setCellContents calcRowNumber(Price), DOMColumns.AskSize, Size
+    setCellContents calcRowNumber(Price), DOMColumns.AskSize, sizeString
 Case DOMUpdateTypes.DOMUpdateBid
-    setCellContents calcRowNumber(Price), DOMColumns.BidSize, Size
+    setCellContents calcRowNumber(Price), DOMColumns.BidSize, sizeString
 Case DOMUpdateTypes.DOMUpdateLast
-    setCellContents calcRowNumber(Price), DOMColumns.LastSize, Size
-    mCurrentLast = Price
+    If Size <> 0 Then mCurrentLast = Price
+    setCellContents calcRowNumber(Price), DOMColumns.LastSize, sizeString
 End Select
 
 Exit Sub
@@ -653,7 +629,7 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
-
+                
 Private Sub setupRows()
 Dim i As Long
 Dim Price As Double

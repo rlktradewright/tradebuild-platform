@@ -1415,6 +1415,8 @@ If Not mReplayingTickfile Then
             If mMarketDepthListeners.Count = 0 Or forceCancel Then
                 mRealtimeDataReader.StopMarketDepth
                 mReceivingMarketDepth = False
+                mMaxAskPricesIndex = -1
+                mMaxBidPricesIndex = -1
             Else
                 ' there are still some listeners
                 mWaitingToCancelMktDepth = True
@@ -1762,6 +1764,8 @@ If mMarketDepthListeners.Count = 0 And mWaitingToCancelMktDepth Then
     If Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StopMarketDepth
         mReceivingMarketDepth = False
+        mMaxAskPricesIndex = -1
+        mMaxBidPricesIndex = -1
     End If
 End If
 
@@ -1874,6 +1878,8 @@ If mReplayingTickfile Then
     mNoMarketDepthNotifyTimer.StartTimer
     Exit Sub
 End If
+
+mWaitingToCancelMktDepth = False
 
 If Not mIncludeMarketDepthInTickfile Then mIncludeMarketDepthInTickfile = writeToTickFile
 
@@ -2564,18 +2570,18 @@ Private Sub fireSetMarketDepthCell( _
                 ByVal size As Long)
 Const ProcName As String = "fireSetMarketDepthCell"
 Dim listener As MarketDepthListener
-Dim processedMarketDepth As MarketDepthEvent
+Dim ev As MarketDepthEvent
 Dim failpoint As Long
 On Error GoTo Err
 
-Set processedMarketDepth.source = Me
-processedMarketDepth.price = price
-processedMarketDepth.type = updateType
-processedMarketDepth.size = size
+Set ev.source = Me
+ev.price = price
+ev.type = updateType
+ev.size = size
 For Each listener In mMarketDepthListeners
-    listener.SetMarketDepthCell processedMarketDepth
+    listener.SetMarketDepthCell ev
 Next
-RaiseEvent DOMSetCell(processedMarketDepth)
+RaiseEvent DOMSetCell(ev)
 
 Exit Sub
 
@@ -2787,8 +2793,8 @@ On Error GoTo Err
 
 ReDim mAskPrices(15) As PriceTableEntry
 ReDim mBidPrices(15) As PriceTableEntry
-mMaxAskPricesIndex = 0
-mMaxBidPricesIndex = 0
+mMaxAskPricesIndex = -1
+mMaxBidPricesIndex = -1
 
 Exit Sub
 
@@ -3035,7 +3041,7 @@ Else
     If mContract.ExpiryDate <> 0 And mContract.ExpiryDate < Date Then
         Set ev.source = Me
         ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-        ev.eventMessage = "Contract has expired: " & mContracts.ContractSpecifier.ToString
+        ev.eventMessage = "Contract has expired: " & mContract.specifier.ToString
         gTB.notify ev
     Else
         Set mRealtimeDataReader = gTB.ServiceProviders.CreateRealtimeDataReader(Me, Me)
@@ -3082,16 +3088,16 @@ mStudyManager.NotifyInput mAskInputHandle, mAskPrice, pTick.Timestamp
 
 fireAsk
 
-If mPrevAskPrice <> 0 And mAskPrice > mPrevAskPrice Then
-    DOMClearCell DOMUpdateTypes.DOMUpdateAsk, _
-                mPrevAskPrice
-End If
-
-If mAskSize <> 0 Then
-    DOMSetCell DOMUpdateTypes.DOMUpdateAsk, _
-                mAskPrice, _
-                mAskSize
-End If
+'If mPrevAskPrice <> 0 And mAskPrice > mPrevAskPrice Then
+'    DOMClearCell DOMUpdateTypes.DOMUpdateAsk, _
+'                mPrevAskPrice
+'End If
+'
+'If mAskSize <> 0 Then
+'    DOMSetCell DOMUpdateTypes.DOMUpdateAsk, _
+'                mAskPrice, _
+'                mAskSize
+'End If
 
 Exit Sub
 
@@ -3123,16 +3129,16 @@ mStudyManager.NotifyInput mBidInputHandle, mBidPrice, pTick.Timestamp
 
 fireBid
 
-If mPrevBidPrice <> 0 And mBidPrice < mPrevBidPrice Then
-    DOMClearCell DOMUpdateTypes.DOMUpdateBid, _
-                mPrevBidPrice
-End If
-
-If mBidSize <> 0 Then
-    DOMSetCell DOMUpdateTypes.DOMUpdateBid, _
-                mBidPrice, _
-                mBidSize
-End If
+'If mPrevBidPrice <> 0 And mBidPrice < mPrevBidPrice Then
+'    DOMClearCell DOMUpdateTypes.DOMUpdateBid, _
+'                mPrevBidPrice
+'End If
+'
+'If mBidSize <> 0 Then
+'    DOMSetCell DOMUpdateTypes.DOMUpdateBid, _
+'                mBidPrice, _
+'                mBidSize
+'End If
 
 Exit Sub
 
@@ -3404,7 +3410,7 @@ ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
         Dim impliedTick As GenericTick
         impliedTick.tickType = TickTypeTrade
         impliedTick.Timestamp = pTick.Timestamp
-        impliedTick.price = mPrevTradePrice
+        impliedTick.price = mTradePrice
         impliedTick.size = pTick.size + mVolumeCorrectionIncrement - mAccumulatedVolume
         notifyTrade impliedTick
     End If
@@ -3632,9 +3638,10 @@ Case DOMOperations.DOMDelete
         maxIndex = position
     End If
 End Select
-If maxIndex >= UBound(prices) Then
+
+Do While maxIndex >= UBound(prices)
     ReDim Preserve prices(2 * (UBound(prices) + 1) - 1) As PriceTableEntry
-End If
+Loop
 
 Select Case operation
 Case DOMOperations.DOMInsert
@@ -3643,13 +3650,13 @@ Case DOMOperations.DOMInsert
     Next
     prices(position).price = price
     prices(position).size = size
-    If position <> 0 Then
+'    If position <> 0 Then
         If notifyApp Then
             DOMSetCell side, _
                     price, _
                     size
         End If
-    End If
+'    End If
 Case DOMOperations.DOMUpdate
     If price <> prices(position).price And prices(position).price <> 0 Then
         ' if need be we must blank the Size display for the price currently
@@ -3676,25 +3683,25 @@ Case DOMOperations.DOMUpdate
     End If
     prices(position).price = price
     prices(position).size = size
-    If position <> 0 Then
+'    If position <> 0 Then
         If notifyApp Then
             DOMSetCell side, _
                         price, _
                         size
         End If
-    End If
+'    End If
 Case DOMOperations.DOMDelete
-    If (position = 0 And side = DOMSides.DOMBid And prices(position).price = currentBid) _
-        Or _
-        (position = 0 And side = DOMSides.DOMAsk And prices(position).price = currentAsk) _
-    Then
-        ' we get here when we've alReady set the Bid or Ask in the notifyBid/notifyAsk
-        ' methods, but the marketdepth updates are deleting some entries prior to
-        ' inserting the Bid/Ask (why it deletes an entry then immediately reinserts
-        ' it is a mystery to me, but it does!).
-        ' So in this scenario, we don't want to blank the Size display for this price
-    Else
-        ' otherwise we do want to blank the Size entry for this price
+'    If (position = 0 And side = DOMSides.DOMBid And prices(position).price = currentBid) _
+'        Or _
+'        (position = 0 And side = DOMSides.DOMAsk And prices(position).price = currentAsk) _
+'    Then
+'        ' we get here when we've alReady set the Bid or Ask in the notifyBid/notifyAsk
+'        ' methods, but the marketdepth updates are deleting some entries prior to
+'        ' inserting the Bid/Ask (why it deletes an entry then immediately reinserts
+'        ' it is a mystery to me, but it does!).
+'        ' So in this scenario, we don't want to blank the Size display for this price
+'    Else
+'        ' otherwise we do want to blank the Size entry for this price
         If notifyApp Then
             If prices(position).price = 0 Then
                 ' we getting a delete before a price has been inserted in this position,
@@ -3704,7 +3711,8 @@ Case DOMOperations.DOMDelete
                             prices(position).price
             End If
         End If
-    End If
+'    End If
+    
     For i = position To maxIndex - 1
         prices(i) = prices(i + 1)
     Next

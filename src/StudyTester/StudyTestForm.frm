@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#162.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#141.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#167.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#146.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -65,18 +65,18 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "StudyConfigurer1"
-      Tab(1).Control(1)=   "SetStudyLibraryButton"
-      Tab(1).Control(2)=   "RemoveLibButton"
-      Tab(1).Control(3)=   "StudyLibraryList"
-      Tab(1).Control(4)=   "AddLibButton"
-      Tab(1).Control(5)=   "LibToAddText"
-      Tab(1).Control(6)=   "StudyLibraryClassNameText"
-      Tab(1).Control(7)=   "StudiesCombo"
-      Tab(1).Control(8)=   "Label19"
-      Tab(1).Control(9)=   "Label1"
-      Tab(1).Control(10)=   "Label3"
-      Tab(1).Control(11)=   "Label2"
+      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(4)=   "StudiesCombo"
+      Tab(1).Control(5)=   "StudyLibraryClassNameText"
+      Tab(1).Control(6)=   "LibToAddText"
+      Tab(1).Control(7)=   "AddLibButton"
+      Tab(1).Control(8)=   "StudyLibraryList"
+      Tab(1).Control(9)=   "RemoveLibButton"
+      Tab(1).Control(10)=   "SetStudyLibraryButton"
+      Tab(1).Control(11)=   "StudyConfigurer1"
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
@@ -797,7 +797,7 @@ On Error Resume Next    ' ignore any further errors that might arise
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"

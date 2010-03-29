@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.UserControl OrdersSummary 
    Alignable       =   -1  'True
    ClientHeight    =   4245
@@ -829,9 +829,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Public Sub monitorWorkspace( _
+Public Sub MonitorWorkspace( _
                 ByVal pWorkspace As Workspace)
-Const ProcName As String = "monitorWorkspace"
+Const ProcName As String = "MonitorWorkspace"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -1481,6 +1481,8 @@ On Error GoTo Err
 
 With OrderPlexGrid
     mSelectedOrderPlexGridRow = -1
+    
+    .Redraw = False
     .AllowUserResizing = flexResizeBoth
     
     .Cols = 0
@@ -1525,6 +1527,8 @@ With OrderPlexGrid
     .SelectionMode = flexSelectionByRow
     .HighLight = flexHighlightAlways
     .FocusRect = flexFocusNone
+    
+    .Redraw = True
     
     mFirstOrderPlexGridRowIndex = 3
 End With
