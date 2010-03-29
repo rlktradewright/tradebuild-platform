@@ -68,7 +68,7 @@ On Error Resume Next    ' ignore any further errors that might arise
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
-        "     " & DefaultLogFileName & vbCrLf & vbCrLf & _
+        "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
         "to support@tradewright.com", _
         vbCritical, _
         "Fatal error"

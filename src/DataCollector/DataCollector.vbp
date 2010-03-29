@@ -1,5 +1,5 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{76D7EB11-112B-4B1C-AD21-EBFF4C9996C1}#1.0#0#..\TimeframeUtils\TimeframeUtils2-6.dll#TradeWright Timeframe Utilities v2.6
 Reference=*\G{8E9412D5-BD0C-4598-AB9F-DA8ACD28EFE0}#86.0#0#..\TBDataCollector\TBDataCollector26.dll#TradeWright TradeBuild Data Collector v2.6
 Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#2.2#0#..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v2.0
@@ -30,7 +30,7 @@ Description="TradeBuild Data Collector v2.6"
 CompatibleMode="0"
 MajorVer=2
 MinorVer=6
-RevisionVer=373
+RevisionVer=375
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionCompanyName="TradeWright Software Systems"
