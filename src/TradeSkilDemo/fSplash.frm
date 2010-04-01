@@ -4,7 +4,7 @@ Begin VB.Form fSplash
    BackColor       =   &H80000005&
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
-   ClientHeight    =   5925
+   ClientHeight    =   6240
    ClientLeft      =   45
    ClientTop       =   435
    ClientWidth     =   7035
@@ -12,13 +12,15 @@ Begin VB.Form fSplash
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   5925
+   ScaleHeight     =   6240
    ScaleWidth      =   7035
    StartUpPosition =   2  'CenterScreen
    Begin VB.TextBox LogText 
       Appearance      =   0  'Flat
+      BackColor       =   &H00000000&
       BorderStyle     =   0  'None
-      Height          =   615
+      ForeColor       =   &H00FFFFFF&
+      Height          =   975
       Left            =   0
       Locked          =   -1  'True
       MultiLine       =   -1  'True
