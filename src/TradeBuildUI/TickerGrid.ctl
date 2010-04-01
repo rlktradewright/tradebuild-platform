@@ -2016,7 +2016,7 @@ If mConfig.GetSetting(ConfigSettingDecreasedValueColor) <> "" Then mDecreasedVal
 Set tickersConfigSection = mConfig.AddPrivateConfigurationSection(ConfigSectionTickers)
 
 For Each tickerConfigSection In tickersConfigSection
-    Set lTicker = mTickers.Add(tickerConfigSection.GetSetting(ConfigSettingOptions), _
+    Set lTicker = mTickers.Add(tickerConfigSection.GetSetting(ConfigSettingOptions, CStr(TickerOptions.TickerOptOrdersAreLive + TickerOptions.TickerOptUseExchangeTimeZone)), _
                                 tickerConfigSection.InstanceQualifier)
     
     Set contractConfigSection = tickerConfigSection.GetConfigurationSection(ConfigSectionContract)
