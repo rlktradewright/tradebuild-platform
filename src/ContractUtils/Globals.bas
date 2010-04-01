@@ -62,26 +62,6 @@ Private mMaxExchangeCodesIndex As Long
 Private mCurrencyDescs() As CurrencyDescriptor
 Private mMaxCurrencyDescsIndex As Long
 
-Private mThirtySecondsSeparators() As String
-Private mThirtySecondsTerminators() As String
-
-Private mThirtySecondsAndFractionsSeparators() As String
-Private mThirtySecondsAndFractionsTerminators() As String
-
-Private mSixtyFourthsSeparators() As String
-Private mSixtyFourthsTerminators() As String
-
-Private mSixtyFourthsAndFractionsSeparators() As String
-Private mSixtyFourthsAndFractionsTerminators() As String
-
-Private mExactThirtySecondIndicators() As String
-Private mQuarterThirtySecondIndicators() As String
-Private mHalfThirtySecondIndicators() As String
-Private mThreeQuarterThirtySecondIndicators() As String
-
-Private mExactSixtyFourthIndicators() As String
-Private mHalfSixtyFourthIndicators() As String
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -98,220 +78,12 @@ Private mHalfSixtyFourthIndicators() As String
 ' Properties
 '@================================================================================
 
-Public Property Get gDefaultExactSixtyFourthIndicator() As String
-gDefaultExactSixtyFourthIndicator = mExactSixtyFourthIndicators(0)
-End Property
-                
-Public Property Get gDefaultExactThirtySecondIndicator() As String
-gDefaultExactThirtySecondIndicator = mExactThirtySecondIndicators(0)
-End Property
-                
-Public Property Get gDefaultHalfSixtyFourthIndicator() As String
-gDefaultHalfSixtyFourthIndicator = mHalfSixtyFourthIndicators(0)
-End Property
-                
-Public Property Get gDefaultHalfThirtySecondIndicator() As String
-gDefaultHalfThirtySecondIndicator = mHalfThirtySecondIndicators(0)
-End Property
-                
-Public Property Get gDefaultQuarterThirtySecondIndicator() As String
-gDefaultQuarterThirtySecondIndicator = mQuarterThirtySecondIndicators(0)
-End Property
-                
-Public Property Get gDefaultSixtyFourthsAndFractionsSeparator() As String
-gDefaultSixtyFourthsAndFractionsSeparator = mSixtyFourthsAndFractionsSeparators(0)
-End Property
-                
-Public Property Get gDefaultSixtyFourthsAndFractionsTerminator() As String
-gDefaultSixtyFourthsAndFractionsTerminator = mSixtyFourthsAndFractionsTerminators(0)
-End Property
-                
-Public Property Get gDefaultSixtyFourthsSeparator() As String
-gDefaultSixtyFourthsSeparator = mSixtyFourthsSeparators(0)
-End Property
-                
-Public Property Get gDefaultSixtyFourthsTerminator() As String
-gDefaultSixtyFourthsTerminator = mSixtyFourthsTerminators(0)
-End Property
-                
-Public Property Get gDefaultThirtySecondsAndFractionsSeparator() As String
-gDefaultThirtySecondsAndFractionsSeparator = mThirtySecondsAndFractionsSeparators(0)
-End Property
-                
-Public Property Get gDefaultThirtySecondsAndFractionsTerminator() As String
-gDefaultThirtySecondsAndFractionsTerminator = mThirtySecondsAndFractionsTerminators(0)
-End Property
-                
-Public Property Get gDefaultThirtySecondsSeparator() As String
-gDefaultThirtySecondsSeparator = mThirtySecondsSeparators(0)
-End Property
-                
-Public Property Get gDefaultThirtySecondsTerminator() As String
-gDefaultThirtySecondsTerminator = mThirtySecondsTerminators(0)
-End Property
-                
-Public Property Get gDefaultThreeQuarterThirtySecondIndicator() As String
-gDefaultThreeQuarterThirtySecondIndicator = mThreeQuarterThirtySecondIndicators(0)
-End Property
-                
-Public Property Let gExactSixtyFourthIndicators( _
-                ByRef value() As String)
-mExactSixtyFourthIndicators = value
-gPriceParser.GenerateParsePriceAs64thsAndFractionsPattern
-End Property
-                
-Public Property Get gExactSixtyFourthIndicators() As String()
-gExactSixtyFourthIndicators = mExactSixtyFourthIndicators
-End Property
-                
-Public Property Let gExactThirtySecondIndicators( _
-                ByRef value() As String)
-mExactThirtySecondIndicators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gExactThirtySecondIndicators() As String()
-gExactThirtySecondIndicators = mExactThirtySecondIndicators
-End Property
-                
-Public Property Let gHalfSixtyFourthIndicators( _
-                ByRef value() As String)
-mHalfSixtyFourthIndicators = value
-gPriceParser.GenerateParsePriceAs64thsAndFractionsPattern
-End Property
-                
-Public Property Get gHalfSixtyFourthIndicators() As String()
-gHalfSixtyFourthIndicators = mHalfSixtyFourthIndicators
-End Property
-                
-Public Property Let gHalfThirtySecondIndicators( _
-                ByRef value() As String)
-mHalfThirtySecondIndicators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gHalfThirtySecondIndicators() As String()
-gHalfThirtySecondIndicators = mHalfThirtySecondIndicators
-End Property
-                
-Public Property Get gPriceFormatter() As PriceFormatter
-Static lPriceFormatter As PriceFormatter
-If lPriceFormatter Is Nothing Then Set lPriceFormatter = New PriceFormatter
-Set gPriceFormatter = lPriceFormatter
-End Property
-
-Public Property Get gPriceParser() As PriceParser
-Static lPriceParser As PriceParser
-If lPriceParser Is Nothing Then Set lPriceParser = New PriceParser
-Set gPriceParser = lPriceParser
-End Property
-
-Public Property Let gQuarterThirtySecondIndicators( _
-                ByRef value() As String)
-mQuarterThirtySecondIndicators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gQuarterThirtySecondIndicators() As String()
-gQuarterThirtySecondIndicators = mQuarterThirtySecondIndicators
-End Property
-                
 Public Property Get gREgExp() As RegExp
 Static lRegExp As RegExp
 If lRegExp Is Nothing Then Set lRegExp = New RegExp
 Set gREgExp = lRegExp
 End Property
 
-Public Property Let gSixtyFourthsAndFractionsSeparators( _
-                ByRef value() As String)
-mSixtyFourthsAndFractionsSeparators = value
-gPriceParser.GenerateParsePriceAs64thsAndFractionsPattern
-End Property
-                
-Public Property Get gSixtyFourthsAndFractionsSeparators() As String()
-gSixtyFourthsAndFractionsSeparators = mSixtyFourthsAndFractionsSeparators
-End Property
-                
-Public Property Let gSixtyFourthsAndFractionsTerminators( _
-                ByRef value() As String)
-mSixtyFourthsAndFractionsTerminators = value
-gPriceParser.GenerateParsePriceAs64thsAndFractionsPattern
-End Property
-                
-Public Property Get gSixtyFourthsAndFractionsTerminators() As String()
-gSixtyFourthsAndFractionsTerminators = mSixtyFourthsAndFractionsTerminators
-End Property
-                
-Public Property Let gSixtyFourthsSeparators( _
-                ByRef value() As String)
-mSixtyFourthsSeparators = value
-gPriceParser.GenerateParsePriceAs64thsPattern
-End Property
-                
-Public Property Get gSixtyFourthsSeparators() As String()
-gSixtyFourthsSeparators = mSixtyFourthsSeparators
-End Property
-                
-Public Property Let gSixtyFourthsTerminators( _
-                ByRef value() As String)
-mSixtyFourthsTerminators = value
-gPriceParser.GenerateParsePriceAs64thsPattern
-End Property
-                
-Public Property Get gSixtyFourthsTerminators() As String()
-gSixtyFourthsTerminators = mSixtyFourthsTerminators
-End Property
-                
-Public Property Let gThirtySecondsAndFractionsSeparators( _
-                ByRef value() As String)
-mThirtySecondsAndFractionsSeparators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gThirtySecondsAndFractionsSeparators() As String()
-gThirtySecondsAndFractionsSeparators = mThirtySecondsAndFractionsSeparators
-End Property
-                
-Public Property Let gThirtySecondsAndFractionsTerminators( _
-                ByRef value() As String)
-mThirtySecondsAndFractionsTerminators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gThirtySecondsAndFractionsTerminators() As String()
-gThirtySecondsAndFractionsTerminators = mThirtySecondsAndFractionsTerminators
-End Property
-                
-Public Property Let gThirtySecondsSeparators( _
-                ByRef value() As String)
-mThirtySecondsSeparators = value
-gPriceParser.GenerateParsePriceAs32ndsPattern
-End Property
-                
-Public Property Get gThirtySecondsSeparators() As String()
-gThirtySecondsSeparators = mThirtySecondsSeparators
-End Property
-                
-Public Property Let gThirtySecondsTerminators( _
-                ByRef value() As String)
-mThirtySecondsTerminators = value
-gPriceParser.GenerateParsePriceAs32ndsPattern
-End Property
-                
-Public Property Get gThirtySecondsTerminators() As String()
-gThirtySecondsTerminators = mThirtySecondsTerminators
-End Property
-                
-Public Property Let gThreeQuarterThirtySecondIndicators( _
-                ByRef value() As String)
-mThreeQuarterThirtySecondIndicators = value
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-End Property
-                
-Public Property Get gThreeQuarterThirtySecondIndicators() As String()
-gThreeQuarterThirtySecondIndicators = mThreeQuarterThirtySecondIndicators
-End Property
-                
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -659,34 +431,6 @@ Next
 gUnEscapeRegexSpecialChar = s
 End Function
 
-Public Sub Main()
-mThirtySecondsSeparators = makeStringArray("'")
-mThirtySecondsTerminators = makeStringArray(",/32")
-
-mThirtySecondsAndFractionsSeparators = makeStringArray("'")
-mThirtySecondsAndFractionsTerminators = makeStringArray(",/32")
-
-mSixtyFourthsSeparators = makeStringArray(" ,''")
-mSixtyFourthsTerminators = makeStringArray(",/64")
-
-mSixtyFourthsAndFractionsSeparators = makeStringArray("''")
-mSixtyFourthsAndFractionsTerminators = makeStringArray(",/64")
-
-mExactThirtySecondIndicators = makeStringArray(",0")
-mQuarterThirtySecondIndicators = makeStringArray("¼,2")
-mHalfThirtySecondIndicators = makeStringArray("+,5")
-mThreeQuarterThirtySecondIndicators = makeStringArray("¾,7")
-
-mExactSixtyFourthIndicators = makeStringArray(",''")
-mHalfSixtyFourthIndicators = makeStringArray("+,5")
-
-gPriceParser.GenerateParsePriceAs32ndsAndFractionsPattern
-gPriceParser.GenerateParsePriceAs32ndsPattern
-gPriceParser.GenerateParsePriceAs64thsAndFractionsPattern
-gPriceParser.GenerateParsePriceAs64thsPattern
-
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -764,10 +508,6 @@ Exit Function
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Private Function makeStringArray(ByRef inString) As String()
-makeStringArray = Split(inString, ",")
 End Function
 
 Private Sub setupExchangeCodes()
@@ -869,6 +609,7 @@ addExchangeCode "SWB"
 addExchangeCode "SWX"
 
 addExchangeCode "TRACKECN"
+addExchangeCode "TRQXEN"
 addExchangeCode "TSE"
 addExchangeCode "TSE.JPN"
 

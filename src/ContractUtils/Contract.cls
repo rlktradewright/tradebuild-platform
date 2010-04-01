@@ -72,9 +72,17 @@ Private mTimeZone As Timezone
 
 Private mSortKeys() As ContractSortKeyIds
 
+Private mPriceFormatter As PriceFormatter
+Private mPriceParser As PriceParser
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mPriceFormatter = New PriceFormatter
+Set mPriceParser = New PriceParser
+End Sub
 
 '@================================================================================
 ' Comparable Interface Members
@@ -243,12 +251,12 @@ minTickString = Format(mTickSize, "0.##############")
 
 mNumberOfDecimals = Len(minTickString) - 2
 
-gPriceParser.NumberOfDecimals = mNumberOfDecimals
+mPriceParser.NumberOfDecimals = mNumberOfDecimals
 
 If mNumberOfDecimals = 0 Then
-    gPriceFormatter.PriceFormatString = "0"
+    mPriceFormatter.PriceFormatString = "0"
 Else
-    gPriceFormatter.PriceFormatString = "0." & String(mNumberOfDecimals, "0")
+    mPriceFormatter.PriceFormatString = "0." & String(mNumberOfDecimals, "0")
 End If
 
 Exit Property
@@ -314,7 +322,7 @@ Const ProcName As String = "FormatPriceAs32nds"
 Dim failpoint As String
 On Error GoTo Err
 
-FormatPriceAs32nds = gPriceFormatter.FormatPriceAs32nds(pPrice)
+FormatPriceAs32nds = mPriceFormatter.FormatPriceAs32nds(pPrice)
 
 Exit Function
 
@@ -328,7 +336,7 @@ Const ProcName As String = "FormatPriceAs32ndsAndFractions"
 Dim failpoint As String
 On Error GoTo Err
 
-FormatPriceAs32ndsAndFractions = gPriceFormatter.FormatPriceAs32ndsAndFractions(pPrice)
+FormatPriceAs32ndsAndFractions = mPriceFormatter.FormatPriceAs32ndsAndFractions(pPrice)
 
 Exit Function
 
@@ -342,7 +350,7 @@ Const ProcName As String = "FormatPriceAs64ths"
 Dim failpoint As String
 On Error GoTo Err
 
-FormatPriceAs64ths = gPriceFormatter.FormatPriceAs64ths(pPrice)
+FormatPriceAs64ths = mPriceFormatter.FormatPriceAs64ths(pPrice)
 
 Exit Function
 
@@ -356,7 +364,7 @@ Const ProcName As String = "FormatPriceAs64thsAndFractions"
 Dim failpoint As String
 On Error GoTo Err
 
-FormatPriceAs64thsAndFractions = gPriceFormatter.FormatPriceAs64thsAndFractions(pPrice)
+FormatPriceAs64thsAndFractions = mPriceFormatter.FormatPriceAs64thsAndFractions(pPrice)
 
 Exit Function
 
@@ -370,7 +378,7 @@ Const ProcName As String = "FormatPriceAsDecimals"
 Dim failpoint As String
 On Error GoTo Err
 
-FormatPriceAsDecimals = gPriceFormatter.FormatPriceAsDecimals(pPrice)
+FormatPriceAsDecimals = mPriceFormatter.FormatPriceAsDecimals(pPrice)
 
 Exit Function
 
@@ -561,7 +569,7 @@ Const ProcName As String = "ParsePriceAs32nds"
 Dim failpoint As String
 On Error GoTo Err
 
-ParsePriceAs32nds = gPriceParser.ParsePriceAs32nds(pPriceString, pPrice)
+ParsePriceAs32nds = mPriceParser.ParsePriceAs32nds(pPriceString, pPrice)
 
 Exit Function
 
@@ -576,7 +584,7 @@ Const ProcName As String = "ParsePriceAs32ndsAndFractions"
 Dim failpoint As String
 On Error GoTo Err
 
-ParsePriceAs32ndsAndFractions = gPriceParser.ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
+ParsePriceAs32ndsAndFractions = mPriceParser.ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
 
 Exit Function
 
@@ -591,7 +599,7 @@ Const ProcName As String = "ParsePriceAs64ths"
 Dim failpoint As String
 On Error GoTo Err
 
-ParsePriceAs64ths = gPriceParser.ParsePriceAs64ths(pPriceString, pPrice)
+ParsePriceAs64ths = mPriceParser.ParsePriceAs64ths(pPriceString, pPrice)
 
 Exit Function
 
@@ -606,7 +614,7 @@ Const ProcName As String = "ParsePriceAs64ths"
 Dim failpoint As String
 On Error GoTo Err
 
-ParsePriceAs64thsAndFractions = gPriceParser.ParsePriceAs64thsAndFractions(pPriceString, pPrice)
+ParsePriceAs64thsAndFractions = mPriceParser.ParsePriceAs64thsAndFractions(pPriceString, pPrice)
 
 Exit Function
 
@@ -622,7 +630,7 @@ Const ProcName As String = "ParsePriceAsDecimals"
 Dim failpoint As String
 On Error GoTo Err
 
-ParsePriceAsDecimals = gPriceParser.ParsePriceAsDecimals(pPriceString, pPrice)
+ParsePriceAsDecimals = mPriceParser.ParsePriceAsDecimals(pPriceString, pPrice)
 
 Exit Function
 

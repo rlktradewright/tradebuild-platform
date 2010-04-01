@@ -44,10 +44,6 @@ Private Const ModuleName                            As String = "PriceParser"
 ' Member variables
 '@================================================================================
 
-Private mParsePriceAs32ndsPattern As String
-Private mParsePriceAs32ndsAndFractionsPattern As String
-Private mParsePriceAs64thsPattern As String
-Private mParsePriceAs64thsAndFractionsPattern  As String
 Private mParsePriceAsDecimalsPattern As String
 
 '@================================================================================
@@ -77,72 +73,6 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub GenerateParsePriceAs32ndsPattern()
-mParsePriceAs32ndsPattern = _
-                            "^(\d+)" & _
-                            "(" & _
-                                "($" & _
-                                    "|" & convertToRegexpChoices(gThirtySecondsSeparators) & _
-                                ")" & _
-                                "([0-2][0-9]|30|31)" & _
-                                "(" & _
-                                      convertToRegexpChoices(gThirtySecondsTerminators) & _
-                                ")$" & _
-                            ")"
-End Sub
-
-Public Sub GenerateParsePriceAs32ndsAndFractionsPattern()
-mParsePriceAs32ndsAndFractionsPattern = _
-                            "^(\d+)" & _
-                            "(" & _
-                                "($" & _
-                                    "|" & convertToRegexpChoices(gThirtySecondsAndFractionsSeparators) & _
-                                ")" & _
-                                "([0-2][0-9]|30|31)" & _
-                                "(" & _
-                                    convertToRegexpChoices(gExactThirtySecondIndicators) & _
-                                    "|" & convertToRegexpChoices(gQuarterThirtySecondIndicators) & _
-                                    "|" & convertToRegexpChoices(gHalfThirtySecondIndicators) & _
-                                    "|" & convertToRegexpChoices(gThreeQuarterThirtySecondIndicators) & _
-                                ")" & _
-                                "(" & _
-                                    convertToRegexpChoices(gThirtySecondsAndFractionsTerminators) & _
-                                ")$" & _
-                            ")"
-End Sub
-
-Public Sub GenerateParsePriceAs64thsPattern()
-mParsePriceAs64thsPattern = _
-                            "^(\d+)" & _
-                            "(" & _
-                                "($" & _
-                                    "|" & convertToRegexpChoices(gSixtyFourthsSeparators) & _
-                                ")" & _
-                                "([0-5][0-9]|60|61|62|63)" & _
-                                "(" & _
-                                    convertToRegexpChoices(gSixtyFourthsTerminators) & _
-                                ")$" & _
-                            ")"
-End Sub
-
-Public Sub GenerateParsePriceAs64thsAndFractionsPattern()
-mParsePriceAs64thsAndFractionsPattern = _
-                            "^(\d+)" & _
-                            "(" & _
-                                "($" & _
-                                    "|" & convertToRegexpChoices(gSixtyFourthsAndFractionsSeparators) & _
-                                ")" & _
-                                "([0-5][0-9]|60|61|62|63)" & _
-                                "(" & _
-                                    convertToRegexpChoices(gExactSixtyFourthIndicators) & _
-                                    "|" & convertToRegexpChoices(gHalfSixtyFourthIndicators) & _
-                                ")" & _
-                                "(" & _
-                                    "|" & convertToRegexpChoices(gSixtyFourthsAndFractionsTerminators) & _
-                                ")$" & _
-                            ")"
-End Sub
-
 Public Function ParsePriceAs32nds( _
                 ByVal pPriceString As String, _
                 ByRef pPrice As Double) As Boolean
@@ -152,7 +82,7 @@ Const ProcName As String = "ParsePriceAs32nds"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not getSubmatches(pPriceString, mParsePriceAs32ndsPattern, lSubmatches) Then Exit Function
+If Not getSubmatches(pPriceString, gParsePriceAs32ndsPattern, lSubmatches) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
 
@@ -177,7 +107,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not getSubmatches(pPriceString, _
-                    mParsePriceAs32ndsAndFractionsPattern, _
+                    gParsePriceAs32ndsAndFractionsPattern, _
                     lSubmatches) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
@@ -213,7 +143,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not getSubmatches(pPriceString, _
-                    mParsePriceAs64thsPattern, _
+                    gParsePriceAs64thsPattern, _
                     lSubmatches) Then Exit Function
 
 If Not gREgExp.Test(pPriceString) Then Exit Function
@@ -241,7 +171,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not getSubmatches(pPriceString, _
-                    mParsePriceAs64thsAndFractionsPattern, _
+                    gParsePriceAs64thsAndFractionsPattern, _
                     lSubmatches) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
@@ -306,40 +236,6 @@ Exit Function
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Private Function convertToRegexpChoices( _
-                ByRef choiceStrings() As String) As String
-Dim s As String
-Dim i As Long
-Dim choiceString As String
-
-For i = 0 To UBound(choiceStrings)
-    choiceString = choiceStrings(i)
-    If i <> 0 Then s = s & "|"
-    s = s & escapeRegexSpecialChar(choiceString)
-Next
-
-convertToRegexpChoices = s
-End Function
-
-Private Function escapeRegexSpecialChar( _
-                ByRef inString As String) As String
-Dim i As Long
-Dim s As String
-Dim ch As String
-
-For i = 1 To Len(inString)
-    ch = Mid$(inString, i, 1)
-    Select Case ch
-    Case "*", "+", "?", "^", "$", "[", "]", "{", "}", "(", ")", "|", "/", "\"
-        s = s & "\" & ch
-    Case Else
-        s = s & ch
-    End Select
-Next
-
-escapeRegexSpecialChar = s
 End Function
 
 Private Function getSubmatches( _
