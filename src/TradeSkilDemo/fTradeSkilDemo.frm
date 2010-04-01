@@ -106,9 +106,9 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":166C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(0)=   "LiveExecutionsSummary"
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(2)=   "LiveExecutionsSummary"
+      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1688
@@ -317,51 +317,51 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":16C0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(2)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(3)=   "NumHistoryBarsText"
-      Tab(1).Control(4)=   "SessionOnlyCheck"
-      Tab(1).Control(5)=   "ChartButton"
+      Tab(1).Control(0)=   "ChartButton"
+      Tab(1).Control(1)=   "SessionOnlyCheck"
+      Tab(1).Control(2)=   "NumHistoryBarsText"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(4)=   "Label22"
+      Tab(1).Control(5)=   "Label18"
       Tab(1).ControlCount=   6
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":16DC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "FromDatePicker"
-      Tab(2).Control(5)=   "ToDatePicker"
-      Tab(2).Control(6)=   "HistTimeframeSelector"
-      Tab(2).Control(7)=   "NumHistBarsText"
-      Tab(2).Control(8)=   "HistSessionOnlyCheck"
-      Tab(2).Control(9)=   "HistContractSearch"
+      Tab(2).Control(0)=   "HistContractSearch"
+      Tab(2).Control(1)=   "HistSessionOnlyCheck"
+      Tab(2).Control(2)=   "NumHistBarsText"
+      Tab(2).Control(3)=   "HistTimeframeSelector"
+      Tab(2).Control(4)=   "ToDatePicker"
+      Tab(2).Control(5)=   "FromDatePicker"
+      Tab(2).Control(6)=   "Label3"
+      Tab(2).Control(7)=   "Label2"
+      Tab(2).Control(8)=   "Label4"
+      Tab(2).Control(9)=   "Label5"
       Tab(2).ControlCount=   10
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":16F8
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(3)=   "ReplayProgressBar"
-      Tab(3).Control(4)=   "TickfileList"
-      Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "ClearTickfileListButton"
-      Tab(3).Control(6)=   "SelectTickfilesButton"
-      Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(8)=   "StopReplayButton"
-      Tab(3).Control(9)=   "PauseReplayButton"
-      Tab(3).Control(10)=   "PlayTickFileButton"
-      Tab(3).Control(11)=   "SkipReplayButton"
+      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(4)=   "ReplaySpeedCombo"
+      Tab(3).Control(5)=   "SelectTickfilesButton"
+      Tab(3).Control(6)=   "ClearTickfileListButton"
+      Tab(3).Control(7)=   "TickfileList"
+      Tab(3).Control(7).Enabled=   0   'False
+      Tab(3).Control(8)=   "ReplayProgressBar"
+      Tab(3).Control(9)=   "ReplayProgressLabel"
+      Tab(3).Control(10)=   "ReplayContractLabel"
+      Tab(3).Control(11)=   "Label20"
       Tab(3).ControlCount=   12
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1714
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ConfigEditorButton"
+      Tab(4).Control(0)=   "Label6"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "Label6"
+      Tab(4).Control(2)=   "ConfigEditorButton"
       Tab(4).ControlCount=   3
       Begin TradeBuildUI26.ContractSearch HistContractSearch 
          Height          =   5055
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   64552963
+         Format          =   68681731
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   64552963
+         Format          =   68681731
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -926,7 +926,7 @@ On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 
-If Me.Width < 14385 Then Me.Width = 14505
+If Me.Width < ControlsSSTab.Width + 120 Then Me.Width = ControlsSSTab.Width + 120
 If Me.Height < 9555 Then Me.Height = 9555
 
 If Me.Width = prevWidth And Me.Height = prevHeight Then Exit Sub
@@ -986,11 +986,11 @@ End Sub
 ' LogListener Interface Members
 '================================================================================
 
-Private Sub LogListener_finish()
+Private Sub LogListener_Finish()
 'nothing to do
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
 
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
@@ -1005,7 +1005,7 @@ End If
 LogText.SelStart = Len(LogText.Text)
 LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
-LogText.SelText = formatLogRecord(logrec)
+LogText.SelText = formatLogRecord(Logrec)
 LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 
 Exit Sub
@@ -2307,14 +2307,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function formatLogRecord(ByVal logrec As LogRecord) As String
+Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
 Static formatter As LogFormatter
 Dim failpoint As String
 On Error GoTo Err
 
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
-formatLogRecord = formatter.FormatRecord(logrec)
+formatLogRecord = formatter.FormatRecord(Logrec)
 
 Exit Function
 
@@ -2673,7 +2673,7 @@ On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
     SimulatedExecutionsSummary.Simulated = True
-    SimulatedExecutionsSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top + ExecutionsSummaryTabStrip.Height - SimulatedExecutionsSummary.Top
     SimulatedExecutionsSummary.Visible = True
     
@@ -2682,12 +2682,12 @@ If mTradeBuildAPI.AllOrdersSimulated Then
     ExecutionsSummaryTabStrip.Visible = False
 Else
     SimulatedExecutionsSummary.Simulated = True
-    SimulatedExecutionsSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
     
     LiveExecutionsSummary.Simulated = False
     LiveExecutionsSummary.Height = ExecutionsSummaryTabStrip.Top - SimulatedExecutionsSummary.Top
-    LiveExecutionsSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    LiveExecutionsSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     
     ExecutionsSummaryTabStrip.Visible = True
     ExecutionsSummaryTabStrip.Tabs.Item(ExecutionsTabIndexLive).Selected = True
@@ -2721,7 +2721,7 @@ On Error GoTo Err
 If mTradeBuildAPI.AllOrdersSimulated Then
     SimulatedOrdersSummary.Finish
     SimulatedOrdersSummary.Simulated = True
-    SimulatedOrdersSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top + OrdersSummaryTabStrip.Height - SimulatedOrdersSummary.Top
     SimulatedOrdersSummary.Visible = True
     
@@ -2732,13 +2732,13 @@ If mTradeBuildAPI.AllOrdersSimulated Then
 Else
     SimulatedOrdersSummary.Finish
     SimulatedOrdersSummary.Simulated = True
-    SimulatedOrdersSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    SimulatedOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     SimulatedOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
     
     LiveOrdersSummary.Finish
     LiveOrdersSummary.Simulated = False
     LiveOrdersSummary.Height = OrdersSummaryTabStrip.Top - SimulatedOrdersSummary.Top
-    LiveOrdersSummary.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+    LiveOrdersSummary.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
     
     OrdersSummaryTabStrip.Visible = True
     OrdersSummaryTabStrip.Tabs.Item(OrdersTabIndexLive).Selected = True
@@ -2788,7 +2788,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 TickerGrid1.Finish
-TickerGrid1.monitorWorkspace mTradeBuildAPI.DefaultWorkSpace
+TickerGrid1.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
 
 Exit Sub
 
