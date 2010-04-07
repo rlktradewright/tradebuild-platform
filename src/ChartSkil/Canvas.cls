@@ -63,7 +63,6 @@ Private Const NoClipRegion              As Long = -1
 Private mSurface As PictureBox
 Attribute mSurface.VB_VarHelpID = -1
 Private mViewport As Viewport
-Private mModeSwitcher As ScaleModeSwitcher
 
 ' pen attributes
 Private mPenColor As Long
@@ -190,8 +189,6 @@ On Error GoTo Err
 
 Set mSurface = value
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
-Set mModeSwitcher = New ScaleModeSwitcher
-mModeSwitcher.Initialise mSurface
 
 Exit Property
 
