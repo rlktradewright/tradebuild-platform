@@ -565,9 +565,9 @@ If Not mConfig Is Nothing Then
 End If
 
 If mIsHistoric Then
-    lChart.showHistoricChart mTicker, lSpec, mFromTime, mToTime, mBarFormatterFactory
+    lChart.ShowHistoricChart mTicker, lSpec, mFromTime, mToTime, mBarFormatterFactory
 Else
-    lChart.showChart mTicker, lSpec, mBarFormatterFactory
+    lChart.ShowChart mTicker, lSpec, mBarFormatterFactory
 End If
 
 lTab.Selected = True
@@ -824,10 +824,10 @@ On Error GoTo Err
 Set lChart = loadChartControl
 Set lTab = addTab(Nothing)
 
-lChart.LoadFromConfig chartSect
+lChart.LoadFromConfig chartSect, True
 
 lTab.caption = lChart.TimePeriod.ToShortString
-lTab.Selected = True
+'lTab.Selected = True
 
 Exit Sub
 
@@ -953,7 +953,7 @@ Const ProcName As String = "getChartFromIndex"
 Dim failpoint As Long
 On Error GoTo Err
 
-Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index))
+Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index)).object
 
 Exit Function
 
@@ -1076,15 +1076,19 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Private Function showChart( _
+Private Function ShowChart( _
                 ByVal index As Long) As TradeBuildChart
 Dim lChart As TradeBuildChart
-Const ProcName As String = "showChart"
+Const ProcName As String = "ShowChart"
 Dim failpoint As Long
 On Error GoTo Err
 
 If index = 0 Then Exit Function
+
 Set lChart = getChartFromIndex(index)
+
+If lChart.State = ChartStates.ChartStateBlank Then lChart.Start
+
 If lChart.State = ChartStateLoaded Then
     lChart.EnableDrawing
     ControlToolbar.Buttons("change").Enabled = True
@@ -1099,7 +1103,7 @@ mCurrentIndex = index
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 
-Set showChart = lChart
+Set ShowChart = lChart
 
 Exit Function
 
@@ -1174,7 +1178,7 @@ On Error GoTo Err
 If index = mCurrentIndex Then Exit Sub
 
 hideChart mCurrentIndex
-showChart index
+ShowChart index
 
 Exit Sub
 

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#140.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#146.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -161,6 +161,8 @@ Private mLoadedFromConfig                               As Boolean
 
 Private mTradeBarSeries                                 As BarSeries
 
+Private mDeferStart                                     As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -311,6 +313,9 @@ On Error GoTo Err
 If ev.State = TickerStates.TickerStateReady Then
     ' this means that the Ticker object has retrieved the contract info, so we can
     ' now start the chart
+    
+    If mDeferStart Then Exit Sub
+
     loadchart
     If mLoadedFromConfig Then
         loadStudiesFromConfig
@@ -1019,7 +1024,8 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pPr
 End Sub
 
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal config As ConfigurationSection, _
+                ByVal deferStart As Boolean)
 Dim cs As ConfigurationSection
 
 Const ProcName As String = "LoadFromConfig"
@@ -1028,6 +1034,8 @@ On Error GoTo Err
 
 Set mConfig = config
 mLoadedFromConfig = True
+
+mDeferStart = deferStart
 
 Set mTicker = TradeBuildAPI.WorkSpaces(mConfig.GetSetting(ConfigSettingWorkspace)).Tickers(mConfig.GetSetting(ConfigSettingTickerKey))
 Set mChartSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
@@ -1041,7 +1049,7 @@ If Not cs Is Nothing Then
     mBarFormatterFactory.LoadFromConfig cs
 End If
 
-prepareChart
+If Not deferStart Then prepareChart
 
 Exit Sub
 
@@ -1076,11 +1084,11 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Public Sub showChart( _
+Public Sub ShowChart( _
                 ByVal pTicker As Ticker, _
                 ByVal chartSpec As ChartSpecifier, _
                 Optional ByVal BarFormatterFactory As BarFormatterFactory)
-Const ProcName As String = "showChart"
+Const ProcName As String = "ShowChart"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1115,13 +1123,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Public Sub showHistoricChart( _
+Public Sub ShowHistoricChart( _
                 ByVal pTicker As Ticker, _
                 ByVal chartSpec As ChartSpecifier, _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date, _
                 Optional ByVal BarFormatterFactory As BarFormatterFactory)
-Const ProcName As String = "showHistoricChart"
+Const ProcName As String = "ShowHistoricChart"
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1157,6 +1165,25 @@ Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+End Sub
+
+Public Sub Start()
+Const ProcName As String = "Start"
+On Error GoTo Err
+
+If Not (mLoadedFromConfig And mState = ChartStates.ChartStateBlank) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
+End If
+
+mDeferStart = False
+prepareChart
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -1441,7 +1468,7 @@ On Error GoTo Err
 
 Set mLoadingText = mPriceRegion.AddText(, ChartSkil26.LayerNumbers.LayerHighestUser)
 Dim Font As New stdole.StdFont
-Font.size = 18
+Font.Size = 18
 mLoadingText.Font = Font
 mLoadingText.Color = vbBlack
 mLoadingText.Box = True
