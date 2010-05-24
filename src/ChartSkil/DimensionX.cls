@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "DimensionX"
+Attribute VB_Name = "Dimension"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,7 +21,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "DimensionX"
+Private Const ModuleName                As String = "Dimension"
 
 '================================================================================
 ' Enums
@@ -35,10 +35,9 @@ Private Const ModuleName                As String = "DimensionX"
 ' Member variables
 '================================================================================
 
-Private mX As Double
-Private mViewport As Viewport
+Private mLength As Double
 
-Private mCoordSystemX As CoordinateSystems
+Private mCoordSystem As CoordinateSystems
 
 '================================================================================
 ' Class Event Handlers
@@ -52,34 +51,8 @@ Private mCoordSystemX As CoordinateSystems
 ' Properties
 '================================================================================
 
-Friend Property Get Viewport() As Viewport
-Set Viewport = mViewport
-End Property
-
-Public Property Get X() As Double
-X = mX
-End Property
-
-Public Property Get XLogical() As Double
-Const ProcName As String = "XLogical"
-Dim failpoint As String
-On Error GoTo Err
-
-Select Case mCoordSystemX
-Case CoordsLogical
-    XLogical = mX
-Case CoordsRelative
-    XLogical = mViewport.ConvertRelativeToLogicalX(mX)
-Case CoordsDistance
-    XLogical = mViewport.ConvertDistanceToLogicalX(mX)
-Case CoordsCounterDistance
-    XLogical = mViewport.ConvertCounterDistanceToLogicalY(mX)
-End Select
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Public Property Get Length() As Double
+Length = mLength
 End Property
 
 '================================================================================
@@ -96,10 +69,7 @@ If aDim Is Me Then
     Equals = True
     Exit Function
 End If
-With aDim
-    If Not .Viewport Is mViewport Then Exit Function
-    If .X <> mX Then Exit Function
-End With
+If aDim.Length <> mLength Then Exit Function
 Equals = True
 
 Exit Function
@@ -109,13 +79,57 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Friend Sub Initialise( _
-                ByVal X As Double, _
-                ByVal coordSystemX As CoordinateSystems, _
-                ByVal pViewport As Viewport)
-mX = X
-mCoordSystemX = coordSystemX
-Set mViewport = pViewport
+                ByVal pLength As Double, _
+                ByVal pCoordSystem As CoordinateSystems)
+mLength = Length
+mCoordSystem = pCoordSystem
 End Sub
+
+Public Function LengthLogicalX( _
+                ByVal pViewport As Viewport) As Double
+Const ProcName As String = "LengthLogicalX"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystem
+Case CoordsLogical
+    LengthLogicalX = mLength
+Case CoordsRelative
+    LengthLogicalX = pViewport.ConvertRelativeToLogicalX(mLength)
+Case CoordsDistance
+    LengthLogicalX = pViewport.ConvertDistanceToLogicalX(mLength)
+Case CoordsCounterDistance
+    LengthLogicalX = pViewport.ConvertCounterDistanceToLogicalY(mLength)
+End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Public Function LengthLogicalY( _
+                ByVal pViewport As Viewport) As Double
+Const ProcName As String = "LengthLogicalY"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystem
+Case CoordsLogical
+    LengthLogicalY = mLength
+Case CoordsRelative
+    LengthLogicalY = pViewport.ConvertRelativeToLogicalY(mLength)
+Case CoordsDistance
+    LengthLogicalY = pViewport.ConvertDistanceToLogicalY(mLength)
+Case CoordsCounterDistance
+    LengthLogicalY = pViewport.ConvertCounterDistanceToLogicalY(mLength)
+End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 '================================================================================
 ' Helper Functions
