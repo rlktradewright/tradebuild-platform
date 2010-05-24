@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Dimension"
+Attribute VB_Name = "Size"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,7 +21,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "Dimension"
+Private Const ModuleName                As String = "Size"
 
 '================================================================================
 ' Enums
@@ -88,20 +88,20 @@ Public Property Get Y() As Double
 Y = mY
 End Property
 
-Public Property Get YLogical() As Double
+Public Property Get yLogical() As Double
 Const ProcName As String = "YLogical"
 Dim failpoint As String
 On Error GoTo Err
 
 Select Case mCoordSystemY
 Case CoordsLogical
-    YLogical = mY
+    yLogical = mY
 Case CoordsRelative
-    YLogical = mViewport.ConvertRelativeToLogicalY(mY)
+    yLogical = mViewport.ConvertRelativeToLogicalY(mY)
 Case CoordsDistance
-    YLogical = mViewport.ConvertDistanceToLogicalY(mY)
+    yLogical = mViewport.ConvertDistanceToLogicalY(mY)
 Case CoordsCounterDistance
-    YLogical = mViewport.ConvertCounterDistanceToLogicalY(mY)
+    yLogical = mViewport.ConvertCounterDistanceToLogicalY(mY)
 End Select
 
 Exit Property
