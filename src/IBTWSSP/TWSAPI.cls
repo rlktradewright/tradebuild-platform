@@ -707,34 +707,28 @@ Else
             ' nothing to do
             
         Else
-            On Error Resume Next
-            mTwsHistDataRequestQueue.remove key
-            If Err.number = 0 Then
-                ' request was still in queue - no further action required
-                On Error GoTo Err
-            ElseIf Err.number <> ErrorCodes.ErrIllegalArgumentException Then
-                Dim errNum As Long: errNum = Err.number
-                Dim errSource As String: errSource = Err.source
-                Dim errDesc As String: errDesc = Err.Description
-                On Error GoTo Err
-                Err.Raise errNum, errSource, errDesc
-            Else
-                On Error GoTo Err
-                
+            If mTwsHistDataRequestQueue.size = 0 Then
                 ' request is with TWS so cancel it
+                cancelHistDataRequest requestHandle
+            Else
+                On Error Resume Next
+                mTwsHistDataRequestQueue.remove key
+                If Err.number = 0 Then
+                    ' request was still in queue - no further action required
+                    On Error GoTo Err
                 
-                If mConnectionState = ConnConnected Then
-                    Const version As Long = 1
-            
-                    addMsgId CANCEL_HISTORICAL_DATA
-                    addData version, "Version"
-                    addData generateHistDataRequestId(requestHandle), "Request id"
-                    send
+                ElseIf Err.number = ErrorCodes.ErrIllegalArgumentException Then
+                    On Error GoTo Err
+                
+                    ' request is with TWS so cancel it
+                    cancelHistDataRequest requestHandle
+                Else
+                    Dim errNum As Long: errNum = Err.number
+                    Dim errSource As String: errSource = Err.source
+                    Dim errDesc As String: errDesc = Err.Description
+                    On Error GoTo Err
+                    Err.Raise errNum, errSource, errDesc
                 End If
-                
-                mHistoricalDataTable(requestHandle).cancelling = True
-                
-                processNextHistDataRequest
             End If
         End If
 
@@ -1560,6 +1554,30 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName
 
 End Function
+
+Private Sub cancelHistDataRequest( _
+                ByVal pRequestHandle As Long)
+Const ProcName As String = "cancelHistDataRequest"
+On Error GoTo Err
+
+If mConnectionState = ConnConnected Then
+    Const version As Long = 1
+
+    addMsgId CANCEL_HISTORICAL_DATA
+    addData version, "Version"
+    addData generateHistDataRequestId(pRequestHandle), "Request id"
+    send
+End If
+
+mHistoricalDataTable(pRequestHandle).cancelling = True
+
+processNextHistDataRequest
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName
+End Sub
 
 Private Sub cancelMarketDataEx(ByVal index As Long, _
                 ByVal releaseEntry As Boolean)
@@ -2487,6 +2505,7 @@ Dim exchange As String
 Dim currencyCode As String
 Dim marketName As String
 Dim tradingClass As String
+Dim lDescription As String
 
 Dim lContractBuilder As ContractBuilder
 
@@ -2528,8 +2547,8 @@ minimumTick = getDouble("Minimum tick")
 multiplier = getLong("Multiplier")
 If multiplier = 0 Then multiplier = 1
     
-If IsValidExchangeCode(exchange) Then
 
+If IsValidExchangeCode(exchange) Then
     Set lContractSpec = CreateContractSpecifier(localSymbol, _
                                                 symbol, _
                                                 exchange, _
@@ -2677,7 +2696,7 @@ End If
 If version >= 4 Then getLong "UnderConId"
 
 If version >= 5 Then
-   lContractBuilder.Description = getString("Long name")
+   lDescription = getString("Long name")
    getString "Primary exchange"
 End If
 
@@ -2703,6 +2722,8 @@ If Not ignore Then
     
     lContractBuilder.multiplier = multiplier / lContractWrapper.priceMagnifier
     lContractBuilder.TickSize = minimumTick * lContractWrapper.priceMagnifier
+    
+    lContractBuilder.Description = lDescription
 
     mContractDetailsRequest.contractWrappers.add lContractWrapper
 End If
@@ -2907,6 +2928,7 @@ Case 200    ' security definition not known
             mapEntry.OrderSubmitter.InvalidOrder mapEntry.order.tradebuildId, errorMsg
         End If
     End Select
+Case 202
     failpoint = 800
 
     On Error Resume Next
