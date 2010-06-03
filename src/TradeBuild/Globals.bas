@@ -326,7 +326,7 @@ End Function
 Public Sub GHandleFatalError( _
                 ByRef pProcName As String, _
                 ByRef pModuleName As String, _
-                Optional ByVal pFailpoint As Long)
+                Optional ByVal pFailpoint As String)
 Dim errNum As Long: errNum = Err.number
 Dim errSource As String: errSource = Err.source
 Dim errDesc As String: errDesc = Err.Description
@@ -344,6 +344,7 @@ errSource = errSource & vbCrLf & _
 Err.Raise errNum, errSource, errDesc
 
 ' NB: will never get to here so no need for Exit Sub
+Exit Sub
 
 Err:
 gTB.NotifyFatalError Err.number, Err.Description, Err.source
@@ -440,7 +441,7 @@ ElseIf TypeOf pCollection Is Enumerable Then
     Set en = enColl.Enumerator
     
     Do While en.MoveNext
-        notifyCollectionMember en.current, pSource, pListener
+        notifyCollectionMember en.Current, pSource, pListener
     Loop
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _

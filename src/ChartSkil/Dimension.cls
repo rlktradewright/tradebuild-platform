@@ -23,6 +23,9 @@ Option Explicit
 
 Private Const ModuleName                As String = "Dimension"
 
+Private Const ConfigSettingCoordSystem  As String = "&CoordSystem"
+Private Const ConfigSettingLength       As String = "&Length"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -39,6 +42,8 @@ Private mLength As Double
 
 Private mCoordSystem As CoordinateSystems
 
+Private mConfig As ConfigurationSection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -50,6 +55,32 @@ Private mCoordSystem As CoordinateSystems
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Let ConfigurationSection( _
+                ByVal Value As ConfigurationSection)
+
+Const ProcName As String = "ConfigurationSection"
+Dim failpoint As String
+On Error GoTo Err
+
+If Value Is Nothing Then
+    RemoveFromConfig
+    Set mConfig = Nothing
+    Exit Property
+End If
+
+Set mConfig = Value
+
+
+mConfig.SetSetting ConfigSettingLength, mLength
+mConfig.SetSetting ConfigSettingCoordSystem, mCoordSystem
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Property
 
 Public Property Get Length() As Double
 Length = mLength
@@ -130,6 +161,36 @@ Exit Function
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
+
+Friend Sub LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
+
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mConfig = pConfig
+mLength = mConfig.GetSetting(ConfigSettingLength, "0")
+mCoordSystem = mConfig.GetSetting(ConfigSettingCoordSystem, "0")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mConfig Is Nothing Then mConfig.Remove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 '================================================================================
 ' Helper Functions

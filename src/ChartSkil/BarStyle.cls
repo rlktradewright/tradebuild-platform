@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -38,16 +40,17 @@ Event PropertyChanged( _
 
 Private Const ModuleName                As String = "BarStyle"
 
-Private Const ConfigSettingTailThickness        As String = "&TailThickness"
-Private Const ConfigSettingOutlineThickness     As String = "&OutlineThickness"
-Private Const ConfigSettingColor                As String = "&BarColor"
-Private Const ConfigSettingUpColor              As String = "&UpColor"
-Private Const ConfigSettingDownColor            As String = "&DownColor"
-Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
-Private Const ConfigSettingSolidUpBody          As String = "&SolidUpBody"
-Private Const ConfigSettingThickness            As String = "&BarThickness"
-Private Const ConfigSettingWidth                As String = "&BarWidth"
-Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingTailThickness         As String = "&TailThickness"
+Private Const ConfigSettingOutlineThickness      As String = "&OutlineThickness"
+Private Const ConfigSettingColor                 As String = "&BarColor"
+Private Const ConfigSettingUpColor               As String = "&UpColor"
+Private Const ConfigSettingDownColor             As String = "&DownColor"
+Private Const ConfigSettingDisplayMode           As String = "&DisplayMode"
+Private Const ConfigSettingSolidUpBody           As String = "&SolidUpBody"
+Private Const ConfigSettingThickness             As String = "&BarThickness"
+Private Const ConfigSettingWidth                 As String = "&BarWidth"
+Private Const ConfigSettingIncludeInAutoscale    As String = "&IncludeInAutoscale"
+Private Const ConfigSettingLayer                 As String = "&Layer"
 
 '@================================================================================
 ' Enums
@@ -61,6 +64,8 @@ Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mStyleType As String
 Private mConfig As ConfigurationSection
 
 Private mTailThickness As Long
@@ -77,26 +82,42 @@ Private mThickness As Long
 Private mWidth As Single
 Private mIncludeInAutoscale As Boolean
 
+Private mLayer As Long
+
+Private mPropertyFlags As BarPropertyFlags
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mTailThickness = 1
-mOutlineThickness = 1
-mUpColor = vbBlack
-mDownColor = vbBlack
-mDisplayMode = BarDisplayModeCandlestick
-mSolidUpBody = False
-mThickness = 2
-mWidth = 0.6
-mColor = -1
-mIncludeInAutoscale = True
+mName = GenerateGUIDString
+mStyleType = "Bar Styles"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGraphicObjectStyle Interface Members
 '@================================================================================
+
+Private Property Let IGraphicObjectStyle_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Me.ConfigurationSection = RHS
+End Property
+
+Private Sub IGraphicObjectStyle_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Me.LoadFromConfig pConfig
+End Sub
+
+Private Property Get IGraphicObjectStyle_Name() As String
+IGraphicObjectStyle_Name = mName
+End Property
+
+Private Property Get IGraphicObjectStyle_ProgId() As String
+IGraphicObjectStyle_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IGraphicObjectStyle_StyleType() As String
+IGraphicObjectStyle_StyleType = mStyleType
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -106,19 +127,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
 
-mColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
-firePropertyChanged "Color"
+setLongProperty mColor, BarPropertyColor, Value
 
 Exit Property
 
@@ -127,33 +146,54 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+On Error GoTo Err
+
+checkPropertySet BarPropertyColor
 Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
 End If
 
-Set mConfig = value
+Set mConfig = Value
 
-mConfig.SetSetting ConfigSettingTailThickness, mTailThickness
-mConfig.SetSetting ConfigSettingOutlineThickness, mOutlineThickness
-mConfig.SetSetting ConfigSettingColor, mColor
-mConfig.SetSetting ConfigSettingUpColor, mUpColor
-mConfig.SetSetting ConfigSettingDownColor, mDownColor
-mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
-mConfig.SetSetting ConfigSettingSolidUpBody, mSolidUpBody
-mConfig.SetSetting ConfigSettingThickness, mThickness
-mConfig.SetSetting ConfigSettingWidth, mWidth
-mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStyleType, mStyleType
+
+If IsPropertySet(BarPropertyColor) Then mConfig.SetSetting ConfigSettingColor, mColor
+
+If IsPropertySet(BarPropertyDisplayMode) Then mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
+If IsPropertySet(BarPropertyDownColor) Then mConfig.SetSetting ConfigSettingDownColor, mDownColor
+
+If IsPropertySet(BarPropertyIncludeInAutoscale) Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+
+If IsPropertySet(BarPropertyLayer) Then mConfig.SetSetting ConfigSettingLayer, mLayer
+
+If IsPropertySet(BarPropertyOutlineThickness) Then mConfig.SetSetting ConfigSettingOutlineThickness, mOutlineThickness
+
+If IsPropertySet(BarPropertySolidUpBody) Then mConfig.SetSetting ConfigSettingSolidUpBody, mSolidUpBody
+
+If IsPropertySet(BarPropertyTailThickness) Then mConfig.SetSetting ConfigSettingTailThickness, mTailThickness
+If IsPropertySet(BarPropertyThickness) Then mConfig.SetSetting ConfigSettingThickness, mThickness
+
+If IsPropertySet(BarPropertyUpColor) Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
+
+If IsPropertySet(BarPropertyWidth) Then mConfig.SetSetting ConfigSettingWidth, mWidth
 
 Exit Property
 
@@ -162,14 +202,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 
 End Property
 
-Public Property Let DisplayMode(ByVal value As BarDisplayModes)
+Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
 Dim failpoint As String
 On Error GoTo Err
 
-mDisplayMode = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
-firePropertyChanged "DisplayMode"
+setLongProperty mDisplayMode, BarPropertyDisplayMode, Value
 
 Exit Property
 
@@ -178,21 +216,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
+Const ProcName As String = "DisplayMode"
+On Error GoTo Err
+
+checkPropertySet BarPropertyDisplayMode
 DisplayMode = mDisplayMode
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let DownColor(ByVal value As Long)
+Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
-mDownColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDownColor, mDownColor
-firePropertyChanged "DownColor"
+
+setLongProperty mDownColor, BarPropertyDownColor, Value
 
 Exit Property
 
@@ -201,17 +247,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get DownColor() As Long
+Const ProcName As String = "DownColor"
+On Error GoTo Err
+
+checkPropertySet BarPropertyDownColor
 DownColor = mDownColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-mIncludeInAutoscale = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-firePropertyChanged "IncludeInAutoscale"
+setBooleanProperty mIncludeInAutoscale, BarPropertyIncludeInAutoscale, Value
 
 Exit Property
 
@@ -220,17 +273,74 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+On Error GoTo Err
+
+checkPropertySet BarPropertyIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let OutlineThickness(ByVal value As Long)
+Public Property Let Layer(ByVal Value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
+
+setLongProperty mLayer, BarPropertyLayer, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+On Error GoTo Err
+
+checkPropertySet BarPropertyLayer
+Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Name(ByVal Value As String)
+Const ProcName As String = "Name"
+On Error GoTo Err
+
+If Value = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Name cannot be blank"
+End If
+
+mName = Value
+If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-mOutlineThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingOutlineThickness, mOutlineThickness
-firePropertyChanged "OutlineThickness"
+setLongProperty mOutlineThickness, BarPropertyOutlineThickness, Value
 
 Exit Property
 
@@ -239,17 +349,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get OutlineThickness() As Long
+Const ProcName As String = "OutlineThickness"
+On Error GoTo Err
+
+checkPropertySet BarPropertyOutlineThickness
 OutlineThickness = mOutlineThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let SolidUpBody(ByVal value As Boolean)
+Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
 Dim failpoint As String
 On Error GoTo Err
 
-mSolidUpBody = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingSolidUpBody, mSolidUpBody
-firePropertyChanged "SolidUpBody"
+setBooleanProperty mSolidUpBody, BarPropertySolidUpBody, Value
 
 Exit Property
 
@@ -258,17 +375,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get SolidUpBody() As Boolean
+Const ProcName As String = "SolidUpBody"
+On Error GoTo Err
+
+checkPropertySet BarPropertySolidUpBody
 SolidUpBody = mSolidUpBody
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let TailThickness(ByVal value As Long)
+Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-mTailThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTailThickness, mTailThickness
-firePropertyChanged "TailThickness"
+setLongProperty mTailThickness, BarPropertyTailThickness, Value
 
 Exit Property
 
@@ -277,17 +401,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get TailThickness() As Long
+Const ProcName As String = "TailThickness"
+On Error GoTo Err
+
+checkPropertySet BarPropertyTailThickness
 TailThickness = mTailThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Thickness(ByVal value As Long)
+Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
 Dim failpoint As String
 On Error GoTo Err
 
-mThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingThickness, mThickness
-firePropertyChanged "Thickness"
+setLongProperty mThickness, BarPropertyThickness, Value
 
 Exit Property
 
@@ -296,22 +427,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Thickness() As Long
+Const ProcName As String = "Thickness"
+On Error GoTo Err
+
+checkPropertySet BarPropertyThickness
 Thickness = mThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let UpColor(ByVal value As Long)
+Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
 
-mUpColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
-firePropertyChanged "UpColor"
+setLongProperty mUpColor, BarPropertyUpColor, Value
 
 Exit Property
 
@@ -320,17 +458,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get UpColor() As Long
+Const ProcName As String = "UpColor"
+On Error GoTo Err
+
+checkPropertySet BarPropertyUpColor
 UpColor = mUpColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Width(ByVal value As Single)
+Public Property Let Width(ByVal Value As Single)
 Const ProcName As String = "Width"
 Dim failpoint As String
 On Error GoTo Err
 
-mWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingWidth, mWidth
-firePropertyChanged "Width"
+setSingleProperty mWidth, BarPropertyWidth, Value
 
 Exit Property
 
@@ -339,15 +484,40 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Width() As Single
+Const ProcName As String = "Width"
+On Error GoTo Err
+
+checkPropertySet BarPropertyWidth
 Width = mWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Public Sub ClearProperty( _
+                ByVal pPropFlag As BarPropertyFlags)
+Const ProcName As String = "ClearProperty"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
+If Not mConfig Is Nothing Then mConfig.RemoveSetting propertyFlagToConfigSetting(pPropFlag)
+firePropertyChanged gBarPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Public Function clone() As BarStyle
-Const ProcName As String = "clone"
+Const ProcName As String = "Clone"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -369,23 +539,41 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Public Function IsPropertySet( _
+                ByVal pPropertyFlag As BarPropertyFlags) As Boolean
+                
+IsPropertySet = gIsFlagSet(mPropertyFlags, pPropertyFlag)
+
+End Function
+
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mConfig = config
-mTailThickness = mConfig.GetSetting(ConfigSettingTailThickness, "1")
-mOutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness, "1")
-mColor = mConfig.GetSetting(ConfigSettingColor, "-1")
-mUpColor = mConfig.GetSetting(ConfigSettingUpColor, CStr(vbBlack))
-mDownColor = mConfig.GetSetting(ConfigSettingDownColor, CStr(vbBlack))
-mDisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode, BarDisplayModes.BarDisplayModeCandlestick)
-mSolidUpBody = mConfig.GetSetting(ConfigSettingSolidUpBody, "False")
-mThickness = mConfig.GetSetting(ConfigSettingThickness, "2")
-mWidth = mConfig.GetSetting(ConfigSettingWidth, "0.6")
-mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale, "True")
+Set mConfig = pConfig
+mName = mConfig.GetSetting(ConfigSettingName)
+mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
+
+If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+
+If mConfig.GetAttribute(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
+If mConfig.GetAttribute(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
+
+If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+
+If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+
+If mConfig.GetAttribute(ConfigSettingOutlineThickness) <> "" Then OutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
+
+If mConfig.GetAttribute(ConfigSettingSolidUpBody) <> "" Then SolidUpBody = mConfig.GetSetting(ConfigSettingSolidUpBody)
+
+If mConfig.GetAttribute(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
+If mConfig.GetAttribute(ConfigSettingTailThickness) <> "" Then TailThickness = mConfig.GetSetting(ConfigSettingTailThickness)
+
+If mConfig.GetAttribute(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
+If mConfig.GetAttribute(ConfigSettingWidth) <> "" Then Width = mConfig.GetSetting(ConfigSettingWidth)
 
 Exit Sub
 
@@ -411,6 +599,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkPropertySet( _
+                ByVal pPropFlag As BarPropertyFlags)
+Const ProcName As String = "checkPropertySet"
+On Error GoTo Err
+
+If Not IsPropertySet(pPropFlag) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Property is not set"
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
 Dim ev As PropertyChangedEvent
@@ -422,6 +627,105 @@ On Error GoTo Err
 Set ev.Source = Me
 ev.PropertyName = Name
 RaiseEvent PropertyChanged(ev)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Function propertyFlagToConfigSetting( _
+            ByVal pPropFlag As BarPropertyFlags) As String
+Select Case pPropFlag
+Case BarPropertyColor
+    propertyFlagToConfigSetting = ConfigSettingColor
+Case BarPropertyUpColor
+    propertyFlagToConfigSetting = ConfigSettingUpColor
+Case BarPropertyDownColor
+    propertyFlagToConfigSetting = ConfigSettingDownColor
+Case BarPropertyDisplayMode
+    propertyFlagToConfigSetting = ConfigSettingDisplayMode
+Case BarPropertySolidUpBody
+    propertyFlagToConfigSetting = ConfigSettingSolidUpBody
+Case BarPropertyThickness
+    propertyFlagToConfigSetting = ConfigSettingThickness
+Case BarPropertyWidth
+    propertyFlagToConfigSetting = ConfigSettingWidth
+Case BarPropertyTailThickness
+    propertyFlagToConfigSetting = ConfigSettingTailThickness
+Case BarPropertyOutlineThickness
+    propertyFlagToConfigSetting = ConfigSettingOutlineThickness
+Case BarPropertyIncludeInAutoscale
+    propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
+Case BarPropertyLayer
+    propertyFlagToConfigSetting = ConfigSettingLayer
+End Select
+End Function
+
+Private Sub setBooleanProperty( _
+                ByRef pProp As Boolean, _
+                ByVal pPropFlag As BarPropertyFlags, _
+                ByVal Value As Boolean)
+Const ProcName As String = "setBooleanProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gBarPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setLongProperty( _
+                ByRef pProp As Long, _
+                ByVal pPropFlag As BarPropertyFlags, _
+                ByVal Value As Long)
+Const ProcName As String = "setLongProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gBarPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSingleProperty( _
+                ByRef pProp As Single, _
+                ByVal pPropFlag As BarPropertyFlags, _
+                ByVal Value As Single)
+Const ProcName As String = "setSingleProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gBarPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setPropertyFlag( _
+                ByVal flag As BarPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gSetFlag(mPropertyFlags, flag)
 
 Exit Sub
 

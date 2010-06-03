@@ -676,7 +676,7 @@ Const ProcName As String = "HScroll_Change"
 Dim failpoint As String
 On Error GoTo Err
 
-LastVisiblePeriod = Round((CLng(HScroll.value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.CurrentPeriodNumber + ChartWidth - 1))
+LastVisiblePeriod = Round((CLng(HScroll.Value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.CurrentPeriodNumber + ChartWidth - 1))
 
 Exit Sub
 
@@ -990,7 +990,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Let BarTimePeriod( _
-                ByVal value As TimePeriod)
+                ByVal Value As TimePeriod)
 Const ProcName As String = "BarTimePeriod"
 Dim failpoint As String
 On Error GoTo Err
@@ -998,11 +998,11 @@ On Error GoTo Err
 If mBarTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "BarTimePeriod has already been set"
-If value.Length < 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+If Value.Length < 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "BarTimePeriod length cannot be negative"
                                     
-Select Case value.Units
+Select Case Value.Units
 Case TimePeriodNone
 Case TimePeriodSecond
 Case TimePeriodMinute
@@ -1020,7 +1020,7 @@ Case Else
             "Invalid period unit - must be a member of the TimePeriodUnits enum"
 End Select
 
-Set mBarTimePeriod = value
+Set mBarTimePeriod = Value
 
 mBarTimePeriodSet = True
 
@@ -1043,8 +1043,8 @@ Public Property Get Autoscrolling() As Boolean
 Autoscrolling = mAutoscrolling
 End Property
 
-Public Property Let Autoscrolling(ByVal value As Boolean)
-mAutoscrolling = value
+Public Property Let Autoscrolling(ByVal Value As Boolean)
+mAutoscrolling = Value
 PropertyChanged PropNameAutoscrolling
 End Property
 
@@ -1053,12 +1053,12 @@ Attribute ChartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
 ChartBackColor = mChartBackColor
 End Property
 
-Public Property Let ChartBackColor(ByVal value As OLE_COLOR)
+Public Property Let ChartBackColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "ChartBackColor"
 Dim failpoint As String
 On Error GoTo Err
 
-mChartBackColor = value
+mChartBackColor = Value
 resizeBackground
 PropertyChanged PropNameChartBackColor
 
@@ -1120,12 +1120,12 @@ Attribute FirstVisiblePeriod.VB_MemberFlags = "400"
 FirstVisiblePeriod = mScaleLeft
 End Property
 
-Public Property Let FirstVisiblePeriod(ByVal value As Long)
+Public Property Let FirstVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "FirstVisiblePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-ScrollX value - mScaleLeft + 1
+ScrollX Value - mScaleLeft + 1
 
 Exit Property
 
@@ -1137,12 +1137,12 @@ Public Property Get HorizontalMouseScrollingAllowed() As Boolean
 HorizontalMouseScrollingAllowed = mHorizontalMouseScrollingAllowed
 End Property
 
-Public Property Let HorizontalMouseScrollingAllowed(ByVal value As Boolean)
+Public Property Let HorizontalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 Dim failpoint As String
 On Error GoTo Err
 
-mHorizontalMouseScrollingAllowed = value
+mHorizontalMouseScrollingAllowed = Value
 PropertyChanged PropNameHorizontalMouseScrollingAllowed
 
 Exit Property
@@ -1197,12 +1197,12 @@ Attribute LastVisiblePeriod.VB_MemberFlags = "400"
 LastVisiblePeriod = mYAxisPosition - 1
 End Property
 
-Public Property Let LastVisiblePeriod(ByVal value As Long)
+Public Property Let LastVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "LastVisiblePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-ScrollX value - mYAxisPosition + 1
+ScrollX Value - mYAxisPosition + 1
 
 Exit Property
 
@@ -1220,15 +1220,15 @@ Attribute PointerCrosshairsColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
 PointerCrosshairsColor = mPointerCrosshairsColor
 End Property
 
-Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
+Public Property Let PointerCrosshairsColor(ByVal Value As OLE_COLOR)
 Dim Region As ChartRegion
 Const ProcName As String = "PointerCrosshairsColor"
 Dim failpoint As String
 On Error GoTo Err
 
-mPointerCrosshairsColor = value
+mPointerCrosshairsColor = Value
 For Each Region In mRegions
-    Region.PointerCrosshairsColor = value
+    Region.PointerCrosshairsColor = Value
 Next
 PropertyChanged PropNamePointerCrosshairsColor
 
@@ -1243,15 +1243,15 @@ Attribute PointerDiscColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
 PointerDiscColor = mPointerDiscColor
 End Property
 
-Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
+Public Property Let PointerDiscColor(ByVal Value As OLE_COLOR)
 Dim Region As ChartRegion
 Const ProcName As String = "PointerDiscColor"
 Dim failpoint As String
 On Error GoTo Err
 
-mPointerDiscColor = value
+mPointerDiscColor = Value
 For Each Region In mRegions
-    Region.PointerDiscColor = value
+    Region.PointerDiscColor = Value
 Next
 PropertyChanged PropNamePointerDiscColor
 
@@ -1266,17 +1266,17 @@ Attribute PointerIcon.VB_MemberFlags = "400"
 Set PointerIcon = mPointerIcon
 End Property
 
-Public Property Let PointerIcon(ByVal value As IPictureDisp)
+Public Property Let PointerIcon(ByVal Value As IPictureDisp)
 Dim Region As ChartRegion
 
 Const ProcName As String = "PointerIcon"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then Exit Property
-If value Is mPointerIcon Then Exit Property
+If Value Is Nothing Then Exit Property
+If Value Is mPointerIcon Then Exit Property
 
-Set mPointerIcon = value
+Set mPointerIcon = Value
 
 If mPointerStyle = PointerCustom Then
     For Each Region In mRegions
@@ -1300,16 +1300,16 @@ Attribute PointerStyle.VB_ProcData.VB_Invoke_Property = ";Appearance"
 PointerStyle = mPointerStyle
 End Property
 
-Public Property Let PointerStyle(ByVal value As PointerStyles)
+Public Property Let PointerStyle(ByVal Value As PointerStyles)
 Dim Region As ChartRegion
 
 Const ProcName As String = "PointerStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = mPointerStyle Then Exit Property
+If Value = mPointerStyle Then Exit Property
 
-mPointerStyle = value
+mPointerStyle = Value
 
 If mPointerStyle = PointerCustom And mPointerIcon Is Nothing Then
     ' we'll notify the region when an icon is supplied
@@ -1399,7 +1399,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Set VerticalGridTimePeriod( _
-                ByVal value As TimePeriod)
+                ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
 Dim failpoint As String
 On Error GoTo Err
@@ -1408,10 +1408,10 @@ If mVerticalGridTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "verticalGridTimePeriod has already been set"
 
-If value.Length <= 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+If Value.Length <= 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
                                     "verticalGridTimePeriod length must be >0"
-Select Case value.Units
+Select Case Value.Units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
@@ -1425,7 +1425,7 @@ Case Else
                 "verticalGridTimePeriod Units must be a member of the TimePeriodUnits enum"
 End Select
 
-Set mVerticalGridTimePeriod = value
+Set mVerticalGridTimePeriod = Value
 mVerticalGridTimePeriodSet = True
 
 setRegionPeriodAndVerticalGridParameters
@@ -1446,8 +1446,8 @@ Public Property Get VerticalMouseScrollingAllowed() As Boolean
 VerticalMouseScrollingAllowed = mVerticalMouseScrollingAllowed
 End Property
 
-Public Property Let VerticalMouseScrollingAllowed(ByVal value As Boolean)
-mVerticalMouseScrollingAllowed = value
+Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
+mVerticalMouseScrollingAllowed = Value
 PropertyChanged PropNameVerticalMouseScrollingAllowed
 End Property
 
@@ -1461,12 +1461,12 @@ Attribute XAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
 XAxisVisible = mXAxisVisible
 End Property
 
-Public Property Let XAxisVisible(ByVal value As Boolean)
+Public Property Let XAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "XAxisVisible"
 Dim failpoint As String
 On Error GoTo Err
 
-mXAxisVisible = value
+mXAxisVisible = Value
 mRegions.ResizeY mUserResizingRegions
 XAxisPicture.Visible = mXAxisVisible
 PropertyChanged PropNameXAxisVisible
@@ -1477,12 +1477,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let XCursorTextStyle(ByVal value As TextStyle)
+Public Property Let XCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "XCursorTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-mXCursorText.LocalStyle = value
+mXCursorText.LocalStyle = Value
 
 Exit Property
 
@@ -1513,12 +1513,12 @@ Attribute YAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
 YAxisVisible = mYAxisVisible
 End Property
 
-Public Property Let YAxisVisible(ByVal value As Boolean)
+Public Property Let YAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "YAxisVisible"
 Dim failpoint As String
 On Error GoTo Err
 
-mYAxisVisible = value
+mYAxisVisible = Value
 resizeX
 PropertyChanged PropNameYAxisVisible
 
@@ -1533,18 +1533,18 @@ Attribute YAxisWidthCm.VB_ProcData.VB_Invoke_Property = ";Appearance"
 YAxisWidthCm = mYAxisWidthCm
 End Property
 
-Public Property Let YAxisWidthCm(ByVal value As Single)
+Public Property Let YAxisWidthCm(ByVal Value As Single)
 Const ProcName As String = "YAxisWidthCm"
 Dim failpoint As String
 On Error GoTo Err
 
-If value <= 0 Then
+If Value <= 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Y axis Width must be greater than 0"
 End If
 
-mYAxisWidthCm = value
+mYAxisWidthCm = Value
 resizeX
 PropertyChanged PropNameYAxisWidthCm
 
@@ -1791,7 +1791,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Sub ScrollX(ByVal value As Long)
+Public Sub ScrollX(ByVal Value As Long)
 Dim Region As ChartRegion
 
 Const ProcName As String = "ScrollX"
@@ -1799,22 +1799,22 @@ Dim failpoint As String
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="value=" & CStr(value), pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure pInfo:="value=" & CStr(Value), pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 #End If
 
-If value = 0 Then
+If Value = 0 Then
     gTracer.ExitProcedure pInfo:="", pProcedureName:="ScrollX", pProjectName:=ProjectName, pModuleName:=ModuleName
     Exit Sub
 End If
 
-If (LastVisiblePeriod + value) > _
+If (LastVisiblePeriod + Value) > _
         (mPeriods.CurrentPeriodNumber + ChartWidth - 1) Then
-    value = mPeriods.CurrentPeriodNumber + ChartWidth - 1 - LastVisiblePeriod
-ElseIf (LastVisiblePeriod + value) < 1 Then
-    value = 1 - LastVisiblePeriod
+    Value = mPeriods.CurrentPeriodNumber + ChartWidth - 1 - LastVisiblePeriod
+ElseIf (LastVisiblePeriod + Value) < 1 Then
+    Value = 1 - LastVisiblePeriod
 End If
 
-mYAxisPosition = mYAxisPosition + value
+mYAxisPosition = mYAxisPosition + Value
 mScaleLeft = calcScaleLeft
 XAxisPicture.ScaleLeft = mScaleLeft
 
@@ -2062,7 +2062,7 @@ On Error GoTo Err
 Set en = mRegions.Enumerator
 
 Do While en.MoveNext
-    Set lRegion = en.current
+    Set lRegion = en.Current
     lRegion.ClearRegion
     en.Remove
 Loop
@@ -2322,7 +2322,7 @@ If thisPeriod Is Nothing Then
     Exit Sub
 End If
 
-mXCursorText.Position = mXAxisRegion.NewPoint( _
+mXCursorText.Position = gNewPoint( _
                             PeriodNumber, _
                             0, _
                             CoordsLogical, _
@@ -2420,7 +2420,7 @@ mScaleLeft = calcScaleLeft
 mScaleHeight = -100
 mScaleTop = 100
 
-HScroll.value = 0
+HScroll.Value = 0
 
 mInitialised = True
 
@@ -2713,11 +2713,11 @@ failpoint = 400
 ' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using integers
 hscrollVal = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
 If hscrollVal > HScroll.Max Then
-    HScroll.value = HScroll.Max
+    HScroll.Value = HScroll.Max
 ElseIf hscrollVal < HScroll.Min Then
-    HScroll.value = HScroll.Min
+    HScroll.Value = HScroll.Min
 Else
-    HScroll.value = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
+    HScroll.Value = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
 End If
 
 failpoint = 500

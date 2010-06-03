@@ -176,7 +176,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_cancelTickData( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_cancelTickData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTicker.RemoveDataConsumer consumer
@@ -191,7 +191,7 @@ Private Sub IOrderSubmissionSrvcConsumer_ExecutionReport(ByVal pExecutionReport 
 Dim lExec As Execution
 
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_ExecutionReport"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -229,7 +229,7 @@ Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_NotifyEvent"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, spHandle
@@ -242,7 +242,7 @@ End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_notReady()
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_notReady"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mProviderIsReady = False
@@ -259,7 +259,7 @@ End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_OrderReport(ByVal OrderReport As TradeBuildSP.IOrderReport)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_OrderReport"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mOrders(OrderReport.TradeBuildId).SyncToOrderReport OrderReport, mKey
@@ -273,7 +273,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_OrderStatusReport(ByVal pOrderStatusReport As TradeBuildSP.IOrderStatusReport)
 Dim lOrder As Order
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_OrderStatusReport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set lOrder = mOrders.Item(pOrderStatusReport.orderId)
@@ -294,7 +294,7 @@ End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_Ready()
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_Ready"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mProviderIsReady = True
@@ -314,7 +314,7 @@ Private Sub IOrderSubmissionSrvcConsumer_rejectOrder( _
 Dim ev As NotificationEvent
 Dim lOrder As Order
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_rejectOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lOrder = mOrders.Item(orderId)
@@ -335,7 +335,7 @@ Private Sub IOrderSubmissionSrvcConsumer_requestTickData( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_requestTickData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTicker.AddDataConsumer consumer, includeMarketDepth
@@ -353,7 +353,7 @@ End Sub
 Private Sub QuoteListener_Ask(ev As QuoteEvent)
 
 Const ProcName As String = "QuoteListener_Ask"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.price = 0 Then Exit Sub ' can occur at start of Session
@@ -377,7 +377,7 @@ End Sub
 Private Sub QuoteListener_Bid(ev As QuoteEvent)
 
 Const ProcName As String = "QuoteListener_Bid"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.price = 0 Then Exit Sub  ' can occur at start of Session
@@ -421,7 +421,7 @@ End Sub
 Private Sub QuoteListener_Trade(ev As QuoteEvent)
 
 Const ProcName As String = "QuoteListener_Trade"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.price > mLastAsk Then QuoteListener_Ask ev    ' because the Ask price must have gone at least that high
@@ -447,7 +447,7 @@ Private Sub mBalancingOrderPlex_Completed()
 ' settling order
 
 Const ProcName As String = "mBalancingOrderPlex_Completed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim oc As OrderContext
@@ -471,7 +471,7 @@ Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEvent)
 Dim lContract As Contract
 
 Const ProcName As String = "mTicker_StateChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.State = TickerStates.TickerStateReady Then
@@ -497,7 +497,7 @@ End Sub
 
 Private Sub mTicker_TradingSessionEnded()
 Const ProcName As String = "mTicker_TradingSessionEnded"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mProfitIncrement = 0 Then Exit Sub
@@ -526,7 +526,7 @@ End Sub
 
 Private Sub mTicker_TradingSessionStarted()
 Const ProcName As String = "mTicker_TradingSessionStarted"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mRecovering Then Exit Sub
@@ -547,7 +547,7 @@ End Sub
 
 Public Property Get Drawdown() As Currency
 Const ProcName As String = "Drawdown"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Drawdown = mMaxProfit - mProfit
@@ -564,7 +564,7 @@ End Property
 
 Public Property Get DrawdownThisTrade() As Currency
 Const ProcName As String = "DrawdownThisTrade"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 DrawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
@@ -589,7 +589,7 @@ End Property
 
 Friend Property Let IsSimulated(ByVal value As Boolean)
 Const ProcName As String = "IsSimulated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mIsSimulated = value
@@ -629,7 +629,7 @@ End Property
 Friend Property Let orderSubmitter( _
                 ByVal value As TradeBuildSP.IOrderSubmitter)
 Const ProcName As String = "OrderSubmitter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mOrderSubmitter = value
@@ -646,7 +646,7 @@ Dim OrderContext As OrderContext
 Dim size As Long
 
 Const ProcName As String = "PendingPositionSize"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each OrderContext In mOrderContexts
@@ -671,7 +671,7 @@ End Property
 
 Public Property Let ProfitProfileIncrementTicks(ByVal value As Long)
 Const ProcName As String = "ProfitProfileIncrementTicks"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mProfitIncrementTicks = value
@@ -701,7 +701,7 @@ Dim totRisk As Currency
 Dim ocRisk As Currency
 
 Const ProcName As String = "Risk"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each OrderContext In mOrderContexts
@@ -724,7 +724,7 @@ End Property
 Friend Property Let Ticker(ByVal value As Ticker)
 
 Const ProcName As String = "Ticker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = value
@@ -744,8 +744,8 @@ Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Get Workspace() As Workspace
-Set Workspace = mWorkspaceRef.Target
+Public Property Get WorkSpace() As WorkSpace
+Set WorkSpace = mWorkspaceRef.Target
 End Property
 
 '@================================================================================
@@ -825,7 +825,7 @@ Public Sub AddStudy( _
                 ByVal study As study, _
                 ByRef valueNames() As String)
 Const ProcName As String = "AddStudy"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mStudies.Add study, valueNames
@@ -842,7 +842,7 @@ Friend Function AllowOrder(ByVal orderLong As Boolean, _
                             ByRef Message As String) As Boolean
 
 Const ProcName As String = "AllowOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mClosingPosition Then
@@ -880,7 +880,7 @@ Dim lOrderContext As OrderContext
 Dim cancellingOrders As Boolean
 
 Const ProcName As String = "ClosePositions"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mClosingPosition Then Exit Sub
@@ -915,7 +915,7 @@ End Sub
 Friend Sub Finish()
 
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = Nothing
@@ -959,7 +959,7 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pKey As String, _
-                ByVal pWorkspace As Workspace)
+                ByVal pWorkspace As WorkSpace)
 mKey = pKey
 Set mWorkspaceRef = CreateWeakReference(pWorkspace)
 End Sub
@@ -971,7 +971,7 @@ Dim size As Long
 
 
 Const ProcName As String = "NotifyOrderContextInactive"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mClosingPosition Then
@@ -1025,7 +1025,7 @@ End Sub
 Public Sub RemoveChangeListener(ByVal value As ChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -1041,7 +1041,7 @@ End Sub
 Public Sub RemoveProfitListener(ByVal value As ProfitListener)
 Dim i As Long
 Const ProcName As String = "RemoveProfitListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mProfitListeners.Count To 1 Step -1
@@ -1101,7 +1101,7 @@ Dim Profit As Currency
 Dim ev As StudyValueEvent
 
 Const ProcName As String = "calcTradeProfit"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTickSize = 0 Then Exit Sub
@@ -1197,7 +1197,7 @@ Dim msg As String
 Dim EndSession As Boolean
 
 Const ProcName As String = "checkCloseall"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
@@ -1236,7 +1236,7 @@ Private Sub fireChange( _
 Dim listener As ChangeListener
 Dim Change As ChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Change.source = Me
@@ -1257,7 +1257,7 @@ Private Sub fireProfit( _
 Dim listener As ProfitListener
 Dim Profit As ProfitEvent
 Const ProcName As String = "fireProfit"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Profit.source = Me
@@ -1325,7 +1325,7 @@ End Function
 
 Private Sub placeBalancingOrder()
 Const ProcName As String = "placeBalancingOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 GLogOrder _
@@ -1361,7 +1361,7 @@ End Sub
 Private Sub processExecution(ByVal pExec As Execution)
 
 Const ProcName As String = "processExecution"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mQuantityOutstanding = 0 Then
@@ -1433,7 +1433,7 @@ Private Sub SaveRecoveryInfo()
 Dim summary As PositionManagerSummary
 
 Const ProcName As String = "SaveRecoveryInfo"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
@@ -1455,7 +1455,7 @@ summary.ProfitProfileBarLow = mProfitProfileBarLow
 summary.ProfitProfileBarNumber = mProfitProfileBarNumber
 summary.ProfitProfileBarOpen = mProfitProfileBarOpen
 summary.ProfitProfileBarStartTime = mProfitProfileBarStartTime
-summary.WorkspaceName = Workspace.name
+summary.WorkspaceName = WorkSpace.name
 
 gTB.OrderPlexRecoveryController.SaveRecoveryInfo mKey, summary
 

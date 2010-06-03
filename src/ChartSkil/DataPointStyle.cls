@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -38,15 +40,16 @@ Event PropertyChanged( _
 
 Private Const ModuleName                As String = "DataPointStyle"
 
-Private Const ConfigSettingLineThickness        As String = "&LineThickness"
-Private Const ConfigSettingColor                As String = "&Color"
+Private Const ConfigSettingColor                As String = "&BarColor"
 Private Const ConfigSettingUpColor              As String = "&UpColor"
 Private Const ConfigSettingDownColor            As String = "&DownColor"
+Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
+Private Const ConfigSettingLineThickness        As String = "&LineThickness"
 Private Const ConfigSettingLineStyle            As String = "&LineStyle"
 Private Const ConfigSettingPointStyle           As String = "&PointStyle"
-Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
 Private Const ConfigSettingHistWidth            As String = "&HistBarWidth"
 Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
+Private Const ConfigSettingLayer                 As String = "&Layer"
 
 '@================================================================================
 ' Enums
@@ -60,6 +63,8 @@ Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mStyleType As String
 Private mConfig As ConfigurationSection
 
 Private mLineThickness As Long
@@ -71,26 +76,42 @@ Private mPointStyle As PointStyles
 Private mDisplayMode As DataPointDisplayModes
 Private mHistWidth As Single
 Private mIncludeInAutoscale As Boolean
+Private mLayer As Long
+
+Private mPropertyFlags As DataPointPropertyFlags
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mLineThickness = 1
-mColor = vbBlack
-mLineStyle = LineStyles.LineSolid
-mPointStyle = PointRound
-mDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mHistWidth = 0.6
-mDownColor = -1
-mUpColor = -1
-mIncludeInAutoscale = True
+mName = GenerateGUIDString
+mStyleType = "Data Point Styles"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGraphicObjectStyle Interface Members
 '@================================================================================
+
+Private Property Let IGraphicObjectStyle_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Me.ConfigurationSection = RHS
+End Property
+
+Private Sub IGraphicObjectStyle_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Me.LoadFromConfig pConfig
+End Sub
+
+Private Property Get IGraphicObjectStyle_Name() As String
+IGraphicObjectStyle_Name = mName
+End Property
+
+Private Property Get IGraphicObjectStyle_ProgId() As String
+IGraphicObjectStyle_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IGraphicObjectStyle_StyleType() As String
+IGraphicObjectStyle_StyleType = mStyleType
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -100,19 +121,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-If mColor = value Then Exit Property
-mColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
-firePropertyChanged "Color"
+
+setLongProperty mColor, DataPointPropertyColor, Value
 
 Exit Property
 
@@ -121,32 +140,45 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyColor
 Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
 End If
 
-Set mConfig = value
+Set mConfig = Value
 
-mConfig.SetSetting ConfigSettingLineThickness, mLineThickness
-mConfig.SetSetting ConfigSettingColor, mColor
-mConfig.SetSetting ConfigSettingUpColor, mUpColor
-mConfig.SetSetting ConfigSettingDownColor, mDownColor
-mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
-mConfig.SetSetting ConfigSettingPointStyle, mPointStyle
-mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
-mConfig.SetSetting ConfigSettingHistWidth, mHistWidth
-mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStyleType, mStyleType
+
+If IsPropertySet(DataPointPropertyLineThickness) Then mConfig.SetSetting ConfigSettingLineThickness, mLineThickness
+If IsPropertySet(DataPointPropertyColor) Then mConfig.SetSetting ConfigSettingColor, mColor
+If IsPropertySet(DataPointPropertyUpColor) Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
+If IsPropertySet(DataPointPropertyDownColor) Then mConfig.SetSetting ConfigSettingDownColor, mDownColor
+If IsPropertySet(DataPointPropertyLineStyle) Then mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
+If IsPropertySet(DataPointPropertyPointStyle) Then mConfig.SetSetting ConfigSettingPointStyle, mPointStyle
+If IsPropertySet(DataPointPropertyDisplayMode) Then mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
+If IsPropertySet(DataPointPropertyHistWidth) Then mConfig.SetSetting ConfigSettingHistWidth, mHistWidth
+If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+If IsPropertySet(DataPointPropertyLayer) Then mConfig.SetSetting ConfigSettingLayer, mLayer
 
 Exit Property
 
@@ -155,15 +187,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 
 End Property
 
-Public Property Let DisplayMode(ByVal value As DataPointDisplayModes)
+Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
 Const ProcName As String = "DisplayMode"
 Dim failpoint As String
 On Error GoTo Err
 
-If mDisplayMode = value Then Exit Property
-mDisplayMode = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDisplayMode, mDisplayMode
-firePropertyChanged "DisplayMode"
+setLongProperty mDisplayMode, DataPointPropertyDisplayMode, Value
 
 Exit Property
 
@@ -172,22 +201,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
+Const ProcName As String = "DisplayMode"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyDisplayMode
 DisplayMode = mDisplayMode
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let DownColor(ByVal value As Long)
+Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
-If mDownColor = value Then Exit Property
-mDownColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDownColor, mDownColor
-firePropertyChanged "DownColor"
+
+setLongProperty mDownColor, DataPointPropertyDownColor, Value
 
 Exit Property
 
@@ -196,23 +232,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get DownColor() As Long
+Const ProcName As String = "DownColor"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyDownColor
 DownColor = mDownColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let HistogramBarWidth(ByVal value As Single)
+Public Property Let HistogramBarWidth(ByVal Value As Single)
 Const ProcName As String = "HistogramBarWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If value <= 0 Or value > 1 Then _
+If Value <= 0 Or Value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "HistogramBarWidth must be greater than zero but not greater than 1"
 
-If mHistWidth = value Then Exit Property
-mHistWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHistWidth, mHistWidth
-firePropertyChanged "HistogramBarWidth"
+setSingleProperty mHistWidth, DataPointPropertyHistWidth, Value
 
 Exit Property
 
@@ -221,18 +263,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get HistogramBarWidth() As Single
+Const ProcName As String = "HistogramBarWidth"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyHistWidth
 HistogramBarWidth = mHistWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value Then Exit Property
-mIncludeInAutoscale = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-firePropertyChanged "IncludeInAutoscale"
+setBooleanProperty mIncludeInAutoscale, DataPointPropertyIncludeInAutoscale, Value
 
 Exit Property
 
@@ -241,18 +289,55 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineStyle(ByVal value As LineStyles)
+Public Property Let Layer(ByVal Value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
+
+setLongProperty mLayer, BarPropertyLayer, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+On Error GoTo Err
+
+checkPropertySet BarPropertyLayer
+Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mLineStyle = value Then Exit Property
-mLineStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
-firePropertyChanged "LineStyle"
+setLongProperty mLineStyle, DataPointPropertyLineStyle, Value
 
 Exit Property
 
@@ -261,18 +346,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get LineStyle() As LineStyles
+Const ProcName As String = "LineStyle"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyLineStyle
 LineStyle = mLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineThickness(ByVal value As Long)
+Public Property Let LineThickness(ByVal Value As Long)
 Const ProcName As String = "LineThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mLineThickness = value Then Exit Property
-mLineThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingLineThickness, mLineThickness
-firePropertyChanged "LineThickness"
+setLongProperty mLineThickness, DataPointPropertyLineThickness, Value
 
 Exit Property
 
@@ -281,18 +372,43 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get LineThickness() As Long
+Const ProcName As String = "LineThickness"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyLineThickness
 LineThickness = mLineThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PointStyle(ByVal value As PointStyles)
+Public Property Let Name(ByVal Value As String)
+Const ProcName As String = "Name"
+On Error GoTo Err
+
+If Value = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Name cannot be blank"
+End If
+
+mName = Value
+If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let PointStyle(ByVal Value As PointStyles)
 Const ProcName As String = "PointStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mPointStyle = value Then Exit Property
-mPointStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPointStyle, mPointStyle
-firePropertyChanged "PointStyle"
+setLongProperty mPointStyle, DataPointPropertyPointStyle, Value
 
 Exit Property
 
@@ -301,22 +417,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get PointStyle() As PointStyles
+Const ProcName As String = "PointStyle"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyPointStyle
 PointStyle = mPointStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let UpColor(ByVal value As Long)
+Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
-If mUpColor = value Then Exit Property
-mUpColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingUpColor, mUpColor
-firePropertyChanged "UpColor"
+
+setLongProperty mUpColor, DataPointPropertyUpColor, Value
 
 Exit Property
 
@@ -325,12 +448,37 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get UpColor() As Long
+Const ProcName As String = "UpColor"
+On Error GoTo Err
+
+checkPropertySet DataPointPropertyUpColor
 UpColor = mUpColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub ClearProperty( _
+                ByVal pPropFlag As DataPointPropertyFlags)
+Const ProcName As String = "ClearProperty"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
+If Not mConfig Is Nothing Then mConfig.RemoveSetting propertyFlagToConfigSetting(pPropFlag)
+firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 Public Function clone() As DataPointStyle
 Const ProcName As String = "clone"
@@ -354,23 +502,41 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Public Function IsPropertySet( _
+                ByVal pPropertyFlag As DataPointPropertyFlags) As Boolean
+                
+IsPropertySet = gIsFlagSet(mPropertyFlags, pPropertyFlag)
+
+End Function
+
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mConfig = config
-mLineThickness = mConfig.GetSetting(ConfigSettingLineThickness, "1")
-mColor = mConfig.GetSetting(ConfigSettingColor, CStr(vbBlack))
-mUpColor = mConfig.GetSetting(ConfigSettingUpColor, "-1")
-mDownColor = mConfig.GetSetting(ConfigSettingDownColor, "-1")
-mLineStyle = mConfig.GetSetting(ConfigSettingLineStyle, CStr(LineStyles.LineSolid))
-mPointStyle = mConfig.GetSetting(ConfigSettingPointStyle, CStr(PointStyles.PointRound))
-mDisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode, CStr(DataPointDisplayModes.DataPointDisplayModeLine))
-mHistWidth = mConfig.GetSetting(ConfigSettingHistWidth, "0.6")
-mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale, "True")
+Set mConfig = pConfig
+mName = mConfig.GetSetting(ConfigSettingName)
+mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
+
+If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+
+If mConfig.GetAttribute(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
+If mConfig.GetAttribute(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
+
+If mConfig.GetAttribute(ConfigSettingHistWidth) <> "" Then HistogramBarWidth = mConfig.GetSetting(ConfigSettingHistWidth)
+
+If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+
+If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+
+If mConfig.GetAttribute(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
+If mConfig.GetAttribute(ConfigSettingLineThickness) <> "" Then LineThickness = mConfig.GetSetting(ConfigSettingLineThickness)
+
+If mConfig.GetAttribute(ConfigSettingPointStyle) <> "" Then PointStyle = mConfig.GetSetting(ConfigSettingPointStyle)
+
+If mConfig.GetAttribute(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
 
 Exit Sub
 
@@ -396,6 +562,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkPropertySet( _
+                ByVal pPropFlag As DataPointPropertyFlags)
+Const ProcName As String = "checkPropertySet"
+On Error GoTo Err
+
+If Not IsPropertySet(pPropFlag) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Property is not set"
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
 Dim ev As PropertyChangedEvent
@@ -413,6 +596,127 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function propertyFlagToConfigSetting( _
+            ByVal pPropFlag As DataPointPropertyFlags) As String
+Select Case pPropFlag
+Case DataPointPropertyLineThickness
+    propertyFlagToConfigSetting = ConfigSettingLineThickness
+Case DataPointPropertyColor
+    propertyFlagToConfigSetting = ConfigSettingColor
+Case DataPointPropertyUpColor
+    propertyFlagToConfigSetting = ConfigSettingUpColor
+Case DataPointPropertyDownColor
+    propertyFlagToConfigSetting = ConfigSettingDownColor
+Case DataPointPropertyLineStyle
+    propertyFlagToConfigSetting = ConfigSettingLineStyle
+Case DataPointPropertyPointStyle
+    propertyFlagToConfigSetting = ConfigSettingPointStyle
+Case DataPointPropertyDisplayMode
+    propertyFlagToConfigSetting = ConfigSettingDisplayMode
+Case DataPointPropertyHistWidth
+    propertyFlagToConfigSetting = ConfigSettingHistWidth
+Case DataPointPropertyIncludeInAutoscale
+    propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
+End Select
+End Function
+
+Public Function gDataPointPropertyFlagToString( _
+            ByVal pPropFlag As DataPointPropertyFlags) As String
+Select Case pPropFlag
+Case DataPointPropertyLineThickness
+    gDataPointPropertyFlagToString = "LineThickness"
+Case DataPointPropertyColor
+    gDataPointPropertyFlagToString = "Color"
+Case DataPointPropertyUpColor
+    gDataPointPropertyFlagToString = "UpColor"
+Case DataPointPropertyDownColor
+    gDataPointPropertyFlagToString = "DownColor"
+Case DataPointPropertyLineStyle
+    gDataPointPropertyFlagToString = "LineStyle"
+Case DataPointPropertyPointStyle
+    gDataPointPropertyFlagToString = "PointStyle"
+Case DataPointPropertyDisplayMode
+    gDataPointPropertyFlagToString = "DisplayMode"
+Case DataPointPropertyHistWidth
+    gDataPointPropertyFlagToString = "HistWidth"
+Case DataPointPropertyIncludeInAutoscale
+    gDataPointPropertyFlagToString = "IncludeInAutoscale"
+End Select
+End Function
+
+Private Sub setBooleanProperty( _
+                ByRef pProp As Boolean, _
+                ByVal pPropFlag As DataPointPropertyFlags, _
+                ByVal Value As Boolean)
+Const ProcName As String = "setBooleanProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setLongProperty( _
+                ByRef pProp As Long, _
+                ByVal pPropFlag As DataPointPropertyFlags, _
+                ByVal Value As Long)
+Const ProcName As String = "setLongProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSingleProperty( _
+                ByRef pProp As Single, _
+                ByVal pPropFlag As DataPointPropertyFlags, _
+                ByVal Value As Single)
+Const ProcName As String = "setSingleProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setPropertyFlag( _
+                ByVal flag As DataPointPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gSetFlag(mPropertyFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+
 
 
 

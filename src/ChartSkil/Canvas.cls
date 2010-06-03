@@ -130,12 +130,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let MouseIcon(ByVal value As IPictureDisp)
+Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "MouseIcon"
 Dim failpoint As String
 On Error GoTo Err
 
-mSurface.MouseIcon = value
+mSurface.MouseIcon = Value
 
 Exit Property
 
@@ -143,12 +143,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let MousePointer(ByVal value As VBRUN.MousePointerConstants)
+Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
 Const ProcName As String = "MousePointer"
 Dim failpoint As String
 On Error GoTo Err
 
-mSurface.MousePointer = value
+mSurface.MousePointer = Value
 
 Exit Property
 
@@ -169,12 +169,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let RegionType(ByVal value As RegionTypes)
+Friend Property Let RegionType(ByVal Value As RegionTypes)
 Const ProcName As String = "RegionType"
 Dim failpoint As String
 On Error GoTo Err
 
-mRegionType = value
+mRegionType = Value
 
 Exit Property
 
@@ -182,12 +182,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Surface(ByVal value As PictureBox)
+Friend Property Let Surface(ByVal Value As PictureBox)
 Const ProcName As String = "Surface"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mSurface = value
+Set mSurface = Value
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
 
 Exit Property
@@ -209,8 +209,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Viewport(ByVal value As Viewport)
-Set mViewport = value
+Friend Property Let Viewport(ByVal Value As Viewport)
+Set mViewport = Value
 End Property
 
 Friend Property Get Width() As Double
@@ -295,7 +295,7 @@ On Error GoTo Err
 applyPenSettings
 applyFillSettings
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
-mSurface.Circle (centre.XLogical, centre.yLogical), radius
+mSurface.Circle (centre.XLogical(mViewport), centre.yLogical(mViewport)), radius
 
 Exit Sub
 
@@ -330,7 +330,7 @@ On Error GoTo Err
 
 applyPenSettings
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
-mSurface.PSet (p.XLogical, p.yLogical)
+mSurface.PSet (p.XLogical(mViewport), p.yLogical(mViewport))
 
 Exit Sub
 
@@ -387,10 +387,10 @@ Dim lTRect As TRectangle
 Dim failpoint As String
 On Error GoTo Err
 
-lTRect.Left = p1.XLogical
-lTRect.Bottom = p1.yLogical
-lTRect.Right = p2.XLogical
-lTRect.Top = p2.yLogical
+lTRect.Left = p1.XLogical(mViewport)
+lTRect.Bottom = p1.yLogical(mViewport)
+lTRect.Right = p2.XLogical(mViewport)
+lTRect.Top = p2.yLogical(mViewport)
 RectValidate lTRect
 
 DrawRectangleFromTRectangle lTRect
@@ -440,7 +440,6 @@ End Sub
 
 Public Sub DrawText( _
                 ByVal pText As String, _
-                ByRef pLocation As TPoint, _
                 ByRef pClippingRect As TRectangle, _
                 ByVal pJustification As TextJustifyModes, _
                 ByVal pMultiLine As Boolean, _
@@ -448,8 +447,8 @@ Public Sub DrawText( _
                 ByVal pExpandTabs As Boolean, _
                 ByVal pTabWidth As Long, _
                 ByVal pWordWrap As Boolean, _
-                ByVal pLeftMargin As DimensionX, _
-                ByVal pRightMargin As DimensionX)
+                ByVal pLeftMargin As Dimension, _
+                ByVal pRightMargin As Dimension)
 Dim textLines() As String
 Dim i As Long
 Dim clipRect As RECT
@@ -470,8 +469,8 @@ clipRect = mViewport.ConvertTRectangleToRect(pClippingRect)
     
 dtp.cbSize = Len(dtp)
 dtp.iTabLength = pTabWidth
-If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.XLogical)
-If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.XLogical)
+If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.LengthLogicalX(mViewport))
+If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.LengthLogicalX(mViewport))
 
 res = User32.DrawTextEx(mSurface.hDC, _
                         StrPtr(pText), _
@@ -500,17 +499,17 @@ Set mSurface = Nothing
 Set mViewport = Nothing
 End Sub
 
-Public Function GetTextDimensions( _
+Public Function GetTextSize( _
                 ByVal pText As String, _
-                ByRef pSize As Dimension, _
+                ByRef pSize As Size, _
                 ByVal pJustification As TextJustifyModes, _
                 ByVal pMultiLine As Boolean, _
                 ByVal pEllipsis As EllipsisModes, _
                 ByVal pExpandTabs As Boolean, _
                 ByVal pTabWidth As Long, _
                 ByVal pWordWrap As Boolean, _
-                ByVal pLeftMargin As DimensionX, _
-                ByVal pRightMargin As DimensionX) As Dimension
+                ByVal pLeftMargin As Dimension, _
+                ByVal pRightMargin As Dimension) As Size
 Dim textLines() As String
 Dim i As Long
 Dim clipRect As RECT
@@ -519,7 +518,7 @@ Dim dtp As DRAWTEXTPARAMS
 Dim sizeHeight As Long
 Dim sizeWidth As Long
 
-Const ProcName As String = "GetTextDimensions"
+Const ProcName As String = "GetTextSize"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -530,8 +529,8 @@ mSurface.ForeColor = mTextColor
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
 
 If Not pSize Is Nothing Then
-    sizeWidth = mViewport.ConvertLogicalToPixelsX(pSize.XLogical)
-    sizeHeight = mViewport.ConvertLogicalToPixelsY(pSize.yLogical)
+    sizeWidth = mViewport.ConvertLogicalToPixelsX(pSize.WidthLogical(mViewport))
+    sizeHeight = mViewport.ConvertLogicalToPixelsY(pSize.HeightLogical(mViewport))
     clipRect.Right = sizeWidth
     clipRect.Bottom = sizeHeight
 Else
@@ -541,8 +540,8 @@ End If
     
 dtp.cbSize = Len(dtp)
 dtp.iTabLength = pTabWidth
-If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.XLogical)
-If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.XLogical)
+If Not pLeftMargin Is Nothing Then dtp.iLeftMargin = mViewport.ConvertLogicalToPixelsX(pLeftMargin.LengthLogicalX(mViewport))
+If Not pLeftMargin Is Nothing Then dtp.iRightMargin = mViewport.ConvertLogicalToPixelsX(pRightMargin.LengthLogicalX(mViewport))
 
 res = User32.DrawTextEx(mSurface.hDC, _
                         StrPtr(pText), _
@@ -561,7 +560,7 @@ If Not pSize Is Nothing Then
     If sizeWidth <> 0 Then clipRect.Right = sizeWidth
 End If
 
-Set GetTextDimensions = mViewport.NewDimension(mViewport.ConvertPixelsToLogicalX(clipRect.Right), _
+Set GetTextSize = gNewSize(mViewport.ConvertPixelsToLogicalX(clipRect.Right), _
                                             mViewport.ConvertPixelsToLogicalY(clipRect.Bottom), _
                                             CoordsLogical, _
                                             CoordsLogical)
@@ -759,13 +758,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function TextHeight(ByVal value As String) As Double
+Public Function TextHeight(ByVal Value As String) As Double
 Const ProcName As String = "TextHeight"
 Dim failpoint As String
 On Error GoTo Err
 
 setfont
-TextHeight = Abs(mSurface.TextHeight(value))
+TextHeight = Abs(mSurface.TextHeight(Value))
 
 Exit Function
 
@@ -773,13 +772,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function TextWidth(ByVal value As String) As Double
+Public Function TextWidth(ByVal Value As String) As Double
 Const ProcName As String = "TextWidth"
 Dim failpoint As String
 On Error GoTo Err
 
 setfont
-TextWidth = mSurface.TextWidth(value)
+TextWidth = mSurface.TextWidth(Value)
 
 Exit Function
 
@@ -787,7 +786,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Function ZOrder( _
+Friend Sub ZOrder( _
                 ByVal Position As Integer)
 Const ProcName As String = "ZOrder"
 Dim failpoint As String
@@ -795,11 +794,11 @@ On Error GoTo Err
 
 mSurface.ZOrder Position
 
-Exit Function
+Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
+End Sub
 
 '================================================================================
 ' Helper Functions

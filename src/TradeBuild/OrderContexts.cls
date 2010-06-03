@@ -99,7 +99,7 @@ End Sub
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Count = mOrderContexts.Count
@@ -117,7 +117,7 @@ End Property
 Friend Property Let Enabled(ByVal value As Boolean)
 Dim oc As OrderContext
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mEnabled = value
@@ -138,7 +138,7 @@ End Property
 Friend Property Let IsSimulated(ByVal value As Boolean)
 Dim oc As OrderContext
 Const ProcName As String = "IsSimulated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mIsSimulated = value
@@ -160,7 +160,7 @@ Friend Property Let orderSubmitter( _
                 ByVal value As TradeBuildSP.IOrderSubmitter)
 Dim lOrderContext As OrderContext
 Const ProcName As String = "OrderSubmitter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mOrderSubmitter = value
@@ -177,7 +177,7 @@ End Property
 Friend Property Let ProviderReady(ByVal value As Boolean)
 Dim lOrderContext As OrderContext
 Const ProcName As String = "ProviderReady"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mProviderReady = value
@@ -194,7 +194,7 @@ End Property
 Friend Property Let Ticker(ByVal value As Ticker)
 Dim lOrderContext As OrderContext
 Const ProcName As String = "Ticker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = value
@@ -214,7 +214,7 @@ End Property
 
 Public Function Add(ByVal name As String) As OrderContext
 Const ProcName As String = "Add"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Add = New OrderContext
@@ -238,7 +238,7 @@ Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -255,7 +255,7 @@ Friend Sub Finish()
 Dim OrderContext As OrderContext
 
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = Nothing
@@ -281,7 +281,7 @@ End Sub
 Public Function Item(index As Variant) As OrderContext
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Item = mOrderContexts(index)
@@ -296,7 +296,7 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set NewEnum = mOrderContexts.[_NewEnum]
@@ -310,7 +310,7 @@ End Function
 Public Sub Remove( _
                 ByVal pOrderContext As OrderContext)
 Const ProcName As String = "Remove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mOrderContexts.Remove pOrderContext.name
@@ -325,7 +325,7 @@ End Sub
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -348,7 +348,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me

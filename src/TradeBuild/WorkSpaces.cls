@@ -87,12 +87,12 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function Add(ByVal name As String) As Workspace
+Public Function Add(ByVal name As String) As WorkSpace
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set Add = New Workspace
+Set Add = New WorkSpace
 Add.name = name
 mWorkSpaces.Add Add, name
 fireChange CollItemAdded, Add
@@ -106,7 +106,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -119,10 +119,10 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function Item(index As Variant) As Workspace
+Public Function Item(index As Variant) As WorkSpace
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mWorkSpaces(index)
@@ -139,9 +139,9 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mWorkSpaces.[_NewEnum]
 End Function
 
-Public Sub Remove(ByVal pWorkspace As Workspace)
+Public Sub Remove(ByVal pWorkspace As WorkSpace)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mWorkSpaces.Remove pWorkspace.name
@@ -156,7 +156,7 @@ End Sub
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -175,11 +175,11 @@ End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Workspace)
+                ByVal affectedObject As WorkSpace)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.source = Me

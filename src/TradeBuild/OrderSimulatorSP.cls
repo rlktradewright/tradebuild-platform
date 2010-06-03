@@ -173,7 +173,7 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
 Dim orderSubmitter As SimulatedOrderSubmitter
 
 Const ProcName As String = "IOrderSubmissionSrvcProvider_CreateOrderSubmitter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set orderSubmitter = New SimulatedOrderSubmitter

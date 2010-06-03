@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -68,6 +70,8 @@ Private Const ConfigSettingBackGradientFillColors       As String = "&BackGradie
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mStyleType As String
 Private mConfig As ConfigurationSection
 
 ' indicates whether there is a grid, not whether it
@@ -103,6 +107,9 @@ Attribute mYCursorTextStyle.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
+mName = GenerateGUIDString
+mStyleType = "Chart Region Styles"
+
 setInitialGridLineStyle
 setInitialGridTextStyle
 setInitialSessionEndGridLineStyle
@@ -123,8 +130,28 @@ mBackGradientFillColors(0) = vbWhite
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGraphicObjectStyle Interface Members
 '@================================================================================
+
+Private Property Let IGraphicObjectStyle_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Me.ConfigurationSection = RHS
+End Property
+
+Private Sub IGraphicObjectStyle_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Me.LoadFromConfig pConfig
+End Sub
+
+Private Property Get IGraphicObjectStyle_Name() As String
+IGraphicObjectStyle_Name = mName
+End Property
+
+Private Property Get IGraphicObjectStyle_ProgId() As String
+IGraphicObjectStyle_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IGraphicObjectStyle_StyleType() As String
+IGraphicObjectStyle_StyleType = mStyleType
+End Property
 
 '@================================================================================
 ' mGridLineStyle Event Handlers
@@ -181,12 +208,12 @@ Public Property Get Autoscaling() As Boolean
 Autoscaling = mAutoscaling
 End Property
 
-Public Property Let Autoscaling(ByVal value As Boolean)
+Public Property Let Autoscaling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscaling"
 Dim failpoint As String
 On Error GoTo Err
 
-mAutoscaling = value
+mAutoscaling = Value
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingAutoscaling, mAutoscaling
 firePropertyChanged "Autoscaling"
 
@@ -200,13 +227,13 @@ Public Property Get BackColor() As Long
 BackColor = mBackGradientFillColors(0)
 End Property
 
-Public Property Let BackColor(ByVal value As Long)
+Public Property Let BackColor(ByVal Value As Long)
 Const ProcName As String = "BackColor"
 Dim failpoint As String
 On Error GoTo Err
 
 ReDim mBackGradientFillColors(0) As Long
-mBackGradientFillColors(0) = value
+mBackGradientFillColors(0) = Value
 If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
 firePropertyChanged "BackColor"
 
@@ -220,7 +247,7 @@ Public Property Get BackGradientFillColors() As Long()
 BackGradientFillColors = mBackGradientFillColors
 End Property
 
-Public Property Let BackGradientFillColors(ByRef value() As Long)
+Public Property Let BackGradientFillColors(ByRef Value() As Long)
 Dim numColors As Long
 
 Const ProcName As String = "BackGradientFillColors"
@@ -228,7 +255,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 On Error Resume Next
-numColors = UBound(value) + 1
+numColors = UBound(Value) + 1
 On Error GoTo Err
 
 If numColors = 0 Then
@@ -248,7 +275,7 @@ If numColors > 5 Then
             "At most 5 background gradient fill colors may be supplied"
 End If
 
-mBackGradientFillColors = value
+mBackGradientFillColors = Value
 
 If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
 
@@ -261,19 +288,22 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
 End If
 
-Set mConfig = value
+Set mConfig = Value
+
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStyleType, mStyleType
 
 mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
 mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
@@ -298,16 +328,35 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
+Public Property Let CursorSnapsToTickBoundaries(ByVal Value As Boolean)
+Const ProcName As String = "CursorSnapsToTickBoundaries"
+Dim failpoint As String
+On Error GoTo Err
+
+mCursorSnapsToTickBoundaries = Value
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
+firePropertyChanged "CursorSnapsToTickBoundaries"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get CursorSnapsToTickBoundaries() As Boolean
+CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+End Property
+
 Public Property Get GridlineSpacingY() As Double
 GridlineSpacingY = mGridlineSpacingY
 End Property
 
-Public Property Let GridlineSpacingY(ByVal value As Double)
+Public Property Let GridlineSpacingY(ByVal Value As Double)
 Const ProcName As String = "GridlineSpacingY"
 Dim failpoint As String
 On Error GoTo Err
 
-mGridlineSpacingY = value
+mGridlineSpacingY = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
 firePropertyChanged "GridlineSpacingY"
 
@@ -321,12 +370,12 @@ Public Property Get GridLineStyle() As LineStyle
 Set GridLineStyle = mGridLineStyle
 End Property
 
-Public Property Let GridLineStyle(ByVal value As LineStyle)
+Public Property Let GridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "GridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mGridLineStyle = value
+Set mGridLineStyle = Value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
 firePropertyChanged "GridLineStyle"
 
@@ -340,12 +389,12 @@ Public Property Get GridTextStyle() As TextStyle
 Set GridTextStyle = mGridTextStyle
 End Property
 
-Public Property Let GridTextStyle(ByVal value As TextStyle)
+Public Property Let GridTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "GridTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mGridTextStyle = value
+Set mGridTextStyle = Value
 If Not mConfig Is Nothing Then mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
 firePropertyChanged "GridTextStyle"
 
@@ -397,12 +446,12 @@ Public Property Get IntegerYScale() As Boolean
 IntegerYScale = mIntegerYScale
 End Property
 
-Public Property Let IntegerYScale(ByVal value As Boolean)
+Public Property Let IntegerYScale(ByVal Value As Boolean)
 Const ProcName As String = "IntegerYScale"
 Dim failpoint As String
 On Error GoTo Err
 
-mIntegerYScale = value
+mIntegerYScale = Value
 If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingIntegerYScale, mIntegerYScale
 firePropertyChanged "IntegerYScale"
 
@@ -416,12 +465,12 @@ Public Property Get MinimumHeight() As Double
 MinimumHeight = mMinimumHeight
 End Property
 
-Public Property Let MinimumHeight(ByVal value As Double)
+Public Property Let MinimumHeight(ByVal Value As Double)
 Const ProcName As String = "MinimumHeight"
 Dim failpoint As String
 On Error GoTo Err
 
-mMinimumHeight = value
+mMinimumHeight = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
 firePropertyChanged "MinimumHeight"
 
@@ -431,14 +480,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let CursorSnapsToTickBoundaries(ByVal value As Boolean)
-Const ProcName As String = "CursorSnapsToTickBoundaries"
-Dim failpoint As String
+Public Property Let Name(ByVal Value As String)
+Const ProcName As String = "Name"
 On Error GoTo Err
 
-mCursorSnapsToTickBoundaries = value
-If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
-firePropertyChanged "CursorSnapsToTickBoundaries"
+If Value = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Name cannot be blank"
+End If
+
+mName = Value
+If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
 
 Exit Property
 
@@ -446,20 +499,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get CursorSnapsToTickBoundaries() As Boolean
-CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
-End Property
-
 Public Property Get SessionEndGridLineStyle() As LineStyle
 Set SessionEndGridLineStyle = mSessionEndGridLineStyle
 End Property
 
-Public Property Let SessionEndGridLineStyle(ByVal value As LineStyle)
+Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionEndGridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mSessionEndGridLineStyle = value
+Set mSessionEndGridLineStyle = Value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
 firePropertyChanged "SessionEndGridLineStyle"
 
@@ -473,12 +522,12 @@ Public Property Get SessionStartGridLineStyle() As LineStyle
 Set SessionStartGridLineStyle = mSessionStartGridLineStyle
 End Property
 
-Public Property Let SessionStartGridLineStyle(ByVal value As LineStyle)
+Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionStartGridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mSessionStartGridLineStyle = value
+Set mSessionStartGridLineStyle = Value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 firePropertyChanged "SessionStartGridLineStyle"
 
@@ -492,12 +541,12 @@ Public Property Get YAxisTextStyle() As TextStyle
 Set YAxisTextStyle = mYAxisTextStyle
 End Property
 
-Public Property Let YAxisTextStyle(ByVal value As TextStyle)
+Public Property Let YAxisTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YAxisTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mYAxisTextStyle = value
+Set mYAxisTextStyle = Value
 If Not mConfig Is Nothing Then mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
 firePropertyChanged "YAxisTextStyle"
 
@@ -511,12 +560,12 @@ Public Property Get YCursorTextStyle() As TextStyle
 Set YCursorTextStyle = mYCursorTextStyle
 End Property
 
-Public Property Let YCursorTextStyle(ByVal value As TextStyle)
+Public Property Let YCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YCursorTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mYCursorTextStyle = value
+Set mYCursorTextStyle = Value
 If Not mConfig Is Nothing Then mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
 firePropertyChanged "YCursorTextStyle"
 
@@ -530,12 +579,12 @@ Public Property Get YScaleQuantum() As Double
 YScaleQuantum = mYScaleQuantum
 End Property
 
-Public Property Let YScaleQuantum(ByVal value As Double)
+Public Property Let YScaleQuantum(ByVal Value As Double)
 Const ProcName As String = "YScaleQuantum"
 Dim failpoint As String
 On Error GoTo Err
 
-mYScaleQuantum = value
+mYScaleQuantum = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYScaleQuantum, mYScaleQuantum
 firePropertyChanged "YScaleQuantum"
 
@@ -578,7 +627,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
 Dim ar() As String
 Dim i As Long
 
@@ -586,7 +635,7 @@ Const ProcName As String = "LoadFromConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mConfig = config
+Set mConfig = pConfig
 
 getGridLineStyleFromConfig
 getGridTextStyleFromConfig
@@ -595,14 +644,16 @@ getSessionStartGridLineStyleFromConfig
 getYAxisTextStyleFromConfig
 getYCursorTextStyleFromConfig
 
-mHasGrid = CBool(mConfig.GetSetting(ConfigSettingHasGrid, "True"))
-mHasGridText = CBool(mConfig.GetSetting(ConfigSettingHasGridText, "False"))
-mAutoscaling = CBool(mConfig.GetSetting(ConfigSettingAutoscaling, "True"))
-mIntegerYScale = CBool(mConfig.GetSetting(ConfigSettingIntegerYScale, "False"))
-mYScaleQuantum = CDbl(mConfig.GetSetting(ConfigSettingYScaleQuantum, "0.01"))
-mGridlineSpacingY = CDbl(mConfig.GetSetting(ConfigSettingGridlineSpacingY, "1.8"))
-mMinimumHeight = CDbl(mConfig.GetSetting(ConfigSettingMinimumHeight, "0"))
-mCursorSnapsToTickBoundaries = CBool(mConfig.GetSetting(ConfigSettingCursorSnapsToTickBoundaries, "True"))
+mName = mConfig.GetSetting(ConfigSettingName)
+mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
+HasGrid = CBool(mConfig.GetSetting(ConfigSettingHasGrid, "True"))
+HasGridText = CBool(mConfig.GetSetting(ConfigSettingHasGridText, "False"))
+Autoscaling = CBool(mConfig.GetSetting(ConfigSettingAutoscaling, "True"))
+IntegerYScale = CBool(mConfig.GetSetting(ConfigSettingIntegerYScale, "False"))
+YScaleQuantum = CDbl(mConfig.GetSetting(ConfigSettingYScaleQuantum, "0.01"))
+GridlineSpacingY = CDbl(mConfig.GetSetting(ConfigSettingGridlineSpacingY, "1.8"))
+MinimumHeight = CDbl(mConfig.GetSetting(ConfigSettingMinimumHeight, "0"))
+CursorSnapsToTickBoundaries = CBool(mConfig.GetSetting(ConfigSettingCursorSnapsToTickBoundaries, "True"))
 
 ar = Split(mConfig.GetSetting(ConfigSettingBackGradientFillColors), ",")
 ReDim mBackGradientFillColors(UBound(ar())) As Long
@@ -911,5 +962,4 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
-
 

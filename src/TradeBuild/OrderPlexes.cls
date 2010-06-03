@@ -81,7 +81,7 @@ End Sub
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Count = mOrderPlexes.Count
@@ -99,7 +99,7 @@ End Property
 Friend Function Add( _
                 ByVal pOrderPlex As orderPlex) As orderPlex
 Const ProcName As String = "Add"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Add = pOrderPlex
@@ -115,7 +115,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -151,7 +151,7 @@ End Function
 Public Function Item( _
                 index As Variant) As orderPlex
 Const ProcName As String = "Item"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If IsObject(index) Then
@@ -175,7 +175,7 @@ End Function
 Public Sub Remove( _
                 ByVal pOrderPlex As orderPlex)
 Const ProcName As String = "Remove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mOrderPlexes.Remove pOrderPlex.Key
@@ -190,7 +190,7 @@ End Sub
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -211,7 +211,7 @@ Private Function findOrderPlexFromOrder(ByVal pOrder As Order) As orderPlex
 Dim op As orderPlex
 
 Const ProcName As String = "findOrderPlexFromOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each op In mOrderPlexes
@@ -233,7 +233,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me

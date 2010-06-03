@@ -278,7 +278,7 @@ End Property
 
 Public Property Let AllOrNone(ByVal value As Boolean)
 Const ProcName As String = "allOrNone"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttAllOrNone
@@ -306,7 +306,7 @@ End Property
 
 Public Property Let BlockOrder(value As Boolean)
 Const ProcName As String = "blockOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttBlockOrder
@@ -338,7 +338,7 @@ End Property
 
 Public Property Let DiscretionaryAmount(ByVal value As Double)
 Const ProcName As String = "discretionaryAmount"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDiscretionaryAmount
@@ -358,7 +358,7 @@ End Property
 
 Public Property Let DisplaySize(ByVal value As Long)
 Const ProcName As String = "displaySize"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDisplaySize
@@ -378,7 +378,7 @@ End Property
 
 Public Property Let ETradeOnly(ByVal value As Boolean)
 Const ProcName As String = "eTradeOnly"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttETradeOnly
@@ -406,7 +406,7 @@ End Property
 
 Public Property Let FirmQuoteOnly(ByVal value As Boolean)
 Const ProcName As String = "firmQuoteOnly"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly
@@ -426,7 +426,7 @@ End Property
 
 Public Property Let GoodAfterTime(ByVal value As Date)
 Const ProcName As String = "goodAfterTime"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime
@@ -446,7 +446,7 @@ End Property
 
 Public Property Let GoodAfterTimeTZ(ByVal value As String)
 Const ProcName As String = "goodAfterTimeTZ"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ
@@ -466,7 +466,7 @@ End Property
 
 Public Property Let GoodTillDate(ByVal value As Date)
 Const ProcName As String = "goodTillDate"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate
@@ -486,7 +486,7 @@ End Property
 
 Public Property Let GoodTillDateTZ(ByVal value As String)
 Const ProcName As String = "goodTillDateTZ"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ
@@ -506,7 +506,7 @@ End Property
 
 Public Property Let Hidden(value As Boolean)
 Const ProcName As String = "hidden"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttHidden
@@ -534,7 +534,7 @@ End Property
 
 Public Property Let IgnoreRegularTradingHours(value As Boolean)
 Const ProcName As String = "ignoreRegularTradingHours"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH
@@ -555,7 +555,8 @@ End Property
 Friend Property Get IsActive() As Boolean
 IsActive = (mStatus = OrderStatusPendingSubmit) Or _
         (mStatus = OrderStatusPreSubmitted) Or _
-        (mStatus = OrderStatusSubmitted)
+        (mStatus = OrderStatusSubmitted) Or _
+        (mStatus = OrderStatusCancelling)
 End Property
 
 Public Property Get IsDirty() As Boolean
@@ -588,7 +589,7 @@ End Property
 
 Public Property Let MinimumQuantity(ByVal value As Long)
 Const ProcName As String = "minimumQuantity"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity
@@ -608,7 +609,7 @@ End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
 Const ProcName As String = "NbboPriceCap"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap
@@ -652,7 +653,7 @@ End Property
 
 Friend Property Let OrderType(ByVal value As OrderTypes)
 Const ProcName As String = "orderType"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrderType
@@ -675,7 +676,7 @@ End Property
 
 Public Property Let Origin(ByVal value As OrderOrigins)
 Const ProcName As String = "origin"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrigin
@@ -695,7 +696,7 @@ End Property
 
 Public Property Let OriginatorRef(ByVal value As String)
 Const ProcName As String = "originatorRef"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef
@@ -715,7 +716,7 @@ End Property
 
 Public Property Let OverrideConstraints(ByVal value As Boolean)
 Const ProcName As String = "overrideConstraints"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints
@@ -735,7 +736,7 @@ End Property
 
 Public Property Let PercentOffset(ByVal value As Double)
 Const ProcName As String = "percentOffset"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttPercentOffset
@@ -764,7 +765,7 @@ End Property
 
 Public Property Let Quantity(ByVal value As Long)
 Const ProcName As String = "quantity"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttQuantity
@@ -801,7 +802,7 @@ End Property
 
 Public Property Let SettlingFirm(value As String)
 Const ProcName As String = "settlingFirm"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm
@@ -829,7 +830,7 @@ End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
 Const ProcName As String = "StopTriggerMethod"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod
@@ -852,7 +853,7 @@ End Property
 
 Public Property Let SweepToFill(value As Boolean)
 Const ProcName As String = "SweepToFill"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSweepToFill
@@ -872,7 +873,7 @@ End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
 Const ProcName As String = "Ticker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = value
@@ -890,7 +891,7 @@ End Property
 
 Public Property Let TimeInForce(ByVal value As OrderTifs)
 Const ProcName As String = "timeInForce"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not GIsValidTIF(value) Then
@@ -931,7 +932,7 @@ End Property
 
 Public Function Clone() As Order
 Const ProcName As String = "clone"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Clone = New Order
@@ -954,7 +955,7 @@ Friend Sub NotifyFill( _
                 ByRef persistenceKey As String)
 
 Const ProcName As String = "NotifyFill"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mContract Is Nothing Then
@@ -997,7 +998,7 @@ End Sub
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = Nothing
@@ -1014,7 +1015,7 @@ Public Function IsAttributeModifiable( _
                 ByVal attributeId As OrderAttributeIds) As Boolean
 
 Const ProcName As String = "isAttributeModifiable"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
@@ -1116,7 +1117,7 @@ End Function
 
 Public Function IsModifiable() As Boolean
 Const ProcName As String = "isModifiable"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mStatus <> OrderStatuses.OrderStatusCancelled And _
@@ -1134,7 +1135,7 @@ Friend Sub SaveRecoveryInfo(pKey As String)
 Dim summary As OrderSummary
 
 Const ProcName As String = "SaveRecoveryInfo"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsSimulated Then Exit Sub
@@ -1194,7 +1195,7 @@ End Sub
 '@/
 Friend Sub setClean()
 Const ProcName As String = "setClean"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mIsDirty = False
@@ -1214,7 +1215,7 @@ End Sub
 '@/
 Friend Sub syncToMe(ByVal TargetOrder As Order)
 Const ProcName As String = "syncToMe"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With TargetOrder
@@ -1272,7 +1273,7 @@ Friend Sub SyncToOrderReport( _
 Dim changed As Boolean
 
 Const ProcName As String = "SyncToOrderReport"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With OrderReport
@@ -1328,7 +1329,7 @@ Friend Sub UpdateStatus( _
                 ByRef persistenceKey As String)
 
 Const ProcName As String = "UpdateStatus"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pStatus <> mStatus Then
@@ -1352,7 +1353,7 @@ Private Sub attributeValueNotSupported( _
                 ByVal pAttribute As OrderAttributeIds, _
                 ByVal value As Variant)
 Const ProcName As String = "attributeValueNotSupported"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1368,7 +1369,7 @@ End Sub
 Private Sub checkAttributeModificationPermitted( _
                 ByVal attributeId As OrderAttributeIds)
 Const ProcName As String = "checkAttributeModificationPermitted"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not IsAttributeModifiable(attributeId) Then
@@ -1396,12 +1397,12 @@ End If
 End Function
 
 ''
-' Set the 'dirty' flag, and raise a Dirty event if one has not alReady
+' Set the 'dirty' flag, and raise a Dirty event if one has not already
 ' been raised.
 '@/
 Private Sub setDirty()
 Const ProcName As String = "setDirty"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mIsDirty Then

@@ -84,7 +84,7 @@ Do While mGraphObjSeries.Count <> 0
     failpoint = 200
 
     ' we remove the latest object first, since later objects may have references to earlier
-    ' objects, so that remove the earliest first would mean they can't actually be
+    ' objects, so that removing the earliest first would mean they can't actually be
     ' terminated
     If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
     
@@ -111,8 +111,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
-Set mTaskContext = value
+Private Property Let Task_TaskContext(ByVal Value As TWUtilities30.TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_TaskName() As String

@@ -61,11 +61,15 @@ Private Const ModuleName                            As String = "IGraphicObjectS
 '@================================================================================
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
                 
 End Property
 
 Public Property Get Name() As String
+
+End Property
+
+Public Property Get ProgId() As String
 
 End Property
 
@@ -78,7 +82,7 @@ End Property
 '@================================================================================
 
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
         
 End Sub
 

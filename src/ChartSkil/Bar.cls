@@ -35,7 +35,6 @@ Implements IGraphicObject
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                As String = "Bar"
 
 '================================================================================
@@ -56,6 +55,8 @@ Private mTimestamp As Date
 
 Private WithEvents mLocalStyle As BarStyle
 Attribute mLocalStyle.VB_VarHelpID = -1
+Private mLocalStyleNoEvents As BarStyle
+Attribute mLocalStyleNoEvents.VB_VarHelpID = -1
 
 Private mTailThickness As Long
 Private mOutlineThickness As Long
@@ -89,7 +90,7 @@ Private mBarSemiWidth As Single ' half the Width of the bar - this actually depe
                                 ' on the bar display mode, rather than being simply
                                 ' half of Width
 
-Private mPropertyOverrideFlags As BarPropertyOverrideFlags
+Private mPropertyOverrideFlags As BarPropertyFlags
 
 Private mPrevBarRef As WeakReference
 
@@ -228,16 +229,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Property Let IGraphicObject_Handle(ByVal value As Long)
-mHandle = value
+Private Property Let IGraphicObject_Handle(ByVal Value As Long)
+mHandle = Value
 End Property
 
 Private Property Get IGraphicObject_IncludeInAutoscale() As Boolean
 IGraphicObject_IncludeInAutoscale = True
 End Property
 
-Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
-mInScope = value
+Private Property Let IGraphicObject_inScope(ByVal Value As Boolean)
+mInScope = Value
 End Property
 
 Private Property Get IGraphicObject_IsSelectable() As Boolean
@@ -300,8 +301,14 @@ IGraphicObject_VerticalRangeInXinterval.isValid = True
                     
 End Property
 
-Private Property Let IGraphicObject_visible(ByVal value As Boolean)
-mVisible = value
+Private Property Let IGraphicObject_visible(ByVal Value As Boolean)
+mVisible = Value
+If mVisible Then
+    Set mLocalStyle = mLocalStyleNoEvents
+Else
+    Set mLocalStyle = Nothing
+End If
+    
 End Property
 
 '================================================================================
@@ -316,8 +323,6 @@ On Error GoTo Err
 Select Case UCase$(ev.PropertyName)
 Case "COLOR"
     initiateRedraw False, False
-Case "THICKNESS"
-    initiateRedraw True, False
 Case "WIDTH"
     initiateRedraw True, True
 Case "DISPLAYMODE"
@@ -326,11 +331,15 @@ Case "DOWNCOLOR"
     initiateRedraw False, False
 Case "INCLUDEINAUTOSCALE"
     initiateRedraw False, False
+Case "LAYER"
+    initiateRedraw False, False
 Case "OUTLINETHICKNESS"
     initiateRedraw False, False
 Case "SOLIDUPBODY"
     initiateRedraw False, False
 Case "TAILTHICKNESS"
+    initiateRedraw True, False
+Case "THICKNESS"
     initiateRedraw True, False
 Case "UPCOLOR"
     initiateRedraw False, False
@@ -350,22 +359,22 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
 
-If mColor = value And isPropertyOverrideFlagSet(BarIsSetColor) Then Exit Property
-mColor = value
+If mColor = Value And IsPropertySet(BarPropertyColor) Then Exit Property
+mColor = Value
 If mColor <> -1 Then
-    setPropertyOverrideFlag BarIsSetColor
+    setPropertyFlag BarPropertyColor
 Else
-    clearPropertyOverrideFlag BarIsSetColor
+    ClearProperty BarPropertyColor
 End If
 initiateRedraw False, False
 
@@ -381,70 +390,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Color = mSeries.Color
-If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If isPropertyOverrideFlagSet(BarIsSetColor) Then Color = mColor
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Let Thickness(ByVal value As Long)
-Const ProcName As String = "Thickness"
-Dim failpoint As String
-On Error GoTo Err
-
-If mThickness = value And isPropertyOverrideFlagSet(BarIsSetThickness) Then Exit Property
-mThickness = value
-setPropertyOverrideFlag BarIsSetThickness
-initiateRedraw True, False
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get Thickness() As Long
-Const ProcName As String = "Thickness"
-Dim failpoint As String
-On Error GoTo Err
-
-Thickness = mSeries.Thickness
-If Not mLocalStyle Is Nothing Then Thickness = mLocalStyle.Thickness
-If isPropertyOverrideFlagSet(BarIsSetThickness) Then Thickness = mThickness
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Let Width(ByVal value As Single)
-Const ProcName As String = "Width"
-Dim failpoint As String
-On Error GoTo Err
-
-If mWidth = value And isPropertyOverrideFlagSet(BarIsSetWidth) Then Exit Property
-mWidth = value
-setPropertyOverrideFlag BarIsSetWidth
-initiateRedraw True, True
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get Width() As Single
-Const ProcName As String = "Width"
-Dim failpoint As String
-On Error GoTo Err
-
-Width = mSeries.Width
-If Not mLocalStyle Is Nothing Then Width = mLocalStyle.Width
-If isPropertyOverrideFlagSet(BarIsSetWidth) Then Width = mWidth
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyColor) Then Color = mLocalStyle.Color
+If IsPropertySet(BarPropertyColor) Then Color = mColor
 
 Exit Property
 
@@ -460,14 +407,14 @@ Public Property Get ClosePrice() As Double
 ClosePrice = mClose
 End Property
 
-Public Property Let DisplayMode(ByVal value As BarDisplayModes)
+Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
 Dim failpoint As String
 On Error GoTo Err
 
-If mDisplayMode = value And isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then Exit Property
-mDisplayMode = value
-setPropertyOverrideFlag BarIsSetDisplayMode
+If mDisplayMode = Value And IsPropertySet(BarPropertyDisplayMode) Then Exit Property
+mDisplayMode = Value
+setPropertyFlag BarPropertyDisplayMode
 initiateRedraw True, True
 
 Exit Property
@@ -482,8 +429,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 DisplayMode = mSeries.DisplayMode
-If Not mLocalStyle Is Nothing Then DisplayMode = mLocalStyle.DisplayMode
-If isPropertyOverrideFlagSet(BarIsSetDisplayMode) Then DisplayMode = mDisplayMode
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyDisplayMode) Then DisplayMode = mLocalStyle.DisplayMode
+If IsPropertySet(BarPropertyDisplayMode) Then DisplayMode = mDisplayMode
 
 Exit Property
 
@@ -495,22 +442,22 @@ Public Property Get DownBar() As Boolean
 DownBar = (mClose <= mOpen)
 End Property
 
-Public Property Let DownColor(ByVal value As Long)
+Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
 
-If mDownColor = value And isPropertyOverrideFlagSet(BarIsSetDownColor) Then Exit Property
-mDownColor = value
+If mDownColor = Value And IsPropertySet(BarPropertyDownColor) Then Exit Property
+mDownColor = Value
 If mDownColor <> -1 Then
-    setPropertyOverrideFlag BarIsSetDownColor
+    setPropertyFlag BarPropertyDownColor
 Else
-    clearPropertyOverrideFlag BarIsSetDownColor
+    ClearProperty BarPropertyDownColor
 End If
 initiateRedraw False, False
 
@@ -526,8 +473,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 DownColor = mSeries.DownColor
-If Not mLocalStyle Is Nothing Then DownColor = mLocalStyle.DownColor
-If isPropertyOverrideFlagSet(BarIsSetDownColor) Then DownColor = mDownColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyDownColor) Then DownColor = mLocalStyle.DownColor
+If IsPropertySet(BarPropertyDownColor) Then DownColor = mDownColor
 If DownColor = -1 Then DownColor = UpColor
 
 Exit Property
@@ -544,14 +491,14 @@ Public Property Get HighPrice() As Double
 HighPrice = mHigh
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then Exit Property
-mIncludeInAutoscale = value
-setPropertyOverrideFlag BarIsSetIncludeInAutoscale
+If mIncludeInAutoscale = Value And IsPropertySet(BarPropertyIncludeInAutoscale) Then Exit Property
+mIncludeInAutoscale = Value
+setPropertyFlag BarPropertyIncludeInAutoscale
 initiateRedraw False, False
 
 Exit Property
@@ -566,8 +513,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If isPropertyOverrideFlagSet(BarIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyIncludeInAutoscale) Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If IsPropertySet(BarPropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
 
 Exit Property
@@ -580,8 +527,8 @@ Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
-mIsSelectable = value
+Public Property Let IsSelectable(ByVal Value As Boolean)
+mIsSelectable = Value
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -596,14 +543,14 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let Layer(ByVal value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 Dim failpoint As String
 On Error GoTo Err
 
-If mLayer = value And isPropertyOverrideFlagSet(BarIsSetLayer) Then Exit Property
-mLayer = value
-setPropertyOverrideFlag BarIsSetLayer
+If mLayer = Value And IsPropertySet(BarPropertyLayer) Then Exit Property
+mLayer = Value
+setPropertyFlag BarPropertyLayer
 initiateRedraw False, False
 
 Exit Property
@@ -618,7 +565,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If isPropertyOverrideFlagSet(BarIsSetLayer) Then Layer = mLayer
+If IsPropertySet(BarPropertyLayer) Then Layer = mLayer
 
 Exit Property
 
@@ -627,17 +574,20 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get LocalStyle() As BarStyle
-Set LocalStyle = mLocalStyle
+Set LocalStyle = mLocalStyleNoEvents
 End Property
 
 Public Property Let LocalStyle( _
-                ByVal value As BarStyle)
+                ByVal Value As BarStyle)
 Const ProcName As String = "LocalStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mLocalStyle = value
-initiateRedraw True, True
+Set mLocalStyleNoEvents = Value
+If mVisible Then
+    Set mLocalStyle = Value
+    initiateRedraw True, True
+End If
 
 Exit Property
 
@@ -653,14 +603,14 @@ Public Property Get OpenPrice() As Double
 OpenPrice = mOpen
 End Property
 
-Public Property Let OutlineThickness(ByVal value As Long)
+Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mOutlineThickness = value And isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then Exit Property
-mOutlineThickness = value
-setPropertyOverrideFlag BarIsSetOutlineThickness
+If mOutlineThickness = Value And IsPropertySet(BarPropertyOutlineThickness) Then Exit Property
+mOutlineThickness = Value
+setPropertyFlag BarPropertyOutlineThickness
 initiateRedraw False, False
 
 Exit Property
@@ -675,8 +625,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 OutlineThickness = mSeries.OutlineThickness
-If Not mLocalStyle Is Nothing Then OutlineThickness = mLocalStyle.OutlineThickness
-If isPropertyOverrideFlagSet(BarIsSetOutlineThickness) Then OutlineThickness = mOutlineThickness
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyOutlineThickness) Then OutlineThickness = mLocalStyle.OutlineThickness
+If IsPropertySet(BarPropertyOutlineThickness) Then OutlineThickness = mOutlineThickness
 
 Exit Property
 
@@ -698,12 +648,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let PreviousBar(ByVal value As Bar)
+Friend Property Let PreviousBar(ByVal Value As Bar)
 Const ProcName As String = "PreviousBar"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mPrevBarRef = CreateWeakReference(value)
+Set mPrevBarRef = CreateWeakReference(Value)
 
 Exit Property
 
@@ -711,14 +661,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let SolidUpBody(ByVal value As Boolean)
+Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
 Dim failpoint As String
 On Error GoTo Err
 
-If mSolidUpBody = value And isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then Exit Property
-mSolidUpBody = value
-setPropertyOverrideFlag BarIsSetSolidUpBody
+If mSolidUpBody = Value And IsPropertySet(BarPropertySolidUpBody) Then Exit Property
+mSolidUpBody = Value
+setPropertyFlag BarPropertySolidUpBody
 initiateRedraw False, False
 
 Exit Property
@@ -733,8 +683,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 SolidUpBody = mSeries.SolidUpBody
-If Not mLocalStyle Is Nothing Then SolidUpBody = mLocalStyle.SolidUpBody
-If isPropertyOverrideFlagSet(BarIsSetSolidUpBody) Then SolidUpBody = mSolidUpBody
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertySolidUpBody) Then SolidUpBody = mLocalStyle.SolidUpBody
+If IsPropertySet(BarPropertySolidUpBody) Then SolidUpBody = mSolidUpBody
 
 Exit Property
 
@@ -742,14 +692,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let TailThickness(ByVal value As Long)
+Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mTailThickness = value And isPropertyOverrideFlagSet(BarIsSetTailThickness) Then Exit Property
-mTailThickness = value
-setPropertyOverrideFlag BarIsSetTailThickness
+If mTailThickness = Value And IsPropertySet(BarPropertyTailThickness) Then Exit Property
+mTailThickness = Value
+setPropertyFlag BarPropertyTailThickness
 initiateRedraw True, False
 
 Exit Property
@@ -764,8 +714,39 @@ Dim failpoint As String
 On Error GoTo Err
 
 TailThickness = mSeries.TailThickness
-If Not mLocalStyle Is Nothing Then TailThickness = mLocalStyle.TailThickness
-If isPropertyOverrideFlagSet(BarIsSetTailThickness) Then TailThickness = mTailThickness
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyTailThickness) Then TailThickness = mLocalStyle.TailThickness
+If IsPropertySet(BarPropertyTailThickness) Then TailThickness = mTailThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Thickness(ByVal Value As Long)
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
+If mThickness = Value And IsPropertySet(BarPropertyThickness) Then Exit Property
+mThickness = Value
+setPropertyFlag BarPropertyThickness
+initiateRedraw True, False
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Thickness() As Long
+Const ProcName As String = "Thickness"
+Dim failpoint As String
+On Error GoTo Err
+
+Thickness = mSeries.Thickness
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyThickness) Then Thickness = mLocalStyle.Thickness
+If IsPropertySet(BarPropertyThickness) Then Thickness = mThickness
 
 Exit Property
 
@@ -777,22 +758,22 @@ Public Property Get UpBar() As Boolean
 UpBar = (mClose >= mOpen)
 End Property
 
-Public Property Let UpColor(ByVal value As Long)
+Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
 
-If mUpColor = value And isPropertyOverrideFlagSet(BarIsSetUpColor) Then Exit Property
-mUpColor = value
+If mUpColor = Value And IsPropertySet(BarPropertyUpColor) Then Exit Property
+mUpColor = Value
 If mUpColor <> -1 Then
-    setPropertyOverrideFlag BarIsSetUpColor
+    setPropertyFlag BarPropertyUpColor
 Else
-    clearPropertyOverrideFlag BarIsSetUpColor
+    ClearProperty BarPropertyUpColor
 End If
 initiateRedraw False, False
 
@@ -808,8 +789,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 UpColor = mSeries.UpColor
-If Not mLocalStyle Is Nothing Then UpColor = mLocalStyle.UpColor
-If isPropertyOverrideFlagSet(BarIsSetUpColor) Then UpColor = mUpColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyUpColor) Then UpColor = mLocalStyle.UpColor
+If IsPropertySet(BarPropertyUpColor) Then UpColor = mUpColor
 
 Exit Property
 
@@ -821,12 +802,43 @@ Public Property Get Visible() As Boolean
 Visible = mVisible
 End Property
 
-Friend Property Let X(ByVal value As Double)
+Public Property Let Width(ByVal Value As Single)
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
+If mWidth = Value And IsPropertySet(BarPropertyWidth) Then Exit Property
+mWidth = Value
+setPropertyFlag BarPropertyWidth
+initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Width() As Single
+Const ProcName As String = "Width"
+Dim failpoint As String
+On Error GoTo Err
+
+Width = mSeries.Width
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(BarPropertyWidth) Then Width = mLocalStyle.Width
+If IsPropertySet(BarPropertyWidth) Then Width = mWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Friend Property Let X(ByVal Value As Double)
 Const ProcName As String = "X"
 Dim failpoint As String
 On Error GoTo Err
 
-mX = value
+mX = Value
 calcBoundingRect
 
 Exit Property
@@ -894,15 +906,15 @@ On Error GoTo Err
 
 Set mLocalStyle = Nothing
 
-setPropertyOverrideFlag BarIsSetTailThickness = False
-setPropertyOverrideFlag BarIsSetOutlineThickness = False
-setPropertyOverrideFlag BarIsSetColor = False
-setPropertyOverrideFlag BarIsSetUpColor = False
-setPropertyOverrideFlag BarIsSetDownColor = False
-setPropertyOverrideFlag BarIsSetDisplayMode = False
-setPropertyOverrideFlag BarIsSetSolidUpBody = False
-setPropertyOverrideFlag BarIsSetThickness = False
-setPropertyOverrideFlag BarIsSetWidth = False
+setPropertyFlag BarPropertyTailThickness = False
+setPropertyFlag BarPropertyOutlineThickness = False
+setPropertyFlag BarPropertyColor = False
+setPropertyFlag BarPropertyUpColor = False
+setPropertyFlag BarPropertyDownColor = False
+setPropertyFlag BarPropertyDisplayMode = False
+setPropertyFlag BarPropertySolidUpBody = False
+setPropertyFlag BarPropertyThickness = False
+setPropertyFlag BarPropertyWidth = False
 
 initiateRedraw True, True
 
@@ -1029,9 +1041,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As BarPropertyOverrideFlags)
-Const ProcName As String = "clearPropertyOverrideFlag"
+Private Sub ClearProperty( _
+                ByVal flag As BarPropertyFlags)
+Const ProcName As String = "ClearProperty"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -1426,13 +1438,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As BarPropertyOverrideFlags) As Boolean
-Const ProcName As String = "isPropertyOverrideFlagSet"
+Private Function IsPropertySet( _
+                ByVal flag As BarPropertyFlags) As Boolean
+Const ProcName As String = "IsPropertySet"
 Dim failpoint As String
 On Error GoTo Err
 
-isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 
 Exit Function
 
@@ -1464,9 +1476,9 @@ Case BarDisplayModeLine
 End Select
 End Sub
 
-Private Sub setPropertyOverrideFlag( _
-                ByVal flag As BarPropertyOverrideFlags)
-Const ProcName As String = "setPropertyOverrideFlag"
+Private Sub setPropertyFlag( _
+                ByVal flag As BarPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
 Dim failpoint As String
 On Error GoTo Err
 

@@ -171,7 +171,7 @@ Private Sub DeferredAction_run(ByVal Data As Variant)
 Dim bar2Write As BarToWrite
 
 Const ProcName As String = "DeferredAction_run"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 bar2Write = Data
@@ -193,7 +193,7 @@ Private Sub IBarDataConsumer_Bar( _
                 ByVal Data As Bar, _
                 ByVal barTimePeriod As TimePeriod)
 Const ProcName As String = "IBarDataConsumer_Bar"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mHistoricBar = Data
@@ -211,7 +211,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 Const ProcName As String = "IBarDataInputServiceConsumer_BarDataComplete"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Debug.Print "Timeframe bars loaded: " & getName
@@ -243,7 +243,7 @@ Private Sub IBarDataInputServiceConsumer_NotifyEvent( _
 Dim ev As NotificationEvent
 
 Const ProcName As String = "IBarDataInputServiceConsumer_NotifyEvent"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ev.eventCode = eventCode
@@ -289,7 +289,7 @@ End Sub
 Private Sub IBarDataInputServiceConsumer_Ready()
 ' unwind the stack
 Const ProcName As String = "IBarDataInputServiceConsumer_Ready"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTaskContext.Continue
@@ -310,7 +310,7 @@ Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
 
 Const ProcName As String = "StudyValueListener_notify"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.source Is mTradeBarsStudy Then
@@ -359,7 +359,8 @@ End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-Dim failpoint As Long
+
+Dim failpoint As String
 
 #If trace Then
     GTracer.EnterProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
@@ -368,7 +369,7 @@ Dim failpoint As Long
 
 On Error GoTo Err
 
-failpoint = 100
+failpoint = "100"
 
 If mState = TimeframeStateFinished Then
     ' this can happen between starttask being called
@@ -392,7 +393,7 @@ If mBarReader Is Nothing Then
 End If
 
 
-failpoint = 200
+failpoint = "200"
 
 If mHistoricBar Is Nothing Then
     mBarReader.FireNextBar
@@ -408,7 +409,7 @@ If mHistoricBar Is Nothing Then
 End If
 
 
-failpoint = 300
+failpoint = "300"
 
 ProcessHistoricBar
 
@@ -418,7 +419,7 @@ ProcessHistoricBar
 Exit Sub
 
 Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
+GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
@@ -443,7 +444,7 @@ End Sub
 
 Private Sub mWriteTimer_TimerExpired()
 Const ProcName As String = "mWriteTimer_TimerExpired"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mCurrTradeBar Is Nothing Then
@@ -498,7 +499,7 @@ End Property
 ' only gets called if contract was not available when Initialise was called
 Friend Property Let Contract(ByVal value As Contract)
 Const ProcName As String = "Contract"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 #If trace Then
@@ -560,7 +561,7 @@ End Sub
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Clear
@@ -588,7 +589,7 @@ Friend Sub Initialise( _
                 ByVal writeBidAndAskBars As Boolean)
 
 Const ProcName As String = "Initialise"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mContract = pContract
@@ -667,7 +668,7 @@ End Sub
 Private Sub Clear()
 
 Const ProcName As String = "Clear"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mWriteTimer Is Nothing Then
@@ -700,7 +701,7 @@ End Sub
 
 Private Function getName() As String
 Const ProcName As String = "getName"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mContract Is Nothing Then
@@ -721,7 +722,7 @@ Dim ev As StateChangeEvent
 Dim s As String
 
 Const ProcName As String = "fireStateChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If newState = mState Then Exit Sub
@@ -759,7 +760,7 @@ Private Sub ProcessHistoricBar()
 Static firstVolumeSent As Boolean
 
 Const ProcName As String = "ProcessHistoricBar"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 #If trace Then
@@ -832,7 +833,7 @@ Dim barSpecifier As New BarDataSpecifier
 Dim ev As NotificationEvent
     
 Const ProcName As String = "setupBarReader"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 #If trace Then
@@ -913,7 +914,7 @@ End Sub
 Private Sub setupBarStudies()
 
 Const ProcName As String = "setupBarStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 setupInputStudies
@@ -955,7 +956,7 @@ Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantMomentumBarsStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 params.SetParameterValue ConstMomentumBarsParamTicksPerBar, mBarTimePeriod.length
@@ -1014,7 +1015,7 @@ Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantTimeBarsStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 params.SetParameterValue ConstTimeBarsParamBarLength, mBarTimePeriod.length
@@ -1075,7 +1076,7 @@ Dim params As New Parameters
 Dim barsStudy As BarStudy
 
 Const ProcName As String = "setupConstantVolumeBarsStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 params.SetParameterValue ConstTimeBarsParamVolPerBar, mBarTimePeriod.length
@@ -1134,7 +1135,7 @@ Dim sourceName As String
 Dim TickSize As Double
 
 Const ProcName As String = "setupInputStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mContract Is Nothing Then
@@ -1192,7 +1193,7 @@ End Sub
 
 Private Sub startHistDataFetch()
 Const ProcName As String = "startHistDataFetch"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 #If trace Then
@@ -1221,7 +1222,7 @@ Dim lInputStudy As InputStudy
 Dim lStudy As BarStudy
 
 Const ProcName As String = "StartStudies"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 #If trace Then
@@ -1287,7 +1288,7 @@ Private Sub WriteABar( _
 Dim bar2Write As BarToWrite
 
 Const ProcName As String = "WriteABar"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mBarWriter Is Nothing Then Exit Sub
@@ -1322,7 +1323,7 @@ Private Sub WriteBar( _
 ' because of the delayed writes, the Timeframe may have been Finished between
 ' initiating the write timer and getting here, so check for this
 Const ProcName As String = "WriteBar"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mBarWriter Is Nothing Then Exit Sub

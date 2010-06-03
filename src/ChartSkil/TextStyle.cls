@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -71,11 +73,19 @@ Private Const ConfigSettingExpandTabs               As String = "&ExpandTabs"
 Private Const ConfigSettingTabWidth                 As String = "&TabWidth"
 Private Const ConfigSettingWordWrap                 As String = "&WordWrap"
 Private Const ConfigSettingHideIfBlank              As String = "&HideIfBlank"
+Private Const ConfigSettingLayer                    As String = "&Layer"
+
+Private Const ConfigSectionLeftMargin               As String = "LeftMargin"
+Private Const ConfigSectionOffset                   As String = "Offset"
+Private Const ConfigSectionRightMargin              As String = "RightMargin"
+Private Const ConfigSectionSize                     As String = "Size"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mStyleType As String
 Private mConfig As ConfigurationSection
 
 Private WithEvents mFont As StdFont
@@ -103,56 +113,53 @@ Private mExpandTabs As Boolean
 Private mTabWidth As Long
 Private mWordWrap As Boolean
 Private mHideIfBlank As Boolean
+Private mLeftMargin As Dimension
+Private mRightMargin As Dimension
+Private mOffset As Size
+Private mSize As Size
+Private mLayer As Long
+
+Private mPropertyFlags As TextPropertyFlags
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-
-Set mFont = New StdFont
-mFont.Bold = False
-mFont.Italic = False
-mFont.Name = "Arial"
-mFont.Size = 8
-mFont.Strikethrough = False
-mFont.Underline = False
-
-mColor = vbBlack
-mBox = False
-mBoxColor = vbBlack
-mBoxStyle = LineStyles.LineSolid
-mBoxThickness = 1
-mBoxFillColor = vbWhite
-mBoxFillStyle = FillStyles.FillSolid
-mBoxFillWithBackgroundColor = False
-mAlign = TextAlignModes.AlignTopLeft
-mPaddingX = 1
-'mPaddingY = 0.5
-mIncludeInAutoscale = False
-mFixedX = False
-mFixedY = False
-mExtended = False
-
-mAngle = 0
-mJustification = TextJustifyModes.JustifyLeft
-mMultiLine = False
-mEllipsis = EllipsisModes.EllipsisNone
-mExpandTabs = True
-mTabWidth = 8
-mWordWrap = True
-mHideIfBlank = True
+mName = GenerateGUIDString
+mStyleType = "Text Styles"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGraphicObjectStyle Interface Members
 '@================================================================================
+
+Private Property Let IGraphicObjectStyle_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Me.ConfigurationSection = RHS
+End Property
+
+Private Sub IGraphicObjectStyle_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Me.LoadFromConfig pConfig
+End Sub
+
+Private Property Get IGraphicObjectStyle_Name() As String
+IGraphicObjectStyle_Name = mName
+End Property
+
+Private Property Get IGraphicObjectStyle_ProgId() As String
+IGraphicObjectStyle_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IGraphicObjectStyle_StyleType() As String
+IGraphicObjectStyle_StyleType = mStyleType
+End Property
 
 '@================================================================================
 ' mFont Event Handlers
 '@================================================================================
 
 Private Sub mFont_FontChanged(ByVal PropertyName As String)
+If Not mConfig Is Nothing Then SaveFontToConfig mFont, mConfig.AddConfigurationSection(ConfigSectionFont)
 firePropertyChanged "Font"
 End Sub
 
@@ -160,15 +167,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Align(ByVal value As TextAlignModes)
+Public Property Let Align(ByVal Value As TextAlignModes)
 Const ProcName As String = "Align"
 Dim failpoint As String
 On Error GoTo Err
 
-If mAlign = value Then Exit Property
-mAlign = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingAlign, mAlign
-firePropertyChanged "Align"
+setLongProperty mAlign, TextPropertyAlign, Value
 
 Exit Property
 
@@ -177,18 +181,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Align() As TextAlignModes
+Const ProcName As String = "Align"
+On Error GoTo Err
+
+checkPropertySet TextPropertyAlign
 Align = mAlign
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Angle(ByVal value As Double)
+Public Property Let Angle(ByVal Value As Double)
 Const ProcName As String = "Angle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mAngle = value Then Exit Property
-mAngle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingAngle, mAngle
-firePropertyChanged "Angle"
+setDoubleProperty mAngle, TextPropertyAngle, Value
 
 Exit Property
 
@@ -197,18 +207,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Angle() As Double
+Const ProcName As String = "Angle"
+On Error GoTo Err
+
+checkPropertySet TextPropertyAngle
 Angle = mAngle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Box(ByVal value As Boolean)
+Public Property Let Box(ByVal Value As Boolean)
 Const ProcName As String = "Box"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBox = value Then Exit Property
-mBox = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBox, mBox
-firePropertyChanged "Box"
+setBooleanProperty mBox, TextPropertyBox, Value
 
 Exit Property
 
@@ -217,18 +233,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Box() As Boolean
+Const ProcName As String = "Box"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBox
 Box = mBox
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxColor(ByVal value As Long)
+Public Property Let BoxColor(ByVal Value As Long)
 Const ProcName As String = "BoxColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxColor = value Then Exit Property
-mBoxColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxColor, mBoxColor
-firePropertyChanged "BoxColor"
+setLongProperty mBoxColor, TextPropertyBoxColor, Value
 
 Exit Property
 
@@ -237,18 +259,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxColor() As Long
+Const ProcName As String = "BoxColor"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxColor
 BoxColor = mBoxColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillColor(ByVal value As Long)
+Public Property Let BoxFillColor(ByVal Value As Long)
 Const ProcName As String = "BoxFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillColor = value Then Exit Property
-mBoxFillColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxFillColor, mBoxFillColor
-firePropertyChanged "BoxFillColor"
+setLongProperty mBoxFillColor, TextPropertyBoxFillColor, Value
 
 Exit Property
 
@@ -257,18 +285,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxFillColor() As Long
+Const ProcName As String = "BoxFillColor"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxFillColor
 BoxFillColor = mBoxFillColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillStyle(ByVal value As FillStyles)
+Public Property Let BoxFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "BoxFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillStyle = value Then Exit Property
-mBoxFillStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxFillStyle, mBoxFillStyle
-firePropertyChanged "BoxFillStyle"
+setLongProperty mBoxFillStyle, TextPropertyBoxFillStyle, Value
 
 Exit Property
 
@@ -277,18 +311,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxFillStyle() As FillStyles
+Const ProcName As String = "BoxFillStyle"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxFillStyle
 BoxFillStyle = mBoxFillStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
+Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
 Const ProcName As String = "BoxFillWithBackgroundColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillWithBackgroundColor = value Then Exit Property
-mBoxFillWithBackgroundColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxFillWithBackgroundColor, mBoxFillWithBackgroundColor
-firePropertyChanged "BoxFillWithBackgroundColor"
+setBooleanProperty mBoxFillWithBackgroundColor, TextPropertyBoxFillWithBackgroundColor, Value
 
 Exit Property
 
@@ -297,18 +337,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
+Const ProcName As String = "BoxFillWithBackgroundColor"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxFillWithBackgroundColor
 BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxStyle(ByVal value As LineStyles)
+Public Property Let BoxStyle(ByVal Value As LineStyles)
 Const ProcName As String = "BoxStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxStyle = value Then Exit Property
-mBoxStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxStyle, mBoxStyle
-firePropertyChanged "BoxStyle"
+setLongProperty mBoxStyle, TextPropertyBoxStyle, Value
 
 Exit Property
 
@@ -317,18 +363,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxStyle() As LineStyles
+Const ProcName As String = "BoxStyle"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxStyle
 BoxStyle = mBoxStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxThickness(ByVal value As Long)
+Public Property Let BoxThickness(ByVal Value As Long)
 Const ProcName As String = "BoxThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxThickness = value Then Exit Property
-mBoxThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBoxThickness, mBoxThickness
-firePropertyChanged "BoxThickness"
+setLongProperty mBoxThickness, TextPropertyBoxThickness, Value
 
 Exit Property
 
@@ -337,22 +389,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get BoxThickness() As Long
+Const ProcName As String = "BoxThickness"
+On Error GoTo Err
+
+checkPropertySet TextPropertyBoxThickness
 BoxThickness = mBoxThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-If mColor = value Then Exit Property
-mColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
-firePropertyChanged "Color"
+
+setLongProperty mColor, TextPropertyColor, Value
 
 Exit Property
 
@@ -361,42 +420,66 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+On Error GoTo Err
+
+checkPropertySet TextPropertyColor
 Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
 End If
 
-Set mConfig = value
+Set mConfig = Value
 
-SaveFontToConfig mFont, mConfig.AddConfigurationSection(ConfigSectionFont)
-mConfig.SetSetting ConfigSettingAlign, mAlign
-mConfig.SetSetting ConfigSettingAngle, mAngle
-mConfig.SetSetting ConfigSettingBox, mBox
-mConfig.SetSetting ConfigSettingBoxColor, mBoxColor
-mConfig.SetSetting ConfigSettingBoxFillColor, mBoxFillColor
-mConfig.SetSetting ConfigSettingBoxFillStyle, mBoxFillStyle
-mConfig.SetSetting ConfigSettingBoxFillWithBackgroundColor, mBoxFillWithBackgroundColor
-mConfig.SetSetting ConfigSettingBoxStyle, mBoxStyle
-mConfig.SetSetting ConfigSettingBoxThickness, mBoxThickness
-mConfig.SetSetting ConfigSettingColor, mColor
-mConfig.SetSetting ConfigSettingExtended, mExtended
-mConfig.SetSetting ConfigSettingFixedX, mFixedX
-mConfig.SetSetting ConfigSettingFixedY, mFixedY
-mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-mConfig.SetSetting ConfigSettingPaddingX, mPaddingX
-mConfig.SetSetting ConfigSettingPaddingY, mPaddingY
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStyleType, mStyleType
 
+If Not mFont Is Nothing Then SaveFontToConfig mFont, mConfig.AddConfigurationSection(ConfigSectionFont)
+
+If IsPropertySet(TextPropertyAlign) Then mConfig.SetSetting ConfigSettingAlign, mAlign
+If IsPropertySet(TextPropertyAngle) Then mConfig.SetSetting ConfigSettingAngle, mAngle
+If IsPropertySet(TextPropertyBox) Then mConfig.SetSetting ConfigSettingBox, mBox
+If IsPropertySet(TextPropertyBoxColor) Then mConfig.SetSetting ConfigSettingBoxColor, mBoxColor
+If IsPropertySet(TextPropertyBoxFillColor) Then mConfig.SetSetting ConfigSettingBoxFillColor, mBoxFillColor
+If IsPropertySet(TextPropertyBoxFillStyle) Then mConfig.SetSetting ConfigSettingBoxFillStyle, mBoxFillStyle
+If IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then mConfig.SetSetting ConfigSettingBoxFillWithBackgroundColor, mBoxFillWithBackgroundColor
+If IsPropertySet(TextPropertyBoxStyle) Then mConfig.SetSetting ConfigSettingBoxStyle, mBoxStyle
+If IsPropertySet(TextPropertyBoxThickness) Then mConfig.SetSetting ConfigSettingBoxThickness, mBoxThickness
+If IsPropertySet(TextPropertyColor) Then mConfig.SetSetting ConfigSettingColor, mColor
+If IsPropertySet(TextPropertyEllipsis) Then mConfig.SetSetting ConfigSettingEllipsis, mEllipsis
+If IsPropertySet(TextPropertyExtended) Then mConfig.SetSetting ConfigSettingExtended, mExtended
+If IsPropertySet(TextPropertyFixedX) Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
+If IsPropertySet(TextPropertyFixedY) Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
+If IsPropertySet(TextPropertyHideIfBlank) Then mConfig.SetSetting ConfigSettingHideIfBlank, mHideIfBlank
+If IsPropertySet(TextPropertyIncludeInAutoscale) Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+If IsPropertySet(TextPropertyJustification) Then mConfig.SetSetting ConfigSettingJustification, mJustification
+If IsPropertySet(TextPropertyLayer) Then mConfig.SetSetting ConfigSettingLayer, mLayer
+If IsPropertySet(TextPropertyMultiLine) Then mConfig.SetSetting ConfigSettingMultiline, mMultiLine
+If IsPropertySet(TextPropertyPaddingX) Then mConfig.SetSetting ConfigSettingPaddingX, mPaddingX
+If IsPropertySet(TextPropertyPaddingY) Then mConfig.SetSetting ConfigSettingPaddingY, mPaddingY
+If IsPropertySet(TextPropertyTabWidth) Then mConfig.SetSetting ConfigSettingTabWidth, mTabWidth
+If IsPropertySet(TextPropertyWordWrap) Then mConfig.SetSetting ConfigSettingWordWrap, mWordWrap
+
+If Not mOffset Is Nothing Then mOffset.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionOffset)
+If Not mLeftMargin Is Nothing Then mLeftMargin.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionLeftMargin)
+If Not mRightMargin Is Nothing Then mRightMargin.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionRightMargin)
+If Not mSize Is Nothing Then mSize.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSize)
 Exit Property
 
 Err:
@@ -404,15 +487,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 
 End Property
 
-Public Property Let Ellipsis(ByVal value As EllipsisModes)
+Public Property Let Ellipsis(ByVal Value As EllipsisModes)
 Const ProcName As String = "Ellipsis"
 Dim failpoint As String
 On Error GoTo Err
 
-If mEllipsis = value Then Exit Property
-mEllipsis = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingEllipsis, mEllipsis
-firePropertyChanged "Ellipsis"
+setLongProperty mEllipsis, TextPropertyEllipsis, Value
 
 Exit Property
 
@@ -421,18 +501,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Ellipsis() As EllipsisModes
+Const ProcName As String = "Ellipsis"
+On Error GoTo Err
+
+checkPropertySet TextPropertyEllipsis
 Ellipsis = mEllipsis
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ExpandTabs(ByVal value As Boolean)
+Public Property Let ExpandTabs(ByVal Value As Boolean)
 Const ProcName As String = "ExpandTabs"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExpandTabs = value Then Exit Property
-mExpandTabs = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExpandTabs, mExpandTabs
-firePropertyChanged "ExpandTabs"
+setBooleanProperty mExpandTabs, TextPropertyExpandTabs, Value
 
 Exit Property
 
@@ -441,18 +527,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ExpandTabs() As Boolean
+Const ProcName As String = "ExpandTabs"
+On Error GoTo Err
+
+checkPropertySet TextPropertyExpandTabs
 ExpandTabs = mExpandTabs
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Extended(ByVal value As Boolean)
+Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtended = value Then Exit Property
-mExtended = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtended, mExtended
-firePropertyChanged "Extended"
+setBooleanProperty mExtended, TextPropertyExtended, Value
 
 Exit Property
 
@@ -461,18 +553,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Extended() As Boolean
+Const ProcName As String = "Extended"
+On Error GoTo Err
+
+checkPropertySet TextPropertyExtended
 Extended = mExtended
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedX(ByVal value As Boolean)
+Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedX = value Then Exit Property
-mFixedX = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
-firePropertyChanged "FixedX"
+setBooleanProperty mFixedX, TextPropertyFixedX, Value
 
 Exit Property
 
@@ -481,18 +579,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get FixedX() As Boolean
+Const ProcName As String = "FixedX"
+On Error GoTo Err
+
+checkPropertySet TextPropertyFixedX
 FixedX = mFixedX
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedY(ByVal value As Boolean)
+Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedY = value Then Exit Property
-mFixedY = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
-firePropertyChanged "FixedY"
+setBooleanProperty mFixedY, TextPropertyFixedY, Value
 
 Exit Property
 
@@ -501,16 +605,26 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get FixedY() As Boolean
+Const ProcName As String = "FixedY"
+On Error GoTo Err
+
+checkPropertySet TextPropertyFixedY
 FixedY = mFixedY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Font(ByVal value As StdFont)
+Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFont Is value Then Exit Property
-Set mFont = value
+If mFont Is Value Then Exit Property
+Set mFont = Value
+setPropertyFlag TextPropertyFont
 If Not mConfig Is Nothing Then SaveFontToConfig mFont, mConfig.AddConfigurationSection(ConfigSectionFont)
 firePropertyChanged "Font"
 
@@ -521,18 +635,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Font() As StdFont
+Const ProcName As String = "Font"
+On Error GoTo Err
+
+checkPropertySet TextPropertyFont
 Set Font = mFont
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let HideIfBlank(ByVal value As Boolean)
+Public Property Let HideIfBlank(ByVal Value As Boolean)
 Const ProcName As String = "HideIfBlank"
 Dim failpoint As String
 On Error GoTo Err
 
-If mHideIfBlank = value Then Exit Property
-mHideIfBlank = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHideIfBlank, mHideIfBlank
-firePropertyChanged "HideIfBlank"
+setBooleanProperty mHideIfBlank, TextPropertyHideIfBlank, Value
 
 Exit Property
 
@@ -541,18 +661,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get HideIfBlank() As Boolean
+Const ProcName As String = "HideIfBlank"
+On Error GoTo Err
+
+checkPropertySet TextPropertyHideIfBlank
 HideIfBlank = mHideIfBlank
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value Then Exit Property
-mIncludeInAutoscale = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-firePropertyChanged "IncludeInAutoscale"
+setBooleanProperty mIncludeInAutoscale, TextPropertyIncludeInAutoscale, Value
 
 Exit Property
 
@@ -561,18 +687,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+On Error GoTo Err
+
+checkPropertySet TextPropertyIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Justification(ByVal value As TextJustifyModes)
+Public Property Let Justification(ByVal Value As TextJustifyModes)
 Const ProcName As String = "Justification"
 Dim failpoint As String
 On Error GoTo Err
 
-If mJustification = value Then Exit Property
-mJustification = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingJustification, mJustification
-firePropertyChanged "Justification"
+setLongProperty mJustification, TextPropertyJustification, Value
 
 Exit Property
 
@@ -581,18 +713,81 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Justification() As TextJustifyModes
+Const ProcName As String = "Justification"
+On Error GoTo Err
+
+checkPropertySet TextPropertyJustification
 Justification = mJustification
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let MultiLine(ByVal value As Boolean)
+Public Property Let Layer(ByVal Value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
+
+setLongProperty mLayer, BarPropertyLayer, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+On Error GoTo Err
+
+checkPropertySet BarPropertyLayer
+Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let LeftMargin(ByVal Value As Dimension)
+Const ProcName As String = "LeftMargin"
+Dim failpoint As String
+On Error GoTo Err
+
+setDimensionProperty mLeftMargin, TextPropertyLeftMargin, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get LeftMargin() As Dimension
+Const ProcName As String = "LeftMargin"
+On Error GoTo Err
+
+checkPropertySet TextPropertyLeftMargin
+Set LeftMargin = mLeftMargin
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let MultiLine(ByVal Value As Boolean)
 Const ProcName As String = "MultiLine"
 Dim failpoint As String
 On Error GoTo Err
 
-If mMultiLine = value Then Exit Property
-mMultiLine = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingMultiline, mMultiLine
-firePropertyChanged "MultiLine"
+setBooleanProperty mMultiLine, TextPropertyMultiLine, Value
 
 Exit Property
 
@@ -601,18 +796,69 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get MultiLine() As Boolean
+Const ProcName As String = "MultiLine"
+On Error GoTo Err
+
+checkPropertySet TextPropertyMultiLine
 MultiLine = mMultiLine
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PaddingX(ByVal value As Double)
+Public Property Let Name(ByVal Value As String)
+Const ProcName As String = "Name"
+On Error GoTo Err
+
+If Value = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Name cannot be blank"
+End If
+
+mName = Value
+If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset(ByVal Value As Size)
+Const ProcName As String = "Offset"
+Dim failpoint As String
+On Error GoTo Err
+
+setSizeProperty mOffset, TextPropertyOffset, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Offset() As Size
+Const ProcName As String = "Offset"
+On Error GoTo Err
+
+checkPropertySet TextPropertyOffset
+Set Offset = mOffset
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let PaddingX(ByVal Value As Double)
 Const ProcName As String = "PaddingX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mPaddingX = value Then Exit Property
-mPaddingX = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPaddingX, mPaddingX
-firePropertyChanged "PaddingX"
+setDoubleProperty mPaddingX, TextPropertyPaddingX, Value
 
 Exit Property
 
@@ -621,18 +867,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get PaddingX() As Double
+Const ProcName As String = "PaddingX"
+On Error GoTo Err
+
+checkPropertySet TextPropertyPaddingX
 PaddingX = mPaddingX
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PaddingY(ByVal value As Double)
+Public Property Let PaddingY(ByVal Value As Double)
 Const ProcName As String = "PaddingY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mPaddingY = value Then Exit Property
-mPaddingY = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPaddingY, mPaddingY
-firePropertyChanged "PaddingY"
+setDoubleProperty mPaddingY, TextPropertyPaddingY, Value
 
 Exit Property
 
@@ -641,18 +893,76 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get PaddingY() As Double
+Const ProcName As String = "PaddingY"
+On Error GoTo Err
+
+checkPropertySet TextPropertyPaddingY
 PaddingY = mPaddingY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let TabWidth(ByVal value As Long)
+Public Property Let RightMargin(ByVal Value As Dimension)
+Const ProcName As String = "RightMargin"
+Dim failpoint As String
+On Error GoTo Err
+
+setDimensionProperty mRightMargin, TextPropertyRightMargin, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get RightMargin() As Dimension
+Const ProcName As String = "RightMargin"
+On Error GoTo Err
+
+checkPropertySet TextPropertyRightMargin
+Set RightMargin = mRightMargin
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Size(ByVal Value As Size)
+Const ProcName As String = "Size"
+Dim failpoint As String
+On Error GoTo Err
+
+setSizeProperty mSize, TextPropertySize, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Size() As Size
+Const ProcName As String = "Size"
+On Error GoTo Err
+
+checkPropertySet TextPropertySize
+Set Size = mSize
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let TabWidth(ByVal Value As Long)
 Const ProcName As String = "TabWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If mTabWidth = value Then Exit Property
-mTabWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTabWidth, mTabWidth
-firePropertyChanged "TabWidth"
+setLongProperty mTabWidth, TextPropertyTabWidth, Value
 
 Exit Property
 
@@ -661,18 +971,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get TabWidth() As Long
+Const ProcName As String = "TabWidth"
+On Error GoTo Err
+
+checkPropertySet TextPropertyTabWidth
 TabWidth = mTabWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let WordWrap(ByVal value As Boolean)
+Public Property Let WordWrap(ByVal Value As Boolean)
 Const ProcName As String = "WordWrap"
 Dim failpoint As String
 On Error GoTo Err
 
-If mWordWrap = value Then Exit Property
-mWordWrap = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingWordWrap, mWordWrap
-firePropertyChanged "WordWrap"
+setBooleanProperty mWordWrap, TextPropertyWordWrap, Value
 
 Exit Property
 
@@ -681,12 +997,37 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get WordWrap() As Boolean
+Const ProcName As String = "WordWrap"
+On Error GoTo Err
+
+checkPropertySet TextPropertyWordWrap
 WordWrap = mWordWrap
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub ClearProperty( _
+                ByVal pPropFlag As TextPropertyFlags)
+Const ProcName As String = "ClearProperty"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
+If Not mConfig Is Nothing Then mConfig.RemoveSetting propertyFlagToConfigSetting(pPropFlag)
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 Public Function clone() As TextStyle
 Const ProcName As String = "clone"
@@ -725,40 +1066,70 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 
 End Function
 
+Public Function IsPropertySet( _
+                ByVal pPropertyFlag As TextPropertyFlags) As Boolean
+
+IsPropertySet = gIsFlagSet(mPropertyFlags, pPropertyFlag)
+
+End Function
+
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mConfig = config
+Set mConfig = pConfig
 
-Set mFont = LoadFontFromConfig(mConfig.AddConfigurationSection(ConfigSectionFont))
+mName = mConfig.GetSetting(ConfigSettingName)
+mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
 
-mAlign = mConfig.GetSetting(ConfigSettingAlign, CStr(AlignTopLeft))
-mAngle = mConfig.GetSetting(ConfigSettingAngle, "0")
-mColor = mConfig.GetSetting(ConfigSettingColor, "0")
-mBox = mConfig.GetSetting(ConfigSettingBox, "False")
-mBoxColor = mConfig.GetSetting(ConfigSettingBoxColor, "0")
-mBoxFillColor = mConfig.GetSetting(ConfigSettingBoxFillColor, CStr(vbWhite))
-mBoxFillStyle = mConfig.GetSetting(ConfigSettingBoxFillStyle, CStr(FillStyles.FillSolid))
-mBoxFillWithBackgroundColor = mConfig.GetSetting(ConfigSettingBoxFillWithBackgroundColor, "False")
-mBoxStyle = mConfig.GetSetting(ConfigSettingBoxStyle, CStr(LineStyles.LineSolid))
-mBoxThickness = mConfig.GetSetting(ConfigSettingBoxThickness, "1")
-mExtended = mConfig.GetSetting(ConfigSettingExtended, "False")
-mFixedX = mConfig.GetSetting(ConfigSettingFixedX, "False")
-mFixedY = mConfig.GetSetting(ConfigSettingFixedY, "False")
-mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale, "False")
-mPaddingX = mConfig.GetSetting(ConfigSettingPaddingX, "1")
-mPaddingY = mConfig.GetSetting(ConfigSettingPaddingY, "0")
-mJustification = mConfig.GetSetting(ConfigSettingJustification, CStr(TextJustifyModes.JustifyLeft))
-mMultiLine = mConfig.GetSetting(ConfigSettingMultiline, "False")
-mEllipsis = mConfig.GetSetting(ConfigSettingEllipsis, CStr(EllipsisModes.EllipsisNone))
-mExpandTabs = mConfig.GetSetting(ConfigSettingExpandTabs, "True")
-mTabWidth = mConfig.GetSetting(ConfigSettingTabWidth, "8")
-mWordWrap = mConfig.GetSetting(ConfigSettingWordWrap, "True")
-mHideIfBlank = mConfig.GetSetting(ConfigSettingHideIfBlank, "True")
+If Not mConfig.GetConfigurationSection(ConfigSectionFont) Is Nothing Then Font = LoadFontFromConfig(mConfig.GetConfigurationSection(ConfigSectionFont))
+
+If mConfig.GetAttribute(ConfigSettingAlign) <> "" Then Align = mConfig.GetSetting(ConfigSettingAlign)
+If mConfig.GetAttribute(ConfigSettingAngle) <> "" Then Angle = mConfig.GetSetting(ConfigSettingAngle)
+
+If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+
+If mConfig.GetAttribute(ConfigSettingBox) <> "" Then Box = mConfig.GetSetting(ConfigSettingBox, "False")
+If mConfig.GetAttribute(ConfigSettingBoxColor) <> "" Then BoxColor = mConfig.GetSetting(ConfigSettingBoxColor)
+If mConfig.GetAttribute(ConfigSettingBoxFillColor) <> "" Then BoxFillColor = mConfig.GetSetting(ConfigSettingBoxFillColor)
+If mConfig.GetAttribute(ConfigSettingBoxFillStyle) <> "" Then BoxFillStyle = mConfig.GetSetting(ConfigSettingBoxFillStyle)
+If mConfig.GetAttribute(ConfigSettingBoxFillWithBackgroundColor) <> "" Then BoxFillWithBackgroundColor = mConfig.GetSetting(ConfigSettingBoxFillWithBackgroundColor)
+If mConfig.GetAttribute(ConfigSettingBoxStyle) <> "" Then BoxStyle = mConfig.GetSetting(ConfigSettingBoxStyle)
+If mConfig.GetAttribute(ConfigSettingBoxThickness) <> "" Then BoxThickness = mConfig.GetSetting(ConfigSettingBoxThickness)
+
+If mConfig.GetAttribute(ConfigSettingEllipsis) <> "" Then Ellipsis = mConfig.GetSetting(ConfigSettingEllipsis)
+If mConfig.GetAttribute(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
+If mConfig.GetAttribute(ConfigSettingExpandTabs) <> "" Then ExpandTabs = mConfig.GetSetting(ConfigSettingExpandTabs)
+
+If mConfig.GetAttribute(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
+If mConfig.GetAttribute(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
+
+If mConfig.GetAttribute(ConfigSettingHideIfBlank) <> "" Then HideIfBlank = mConfig.GetSetting(ConfigSettingHideIfBlank)
+
+If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+
+If mConfig.GetAttribute(ConfigSettingJustification) <> "" Then Justification = mConfig.GetSetting(ConfigSettingJustification)
+
+If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+
+If mConfig.GetAttribute(ConfigSettingMultiline) <> "" Then MultiLine = mConfig.GetSetting(ConfigSettingMultiline)
+
+If mConfig.GetAttribute(ConfigSettingPaddingX) <> "" Then PaddingX = mConfig.GetSetting(ConfigSettingPaddingX)
+If mConfig.GetAttribute(ConfigSettingPaddingY) <> "" Then PaddingY = mConfig.GetSetting(ConfigSettingPaddingY)
+
+If mConfig.GetAttribute(ConfigSettingTabWidth) <> "" Then TabWidth = mConfig.GetSetting(ConfigSettingTabWidth)
+
+If mConfig.GetAttribute(ConfigSettingWordWrap) <> "" Then WordWrap = mConfig.GetSetting(ConfigSettingWordWrap)
+
+If Not mConfig.GetConfigurationSection(ConfigSectionLeftMargin) Then LeftMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionLeftMargin))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset) Then Offset = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset))
+If Not mConfig.GetConfigurationSection(ConfigSectionRightMargin) Then RightMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionRightMargin))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset) Then Offset = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset))
+If Not mConfig.GetConfigurationSection(ConfigSectionSize) Then Size = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionSize))
+
 Exit Sub
 
 Err:
@@ -783,6 +1154,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkPropertySet( _
+                ByVal pPropFlag As TextPropertyFlags)
+Const ProcName As String = "checkPropertySet"
+On Error GoTo Err
+
+If Not IsPropertySet(pPropFlag) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Property is not set"
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
 Dim ev As PropertyChangedEvent
@@ -800,4 +1188,203 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function propertyFlagToConfigSetting( _
+            ByVal pPropFlag As TextPropertyFlags) As String
+Select Case pPropFlag
+Case TextPropertyColor
+    propertyFlagToConfigSetting = ConfigSettingColor
+Case TextPropertyBox
+    propertyFlagToConfigSetting = ConfigSettingBox
+Case TextPropertyBoxColor
+    propertyFlagToConfigSetting = ConfigSettingBoxColor
+Case TextPropertyBoxStyle
+    propertyFlagToConfigSetting = ConfigSettingBoxStyle
+Case TextPropertyBoxThickness
+    propertyFlagToConfigSetting = ConfigSettingBoxThickness
+Case TextPropertyBoxFillColor
+    propertyFlagToConfigSetting = ConfigSettingBoxFillColor
+Case TextPropertyBoxFillStyle
+    propertyFlagToConfigSetting = ConfigSettingBoxFillStyle
+Case TextPropertyAlign
+    propertyFlagToConfigSetting = ConfigSettingAlign
+Case TextPropertyPaddingX
+    propertyFlagToConfigSetting = ConfigSettingPaddingX
+Case TextPropertyPaddingY
+    propertyFlagToConfigSetting = ConfigSettingPaddingY
+Case TextPropertyBoxFillWithBackgroundColor
+    propertyFlagToConfigSetting = ConfigSettingBoxFillWithBackgroundColor
+Case TextPropertyFixedX
+    propertyFlagToConfigSetting = ConfigSettingFixedX
+Case TextPropertyFixedY
+    propertyFlagToConfigSetting = ConfigSettingFixedY
+Case TextPropertyIncludeInAutoscale
+    propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
+Case TextPropertyExtended
+    propertyFlagToConfigSetting = ConfigSettingExtended
+Case TextPropertyAngle
+    propertyFlagToConfigSetting = ConfigSettingAngle
+Case TextPropertyJustification
+    propertyFlagToConfigSetting = ConfigSettingJustification
+Case TextPropertyMultiLine
+    propertyFlagToConfigSetting = ConfigSettingMultiline
+Case TextPropertyEllipsis
+    propertyFlagToConfigSetting = ConfigSettingEllipsis
+Case TextPropertyExpandTabs
+    propertyFlagToConfigSetting = ConfigSettingExpandTabs
+Case TextPropertyTabWidth
+    propertyFlagToConfigSetting = ConfigSettingTabWidth
+Case TextPropertyWordWrap
+    propertyFlagToConfigSetting = ConfigSettingWordWrap
+Case TextPropertyHideIfBlank
+    propertyFlagToConfigSetting = ConfigSettingHideIfBlank
+Case TextPropertyLeftMargin
+    propertyFlagToConfigSetting = ConfigSectionLeftMargin
+Case TextPropertyRightMargin
+    propertyFlagToConfigSetting = ConfigSectionRightMargin
+Case TextPropertyOffset
+    propertyFlagToConfigSetting = ConfigSectionOffset
+End Select
+            
+End Function
+
+Private Sub setBooleanProperty( _
+                ByRef pProp As Boolean, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Boolean)
+Const ProcName As String = "setBooleanProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setDimensionProperty( _
+                ByRef pProp As Dimension, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Dimension)
+Const ProcName As String = "setDimensionProperty"
+On Error GoTo Err
+
+If pProp Is Value And IsPropertySet(pPropFlag) Then Exit Sub
+If Not pProp Is Nothing Then pProp.RemoveFromConfig
+Set pProp = Value
+If pProp Is Nothing Then
+    ClearProperty pPropFlag
+Else
+    setPropertyFlag pPropFlag
+    If Not mConfig Is Nothing Then pProp.ConfigurationSection = mConfig.AddConfigurationSection(propertyFlagToConfigSetting(pPropFlag))
+End If
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setDoubleProperty( _
+                ByRef pProp As Double, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Single)
+Const ProcName As String = "setDoubleProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setLongProperty( _
+                ByRef pProp As Long, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Long)
+Const ProcName As String = "setLongProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSingleProperty( _
+                ByRef pProp As Single, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Single)
+Const ProcName As String = "setSingleProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSizeProperty( _
+                ByRef pProp As Size, _
+                ByVal pPropFlag As TextPropertyFlags, _
+                ByVal Value As Size)
+Const ProcName As String = "setSizeProperty"
+On Error GoTo Err
+
+If pProp Is Value And IsPropertySet(pPropFlag) Then Exit Sub
+If Not pProp Is Nothing Then pProp.RemoveFromConfig
+Set pProp = Value
+If pProp Is Nothing Then
+    ClearProperty pPropFlag
+Else
+    setPropertyFlag pPropFlag
+    If Not mConfig Is Nothing Then pProp.ConfigurationSection = mConfig.AddConfigurationSection(propertyFlagToConfigSetting(pPropFlag))
+End If
+firePropertyChanged gTextPropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setPropertyFlag( _
+                ByVal flag As TextPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gSetFlag(mPropertyFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+
 

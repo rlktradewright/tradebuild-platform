@@ -77,7 +77,7 @@ Private mBlank As Boolean   ' indicates that no value has been assigned
 
 Private mPrevDataPointRef As WeakReference
 
-Private mPropertyOverrideFlags As DataPointPropertyOverrideFlags
+Private mPropertyOverrideFlags As DataPointPropertyFlags
 
 Private mSeriesUpdateNumber As Long
 
@@ -213,8 +213,8 @@ Case DataPointDisplayModeHistogram
 End Select
 End Property
 
-Private Property Let IGraphicObject_Handle(ByVal value As Long)
-mHandle = value
+Private Property Let IGraphicObject_Handle(ByVal Value As Long)
+mHandle = Value
 End Property
 
 Private Property Get IGraphicObject_Handle() As Long
@@ -247,8 +247,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
-mInScope = value
+Private Property Let IGraphicObject_inScope(ByVal Value As Boolean)
+mInScope = Value
 End Property
 
 Private Property Get IGraphicObject_IsSelectable() As Boolean
@@ -308,8 +308,8 @@ If mX > pXInterval.endValue Then Exit Property
 IGraphicObject_VerticalRangeInXinterval = RectGetYInterval(IGraphicObject_boundingRectangle)
 End Property
 
-Private Property Let IGraphicObject_visible(ByVal value As Boolean)
-mVisible = value
+Private Property Let IGraphicObject_visible(ByVal Value As Boolean)
+mVisible = Value
 End Property
 
 
@@ -332,6 +332,8 @@ Case "DOWNCOLOR"
 Case "HistogramBarWidth"
     initiateRedraw True, True
 Case "INCLUDEINAUTOSCALE"
+    initiateRedraw False, False
+Case "LAYER"
     initiateRedraw False, False
 Case "LINESTYLE"
     initiateRedraw False, False
@@ -362,21 +364,21 @@ Public Property Get Blank() As Boolean
 Blank = mBlank
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
 
-If isPropertyOverrideFlagSet(DataPointIsSetColor) Then
-    If getProperties.Color = value Then Exit Property
+If IsPropertySet(DataPointPropertyColor) Then
+    If getProperties.Color = Value Then Exit Property
 End If
-setPropertyOverrideFlag DataPointIsSetColor
-getProperties.Color = value
+setPropertyFlag DataPointPropertyColor
+getProperties.Color = Value
 initiateRedraw False, False
 
 Exit Property
@@ -391,8 +393,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Color = mSeries.Color
-If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If isPropertyOverrideFlagSet(DataPointIsSetColor) Then Color = getProperties.Color
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyColor) Then Color = mLocalStyle.Color
+If IsPropertySet(DataPointPropertyColor) Then Color = getProperties.Color
 
 Exit Property
 
@@ -404,14 +406,14 @@ Public Property Get DataValue() As Double
 DataValue = mDataValue
 End Property
 
-Public Property Let DataValue(value As Double)
+Public Property Let DataValue(Value As Double)
 Const ProcName As String = "DataValue"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = mDataValue Then Exit Property
+If Value = mDataValue Then Exit Property
 mBlank = False
-mDataValue = value
+mDataValue = Value
 initiateRedraw True, True
 
 Exit Property
@@ -420,16 +422,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let DisplayMode(ByVal value As DataPointDisplayModes)
+Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
 Const ProcName As String = "DisplayMode"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then
-    If getProperties.DisplayMode = value Then Exit Property
+If IsPropertySet(DataPointPropertyDisplayMode) Then
+    If getProperties.DisplayMode = Value Then Exit Property
 End If
-setPropertyOverrideFlag DataPointIsSetDisplayMode
-getProperties.DisplayMode = value
+setPropertyFlag DataPointPropertyDisplayMode
+getProperties.DisplayMode = Value
 initiateRedraw True, True
 
 Exit Property
@@ -444,8 +446,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 DisplayMode = mSeries.DisplayMode
-If Not mLocalStyle Is Nothing Then DisplayMode = mLocalStyle.DisplayMode
-If isPropertyOverrideFlagSet(DataPointIsSetDisplayMode) Then DisplayMode = getProperties.DisplayMode
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = mLocalStyle.DisplayMode
+If IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = getProperties.DisplayMode
 
 Exit Property
 
@@ -453,21 +455,21 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let DownColor(ByVal value As Long)
+Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) And value <> -1 Then _
+If Not gIsValidColor(Value) And Value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color or -1"
 
-If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then
-    If getProperties.DownColor = value Then Exit Property
+If IsPropertySet(DataPointPropertyDownColor) Then
+    If getProperties.DownColor = Value Then Exit Property
 End If
-setPropertyOverrideFlag DataPointIsSetDownColor
-getProperties.DownColor = value
+setPropertyFlag DataPointPropertyDownColor
+getProperties.DownColor = Value
 initiateRedraw False, False
 
 Exit Property
@@ -482,8 +484,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 DownColor = mSeries.DownColor
-If Not mLocalStyle Is Nothing Then DownColor = mLocalStyle.DownColor
-If isPropertyOverrideFlagSet(DataPointIsSetDownColor) Then DownColor = getProperties.DownColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyDownColor) Then DownColor = mLocalStyle.DownColor
+If IsPropertySet(DataPointPropertyDownColor) Then DownColor = getProperties.DownColor
 If DownColor = -1 Then DownColor = Color
 
 Exit Property
@@ -500,20 +502,20 @@ Friend Property Get handle() As Long
 handle = mHandle
 End Property
 
-Public Property Let HistogramBarWidth(ByVal value As Single)
+Public Property Let HistogramBarWidth(ByVal Value As Single)
 Const ProcName As String = "HistogramBarWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If value <= 0 Or value > 1 Then _
+If Value <= 0 Or Value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "HistogramBarWidth must be greater than zero but not greater than 1"
-If isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then
-    If getProperties.HistogramBarWidth = value Then Exit Property
+If IsPropertySet(DataPointPropertyHistWidth) Then
+    If getProperties.HistogramBarWidth = Value Then Exit Property
 End If
-setPropertyOverrideFlag DataPointIsSetHistWidth
-getProperties.HistogramBarWidth = value
+setPropertyFlag DataPointPropertyHistWidth
+getProperties.HistogramBarWidth = Value
 initiateRedraw True, True
 
 Exit Property
@@ -528,8 +530,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 HistogramBarWidth = mSeries.HistogramBarWidth
-If Not mLocalStyle Is Nothing Then HistogramBarWidth = mLocalStyle.HistogramBarWidth
-If isPropertyOverrideFlagSet(DataPointIsSetHistWidth) Then HistogramBarWidth = getProperties.HistogramBarWidth
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = mLocalStyle.HistogramBarWidth
+If IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = getProperties.HistogramBarWidth
 
 Exit Property
 
@@ -543,8 +545,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then IncludeInAutoscale = getProperties.IncludeInAutoscale
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = getProperties.IncludeInAutoscale
 
 Exit Property
 
@@ -552,16 +554,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetIncludeInAutoscale) Then
-    If getProperties.IncludeInAutoscale = value Then Exit Property
+If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then
+    If getProperties.IncludeInAutoscale = Value Then Exit Property
 End If
-getProperties.IncludeInAutoscale = value
-setPropertyOverrideFlag DataPointIsSetIncludeInAutoscale
+getProperties.IncludeInAutoscale = Value
+setPropertyFlag DataPointPropertyIncludeInAutoscale
 initiateRedraw False, False
 
 Exit Property
@@ -574,8 +576,8 @@ Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
-mIsSelectable = value
+Public Property Let IsSelectable(ByVal Value As Boolean)
+mIsSelectable = Value
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -590,16 +592,16 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let Layer(ByVal value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetLayer) Then
-    If mLayer = value Then Exit Property
+If IsPropertySet(DataPointPropertyLayer) Then
+    If mLayer = Value Then Exit Property
 End If
-mLayer = value
-setPropertyOverrideFlag DataPointIsSetLayer
+mLayer = Value
+setPropertyFlag DataPointPropertyLayer
 initiateRedraw False, False
 
 Exit Property
@@ -614,7 +616,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If isPropertyOverrideFlagSet(DataPointIsSetLayer) Then Layer = mLayer
+If IsPropertySet(DataPointPropertyLayer) Then Layer = mLayer
 
 Exit Property
 
@@ -622,16 +624,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineStyle(ByVal value As LineStyles)
+Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then
-    If getProperties.LineStyle = value Then Exit Property
+If IsPropertySet(DataPointPropertyLineStyle) Then
+    If getProperties.LineStyle = Value Then Exit Property
 End If
-getProperties.LineStyle = value
-setPropertyOverrideFlag DataPointIsSetLineStyle
+getProperties.LineStyle = Value
+setPropertyFlag DataPointPropertyLineStyle
 initiateRedraw False, False
 
 Exit Property
@@ -646,8 +648,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 LineStyle = mSeries.LineStyle
-If Not mLocalStyle Is Nothing Then LineStyle = mLocalStyle.LineStyle
-If isPropertyOverrideFlagSet(DataPointIsSetLineStyle) Then LineStyle = getProperties.LineStyle
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = mLocalStyle.LineStyle
+If IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = getProperties.LineStyle
 
 Exit Property
 
@@ -655,16 +657,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineThickness(ByVal value As Long)
+Public Property Let LineThickness(ByVal Value As Long)
 Const ProcName As String = "LineThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then
-    If getProperties.LineThickness = value Then Exit Property
+If IsPropertySet(DataPointPropertyLineThickness) Then
+    If getProperties.LineThickness = Value Then Exit Property
 End If
-getProperties.LineThickness = value
-setPropertyOverrideFlag DataPointIsSetLineThickness
+getProperties.LineThickness = Value
+setPropertyFlag DataPointPropertyLineThickness
 initiateRedraw True, True
 
 Exit Property
@@ -679,8 +681,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 LineThickness = mSeries.LineThickness
-If Not mLocalStyle Is Nothing Then LineThickness = mLocalStyle.LineThickness
-If isPropertyOverrideFlagSet(DataPointIsSetLineThickness) Then LineThickness = getProperties.LineThickness
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = mLocalStyle.LineThickness
+If IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = getProperties.LineThickness
 
 Exit Property
 
@@ -693,13 +695,13 @@ Set LocalStyle = mLocalStyle
 End Property
 
 Public Property Let LocalStyle( _
-                ByVal value As DataPointStyle)
+                ByVal Value As DataPointStyle)
 
 Const ProcName As String = "LocalStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mLocalStyle = value
+Set mLocalStyle = Value
 initiateRedraw True, True
 
 Exit Property
@@ -708,16 +710,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PointStyle(ByVal value As PointStyles)
+Public Property Let PointStyle(ByVal Value As PointStyles)
 Const ProcName As String = "PointStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then
-    If getProperties.PointStyle = value Then Exit Property
+If IsPropertySet(DataPointPropertyPointStyle) Then
+    If getProperties.PointStyle = Value Then Exit Property
 End If
-getProperties.PointStyle = value
-setPropertyOverrideFlag DataPointIsSetPointStyle
+getProperties.PointStyle = Value
+setPropertyFlag DataPointPropertyPointStyle
 initiateRedraw False, False
 
 Exit Property
@@ -732,8 +734,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 PointStyle = mSeries.PointStyle
-If Not mLocalStyle Is Nothing Then PointStyle = mLocalStyle.PointStyle
-If isPropertyOverrideFlagSet(DataPointIsSetPointStyle) Then PointStyle = getProperties.PointStyle
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = mLocalStyle.PointStyle
+If IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = getProperties.PointStyle
 
 Exit Property
 
@@ -755,12 +757,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let PreviousDataPoint(ByVal value As DataPoint)
+Friend Property Let PreviousDataPoint(ByVal Value As DataPoint)
 Const ProcName As String = "PreviousDataPoint"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mPrevDataPointRef = CreateWeakReference(value)
+Set mPrevDataPointRef = CreateWeakReference(Value)
 
 Exit Property
 
@@ -768,20 +770,20 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let UpColor(ByVal value As Long)
+Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then
-    If getProperties.UpColor = value Then Exit Property
+If IsPropertySet(DataPointPropertyUpColor) Then
+    If getProperties.UpColor = Value Then Exit Property
 End If
-getProperties.UpColor = value
-setPropertyOverrideFlag DataPointIsSetUpColor
+getProperties.UpColor = Value
+setPropertyFlag DataPointPropertyUpColor
 initiateRedraw False, False
 
 Exit Property
@@ -796,8 +798,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 UpColor = mSeries.UpColor
-If Not mLocalStyle Is Nothing Then UpColor = mLocalStyle.UpColor
-If isPropertyOverrideFlagSet(DataPointIsSetUpColor) Then UpColor = getProperties.UpColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(DataPointPropertyUpColor) Then UpColor = mLocalStyle.UpColor
+If IsPropertySet(DataPointPropertyUpColor) Then UpColor = getProperties.UpColor
 If UpColor = -1 Then UpColor = Color
 
 Exit Property
@@ -810,14 +812,14 @@ Public Property Get Visible() As Boolean
 Visible = mVisible
 End Property
 
-Public Property Let X(ByVal value As Double)
+Public Property Let X(ByVal Value As Double)
 Const ProcName As String = "X"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = mX Then Exit Property
+If Value = mX Then Exit Property
 mBlank = False
-mX = value
+mX = Value
 initiateRedraw True, True
 
 Exit Property
@@ -1001,9 +1003,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As DataPointPropertyOverrideFlags)
-Const ProcName As String = "clearPropertyOverrideFlag"
+Private Sub ClearProperty( _
+                ByVal flag As DataPointPropertyFlags)
+Const ProcName As String = "ClearProperty"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -1081,7 +1083,7 @@ With mViewport
         .Canvas.DrawRectangle mX - HistogramBarWidth / 2, 0, mX + HistogramBarWidth / 2, mDataValue
     ElseIf drawAsPoint Then
         If PointStyle = PointRound Then
-            .Canvas.DrawPoint .NewPoint(mX, mDataValue)
+            .Canvas.DrawPoint gNewPoint(mX, mDataValue)
         Else
             .Canvas.SetPenAttributes Color, _
                                     1, _
@@ -1190,13 +1192,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As DataPointPropertyOverrideFlags) As Boolean
-Const ProcName As String = "isPropertyOverrideFlagSet"
+Private Function IsPropertySet( _
+                ByVal flag As DataPointPropertyFlags) As Boolean
+Const ProcName As String = "IsPropertySet"
 Dim failpoint As String
 On Error GoTo Err
 
-isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 
 Exit Function
 
@@ -1217,9 +1219,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub setPropertyOverrideFlag( _
-                ByVal flag As DataPointPropertyOverrideFlags)
-Const ProcName As String = "setPropertyOverrideFlag"
+Private Sub setPropertyFlag( _
+                ByVal flag As DataPointPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
 Dim failpoint As String
 On Error GoTo Err
 

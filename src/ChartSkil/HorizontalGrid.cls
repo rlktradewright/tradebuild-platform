@@ -70,16 +70,16 @@ Private mPriceFormatter                             As IPriceFormatter
 ' Properties
 '@================================================================================
 
-Friend Property Let GridLineStyle(ByVal value As LineStyle)
-mYGridLines.Style = value
+Friend Property Let GridLineStyle(ByVal Value As LineStyle)
+mYGridLines.Style = Value
 End Property
 
-Friend Property Let Hidden(ByVal value As Boolean)
+Friend Property Let Hidden(ByVal Value As Boolean)
 Const ProcName As String = "Hidden"
 Dim failpoint As String
 On Error GoTo Err
 
-mHidden = value
+mHidden = Value
 
 If mHidden Then removeLines
 
@@ -93,8 +93,8 @@ Friend Property Get Hidden() As Boolean
 Hidden = mHidden
 End Property
 
-Friend Property Let PriceFormatter(ByVal value As IPriceFormatter)
-Set mPriceFormatter = value
+Friend Property Let PriceFormatter(ByVal Value As IPriceFormatter)
+Set mPriceFormatter = Value
 End Property
 
 Friend Property Get PriceFormatter() As IPriceFormatter
@@ -102,12 +102,12 @@ Set PriceFormatter = mPriceFormatter
 End Property
 
 Friend Property Let TextStyle( _
-                ByVal value As TextStyle)
+                ByVal Value As TextStyle)
 Const ProcName As String = "TextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not mYGridTexts Is Nothing Then mYGridTexts.Style = value
+If Not mYGridTexts Is Nothing Then mYGridTexts.Style = Value
 
 Exit Property
 
@@ -115,14 +115,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let YAxisRegion(ByVal value As ChartRegion)
+Friend Property Let YAxisRegion(ByVal Value As ChartRegion)
 Const ProcName As String = "YAxisRegion"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then Exit Property
+If Value Is Nothing Then Exit Property
 
-Set mYAxisRegionRef = CreateWeakReference(value)
+Set mYAxisRegionRef = CreateWeakReference(Value)
 Set mYGridTexts = yAxisRegionObj.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
 mYGridTexts.Align = AlignBoxCentreLeft
 
@@ -228,15 +228,12 @@ Private Sub setHorizontalGridLines( _
 Dim Y As Double
 Dim i As Long
 Dim aLine As ChartSkil26.Line
-Dim reg As ChartRegion
 
 Const ProcName As String = "setHorizontalGridLines"
 Dim failpoint As String
 On Error GoTo Err
 
 If mHidden Then Exit Sub
-
-Set reg = regionObj
 
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
 Do While Y < pTop
@@ -246,14 +243,14 @@ Do While Y < pTop
     Else
         Set aLine = mYGridLines.Item(i)
     End If
-    aLine.SetPosition reg.NewPoint(0, Y, CoordsRelative, CoordsLogical), _
-                        reg.NewPoint(100, Y, CoordsRelative, CoordsLogical)
+    aLine.SetPosition gNewPoint(0, Y, CoordsRelative, CoordsLogical), _
+                        gNewPoint(100, Y, CoordsRelative, CoordsLogical)
     Y = Y + pGridlineSpacing
 Loop
 For i = i + 1 To mYGridLines.Count
     Set aLine = mYGridLines.Item(i)
-    aLine.SetPosition reg.NewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
-                        reg.NewPoint(-1000, 0, CoordsLogical, CoordsLogical)
+    aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
+                        gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
 Next
 
 Exit Sub
@@ -269,15 +266,12 @@ Private Sub setHorizontalGridTexts( _
 Dim Y As Double
 Dim i As Long
 Dim aText As Text
-Dim reg As ChartRegion
 
 Const ProcName As String = "setHorizontalGridTexts"
 Dim failpoint As String
 On Error GoTo Err
 
 If mYGridTexts Is Nothing Then Exit Sub
-
-Set reg = yAxisRegionObj
 
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
 Do While Y < pTop
@@ -288,7 +282,7 @@ Do While Y < pTop
         Set aText = mYGridTexts.Item(i)
     End If
     aText.Text = FormatYValue(Y)
-    aText.Position = reg.NewPoint(15, Y, CoordsLogical, CoordsLogical)
+    aText.Position = gNewPoint(15, Y, CoordsLogical, CoordsLogical)
     Y = Y + pGridlineSpacing
 Loop
 For i = i + 1 To mYGridTexts.Count

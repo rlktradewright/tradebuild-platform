@@ -107,7 +107,7 @@ Dim tte As TimeframeTableEntry
 Dim i As Long
 
 Const ProcName As String = "Contract"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mContract = value
@@ -142,7 +142,7 @@ Public Function Add( _
                 Optional ByVal excludeCurrentbar As Boolean) As Timeframe
 
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case barTimePeriod.Units
@@ -182,7 +182,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -228,7 +228,7 @@ Public Function AddHistorical( _
                 Optional ByVal includeBarsOutsideSession As Boolean) As Timeframe
 
 Const ProcName As String = "AddHistorical"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case barTimePeriod.Units
@@ -288,7 +288,7 @@ Dim tte As TimeframeTableEntry
 Dim timeframeIndex As Long
 
 Const ProcName As String = "AddTimeframe"
-Dim failpoint As String
+
 On Error GoTo Err
 
 timeframeIndex = getTimeframeIndex(barTimePeriod, _
@@ -354,7 +354,7 @@ End Function
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As String
+
 On Error GoTo Err
 
 RemoveAll
@@ -370,7 +370,7 @@ Public Function Item(Key As String) As Timeframe
 Dim i As Long
 
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -390,7 +390,7 @@ Public Sub Remove(Key As String)
 Dim i As Long
 
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -412,7 +412,7 @@ Public Sub RemoveAll()
 Dim i As Long
 
 Const ProcName As String = "RemoveAll"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -430,7 +430,7 @@ End Sub
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -449,7 +449,7 @@ End Sub
 
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
 Const ProcName As String = "clearTimeframeTableEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTimeframeTable(index).Key = ""
@@ -469,7 +469,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -496,7 +496,7 @@ Private Function generateKey( _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean) As String
 Const ProcName As String = "generateKey"
-Dim failpoint As String
+
 On Error GoTo Err
 
 generateKey = barTimePeriod.ToString & _
@@ -527,7 +527,7 @@ Private Function getTimeframeIndex( _
 Dim i As Long
 
 Const ProcName As String = "getTimeframeIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 getTimeframeIndex = -1

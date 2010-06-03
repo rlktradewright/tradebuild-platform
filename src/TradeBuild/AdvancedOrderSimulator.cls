@@ -112,11 +112,11 @@ Dim tli As TimerListItem
 Dim lOrder As SimulatorOrder
 
 Const ProcName As String = "StateChangeListener_Change"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set tli = ev.source
-Set lOrder = tli.data
+Set lOrder = tli.Data
 
 If ev.State = TimerListItemStates.TimerListItemStateExpired Then
     Select Case lOrder.Order.Status
@@ -148,14 +148,14 @@ Friend Property Let ClockRate( _
                 ByVal value As Single)
 Dim latestTimestamp As Date
 Const ProcName As String = "ClockRate"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(MarketIndex)
     If Not .Clock Is Nothing Then
         latestTimestamp = .Clock.Timestamp
     End If
-    Set .Clock = CreateSimulatedClock(value, .Contract.Timezone.standardName)
+    Set .Clock = CreateSimulatedClock(value, .Contract.Timezone.StandardName)
     .simulateExchangeDelays = (value <> 0)
 End With
 
@@ -180,7 +180,7 @@ Friend Sub Bid(ByVal Timestamp As Date, _
 Dim lOrder As SimulatorOrder
 
 Const ProcName As String = "Bid"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(MarketIndex)
@@ -222,7 +222,7 @@ Friend Sub Ask(ByVal Timestamp As Date, _
 Dim lOrder As SimulatorOrder
 
 Const ProcName As String = "Ask"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(MarketIndex)
@@ -263,7 +263,7 @@ Dim pendingOrder As SimulatorOrder
 Dim relatedOrder As SimulatorOrder
 
 Const ProcName As String = "CancelOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -283,12 +283,12 @@ With mMarketTable(lOrder.MarketIndex)
     On Error GoTo Err
     
     If Not pendingOrder Is Nothing Then
-        If lOrder.parentId <> "" Then
-            Set relatedOrder = .pendingOrders(lOrder.parentId)
+        If lOrder.ParentId <> "" Then
+            Set relatedOrder = .pendingOrders(lOrder.ParentId)
             setCancelOrder relatedOrder
             
             For Each relatedOrder In .pendingOrders
-                If relatedOrder.parentId = lOrder.parentId And _
+                If relatedOrder.ParentId = lOrder.ParentId And _
                     relatedOrder.Order.Id <> lOrder.Order.Id _
                 Then
                     setCancelOrder relatedOrder
@@ -296,9 +296,9 @@ With mMarketTable(lOrder.MarketIndex)
             Next
         Else
             For Each relatedOrder In .pendingOrders
-                If relatedOrder.parentId = lOrder.Order.Id Or _
-                    (relatedOrder.ocaGroup = lOrder.ocaGroup And _
-                    lOrder.ocaGroup <> "" And _
+                If relatedOrder.ParentId = lOrder.Order.Id Or _
+                    (relatedOrder.OcaGroup = lOrder.OcaGroup And _
+                    lOrder.OcaGroup <> "" And _
                     relatedOrder.Order.Id <> lOrder.Order.Id) _
                 Then
                     setCancelOrder relatedOrder
@@ -312,15 +312,15 @@ With mMarketTable(lOrder.MarketIndex)
         
         If lOrder Is Nothing Then Exit Sub
         
-        If lOrder.parentId <> "" Then
+        If lOrder.ParentId <> "" Then
             On Error Resume Next
-            Set relatedOrder = .activeOrders(lOrder.parentId)
+            Set relatedOrder = .activeOrders(lOrder.ParentId)
             On Error GoTo Err
             If Not relatedOrder Is Nothing Then
                 setCancelOrder relatedOrder
             End If
             For Each relatedOrder In .activeOrders
-                If relatedOrder.parentId = lOrder.parentId And _
+                If relatedOrder.ParentId = lOrder.ParentId And _
                     relatedOrder.Order.Id <> lOrder.Order.Id _
                 Then
                     setCancelOrder relatedOrder
@@ -328,9 +328,9 @@ With mMarketTable(lOrder.MarketIndex)
             Next
         Else
             For Each relatedOrder In .activeOrders
-                If relatedOrder.parentId = lOrder.Order.Id Or _
-                    (relatedOrder.ocaGroup = lOrder.ocaGroup And _
-                    lOrder.ocaGroup <> "" And _
+                If relatedOrder.ParentId = lOrder.Order.Id Or _
+                    (relatedOrder.OcaGroup = lOrder.OcaGroup And _
+                    lOrder.OcaGroup <> "" And _
                     relatedOrder.Order.Id <> lOrder.Order.Id) _
                   Then
                     setCancelOrder relatedOrder
@@ -362,7 +362,7 @@ End Sub
 Friend Function GetOrder( _
                 ByVal pId As String) As SimulatorOrder
 Const ProcName As String = "GetOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set GetOrder = mAllOrders(pId)
@@ -375,8 +375,8 @@ End Function
 
 Friend Sub placeOrder( _
                 ByVal pOrder As Order, _
-                ByVal parentId As String, _
-                ByVal ocaGroup As String, _
+                ByVal ParentId As String, _
+                ByVal OcaGroup As String, _
                 ByVal MarketIndex As Long, _
                 ByVal transmit As Boolean)
 
@@ -385,7 +385,7 @@ Dim specifier As ContractSpecifier
 Dim pendingOrder As SimulatorOrder
 
 Const ProcName As String = "placeOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If MarketIndex < 0 Or MarketIndex > UBound(mMarketTable) Then
@@ -425,8 +425,8 @@ If lOrder Is Nothing Then
     Set lOrder = New SimulatorOrder
     lOrder.Order = pOrder.Clone
     lOrder.MarketIndex = MarketIndex
-    lOrder.ocaGroup = ocaGroup
-    lOrder.parentId = parentId
+    lOrder.OcaGroup = OcaGroup
+    lOrder.ParentId = ParentId
     mAllOrders.Add lOrder, pOrder.Id
 ElseIf pOrder.BrokerId <> "" Then
     ' the order is being updated
@@ -443,8 +443,8 @@ Else
     Set lOrder = New SimulatorOrder
     lOrder.Order = pOrder.Clone
     lOrder.MarketIndex = MarketIndex
-    lOrder.ocaGroup = ocaGroup
-    lOrder.parentId = parentId
+    lOrder.OcaGroup = OcaGroup
+    lOrder.ParentId = ParentId
     mAllOrders.Add lOrder, pOrder.Id
     
 End If
@@ -461,15 +461,15 @@ With mMarketTable(MarketIndex)
         
         ' now see if there are any other pending orders related
         ' to this one via parentid or oca group
-        If lOrder.parentId <> "" Then
-            Set pendingOrder = .pendingOrders(lOrder.parentId)
+        If lOrder.ParentId <> "" Then
+            Set pendingOrder = .pendingOrders(lOrder.ParentId)
             .activeOrders.Add pendingOrder, pendingOrder.Order.Id
             .pendingOrders.Remove pendingOrder.Order.Id
             setSubmitOrder pendingOrder
             
             ' find any other child orders
             For Each pendingOrder In .pendingOrders
-                If pendingOrder.parentId = lOrder.parentId Then
+                If pendingOrder.ParentId = lOrder.ParentId Then
                     .activeOrders.Add pendingOrder, pendingOrder.Order.Id
                     .pendingOrders.Remove pendingOrder.Order.Id
                     setSubmitOrder pendingOrder
@@ -478,9 +478,9 @@ With mMarketTable(MarketIndex)
         Else
             ' find any child orders or related OCA orders
             For Each pendingOrder In .pendingOrders
-                If pendingOrder.parentId = lOrder.Order.Id Or _
-                    (pendingOrder.ocaGroup = lOrder.ocaGroup And _
-                    lOrder.ocaGroup <> "") _
+                If pendingOrder.ParentId = lOrder.Order.Id Or _
+                    (pendingOrder.OcaGroup = lOrder.OcaGroup And _
+                    lOrder.OcaGroup <> "") _
                 Then
                     .activeOrders.Add pendingOrder, pendingOrder.Order.Id
                     .pendingOrders.Remove pendingOrder.Order.Id
@@ -509,7 +509,7 @@ Friend Function startMarket( _
 Dim i As Long
 
 Const ProcName As String = "startMarket"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 startMarket = -1
@@ -532,7 +532,7 @@ With mMarketTable(startMarket)
     Set .serviceConsumer = serviceConsumer
     Set .activeOrders = New Collection
     Set .pendingOrders = New Collection
-    Set .Clock = CreateSimulatedClock(1, pContract.Timezone.standardName)
+    Set .Clock = CreateSimulatedClock(1, pContract.Timezone.StandardName)
 End With
 
 Exit Function
@@ -544,7 +544,7 @@ End Function
 
 Friend Sub stopMarket(ByVal Handle As Long)
 Const ProcName As String = "stopMarket"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(Handle)
@@ -575,7 +575,7 @@ Dim lOrder As SimulatorOrder
 
 
 Const ProcName As String = "Trade"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(MarketIndex)
@@ -590,7 +590,7 @@ With mMarketTable(MarketIndex)
                 matchOrderTrade lOrder, Trade
             End If
         ElseIf lOrder.Order.Status = OrderStatuses.OrderStatusPreSubmitted And _
-            lOrder.parentId = "" _
+            lOrder.ParentId = "" _
         Then
             Select Case lOrder.Order.OrderType
                 Case OrderTypes.OrderTypeStop
@@ -642,7 +642,7 @@ Private Sub handleCreatedOrders(ByVal marketid As Long)
 ' submits any orders which are still in the created state
 Dim lOrder As SimulatorOrder
 Const ProcName As String = "handleCreatedOrders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(marketid)
@@ -662,12 +662,12 @@ End Sub
 Private Sub handlePendingSubmitOrders(ByVal marketid As Long)
 Dim lOrder As SimulatorOrder
 Const ProcName As String = "handlePendingSubmitOrders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(marketid)
     For Each lOrder In .activeOrders
-        If lOrder.Order.Status = OrderStatuses.OrderStatusPendingSubmit And lOrder.parentId = "" Then
+        If lOrder.Order.Status = OrderStatuses.OrderStatusPendingSubmit And lOrder.ParentId = "" Then
             setSubmitOrder lOrder
         End If
     Next
@@ -683,13 +683,13 @@ Private Sub handleRelatedOrders(ByVal pOrder As SimulatorOrder)
 Dim lOrder As SimulatorOrder
 
 Const ProcName As String = "handleRelatedOrders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(pOrder.MarketIndex)
     For Each lOrder In .activeOrders
-        If lOrder.parentId = pOrder.Order.Id Then
-            lOrder.parentId = ""    ' detach the order from the parent
+        If lOrder.ParentId = pOrder.Order.Id Then
+            lOrder.ParentId = ""    ' detach the order from the parent
             
             ' now set the status if necessary
             Select Case lOrder.Order.OrderType
@@ -707,14 +707,14 @@ With mMarketTable(pOrder.MarketIndex)
                 ' the order status must remain unchanged
             End Select
         End If
-        If lOrder.parentId = pOrder.parentId And _
+        If lOrder.ParentId = pOrder.ParentId And _
             lOrder.Order.Id <> pOrder.Order.Id And _
-            lOrder.parentId <> "" _
+            lOrder.ParentId <> "" _
         Then
             setCancelOrder lOrder
         End If
-        If lOrder.ocaGroup = pOrder.ocaGroup And _
-            pOrder.ocaGroup <> "" And _
+        If lOrder.OcaGroup = pOrder.OcaGroup And _
+            pOrder.OcaGroup <> "" And _
             lOrder.Order.Id <> pOrder.Order.Id _
         Then
             setCancelOrder lOrder
@@ -731,7 +731,7 @@ End Sub
 
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "matchOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(pOrder.MarketIndex)
@@ -762,7 +762,7 @@ End Sub
 Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
                             ByVal Trade As Double)
 Const ProcName As String = "matchOrderTrade"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With mMarketTable(pOrder.MarketIndex)
@@ -798,7 +798,7 @@ End Sub
 
 Private Sub setCancelOrder(ByVal pOrder As SimulatorOrder)
 Const ProcName As String = "setCancelOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pOrder.Order.Status = OrderStatuses.OrderStatusCancelled Then Exit Sub
@@ -843,7 +843,7 @@ Dim lFillSize As Long
 Dim exec As Execution
 
 Const ProcName As String = "setFillOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If fillPrice = 0 Then Exit Sub ' can occur at start of Session before first Bid or offer
@@ -982,7 +982,7 @@ Private Sub setRejectOrder(ByVal pOrder As Order, _
                             reason As String, _
                             ByVal MarketIndex As Long)
 Const ProcName As String = "setRejectOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mMarketTable(MarketIndex).serviceConsumer.RejectOrder pOrder.Id, _
@@ -996,14 +996,14 @@ End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
 Const ProcName As String = "setSubmitOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Select Case pOrder.Order.OrderType
 Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
     Select Case pOrder.Order.Status
     Case OrderStatuses.OrderStatusCreated
-        If pOrder.parentId <> "" Then
+        If pOrder.ParentId <> "" Then
             ' this is an attached order. Set the status to pending submit and
             ' then move it on at the next tick
             setOrderStatus pOrder, OrderStatuses.OrderStatusPendingSubmit
@@ -1021,7 +1021,7 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
             End If
         End If
     Case OrderStatuses.OrderStatusPendingSubmit
-        If pOrder.parentId <> "" Then
+        If pOrder.ParentId <> "" Then
             ' this is an attached order. Set the status to presubmitted
             ' then move it on at the next tick
             setOrderStatus pOrder, OrderStatuses.OrderStatusPreSubmitted

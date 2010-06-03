@@ -164,7 +164,7 @@ Else
     If Len(minTickString) - 2 = 0 Then
         mYScaleFormatStr = "0"
     Else
-        mYScaleFormatStr = "0." & String(Len(minTickString) - 2, "0")
+        mYScaleFormatStr = "0." & String$(Len(minTickString) - 2, "0")
     End If
 End If
 
@@ -184,7 +184,7 @@ If mIntegerYScale Then
     mYScaleSubFormatStr = "0"
 Else
     If mYScaleGridSpacing < 1 Then
-        mYScaleSubFormatStr = "0." & String(Abs(Int(Log(mYScaleGridSpacing / Log10))) + 2, "0")
+        mYScaleSubFormatStr = "0." & String$(Abs(Int(Log(mYScaleGridSpacing / Log10))) + 2, "0")
     Else
         mYScaleSubFormatStr = "0.00"
     End If

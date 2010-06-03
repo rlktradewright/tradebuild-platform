@@ -91,7 +91,7 @@ End Sub
 Friend Function GetBrokerId( _
                 ByRef pTradeBuildId As String) As String
 Const ProcName As String = "GetBrokerId"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -107,7 +107,7 @@ End Function
 Friend Function GetTradeBuildId( _
                 ByRef pBrokerId As String) As String
 Const ProcName As String = "GetTradeBuildId"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next

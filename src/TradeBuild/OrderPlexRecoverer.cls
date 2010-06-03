@@ -53,7 +53,7 @@ Private mCancel                                     As Boolean
 
 Private mOrderPlex                                  As orderPlex
 
-Private mWorkspace                                  As Workspace
+Private mWorkspace                                  As WorkSpace
 Private mTickerKey                                  As String
 
 Private mPositionManager                            As PositionManager
@@ -71,7 +71,7 @@ Private mOrderContext                               As OrderContext
 
 Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEvent)
 Const ProcName As String = "CollectionChangeListener_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.changeType = CollItemAdded Then processStartedTicker ev.affectedItem
@@ -89,7 +89,7 @@ End Sub
 Private Sub StateChangeListener_Change(ev As TWUtilities30.StateChangeEvent)
 Dim lTicker As Ticker
 Const ProcName As String = "StateChangeListener_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.State = TickerStates.TickerStateReady Or ev.State = TickerStates.TickerStateRunning Then
@@ -174,7 +174,7 @@ Friend Sub Initialise( _
                 ByVal pTickerKey As String)
 
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 logMessage "Starting recovery of orderPlex", pMsgQualifier:=pKey, pProcName:=ProcName, pLogLevel:=LogLevelDetail
@@ -213,7 +213,7 @@ Friend Sub NotifyOrderReport( _
                 ByVal pOrderReport As IOrderReport)
 
 Const ProcName As String = "NotifyOrderReport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If orderIdIsForEntryOrder(pOrderReport.TradeBuildId) Then
@@ -255,7 +255,7 @@ End Sub
 Friend Sub UpdateExecution( _
                 ByVal pExec As Execution)
 Const ProcName As String = "UpdateExecution"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mOSSC.ExecutionReport pExec
@@ -270,7 +270,7 @@ Friend Sub UpdateOrder(ByVal os As OrderSummary)
 Dim lOrder As Order
 
 Const ProcName As String = "updateOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If orderIdIsForEntryOrder(os.Id) Then
@@ -331,7 +331,7 @@ End Sub
 
 Friend Sub UpdateOrderPlex(ByVal ops As OrderPlexSummary)
 Const ProcName As String = "UpdateOrderPlex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mOrderPlex.SyncToSummary ops
@@ -350,7 +350,7 @@ End Sub
 Private Sub ActivateOrderPlex( _
                 ByVal pTicker As Ticker)
 Const ProcName As String = "ActivateOrderPlex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mOrderPlex.EntryOrder Is Nothing Then mOrderPlex.EntryOrder.Ticker = pTicker
@@ -370,7 +370,7 @@ End Sub
 Private Function createOrder(ByVal Id As String)
 Dim lOrder As Order
 Const ProcName As String = "createOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set lOrder = New Order
@@ -396,7 +396,7 @@ End Sub
 Private Function orderIdIsForCloseoutOrder( _
                 ByVal pId As String) As Boolean
 Const ProcName As String = "orderIdIsForCloseoutOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mOrderPlex.CloseoutOrder Is Nothing Then Exit Function
@@ -411,7 +411,7 @@ End Function
 Private Function orderIdIsForEntryOrder( _
                 ByVal pId As String) As Boolean
 Const ProcName As String = "orderIdIsForEntryOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mOrderPlex.EntryOrder Is Nothing Then Exit Function
@@ -426,7 +426,7 @@ End Function
 Private Function orderIdIsForStopOrder( _
                 ByVal pId As String) As Boolean
 Const ProcName As String = "orderIdIsForStopOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mOrderPlex.Stoporder Is Nothing Then Exit Function
@@ -441,7 +441,7 @@ End Function
 Private Function orderIdIsForTargetOrder( _
                 ByVal pId As String) As Boolean
 Const ProcName As String = "orderIdIsForTargetOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mOrderPlex.TargetOrder Is Nothing Then Exit Function
@@ -455,7 +455,7 @@ End Function
 
 Private Function orderPlexActive() As Boolean
 Const ProcName As String = "orderPlexActive"
-Dim failpoint As String
+
 On Error GoTo Err
 
 orderPlexActive = (Not mOrderPlex.Ticker Is Nothing)
@@ -468,7 +468,7 @@ End Function
 
 Private Sub processStartedTicker(ByVal pTicker As Ticker)
 Const ProcName As String = "processStartedTicker"
-Dim failpoint As String
+
 
 On Error GoTo Err
 
@@ -491,7 +491,7 @@ End Sub
 Private Sub setOrderPlexTicker()
 Dim tckr As Ticker
 Const ProcName As String = "setOrderPlexTicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next

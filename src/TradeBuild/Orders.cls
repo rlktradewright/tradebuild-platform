@@ -82,7 +82,7 @@ End Sub
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Count = mOrders.Count
@@ -99,7 +99,7 @@ End Property
 
 Friend Function Add(ByVal pOrder As Order) As Order
 Const ProcName As String = "Add"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Add = pOrder
@@ -115,7 +115,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -152,7 +152,7 @@ End Function
 Public Function Item(index As Variant) As Order
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Item = mOrders(index)
@@ -172,7 +172,7 @@ End Function
 Public Sub Remove( _
                 ByVal pOrder As Order)
 Const ProcName As String = "Remove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mOrders.Remove pOrder.Id
@@ -187,7 +187,7 @@ End Sub
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -210,7 +210,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me

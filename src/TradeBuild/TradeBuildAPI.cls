@@ -50,7 +50,7 @@ Private mServiceProviderError           As ServiceProviderError
 Private mServiceProviders               As ServiceProviders
 
 Private mWorkSpaces                     As WorkSpaces
-Private mDefaultWorkSpace               As Workspace
+Private mDefaultWorkSpace               As WorkSpace
 Private mTickers                        As Tickers
 Private mExecutions                     As Executions
 Private mExecutionsSimulated            As Executions
@@ -92,7 +92,7 @@ End Sub
 
 Public Property Get AllOrdersSimulated() As Boolean
 Const ProcName As String = "AllOrdersSimulated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
@@ -105,7 +105,7 @@ End Property
 
 Public Property Get ClosingPositions() As Boolean
 Const ProcName As String = "ClosingPositions"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ClosingPositions = Not (mClosePositionsTC Is Nothing)
@@ -116,9 +116,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get DefaultWorkSpace() As Workspace
+Public Property Get DefaultWorkSpace() As WorkSpace
 Const ProcName As String = "defaultWorkSpace"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set DefaultWorkSpace = mDefaultWorkSpace
@@ -131,7 +131,7 @@ End Property
 
 Public Property Get Executions() As Executions
 Const ProcName As String = "Executions"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Executions = mExecutions
@@ -144,7 +144,7 @@ End Property
 
 Public Property Get ExecutionsSimulated() As Executions
 Const ProcName As String = "ExecutionsSimulated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Executions = mExecutionsSimulated
@@ -162,13 +162,13 @@ End Property
 Public Property Let PermittedServiceProviderRoles( _
                 ByVal value As ServiceProviderRoles)
 Const ProcName As String = "PermittedServiceProviderRoles"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mServiceProviders.IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Service providers are alReady configured"
+            "Service providers are already configured"
 End If
 
 mServiceProviders.PermittedServiceProviderRoles = value
@@ -181,7 +181,7 @@ End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
 Const ProcName As String = "PermittedServiceProviderRoles"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
@@ -194,7 +194,7 @@ End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
 Const ProcName As String = "ServiceProviders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ServiceProviders = mServiceProviders
@@ -211,7 +211,7 @@ End Property
 
 Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
 Const ProcName As String = "SupportedHistoricalDataPeriods"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriods
@@ -224,7 +224,7 @@ End Property
 
 Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedInputTickfileFormats"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
@@ -237,7 +237,7 @@ End Property
 
 Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedOutputTickfileFormats"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
@@ -250,7 +250,7 @@ End Property
 
 Public Property Get Tickers() As Tickers
 Const ProcName As String = "Tickers"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Tickers = mTickers
@@ -263,7 +263,7 @@ End Property
 
 Public Property Get WorkSpaces() As WorkSpaces
 Const ProcName As String = "WorkSpaces"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set WorkSpaces = mWorkSpaces
@@ -282,13 +282,13 @@ Public Function CloseAllPositions( _
                 Optional ByVal types As PositionTypes = PositionTypeAll, _
                 Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
 Const ProcName As String = "CloseAllPositions"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mClosePositionsTC Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Positions are alReady being closed"
+            "Positions are already being closed"
 End If
 
 Dim t As New ClosePositionsTask
@@ -310,7 +310,7 @@ Public Sub ConfigureDefaults( _
                 Optional ByVal twsLogLevel As String = "ERROR", _
                 Optional ByVal tickfilesPath As String)
 Const ProcName As String = "ConfigureDefaults"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
@@ -331,7 +331,7 @@ End Sub
 Public Sub EndSession()
 
 Const ProcName As String = "EndSession"
-Dim failpoint As String
+
 On Error GoTo Err
 
 StopAllTickers
@@ -376,7 +376,7 @@ Dim ToDate As Date
 Dim replayFromDate As Date
 Dim replayToDate As Date
 
-Dim failpoint As Long
+
 Const ProcName As String = "GenerateTickfileSpecifiers"
 
 On Error GoTo Err
@@ -614,7 +614,7 @@ End Function
 
 Public Function GetServiceProviderError() As ServiceProviderError
 Const ProcName As String = "GetServiceProviderError"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set GetServiceProviderError = mServiceProviderError
@@ -628,7 +628,7 @@ End Function
 
 Friend Sub Initialise()
 Const ProcName As String = "Initialise"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mSessionID = GenerateGUIDString
@@ -655,7 +655,7 @@ End Sub
 Public Function IsSupportedHistoricalDataPeriod( _
                 ByVal period As TimePeriod) As Boolean
 Const ProcName As String = "IsSupportedHistoricalDataPeriod"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
@@ -669,10 +669,10 @@ End Function
 Public Function LoadContracts( _
                 ByVal pContractSpec As ContractSpecifier) As TaskController
 Const ProcName As String = "loadContracts"
-Dim failpoint As Long
+
 On Error GoTo Err
 
-GLogLogger.Log "Starting contract load task for " & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
+GLogLogger.Log "Starting contract load task", ProcName, ModuleName, , pContractSpec.ToString
 Set LoadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
 
 Exit Function
@@ -683,7 +683,7 @@ End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
 Const ProcName As String = "notify"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 logMessage pMsg:="Notification", _
@@ -745,7 +745,7 @@ Friend Sub SetServiceProviderError( _
 Dim ev As NotificationEvent
 
 Const ProcName As String = "SetServiceProviderError"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mServiceProviderError = New ServiceProviderError
@@ -767,11 +767,11 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Public Sub StopAllTickers()
-Dim ws As Workspace
+Dim ws As WorkSpace
 Dim t As Ticker
 
 Const ProcName As String = "StopAllTickers"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each ws In mWorkSpaces
@@ -797,7 +797,7 @@ Private Function editContractSessionTimes( _
 Dim lContractBuilder As ContractBuilder
 
 Const ProcName As String = "editContractSessionTimes"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lContractBuilder = CreateContractBuilderFromContract(pContract)

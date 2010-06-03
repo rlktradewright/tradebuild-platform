@@ -93,7 +93,7 @@ Set mProviderProperties = New Parameters
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' JSONable Interface Members
 '@================================================================================
 
 Private Function JSONable_ToJSON() As String

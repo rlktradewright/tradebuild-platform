@@ -94,18 +94,18 @@ Private mEllipsis As EllipsisModes
 Private mExpandTabs As Boolean
 Private mTabWidth As Long
 Private mWordWrap As Boolean
-Private mLeftMargin As DimensionX
-Private mRightMargin As DimensionX
+Private mLeftMargin As Dimension
+Private mRightMargin As Dimension
 Private mHideIfBlank As Boolean
 
 Private mPosition As Point
-Private mOffset As Dimension
+Private mOffset As Size
 
 Private mKey As String
 
-Private mSize As Dimension
+Private mSize As Size
 
-Private mPropertyOverrideFlags As TextPropertyOverrideFlags
+Private mPropertyOverrideFlags As TextPropertyFlags
 
 '================================================================================
 ' Enums
@@ -234,8 +234,8 @@ Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = True
 End Property
 
-Private Property Let IGraphicObject_Handle(ByVal value As Long)
-mHandle = value
+Private Property Let IGraphicObject_Handle(ByVal Value As Long)
+mHandle = Value
 End Property
 
 Private Property Get IGraphicObject_Handle() As Long
@@ -259,8 +259,8 @@ Private Property Get IGraphicObject_IncludeInAutoscale() As Boolean
 IGraphicObject_IncludeInAutoscale = IncludeInAutoscale
 End Property
 
-Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
-mInScope = value
+Private Property Let IGraphicObject_inScope(ByVal Value As Boolean)
+mInScope = Value
 End Property
 
 Private Property Get IGraphicObject_IsSelectable() As Boolean
@@ -279,7 +279,7 @@ Private Property Get IGraphicObject_PeriodNumber() As Long
 If isExtended Or Not mBoundingRect.isValid Then
     IGraphicObject_PeriodNumber = &H80000000
 Else
-    IGraphicObject_PeriodNumber = Int(mPosition.XLogical)
+    IGraphicObject_PeriodNumber = Int(mPosition.XLogical(mViewport))
 End If
 End Property
 
@@ -315,8 +315,8 @@ Then
 End If
 End Property
 
-Private Property Let IGraphicObject_visible(ByVal value As Boolean)
-mVisible = value
+Private Property Let IGraphicObject_visible(ByVal Value As Boolean)
+mVisible = Value
 End Property
 
 '================================================================================
@@ -365,6 +365,8 @@ Case "INCLUDEINAUTOSCALE"
     initiateRedraw False, False
 Case "JUSTIFICATION"
     initiateRedraw False, False
+Case "LAYER"
+    initiateRedraw False, False
 Case "LEFTMARGIN"
     initiateRedraw True, True
 Case "MULTILINE"
@@ -405,8 +407,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Align = mSeries.Align
-If Not mLocalStyle Is Nothing Then Align = mLocalStyle.Align
-If isPropertyOverrideFlagSet(TextIsSetAlign) Then Align = mAlign
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyAlign) Then Align = mLocalStyle.Align
+If IsPropertySet(TextPropertyAlign) Then Align = mAlign
 
 Exit Property
 
@@ -414,14 +416,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Align(ByVal value As TextAlignModes)
+Public Property Let Align(ByVal Value As TextAlignModes)
 Const ProcName As String = "Align"
 Dim failpoint As String
 On Error GoTo Err
 
-If mAlign = value And isPropertyOverrideFlagSet(TextIsSetAlign) Then Exit Property
-mAlign = value
-setPropertyOverrideFlag TextIsSetAlign
+If mAlign = Value And IsPropertySet(TextPropertyAlign) Then Exit Property
+mAlign = Value
+setPropertyFlag TextPropertyAlign
 initiateRedraw True, True
 
 Exit Property
@@ -436,8 +438,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Angle = mSeries.Angle
-If Not mLocalStyle Is Nothing Then Angle = mLocalStyle.Angle
-If isPropertyOverrideFlagSet(TextIsSetAngle) Then Angle = mAngle
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyAngle) Then Angle = mLocalStyle.Angle
+If IsPropertySet(TextPropertyAngle) Then Angle = mAngle
 
 Exit Property
 
@@ -445,14 +447,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Angle(ByVal value As Double)
+Public Property Let Angle(ByVal Value As Double)
 Const ProcName As String = "Angle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mAngle = value And isPropertyOverrideFlagSet(TextIsSetAngle) Then Exit Property
-mAngle = value
-setPropertyOverrideFlag TextIsSetAngle
+If mAngle = Value And IsPropertySet(TextPropertyAngle) Then Exit Property
+mAngle = Value
+setPropertyFlag TextPropertyAngle
 initiateRedraw True, True
 
 Exit Property
@@ -467,8 +469,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Box = mSeries.Box
-If Not mLocalStyle Is Nothing Then Box = mLocalStyle.Box
-If isPropertyOverrideFlagSet(TextIsSetBox) Then Box = mBox
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBox) Then Box = mLocalStyle.Box
+If IsPropertySet(TextPropertyBox) Then Box = mBox
 
 Exit Property
 
@@ -476,14 +478,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Box(ByVal value As Boolean)
+Public Property Let Box(ByVal Value As Boolean)
 Const ProcName As String = "Box"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBox = value And isPropertyOverrideFlagSet(TextIsSetBox) Then Exit Property
-mBox = value
-setPropertyOverrideFlag TextIsSetBox
+If mBox = Value And IsPropertySet(TextPropertyBox) Then Exit Property
+mBox = Value
+setPropertyFlag TextPropertyBox
 initiateRedraw True, True
 
 Exit Property
@@ -498,8 +500,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxColor = mSeries.BoxColor
-If Not mLocalStyle Is Nothing Then BoxColor = mLocalStyle.BoxColor
-If isPropertyOverrideFlagSet(TextIsSetBoxColor) Then BoxColor = mBoxColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxColor) Then BoxColor = mLocalStyle.BoxColor
+If IsPropertySet(TextPropertyBoxColor) Then BoxColor = mBoxColor
 
 Exit Property
 
@@ -507,14 +509,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxColor(ByVal value As Long)
+Public Property Let BoxColor(ByVal Value As Long)
 Const ProcName As String = "BoxColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxColor = value And isPropertyOverrideFlagSet(TextIsSetBoxColor) Then Exit Property
-mBoxColor = value
-setPropertyOverrideFlag TextIsSetBoxColor
+If mBoxColor = Value And IsPropertySet(TextPropertyBoxColor) Then Exit Property
+mBoxColor = Value
+setPropertyFlag TextPropertyBoxColor
 initiateRedraw False, False
 
 Exit Property
@@ -529,8 +531,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxFillColor = mSeries.BoxFillColor
-If Not mLocalStyle Is Nothing Then BoxFillColor = mLocalStyle.BoxFillColor
-If isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then BoxFillColor = mBoxFillColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxFillColor) Then BoxFillColor = mLocalStyle.BoxFillColor
+If IsPropertySet(TextPropertyBoxFillColor) Then BoxFillColor = mBoxFillColor
 
 Exit Property
 
@@ -538,14 +540,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillColor(ByVal value As Long)
+Public Property Let BoxFillColor(ByVal Value As Long)
 Const ProcName As String = "BoxFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillColor) Then Exit Property
-mBoxFillColor = value
-setPropertyOverrideFlag TextIsSetBoxFillColor
+If mBoxFillColor = Value And IsPropertySet(TextPropertyBoxFillColor) Then Exit Property
+mBoxFillColor = Value
+setPropertyFlag TextPropertyBoxFillColor
 initiateRedraw False, False
 
 Exit Property
@@ -560,8 +562,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxFillStyle = mSeries.BoxFillStyle
-If Not mLocalStyle Is Nothing Then BoxFillStyle = mLocalStyle.BoxFillStyle
-If isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then BoxFillStyle = mBoxFillStyle
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxFillStyle) Then BoxFillStyle = mLocalStyle.BoxFillStyle
+If IsPropertySet(TextPropertyBoxFillStyle) Then BoxFillStyle = mBoxFillStyle
 
 Exit Property
 
@@ -569,14 +571,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillStyle(ByVal value As FillStyles)
+Public Property Let BoxFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "BoxFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxFillStyle) Then Exit Property
-mBoxFillStyle = value
-setPropertyOverrideFlag TextIsSetBoxFillStyle
+If mBoxFillStyle = Value And IsPropertySet(TextPropertyBoxFillStyle) Then Exit Property
+mBoxFillStyle = Value
+setPropertyFlag TextPropertyBoxFillStyle
 initiateRedraw True, False
 
 Exit Property
@@ -591,8 +593,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxFillWithBackgroundColor = mSeries.BoxFillWithBackgroundColor
-If Not mLocalStyle Is Nothing Then BoxFillWithBackgroundColor = mLocalStyle.BoxFillWithBackgroundColor
-If isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then BoxFillWithBackgroundColor = mLocalStyle.BoxFillWithBackgroundColor
+If IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
 
 Exit Property
 
@@ -600,14 +602,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
+Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
 Const ProcName As String = "BoxFillWithBackgroundColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxFillWithBackgroundColor = value And isPropertyOverrideFlagSet(TextIsSetBoxFillWithBackGroundColor) Then Exit Property
-mBoxFillWithBackgroundColor = value
-setPropertyOverrideFlag TextIsSetBoxFillWithBackGroundColor
+If mBoxFillWithBackgroundColor = Value And IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then Exit Property
+mBoxFillWithBackgroundColor = Value
+setPropertyFlag TextPropertyBoxFillWithBackgroundColor
 initiateRedraw True, True
 
 Exit Property
@@ -622,8 +624,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxStyle = mSeries.BoxStyle
-If Not mLocalStyle Is Nothing Then BoxStyle = mLocalStyle.BoxStyle
-If isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then BoxStyle = mBoxStyle
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxStyle) Then BoxStyle = mLocalStyle.BoxStyle
+If IsPropertySet(TextPropertyBoxStyle) Then BoxStyle = mBoxStyle
 
 Exit Property
 
@@ -631,14 +633,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxStyle(ByVal value As LineStyles)
+Public Property Let BoxStyle(ByVal Value As LineStyles)
 Const ProcName As String = "BoxStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxStyle = value And isPropertyOverrideFlagSet(TextIsSetBoxStyle) Then Exit Property
-mBoxStyle = value
-setPropertyOverrideFlag TextIsSetBoxStyle
+If mBoxStyle = Value And IsPropertySet(TextPropertyBoxStyle) Then Exit Property
+mBoxStyle = Value
+setPropertyFlag TextPropertyBoxStyle
 initiateRedraw True, True
 
 Exit Property
@@ -653,8 +655,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 BoxThickness = mSeries.BoxThickness
-If Not mLocalStyle Is Nothing Then BoxThickness = mLocalStyle.BoxThickness
-If isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then BoxThickness = mBoxThickness
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyBoxThickness) Then BoxThickness = mLocalStyle.BoxThickness
+If IsPropertySet(TextPropertyBoxThickness) Then BoxThickness = mBoxThickness
 
 Exit Property
 
@@ -662,14 +664,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BoxThickness(ByVal value As Long)
+Public Property Let BoxThickness(ByVal Value As Long)
 Const ProcName As String = "BoxThickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBoxThickness = value And isPropertyOverrideFlagSet(TextIsSetBoxThickness) Then Exit Property
-mBoxThickness = value
-setPropertyOverrideFlag TextIsSetBoxThickness
+If mBoxThickness = Value And IsPropertySet(TextPropertyBoxThickness) Then Exit Property
+mBoxThickness = Value
+setPropertyFlag TextPropertyBoxThickness
 initiateRedraw True, True
 
 Exit Property
@@ -684,8 +686,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Color = mSeries.Color
-If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
-If isPropertyOverrideFlagSet(TextIsSetColor) Then Color = mColor
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyColor) Then Color = mLocalStyle.Color
+If IsPropertySet(TextPropertyColor) Then Color = mColor
 
 Exit Property
 
@@ -693,14 +695,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If mColor = value And isPropertyOverrideFlagSet(TextIsSetColor) Then Exit Property
-mColor = value
-setPropertyOverrideFlag TextIsSetColor
+If mColor = Value And IsPropertySet(TextPropertyColor) Then Exit Property
+mColor = Value
+setPropertyFlag TextPropertyColor
 initiateRedraw False, False
 
 Exit Property
@@ -715,8 +717,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Ellipsis = mSeries.Ellipsis
-If Not mLocalStyle Is Nothing Then Ellipsis = mLocalStyle.Ellipsis
-If isPropertyOverrideFlagSet(TextIsSetEllipsis) Then Ellipsis = mEllipsis
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyEllipsis) Then Ellipsis = mLocalStyle.Ellipsis
+If IsPropertySet(TextPropertyEllipsis) Then Ellipsis = mEllipsis
 
 Exit Property
 
@@ -724,14 +726,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Ellipsis(ByVal value As EllipsisModes)
+Public Property Let Ellipsis(ByVal Value As EllipsisModes)
 Const ProcName As String = "Ellipsis"
 Dim failpoint As String
 On Error GoTo Err
 
-If mEllipsis = value And isPropertyOverrideFlagSet(TextIsSetEllipsis) Then Exit Property
-mEllipsis = value
-setPropertyOverrideFlag TextIsSetEllipsis
+If mEllipsis = Value And IsPropertySet(TextPropertyEllipsis) Then Exit Property
+mEllipsis = Value
+setPropertyFlag TextPropertyEllipsis
 initiateRedraw True, True
 
 Exit Property
@@ -746,8 +748,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 ExpandTabs = mSeries.ExpandTabs
-If Not mLocalStyle Is Nothing Then ExpandTabs = mLocalStyle.ExpandTabs
-If isPropertyOverrideFlagSet(TextIsSetExpandTabs) Then ExpandTabs = mExpandTabs
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyExpandTabs) Then ExpandTabs = mLocalStyle.ExpandTabs
+If IsPropertySet(TextPropertyExpandTabs) Then ExpandTabs = mExpandTabs
 
 Exit Property
 
@@ -755,14 +757,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ExpandTabs(ByVal value As Boolean)
+Public Property Let ExpandTabs(ByVal Value As Boolean)
 Const ProcName As String = "ExpandTabs"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExpandTabs = value And isPropertyOverrideFlagSet(TextIsSetExpandTabs) Then Exit Property
-mExpandTabs = value
-setPropertyOverrideFlag TextIsSetExpandTabs
+If mExpandTabs = Value And IsPropertySet(TextPropertyExpandTabs) Then Exit Property
+mExpandTabs = Value
+setPropertyFlag TextPropertyExpandTabs
 initiateRedraw True, True
 
 Exit Property
@@ -777,8 +779,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Extended = mSeries.Extended
-If Not mLocalStyle Is Nothing Then Extended = mLocalStyle.Extended
-If isPropertyOverrideFlagSet(TextIsSetExtended) Then Extended = mExtended
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyExtended) Then Extended = mLocalStyle.Extended
+If IsPropertySet(TextPropertyExtended) Then Extended = mExtended
 
 Exit Property
 
@@ -786,14 +788,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Extended(ByVal value As Boolean)
+Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtended = value And isPropertyOverrideFlagSet(TextIsSetExtended) Then Exit Property
-mExtended = value
-setPropertyOverrideFlag TextIsSetExtended
+If mExtended = Value And IsPropertySet(TextPropertyExtended) Then Exit Property
+mExtended = Value
+setPropertyFlag TextPropertyExtended
 initiateRedraw True, True
 
 Exit Property
@@ -808,8 +810,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 FixedX = mSeries.FixedX
-If Not mLocalStyle Is Nothing Then FixedX = mLocalStyle.FixedX
-If isPropertyOverrideFlagSet(TextIsSetFixedX) Then FixedX = mFixedX
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyFixedX) Then FixedX = mLocalStyle.FixedX
+If IsPropertySet(TextPropertyFixedX) Then FixedX = mFixedX
 
 Exit Property
 
@@ -817,14 +819,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedX(ByVal value As Boolean)
+Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedX = value And isPropertyOverrideFlagSet(TextIsSetFixedX) Then Exit Property
-mFixedX = value
-setPropertyOverrideFlag TextIsSetFixedX
+If mFixedX = Value And IsPropertySet(TextPropertyFixedX) Then Exit Property
+mFixedX = Value
+setPropertyFlag TextPropertyFixedX
 initiateRedraw True, True
 
 Exit Property
@@ -839,8 +841,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 FixedY = mSeries.FixedY
-If Not mLocalStyle Is Nothing Then FixedY = mLocalStyle.FixedY
-If isPropertyOverrideFlagSet(TextIsSetFixedY) Then FixedY = mFixedY
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyFixedY) Then FixedY = mLocalStyle.FixedY
+If IsPropertySet(TextPropertyFixedY) Then FixedY = mFixedY
 
 Exit Property
 
@@ -848,14 +850,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedY(ByVal value As Boolean)
+Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedY = value And isPropertyOverrideFlagSet(TextIsSetFixedY) Then Exit Property
-mFixedY = value
-setPropertyOverrideFlag TextIsSetFixedY
+If mFixedY = Value And IsPropertySet(TextPropertyFixedY) Then Exit Property
+mFixedY = Value
+setPropertyFlag TextPropertyFixedY
 initiateRedraw True, True
 
 Exit Property
@@ -869,13 +871,9 @@ Const ProcName As String = "Font"
 Dim failpoint As String
 On Error GoTo Err
 
-If isPropertyOverrideFlagSet(TextIsSetFont) Then
-    Set Font = mFont
-ElseIf Not mLocalStyle Is Nothing Then
-    Set Font = mLocalStyle.Font
-Else
-    Set Font = mSeries.Font
-End If
+Set Font = mSeries.Font
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyFont) Then Set Font = mLocalStyle.Font
+If IsPropertySet(TextPropertyFont) Then Set Font = mFont
 
 Exit Property
 
@@ -883,16 +881,16 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Font(ByVal value As StdFont)
+Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mFont = value
+Set mFont = Value
 If mFont Is Nothing Then
-    clearPropertyOverrideFlag TextIsSetFont
+    ClearProperty TextPropertyFont
 Else
-    setPropertyOverrideFlag TextIsSetFont
+    setPropertyFlag TextPropertyFont
 End If
 initiateRedraw True, True
 
@@ -912,7 +910,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 HideIfBlank = mSeries.HideIfBlank
-If isPropertyOverrideFlagSet(TextIsSetHideIfBlank) Then HideIfBlank = mHideIfBlank
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyHideIfBlank) Then HideIfBlank = mLocalStyle.HideIfBlank
+If IsPropertySet(TextPropertyHideIfBlank) Then HideIfBlank = mHideIfBlank
 
 Exit Property
 
@@ -920,14 +919,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let HideIfBlank(ByVal value As Boolean)
+Public Property Let HideIfBlank(ByVal Value As Boolean)
 Const ProcName As String = "HideIfBlank"
 Dim failpoint As String
 On Error GoTo Err
 
-If mHideIfBlank = value And isPropertyOverrideFlagSet(TextIsSetHideIfBlank) Then Exit Property
-mHideIfBlank = value
-setPropertyOverrideFlag TextIsSetHideIfBlank
+If mHideIfBlank = Value And IsPropertySet(TextPropertyHideIfBlank) Then Exit Property
+mHideIfBlank = Value
+setPropertyFlag TextPropertyHideIfBlank
 initiateRedraw False, False
 
 Exit Property
@@ -942,7 +941,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
-If isPropertyOverrideFlagSet(TextIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyIncludeInAutoscale) Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If IsPropertySet(TextPropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 
 Exit Property
 
@@ -950,14 +950,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(TextIsSetIncludeInAutoscale) Then Exit Property
-mIncludeInAutoscale = value
-setPropertyOverrideFlag TextIsSetIncludeInAutoscale
+If mIncludeInAutoscale = Value And IsPropertySet(TextPropertyIncludeInAutoscale) Then Exit Property
+mIncludeInAutoscale = Value
+setPropertyFlag TextPropertyIncludeInAutoscale
 initiateRedraw False, False
 
 Exit Property
@@ -970,8 +970,8 @@ Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
-mIsSelectable = value
+Public Property Let IsSelectable(ByVal Value As Boolean)
+mIsSelectable = Value
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -988,8 +988,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Justification = mSeries.Justification
-If Not mLocalStyle Is Nothing Then Justification = mLocalStyle.Justification
-If isPropertyOverrideFlagSet(TextIsSetJustification) Then Justification = mJustification
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyJustification) Then Justification = mLocalStyle.Justification
+If IsPropertySet(TextPropertyJustification) Then Justification = mJustification
 
 Exit Property
 
@@ -997,14 +997,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Justification(ByVal value As TextJustifyModes)
+Public Property Let Justification(ByVal Value As TextJustifyModes)
 Const ProcName As String = "Justification"
 Dim failpoint As String
 On Error GoTo Err
 
-If mJustification = value And isPropertyOverrideFlagSet(TextIsSetJustification) Then Exit Property
-mJustification = value
-setPropertyOverrideFlag TextIsSetJustification
+If mJustification = Value And IsPropertySet(TextPropertyJustification) Then Exit Property
+mJustification = Value
+setPropertyFlag TextPropertyJustification
 initiateRedraw True, True
 
 Exit Property
@@ -1017,14 +1017,14 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let Layer(ByVal value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 Dim failpoint As String
 On Error GoTo Err
 
-If mLayer = value And isPropertyOverrideFlagSet(TextIsSetLayer) Then Exit Property
-mLayer = value
-setPropertyOverrideFlag TextIsSetLayer
+If mLayer = Value And IsPropertySet(TextPropertyLayer) Then Exit Property
+mLayer = Value
+setPropertyFlag TextPropertyLayer
 initiateRedraw False, False
 
 Exit Property
@@ -1039,7 +1039,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If isPropertyOverrideFlagSet(TextIsSetLayer) Then Layer = mLayer
+If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 
 Exit Property
 
@@ -1047,13 +1047,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get LeftMargin() As DimensionX
+Public Property Get LeftMargin() As Dimension
 Const ProcName As String = "LeftMargin"
 Dim failpoint As String
 On Error GoTo Err
 
 Set LeftMargin = mSeries.LeftMargin
-If isPropertyOverrideFlagSet(TextIsSetLeftMargin) Then Set LeftMargin = mLeftMargin
+If IsPropertySet(TextPropertyLeftMargin) Then Set LeftMargin = mLeftMargin
 
 Exit Property
 
@@ -1061,21 +1061,21 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LeftMargin(ByVal value As DimensionX)
+Public Property Let LeftMargin(ByVal Value As Dimension)
 Const ProcName As String = "LeftMargin"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing And (Not isPropertyOverrideFlagSet(TextIsSetLeftMargin)) Then
+If Value Is Nothing And (Not IsPropertySet(TextPropertyLeftMargin)) Then
     Exit Property
-ElseIf value Is Nothing Then
+ElseIf Value Is Nothing Then
     Set mLeftMargin = Nothing
-    clearPropertyOverrideFlag TextIsSetLeftMargin
-ElseIf isPropertyOverrideFlagSet(TextIsSetLeftMargin) And value.Equals(mOffset) Then
+    ClearProperty TextPropertyLeftMargin
+ElseIf IsPropertySet(TextPropertyLeftMargin) And Value.Equals(mOffset) Then
     Exit Property
 Else
-    Set mLeftMargin = value
-    setPropertyOverrideFlag TextIsSetLeftMargin
+    Set mLeftMargin = Value
+    setPropertyFlag TextPropertyLeftMargin
 End If
 initiateRedraw True, True
 
@@ -1090,12 +1090,12 @@ Set LocalStyle = mLocalStyle
 End Property
 
 Public Property Let LocalStyle( _
-                ByVal value As TextStyle)
+                ByVal Value As TextStyle)
 Const ProcName As String = "LocalStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mLocalStyle = value
+Set mLocalStyle = Value
 initiateRedraw True, True
 
 Exit Property
@@ -1110,8 +1110,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 MultiLine = mSeries.MultiLine
-If Not mLocalStyle Is Nothing Then MultiLine = mLocalStyle.MultiLine
-If isPropertyOverrideFlagSet(TextIsSetMultiLine) Then MultiLine = mMultiLine
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyMultiLine) Then MultiLine = mLocalStyle.MultiLine
+If IsPropertySet(TextPropertyMultiLine) Then MultiLine = mMultiLine
 
 Exit Property
 
@@ -1119,14 +1119,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let MultiLine(ByVal value As Boolean)
+Public Property Let MultiLine(ByVal Value As Boolean)
 Const ProcName As String = "MultiLine"
 Dim failpoint As String
 On Error GoTo Err
 
-If mMultiLine = value And isPropertyOverrideFlagSet(TextIsSetMultiLine) Then Exit Property
-mMultiLine = value
-setPropertyOverrideFlag TextIsSetMultiLine
+If mMultiLine = Value And IsPropertySet(TextPropertyMultiLine) Then Exit Property
+mMultiLine = Value
+setPropertyFlag TextPropertyMultiLine
 initiateRedraw True, True
 
 Exit Property
@@ -1135,14 +1135,52 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PaddingX(ByVal value As Double)
+Public Property Get Offset() As Size
+Const ProcName As String = "Offset"
+Dim failpoint As String
+On Error GoTo Err
+
+Set Offset = mSeries.Offset
+If IsPropertySet(TextPropertyOffset) Then Set Offset = mOffset
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset(ByVal Value As Size)
+Const ProcName As String = "Offset"
+Dim failpoint As String
+On Error GoTo Err
+
+If Value Is Nothing And (Not IsPropertySet(TextPropertyOffset)) Then
+    Exit Property
+ElseIf Value Is Nothing Then
+    Set mOffset = Nothing
+    ClearProperty TextPropertyOffset
+ElseIf IsPropertySet(TextPropertyOffset) And Value.Equals(mOffset) Then
+    Exit Property
+Else
+    Set mOffset = Value
+    setPropertyFlag TextPropertyOffset
+End If
+initiateRedraw True, True
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let PaddingX(ByVal Value As Double)
 Const ProcName As String = "PaddingX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mPaddingX = value And isPropertyOverrideFlagSet(TextIsSetPaddingX) Then Exit Property
-mPaddingX = value
-setPropertyOverrideFlag TextIsSetPaddingX
+If mPaddingX = Value And IsPropertySet(TextPropertyPaddingX) Then Exit Property
+mPaddingX = Value
+setPropertyFlag TextPropertyPaddingX
 initiateRedraw True, True
 
 Exit Property
@@ -1157,8 +1195,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 PaddingX = mSeries.PaddingX
-If Not mLocalStyle Is Nothing Then PaddingX = mLocalStyle.PaddingX
-If isPropertyOverrideFlagSet(TextIsSetPaddingX) Then PaddingX = mPaddingX
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyPaddingX) Then PaddingX = mLocalStyle.PaddingX
+If IsPropertySet(TextPropertyPaddingX) Then PaddingX = mPaddingX
 
 Exit Property
 
@@ -1166,14 +1204,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PaddingY(ByVal value As Double)
+Public Property Let PaddingY(ByVal Value As Double)
 Const ProcName As String = "PaddingY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mPaddingY = value And isPropertyOverrideFlagSet(TextIsSetPaddingY) Then Exit Property
-mPaddingY = value
-setPropertyOverrideFlag TextIsSetPaddingY
+If mPaddingY = Value And IsPropertySet(TextPropertyPaddingY) Then Exit Property
+mPaddingY = Value
+setPropertyFlag TextPropertyPaddingY
 initiateRedraw True, True
 
 Exit Property
@@ -1188,8 +1226,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 PaddingY = mSeries.PaddingY
-If Not mLocalStyle Is Nothing Then PaddingY = mLocalStyle.PaddingY
-If isPropertyOverrideFlagSet(TextIsSetPaddingY) Then PaddingY = mPaddingY
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyPaddingY) Then PaddingY = mLocalStyle.PaddingY
+If IsPropertySet(TextPropertyPaddingY) Then PaddingY = mPaddingY
 
 Exit Property
 
@@ -1201,25 +1239,25 @@ Public Property Get Position() As Point
 Set Position = mPosition
 End Property
 
-Public Property Let Position(ByVal value As Point)
+Public Property Let Position(ByVal Value As Point)
 Const ProcName As String = "Position"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     Set mPosition = Nothing
     mBoundingRect.isValid = False
 '    mBlank = True
     initiateRedraw True, True
     Exit Property
 ElseIf Not mPosition Is Nothing Then
-    If value.Equals(mPosition) Then
+    If Value.Equals(mPosition) Then
         If mPosition.CoordinateSystemX = CoordsLogical And mPosition.CoordinateSystemY = CoordsLogical Then Exit Property
     End If
 End If
 
 'If mText <> "" Then mBlank = False
-Set mPosition = value
+Set mPosition = Value
 initiateRedraw True, True
 
 Exit Property
@@ -1228,51 +1266,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get Offset() As Dimension
-Const ProcName As String = "Offset"
-Dim failpoint As String
-On Error GoTo Err
-
-Set Offset = mSeries.Offset
-If isPropertyOverrideFlagSet(TextIsSetOffset) Then Set Offset = mOffset
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Let Offset(ByVal value As Dimension)
-Const ProcName As String = "Offset"
-Dim failpoint As String
-On Error GoTo Err
-
-If value Is Nothing And (Not isPropertyOverrideFlagSet(TextIsSetOffset)) Then
-    Exit Property
-ElseIf value Is Nothing Then
-    Set mOffset = Nothing
-    clearPropertyOverrideFlag TextIsSetOffset
-ElseIf isPropertyOverrideFlagSet(TextIsSetOffset) And value.Equals(mOffset) Then
-    Exit Property
-Else
-    Set mOffset = value
-    setPropertyOverrideFlag TextIsSetOffset
-End If
-initiateRedraw True, True
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get RightMargin() As DimensionX
+Public Property Get RightMargin() As Dimension
 Const ProcName As String = "RightMargin"
 Dim failpoint As String
 On Error GoTo Err
 
 Set RightMargin = mSeries.RightMargin
-If isPropertyOverrideFlagSet(TextIsSetRightMargin) Then Set RightMargin = mRightMargin
+If IsPropertySet(TextPropertyRightMargin) Then Set RightMargin = mRightMargin
 
 Exit Property
 
@@ -1280,21 +1280,21 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let RightMargin(ByVal value As DimensionX)
+Public Property Let RightMargin(ByVal Value As Dimension)
 Const ProcName As String = "RightMargin"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing And (Not isPropertyOverrideFlagSet(TextIsSetRightMargin)) Then
+If Value Is Nothing And (Not IsPropertySet(TextPropertyRightMargin)) Then
     Exit Property
-ElseIf value Is Nothing Then
+ElseIf Value Is Nothing Then
     Set mRightMargin = Nothing
-    clearPropertyOverrideFlag TextIsSetRightMargin
-ElseIf isPropertyOverrideFlagSet(TextIsSetRightMargin) And value.Equals(mOffset) Then
+    ClearProperty TextPropertyRightMargin
+ElseIf IsPropertySet(TextPropertyRightMargin) And Value.Equals(mOffset) Then
     Exit Property
 Else
-    Set mRightMargin = value
-    setPropertyOverrideFlag TextIsSetRightMargin
+    Set mRightMargin = Value
+    setPropertyFlag TextPropertyRightMargin
 End If
 initiateRedraw True, True
 
@@ -1304,21 +1304,21 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Size(ByVal value As Dimension)
+Public Property Let Size(ByVal Value As Size)
 Const ProcName As String = "Size"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing And (Not isPropertyOverrideFlagSet(TextIsSetSize)) Then
+If Value Is Nothing And (Not IsPropertySet(TextPropertySize)) Then
     Exit Property
-ElseIf value Is Nothing Then
+ElseIf Value Is Nothing Then
     Set mSize = Nothing
-    clearPropertyOverrideFlag TextIsSetSize
-ElseIf isPropertyOverrideFlagSet(TextIsSetSize) And value.Equals(mOffset) Then
+    ClearProperty TextPropertySize
+ElseIf IsPropertySet(TextPropertySize) And Value.Equals(mOffset) Then
     Exit Property
 Else
-    Set mSize = value
-    setPropertyOverrideFlag TextIsSetSize
+    Set mSize = Value
+    setPropertyFlag TextPropertySize
 End If
 initiateRedraw True, True
 
@@ -1328,13 +1328,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get Size() As Dimension
+Public Property Get Size() As Size
 Const ProcName As String = "Size"
 Dim failpoint As String
 On Error GoTo Err
 
 Set Size = mSeries.Size
-If isPropertyOverrideFlagSet(TextIsSetSize) Then Set Size = mSize
+If IsPropertySet(TextPropertySize) Then Set Size = mSize
 
 Exit Property
 
@@ -1342,13 +1342,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Text(value As String)
+Public Property Let Text(Value As String)
 Const ProcName As String = "Text"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = mText Then Exit Property
-mText = value
+If Value = mText Then Exit Property
+mText = Value
 'mBlank = (value = "" Or mPosition Is Nothing)
 initiateRedraw True, True
 
@@ -1364,8 +1364,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 TabWidth = mSeries.TabWidth
-If Not mLocalStyle Is Nothing Then TabWidth = mLocalStyle.TabWidth
-If isPropertyOverrideFlagSet(TextIsSetTabWidth) Then TabWidth = mTabWidth
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyTabWidth) Then TabWidth = mLocalStyle.TabWidth
+If IsPropertySet(TextPropertyTabWidth) Then TabWidth = mTabWidth
 
 Exit Property
 
@@ -1373,14 +1373,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let TabWidth(ByVal value As Long)
+Public Property Let TabWidth(ByVal Value As Long)
 Const ProcName As String = "TabWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If mTabWidth = value And isPropertyOverrideFlagSet(TextIsSetTabWidth) Then Exit Property
-mTabWidth = value
-setPropertyOverrideFlag TextIsSetTabWidth
+If mTabWidth = Value And IsPropertySet(TextPropertyTabWidth) Then Exit Property
+mTabWidth = Value
+setPropertyFlag TextPropertyTabWidth
 initiateRedraw True, True
 
 Exit Property
@@ -1403,8 +1403,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 WordWrap = mSeries.WordWrap
-If Not mLocalStyle Is Nothing Then WordWrap = mLocalStyle.WordWrap
-If isPropertyOverrideFlagSet(TextIsSetWordWrap) Then WordWrap = mWordWrap
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyWordWrap) Then WordWrap = mLocalStyle.WordWrap
+If IsPropertySet(TextPropertyWordWrap) Then WordWrap = mWordWrap
 
 Exit Property
 
@@ -1412,14 +1412,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let WordWrap(ByVal value As Boolean)
+Public Property Let WordWrap(ByVal Value As Boolean)
 Const ProcName As String = "WordWrap"
 Dim failpoint As String
 On Error GoTo Err
 
-If mWordWrap = value And isPropertyOverrideFlagSet(TextIsSetWordWrap) Then Exit Property
-mWordWrap = value
-setPropertyOverrideFlag TextIsSetWordWrap
+If mWordWrap = Value And IsPropertySet(TextPropertyWordWrap) Then Exit Property
+mWordWrap = Value
+setPropertyFlag TextPropertyWordWrap
 initiateRedraw True, True
 
 Exit Property
@@ -1513,7 +1513,7 @@ End Sub
 
 Private Sub calcBoundingRect()
 Dim alignmentOffset As W32Point
-Dim lTextDim As Dimension
+Dim lTextSize As Size
 Dim lTextRect As RECT
 Dim lBoxRect As RECT
 Dim lBoundingRect As RECT
@@ -1532,7 +1532,7 @@ Set mPosition = convertPosition(mPosition)
 
 mCanvas.SetTextAttributes Color, Font, True
 
-Set lTextDim = mCanvas.GetTextDimensions(mText, _
+Set lTextSize = mCanvas.GetTextSize(mText, _
                                     Size, _
                                     Justification, _
                                     MultiLine, _
@@ -1543,15 +1543,15 @@ Set lTextDim = mCanvas.GetTextDimensions(mText, _
                                     LeftMargin, _
                                     RightMargin)
 With mTextTRect
-    .Left = mPosition.XLogical
-    .Right = .Left + lTextDim.XLogical
-    .Top = mPosition.yLogical
-    .Bottom = .Top - lTextDim.yLogical
+    .Left = mPosition.XLogical(mViewport)
+    .Right = .Left + lTextSize.WidthLogical(mViewport)
+    .Top = mPosition.yLogical(mViewport)
+    .Bottom = .Top - lTextSize.HeightLogical(mViewport)
     .isValid = True
 End With
     
 If Not mOffset Is Nothing Then
-    RectOffsetDim mTextTRect, mOffset
+    RectOffsetBySize mTextTRect, mOffset, mViewport
 End If
     
 lTextRect = mViewport.ConvertTRectangleToRect(mTextTRect)
@@ -1560,7 +1560,7 @@ If Box Then
     
     lBoxRect = lTextRect
     
-    twwin32api.InflateRect lBoxRect, _
+    TWWin32API.InflateRect lBoxRect, _
                             mViewport.ConvertDistanceToPixelsX(PaddingX / 10), _
                             mViewport.ConvertDistanceToPixelsY(PaddingY / 10)
                             
@@ -1574,15 +1574,15 @@ If Box Then
     If lBoxThickness = 0 Then
         lBoundingRect = lBoxRect
     ElseIf (lBoxThickness > 1 And BoxStyle = LineInsideSolid) Or lBoxThickness = 1 Then
-        twwin32api.InflateRect lBoxRect, lBoxThickness, lBoxThickness
+        TWWin32API.InflateRect lBoxRect, lBoxThickness, lBoxThickness
         lBoundingRect = lBoxRect
-        twwin32api.InflateRect lBoundingRect, 1, 1
+        TWWin32API.InflateRect lBoundingRect, 1, 1
     Else
-        twwin32api.InflateRect lBoxRect, _
+        TWWin32API.InflateRect lBoxRect, _
                                 lBoxThickness - Int(lBoxThickness / 2), _
                                 lBoxThickness - Int(lBoxThickness / 2)
         lBoundingRect = lBoxRect
-        twwin32api.InflateRect lBoundingRect, Int(lBoxThickness / 2) + 1, Int(lBoxThickness / 2) + 1
+        TWWin32API.InflateRect lBoundingRect, Int(lBoxThickness / 2) + 1, Int(lBoxThickness / 2) + 1
     End If
 Else
     lBoxRect = lTextRect
@@ -1599,9 +1599,9 @@ End If
 
 alignmentOffset = getAlignmentOffset(lTextRect, lBoxRect)
 
-twwin32api.OffsetRect lTextRect, alignmentOffset.X, alignmentOffset.Y
-twwin32api.OffsetRect lBoxRect, alignmentOffset.X, alignmentOffset.Y
-twwin32api.OffsetRect lBoundingRect, alignmentOffset.X, alignmentOffset.Y
+TWWin32API.OffsetRect lTextRect, alignmentOffset.X, alignmentOffset.Y
+TWWin32API.OffsetRect lBoxRect, alignmentOffset.X, alignmentOffset.Y
+TWWin32API.OffsetRect lBoundingRect, alignmentOffset.X, alignmentOffset.Y
 
 lBoundingRect.Right = lBoundingRect.Right + 1
 lBoundingRect.Bottom = lBoundingRect.Bottom + 1
@@ -1641,9 +1641,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As TextPropertyOverrideFlags)
-Const ProcName As String = "clearPropertyOverrideFlag"
+Private Sub ClearProperty( _
+                ByVal flag As TextPropertyFlags)
+Const ProcName As String = "ClearProperty"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -1659,8 +1659,10 @@ Private Function convertPosition(ByVal pPoint As Point) As Point
 Const ProcName As String = "convertPosition"
 On Error GoTo Err
 
-Set convertPosition = pPoint.ChangeCoordinateSystem(IIf(FixedX, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
-                                                    IIf(FixedY, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical))
+Set convertPosition = pPoint.ChangeCoordinateSystem( _
+                                            IIf(FixedX, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
+                                            IIf(FixedY, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
+                                            mViewport)
 
 Exit Function
 
@@ -1729,12 +1731,8 @@ Const ProcName As String = "DrawText"
 Dim failpoint As String
 On Error GoTo Err
 
-'mCanvas.SaveClippingRegion
-'mCanvas.IntersectClippingRegion mViewport.ConvertTRectangleToRect(mTextTRect)
-
 mCanvas.SetTextAttributes Color, Font, True
 mCanvas.DrawText mText, _
-                RectTopLeft(mTextTRect), _
                 mTextTRect, _
                 Justification, _
                 MultiLine, _
@@ -1744,8 +1742,6 @@ mCanvas.DrawText mText, _
                 WordWrap, _
                 LeftMargin, _
                 RightMargin
-
-'mCanvas.RestoreClippingRegion
 
 Exit Sub
 
@@ -1875,12 +1871,12 @@ End Function
 
 Private Function getSizeAdjustment( _
                 ByRef lBoundingRect As RECT) As W32Point
-If Me.Size.X <> 0 Then
-    getSizeAdjustment.X = mViewport.ConvertLogicalToPixelsX(Me.Size.XLogical) - _
+If Me.Size.Width <> 0 Then
+    getSizeAdjustment.X = mViewport.ConvertLogicalToPixelsX(Me.Size.WidthLogical(mViewport)) - _
                             (lBoundingRect.Right - lBoundingRect.Left)
 End If
-If Me.Size.Y <> 0 Then
-    getSizeAdjustment.Y = mViewport.ConvertLogicalToPixelsX(Me.Size.yLogical) - _
+If Me.Size.Height <> 0 Then
+    getSizeAdjustment.Y = mViewport.ConvertLogicalToPixelsX(Me.Size.HeightLogical(mViewport)) - _
                             (lBoundingRect.Bottom - lBoundingRect.Top)
 End If
 End Function
@@ -1912,13 +1908,13 @@ Private Function isExtended() As Boolean
 isExtended = Extended Or FixedX
 End Function
 
-Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As TextPropertyOverrideFlags) As Boolean
-Const ProcName As String = "isPropertyOverrideFlagSet"
+Private Function IsPropertySet( _
+                ByVal flag As TextPropertyFlags) As Boolean
+Const ProcName As String = "IsPropertySet"
 Dim failpoint As String
 On Error GoTo Err
 
-isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 
 Exit Function
 
@@ -1926,9 +1922,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub setPropertyOverrideFlag( _
-                ByVal flag As TextPropertyOverrideFlags)
-Const ProcName As String = "setPropertyOverrideFlag"
+Private Sub setPropertyFlag( _
+                ByVal flag As TextPropertyFlags)
+Const ProcName As String = "setPropertyFlag"
 Dim failpoint As String
 On Error GoTo Err
 

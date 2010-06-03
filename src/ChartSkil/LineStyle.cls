@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -46,32 +48,38 @@ Event PropertyChanged( _
 
 Private Const ModuleName                As String = "LineStyle"
 
-Private Const ConfigSettingColor As String = "&Color"
-Private Const ConfigSettingThickness As String = "&Thickness"
-Private Const ConfigSettingLineStyle  As String = "&LineStyle"
-Private Const ConfigSettingExtendBefore As String = "&ExtendBefore"
-Private Const ConfigSettingExtendAfter As String = "&ExtendAfter"
-Private Const ConfigSettingArrowStartStyle  As String = "&ArrowStartStyle"
-Private Const ConfigSettingArrowStartLength As String = "&ArrowStartLength"
-Private Const ConfigSettingArrowStartWidth As String = "&ArrowStartWidth"
-Private Const ConfigSettingArrowStartColor As String = "&ArrowStartColor"
-Private Const ConfigSettingArrowStartFillColor As String = "&ArrowStartFillColor"
+Private Const ConfigSettingColor                As String = "&Color"
+Private Const ConfigSettingThickness            As String = "&Thickness"
+Private Const ConfigSettingLineStyle            As String = "&LineStyle"
+Private Const ConfigSettingExtendBefore         As String = "&ExtendBefore"
+Private Const ConfigSettingExtendAfter          As String = "&ExtendAfter"
+Private Const ConfigSettingArrowStartStyle      As String = "&ArrowStartStyle"
+Private Const ConfigSettingArrowStartLength     As String = "&ArrowStartLength"
+Private Const ConfigSettingArrowStartWidth      As String = "&ArrowStartWidth"
+Private Const ConfigSettingArrowStartColor      As String = "&ArrowStartColor"
+Private Const ConfigSettingArrowStartFillColor  As String = "&ArrowStartFillColor"
 Private Const ConfigSettingArrowStartfillStyle  As String = "&ArrowStartFillStyle"
-Private Const ConfigSettingArrowEndStyle  As String = "&ArrowEndStyle"
-Private Const ConfigSettingArrowEndLength As String = "&ArrowEndLength"
-Private Const ConfigSettingArrowEndWidth As String = "&ArrowEndWidth"
-Private Const ConfigSettingArrowEndColor As String = "&ArrowEndColor"
-Private Const ConfigSettingArrowEndFillColor As String = "&ArrowEndFillColor"
-Private Const ConfigSettingArrowEndFillStyle  As String = "&ArrowEndFillStyle"
+Private Const ConfigSettingArrowEndStyle        As String = "&ArrowEndStyle"
+Private Const ConfigSettingArrowEndLength       As String = "&ArrowEndLength"
+Private Const ConfigSettingArrowEndWidth        As String = "&ArrowEndWidth"
+Private Const ConfigSettingArrowEndColor        As String = "&ArrowEndColor"
+Private Const ConfigSettingArrowEndFillColor    As String = "&ArrowEndFillColor"
+Private Const ConfigSettingArrowEndFillStyle    As String = "&ArrowEndFillStyle"
 Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
 Private Const ConfigSettingFixedX               As String = "&FixedX"
 Private Const ConfigSettingFixedY               As String = "&FixedY"
 Private Const ConfigSettingExtended             As String = "&Extended"
+Private Const ConfigSettingLayer                As String = "&Layer"
+
+Private Const ConfigSectionOffset1              As String = "Offset1"
+Private Const ConfigSectionOffset2              As String = "Offset2"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
+Private mName As String
+Private mStyleType As String
 Private mConfig As ConfigurationSection
 
 Private mColor As Long
@@ -95,38 +103,44 @@ Private mIncludeInAutoscale As Boolean
 Private mFixedX As Boolean
 Private mFixedY As Boolean
 Private mExtended As Boolean
+Private mOffset1 As Size
+Private mOffset2 As Size
+Private mLayer As Long
+
+Private mPropertyFlags As LinePropertyFlags
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mColor = vbBlack
-mThickness = 1
-mLineStyle = LineStyles.LineSolid
-mExtendBefore = False
-mExtendAfter = False
-mArrowStartStyle = ArrowStyles.ArrowNone
-mArrowStartLength = 10
-mArrowStartWidth = 10
-mArrowStartColor = vbBlack
-mArrowStartFillColor = vbBlack
-mArrowStartfillStyle = FillStyles.FillSolid
-mArrowEndStyle = ArrowStyles.ArrowNone
-mArrowEndLength = 10
-mArrowEndWidth = 10
-mArrowEndColor = vbBlack
-mArrowEndFillColor = vbBlack
-mArrowEndFillStyle = FillStyles.FillSolid
-mIncludeInAutoscale = False
-mFixedX = False
-mFixedY = False
-mExtended = False
+mName = GenerateGUIDString
+mStyleType = "Line Styles"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGraphicObjectStyle Interface Members
 '@================================================================================
+
+Private Property Let IGraphicObjectStyle_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Me.ConfigurationSection = RHS
+End Property
+
+Private Sub IGraphicObjectStyle_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Me.LoadFromConfig pConfig
+End Sub
+
+Private Property Get IGraphicObjectStyle_Name() As String
+IGraphicObjectStyle_Name = mName
+End Property
+
+Private Property Get IGraphicObjectStyle_ProgId() As String
+IGraphicObjectStyle_ProgId = ProjectName & "." & ModuleName
+End Property
+
+Private Property Get IGraphicObjectStyle_StyleType() As String
+IGraphicObjectStyle_StyleType = mStyleType
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -136,140 +150,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let ArrowStartColor(ByVal value As Long)
-Const ProcName As String = "ArrowStartColor"
-Dim failpoint As String
-On Error GoTo Err
-
-If Not gIsValidColor(value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
-mArrowStartColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartColor, mArrowStartColor
-firePropertyChanged "ArrowStartColor"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartColor() As Long
-ArrowStartColor = mArrowStartColor
-End Property
-
-Public Property Let ArrowStartFillColor(ByVal value As Long)
-Const ProcName As String = "ArrowStartFillColor"
-Dim failpoint As String
-On Error GoTo Err
-
-If Not gIsValidColor(value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
-mArrowStartFillColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartFillColor, mArrowStartFillColor
-firePropertyChanged "ArrowStartFillColor"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartFillColor() As Long
-ArrowStartFillColor = mArrowStartFillColor
-End Property
-
-Public Property Let ArrowStartFillStyle(ByVal value As FillStyles)
-Const ProcName As String = "ArrowStartFillStyle"
-Dim failpoint As String
-On Error GoTo Err
-
-mArrowStartfillStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartfillStyle, mArrowStartfillStyle
-firePropertyChanged "ArrowStartFillStyle"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartFillStyle() As FillStyles
-ArrowStartFillStyle = mArrowStartfillStyle
-End Property
-
-Public Property Let ArrowStartLength(ByVal value As Long)
-Const ProcName As String = "ArrowStartLength"
-Dim failpoint As String
-On Error GoTo Err
-
-mArrowStartLength = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartLength, mArrowStartLength
-firePropertyChanged "ArrowStartLength"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartLength() As Long
-ArrowStartLength = mArrowStartLength
-End Property
-
-Public Property Let ArrowStartStyle(ByVal value As ArrowStyles)
-Const ProcName As String = "ArrowStartStyle"
-Dim failpoint As String
-On Error GoTo Err
-
-mArrowStartStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartStyle, mArrowStartStyle
-firePropertyChanged "ArrowStartStyle"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartStyle() As ArrowStyles
-ArrowStartStyle = mArrowStartStyle
-End Property
-
-Public Property Let ArrowStartWidth(ByVal value As Long)
-Const ProcName As String = "ArrowStartWidth"
-Dim failpoint As String
-On Error GoTo Err
-
-mArrowStartWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowStartWidth, mArrowStartWidth
-firePropertyChanged "ArrowStartWidth"
-
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get ArrowStartWidth() As Long
-ArrowStartWidth = mArrowStartWidth
-End Property
-
-Public Property Let ArrowEndColor(ByVal value As Long)
+Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-mArrowEndColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndColor, mArrowEndColor
-firePropertyChanged "ArrowEndColor"
+
+setLongProperty mArrowEndColor, LinePropertyArrowEndColor, Value
 
 Exit Property
 
@@ -278,21 +169,29 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndColor() As Long
+Const ProcName As String = "ArrowEndColor"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndColor
 ArrowEndColor = mArrowEndColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndFillColor(ByVal value As Long)
+Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-mArrowEndFillColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndFillColor, mArrowEndFillColor
-firePropertyChanged "ArrowEndFillColor"
+
+setLongProperty mArrowEndFillColor, LinePropertyArrowEndFillColor, Value
 
 Exit Property
 
@@ -301,17 +200,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndFillColor() As Long
+Const ProcName As String = "ArrowEndFillColor"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndFillColor
 ArrowEndFillColor = mArrowEndFillColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndFillStyle(ByVal value As FillStyles)
+Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowEndFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-mArrowEndFillStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndFillColor, mArrowEndFillColor
-firePropertyChanged "ArrowEndFillStyle"
+setLongProperty mArrowEndFillStyle, LinePropertyArrowEndFillStyle, Value
 
 Exit Property
 
@@ -320,17 +226,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
+Const ProcName As String = "ArrowEndFillStyle"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndFillStyle
 ArrowEndFillStyle = mArrowEndFillStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndLength(ByVal value As Long)
+Public Property Let ArrowEndLength(ByVal Value As Long)
 Const ProcName As String = "ArrowEndLength"
 Dim failpoint As String
 On Error GoTo Err
 
-mArrowEndLength = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndLength, mArrowEndLength
-firePropertyChanged "ArrowEndLength"
+setLongProperty mArrowEndLength, LinePropertyArrowEndLength, Value
 
 Exit Property
 
@@ -339,17 +252,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndLength() As Long
+Const ProcName As String = "ArrowEndLength"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndLength
 ArrowEndLength = mArrowEndLength
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndStyle(ByVal value As ArrowStyles)
+Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowEndStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-mArrowEndStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndStyle, mArrowEndStyle
-firePropertyChanged "ArrowEndStyle"
+setLongProperty mArrowEndStyle, LinePropertyArrowEndStyle, Value
 
 Exit Property
 
@@ -358,17 +278,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
+Const ProcName As String = "ArrowEndStyle"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndStyle
 ArrowEndStyle = mArrowEndStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndWidth(ByVal value As Long)
+Public Property Let ArrowEndWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowEndWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-mArrowEndWidth = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingArrowEndWidth, mArrowEndWidth
-firePropertyChanged "ArrowEndWidth"
+setLongProperty mArrowEndWidth, LinePropertyArrowEndWidth, Value
 
 Exit Property
 
@@ -377,21 +304,195 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ArrowEndWidth() As Long
+Const ProcName As String = "ArrowEndWidth"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowEndWidth
 ArrowEndWidth = mArrowEndWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let ArrowStartColor(ByVal Value As Long)
+Const ProcName As String = "ArrowStartColor"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color"
+
+setLongProperty mArrowStartColor, LinePropertyArrowStartColor, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartColor() As Long
+Const ProcName As String = "ArrowStartColor"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartColor
+ArrowStartColor = mArrowStartColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let ArrowStartFillColor(ByVal Value As Long)
+Const ProcName As String = "ArrowStartFillColor"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color"
+
+setLongProperty mArrowStartFillColor, LinePropertyArrowStartFillColor, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartFillColor() As Long
+Const ProcName As String = "ArrowStartFillColor"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartFillColor
+ArrowStartFillColor = mArrowStartFillColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
+Const ProcName As String = "ArrowStartFillStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+setLongProperty mArrowStartfillStyle, LinePropertyArrowStartFillStyle, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartFillStyle() As FillStyles
+Const ProcName As String = "ArrowStartFillStyle"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartFillStyle
+ArrowStartFillStyle = mArrowStartfillStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let ArrowStartLength(ByVal Value As Long)
+Const ProcName As String = "ArrowStartLength"
+Dim failpoint As String
+On Error GoTo Err
+
+setLongProperty mArrowStartLength, LinePropertyArrowStartLength, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartLength() As Long
+Const ProcName As String = "ArrowStartLength"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartLength
+ArrowStartLength = mArrowStartLength
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
+Const ProcName As String = "ArrowStartStyle"
+Dim failpoint As String
+On Error GoTo Err
+
+setLongProperty mArrowStartStyle, LinePropertyArrowStartStyle, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartStyle() As ArrowStyles
+Const ProcName As String = "ArrowStartStyle"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartStyle
+ArrowStartStyle = mArrowStartStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let ArrowStartWidth(ByVal Value As Long)
+Const ProcName As String = "ArrowStartWidth"
+Dim failpoint As String
+On Error GoTo Err
+
+setLongProperty mArrowStartWidth, LinePropertyArrowStartWidth, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get ArrowStartWidth() As Long
+Const ProcName As String = "ArrowStartWidth"
+On Error GoTo Err
+
+checkPropertySet LinePropertyArrowStartWidth
+ArrowStartWidth = mArrowStartWidth
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(value) Then _
+If Not gIsValidColor(Value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value is not a valid Color"
-mColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingColor, mColor
-firePropertyChanged "Color"
+
+setLongProperty mColor, LinePropertyColor, Value
 
 Exit Property
 
@@ -400,45 +501,68 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Color() As Long
+Const ProcName As String = "Color"
+On Error GoTo Err
+
+checkPropertySet LinePropertyColor
 Color = mColor
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     RemoveFromConfig
     Set mConfig = Nothing
     Exit Property
 End If
 
-Set mConfig = value
+Set mConfig = Value
 
-mConfig.SetSetting ConfigSettingColor, mColor
-mConfig.SetSetting ConfigSettingThickness, mThickness
-mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
-mConfig.SetSetting ConfigSettingExtendBefore, mExtendBefore
-mConfig.SetSetting ConfigSettingExtendAfter, mExtendAfter
-mConfig.SetSetting ConfigSettingArrowStartStyle, mArrowStartStyle
-mConfig.SetSetting ConfigSettingArrowStartLength, mArrowStartLength
-mConfig.SetSetting ConfigSettingArrowStartWidth, mArrowStartWidth
-mConfig.SetSetting ConfigSettingArrowStartColor, mArrowStartColor
-mConfig.SetSetting ConfigSettingArrowStartFillColor, mArrowStartFillColor
-mConfig.SetSetting ConfigSettingArrowStartfillStyle, mArrowStartfillStyle
-mConfig.SetSetting ConfigSettingArrowEndStyle, mArrowEndStyle
-mConfig.SetSetting ConfigSettingArrowEndLength, mArrowEndLength
-mConfig.SetSetting ConfigSettingArrowEndWidth, mArrowEndWidth
-mConfig.SetSetting ConfigSettingArrowEndColor, mArrowEndColor
-mConfig.SetSetting ConfigSettingArrowEndFillColor, mArrowEndFillColor
-mConfig.SetSetting ConfigSettingArrowEndFillStyle, mArrowEndFillStyle
-mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-mConfig.SetSetting ConfigSettingExtended, mExtended
-mConfig.SetSetting ConfigSettingFixedX, mFixedX
-mConfig.SetSetting ConfigSettingFixedY, mFixedY
+mConfig.SetSetting ConfigSettingName, mName
+mConfig.SetSetting ConfigSettingStyleType, mStyleType
+
+If IsPropertySet(LinePropertyArrowEndColor) Then mConfig.SetSetting ConfigSettingArrowEndColor, mArrowEndColor
+If IsPropertySet(LinePropertyArrowEndFillColor) Then mConfig.SetSetting ConfigSettingArrowEndFillColor, mArrowEndFillColor
+If IsPropertySet(LinePropertyArrowEndFillStyle) Then mConfig.SetSetting ConfigSettingArrowEndFillStyle, mArrowEndFillStyle
+If IsPropertySet(LinePropertyArrowEndLength) Then mConfig.SetSetting ConfigSettingArrowEndLength, mArrowEndLength
+If IsPropertySet(LinePropertyArrowEndStyle) Then mConfig.SetSetting ConfigSettingArrowEndStyle, mArrowEndStyle
+If IsPropertySet(LinePropertyArrowEndWidth) Then mConfig.SetSetting ConfigSettingArrowEndWidth, mArrowEndWidth
+
+If IsPropertySet(LinePropertyArrowStartColor) Then mConfig.SetSetting ConfigSettingArrowStartColor, mArrowStartColor
+If IsPropertySet(LinePropertyArrowStartFillColor) Then mConfig.SetSetting ConfigSettingArrowStartFillColor, mArrowStartFillColor
+If IsPropertySet(LinePropertyArrowStartFillStyle) Then mConfig.SetSetting ConfigSettingArrowStartfillStyle, mArrowStartfillStyle
+If IsPropertySet(LinePropertyArrowStartLength) Then mConfig.SetSetting ConfigSettingArrowStartLength, mArrowStartLength
+If IsPropertySet(LinePropertyArrowStartStyle) Then mConfig.SetSetting ConfigSettingArrowStartStyle, mArrowStartStyle
+If IsPropertySet(LinePropertyArrowStartWidth) Then mConfig.SetSetting ConfigSettingArrowStartWidth, mArrowStartWidth
+
+If IsPropertySet(LinePropertyColor) Then mConfig.SetSetting ConfigSettingColor, mColor
+
+If IsPropertySet(LinePropertyExtendAfter) Then mConfig.SetSetting ConfigSettingExtendAfter, mExtendAfter
+If IsPropertySet(LinePropertyExtendBefore) Then mConfig.SetSetting ConfigSettingExtendBefore, mExtendBefore
+If IsPropertySet(LinePropertyExtended) Then mConfig.SetSetting ConfigSettingExtended, mExtended
+
+If IsPropertySet(LinePropertyFixedX) Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
+If IsPropertySet(LinePropertyFixedY) Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
+
+If IsPropertySet(LinePropertyIncludeInAutoscale) Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
+
+If IsPropertySet(LinePropertyLayer) Then mConfig.SetSetting ConfigSettingLayer, mLayer
+If IsPropertySet(LinePropertyLineStyle) Then mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
+
+If IsPropertySet(LinePropertyThickness) Then mConfig.SetSetting ConfigSettingThickness, mThickness
+
+If Not mOffset1 Is Nothing Then mOffset1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionOffset1)
+If Not mOffset2 Is Nothing Then mOffset2.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionOffset2)
 
 Exit Property
 
@@ -447,14 +571,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 
 End Property
 
-Public Property Let ExtendAfter(ByVal value As Boolean)
+Public Property Let ExtendAfter(ByVal Value As Boolean)
 Const ProcName As String = "ExtendAfter"
 Dim failpoint As String
 On Error GoTo Err
 
-mExtendAfter = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtendAfter, mExtendAfter
-firePropertyChanged "ExtendAfter"
+setBooleanProperty mExtendAfter, LinePropertyExtendAfter, Value
 
 Exit Property
 
@@ -463,17 +585,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ExtendAfter() As Boolean
+Const ProcName As String = "ExtendAfter"
+On Error GoTo Err
+
+checkPropertySet LinePropertyExtendAfter
 ExtendAfter = mExtendAfter
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ExtendBefore(ByVal value As Boolean)
+Public Property Let ExtendBefore(ByVal Value As Boolean)
 Const ProcName As String = "ExtendBefore"
 Dim failpoint As String
 On Error GoTo Err
 
-mExtendBefore = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtendBefore, mExtendBefore
-firePropertyChanged "ExtendBefore"
+setBooleanProperty mExtendBefore, LinePropertyExtendBefore, Value
 
 Exit Property
 
@@ -482,18 +611,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get ExtendBefore() As Boolean
+Const ProcName As String = "ExtendBefore"
+On Error GoTo Err
+
+checkPropertySet LinePropertyExtendBefore
 ExtendBefore = mExtendBefore
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Extended(ByVal value As Boolean)
+Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtended = value Then Exit Property
-mExtended = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingExtended, mExtended
-firePropertyChanged "Extended"
+setBooleanProperty mExtended, LinePropertyExtended, Value
 
 Exit Property
 
@@ -502,18 +637,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Extended() As Boolean
+Const ProcName As String = "Extended"
+On Error GoTo Err
+
+checkPropertySet LinePropertyExtended
 Extended = mExtended
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedX(ByVal value As Boolean)
+Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedX = value Then Exit Property
-mFixedX = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedX, mFixedX
-firePropertyChanged "FixedX"
+setBooleanProperty mFixedX, LinePropertyFixedX, Value
 
 Exit Property
 
@@ -522,18 +663,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get FixedX() As Boolean
+Const ProcName As String = "FixedX"
+On Error GoTo Err
+
+checkPropertySet LinePropertyFixedX
 FixedX = mFixedX
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedY(ByVal value As Boolean)
+Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedY = value Then Exit Property
-mFixedY = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingFixedY, mFixedY
-firePropertyChanged "FixedY"
+setBooleanProperty mFixedY, LinePropertyFixedY, Value
 
 Exit Property
 
@@ -542,18 +689,24 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get FixedY() As Boolean
+Const ProcName As String = "FixedY"
+On Error GoTo Err
+
+checkPropertySet LinePropertyFixedY
 FixedY = mFixedY
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value Then Exit Property
-mIncludeInAutoscale = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncludeInAutoscale, mIncludeInAutoscale
-firePropertyChanged "IncludeInAutoscale"
+setBooleanProperty mIncludeInAutoscale, LinePropertyIncludeInAutoscale, Value
 
 Exit Property
 
@@ -562,17 +715,55 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
+Const ProcName As String = "IncludeInAutoscale"
+On Error GoTo Err
+
+checkPropertySet LinePropertyIncludeInAutoscale
 IncludeInAutoscale = mIncludeInAutoscale
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineStyle(ByVal value As LineStyles)
+Public Property Let Layer(ByVal Value As LayerNumbers)
+Const ProcName As String = "Layer"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not gIsValidColor(Value) And Value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color or -1"
+
+setLongProperty mLayer, BarPropertyLayer, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Get Layer() As LayerNumbers
+Const ProcName As String = "Layer"
+On Error GoTo Err
+
+checkPropertySet BarPropertyLayer
+Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-mLineStyle = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingLineStyle, mLineStyle
-firePropertyChanged "LineStyle"
+setLongProperty mLineStyle, LinePropertyLineStyle, Value
 
 Exit Property
 
@@ -581,17 +772,97 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get LineStyle() As LineStyles
+Const ProcName As String = "LineStyle"
+On Error GoTo Err
+
+checkPropertySet LinePropertyLineStyle
 LineStyle = mLineStyle
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Thickness(ByVal value As Long)
+Public Property Let Name(ByVal Value As String)
+Const ProcName As String = "Name"
+On Error GoTo Err
+
+If Value = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Name cannot be blank"
+End If
+
+mName = Value
+If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset1(ByVal Value As Size)
+
+Const ProcName As String = "Offset1"
+On Error GoTo Err
+
+setSizeProperty mOffset1, LinePropertyOffset1, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Property
+
+Public Property Get Offset1() As Size
+Const ProcName As String = "Offset1"
+On Error GoTo Err
+
+checkPropertySet LinePropertyOffset1
+Set Offset1 = mOffset1
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset2(ByVal Value As Size)
+
+Const ProcName As String = "Offset2"
+On Error GoTo Err
+
+setSizeProperty mOffset2, LinePropertyOffset2, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Property
+
+Public Property Get Offset2() As Size
+Const ProcName As String = "Offset2"
+On Error GoTo Err
+
+checkPropertySet LinePropertyOffset2
+Set Offset2 = mOffset2
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
 Dim failpoint As String
 On Error GoTo Err
 
-mThickness = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingThickness, mThickness
-firePropertyChanged "Thickness"
+setLongProperty mThickness, LinePropertyThickness, Value
 
 Exit Property
 
@@ -600,12 +871,37 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Thickness() As Long
+Const ProcName As String = "Thickness"
+On Error GoTo Err
+
+checkPropertySet LinePropertyThickness
 Thickness = mThickness
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub ClearProperty( _
+                ByVal pPropFlag As LinePropertyFlags)
+Const ProcName As String = "ClearProperty"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
+If Not mConfig Is Nothing Then mConfig.RemoveSetting propertyFlagToConfigSetting(pPropFlag)
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
 
 Public Function clone() As LineStyle
 Const ProcName As String = "clone"
@@ -641,41 +937,61 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
+Public Function IsPropertySet( _
+                ByVal pPropertyFlag As LinePropertyFlags) As Boolean
+                
+IsPropertySet = gIsFlagSet(mPropertyFlags, pPropertyFlag)
+
+End Function
+
 Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+                ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mConfig = config
-mColor = mConfig.GetSetting(ConfigSettingColor, CStr(vbBlack))
-mThickness = mConfig.GetSetting(ConfigSettingThickness, "1")
-mLineStyle = mConfig.GetSetting(ConfigSettingLineStyle, CStr(LineStyles.LineSolid))
-mExtendBefore = mConfig.GetSetting(ConfigSettingExtendBefore, "False")
-mExtendAfter = mConfig.GetSetting(ConfigSettingExtendAfter, "False")
-mArrowStartStyle = mConfig.GetSetting(ConfigSettingArrowStartStyle, CStr(ArrowStyles.ArrowNone))
-mArrowStartLength = mConfig.GetSetting(ConfigSettingArrowStartLength, "10")
-mArrowStartWidth = mConfig.GetSetting(ConfigSettingArrowStartWidth, "10")
-mArrowStartColor = mConfig.GetSetting(ConfigSettingArrowStartColor, CStr(vbBlack))
-mArrowStartFillColor = mConfig.GetSetting(ConfigSettingArrowStartFillColor, CStr(vbBlack))
-mArrowStartfillStyle = mConfig.GetSetting(ConfigSettingArrowStartfillStyle, CStr(FillStyles.FillSolid))
-mArrowEndStyle = mConfig.GetSetting(ConfigSettingArrowEndStyle, CStr(ArrowStyles.ArrowNone))
-mArrowEndLength = mConfig.GetSetting(ConfigSettingArrowEndLength, "10")
-mArrowEndWidth = mConfig.GetSetting(ConfigSettingArrowEndWidth, "10")
-mArrowEndColor = mConfig.GetSetting(ConfigSettingArrowEndColor, CStr(vbBlack))
-mArrowEndFillColor = mConfig.GetSetting(ConfigSettingArrowEndFillColor, CStr(vbBlack))
-mArrowEndFillStyle = mConfig.GetSetting(ConfigSettingArrowEndFillStyle, CStr(FillStyles.FillSolid))
-mIncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale, "False")
-mExtended = mConfig.GetSetting(ConfigSettingExtended, "False")
-mFixedX = mConfig.GetSetting(ConfigSettingFixedX, "False")
-mFixedY = mConfig.GetSetting(ConfigSettingFixedY, "False")
+Set mConfig = pConfig
+mName = mConfig.GetSetting(ConfigSettingName)
+mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
+
+If mConfig.GetAttribute(ConfigSettingArrowEndColor) <> "" Then ArrowEndColor = mConfig.GetSetting(ConfigSettingArrowEndColor)
+If mConfig.GetAttribute(ConfigSettingArrowEndFillColor) <> "" Then ArrowEndFillColor = mConfig.GetSetting(ConfigSettingArrowEndFillColor)
+If mConfig.GetAttribute(ConfigSettingArrowEndFillStyle) <> "" Then ArrowEndFillStyle = mConfig.GetSetting(ConfigSettingArrowEndFillStyle)
+If mConfig.GetAttribute(ConfigSettingArrowEndLength) <> "" Then ArrowEndLength = mConfig.GetSetting(ConfigSettingArrowEndLength)
+If mConfig.GetAttribute(ConfigSettingArrowEndStyle) <> "" Then ArrowEndStyle = mConfig.GetSetting(ConfigSettingArrowEndStyle)
+If mConfig.GetAttribute(ConfigSettingArrowEndWidth) <> "" Then ArrowEndWidth = mConfig.GetSetting(ConfigSettingArrowEndWidth)
+
+If mConfig.GetAttribute(ConfigSettingArrowStartColor) <> "" Then ArrowStartColor = mConfig.GetSetting(ConfigSettingArrowStartColor)
+If mConfig.GetAttribute(ConfigSettingArrowStartFillColor) <> "" Then ArrowStartFillColor = mConfig.GetSetting(ConfigSettingArrowStartFillColor)
+If mConfig.GetAttribute(ConfigSettingArrowStartfillStyle) <> "" Then ArrowStartFillStyle = mConfig.GetSetting(ConfigSettingArrowStartfillStyle)
+If mConfig.GetAttribute(ConfigSettingArrowStartLength) <> "" Then ArrowStartLength = mConfig.GetSetting(ConfigSettingArrowStartLength)
+If mConfig.GetAttribute(ConfigSettingArrowStartStyle) <> "" Then ArrowStartStyle = mConfig.GetSetting(ConfigSettingArrowStartStyle)
+If mConfig.GetAttribute(ConfigSettingArrowStartWidth) <> "" Then ArrowStartWidth = mConfig.GetSetting(ConfigSettingArrowStartWidth)
+
+If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+
+If mConfig.GetAttribute(ConfigSettingExtendAfter) <> "" Then ExtendAfter = mConfig.GetSetting(ConfigSettingExtendAfter)
+If mConfig.GetAttribute(ConfigSettingExtendBefore) <> "" Then ExtendBefore = mConfig.GetSetting(ConfigSettingExtendBefore)
+If mConfig.GetAttribute(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
+
+If mConfig.GetAttribute(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
+If mConfig.GetAttribute(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
+
+If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+
+If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetAttribute(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
+
+If mConfig.GetAttribute(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
+
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset1) Then Offset1 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset1))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset2) Then Offset2 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset2))
 
 Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -695,6 +1011,23 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkPropertySet( _
+                ByVal pPropFlag As LinePropertyFlags)
+Const ProcName As String = "checkPropertySet"
+On Error GoTo Err
+
+If Not IsPropertySet(pPropFlag) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Property is not set"
+End If
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
 Dim ev As PropertyChangedEvent
@@ -712,5 +1045,153 @@ Exit Sub
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
+
+Private Function propertyFlagToConfigSetting( _
+            ByVal pPropFlag As LinePropertyFlags) As String
+Select Case pPropFlag
+Case LinePropertyColor
+    propertyFlagToConfigSetting = ConfigSettingColor
+Case LinePropertyThickness
+    propertyFlagToConfigSetting = ConfigSettingThickness
+Case LinePropertyLineStyle
+    propertyFlagToConfigSetting = ConfigSettingLineStyle
+Case LinePropertyExtendBefore
+    propertyFlagToConfigSetting = ConfigSettingExtendBefore
+Case LinePropertyExtendAfter
+    propertyFlagToConfigSetting = ConfigSettingExtendAfter
+Case LinePropertyArrowStartStyle
+    propertyFlagToConfigSetting = ConfigSettingArrowStartStyle
+Case LinePropertyArrowStartLength
+    propertyFlagToConfigSetting = ConfigSettingArrowStartLength
+Case LinePropertyArrowStartWidth
+    propertyFlagToConfigSetting = ConfigSettingArrowStartWidth
+Case LinePropertyArrowStartColor
+    propertyFlagToConfigSetting = ConfigSettingArrowStartColor
+Case LinePropertyArrowStartFillColor
+    propertyFlagToConfigSetting = ConfigSettingArrowStartFillColor
+Case LinePropertyArrowStartFillStyle
+    propertyFlagToConfigSetting = ConfigSettingArrowStartfillStyle
+Case LinePropertyArrowEndStyle
+    propertyFlagToConfigSetting = ConfigSettingArrowEndStyle
+Case LinePropertyArrowEndLength
+    propertyFlagToConfigSetting = ConfigSettingArrowEndLength
+Case LinePropertyArrowEndWidth
+    propertyFlagToConfigSetting = ConfigSettingArrowEndWidth
+Case LinePropertyArrowEndColor
+    propertyFlagToConfigSetting = ConfigSettingArrowEndColor
+Case LinePropertyArrowEndFillColor
+    propertyFlagToConfigSetting = ConfigSettingArrowEndFillColor
+Case LinePropertyArrowEndFillStyle
+    propertyFlagToConfigSetting = ConfigSettingArrowEndFillStyle
+Case LinePropertyFixedX
+    propertyFlagToConfigSetting = ConfigSettingFixedX
+Case LinePropertyFixedY
+    propertyFlagToConfigSetting = ConfigSettingFixedY
+Case LinePropertyIncludeInAutoscale
+    propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
+Case LinePropertyExtended
+    propertyFlagToConfigSetting = ConfigSettingExtended
+Case LinePropertyOffset1
+    propertyFlagToConfigSetting = ConfigSectionOffset1
+Case LinePropertyOffset2
+    propertyFlagToConfigSetting = ConfigSectionOffset2
+End Select
+End Function
+
+Private Sub setBooleanProperty( _
+                ByRef pProp As Boolean, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Boolean)
+Const ProcName As String = "setBooleanProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setLongProperty( _
+                ByRef pProp As Long, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Long)
+Const ProcName As String = "setLongProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSingleProperty( _
+                ByRef pProp As Single, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Single)
+Const ProcName As String = "setSingleProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+If Not mConfig Is Nothing Then mConfig.SetSetting propertyFlagToConfigSetting(pPropFlag), pProp
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSizeProperty( _
+                ByRef pProp As Size, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Size)
+Const ProcName As String = "setSizeProperty"
+On Error GoTo Err
+
+If pProp Is Value And IsPropertySet(pPropFlag) Then Exit Sub
+If Not pProp Is Nothing Then pProp.RemoveFromConfig
+Set pProp = Value
+If pProp Is Nothing Then
+    ClearProperty pPropFlag
+Else
+    setPropertyFlag pPropFlag
+    If Not mConfig Is Nothing Then pProp.ConfigurationSection = mConfig.AddConfigurationSection(propertyFlagToConfigSetting(pPropFlag))
+End If
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setPropertyFlag( _
+                ByVal flag As LinePropertyFlags)
+Const ProcName As String = "setPropertyFlag"
+Dim failpoint As String
+On Error GoTo Err
+
+mPropertyFlags = gSetFlag(mPropertyFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
 
 

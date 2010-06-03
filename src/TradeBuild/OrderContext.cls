@@ -131,7 +131,7 @@ End Sub
 
 Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEvent)
 Const ProcName As String = "mTicker_StateChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.State = TickerStates.TickerStateReady Then
@@ -156,7 +156,7 @@ Public Property Get ActiveSize() As Long
 Dim lOrderPlex As orderPlex
 
 Const ProcName As String = "ActiveSize"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -171,7 +171,7 @@ End Property
 
 Public Property Let AllOrNone(ByVal value As Boolean)
 Const ProcName As String = "AllOrNone"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttAllOrNone
@@ -189,7 +189,7 @@ End Property
 
 Public Property Let BlockOrder(ByVal value As Boolean)
 Const ProcName As String = "BlockOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttBlockOrder
@@ -212,7 +212,7 @@ End Property
 Public Property Get Complete() As Boolean
 Dim op As orderPlex
 Const ProcName As String = "Complete"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each op In mActiveOrderPlexes
@@ -232,7 +232,7 @@ End Property
 
 Public Property Let DisplaySize(ByVal value As Long)
 Const ProcName As String = "DisplaySize"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttDisplaySize
@@ -250,7 +250,7 @@ End Property
 
 Friend Property Let Enabled(ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mEnabled = value
@@ -264,7 +264,7 @@ End Property
 
 Public Property Let ETradeOnly(ByVal value As Boolean)
 Const ProcName As String = "ETradeOnly"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttETradeOnly
@@ -282,7 +282,7 @@ End Property
 
 Public Property Let FirmQuoteOnly(ByVal value As Boolean)
 Const ProcName As String = "FirmQuoteOnly"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttFirmQuoteOnly
@@ -300,7 +300,7 @@ End Property
 
 Public Property Let GoodAfterTime(ByVal value As Date)
 Const ProcName As String = "GoodAfterTime"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTime
@@ -318,7 +318,7 @@ End Property
 
 Public Property Let GoodAfterTimeTZ(ByVal value As String)
 Const ProcName As String = "GoodAfterTimeTZ"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTimeTZ
@@ -336,7 +336,7 @@ End Property
 
 Public Property Let GoodTillDate(ByVal value As Date)
 Const ProcName As String = "GoodTillDate"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDate
@@ -354,7 +354,7 @@ End Property
 
 Public Property Let GoodTillDateTZ(ByVal value As String)
 Const ProcName As String = "GoodTillDateTZ"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDateTZ
@@ -372,7 +372,7 @@ End Property
 
 Public Property Let Hidden(ByVal value As Boolean)
 Const ProcName As String = "Hidden"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttHidden
@@ -390,7 +390,7 @@ End Property
 
 Public Property Let IgnoreRegularTradingHours(ByVal value As Boolean)
 Const ProcName As String = "IgnoreRegularTradingHours"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttIgnoreRTH
@@ -408,7 +408,7 @@ End Property
 
 Friend Property Let IsReady(ByVal value As Boolean)
 Const ProcName As String = "IsReady"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mIsReady = value
@@ -434,7 +434,7 @@ End Property
 
 Public Property Let LimitPrice(ByVal value As Double)
 Const ProcName As String = "LimitPrice"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttLimitPrice
@@ -452,7 +452,7 @@ End Property
 
 Public Property Let MinimumQuantity(ByVal value As Long)
 Const ProcName As String = "MinimumQuantity"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttMinimumQuantity
@@ -478,7 +478,7 @@ End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
 Const ProcName As String = "NbboPriceCap"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttNBBOPriceCap
@@ -496,7 +496,7 @@ End Property
 
 Public Property Let OrderType(ByVal value As OrderTypes)
 Const ProcName As String = "OrderType"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttOrderType
@@ -515,7 +515,7 @@ End Property
 
 Public Property Let Origin(ByVal value As OrderOrigins)
 Const ProcName As String = "Origin"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttOrigin
@@ -538,7 +538,7 @@ End Property
 
 Public Property Let OverrideConstraints(ByVal value As Boolean)
 Const ProcName As String = "OverrideConstraints"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttOverrideConstraints
@@ -557,7 +557,7 @@ End Property
 Public Property Get PendingSize() As Long
 Dim lOrderPlex As orderPlex
 Const ProcName As String = "PendingSize"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -572,7 +572,7 @@ End Property
 
 Public Property Let PercentOffset(ByVal value As Double)
 Const ProcName As String = "PercentOffset"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttPercentOffset
@@ -615,7 +615,7 @@ End Property
 
 Public Property Let Quantity(ByVal value As Long)
 Const ProcName As String = "Quantity"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttQuantity
@@ -634,7 +634,7 @@ End Property
 Public Property Get Risk() As Currency
 Dim lOrderPlex As orderPlex
 Const ProcName As String = "Risk"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -653,7 +653,7 @@ End Property
 
 Public Property Let SettlingFirm(ByVal value As String)
 Const ProcName As String = "SettlingFirm"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttSettlingFirm
@@ -673,7 +673,7 @@ Public Property Get size() As Long
 Dim lOrderPlex As orderPlex
 
 Const ProcName As String = "Size"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 size = mCompletedSize
@@ -690,7 +690,7 @@ End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
 Const ProcName As String = "StopTriggerMethod"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttStopTriggerMethod
@@ -709,7 +709,7 @@ End Property
 
 Public Property Let SweepToFill(ByVal value As Boolean)
 Const ProcName As String = "SweepToFill"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttSweepToFill
@@ -727,7 +727,7 @@ End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
 Const ProcName As String = "Ticker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = value
@@ -744,7 +744,7 @@ End Property
 
 Public Property Let TimeInForce(ByVal value As OrderTifs)
 Const ProcName As String = "TimeInForce"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not GIsValidTIF(value) Then
@@ -769,7 +769,7 @@ End Property
 
 Public Property Let TriggerPrice(ByVal value As Double)
 Const ProcName As String = "TriggerPrice"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 checkAttributeSupported OrderAttributeIds.OrderAttTriggerPrice
@@ -792,7 +792,7 @@ End Property
 Friend Sub ActivateOrderPlex( _
                 ByVal pOrderPlex As orderPlex)
 Const ProcName As String = "ActivateOrderPlex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 pOrderPlex.Ticker = mTicker
@@ -907,7 +907,7 @@ Public Function Buy(ByRef number As Long, _
                     Optional ByVal ScalingStrategy As PositionManagementStrategy) As orderPlex
 
 Const ProcName As String = "Buy"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 GLogLogger.Log pMsg:="Buy", _
@@ -965,7 +965,7 @@ Public Function Cancel() As Boolean
 Dim lOrderPlex As orderPlex
 
 Const ProcName As String = "Cancel"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -982,7 +982,7 @@ Public Function CancelPending() As Boolean
 Dim lOrderPlex As orderPlex
 
 Const ProcName As String = "CancelPending"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -999,7 +999,7 @@ Public Sub CloseOut(ByVal method As String)
 Dim lOrderPlex As orderPlex
 
 Const ProcName As String = "CloseOut"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each lOrderPlex In mActiveOrderPlexes
@@ -1028,7 +1028,7 @@ Public Function CreateBuyOrderPlex( _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
 Const ProcName As String = "CreateBuyOrderPlex"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
@@ -1077,7 +1077,7 @@ Dim lStopPrice As Double
 Dim lTargetPrice As Double
 
 Const ProcName As String = "CreateOrderPlex"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not IsReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1331,7 +1331,7 @@ Public Function CreateSellOrderPlex( _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
 Const ProcName As String = "CreateSellOrderPlex"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
@@ -1367,7 +1367,7 @@ Dim origQuantity As Long
 Dim NewQuantity As Long
 
 Const ProcName As String = "ExecuteOrderPlex"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pOrderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1437,7 +1437,7 @@ Friend Function Finish()
 Dim op As orderPlex
 
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = Nothing
@@ -1462,7 +1462,7 @@ End Function
 
 Public Function GetAccountBalance() As Double
 Const ProcName As String = "GetAccountBalance"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need to fix this up
@@ -1502,7 +1502,7 @@ End Function
 Friend Function NewOrder() As Order
 Dim lOrder As Order
 Const ProcName As String = "NewOrder"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lOrder = New Order
@@ -1558,7 +1558,7 @@ End Function
 Friend Sub NotifyEndOfTradingSession( _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyEndOfTradingSession"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim op As orderPlex
@@ -1577,7 +1577,7 @@ Friend Sub NotifyPositionCloseout( _
                 ByVal pPrice As Double, _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyCloseout"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim op As orderPlex
@@ -1595,7 +1595,7 @@ End Sub
 Friend Function NotifyOrderPlexClosed( _
                 ByVal pOrderPlex As orderPlex)
 Const ProcName As String = "NotifyOrderPlexClosed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -1639,7 +1639,7 @@ Public Function Sell(ByRef number As Long, _
                     Optional ByVal ScalingStrategy As PositionManagementStrategy) As orderPlex
 
 Const ProcName As String = "Sell"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 GLogLogger.Log pMsg:="Sell", _
@@ -1701,7 +1701,7 @@ Private Sub attributeValueNotSupported( _
                 ByVal pAttribute As OrderAttributeIds, _
                 ByVal value As Variant)
 Const ProcName As String = "attributeValueNotSupported"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1717,7 +1717,7 @@ End Sub
 Private Sub checkAttributeSupported( _
                 ByVal pAttribute As OrderAttributeIds)
 Const ProcName As String = "checkAttributeSupported"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not IsAttributeSupported(pAttribute) Then
@@ -1734,7 +1734,7 @@ End Sub
 
 Private Sub checkReady()
 Const ProcName As String = "checkReady"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If IsReady Then
@@ -1756,7 +1756,7 @@ End Sub
 Private Function nextPlexKey() As String
 Static currID As Long
 Const ProcName As String = "nextPlexKey"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 currID = currID + 1

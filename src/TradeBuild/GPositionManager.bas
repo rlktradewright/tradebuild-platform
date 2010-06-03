@@ -57,9 +57,9 @@ Private mPositionManagersSimulated      As PositionManagers
 
 Public Function gCreatePositionManager( _
                 ByVal pKey As String, _
-                ByVal pWorkspace As Workspace) As PositionManager
+                ByVal pWorkspace As WorkSpace) As PositionManager
 Const ProcName As String = "gCreatePositionManager"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set gCreatePositionManager = New PositionManager
@@ -74,9 +74,9 @@ End Function
 
 Public Function gCreatePositionManagerSimulated( _
                 ByVal pKey As String, _
-                ByVal pWorkspace As Workspace) As PositionManager
+                ByVal pWorkspace As WorkSpace) As PositionManager
 Const ProcName As String = "gCreatePositionManagerSimulated"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set gCreatePositionManagerSimulated = New PositionManager
@@ -92,7 +92,7 @@ End Function
 Public Function gGetPositionManager( _
                 ByVal pKey As String) As PositionManager
 Const ProcName As String = "gGetPositionManager"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -119,7 +119,7 @@ End Function
 Public Function gGetPositionManagerSimulated( _
                 ByVal pKey As String) As PositionManager
 Const ProcName As String = "gGetPositionManagerSimulated"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -162,7 +162,7 @@ Public Function gNextApplicationIndex() As Long
 Static lNextApplicationIndex As Long
 
 Const ProcName As String = "gNextApplicationIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gNextApplicationIndex = lNextApplicationIndex

@@ -92,8 +92,8 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let BackColor(ByVal value As Long)
-mGradientFill.Color = value
+Friend Property Let BackColor(ByVal Value As Long)
+mGradientFill.Color = Value
 End Property
 
 Public Property Get BackColor() As Long
@@ -109,12 +109,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Bottom(ByVal value As Double)
+Friend Property Let Bottom(ByVal Value As Double)
 Const ProcName As String = "Bottom"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Bottom = value
+mBoundary.Bottom = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 
@@ -144,12 +144,12 @@ Public Property Get Boundary() As TRectangle
 Boundary = mBoundary
 End Property
 
-Friend Property Let Canvas(ByRef value As Canvas)
+Friend Property Let Canvas(ByRef Value As Canvas)
 Const ProcName As String = "Canvas"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mCanvas = value
+Set mCanvas = Value
 mCanvas.Viewport = Me
 setGradientFillArea
 
@@ -184,13 +184,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let GradientFillColors(ByRef value() As Long)
+Friend Property Let GradientFillColors(ByRef Value() As Long)
 Dim ar() As Long
 Const ProcName As String = "GradientFillColors"
 Dim failpoint As String
 On Error GoTo Err
 
-ar = value
+ar = Value
 mGradientFill.Colors = ar
 
 Exit Property
@@ -199,12 +199,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Height(ByVal value As Double)
+Friend Property Let Height(ByVal Value As Double)
 Const ProcName As String = "Height"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Bottom = mBoundary.Top - value
+mBoundary.Bottom = mBoundary.Top - Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
@@ -247,12 +247,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Left(ByVal value As Double)
+Friend Property Let Left(ByVal Value As Double)
 Const ProcName As String = "Left"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Left = value
+mBoundary.Left = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
@@ -277,12 +277,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let MouseIcon(ByVal value As IPictureDisp)
+Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "MouseIcon"
 Dim failpoint As String
 On Error GoTo Err
 
-mCanvas.MouseIcon = value
+mCanvas.MouseIcon = Value
 
 Exit Property
 
@@ -290,12 +290,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let MousePointer(ByVal value As VBRUN.MousePointerConstants)
+Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
 Const ProcName As String = "MousePointer"
 Dim failpoint As String
 On Error GoTo Err
 
-mCanvas.MousePointer = value
+mCanvas.MousePointer = Value
 
 Exit Property
 
@@ -316,8 +316,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let RegionType(ByVal value As RegionTypes)
-mRegionType = value
+Friend Property Let RegionType(ByVal Value As RegionTypes)
+mRegionType = Value
 End Property
 
 Friend Sub NotifyResizedY()
@@ -335,12 +335,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Property Let Right(ByVal value As Double)
+Friend Property Let Right(ByVal Value As Double)
 Const ProcName As String = "Right"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Right = value
+mBoundary.Right = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
@@ -365,12 +365,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Top(ByVal value As Double)
+Friend Property Let Top(ByVal Value As Double)
 Const ProcName As String = "Top"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Top = value
+mBoundary.Top = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
@@ -405,12 +405,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Width(ByVal value As Double)
+Friend Property Let Width(ByVal Value As Double)
 Const ProcName As String = "Width"
 Dim failpoint As String
 On Error GoTo Err
 
-mBoundary.Left = mBoundary.Right - value
+mBoundary.Left = mBoundary.Right - Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
@@ -486,12 +486,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCoordsLogicalToPixelsX(ByVal value As Double) As Long
+Public Function ConvertCoordsLogicalToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertCoordsLogicalToPixelsX"
 Dim failpoint As String
 On Error GoTo Err
 
-ConvertCoordsLogicalToPixelsX = ConvertLogicalToPixelsX(value - mBoundary.Left)
+ConvertCoordsLogicalToPixelsX = ConvertLogicalToPixelsX(Value - mBoundary.Left)
 ConvertCoordsLogicalToPixelsX = ConvertCoordsLogicalToPixelsX - mTransform.eDx
 Exit Function
 
@@ -499,12 +499,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCoordsLogicalToPixelsY(ByVal value As Double) As Long
+Public Function ConvertCoordsLogicalToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertCoordsLogicalToPixelsY"
 Dim failpoint As String
 On Error GoTo Err
 
-ConvertCoordsLogicalToPixelsY = ConvertLogicalToPixelsY(mBoundary.Top - value)
+ConvertCoordsLogicalToPixelsY = ConvertLogicalToPixelsY(mBoundary.Top - Value)
 ConvertCoordsLogicalToPixelsY = ConvertCoordsLogicalToPixelsY - mTransform.eDy
 
 Exit Function
@@ -513,17 +513,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToDistanceX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToDistanceX = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToDistanceX = CDbl(mCanvas.Width) / TwipsPerCm - value
+    ConvertCounterDistanceToDistanceX = CDbl(mCanvas.Width) / TwipsPerCm - Value
 End If
 
 Exit Function
@@ -532,17 +532,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToDistanceY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToDistanceY = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToDistanceY = CDbl(mCanvas.Height) / TwipsPerCm - value
+    ConvertCounterDistanceToDistanceY = CDbl(mCanvas.Height) / TwipsPerCm - Value
 End If
 
 Exit Function
@@ -551,17 +551,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToLogicalX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToLogicalX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToLogicalX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToLogicalX = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToLogicalX = (mBoundary.Right - mBoundary.Left) - ((value * TwipsPerCm) / CDbl(mCanvas.Width) * (mBoundary.Right - mBoundary.Left))
+    ConvertCounterDistanceToLogicalX = (mBoundary.Right - mBoundary.Left) - ((Value * TwipsPerCm) / CDbl(mCanvas.Width) * (mBoundary.Right - mBoundary.Left))
 End If
 
 Exit Function
@@ -570,17 +570,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToLogicalY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToLogicalY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToLogicalY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToLogicalY = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToLogicalY = (mBoundary.Top - mBoundary.Bottom) - ((value * TwipsPerCm) / CDbl(mCanvas.Height) * (mBoundary.Top - mBoundary.Bottom))
+    ConvertCounterDistanceToLogicalY = (mBoundary.Top - mBoundary.Bottom) - ((Value * TwipsPerCm) / CDbl(mCanvas.Height) * (mBoundary.Top - mBoundary.Bottom))
 End If
 
 Exit Function
@@ -589,17 +589,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToRelativeX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToRelativeX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToRelativeX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToRelativeX = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToRelativeX = 100# - 100# * value * TwipsPerCm / CDbl(mCanvas.Width)
+    ConvertCounterDistanceToRelativeX = 100# - 100# * Value * TwipsPerCm / CDbl(mCanvas.Width)
 End If
 
 Exit Function
@@ -608,17 +608,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertCounterDistanceToRelativeY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToRelativeY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertCounterDistanceToRelativeY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertCounterDistanceToRelativeY = MinusInfinityDouble
 Else
-    ConvertCounterDistanceToRelativeY = 100# - 100# * value * TwipsPerCm / CDbl(mCanvas.Height)
+    ConvertCounterDistanceToRelativeY = 100# - 100# * Value * TwipsPerCm / CDbl(mCanvas.Height)
 End If
 
 Exit Function
@@ -627,17 +627,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToCounterDistanceX(ByVal value As Double) As Double
+Public Function ConvertDistanceToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToCounterDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToCounterDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToCounterDistanceX = MinusInfinityDouble
 Else
-    ConvertDistanceToCounterDistanceX = CDbl(mCanvas.Width) / TwipsPerCm - value
+    ConvertDistanceToCounterDistanceX = CDbl(mCanvas.Width) / TwipsPerCm - Value
 End If
 
 Exit Function
@@ -646,17 +646,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertDistanceToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToCounterDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToCounterDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToCounterDistanceY = MinusInfinityDouble
 Else
-    ConvertDistanceToCounterDistanceY = CDbl(mCanvas.Height) / TwipsPerCm - value
+    ConvertDistanceToCounterDistanceY = CDbl(mCanvas.Height) / TwipsPerCm - Value
 End If
 
 Exit Function
@@ -665,17 +665,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToLogicalX(ByVal value As Double) As Double
+Public Function ConvertDistanceToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToLogicalX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToLogicalX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToLogicalX = MinusInfinityDouble
 Else
-    ConvertDistanceToLogicalX = (value * TwipsPerCm) / CDbl(mCanvas.Width) * (mBoundary.Right - mBoundary.Left)
+    ConvertDistanceToLogicalX = (Value * TwipsPerCm) / CDbl(mCanvas.Width) * (mBoundary.Right - mBoundary.Left)
 End If
 
 Exit Function
@@ -684,17 +684,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToLogicalY(ByVal value As Double) As Double
+Public Function ConvertDistanceToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToLogicalY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToLogicalY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToLogicalY = MinusInfinityDouble
 Else
-    ConvertDistanceToLogicalY = (value * TwipsPerCm) / CDbl(mCanvas.Height) * (mBoundary.Top - mBoundary.Bottom)
+    ConvertDistanceToLogicalY = (Value * TwipsPerCm) / CDbl(mCanvas.Height) * (mBoundary.Top - mBoundary.Bottom)
 End If
 
 Exit Function
@@ -703,17 +703,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToPixelsX(ByVal value As Double) As Long
+Public Function ConvertDistanceToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertDistanceToPixelsX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToPixelsX = PlusInfinityLong
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToPixelsX = MinusInfinityLong
 Else
-    ConvertDistanceToPixelsX = Round((value * TwipsPerCm) / Screen.TwipsPerPixelX, 0)
+    ConvertDistanceToPixelsX = Round((Value * TwipsPerCm) / Screen.TwipsPerPixelX, 0)
 End If
 
 Exit Function
@@ -722,17 +722,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToPixelsY(ByVal value As Double) As Long
+Public Function ConvertDistanceToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertDistanceToPixelsY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToPixelsY = PlusInfinityLong
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToPixelsY = MinusInfinityLong
 Else
-    ConvertDistanceToPixelsY = Round((value * TwipsPerCm) / Screen.TwipsPerPixelY, 0)
+    ConvertDistanceToPixelsY = Round((Value * TwipsPerCm) / Screen.TwipsPerPixelY, 0)
 End If
 
 Exit Function
@@ -741,17 +741,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToRelativeX(ByVal value As Double) As Double
+Public Function ConvertDistanceToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToRelativeX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToRelativeX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToRelativeX = MinusInfinityDouble
 Else
-    ConvertDistanceToRelativeX = 100# * value * TwipsPerCm / CDbl(mCanvas.Width)
+    ConvertDistanceToRelativeX = 100# * Value * TwipsPerCm / CDbl(mCanvas.Width)
 End If
 
 Exit Function
@@ -760,17 +760,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertDistanceToRelativeY(ByVal value As Double) As Double
+Public Function ConvertDistanceToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToRelativeY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertDistanceToRelativeY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertDistanceToRelativeY = MinusInfinityDouble
 Else
-    ConvertDistanceToRelativeY = 100# * value * TwipsPerCm / CDbl(mCanvas.Height)
+    ConvertDistanceToRelativeY = 100# * Value * TwipsPerCm / CDbl(mCanvas.Height)
 End If
 Exit Function
 
@@ -778,17 +778,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToCounterDistanceX(ByVal value As Double) As Double
+Public Function ConvertLogicalToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToCounterDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToCounterDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToCounterDistanceX = MinusInfinityDouble
 Else
-    ConvertLogicalToCounterDistanceX = (mBoundary.Right - value) / (mBoundary.Right - mBoundary.Left) * mCanvas.Width / TwipsPerCm
+    ConvertLogicalToCounterDistanceX = (mBoundary.Right - Value) / (mBoundary.Right - mBoundary.Left) * mCanvas.Width / TwipsPerCm
 End If
 
 Exit Function
@@ -797,17 +797,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertLogicalToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToCounterDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToCounterDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToCounterDistanceY = MinusInfinityDouble
 Else
-    ConvertLogicalToCounterDistanceY = (mBoundary.Top - value) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mCanvas.Height) / TwipsPerCm
+    ConvertLogicalToCounterDistanceY = (mBoundary.Top - Value) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mCanvas.Height) / TwipsPerCm
 End If
 
 Exit Function
@@ -816,17 +816,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToDistanceX(ByVal value As Double) As Double
+Public Function ConvertLogicalToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToDistanceX = MinusInfinityDouble
 Else
-    ConvertLogicalToDistanceX = (value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * CDbl(mCanvas.Width) / TwipsPerCm
+    ConvertLogicalToDistanceX = (Value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * CDbl(mCanvas.Width) / TwipsPerCm
 End If
 
 Exit Function
@@ -835,17 +835,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToDistanceY(ByVal value As Double) As Double
+Public Function ConvertLogicalToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToDistanceY = MinusInfinityDouble
 Else
-    ConvertLogicalToDistanceY = (value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mCanvas.Height) / TwipsPerCm
+    ConvertLogicalToDistanceY = (Value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mCanvas.Height) / TwipsPerCm
 End If
 
 Exit Function
@@ -854,17 +854,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToPixelsX(ByVal value As Double) As Long
+Public Function ConvertLogicalToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertLogicalToPixelsX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToPixelsX = PlusInfinityLong
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToPixelsX = MinusInfinityLong
 Else
-    ConvertLogicalToPixelsX = mCanvas.Surface.ScaleX(value, vbUser, vbPixels)
+    ConvertLogicalToPixelsX = mCanvas.Surface.ScaleX(Value, vbUser, vbPixels)
     'ConvertLogicalToPixelsX = value / mGaugeX
 End If
 
@@ -874,17 +874,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToPixelsY(ByVal value As Double) As Long
+Public Function ConvertLogicalToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertLogicalToPixelsY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToPixelsY = PlusInfinityLong
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToPixelsY = MinusInfinityLong
 Else
-    ConvertLogicalToPixelsY = -Canvas.Surface.ScaleY(value, vbUser, vbPixels)
+    ConvertLogicalToPixelsY = -Canvas.Surface.ScaleY(Value, vbUser, vbPixels)
     'ConvertLogicalToPixelsY = value / mGaugeY
 End If
 Exit Function
@@ -893,17 +893,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToRelativeX(ByVal value As Double) As Double
+Public Function ConvertLogicalToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToRelativeX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToRelativeX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToRelativeX = MinusInfinityDouble
 Else
-    ConvertLogicalToRelativeX = (value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * 100#
+    ConvertLogicalToRelativeX = (Value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * 100#
 End If
 
 Exit Function
@@ -912,17 +912,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertLogicalToRelativeY(ByVal value As Double) As Double
+Public Function ConvertLogicalToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToRelativeY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertLogicalToRelativeY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToRelativeY = MinusInfinityDouble
 Else
-    ConvertLogicalToRelativeY = (value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * 100#
+    ConvertLogicalToRelativeY = (Value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * 100#
 End If
 
 Exit Function
@@ -931,17 +931,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertPixelsToDistanceX(ByVal value As Long) As Double
+Public Function ConvertPixelsToDistanceX(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityLong Then
+If Value = PlusInfinityLong Then
     ConvertPixelsToDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityLong Then
+ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToDistanceX = MinusInfinityDouble
 Else
-    ConvertPixelsToDistanceX = value * Screen.TwipsPerPixelX / TwipsPerCm
+    ConvertPixelsToDistanceX = Value * Screen.TwipsPerPixelX / TwipsPerCm
 End If
 
 Exit Function
@@ -950,17 +950,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertPixelsToDistanceY(ByVal value As Long) As Double
+Public Function ConvertPixelsToDistanceY(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityLong Then
+If Value = PlusInfinityLong Then
     ConvertPixelsToDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityLong Then
+ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToDistanceY = MinusInfinityDouble
 Else
-    ConvertPixelsToDistanceY = value * Screen.TwipsPerPixelY / TwipsPerCm
+    ConvertPixelsToDistanceY = Value * Screen.TwipsPerPixelY / TwipsPerCm
 End If
 
 Exit Function
@@ -969,17 +969,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertPixelsToLogicalX(ByVal value As Long) As Double
+Public Function ConvertPixelsToLogicalX(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToLogicalX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityLong Then
+If Value = PlusInfinityLong Then
     ConvertPixelsToLogicalX = PlusInfinityDouble
-ElseIf value = MinusInfinityLong Then
+ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToLogicalX = MinusInfinityDouble
 Else
-    ConvertPixelsToLogicalX = Canvas.Surface.ScaleX(value, vbPixels, vbUser)
+    ConvertPixelsToLogicalX = Canvas.Surface.ScaleX(Value, vbPixels, vbUser)
     'ConvertPixelsToLogicalX = CDbl(value) * mGaugeX
 End If
 
@@ -989,17 +989,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertPixelsToLogicalY(ByVal value As Long) As Double
+Public Function ConvertPixelsToLogicalY(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToLogicalY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityLong Then
+If Value = PlusInfinityLong Then
     ConvertPixelsToLogicalY = PlusInfinityDouble
-ElseIf value = MinusInfinityLong Then
+ElseIf Value = MinusInfinityLong Then
     ConvertPixelsToLogicalY = MinusInfinityDouble
 Else
-    ConvertPixelsToLogicalY = -Canvas.Surface.ScaleY(value, vbPixels, vbUser)
+    ConvertPixelsToLogicalY = -Canvas.Surface.ScaleY(Value, vbPixels, vbUser)
     'ConvertPixelsToLogicalY = CDbl(value) * mGaugeY
 End If
 
@@ -1020,8 +1020,8 @@ ReDim w32Points(UBound(points)) As W32Point
 Dim i As Long
 
 For i = 0 To UBound(points)
-    w32Points(i).X = ConvertCoordsLogicalToPixelsX(points(i).XLogical)
-    w32Points(i).Y = ConvertCoordsLogicalToPixelsY(points(i).yLogical)
+    w32Points(i).X = ConvertCoordsLogicalToPixelsX(points(i).XLogical(Me))
+    w32Points(i).Y = ConvertCoordsLogicalToPixelsY(points(i).yLogical(Me))
 Next
 
 ConvertPointsToWin32Points = w32Points
@@ -1074,17 +1074,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToCounterDistanceX(ByVal value As Double) As Double
+Public Function ConvertRelativeToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToCounterDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToCounterDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToCounterDistanceX = MinusInfinityDouble
 Else
-    ConvertRelativeToCounterDistanceX = ((100# - value) * CDbl(mCanvas.Width)) / 100# / TwipsPerCm
+    ConvertRelativeToCounterDistanceX = ((100# - Value) * CDbl(mCanvas.Width)) / 100# / TwipsPerCm
 End If
 
 Exit Function
@@ -1093,17 +1093,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertRelativeToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToCounterDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToCounterDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToCounterDistanceY = MinusInfinityDouble
 Else
-    ConvertRelativeToCounterDistanceY = ((100# - value) * CDbl(mCanvas.Height)) / 100# / TwipsPerCm
+    ConvertRelativeToCounterDistanceY = ((100# - Value) * CDbl(mCanvas.Height)) / 100# / TwipsPerCm
 End If
 
 Exit Function
@@ -1112,17 +1112,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToDistanceX(ByVal value As Double) As Double
+Public Function ConvertRelativeToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToDistanceX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToDistanceX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToDistanceX = MinusInfinityDouble
 Else
-    ConvertRelativeToDistanceX = (value * CDbl(mCanvas.Width)) / 100# / TwipsPerCm
+    ConvertRelativeToDistanceX = (Value * CDbl(mCanvas.Width)) / 100# / TwipsPerCm
 End If
 Exit Function
 
@@ -1130,17 +1130,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToDistanceY(ByVal value As Double) As Double
+Public Function ConvertRelativeToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToDistanceY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToDistanceY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToDistanceY = MinusInfinityDouble
 Else
-    ConvertRelativeToDistanceY = (value * CDbl(mCanvas.Height)) * 100# / TwipsPerCm
+    ConvertRelativeToDistanceY = (Value * CDbl(mCanvas.Height)) * 100# / TwipsPerCm
 End If
 
 Exit Function
@@ -1149,18 +1149,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToLogicalX(ByVal value As Double) As Double
+Public Function ConvertRelativeToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToLogicalX"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToLogicalX = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToLogicalX = MinusInfinityDouble
 Else
     'ConvertRelativeToLogicalX = mBoundary.Left + (value * (mBoundary.Right - mBoundary.Left) / 100#)
-    ConvertRelativeToLogicalX = (value * (mBoundary.Right - mBoundary.Left) / 100#)
+    ConvertRelativeToLogicalX = (Value * (mBoundary.Right - mBoundary.Left) / 100#)
 End If
 
 Exit Function
@@ -1169,18 +1169,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Function ConvertRelativeToLogicalY(ByVal value As Double) As Double
+Public Function ConvertRelativeToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToLogicalY"
 Dim failpoint As String
 On Error GoTo Err
 
-If value = PlusInfinityDouble Then
+If Value = PlusInfinityDouble Then
     ConvertRelativeToLogicalY = PlusInfinityDouble
-ElseIf value = MinusInfinityDouble Then
+ElseIf Value = MinusInfinityDouble Then
     ConvertRelativeToLogicalY = MinusInfinityDouble
 Else
     'ConvertRelativeToLogicalY = mBoundary.Bottom + (value * (mBoundary.Top - mBoundary.Bottom) / 100#)
-    ConvertRelativeToLogicalY = (value * (mBoundary.Top - mBoundary.Bottom) / 100#)
+    ConvertRelativeToLogicalY = (Value * (mBoundary.Top - mBoundary.Bottom) / 100#)
 End If
 
 Exit Function
@@ -1244,71 +1244,6 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Public Function NewDimension( _
-                ByVal X As Double, _
-                ByVal Y As Double, _
-                Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance, _
-                Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As Dimension
-Const ProcName As String = "NewDimension"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewDimension = New Dimension
-NewDimension.Initialise X, Y, coordSystemX, coordSystemY, Me
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function NewDimensionX( _
-                ByVal X As Double, _
-                Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance) As DimensionX
-Const ProcName As String = "NewDimensionX"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewDimensionX = New DimensionX
-NewDimensionX.Initialise X, coordSystemX, Me
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function NewDimensionY( _
-                ByVal Y As Double, _
-                Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As DimensionY
-Const ProcName As String = "NewDimensionX"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewDimensionY = New DimensionY
-NewDimensionY.Initialise Y, coordSystemY, Me
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function NewPoint(ByVal X As Double, _
-                        ByVal Y As Double, _
-                        Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal Offset As Dimension) As Point
-Const ProcName As String = "NewPoint"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewPoint = New Point
-NewPoint.Initialise X, Y, coordSystemX, coordSystemY, Offset, Me
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
 Public Sub PaintBackground()
 Const ProcName As String = "PaintBackground"
 Dim failpoint As String
@@ -1348,7 +1283,7 @@ SetGraphicsMode mCanvas.hDC, GM_ADVANCED
 SetWorldTransform mCanvas.hDC, VarPtr(mTransform)
 End Sub
 
-Friend Function ZOrder( _
+Friend Sub ZOrder( _
                 ByVal Position As Integer)
 Const ProcName As String = "ZOrder"
 Dim failpoint As String
@@ -1356,11 +1291,11 @@ On Error GoTo Err
 
 mCanvas.ZOrder Position
 
-Exit Function
+Exit Sub
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
+End Sub
 
 Public Sub UndrawArea( _
                 ByRef undrawnArea As TRectangle)

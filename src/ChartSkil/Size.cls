@@ -23,6 +23,11 @@ Option Explicit
 
 Private Const ModuleName                As String = "Size"
 
+Private Const ConfigSettingCoordSystemHeight       As String = "&CoordSystemHeight"
+Private Const ConfigSettingCoordSystemWidth        As String = "&CoordSystemWidth"
+Private Const ConfigSettingHeight       As String = "&Height"
+Private Const ConfigSettingWidth        As String = "&Width"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -35,12 +40,13 @@ Private Const ModuleName                As String = "Size"
 ' Member variables
 '================================================================================
 
-Private mX As Double
-Private mY As Double
-Private mViewport As Viewport
+Private mWidth As Double
+Private mHeight As Double
 
-Private mCoordSystemX As CoordinateSystems
-Private mCoordSystemY As CoordinateSystems
+Private mCoordSystemWidth As CoordinateSystems
+Private mCoordSystemHeight As CoordinateSystems
+
+Private mConfig As ConfigurationSection
 
 '================================================================================
 ' Class Event Handlers
@@ -54,67 +60,55 @@ Private mCoordSystemY As CoordinateSystems
 ' Properties
 '================================================================================
 
-Friend Property Get Viewport() As Viewport
-Set Viewport = mViewport
-End Property
+Public Property Let ConfigurationSection( _
+                ByVal Value As ConfigurationSection)
 
-Public Property Get X() As Double
-X = mX
-End Property
-
-Public Property Get XLogical() As Double
-Const ProcName As String = "XLogical"
+Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-Select Case mCoordSystemX
-Case CoordsLogical
-    XLogical = mX
-Case CoordsRelative
-    XLogical = mViewport.ConvertRelativeToLogicalX(mX)
-Case CoordsDistance
-    XLogical = mViewport.ConvertDistanceToLogicalX(mX)
-Case CoordsCounterDistance
-    XLogical = mViewport.ConvertCounterDistanceToLogicalY(mX)
-End Select
+If Value Is Nothing Then
+    RemoveFromConfig
+    Set mConfig = Nothing
+    Exit Property
+End If
+
+Set mConfig = Value
+
+
+mConfig.SetSetting ConfigSettingWidth, mWidth
+mConfig.SetSetting ConfigSettingHeight, mHeight
+mConfig.SetSetting ConfigSettingCoordSystemWidth, mCoordSystemWidth
+mConfig.SetSetting ConfigSettingCoordSystemHeight, mCoordSystemHeight
 
 Exit Property
 
 Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
 End Property
 
-Public Property Get Y() As Double
-Y = mY
+Public Property Get CoordinateSystemHeight() As CoordinateSystems
+CoordinateSystemHeight = mCoordSystemHeight
 End Property
 
-Public Property Get yLogical() As Double
-Const ProcName As String = "YLogical"
-Dim failpoint As String
-On Error GoTo Err
+Public Property Get CoordinateSystemWidth() As CoordinateSystems
+CoordinateSystemWidth = mCoordSystemWidth
+End Property
 
-Select Case mCoordSystemY
-Case CoordsLogical
-    yLogical = mY
-Case CoordsRelative
-    yLogical = mViewport.ConvertRelativeToLogicalY(mY)
-Case CoordsDistance
-    yLogical = mViewport.ConvertDistanceToLogicalY(mY)
-Case CoordsCounterDistance
-    yLogical = mViewport.ConvertCounterDistanceToLogicalY(mY)
-End Select
+Public Property Get Width() As Double
+Width = mWidth
+End Property
 
-Exit Property
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Public Property Get Height() As Double
+Height = mHeight
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function Equals(ByVal aDim As Dimension) As Boolean
+Public Function Equals(ByVal aDim As Size) As Boolean
 Const ProcName As String = "Equals"
 Dim failpoint As String
 On Error GoTo Err
@@ -125,9 +119,10 @@ If aDim Is Me Then
     Exit Function
 End If
 With aDim
-    If Not .Viewport Is mViewport Then Exit Function
-    If .X <> mX Then Exit Function
-    If .Y <> mY Then Exit Function
+    If .CoordinateSystemWidth <> mCoordSystemWidth Then Exit Function
+    If .CoordinateSystemHeight <> mCoordSystemHeight Then Exit Function
+    If .Width <> mWidth Then Exit Function
+    If .Height <> mHeight Then Exit Function
 End With
 Equals = True
 
@@ -138,17 +133,93 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Friend Sub Initialise( _
-                ByVal X As Double, _
-                ByVal Y As Double, _
-                ByVal coordSystemX As CoordinateSystems, _
-                ByVal coordSystemY As CoordinateSystems, _
-                ByVal pViewport As Viewport)
-mX = X
-mY = Y
-mCoordSystemX = coordSystemX
-mCoordSystemY = coordSystemY
-Set mViewport = pViewport
+                ByVal pWidth As Double, _
+                ByVal pHeight As Double, _
+                ByVal pCoordSystemWidth As CoordinateSystems, _
+                ByVal pCoordSystemHeight As CoordinateSystems)
+mWidth = pWidth
+mHeight = pHeight
+mCoordSystemWidth = pCoordSystemWidth
+mCoordSystemHeight = pCoordSystemHeight
 End Sub
+
+Friend Sub LoadFromConfig( _
+                ByVal pConfig As ConfigurationSection)
+
+Const ProcName As String = "LoadFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mConfig = pConfig
+mHeight = mConfig.GetSetting(ConfigSettingHeight, "0")
+mWidth = mConfig.GetSetting(ConfigSettingWidth, "0")
+mCoordSystemHeight = mConfig.GetSetting(ConfigSettingCoordSystemHeight, "0")
+mCoordSystemWidth = mConfig.GetSetting(ConfigSettingCoordSystemWidth, "0")
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+Dim failpoint As String
+On Error GoTo Err
+
+If Not mConfig Is Nothing Then mConfig.Remove
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Public Function WidthLogical( _
+                ByVal pViewport As Viewport) As Double
+Const ProcName As String = "WidthLogical"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystemWidth
+Case CoordsLogical
+    WidthLogical = mWidth
+Case CoordsRelative
+    WidthLogical = pViewport.ConvertRelativeToLogicalX(mWidth)
+Case CoordsDistance
+    WidthLogical = pViewport.ConvertDistanceToLogicalX(mWidth)
+Case CoordsCounterDistance
+    WidthLogical = pViewport.ConvertCounterDistanceToLogicalX(mWidth)
+End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
+Public Function HeightLogical( _
+                ByVal pViewport As Viewport) As Double
+Const ProcName As String = "HeightLogical"
+Dim failpoint As String
+On Error GoTo Err
+
+Select Case mCoordSystemHeight
+Case CoordsLogical
+    HeightLogical = mHeight
+Case CoordsRelative
+    HeightLogical = pViewport.ConvertRelativeToLogicalY(mHeight)
+Case CoordsDistance
+    HeightLogical = pViewport.ConvertDistanceToLogicalY(mHeight)
+Case CoordsCounterDistance
+    HeightLogical = pViewport.ConvertCounterDistanceToLogicalY(mHeight)
+End Select
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 '================================================================================
 ' Helper Functions

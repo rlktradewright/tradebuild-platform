@@ -98,14 +98,14 @@ End If
 
 If mContracts Is Nothing Then
     Set mContractsLoadTC = gTB.LoadContracts(mContractSpec)
-    GLogLogger.Log mTaskContext.name & " waiting for contracts to be loaded", ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & " waiting for contracts to be loaded", ProcName, ModuleName, LogLevelDetail
     mTaskContext.suspend -1
     Exit Sub
 End If
 
 If mEnumerator Is Nothing Then
     If mContracts.Count = 0 Then
-        GLogLogger.Log mTaskContext.name & " no contracts", ModuleName, ProcName, , LogLevelDetail
+        GLogLogger.Log mTaskContext.name & " no contracts", ProcName, ModuleName, LogLevelDetail
         mTaskContext.Finish Empty, False
         Exit Sub
     End If
@@ -115,7 +115,7 @@ If mEnumerator Is Nothing Then
 End If
 
 If Not mEnumerator.MoveNext Then
-    GLogLogger.Log mTaskContext.name & ": " & mNumberStarted & " contracts processed", ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & ": " & mNumberStarted & " contracts processed", ProcName, ModuleName, LogLevelDetail
     If mNumberStarted > 0 Then
         ReDim Preserve mTickers(mNumberStarted - 1) As Ticker
         mTaskContext.Finish mTickers, False
@@ -125,7 +125,7 @@ If Not mEnumerator.MoveNext Then
     Exit Sub
 End If
 
-Set lContract = mEnumerator.current
+Set lContract = mEnumerator.Current
     
 If mLoadOnly Then
     Set lTicker = tckrs.Add(lTickerOptions)
@@ -133,12 +133,12 @@ If mLoadOnly Then
     lTicker.OutputTickfileFormat = mOutputTickfileFormat
     lTicker.OutputTickfilePath = mOutputTickfilePath
     
-    GLogLogger.Log mTaskContext.name & " loading Ticker: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & " loading Ticker: " & lContract.specifier.ToString, ProcName, ModuleName, LogLevelDetail
     lTicker.LoadTickerFromContract lContract
 Else
     'check contract is still current
     If lContract.ExpiryDate <> 0 And lContract.ExpiryDate < Date Then
-        GLogLogger.Log mTaskContext.name & " expired contract ignored: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+        GLogLogger.Log mTaskContext.name & " expired contract ignored: " & lContract.specifier.ToString, ProcName, ModuleName, LogLevelDetail
         Exit Sub
     End If
     
@@ -147,7 +147,7 @@ Else
     lTicker.OutputTickfileFormat = mOutputTickfileFormat
     lTicker.OutputTickfilePath = mOutputTickfilePath
     
-    GLogLogger.Log mTaskContext.name & " starting Ticker: " & lContract.specifier.ToString, ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & " starting Ticker: " & lContract.specifier.ToString, ProcName, ModuleName, LogLevelDetail
     lTicker.StartTickerFromContract lContract
 End If
 
@@ -211,7 +211,7 @@ If ev.errorNumber <> 0 Then
     handleContractLoadError ev.errorNumber, ev.errorMessage
 Else
     Set mContracts = ev.result
-    GLogLogger.Log mTaskContext.name & ": " & mContracts.Count & " contracts loaded", ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & ": " & mContracts.Count & " contracts loaded", ProcName, ModuleName, LogLevelDetail
     mTaskContext.Continue
 End If
 
@@ -290,7 +290,7 @@ If errorNumber = ErrorCodes.ErrIllegalArgumentException Then
     Set ev.source = mContracts.ContractSpecifier
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
     ev.eventMessage = errorMessage & ": " & mContracts.ContractSpecifier.ToString
-    GLogLogger.Log mTaskContext.name & " invalid contract specifier: " & errorMessage, ModuleName, ProcName, , LogLevelDetail
+    GLogLogger.Log mTaskContext.name & " invalid contract specifier: " & errorMessage, ProcName, ModuleName, LogLevelDetail
     gTB.notify ev
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, ev.eventMessage
 Else

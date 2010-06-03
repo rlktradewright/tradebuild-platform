@@ -71,7 +71,7 @@ Private mInihibitOrderRecovery      As Boolean
 Private Sub Class_Initialize()
 Set mTickers = New Tickers
 mTickers.AddCollectionChangeListener Me
-mTickers.Workspace = Me
+mTickers.WorkSpace = Me
 
 Set mOrderPlexes = New OrderPlexes
 Set mOrderPlexesSimulated = New OrderPlexes
@@ -90,7 +90,7 @@ End Sub
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 Const ProcName As String = "CollectionChangeListener_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TypeOf ev.source Is Tickers Then

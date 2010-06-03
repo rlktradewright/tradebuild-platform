@@ -81,7 +81,7 @@ End Sub
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Count = mTickers.Count
@@ -95,7 +95,7 @@ End Property
 Public Property Get Item(ByVal index As Variant) As Ticker
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Item = mTickers.Item(index)
@@ -106,10 +106,10 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Workspace( _
-                ByVal pWorkspace As Workspace)
+Friend Property Let WorkSpace( _
+                ByVal pWorkspace As WorkSpace)
 Const ProcName As String = "Workspace"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mWorkspaceRef = CreateWeakReference(pWorkspace)
@@ -120,12 +120,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get Workspace() As Workspace
+Public Property Get WorkSpace() As WorkSpace
 Const ProcName As String = "Workspace"
-Dim failpoint As Long
+
 On Error GoTo Err
 
-Set Workspace = mWorkspaceRef.Target
+Set WorkSpace = mWorkspaceRef.Target
 
 Exit Property
 
@@ -141,13 +141,13 @@ Public Function Add( _
                 ByVal pTickerOptions As TickerOptions, _
                 Optional ByVal pKey As String) As Ticker
 Const ProcName As String = "Add"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pKey = "" Then pKey = GenerateGUIDString
 Set Add = New Ticker
 Add.Initialise AllocateTickerHandle, _
-                Me.Workspace, _
+                Me.WorkSpace, _
                 pKey, _
                 Me, _
                 pTickerOptions
@@ -163,7 +163,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Add value, CStr(ObjPtr(value))
@@ -179,7 +179,7 @@ End Sub
 Public Function CreateTickFileManager( _
                 ByVal pTickerOptions As Long) As TickFileManager
 Const ProcName As String = "CreateTickFileManager"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set CreateTickFileManager = New TickFileManager
@@ -202,7 +202,7 @@ Public Function LoadTickersFromContracts( _
 Dim lTickersStarter As New TickersStarter
 
 Const ProcName As String = "LoadTickersFromContracts"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 lTickersStarter.Initialise Me, _
@@ -230,7 +230,7 @@ Public Function RefreshPriceChange( _
                 ByVal listener As PriceChangeListener) As TaskController
 Dim pcrt As New PriceChangeRefreshTask
 Const ProcName As String = "RefreshPriceChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTickers.Count = 0 Then Exit Function
@@ -247,7 +247,7 @@ Public Function RefreshQuotes( _
                 ByVal listener As PriceChangeListener) As TaskController
 Dim qrt As New QuotesRefreshTask
 Const ProcName As String = "RefreshQuotes"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTickers.Count = 0 Then Exit Function
@@ -264,7 +264,7 @@ Public Sub Remove(ByVal pTicker As Ticker)
 Dim i As Long
 
 Const ProcName As String = "Remove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pTicker.State <> TickerStates.TickerStateClosing Then
@@ -289,7 +289,7 @@ End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Remove CStr(ObjPtr(value))
@@ -303,7 +303,7 @@ End Sub
 Friend Sub StateChange( _
                 ByRef ev As StateChangeEvent)
 Const ProcName As String = "StateChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent StateChange(ev)
@@ -324,7 +324,7 @@ Public Function StartTickers( _
 Dim lTickersStarter As New TickersStarter
 
 Const ProcName As String = "StartTickers"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 lTickersStarter.Initialise Me, _
@@ -352,7 +352,7 @@ Public Function StartTickersFromContracts( _
 Dim lTickersStarter As New TickersStarter
 
 Const ProcName As String = "StartTickersFromContracts"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 lTickersStarter.Initialise Me, _
@@ -378,7 +378,7 @@ Private Function AllocateTickerHandle() As Long
 Dim i As Long
 
 Const ProcName As String = "AllocateTickerHandle"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 AllocateTickerHandle = -1
@@ -410,7 +410,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me

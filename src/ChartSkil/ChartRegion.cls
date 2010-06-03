@@ -55,7 +55,7 @@ Private Enum PropertyOverrideFlags
     AutoscalingIsSet = 1
     GridTextStyleIsSet = 2
     HasGridIsSet = 4
-    HasGridTextIsSet = 8
+    HasGridTextProperty = 8
     IntegerYScaleIsSet = &H10&
     YScaleQuantumIsSet = &H20&
     GridlineSpacingYIsSet = &H40&
@@ -524,8 +524,8 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let ActualHeight(ByVal value As Long)
-mActualHeight = value
+Friend Property Let ActualHeight(ByVal Value As Long)
+mActualHeight = Value
 End Property
 
 Friend Property Get ActualHeight() As Long
@@ -538,7 +538,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Autoscaling = mStyle.Autoscaling
-If isPropertyOverrideFlagSet(AutoscalingIsSet) Then Autoscaling = mAutoscaling
+If IsPropertySet(AutoscalingIsSet) Then Autoscaling = mAutoscaling
 
 Exit Property
 
@@ -546,14 +546,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Autoscaling(ByVal value As Boolean)
+Public Property Let Autoscaling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscaling"
 Dim failpoint As String
 On Error GoTo Err
 
-If mAutoscaling = value And isPropertyOverrideFlagSet(AutoscalingIsSet) Then Exit Property
-mAutoscaling = value
-setPropertyOverrideFlag AutoscalingIsSet
+If mAutoscaling = Value And IsPropertySet(AutoscalingIsSet) Then Exit Property
+mAutoscaling = Value
+setPropertyFlag AutoscalingIsSet
 setAutoscaling
 
 Exit Property
@@ -568,7 +568,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 BackColor = mStyle.BackColor
-If isPropertyOverrideFlagSet(BackGradientFillColorsIsSet) Then BackColor = mBackGradientFillColors(0)
+If IsPropertySet(BackGradientFillColorsIsSet) Then BackColor = mBackGradientFillColors(0)
 
 Exit Property
 
@@ -576,14 +576,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BackColor(ByVal value As Long)
+Public Property Let BackColor(ByVal Value As Long)
 Const ProcName As String = "BackColor"
 Dim failpoint As String
 On Error GoTo Err
 
 ReDim mBackGradientFillColors(0) As Long
-mBackGradientFillColors(0) = value
-setPropertyOverrideFlag AutoscalingIsSet
+mBackGradientFillColors(0) = Value
+setPropertyFlag AutoscalingIsSet
 setBackColor
 
 Exit Property
@@ -598,7 +598,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 BackGradientFillColors = mStyle.BackGradientFillColors
-If isPropertyOverrideFlagSet(BackGradientFillColorsIsSet) Then BackGradientFillColors = mBackGradientFillColors
+If IsPropertySet(BackGradientFillColorsIsSet) Then BackGradientFillColors = mBackGradientFillColors
 
 Exit Property
 
@@ -606,15 +606,15 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let BackGradientFillColors(ByRef value() As Long)
+Public Property Let BackGradientFillColors(ByRef Value() As Long)
 Dim ar() As Long
 Const ProcName As String = "BackGradientFillColors"
 Dim failpoint As String
 On Error GoTo Err
 
-ar = value
+ar = Value
 mBackGradientFillColors = ar
-setPropertyOverrideFlag BackGradientFillColorsIsSet
+setPropertyFlag BackGradientFillColorsIsSet
 setBackGradientFillColors
 
 Exit Property
@@ -636,14 +636,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Bottom(ByVal value As Double)
+Friend Property Let Bottom(ByVal Value As Double)
 Const ProcName As String = "Bottom"
 Dim failpoint As String
 On Error GoTo Err
 
-mViewport.Bottom = value
+mViewport.Bottom = Value
 If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.Bottom = value
+    mYAxisRegion.Bottom = Value
 End If
 
 Exit Property
@@ -665,7 +665,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let CursorSnapsToTickBoundaries(ByVal value As Boolean)
+Public Property Let CursorSnapsToTickBoundaries(ByVal Value As Boolean)
 Const ProcName As String = "CursorSnapsToTickBoundaries"
 Dim failpoint As String
 On Error GoTo Err
@@ -675,9 +675,9 @@ If IsXAxisRegion Or IsYAxisRegion Then
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Cannot set snapCursorToTickBoundaries for an axis region"
 End If
-If mCursorSnapsToTickBoundaries = value And isPropertyOverrideFlagSet(CursorSnapsToTickBoundariesIsSet) Then Exit Property
-mCursorSnapsToTickBoundaries = value
-setPropertyOverrideFlag CursorSnapsToTickBoundariesIsSet
+If mCursorSnapsToTickBoundaries = Value And IsPropertySet(CursorSnapsToTickBoundariesIsSet) Then Exit Property
+mCursorSnapsToTickBoundaries = Value
+setPropertyFlag CursorSnapsToTickBoundariesIsSet
 setCursorSnapsToTickBoundaries
 
 Exit Property
@@ -692,7 +692,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 CursorSnapsToTickBoundaries = mStyle.CursorSnapsToTickBoundaries
-If isPropertyOverrideFlagSet(CursorSnapsToTickBoundariesIsSet) Then CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+If IsPropertySet(CursorSnapsToTickBoundariesIsSet) Then CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
 
 Exit Property
 
@@ -706,7 +706,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 GridlineSpacingY = mStyle.GridlineSpacingY
-If isPropertyOverrideFlagSet(GridlineSpacingYIsSet) Then GridlineSpacingY = mGridlineSpacingY
+If IsPropertySet(GridlineSpacingYIsSet) Then GridlineSpacingY = mGridlineSpacingY
 
 Exit Property
 
@@ -714,14 +714,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let GridlineSpacingY(ByVal value As Double)
+Public Property Let GridlineSpacingY(ByVal Value As Double)
 Const ProcName As String = "GridlineSpacingY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mGridlineSpacingY = value And isPropertyOverrideFlagSet(GridlineSpacingYIsSet) Then Exit Property
-mGridlineSpacingY = value
-setPropertyOverrideFlag GridlineSpacingYIsSet
+If mGridlineSpacingY = Value And IsPropertySet(GridlineSpacingYIsSet) Then Exit Property
+mGridlineSpacingY = Value
+setPropertyFlag GridlineSpacingYIsSet
 setGridlineSpacingY
 
 Exit Property
@@ -736,7 +736,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set GridLineStyle = mStyle.GridLineStyle
-If isPropertyOverrideFlagSet(GridLineStyleIsSet) Then Set GridLineStyle = mGridLineStyle
+If IsPropertySet(GridLineStyleIsSet) Then Set GridLineStyle = mGridLineStyle
 
 Exit Property
 
@@ -744,17 +744,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let GridLineStyle(ByVal value As LineStyle)
+Public Property Let GridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "GridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mGridLineStyle Is value And isPropertyOverrideFlagSet(GridLineStyleIsSet) Then Exit Property
-Set mGridLineStyle = value
+If mGridLineStyle Is Value And IsPropertySet(GridLineStyleIsSet) Then Exit Property
+Set mGridLineStyle = Value
 If mGridLineStyle Is Nothing Then
-    clearPropertyOverrideFlag GridLineStyleIsSet
+    ClearProperty GridLineStyleIsSet
 Else
-    setPropertyOverrideFlag GridLineStyleIsSet
+    setPropertyFlag GridLineStyleIsSet
 End If
 setGridLineStyle
 
@@ -770,7 +770,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set GridTextStyle = mStyle.GridTextStyle
-If isPropertyOverrideFlagSet(GridTextStyleIsSet) Then Set GridTextStyle = mGridTextStyle
+If IsPropertySet(GridTextStyleIsSet) Then Set GridTextStyle = mGridTextStyle
 
 Exit Property
 
@@ -778,17 +778,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let GridTextStyle(ByVal value As TextStyle)
+Public Property Let GridTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "GridTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mGridTextStyle Is value And isPropertyOverrideFlagSet(GridTextStyleIsSet) Then Exit Property
-Set mGridTextStyle = value
+If mGridTextStyle Is Value And IsPropertySet(GridTextStyleIsSet) Then Exit Property
+Set mGridTextStyle = Value
 If mGridTextStyle Is Nothing Then
-    clearPropertyOverrideFlag GridTextStyleIsSet
+    ClearProperty GridTextStyleIsSet
 Else
-    setPropertyOverrideFlag GridTextStyleIsSet
+    setPropertyFlag GridTextStyleIsSet
 End If
 setGridTextStyle
 
@@ -798,8 +798,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let handle(ByVal value As Long)
-mHandle = value
+Friend Property Let handle(ByVal Value As Long)
+mHandle = Value
 End Property
 
 Friend Property Get handle() As Long
@@ -812,7 +812,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 HasGrid = mStyle.HasGrid
-If isPropertyOverrideFlagSet(HasGridIsSet) Then HasGrid = mHasGrid
+If IsPropertySet(HasGridIsSet) Then HasGrid = mHasGrid
 
 Exit Property
 
@@ -820,14 +820,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let HasGrid(ByVal value As Boolean)
+Public Property Let HasGrid(ByVal Value As Boolean)
 Const ProcName As String = "HasGrid"
 Dim failpoint As String
 On Error GoTo Err
 
-If mHasGrid = value And isPropertyOverrideFlagSet(HasGridIsSet) Then Exit Property
-mHasGrid = value
-setPropertyOverrideFlag HasGridIsSet
+If mHasGrid = Value And IsPropertySet(HasGridIsSet) Then Exit Property
+mHasGrid = Value
+setPropertyFlag HasGridIsSet
 setHasGrid
 
 Exit Property
@@ -842,7 +842,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 HasGridText = mStyle.HasGridText
-If isPropertyOverrideFlagSet(HasGridTextIsSet) Then HasGridText = mHasGridText
+If IsPropertySet(HasGridTextProperty) Then HasGridText = mHasGridText
 
 Exit Property
 
@@ -850,14 +850,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let HasGridText(ByVal value As Boolean)
+Public Property Let HasGridText(ByVal Value As Boolean)
 Const ProcName As String = "HasGridText"
 Dim failpoint As String
 On Error GoTo Err
 
-If mHasGridText = value And isPropertyOverrideFlagSet(HasGridTextIsSet) Then Exit Property
-mHasGridText = value
-setPropertyOverrideFlag HasGridTextIsSet
+If mHasGridText = Value And IsPropertySet(HasGridTextProperty) Then Exit Property
+mHasGridText = Value
+setPropertyFlag HasGridTextProperty
 setHasGridText
 
 Exit Property
@@ -879,7 +879,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IntegerYScale(ByVal value As Boolean)
+Public Property Let IntegerYScale(ByVal Value As Boolean)
 Const ProcName As String = "IntegerYScale"
 Dim failpoint As String
 On Error GoTo Err
@@ -890,9 +890,9 @@ If IsXAxisRegion Or IsYAxisRegion Then
             "Cannot set integerYScale for an axis region"
 End If
 
-If mIntegerYScale = value And isPropertyOverrideFlagSet(IntegerYScaleIsSet) Then Exit Property
-mIntegerYScale = value
-setPropertyOverrideFlag IntegerYScaleIsSet
+If mIntegerYScale = Value And IsPropertySet(IntegerYScaleIsSet) Then Exit Property
+mIntegerYScale = Value
+setPropertyFlag IntegerYScaleIsSet
 setIntegerYScale
 
 Exit Property
@@ -907,7 +907,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 IntegerYScale = mStyle.IntegerYScale
-If isPropertyOverrideFlagSet(IntegerYScaleIsSet) Then IntegerYScale = mIntegerYScale
+If IsPropertySet(IntegerYScaleIsSet) Then IntegerYScale = mIntegerYScale
 
 Exit Property
 
@@ -919,13 +919,13 @@ Friend Property Get IsCleared() As Boolean
 IsCleared = mIsCleared
 End Property
 
-Friend Property Let IsDrawingEnabled(ByVal value As Boolean)
+Friend Property Let IsDrawingEnabled(ByVal Value As Boolean)
 Const ProcName As String = "IsDrawingEnabled"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIsDrawingEnabled = value Then Exit Property
-mIsDrawingEnabled = value
+If mIsDrawingEnabled = Value Then Exit Property
+mIsDrawingEnabled = Value
 If Not mIsDrawingEnabled Then
     mViewport.MousePointer = vbHourglass
 Else
@@ -976,12 +976,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Left(ByVal value As Double)
+Friend Property Let Left(ByVal Value As Double)
 Const ProcName As String = "Left"
 Dim failpoint As String
 On Error GoTo Err
 
-mViewport.Left = value
+mViewport.Left = Value
 
 Exit Property
 
@@ -995,7 +995,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 MinimumHeight = mStyle.MinimumHeight
-If isPropertyOverrideFlagSet(MinimumHeightIsSet) Then MinimumHeight = mMinimumHeight
+If IsPropertySet(MinimumHeightIsSet) Then MinimumHeight = mMinimumHeight
 
 Exit Property
 
@@ -1003,7 +1003,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let MinimumHeight(ByVal value As Double)
+Public Property Let MinimumHeight(ByVal Value As Double)
 Const ProcName As String = "MinimumHeight"
 Dim failpoint As String
 On Error GoTo Err
@@ -1014,9 +1014,9 @@ If IsXAxisRegion Or IsYAxisRegion Then
             "Cannot set minimumHeight for an axis region"
 End If
 
-If mMinimumHeight = value And isPropertyOverrideFlagSet(MinimumHeightIsSet) Then Exit Property
-mMinimumHeight = value
-setPropertyOverrideFlag MinimumHeightIsSet
+If mMinimumHeight = Value And IsPropertySet(MinimumHeightIsSet) Then Exit Property
+mMinimumHeight = Value
+setPropertyFlag MinimumHeightIsSet
 setMinimumHeight
 
 Exit Property
@@ -1029,8 +1029,8 @@ Public Property Get MinimumPercentHeight() As Double
 MinimumPercentHeight = mMinimumPercentHeight
 End Property
 
-Friend Property Let MinimumPercentHeight(ByVal value As Double)
-mMinimumPercentHeight = value
+Friend Property Let MinimumPercentHeight(ByVal Value As Double)
+mMinimumPercentHeight = Value
 End Property
 
 Public Property Get MousePosition() As Point
@@ -1038,7 +1038,7 @@ Const ProcName As String = "MousePosition"
 Dim failpoint As String
 On Error GoTo Err
 
-Set MousePosition = NewPoint(mCurrX, mCurrY)
+Set MousePosition = gNewPoint(mCurrX, mCurrY)
 
 Exit Property
 
@@ -1054,23 +1054,23 @@ Public Property Get PercentHeight() As Double
 PercentHeight = mPercentHeight
 End Property
 
-Friend Property Let PercentHeight(ByVal value As Double)
-mPercentHeight = value
+Friend Property Let PercentHeight(ByVal Value As Double)
+mPercentHeight = Value
 End Property
 
 Public Property Get PerformanceTextVisible() As Boolean
 PerformanceTextVisible = mPerformanceTextVisible
 End Property
 
-Public Property Let PerformanceTextVisible(ByVal value As Boolean)
-mPerformanceTextVisible = value
+Public Property Let PerformanceTextVisible(ByVal Value As Boolean)
+mPerformanceTextVisible = Value
 End Property
 
 Public Property Get PointerCrosshairsColor() As Long
 PointerCrosshairsColor = mPointerCrosshairsColor
 End Property
 
-Friend Property Let PointerCrosshairsColor(ByVal value As Long)
+Friend Property Let PointerCrosshairsColor(ByVal Value As Long)
 Dim lUseDeferredPainting As Boolean
 
 Const ProcName As String = "PointerCrosshairsColor"
@@ -1083,7 +1083,7 @@ If IsXAxisRegion Or IsYAxisRegion Then
             "Cannot set PointerCrossHairsColor for an axis region"
 End If
 
-mPointerCrosshairsColor = value
+mPointerCrosshairsColor = Value
 
 lUseDeferredPainting = mUseDeferredPainting
 mUseDeferredPainting = False
@@ -1101,7 +1101,7 @@ Public Property Get PointerDiscColor() As Long
 PointerDiscColor = mPointerDiscColor
 End Property
 
-Friend Property Let PointerDiscColor(ByVal value As Long)
+Friend Property Let PointerDiscColor(ByVal Value As Long)
 Const ProcName As String = "PointerDiscColor"
 Dim failpoint As String
 On Error GoTo Err
@@ -1112,7 +1112,7 @@ If IsXAxisRegion Or IsYAxisRegion Then
             "Cannot set PointerDiscColor for an axis region"
 End If
 
-mPointerDiscColor = value
+mPointerDiscColor = Value
 
 Exit Property
 
@@ -1124,28 +1124,28 @@ Public Property Get PointerIcon() As IPictureDisp
 Set PointerIcon = mPointerIcon
 End Property
 
-Public Property Let PointerIcon(ByVal value As IPictureDisp)
+Public Property Let PointerIcon(ByVal Value As IPictureDisp)
 
 Const ProcName As String = "PointerIcon"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then Exit Property
-If value Is mPointerIcon Then Exit Property
+If Value Is Nothing Then Exit Property
+If Value Is mPointerIcon Then Exit Property
 
 If mPointerMode <> PointerModeDefault Then
-    Set mPointerIcon = value
+    Set mPointerIcon = Value
     Exit Property
 End If
 
 If Not mDrawn Then
-    Set mPointerIcon = value
+    Set mPointerIcon = Value
     Exit Property
 End If
 
 If mIsDrawingEnabled Then hideCursor
 
-Set mPointerIcon = value
+Set mPointerIcon = Value
 
 If mIsDrawingEnabled Then
     setMouseIcon mPointerStyle
@@ -1163,7 +1163,7 @@ Public Property Get PointerStyle() As PointerStyles
 PointerStyle = mPointerStyle
 End Property
 
-Public Property Let PointerStyle(ByVal value As PointerStyles)
+Public Property Let PointerStyle(ByVal Value As PointerStyles)
 Dim failpoint As Long
 Const ProcName As String = "PointerStyle"
 
@@ -1176,21 +1176,21 @@ If IsXAxisRegion Or IsYAxisRegion Then
 End If
 
 
-If mPointerStyle = value Then Exit Property
+If mPointerStyle = Value Then Exit Property
 
 If mPointerMode <> PointerModeDefault Then
-    mPointerStyle = value
+    mPointerStyle = Value
     Exit Property
 End If
 
 If Not mDrawn Then
-    mPointerStyle = value
+    mPointerStyle = Value
     Exit Property
 End If
 
 If mIsDrawingEnabled Then hideCursor
 
-mPointerStyle = value
+mPointerStyle = Value
 
 If mIsDrawingEnabled Then
     setMouseIcon mPointerStyle
@@ -1202,9 +1202,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PriceFormatter(ByVal value As IPriceFormatter)
-If Not value Is Nothing Then
-    Set mPriceFormatter = value
+Public Property Let PriceFormatter(ByVal Value As IPriceFormatter)
+If Not Value Is Nothing Then
+    Set mPriceFormatter = Value
 Else
     Set mPriceFormatter = New PriceFormatter
 End If
@@ -1213,7 +1213,7 @@ mPriceFormatter.IntegerYScale = IntegerYScale
 mPriceFormatter.YScaleQuantum = YScaleQuantum
 
 If Not mHorizontalGrid Is Nothing Then
-    mHorizontalGrid.PriceFormatter = value
+    mHorizontalGrid.PriceFormatter = Value
     doRepaint
 End If
 End Property
@@ -1228,7 +1228,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set SessionEndGridLineStyle = mStyle.SessionEndGridLineStyle
-If isPropertyOverrideFlagSet(SessionEndGridLineStyleIsSet) Then Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+If IsPropertySet(SessionEndGridLineStyleIsSet) Then Set SessionEndGridLineStyle = mSessionEndGridLineStyle
 
 Exit Property
 
@@ -1236,17 +1236,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let SessionEndGridLineStyle(ByVal value As LineStyle)
+Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionEndGridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mSessionEndGridLineStyle Is value And isPropertyOverrideFlagSet(SessionEndGridLineStyleIsSet) Then Exit Property
-Set mSessionEndGridLineStyle = value
+If mSessionEndGridLineStyle Is Value And IsPropertySet(SessionEndGridLineStyleIsSet) Then Exit Property
+Set mSessionEndGridLineStyle = Value
 If mSessionEndGridLineStyle Is Nothing Then
-    clearPropertyOverrideFlag SessionEndGridLineStyleIsSet
+    ClearProperty SessionEndGridLineStyleIsSet
 Else
-    setPropertyOverrideFlag SessionEndGridLineStyleIsSet
+    setPropertyFlag SessionEndGridLineStyleIsSet
 End If
 setSessionEndGridLineStyle
 
@@ -1262,7 +1262,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set SessionStartGridLineStyle = mStyle.SessionStartGridLineStyle
-If isPropertyOverrideFlagSet(SessionStartGridLineStyleIsSet) Then Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+If IsPropertySet(SessionStartGridLineStyleIsSet) Then Set SessionStartGridLineStyle = mSessionStartGridLineStyle
 
 Exit Property
 
@@ -1270,17 +1270,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let SessionStartGridLineStyle(ByVal value As LineStyle)
+Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionStartGridLineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mSessionStartGridLineStyle Is value And isPropertyOverrideFlagSet(SessionStartGridLineStyleIsSet) Then Exit Property
-Set mSessionStartGridLineStyle = value
+If mSessionStartGridLineStyle Is Value And IsPropertySet(SessionStartGridLineStyleIsSet) Then Exit Property
+Set mSessionStartGridLineStyle = Value
 If mSessionStartGridLineStyle Is Nothing Then
-    clearPropertyOverrideFlag SessionStartGridLineStyleIsSet
+    ClearProperty SessionStartGridLineStyleIsSet
 Else
-    setPropertyOverrideFlag SessionStartGridLineStyleIsSet
+    setPropertyFlag SessionStartGridLineStyleIsSet
 End If
 setSessionStartGridLineStyle
 
@@ -1290,8 +1290,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let SessionStartTime(ByVal value As Date)
-mSessionStartTime = value
+Friend Property Let SessionStartTime(ByVal Value As Date)
+mSessionStartTime = Value
 End Property
 
 Public Property Get Style() As ChartRegionStyle
@@ -1299,18 +1299,18 @@ Set Style = mStyle
 End Property
 
 Public Property Let Style( _
-                ByVal value As ChartRegionStyle)
+                ByVal Value As ChartRegionStyle)
 Const ProcName As String = "Style"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Value must not be Nothing"
 End If
 
-Set mStyle = value
+Set mStyle = Value
 
 If mViewport Is Nothing Then Exit Property
 
@@ -1355,14 +1355,14 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Top(ByVal value As Double)
+Friend Property Let Top(ByVal Value As Double)
 Const ProcName As String = "Top"
 Dim failpoint As String
 On Error GoTo Err
 
-mViewport.Top = value
+mViewport.Top = Value
 If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.Top = value
+    mYAxisRegion.Top = Value
 End If
 
 Exit Property
@@ -1371,8 +1371,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let VerticalGridTimePeriod(ByVal value As TimePeriod)
-Set mVerticalGridTimePeriod = value
+Friend Property Let VerticalGridTimePeriod(ByVal Value As TimePeriod)
+Set mVerticalGridTimePeriod = Value
 End Property
 
 Public Property Get Width() As Single
@@ -1392,13 +1392,13 @@ Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
 End Property
 
-Friend Property Let YAxisRegion(ByVal value As ChartRegion)
+Friend Property Let YAxisRegion(ByVal Value As ChartRegion)
 
 Const ProcName As String = "YAxisRegion"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mYAxisRegion = value
+Set mYAxisRegion = Value
 
 mYAxisRegion.HasGrid = False
 mYAxisRegion.HasGridText = False
@@ -1412,7 +1412,7 @@ Dim aTextSeries As New TextSeries
 mYAxisRegion.AddGraphicObjectSeries aTextSeries, LayerNumbers.LayerPointer
 Set mYCursorText = aTextSeries.Add
 mYCursorText.Align = AlignBoxCentreLeft
-mYCursorText.Size = mYAxisRegion.NewDimension(90, 0, CoordsRelative)
+mYCursorText.Size = gNewSize(90, 0, CoordsRelative)
 setYCursorTextStyle
 
 If Not mHorizontalGrid Is Nothing Then mHorizontalGrid.YAxisRegion = mYAxisRegion
@@ -1435,7 +1435,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set YAxisTextStyle = mStyle.YAxisTextStyle
-If isPropertyOverrideFlagSet(YAxisTextStyleIsSet) Then Set YAxisTextStyle = mYAxisTextStyle
+If IsPropertySet(YAxisTextStyleIsSet) Then Set YAxisTextStyle = mYAxisTextStyle
 
 Exit Property
 
@@ -1443,17 +1443,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let YAxisTextStyle(ByVal value As TextStyle)
+Public Property Let YAxisTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YAxisTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mYAxisTextStyle Is value And isPropertyOverrideFlagSet(YAxisTextStyleIsSet) Then Exit Property
-Set mYAxisTextStyle = value
+If mYAxisTextStyle Is Value And IsPropertySet(YAxisTextStyleIsSet) Then Exit Property
+Set mYAxisTextStyle = Value
 If mYAxisTextStyle Is Nothing Then
-    clearPropertyOverrideFlag YAxisTextStyleIsSet
+    ClearProperty YAxisTextStyleIsSet
 Else
-    setPropertyOverrideFlag YAxisTextStyleIsSet
+    setPropertyFlag YAxisTextStyleIsSet
 End If
 setYAxisTextStyle
 
@@ -1469,7 +1469,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set YCursorTextStyle = mStyle.YCursorTextStyle
-If isPropertyOverrideFlagSet(YCursorTextStyleIsSet) Then Set YCursorTextStyle = mYCursorTextStyle
+If IsPropertySet(YCursorTextStyleIsSet) Then Set YCursorTextStyle = mYCursorTextStyle
 
 Exit Property
 
@@ -1477,17 +1477,17 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let YCursorTextStyle(ByVal value As TextStyle)
+Public Property Let YCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YCursorTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mYCursorTextStyle Is value And isPropertyOverrideFlagSet(YCursorTextStyleIsSet) Then Exit Property
-Set mYCursorTextStyle = value
+If mYCursorTextStyle Is Value And IsPropertySet(YCursorTextStyleIsSet) Then Exit Property
+Set mYCursorTextStyle = Value
 If mYCursorTextStyle Is Nothing Then
-    clearPropertyOverrideFlag YCursorTextStyleIsSet
+    ClearProperty YCursorTextStyleIsSet
 Else
-    setPropertyOverrideFlag YCursorTextStyleIsSet
+    setPropertyFlag YCursorTextStyleIsSet
 End If
 setYCursorTextStyle
 
@@ -1510,7 +1510,7 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let YScaleQuantum(ByVal value As Double)
+Public Property Let YScaleQuantum(ByVal Value As Double)
 Const ProcName As String = "YScaleQuantum"
 Dim failpoint As String
 On Error GoTo Err
@@ -1521,15 +1521,15 @@ If IsXAxisRegion Or IsYAxisRegion Then
             "Cannot set YScaleQuantum for an axis region"
 End If
 
-If value <= 0 Then
+If Value <= 0 Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "YScaleQuantum must be greater than zero"
 End If
 
-If mYScaleQuantum = value And isPropertyOverrideFlagSet(YScaleQuantumIsSet) Then Exit Property
-mYScaleQuantum = value
-setPropertyOverrideFlag YScaleQuantumIsSet
+If mYScaleQuantum = Value And IsPropertySet(YScaleQuantumIsSet) Then Exit Property
+mYScaleQuantum = Value
+setPropertyFlag YScaleQuantumIsSet
 setYScaleQuantum
 
 Exit Property
@@ -1544,7 +1544,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 YScaleQuantum = mStyle.YScaleQuantum
-If isPropertyOverrideFlagSet(YScaleQuantumIsSet) Then YScaleQuantum = mYScaleQuantum
+If IsPropertySet(YScaleQuantumIsSet) Then YScaleQuantum = mYScaleQuantum
 
 Exit Property
 
@@ -1651,7 +1651,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Public Function AddText( _
-                Optional ByVal value As String, _
+                Optional ByVal Value As String, _
                 Optional ByVal pLayer As LayerNumbers = -1, _
                 Optional ByVal Style As TextStyle) As Text
 Static miscTexts As TextSeries
@@ -1665,7 +1665,7 @@ If miscTexts Is Nothing Then
     Set miscTexts = AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerHighestUser)
 End If
 Set lText = miscTexts.Add
-If value <> "" Then lText.Text = value
+If Value <> "" Then lText.Text = Value
 If pLayer <> -1 Then lText.Layer = pLayer
 If Not Style Is Nothing Then lText.LocalStyle = Style
 
@@ -1936,39 +1936,6 @@ mCurrX = X
 mCurrY = Y
 RaiseEvent MouseUp(Button, Shift, X, Y)
 End Sub
-
-Public Function NewDimension(ByVal X As Double, _
-                        ByVal Y As Double, _
-                        Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance, _
-                        Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As Dimension
-Const ProcName As String = "NewDimension"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewDimension = mViewport.NewDimension(X, Y, coordSystemX, coordSystemY)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Function NewPoint(ByVal X As Double, _
-                        ByVal Y As Double, _
-                        Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal Offset As Dimension) As Point
-Const ProcName As String = "NewPoint"
-Dim failpoint As String
-On Error GoTo Err
-
-Set NewPoint = mViewport.NewPoint(X, Y, coordSystemX, coordSystemY, Offset)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
 
 Friend Sub NotifyResizedY()
 ' notifies the region that the physical Height of the canvas has changed.
@@ -2444,21 +2411,21 @@ If HasGrid Then
         Set vGridLine = mXGridLines.Add(Key)
         vGridLine.FixedX = False
         vGridLine.FixedY = True
-        vGridLine.SetPosition NewPoint(PeriodNumber - 0.5, _
+        vGridLine.SetPosition gNewPoint(PeriodNumber - 0.5, _
                                     0, _
                                     CoordsLogical, _
                                     CoordsRelative), _
-                                NewPoint(PeriodNumber - 0.5, _
+                                gNewPoint(PeriodNumber - 0.5, _
                                     100, _
                                     CoordsLogical, _
                                     CoordsRelative)
     Else
-        If vGridLine.Point1.XLogical > PeriodNumber Then
-            vGridLine.SetPosition NewPoint(PeriodNumber - 0.5, _
+        If vGridLine.Point1.XLogical(mViewport) > PeriodNumber Then
+            vGridLine.SetPosition gNewPoint(PeriodNumber - 0.5, _
                                         0, _
                                         CoordsLogical, _
                                         CoordsRelative), _
-                                    NewPoint(PeriodNumber - 0.5, _
+                                    gNewPoint(PeriodNumber - 0.5, _
                                         100, _
                                         CoordsLogical, _
                                         CoordsRelative)
@@ -2475,7 +2442,7 @@ If HasGridText Then
         Set vGridText = mXGridTexts.Add(Key)
         vGridText.FixedX = False
         vGridText.FixedY = True
-        vGridText.Position = NewPoint(PeriodNumber - 0.5, _
+        vGridText.Position = gNewPoint(PeriodNumber - 0.5, _
                                     0#, _
                                     CoordsLogical, _
                                     CoordsDistance)
@@ -2489,7 +2456,7 @@ If HasGridText Then
         Set vGridTextCoarse = mXGridTextsCoarse.Add(coarseKey)
         vGridTextCoarse.FixedX = False
         vGridTextCoarse.FixedY = True
-        vGridTextCoarse.Position = NewPoint(PeriodNumber - 0.5, _
+        vGridTextCoarse.Position = gNewPoint(PeriodNumber - 0.5, _
                                     0#, _
                                     CoordsLogical, _
                                     CoordsCounterDistance)
@@ -2554,9 +2521,9 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Private Sub clearPropertyOverrideFlag( _
+Private Sub ClearProperty( _
                 ByVal flag As PropertyOverrideFlags)
-Const ProcName As String = "clearPropertyOverrideFlag"
+Const ProcName As String = "ClearProperty"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -2704,10 +2671,10 @@ If Not mIsDrawingEnabled Then Exit Sub
 
 lineX = Round(X)
 
-mCrosshairLineHoriz.SetPosition NewPoint(0, Y, CoordsRelative), _
-                                NewPoint(100, Y, CoordsRelative)
-mCrosshairLineVert.SetPosition NewPoint(lineX, 0, , CoordsRelative), _
-                                NewPoint(lineX, 100, , CoordsRelative)
+mCrosshairLineHoriz.SetPosition gNewPoint(0, Y, CoordsRelative), _
+                                gNewPoint(100, Y, CoordsRelative)
+mCrosshairLineVert.SetPosition gNewPoint(lineX, 0, , CoordsRelative), _
+                                gNewPoint(lineX, 100, , CoordsRelative)
     
 Exit Sub
 
@@ -2731,7 +2698,7 @@ End Sub
 
 Private Sub drawDiscPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
-Dim Size As Dimension
+Dim Size As Size
 
 Const ProcName As String = "drawDiscPointer"
 Dim failpoint As String
@@ -2741,21 +2708,21 @@ If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
     lineX = Round(X)
-    Set Size = .NewDimension(0.4, 0.4)
+    Set Size = gNewSize(0.4, 0.4)
     
     .Canvas.SetPenAttributes vbBlack Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .Canvas.DrawLine lineX - Size.XLogical, Y, lineX + Size.XLogical, Y
-    .Canvas.DrawLine lineX, Y - Size.yLogical, lineX, Y + Size.yLogical
+    .Canvas.DrawLine lineX - Size.WidthLogical(mViewport), Y, lineX + Size.WidthLogical(mViewport), Y
+    .Canvas.DrawLine lineX, Y - Size.HeightLogical(mViewport), lineX, Y + Size.HeightLogical(mViewport)
     
     .Canvas.SetPenAttributes mPointerDiscColor Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
     .Canvas.SetBrushAttributes mPointerDiscColor Xor .BackColor, FillStyles.FillSolid
-    .Canvas.DrawCircle .NewPoint(lineX, Y), .NewDimension(0.8, 0.8).XLogical
+    .Canvas.DrawCircle gNewPoint(lineX, Y), gNewDimension(0.8).LengthLogicalX(mViewport)
     
 End With
 
@@ -2801,7 +2768,7 @@ End Sub
 
 Private Sub drawToolPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
-Dim Size As Dimension
+Dim lSize As Size
 
 Const ProcName As String = "drawToolPointer"
 Dim failpoint As String
@@ -2811,10 +2778,10 @@ If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
     lineX = Round(X)
-    Set Size = .NewDimension(0.4, 0.4)
+    Set lSize = gNewSize(0.4, 0.4)
     
-    mCrosshairLineHoriz.SetPosition .NewPoint(lineX - Size.XLogical, Y), .NewPoint(lineX + Size.XLogical, Y)
-    mCrosshairLineVert.SetPosition .NewPoint(lineX, Y - Size.yLogical), .NewPoint(lineX, Y + Size.yLogical)
+    mCrosshairLineHoriz.SetPosition gNewPoint(lineX - lSize.WidthLogical(mViewport), Y), gNewPoint(lineX + lSize.WidthLogical(mViewport), Y)
+    mCrosshairLineVert.SetPosition gNewPoint(lineX, Y - lSize.HeightLogical(mViewport)), gNewPoint(lineX, Y + lSize.HeightLogical(mViewport))
 End With
 
 Exit Sub
@@ -2829,7 +2796,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not mYAxisRegion Is Nothing Then
-    mYCursorText.Position = mYAxisRegion.NewPoint(5, Y, CoordsRelative, CoordsLogical)
+    mYCursorText.Position = gNewPoint(5, Y, CoordsRelative, CoordsLogical)
     mYCursorText.Text = mPriceFormatter.FormatPrice(Y)
 End If
 
@@ -2863,7 +2830,7 @@ If perfText Is Nothing Then
     perfText.BoxThickness = 1
     perfText.BoxFillColor = vbActiveTitleBar
     perfText.BoxFillStyle = FillStyles.FillSolid
-    perfText.Position = NewPoint(5, 2, CoordsRelative, CoordsRelative)
+    perfText.Position = gNewPoint(5, 2, CoordsRelative, CoordsRelative)
     perfText.FixedX = True
     perfText.FixedY = True
     perfText.Align = TextAlignModes.AlignBottomLeft
@@ -3438,9 +3405,9 @@ Private Sub setCursorSnapsToTickBoundaries()
 ' nothing to do
 End Sub
 
-Private Sub setPropertyOverrideFlag( _
+Private Sub setPropertyFlag( _
                 ByVal flag As PropertyOverrideFlags)
-Const ProcName As String = "setPropertyOverrideFlag"
+Const ProcName As String = "setPropertyFlag"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -3515,7 +3482,7 @@ mTitle.BoxStyle = LineStyles.LineInvisible
 mTitle.BoxThickness = 1
 mTitle.BoxFillColor = vbWhite
 mTitle.BoxFillStyle = FillStyles.FillSolid
-mTitle.Position = NewPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
+mTitle.Position = gNewPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
 mTitle.FixedX = True
 mTitle.FixedY = True
 mTitle.Align = TextAlignModes.AlignBoxTopLeft
@@ -3715,13 +3682,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function isPropertyOverrideFlagSet( _
+Private Function IsPropertySet( _
                 ByVal flag As PropertyOverrideFlags) As Boolean
-Const ProcName As String = "isPropertyOverrideFlagSet"
+Const ProcName As String = "IsPropertySet"
 Dim failpoint As String
 On Error GoTo Err
 
-isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 
 Exit Function
 
@@ -3758,21 +3725,6 @@ Private Sub undrawCrosshairsPointer()
 
 ' nothing to do
 
-'Const ProcName As String = "undrawCrosshairsPointer"
-'Dim failpoint As String
-'On Error GoTo Err
-'
-'If Not mIsDrawingEnabled Then Exit Sub
-'
-'mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
-'                                NewPoint(-1000, 0)
-'mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
-'                                NewPoint(-1000, 0)
-'
-'Exit Sub
-'
-'Err:
-'HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub undrawCustomPointer()
@@ -3782,7 +3734,7 @@ Private Sub undrawCustomPointer()
 End Sub
 
 Private Sub undrawDiscPointer()
-Dim Size As Dimension
+Dim lSize As Size
 Dim prevLineX As Single
 
 Const ProcName As String = "undrawDiscPointer"
@@ -3793,21 +3745,21 @@ If Not mIsDrawingEnabled Then Exit Sub
 
 With mViewport
     prevLineX = Round(mPrevCursorX)
-    Set Size = .NewDimension(0.4, 0.4)
+    Set lSize = gNewSize(0.4, 0.4)
     
     .Canvas.SetPenAttributes vbBlack Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .Canvas.DrawLine prevLineX - Size.XLogical, mPrevCursorY, prevLineX + Size.XLogical, mPrevCursorY
-    .Canvas.DrawLine prevLineX, mPrevCursorY - Size.yLogical, prevLineX, mPrevCursorY + Size.yLogical
+    .Canvas.DrawLine prevLineX - lSize.WidthLogical(mViewport), mPrevCursorY, prevLineX + lSize.WidthLogical(mViewport), mPrevCursorY
+    .Canvas.DrawLine prevLineX, mPrevCursorY - lSize.HeightLogical(mViewport), prevLineX, mPrevCursorY + lSize.HeightLogical(mViewport)
     
     .Canvas.SetPenAttributes mPointerDiscColor Xor .BackColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
     .Canvas.SetBrushAttributes mPointerDiscColor Xor .BackColor, FillStyles.FillSolid
-    .Canvas.DrawCircle .NewPoint(prevLineX, mPrevCursorY), .NewDimension(0.8, 0.8).XLogical
+    .Canvas.DrawCircle gNewPoint(prevLineX, mPrevCursorY), gNewDimension(0.8).LengthLogicalX(mViewport)
 End With
 
 Exit Sub
@@ -3832,10 +3784,10 @@ On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
 
-mCrosshairLineHoriz.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
-mCrosshairLineVert.SetPosition NewPoint(-1000, 0), _
-                                NewPoint(-1000, 0)
+mCrosshairLineHoriz.SetPosition gNewPoint(-1000, 0), _
+                                gNewPoint(-1000, 0)
+mCrosshairLineVert.SetPosition gNewPoint(-1000, 0), _
+                                gNewPoint(-1000, 0)
 
 Exit Sub
 

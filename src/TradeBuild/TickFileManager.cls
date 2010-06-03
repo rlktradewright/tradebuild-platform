@@ -341,7 +341,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 If value < 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -381,7 +381,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 If value < 50 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -482,7 +482,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 Set mTickfileSpecifiers = New TickfileSpecifiers
 mTickfileSpecifiers.Add value
@@ -501,7 +501,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 Set mTickfileSpecifiers = value
 mCurrTickfileIndex = 0
@@ -531,7 +531,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 mTimestampAdjustmentStart = value
 
@@ -560,7 +560,7 @@ On Error GoTo Err
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Tickfile is alReady replaying"
+            "Tickfile is already replaying"
 End If
 mTimestampAdjustmentEnd = value
 

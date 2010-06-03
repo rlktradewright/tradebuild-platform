@@ -88,7 +88,7 @@ Private Sub IOrderPersistenceServiceConsumer_PersistedOrderInfo( _
                 orderInfo As String)
 
 Const ProcName As String = "IOrderPersistenceServiceConsumer_PersistedOrderInfo"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim opItem As OrderPersistenceItem
@@ -122,7 +122,7 @@ Dim opr As OrderPlexRecoverer
 Dim opItem As OrderPersistenceItem
 
 Const ProcName As String = "IOrderPersistenceServiceConsumer_PersistedOrderInfoEnd"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mOrderPersistenceServiceProvider.StartSession gTB.SessionId
@@ -154,7 +154,7 @@ End Sub
 Private Sub IOrderRecoveryServiceConsumer_ExecutionReport(ByVal pExecutionReport As TradeBuildSP.IExecutionReport)
 
 Const ProcName As String = "IOrderRecoveryServiceConsumer_ExecutionReport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim opr As OrderPlexRecoverer
@@ -196,7 +196,7 @@ Private Sub IOrderRecoveryServiceConsumer_OrderReport( _
                 ByVal pOrderReport As TradeBuildSP.IOrderReport)
 
 Const ProcName As String = "IOrderRecoveryServiceConsumer_OrderReport"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Dim opr As OrderPlexRecoverer
@@ -287,7 +287,7 @@ End Sub
 
 Friend Sub RecoverOrders(ByVal sessionName As String)
 Const ProcName As String = "RecoverOrders"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mRecovered Then
@@ -346,11 +346,11 @@ End Sub
 '@================================================================================
 
 Private Function CreateOrderPlexRecoverer(ByVal ops As OrderPlexSummary) As OrderPlexRecoverer
-Dim ws As Workspace
+Dim ws As WorkSpace
 Dim opr As OrderPlexRecoverer
 
 Const ProcName As String = "CreateOrderPlexRecoverer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -394,7 +394,7 @@ Dim en As Enumerator
 Dim pm As PositionManager
 Set en = gGetPositionManagersEnumerator
 Do While en.MoveNext
-    Set pm = en.current
+    Set pm = en.Current
     pm.FinishRecovery
 Loop
 
@@ -411,14 +411,14 @@ Dim opg As OrderPersistenceDataGroup
 
 Const ProcName As String = "getNextOrderPersistenceDataGroupEnumerator"
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If orderPersistenceDataGroupsEn Is Nothing Then Set orderPersistenceDataGroupsEn = mOrderPersistenceDataGroups.Enumerator
 
 If Not orderPersistenceDataGroupsEn.MoveNext Then Exit Function
 
-Set opg = orderPersistenceDataGroupsEn.current
+Set opg = orderPersistenceDataGroupsEn.Current
 Set en = opg.Enumerator
 
 getNextOrderPersistenceDataGroupEnumerator = True
@@ -433,7 +433,7 @@ Private Function getNextOrderPersistenceItem( _
 Static opgEn As Enumerator
 
 Const ProcName As String = "getNextOrderPersistenceItem"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If opgEn Is Nothing Then
@@ -444,7 +444,7 @@ Do While Not opgEn.MoveNext
     If Not getNextOrderPersistenceDataGroupEnumerator(opgEn) Then Exit Function
 Loop
 
-Set pOpItem = opgEn.current
+Set pOpItem = opgEn.Current
 
 getNextOrderPersistenceItem = True
 
@@ -466,7 +466,7 @@ Private Sub processExecution(ByVal ex As Execution)
 Const ProcName As String = "processExecution"
 Dim opr As OrderPlexRecoverer
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set opr = mOrderIdToOrderPlexRecoverer.Item(ex.OrderTradeBuildId)
@@ -510,7 +510,7 @@ Private Sub processOrderPlexSummary(ByVal ops As OrderPlexSummary)
 Const ProcName As String = "processOrderPlexSummary"
 Dim opr As OrderPlexRecoverer
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mStartRecoveryFrom = 0 Or _
@@ -540,7 +540,7 @@ Private Function processOrderSummary(ByVal os As OrderSummary) As Boolean
 Const ProcName As String = "processOrderSummary"
 Dim opr As OrderPlexRecoverer
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -574,7 +574,7 @@ Private Sub processPositionManagerSummary( _
 Const ProcName As String = "processPositionManagerSummary"
 Dim pm As PositionManager
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set pm = gGetPositionManager(pKey)
@@ -593,7 +593,7 @@ End Sub
 
 Private Sub setupDefaultOrderPersistenceSP()
 Const ProcName As String = "setupDefaultOrderPersistenceSP"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gTB.ServiceProviders.Add ProjectName & ".OrderPersistenceSP", _
@@ -609,7 +609,7 @@ End Sub
 Private Sub updateOrderIdToOrderPlexRecovererMap( _
                 ByVal opr As OrderPlexRecoverer)
 Const ProcName As String = "updateOrderIdToOrderPlexRecovererMap"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not opr.orderPlex.CloseoutOrder Is Nothing Then mOrderIdToOrderPlexRecoverer.Add opr, opr.orderPlex.CloseoutOrder.Id

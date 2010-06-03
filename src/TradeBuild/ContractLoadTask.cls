@@ -92,7 +92,7 @@ Const ProcName As String = "Task_TaskContext"
 On Error GoTo Err
 
 Set mTaskContext = RHS
-Set contractSpec = mTaskContext.data
+Set contractSpec = mTaskContext.Data
 
 Set mContractsBuilder = CreateContractsBuilder(contractSpec)
 Set mContracts = mContractsBuilder.Contracts
@@ -130,6 +130,7 @@ If mContracts.Count = 0 Then
         mTaskContext.Finish mContracts, False
     End If
 Else
+    GLogLogger.Log pMsg:="Loaded " & mContracts.Count & " contracts", pMsgQualifier:=mContractsBuilder.Contracts.ContractSpecifier.ToString, pProcName:=ProcName, pModName:=ModuleName
     mTaskContext.Finish mContracts, False
 End If
 

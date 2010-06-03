@@ -69,6 +69,7 @@ Private mGOSP As GraphObjServiceProvider
 
 Private WithEvents mStyle As LineStyle
 Attribute mStyle.VB_VarHelpID = -1
+Private mBaseStyle As LineStyle
 
 ' these fields override corresponding items in the Style
 Private mColor As Long
@@ -92,8 +93,10 @@ Private mFixedX As Boolean
 Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
+Private mOffset1 As Size
+Private mOffset2 As Size
 
-Private mPropertyOverrideFlags As LinePropertyOverrideFlags
+Private mPropertyOverrideFlags As LinePropertyFlags
 
 '================================================================================
 ' Class Event Handlers
@@ -101,8 +104,8 @@ Private mPropertyOverrideFlags As LinePropertyOverrideFlags
 
 Private Sub Class_Initialize()
 Set mLines = New Collection
+Set mBaseStyle = gDefaultLineStyle
 Set mStyle = New LineStyle
-
 End Sub
 
 Private Sub Class_Terminate()
@@ -114,8 +117,8 @@ End Sub
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
-Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
-Set mViewport = value
+Private Property Let IGraphicObjectSeries_Canvas(ByVal Value As Canvas)
+Set mViewport = Value
 End Property
 
 Private Sub IGraphicObjectSeries_Click()
@@ -184,7 +187,7 @@ Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 mLines.Remove index
 End Sub
 
-Private Sub IGraphicObjectSeries_RemoveObject(ByVal value As IGraphicObject)
+Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
 Dim lLine As ChartSkil26.Line
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
@@ -192,7 +195,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 On Error Resume Next
-Set lLine = value
+Set lLine = Value
 
 mLines.Remove lLine.Key
 
@@ -258,10 +261,6 @@ Case "EXTENDAFTER"
     RepaintRegion True
 Case "EXTENDBEFORE"
     RepaintRegion True
-Case "LINESTYLE"
-    RepaintRegion False
-Case "THICKNESS"
-    RepaintRegion True
 Case "EXTENDED"
     RepaintRegion True
 Case "FIXEDX"
@@ -269,6 +268,16 @@ Case "FIXEDX"
 Case "FIXEDY"
     RepaintRegion True
 Case "INCLUDEINAUTOSCALE"
+    RepaintRegion True
+Case "LAYER"
+    RepaintRegion False
+Case "LINESTYLE"
+    RepaintRegion False
+Case "OFFSET1"
+    RepaintRegion True
+Case "OFFSET2"
+    RepaintRegion True
+Case "THICKNESS"
     RepaintRegion True
 Case Else
     Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
@@ -293,8 +302,9 @@ Const ProcName As String = "ArrowEndColor"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndColor = mStyle.ArrowEndColor
-If isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then ArrowEndColor = mArrowEndColor
+ArrowEndColor = mBaseStyle.ArrowEndColor
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndColor) Then ArrowEndColor = mStyle.ArrowEndColor
+If IsPropertySet(LinePropertyArrowEndColor) Then ArrowEndColor = mArrowEndColor
 
 Exit Property
 
@@ -302,16 +312,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndColor(ByVal value As Long)
+Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndColor) Then Exit Property
-mArrowEndColor = value
-setPropertyOverrideFlag LineIsSetArrowEndColor
+If Not gIsValidColor(Value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color"
+
+setLongProperty mArrowEndColor, LinePropertyArrowEndColor, Value
 RepaintRegion False
-firePropertyChanged "ArrowEndColor"
 
 Exit Property
 
@@ -324,8 +336,9 @@ Const ProcName As String = "ArrowEndFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndFillColor = mStyle.ArrowEndFillColor
-If isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then ArrowEndFillColor = mArrowEndFillColor
+ArrowEndFillColor = mBaseStyle.ArrowEndFillColor
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndFillColor) Then ArrowEndFillColor = mStyle.ArrowEndFillColor
+If IsPropertySet(LinePropertyArrowEndFillColor) Then ArrowEndFillColor = mArrowEndFillColor
 
 Exit Property
 
@@ -333,16 +346,18 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndFillColor(ByVal value As Long)
+Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillColor) Then Exit Property
-mArrowEndFillColor = value
-setPropertyOverrideFlag LineIsSetArrowEndFillColor
+If Not gIsValidColor(Value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value is not a valid Color"
+
+setLongProperty mArrowEndFillColor, LinePropertyArrowEndFillColor, Value
 RepaintRegion False
-firePropertyChanged "ArrowEndFillColor"
 
 Exit Property
 
@@ -355,8 +370,9 @@ Const ProcName As String = "ArrowEndFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndFillStyle = mStyle.ArrowEndFillStyle
-If isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then ArrowEndFillStyle = mArrowEndFillStyle
+ArrowEndFillStyle = mBaseStyle.ArrowEndFillStyle
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndFillStyle) Then ArrowEndFillStyle = mStyle.ArrowEndFillStyle
+If IsPropertySet(LinePropertyArrowEndFillStyle) Then ArrowEndFillStyle = mArrowEndFillStyle
 
 Exit Property
 
@@ -364,16 +380,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndFillStyle(ByVal value As FillStyles)
+Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowEndFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndFillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndFillStyle) Then Exit Property
-mArrowEndFillStyle = value
-setPropertyOverrideFlag LineIsSetArrowEndFillStyle
+setLongProperty mArrowEndFillStyle, LinePropertyArrowEndFillStyle, Value
 RepaintRegion False
-firePropertyChanged "ArrowEndFillStyle"
 
 Exit Property
 
@@ -386,8 +399,9 @@ Const ProcName As String = "ArrowEndLength"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndLength = mStyle.ArrowEndLength
-If isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then ArrowEndLength = mArrowEndLength
+ArrowEndLength = mBaseStyle.ArrowEndLength
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndLength) Then ArrowEndLength = mStyle.ArrowEndLength
+If IsPropertySet(LinePropertyArrowEndLength) Then ArrowEndLength = mArrowEndLength
 
 Exit Property
 
@@ -395,16 +409,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndLength(ByVal value As Long)
+Public Property Let ArrowEndLength(ByVal Value As Long)
 Const ProcName As String = "ArrowEndLength"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndLength = value And isPropertyOverrideFlagSet(LineIsSetArrowEndLength) Then Exit Property
-mArrowEndLength = value
-setPropertyOverrideFlag LineIsSetArrowEndLength
+setLongProperty mArrowEndLength, LinePropertyArrowEndLength, Value
 RepaintRegion True
-firePropertyChanged "ArrowEndLength"
 
 Exit Property
 
@@ -417,8 +428,9 @@ Const ProcName As String = "ArrowEndStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndStyle = mStyle.ArrowEndStyle
-If isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then ArrowEndStyle = mArrowEndStyle
+ArrowEndStyle = mBaseStyle.ArrowEndStyle
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndStyle) Then ArrowEndStyle = mStyle.ArrowEndStyle
+If IsPropertySet(LinePropertyArrowEndStyle) Then ArrowEndStyle = mArrowEndStyle
 
 Exit Property
 
@@ -426,16 +438,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndStyle(ByVal value As ArrowStyles)
+Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowEndStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowEndStyle) Then Exit Property
-mArrowEndStyle = value
-setPropertyOverrideFlag LineIsSetArrowEndStyle
+setLongProperty mArrowEndStyle, LinePropertyArrowEndStyle, Value
 RepaintRegion True
-firePropertyChanged "ArrowEndStyle"
 
 Exit Property
 
@@ -448,8 +457,9 @@ Const ProcName As String = "ArrowEndWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowEndWidth = mStyle.ArrowEndWidth
-If isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then ArrowEndWidth = mArrowEndWidth
+ArrowEndWidth = mBaseStyle.ArrowEndWidth
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowEndWidth) Then ArrowEndWidth = mStyle.ArrowEndWidth
+If IsPropertySet(LinePropertyArrowEndWidth) Then ArrowEndWidth = mArrowEndWidth
 
 Exit Property
 
@@ -457,16 +467,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowEndWidth(ByVal value As Long)
+Public Property Let ArrowEndWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowEndWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowEndWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowEndWidth) Then Exit Property
-mArrowEndWidth = value
-setPropertyOverrideFlag LineIsSetArrowEndWidth
+setLongProperty mArrowEndWidth, LinePropertyArrowEndWidth, Value
 RepaintRegion True
-firePropertyChanged "ArrowEndWidth"
 
 Exit Property
 
@@ -479,8 +486,9 @@ Const ProcName As String = "ArrowStartColor"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartColor = mStyle.ArrowStartColor
-If isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then ArrowStartColor = mArrowStartColor
+ArrowStartColor = mBaseStyle.ArrowStartColor
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartColor) Then ArrowStartColor = mStyle.ArrowStartColor
+If IsPropertySet(LinePropertyArrowStartColor) Then ArrowStartColor = mArrowStartColor
 
 Exit Property
 
@@ -488,16 +496,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartColor(ByVal value As Long)
+Public Property Let ArrowStartColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartColor) Then Exit Property
-mArrowStartColor = value
-setPropertyOverrideFlag LineIsSetArrowStartColor
+setLongProperty mArrowStartColor, LinePropertyArrowStartColor, Value
 RepaintRegion False
-firePropertyChanged "ArrowStartColor"
 
 Exit Property
 
@@ -510,8 +515,9 @@ Const ProcName As String = "ArrowStartFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartFillColor = mStyle.ArrowStartFillColor
-If isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then ArrowStartFillColor = mArrowStartFillColor
+ArrowStartFillColor = mBaseStyle.ArrowStartFillColor
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartFillColor) Then ArrowStartFillColor = mStyle.ArrowStartFillColor
+If IsPropertySet(LinePropertyArrowStartFillColor) Then ArrowStartFillColor = mArrowStartFillColor
 
 Exit Property
 
@@ -519,16 +525,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartFillColor(ByVal value As Long)
+Public Property Let ArrowStartFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartFillColor"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartFillColor = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillColor) Then Exit Property
-mArrowStartFillColor = value
-setPropertyOverrideFlag LineIsSetArrowStartFillColor
+setLongProperty mArrowStartFillColor, LinePropertyArrowStartFillColor, Value
 RepaintRegion False
-firePropertyChanged "ArrowStartFillColor"
 
 Exit Property
 
@@ -541,8 +544,9 @@ Const ProcName As String = "ArrowStartFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartFillStyle = mStyle.ArrowStartFillStyle
-If isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then ArrowStartFillStyle = mArrowStartfillStyle
+ArrowStartFillStyle = mBaseStyle.ArrowStartFillStyle
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartFillStyle) Then ArrowStartFillStyle = mStyle.ArrowStartFillStyle
+If IsPropertySet(LinePropertyArrowStartFillStyle) Then ArrowStartFillStyle = mArrowStartfillStyle
 
 Exit Property
 
@@ -550,16 +554,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartFillStyle(ByVal value As FillStyles)
+Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowStartFillStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartfillStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartFillStyle) Then Exit Property
-mArrowStartfillStyle = value
-setPropertyOverrideFlag LineIsSetArrowStartFillStyle
+setLongProperty mArrowStartfillStyle, LinePropertyArrowStartFillStyle, Value
 RepaintRegion False
-firePropertyChanged "ArrowStartFillStyle"
 
 Exit Property
 
@@ -572,8 +573,9 @@ Const ProcName As String = "ArrowStartLength"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartLength = mStyle.ArrowStartLength
-If isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then ArrowStartLength = mArrowStartLength
+ArrowStartLength = mBaseStyle.ArrowStartLength
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartLength) Then ArrowStartLength = mStyle.ArrowStartLength
+If IsPropertySet(LinePropertyArrowStartLength) Then ArrowStartLength = mArrowStartLength
 
 Exit Property
 
@@ -581,16 +583,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartLength(ByVal value As Long)
+Public Property Let ArrowStartLength(ByVal Value As Long)
 Const ProcName As String = "ArrowStartLength"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartLength = value And isPropertyOverrideFlagSet(LineIsSetArrowStartLength) Then Exit Property
-mArrowStartLength = value
-setPropertyOverrideFlag LineIsSetArrowStartLength
+setLongProperty mArrowStartLength, LinePropertyArrowStartLength, Value
 RepaintRegion True
-firePropertyChanged "ArrowStartLength"
 
 Exit Property
 
@@ -603,8 +602,9 @@ Const ProcName As String = "ArrowStartStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartStyle = mStyle.ArrowStartStyle
-If isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then ArrowStartStyle = mArrowStartStyle
+ArrowStartStyle = mBaseStyle.ArrowStartStyle
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartStyle) Then ArrowStartStyle = mStyle.ArrowStartStyle
+If IsPropertySet(LinePropertyArrowStartStyle) Then ArrowStartStyle = mArrowStartStyle
 
 Exit Property
 
@@ -612,16 +612,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartStyle(ByVal value As ArrowStyles)
+Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowStartStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartStyle = value And isPropertyOverrideFlagSet(LineIsSetArrowStartStyle) Then Exit Property
-mArrowStartStyle = value
-setPropertyOverrideFlag LineIsSetArrowStartStyle
+setLongProperty mArrowStartStyle, LinePropertyArrowStartStyle, Value
 RepaintRegion True
-firePropertyChanged "ArrowStartStyle"
 
 Exit Property
 
@@ -634,8 +631,9 @@ Const ProcName As String = "ArrowStartWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-ArrowStartWidth = mStyle.ArrowStartWidth
-If isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then ArrowStartWidth = mArrowStartWidth
+ArrowStartWidth = mBaseStyle.ArrowStartWidth
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyArrowStartWidth) Then ArrowStartWidth = mStyle.ArrowStartWidth
+If IsPropertySet(LinePropertyArrowStartWidth) Then ArrowStartWidth = mArrowStartWidth
 
 Exit Property
 
@@ -643,16 +641,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ArrowStartWidth(ByVal value As Long)
+Public Property Let ArrowStartWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowStartWidth"
 Dim failpoint As String
 On Error GoTo Err
 
-If mArrowStartWidth = value And isPropertyOverrideFlagSet(LineIsSetArrowStartWidth) Then Exit Property
-mArrowStartWidth = value
-setPropertyOverrideFlag LineIsSetArrowStartWidth
+setLongProperty mArrowStartWidth, LinePropertyArrowStartWidth, Value
 RepaintRegion True
-firePropertyChanged "ArrowStartWidth"
 
 Exit Property
 
@@ -660,8 +655,8 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Friend Property Let Canvas(ByVal value As Canvas)
-Set mViewport = value
+Friend Property Let Canvas(ByVal Value As Canvas)
+Set mViewport = Value
 End Property
 
 Public Property Get Color() As Long
@@ -669,8 +664,9 @@ Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-Color = mStyle.Color
-If isPropertyOverrideFlagSet(LineIsSetColor) Then Color = mColor
+Color = mBaseStyle.Color
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyColor) Then Color = mStyle.Color
+If IsPropertySet(LinePropertyColor) Then Color = mColor
 
 Exit Property
 
@@ -678,16 +674,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
-If mColor = value And isPropertyOverrideFlagSet(LineIsSetColor) Then Exit Property
-mColor = value
-setPropertyOverrideFlag LineIsSetColor
+setLongProperty mColor, LinePropertyColor, Value
 RepaintRegion False
-firePropertyChanged "Color"
 
 Exit Property
 
@@ -713,8 +706,9 @@ Const ProcName As String = "ExtendAfter"
 Dim failpoint As String
 On Error GoTo Err
 
-ExtendAfter = mStyle.ExtendAfter
-If isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then ExtendAfter = mExtendAfter
+ExtendAfter = mBaseStyle.ExtendAfter
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyExtendAfter) Then ExtendAfter = mStyle.ExtendAfter
+If IsPropertySet(LinePropertyExtendAfter) Then ExtendAfter = mExtendAfter
 
 Exit Property
 
@@ -722,16 +716,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ExtendAfter(ByVal value As Boolean)
+Public Property Let ExtendAfter(ByVal Value As Boolean)
 Const ProcName As String = "ExtendAfter"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtendAfter = value And isPropertyOverrideFlagSet(LineIsSetExtendAfter) Then Exit Property
-mExtendAfter = value
-setPropertyOverrideFlag LineIsSetExtendAfter
+setBooleanProperty mExtendAfter, LinePropertyExtendAfter, Value
 RepaintRegion True
-firePropertyChanged "ExtendAfter"
 
 Exit Property
 
@@ -744,8 +735,9 @@ Const ProcName As String = "ExtendBefore"
 Dim failpoint As String
 On Error GoTo Err
 
-ExtendBefore = mStyle.ExtendBefore
-If isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then ExtendBefore = mExtendBefore
+ExtendBefore = mBaseStyle.ExtendBefore
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyExtendBefore) Then ExtendBefore = mStyle.ExtendBefore
+If IsPropertySet(LinePropertyExtendBefore) Then ExtendBefore = mExtendBefore
 
 Exit Property
 
@@ -753,16 +745,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let ExtendBefore(ByVal value As Boolean)
+Public Property Let ExtendBefore(ByVal Value As Boolean)
 Const ProcName As String = "ExtendBefore"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtendBefore = value And isPropertyOverrideFlagSet(LineIsSetExtendBefore) Then Exit Property
-mExtendBefore = value
-setPropertyOverrideFlag LineIsSetExtendBefore
+setBooleanProperty mExtendBefore, LinePropertyExtendBefore, Value
 RepaintRegion True
-firePropertyChanged "ExtendBefore"
 
 Exit Property
 
@@ -775,8 +764,9 @@ Const ProcName As String = "Extended"
 Dim failpoint As String
 On Error GoTo Err
 
-Extended = mStyle.Extended
-If isPropertyOverrideFlagSet(LineIsSetExtended) Then Extended = mExtended
+Extended = mBaseStyle.Extended
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyExtended) Then Extended = mStyle.Extended
+If IsPropertySet(LinePropertyExtended) Then Extended = mExtended
 
 Exit Property
 
@@ -784,16 +774,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Extended(ByVal value As Boolean)
+Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
 Dim failpoint As String
 On Error GoTo Err
 
-If mExtended = value And isPropertyOverrideFlagSet(LineIsSetExtended) Then Exit Property
-mExtended = value
-setPropertyOverrideFlag LineIsSetExtended
+setBooleanProperty mExtended, LinePropertyExtended, Value
 RepaintRegion True
-firePropertyChanged "Extended"
 
 Exit Property
 
@@ -806,8 +793,9 @@ Const ProcName As String = "FixedX"
 Dim failpoint As String
 On Error GoTo Err
 
-FixedX = mStyle.FixedX
-If isPropertyOverrideFlagSet(LineIsSetFixedX) Then FixedX = mFixedX
+FixedX = mBaseStyle.FixedX
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyFixedX) Then FixedX = mStyle.FixedX
+If IsPropertySet(LinePropertyFixedX) Then FixedX = mFixedX
 
 Exit Property
 
@@ -815,16 +803,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedX(ByVal value As Boolean)
+Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedX = value And isPropertyOverrideFlagSet(LineIsSetFixedX) Then Exit Property
-mFixedX = value
-setPropertyOverrideFlag LineIsSetFixedX
+setBooleanProperty mFixedX, LinePropertyFixedX, Value
 RepaintRegion True
-firePropertyChanged "FixedX"
 
 Exit Property
 
@@ -837,8 +822,9 @@ Const ProcName As String = "FixedY"
 Dim failpoint As String
 On Error GoTo Err
 
-FixedY = mStyle.FixedY
-If isPropertyOverrideFlagSet(LineIsSetFixedY) Then FixedY = mFixedY
+FixedY = mBaseStyle.FixedY
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyFixedY) Then FixedY = mStyle.FixedY
+If IsPropertySet(LinePropertyFixedY) Then FixedY = mFixedY
 
 Exit Property
 
@@ -846,16 +832,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let FixedY(ByVal value As Boolean)
+Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFixedY = value And isPropertyOverrideFlagSet(LineIsSetFixedY) Then Exit Property
-mFixedY = value
-setPropertyOverrideFlag LineIsSetFixedY
+setBooleanProperty mFixedY, LinePropertyFixedY, Value
 RepaintRegion True
-firePropertyChanged "FixedY"
 
 Exit Property
 
@@ -872,8 +855,9 @@ Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-IncludeInAutoscale = mStyle.IncludeInAutoscale
-If isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
+IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyIncludeInAutoscale) Then IncludeInAutoscale = mStyle.IncludeInAutoscale
+If IsPropertySet(LinePropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncludeInAutoscale
 
 Exit Property
 
@@ -881,16 +865,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
 Dim failpoint As String
 On Error GoTo Err
 
-If mIncludeInAutoscale = value And isPropertyOverrideFlagSet(LineIsSetIncludeInAutoscale) Then Exit Property
-mIncludeInAutoscale = value
-setPropertyOverrideFlag LineIsSetIncludeInAutoscale
+setBooleanProperty mIncludeInAutoscale, LinePropertyIncludeInAutoscale, Value
 RepaintRegion True
-firePropertyChanged "IncludeInAutoscale"
 
 Exit Property
 
@@ -898,12 +879,12 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
+Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
 Dim failpoint As String
 On Error GoTo Err
 
-mIsSelectable = value
+mIsSelectable = Value
 firePropertyChanged "IsSelectable"
 
 Exit Property
@@ -920,12 +901,12 @@ Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Let Layer(ByVal value As LayerNumbers)
+Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 Dim failpoint As String
 On Error GoTo Err
 
-mLayer = value
+mLayer = Value
 RepaintRegion False
 firePropertyChanged "Layer"
 
@@ -944,8 +925,9 @@ Const ProcName As String = "LineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-LineStyle = mStyle.LineStyle
-If isPropertyOverrideFlagSet(LineIsSetLineStyle) Then LineStyle = mLineStyle
+LineStyle = mBaseStyle.LineStyle
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyLineStyle) Then LineStyle = mStyle.LineStyle
+If IsPropertySet(LinePropertyLineStyle) Then LineStyle = mLineStyle
 
 Exit Property
 
@@ -953,16 +935,69 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let LineStyle(ByVal value As LineStyles)
+Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mLineStyle = value And isPropertyOverrideFlagSet(LineIsSetLineStyle) Then Exit Property
-mLineStyle = value
-setPropertyOverrideFlag LineIsSetLineStyle
+setLongProperty mLineStyle, LinePropertyLineStyle, Value
 RepaintRegion False
-firePropertyChanged "LineStyle"
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset1(ByVal Value As Size)
+
+Const ProcName As String = "Offset1"
+On Error GoTo Err
+
+setSizeProperty mOffset1, LinePropertyOffset1, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Property
+
+Public Property Get Offset1() As Size
+Const ProcName As String = "Offset1"
+On Error GoTo Err
+
+Set Offset1 = mBaseStyle.Offset1
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyOffset1) Then Set Offset1 = mStyle.Offset1
+If IsPropertySet(LinePropertyOffset1) Then Set Offset1 = mOffset1
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Property
+
+Public Property Let Offset2(ByVal Value As Size)
+
+Const ProcName As String = "Offset2"
+On Error GoTo Err
+
+setSizeProperty mOffset2, LinePropertyOffset2, Value
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+
+End Property
+
+Public Property Get Offset2() As Size
+Const ProcName As String = "Offset2"
+On Error GoTo Err
+
+Set Offset2 = mBaseStyle.Offset2
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyOffset2) Then Set Offset2 = mStyle.Offset2
+If IsPropertySet(LinePropertyOffset2) Then Set Offset2 = mOffset2
 
 Exit Property
 
@@ -978,18 +1013,18 @@ Public Property Get Style() As LineStyle
 Set Style = mStyle
 End Property
 
-Public Property Let Style(ByVal value As LineStyle)
+Public Property Let Style(ByVal Value As LineStyle)
 Const ProcName As String = "Style"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is Nothing Then
+If Value Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
             "Style is null reference"
 End If
 
-Set mStyle = value
+Set mStyle = Value
 RepaintRegion True
 
 firePropertyChanged "Style"
@@ -1005,8 +1040,9 @@ Const ProcName As String = "Thickness"
 Dim failpoint As String
 On Error GoTo Err
 
-Thickness = mStyle.Thickness
-If isPropertyOverrideFlagSet(LineIsSetThickness) Then Thickness = mThickness
+Thickness = mBaseStyle.Thickness
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(LinePropertyThickness) Then Thickness = mStyle.Thickness
+If IsPropertySet(LinePropertyThickness) Then Thickness = mThickness
 
 Exit Property
 
@@ -1014,16 +1050,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let Thickness(ByVal value As Long)
+Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
 Dim failpoint As String
 On Error GoTo Err
 
-If mThickness = value And isPropertyOverrideFlagSet(LineIsSetThickness) Then Exit Property
-mThickness = value
-setPropertyOverrideFlag LineIsSetThickness
+setLongProperty mThickness, LinePropertyThickness, Value
 RepaintRegion True
-firePropertyChanged "Thickness"
 
 Exit Property
 
@@ -1111,10 +1144,10 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Public Sub RemoveObject(ByVal value As ChartSkil26.Line)
+Public Sub RemoveObject(ByVal Value As ChartSkil26.Line)
 On Error GoTo Err
-mLines.Remove value.Key
-mGOSP.RemoveObject value.handle
+mLines.Remove Value.Key
+mGOSP.RemoveObject Value.handle
 
 Exit Sub
 
@@ -1125,9 +1158,9 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub clearPropertyOverrideFlag( _
-                ByVal flag As LinePropertyOverrideFlags)
-Const ProcName As String = "clearPropertyOverrideFlag"
+Private Sub ClearProperty( _
+                ByVal flag As LinePropertyFlags)
+Const ProcName As String = "ClearProperty"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -1157,13 +1190,13 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Function isPropertyOverrideFlagSet( _
-                ByVal flag As LinePropertyOverrideFlags) As Boolean
-Const ProcName As String = "isPropertyOverrideFlagSet"
+Private Function IsPropertySet( _
+                ByVal flag As LinePropertyFlags) As Boolean
+Const ProcName As String = "isPropertySet"
 Dim failpoint As String
 On Error GoTo Err
 
-isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 
 Exit Function
 
@@ -1193,13 +1226,71 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub setPropertyOverrideFlag( _
-                ByVal flag As LinePropertyOverrideFlags)
-Const ProcName As String = "setPropertyOverrideFlag"
+Private Sub setBooleanProperty( _
+                ByRef pProp As Boolean, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Boolean)
+Const ProcName As String = "setbooleanProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setLongProperty( _
+                ByRef pProp As Long, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Long)
+Const ProcName As String = "setLongProperty"
+On Error GoTo Err
+
+If pProp = Value And IsPropertySet(pPropFlag) Then Exit Sub
+pProp = Value
+setPropertyFlag pPropFlag
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setPropertyFlag( _
+                ByVal flag As LinePropertyFlags)
+Const ProcName As String = "setPropertyFlag"
 Dim failpoint As String
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Private Sub setSizeProperty( _
+                ByRef pProp As Size, _
+                ByVal pPropFlag As LinePropertyFlags, _
+                ByVal Value As Size)
+Const ProcName As String = "setSizeProperty"
+On Error GoTo Err
+
+If pProp Is Value And IsPropertySet(pPropFlag) Then Exit Sub
+Set pProp = Value
+If pProp Is Nothing Then
+    ClearProperty pPropFlag
+Else
+    setPropertyFlag pPropFlag
+End If
+firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 
 Exit Sub
 

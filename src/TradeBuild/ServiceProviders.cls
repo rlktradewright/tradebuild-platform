@@ -170,7 +170,7 @@ Private Sub ICommonServiceConsumer_NotifyEvent( _
                 ByVal serviceProviderHandle As Long)
 
 Const ProcName As String = "ICommonServiceConsumer_NotifyEvent"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
@@ -188,7 +188,7 @@ Private Sub ICommonServiceConsumer_NotifyFatalError( _
                 ByVal spHandle As Long)
 Dim spName As String
 Const ProcName As String = "ICommonServiceConsumer_NotifyFatalError"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 spName = NameFromHandle(spHandle)
@@ -208,7 +208,7 @@ Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
                             ByVal errorMessage As String, _
                             ByVal spHandle As Long)
 Const ProcName As String = "ICommonServiceConsumer_NotifyRecoverableError"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 gTB.SetServiceProviderError ErrorCode, _
@@ -226,7 +226,7 @@ Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal spType As TradeBuildSP.ServiceProviderTypes)
 Dim regOk As Boolean
 Const ProcName As String = "ICommonServiceConsumer_RegisterServiceProvider"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
@@ -332,7 +332,7 @@ End Sub
 
 Friend Property Get IsLiveOrderSubmitterConfigured() As Boolean
 Const ProcName As String = "IsLiveOrderSubmitterConfigured"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 IsLiveOrderSubmitterConfigured = (Not getLiveOrderSubmissionSP Is Nothing)
@@ -345,7 +345,7 @@ End Property
 
 Friend Property Get IsAnyServiceProviderConfigured() As Boolean
 Const ProcName As String = "IsAnyServiceProviderConfigured"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 IsAnyServiceProviderConfigured = mMaxSPIndex >= 0
@@ -359,13 +359,13 @@ End Property
 Public Property Let PermittedServiceProviderRoles( _
                 ByVal value As ServiceProviderRoles)
 Const ProcName As String = "PermittedServiceProviderRoles"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If IsAnyServiceProviderConfigured Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Service providers are alReady configured"
+            "Service providers are already configured"
 End If
 
 mPermittedServiceProviderRoles = value
@@ -378,7 +378,7 @@ End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
 Const ProcName As String = "PermittedServiceProviderRoles"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 PermittedServiceProviderRoles = mPermittedServiceProviderRoles
@@ -391,7 +391,7 @@ End Property
 
 Public Property Get SPNameRealtimeData() As String
 Const ProcName As String = "SPNameRealtimeData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameRealtimeData = SrvcProviderNameRealtimeData
@@ -404,7 +404,7 @@ End Property
 
 Public Property Get SPNamePrimaryContractData() As String
 Const ProcName As String = "SPNamePrimaryContractData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNamePrimaryContractData = SrvcProviderNamePrimaryContractData
@@ -417,7 +417,7 @@ End Property
 
 Public Property Get SPNameSecondryContractData() As String
 Const ProcName As String = "SPNameSecondryContractData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameSecondryContractData = SrvcProviderNameSecondaryContractData
@@ -430,7 +430,7 @@ End Property
 
 Public Property Get SPNameHistoricalDataInput() As String
 Const ProcName As String = "SPNameHistoricalDataInput"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameHistoricalDataInput = SrvcProviderNameHistoricalDataInput
@@ -443,7 +443,7 @@ End Property
 
 Public Property Get SPNameHistoricalDataOutput() As String
 Const ProcName As String = "SPNameHistoricalDataOutput"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameHistoricalDataOutput = SrvcProviderNameHistoricalDataOutput
@@ -456,7 +456,7 @@ End Property
 
 Public Property Get SPNameBrokerLive() As String
 Const ProcName As String = "SPNameBrokerLive"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameBrokerLive = SrvcProviderNameBrokerLive
@@ -469,7 +469,7 @@ End Property
 
 Public Property Get SPNameBrokerSimulated() As String
 Const ProcName As String = "SPNameBrokerSimulated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameBrokerSimulated = SrvcProviderNameBrokerSimulated
@@ -482,7 +482,7 @@ End Property
 
 Public Property Get SPNameTickfileInput() As String
 Const ProcName As String = "SPNameTickfileInput"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameTickfileInput = SrvcProviderNameTickfileInput
@@ -495,7 +495,7 @@ End Property
 
 Public Property Get SPNameTickfileOutput() As String
 Const ProcName As String = "SPNameTickfileOutput"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPNameTickfileOutput = SrvcProviderNameTickfileOutput
@@ -508,7 +508,7 @@ End Property
 
 Public Property Get SPProgIdQtBarData() As String
 Const ProcName As String = "SPProgIdQtBarData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdQtBarData = ProgIdQtBarData
@@ -521,7 +521,7 @@ End Property
 
 Public Property Get SPProgIdQtRealtimeData() As String
 Const ProcName As String = "SPProgIdQtRealtimeData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdQtRealtimeData = ProgIdQtRealtimeData
@@ -534,7 +534,7 @@ End Property
 
 Public Property Get SPProgIdQtTickData() As String
 Const ProcName As String = "SPProgIdQtTickData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdQtTickData = ProgIdQtTickData
@@ -547,7 +547,7 @@ End Property
 
 Public Property Get SPProgIdTbBarData() As String
 Const ProcName As String = "SPProgIdTbBarData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTbBarData = ProgIdTbBarData
@@ -560,7 +560,7 @@ End Property
 
 Public Property Get SPProgIdTbContractData() As String
 Const ProcName As String = "SPProgIdTbContractData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTbContractData = ProgIdTbContractData
@@ -573,7 +573,7 @@ End Property
 
 Public Property Get SPProgIdTbOrders() As String
 Const ProcName As String = "SPProgIdTbOrders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTbOrders = ProgIdTbOrders
@@ -586,7 +586,7 @@ End Property
 
 Public Property Get SPProgIdTbTickData() As String
 Const ProcName As String = "SPProgIdTbTickData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTbTickData = ProgIdTbTickData
@@ -599,7 +599,7 @@ End Property
 
 Public Property Get SPProgIdFileTickData() As String
 Const ProcName As String = "SPProgIdFileTickData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdFileTickData = ProgIdFileTickData
@@ -612,7 +612,7 @@ End Property
 
 Public Property Get SPProgIdTwsBarData() As String
 Const ProcName As String = "SPProgIdTwsBarData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTwsBarData = ProgIdTwsBarData
@@ -625,7 +625,7 @@ End Property
 
 Public Property Get SPProgIdTwsContractData() As String
 Const ProcName As String = "SPProgIdTwsContractData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTwsContractData = ProgIdTwsContractData
@@ -638,7 +638,7 @@ End Property
 
 Public Property Get SPProgIdTwsOrders() As String
 Const ProcName As String = "SPProgIdTwsOrders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTwsOrders = ProgIdTwsOrders
@@ -651,7 +651,7 @@ End Property
 
 Public Property Get SPProgIdTwsRealtimeData() As String
 Const ProcName As String = "SPProgIdTwsRealtimeData"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SPProgIdTwsRealtimeData = ProgIdTwsRealtimeData
@@ -667,7 +667,7 @@ Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
 Const ProcName As String = "SupportedHistoricalDataPeriods"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -688,7 +688,7 @@ End Property
 
 Friend Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedInputTickfileFormats"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SupportedInputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Replay)
@@ -701,7 +701,7 @@ End Property
 
 Friend Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedOutputTickfileFormats"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
@@ -727,7 +727,7 @@ Dim params As Parameters
 Dim spindex As Long
 
 Const ProcName As String = "Add"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Add = CreateObject(progId)
@@ -756,7 +756,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mChangeListeners.Add value
@@ -776,7 +776,7 @@ Friend Sub CommonServiceConsumerNotifyEvent( _
 Dim ev As NotificationEvent
 
 Const ProcName As String = "CommonServiceConsumerNotifyEvent"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If serviceProviderHandle >= 0 Then Set ev.source = mServiceProviders(serviceProviderHandle).SPObject
@@ -899,7 +899,7 @@ Friend Sub ConfigureDefaultServiceProviders( _
                 Optional ByVal tickfilesPath As String)
 
 Const ProcName As String = "ConfigureDefaultServiceProviders"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
@@ -980,7 +980,7 @@ Dim histDataSPReader As TradeBuildSP.IBarDataReader
 Dim i As Long
 
 Const ProcName As String = "CreateHistoricalDataReader"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1018,7 +1018,7 @@ Dim histDataWriter As HistoricDataWriter
 Dim i As Long
 
 Const ProcName As String = "CreateHistoricalDataWriter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1061,7 +1061,7 @@ Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
             
 Const ProcName As String = "CreateLiveOrderSubmitter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lOrderSimulatorSp = getLiveOrderSubmissionSP
@@ -1087,7 +1087,7 @@ Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
 Dim i As Long
 
 Const ProcName As String = "CreateRealtimeDataReader"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1120,7 +1120,7 @@ Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
 Dim i As Long
 
 Const ProcName As String = "CreateSimulatedOrderSubmitter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1161,7 +1161,7 @@ Dim tfReader As TickfileReader
 Dim i As Long
 
 Const ProcName As String = "CreateTickfileReader"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1209,7 +1209,7 @@ Dim tfWriter As TickfileWriter
 Dim i As Long
 
 Const ProcName As String = "CreateTickfileWriter"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1252,7 +1252,7 @@ Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
 Const ProcName As String = "IsSupportedHistoricalDataPeriod"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1278,7 +1278,7 @@ Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
 
 Const ProcName As String = "loadContracts"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1320,14 +1320,14 @@ Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
 
 Const ProcName As String = "loadContractsFromSecondarySP"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo) <> 0 Then
             If i = prevSPIndex Then
-                ' we've alReady tried the secondary, so nothing more we can do
+                ' we've already tried the secondary, so nothing more we can do
             Else
                 Set contractInfoSP = mServiceProviders(i).SPObject
             End If
@@ -1350,7 +1350,7 @@ End Function
 Public Sub LoadServiceProviderConfiguration( _
                 ByVal config As ConfigurationSection)
 Const ProcName As String = "LoadServiceProviderConfiguration"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -1374,7 +1374,7 @@ End Sub
 Friend Function NameFromHandle( _
                 ByVal Handle As Long) As String
 Const ProcName As String = "NameFromHandle"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Handle < 0 Then Exit Function
@@ -1391,7 +1391,7 @@ Public Sub Remove( _
 Dim i As Long
 
 Const ProcName As String = "Remove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If sp Is Nothing Then Exit Sub
@@ -1415,7 +1415,7 @@ Dim i As Long
 Dim sp As TradeBuildSP.ICommonServiceProvider
 
 Const ProcName As String = "RemoveAll"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 gTB.StopAllTickers
@@ -1441,7 +1441,7 @@ Public Sub RemoveCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
@@ -1467,7 +1467,7 @@ Dim currSP As ConfigurationSection
 Dim currProps As ConfigurationSection
 
 Const ProcName As String = "SetDefaultSPConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -1607,7 +1607,7 @@ Dim prop As ConfigurationSection
 Dim param As Parameter
 
 Const ProcName As String = "AddEntryToConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Function
@@ -1647,7 +1647,7 @@ Private Function AddSP( _
             ) As Long
 Dim i As Long
 
-Dim failpoint As Long
+
 Const ProcName As String = "AddSP"
 
 On Error GoTo Err
@@ -1661,12 +1661,12 @@ For i = 0 To mMaxSPIndex
         If mServiceProviders(i).SPObject Is serviceProvider Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "This Service Provider object has alReady been Added"
+                    "This Service Provider object has already been Added"
         End If
         If mServiceProviders(i).name = serviceProvider.name Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "A Service Provider with this Name has alReady been Added"
+                    "A Service Provider with this Name has already been Added"
         End If
     End If
 Next
@@ -1702,7 +1702,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEvent
 Const ProcName As String = "fireChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -1723,7 +1723,7 @@ Private Function getLiveOrderSubmissionSP() As TradeBuildSP.IOrderSubmissionSrvc
 Dim i As Long
 
 Const ProcName As String = "getLiveOrderSubmissionSP"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To mMaxSPIndex
@@ -1751,7 +1751,7 @@ Dim k As Long
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim supportedFormats() As TickfileFormatSpecifier
 Const ProcName As String = "GetSupportedTickfileFormats"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ReDim allSupportedFormats(9) As TickfileFormatSpecifier
@@ -1799,7 +1799,7 @@ Dim spindex As Long
 Dim params As Parameters
 
 Const ProcName As String = "loadConfiguration"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each sp In mServiceProviderConfigList
@@ -1864,7 +1864,7 @@ Private Sub RemoveSP( _
 Dim sp As ICommonServiceProvider
 
 Const ProcName As String = "RemoveSP"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Handle < 0 Then Exit Sub
@@ -1893,7 +1893,7 @@ Private Sub setProperty( _
                 ByVal value As String)
 'Dim prop As ConfigurationSection
 Const ProcName As String = "setProperty"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value

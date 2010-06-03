@@ -17,6 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements DeferredAction
 Implements IBarDataOutputServiceConsumer
 Implements IRealtimeDataInputServiceConsumer
 Implements IStreamingDataConsumer
@@ -74,6 +75,11 @@ Private Const ModuleName As String = "Ticker"
 ' Enums
 '@================================================================================
 
+Private Enum TickerDeferredActions
+    TickerDeferredActionStopTicker
+    TickerDeferredActionStopTickDataWriter
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -114,9 +120,6 @@ Private mLoadOnly                   As Boolean
 '   a short timer.
 '@/
 Private mInEventHandler             As Boolean
-
-Private WithEvents mStopTickerTimer As IntervalTimer
-Attribute mStopTickerTimer.VB_VarHelpID = -1
 
 Private mHandle                     As Long
 Private mTickSize                   As Double
@@ -189,10 +192,6 @@ Private mOutputTickfilePath         As String
 
 Private mTickWriter                 As TickfileWriter
 Private mBarWriter                  As HistoricDataWriter
-
-Private WithEvents mTickWriterReleaseTimer  As IntervalTimer
-Attribute mTickWriterReleaseTimer.VB_VarHelpID = -1
-Private mSelfRef                    As Ticker
 
 Private mClock                      As Clock
 
@@ -285,6 +284,35 @@ Debug.Print "Ticker terminated"
 End Sub
 
 '@================================================================================
+' DeferredAction Interface Members
+'@================================================================================
+
+Private Sub DeferredAction_run(ByVal Data As Variant)
+Dim action As TickerDeferredActions
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+action = Data
+Select Case action
+Case TickerDeferredActionStopTicker
+    StopTicker
+Case TickerDeferredActionStopTickDataWriter
+    mInEventHandler = True
+    
+    GLogLogger.Log "Stopping tick Data writer", ProcName, ModuleName
+    
+    mTickWriter.CloseOutputFile
+    Set mTickWriter = Nothing
+    mInEventHandler = False
+End Select
+
+Exit Sub
+
+Err:
+GHandleFatalError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IBarDataOutputServiceConsumer Interface Members
 '@================================================================================
 
@@ -295,7 +323,7 @@ Private Sub IBarDataOutputServiceConsumer_NotifyEvent( _
 Const ProcName As String = "IBarDataOutputServiceConsumer_NotifyEvent"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -318,7 +346,7 @@ End Sub
 
 Private Sub IBarDataOutputServiceConsumer_NotReady()
 Const ProcName As String = "IBarDataOutputServiceConsumer_NotReady"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mBarWriter.ServiceProviderWriterNotReady
@@ -335,7 +363,7 @@ End Sub
 Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
                             ByVal Filename As String)
 Const ProcName As String = "IBarDataOutputServiceConsumer_OutputBarfileCreated"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 fireBarWriterNotify WriterNotifications.WriterFileCreated, _
@@ -349,7 +377,7 @@ End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Ready()
 Const ProcName As String = "IBarDataOutputServiceConsumer_Ready"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mBarWriter.ServiceProviderWriterReady
@@ -373,7 +401,7 @@ Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
                 ByVal saveIntervalSeconds As Long)
 Const ProcName As String = "IBarDataOutputServiceConsumer_RequiredTimePeriod"
 Dim tf As Timeframe
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
@@ -412,7 +440,7 @@ Private Sub IRealtimeDataInputServiceConsumer_NotifyEvent( _
 Const ProcName As String = "IRealtimeDataInputServiceConsumer_NotifyEvent"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -447,7 +475,7 @@ End Sub
 
 Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
 Const ProcName As String = "IStreamingDataConsumer_Tick"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -540,7 +568,7 @@ Private Sub ITickfileOutputServiceConsumer_NotifyEvent( _
 Const ProcName As String = "ITickfileOutputServiceConsumer_NotifyEvent"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -569,7 +597,7 @@ Private Sub ITickfileOutputServiceConsumer_NotReady()
 Const ProcName As String = "ITickfileOutputServiceConsumer_NotReady"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -591,7 +619,7 @@ Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
 Const ProcName As String = "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -611,7 +639,7 @@ End Sub
 
 Private Sub ITickfileOutputServiceConsumer_Ready()
 Const ProcName As String = "ITickfileOutputServiceConsumer_Ready"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mInEventHandler = True
@@ -622,11 +650,6 @@ If mState = TickerStates.TickerStateStopped Then
     ' is Ready
     mTickWriter.CloseOutputFile
     Set mTickWriter = Nothing
-    Set mSelfRef = Nothing
-    If Not mTickWriterReleaseTimer Is Nothing Then
-        mTickWriterReleaseTimer.StopTimer
-        Set mTickWriterReleaseTimer = Nothing
-    End If
 End If
 
 fireTickfileWriterNotify WriterReady, ""
@@ -652,7 +675,7 @@ End Sub
 Private Sub StateChangeListener_Change( _
                 ev As TWUtilities30.StateChangeEvent)
 Const ProcName As String = "StateChangeListener_Change"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If TypeOf ev.source Is Timeframe Then
@@ -679,7 +702,7 @@ End Sub
 
 Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 Const ProcName As String = "mContractsLoadTC_Completed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.errorNumber <> 0 Then
@@ -703,7 +726,7 @@ Private Sub mNoMarketDepthNotifyTimer_TimerExpired()
 Const ProcName As String = "mNoMarketDepthNotifyTimer_TimerExpired"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mNoMarketDepthNotifyTimer = Nothing
@@ -733,58 +756,13 @@ End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
 Const ProcName As String = "mSession_SessionStarted"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mReceivedFirstVolumeInSession = False
 mPrevSessionAccumulatedVolume = mAccumulatedVolume
 mAccumulatedVolume = 0
 RaiseEvent TradingSessionStarted
-
-Exit Sub
-
-Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-'@================================================================================
-' mStopTickerTimer Event Handlers
-'@================================================================================
-
-Private Sub mStopTickerTimer_TimerExpired()
-Const ProcName As String = "mStopTickerTimer_TimerExpired"
-Dim failpoint As Long
-On Error GoTo Err
-
-Set mStopTickerTimer = Nothing
-StopTicker
-
-Exit Sub
-
-Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-'@================================================================================
-' mTickWriterReleaseTimer Event Handlers
-'@================================================================================
-
-Private Sub mTickWriterReleaseTimer_TimerExpired()
-Const ProcName As String = "mTickWriterReleaseTimer_TimerExpired"
-
-
-Dim failpoint As Long
-On Error GoTo Err
-
-mInEventHandler = True
-
-GLogLogger.Log "Stopping tick Data writer", ProcName, ModuleName
-
-mTickWriter.CloseOutputFile
-Set mTickWriter = Nothing
-Set mSelfRef = Nothing
-Set mTickWriterReleaseTimer = Nothing
-mInEventHandler = False
 
 Exit Sub
 
@@ -838,7 +816,7 @@ End Property
 
 Friend Property Let ClockRate(ByVal value As Long)
 Const ProcName As String = "ClockRate"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If value < 0 Then value = 0
@@ -867,7 +845,7 @@ End Property
 
 Friend Property Let Contracts(ByVal value As Contracts)
 Const ProcName As String = "Contracts"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mContracts = value
@@ -902,7 +880,7 @@ End Property
 
 Public Property Get Description() As String
 Const ProcName As String = "Description"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Description = mContract.Description
@@ -915,13 +893,13 @@ End Property
 
 Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
 Const ProcName As String = "DOMEventsRequired"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Ticker is alReady in use"
+            "Ticker is already in use"
 End If
 mDOMEventsRequired = value
 
@@ -998,7 +976,7 @@ End Property
 
 Public Property Get InputStudy() As InputStudy
 Const ProcName As String = "InputStudy"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mInputStudy Is Nothing Then
@@ -1050,13 +1028,13 @@ End Property
 
 Public Property Let OutputTickfileFormat(ByVal value As String)
 Const ProcName As String = "OutputTickfileFormat"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Ticker is alReady in use"
+            "Ticker is already in use"
 End If
 mOutputTickfileFormat = value
 
@@ -1073,13 +1051,13 @@ End Property
 
 Public Property Let OutputTickfilePath(ByVal value As String)
 Const ProcName As String = "OutputTickfilePath"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Ticker is alReady in use"
+            "Ticker is already in use"
 End If
 mOutputTickfilePath = value
 
@@ -1119,7 +1097,7 @@ Private Property Let State(ByVal value As TickerStates)
 Const ProcName As String = "State"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If value = mState Then Exit Property
@@ -1161,7 +1139,7 @@ End Property
 
 Friend Property Let Timestamp(ByVal value As Date)
 Const ProcName As String = "Timestamp"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mClock.Simulated Then
@@ -1180,7 +1158,7 @@ End Property
 
 Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Timestamp = mClock.Timestamp
@@ -1226,12 +1204,12 @@ Const ProcName As String = "WritingTradeBarData"
 WritingTradeBarData = mWriteTradeBarData
 End Property
 
-Public Property Get Workspace() As Workspace
+Public Property Get WorkSpace() As WorkSpace
 Const ProcName As String = "Workspace"
-Dim failpoint As Long
+
 On Error GoTo Err
 
-Set Workspace = mWorkspaceRef.Target
+Set WorkSpace = mWorkspaceRef.Target
 
 Exit Property
 
@@ -1246,7 +1224,7 @@ End Property
 Public Sub AddBarWriterListener( _
                 ByVal value As BarWriterListener)
 Const ProcName As String = "AddBarWriterListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mBarWriterListeners.Add value
@@ -1261,7 +1239,7 @@ Friend Sub AddDataConsumer( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
 Const ProcName As String = "AddDataConsumer"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mDataConsumers.Add consumer
@@ -1276,7 +1254,7 @@ End Sub
 Public Sub AddPriceChangeListener( _
                 ByVal value As PriceChangeListener)
 Const ProcName As String = "AddPriceChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mPriceChangeListeners.Add value
@@ -1290,7 +1268,7 @@ End Sub
 Public Sub AddMarketDepthListener( _
                 ByVal value As MarketDepthListener)
 Const ProcName As String = "AddMarketDepthListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mMarketDepthListeners.Add value
@@ -1328,7 +1306,7 @@ End Sub
 
 Public Sub AddQuoteListener(ByVal value As QuoteListener)
 Const ProcName As String = "AddQuoteListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mQuoteListeners.Add value
@@ -1344,7 +1322,7 @@ End Sub
 
 Public Sub AddRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Const ProcName As String = "AddRawMarketDepthListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mRawMarketDepthListeners.Add value
@@ -1358,7 +1336,7 @@ End Sub
 Public Sub AddStateChangeListener( _
                 ByVal value As StateChangeListener)
 Const ProcName As String = "AddStateChangeListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mStateChangeListeners.Add value
@@ -1371,7 +1349,7 @@ End Sub
 
 Public Sub AddTickfileWriterListener(ByVal value As TickfileWriterListener)
 Const ProcName As String = "AddTickfileWriterListener"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTickfileWriterListeners.Add value
@@ -1386,7 +1364,7 @@ Friend Function AddTimer(ByVal expiryTime As Variant, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal Data As Variant) As TimerListItem
 Const ProcName As String = "AddTimer"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTimerList Is Nothing Then
@@ -1402,7 +1380,7 @@ End Function
 
 Public Sub CancelMarketDepth(Optional ByVal forceCancel As Boolean = False)
 Const ProcName As String = "CancelMarketDepth"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState = TickerStates.TickerStateStopped Or _
@@ -1435,7 +1413,7 @@ Public Function FormatPrice( _
                 ByVal price As Double, _
                 Optional ByVal blankIfZero As Boolean) As String
 Const ProcName As String = "FormatPrice"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If blankIfZero And price = 0# Then Exit Function
@@ -1449,14 +1427,14 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal Handle As Long, _
-                ByVal pWorkspace As Workspace, _
+                ByVal pWorkspace As WorkSpace, _
                 ByVal pKey As String, _
                 ByVal pTickers As Tickers, _
                 ByVal Options As TickerOptions)
 Const ProcName As String = "Initialise"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mHandle = Handle
@@ -1495,7 +1473,7 @@ End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 Const ProcName As String = "IsTimeInSession"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mSession Is Nothing Then Exit Function
@@ -1509,12 +1487,12 @@ End Function
 
 Public Sub LoadTicker(ByVal pContractSpecifier As ContractSpecifier)
 Const ProcName As String = "LoadTicker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
-                        "Ticker is alReady in use"
+                        "Ticker is already in use"
 
 mLoadOnly = True
 Set mInitialContractSpec = pContractSpecifier
@@ -1532,12 +1510,12 @@ Public Sub LoadTickerFromContract(ByVal pContract As Contract)
 Const ProcName As String = "LoadTickerFromContract"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
-                        "Ticker is alReady in use"
+                        "Ticker is already in use"
 
 State = TickerStateStarting
 Set mContract = pContract
@@ -1551,7 +1529,7 @@ End Sub
 
 Friend Sub NotifyCurrentVolume()
 Const ProcName As String = "NotifyCurrentVolume"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mVolume <> 0 Then
@@ -1569,7 +1547,7 @@ Public Function ParsePrice( _
                 ByVal priceString As String, _
                 ByRef price As Double) As Boolean
 Const ProcName As String = "ParsePrice"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ParsePrice = mContract.ParsePrice(priceString, price)
@@ -1582,7 +1560,7 @@ End Function
 
 Friend Sub PauseTicker()
 Const ProcName As String = "PauseTicker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 State = TickerStates.TickerStatePaused
@@ -1598,7 +1576,7 @@ Public Sub RefreshPriceChange( _
 Const ProcName As String = "RefreshPriceChange"
 Dim ev As PriceChangeEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If State = TickerStateRunning Or State = TickerStatePaused Then
@@ -1620,7 +1598,7 @@ Public Sub RefreshQuotes( _
 Const ProcName As String = "RefreshQuotes"
 Dim ev As QuoteEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If State = TickerStateRunning Or State = TickerStatePaused Then
@@ -1685,7 +1663,7 @@ Public Sub RemoveBarWriterListener( _
                 ByVal value As BarWriterListener)
 Const ProcName As String = "RemoveBarWriterListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = mBarWriterListeners.Count To 1 Step -1
@@ -1701,7 +1679,7 @@ End Sub
 Friend Sub RemoveDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
 Const ProcName As String = "RemoveDataConsumer"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mDataConsumers Is Nothing Then Exit Sub
@@ -1718,7 +1696,7 @@ End Sub
 Public Sub RemovePriceChangeListener(ByVal value As PriceChangeListener)
 Const ProcName As String = "RemovePriceChangeListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mPriceChangeListeners Is Nothing Then Exit Sub
@@ -1735,7 +1713,7 @@ End Sub
 Public Sub RemoveStateChangeListener(ByVal value As StateChangeListener)
 Const ProcName As String = "RemoveStateChangeListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mStateChangeListeners Is Nothing Then Exit Sub
@@ -1752,7 +1730,7 @@ End Sub
 Public Sub RemoveMarketDepthListener(ByVal value As MarketDepthListener)
 Const ProcName As String = "RemoveMarketDepthListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mMarketDepthListeners Is Nothing Then Exit Sub
@@ -1778,7 +1756,7 @@ End Sub
 Public Sub RemoveQuoteListener(ByVal value As QuoteListener)
 Const ProcName As String = "RemoveQuoteListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mQuoteListeners Is Nothing Then Exit Sub
@@ -1797,7 +1775,7 @@ End Sub
 Public Sub RemoveRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Const ProcName As String = "RemoveRawMarketDepthListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mRawMarketDepthListeners Is Nothing Then Exit Sub
@@ -1814,7 +1792,7 @@ End Sub
 Public Sub RemoveTickfileWriterListener(ByVal value As TickfileWriterListener)
 Const ProcName As String = "RemoveTickfileWriterListener"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mTickfileWriterListeners Is Nothing Then Exit Sub
@@ -1830,7 +1808,7 @@ End Sub
 
 Friend Sub RemoveTimer(ByVal theTimer As TimerListItem)
 Const ProcName As String = "RemoveTimer"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTimerList.Remove theTimer
@@ -1846,7 +1824,7 @@ Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
 Const ProcName As String = "RequestMarketDepth"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState = TickerStates.TickerStateClosing Then Exit Sub
@@ -1896,7 +1874,7 @@ If Not mReceivingMarketDepth Then
     InitialisePriceTables
 Else
     
-    ' we are alReady receiving market depth.
+    ' we are already receiving market depth.
     
     If DOMEventsRequired <> DOMEvents.DOMNoEvents And _
         mDOMEventsRequired = DOMEvents.DOMNoEvents _
@@ -1921,12 +1899,14 @@ Public Sub StartTicker(ByVal pContractSpecifier As ContractSpecifier)
 Const ProcName As String = "StartTicker"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
-                        "Ticker is alReady in use"
+                        "Ticker is already in use"
+
+GLogLogger.Log "Starting ticker from contract spec", ProcName, ModuleName, , pContractSpecifier.ToString
 
 Set mInitialContractSpec = pContractSpecifier
 State = TickerStates.TickerStateStarting
@@ -1944,12 +1924,14 @@ Public Sub StartTickerFromContract(ByVal pContract As Contract)
 Const ProcName As String = "StartTickerFromContract"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
-                        "Ticker is alReady in use"
+                        "Ticker is already in use"
+
+GLogLogger.Log "Starting ticker from contract", ProcName, ModuleName, , pContract.specifier.ToString
 
 State = TickerStateStarting
 Set mContract = pContract
@@ -1963,19 +1945,22 @@ End Sub
 
 Public Sub StopTicker()
 Const ProcName As String = "StopTicker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
     GLogLogger.Log pMsg:="Deferring stop ticker", pProcName:=ProcName, pModName:=ModuleName
-    Set mStopTickerTimer = CreateIntervalTimer(1)
-    mStopTickerTimer.StartTimer
+    DeferAction Me, TickerDeferredActions.TickerDeferredActionStopTicker, 1
     Exit Sub
 End If
 
-GLogLogger.Log pMsg:="Stopping ticker", pProcName:=ProcName, pModName:=ModuleName
+If Not getContractSpec Is Nothing Then
+    GLogLogger.Log "Stopping ticker", ProcName, ModuleName, , getContractSpec.ToString
+Else
+    GLogLogger.Log pMsg:="Stopping ticker", pProcName:=ProcName, pModName:=ModuleName
+End If
 
 ' NB: we don't do the following because the app may want to look at the contract(s)
 ' after being notified of a duplicate contract spec or for some other reason
@@ -1992,9 +1977,7 @@ If Not mTickWriter Is Nothing Then
         ' writer is Ready - so delay releasing the writer until the
         ' service provider writer has had a chance to Finish initialising
         GLogLogger.Log pMsg:="Deferring stop tick Data writer", pProcName:=ProcName, pModName:=ModuleName
-        Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
-        mTickWriterReleaseTimer.StartTimer
-        Set mSelfRef = Me   ' ensure this Ticker isn't released
+        DeferAction Me, TickerDeferredActions.TickerDeferredActionStopTickDataWriter, 10, ExpiryTimeUnitSeconds
     End If
 End If
 
@@ -2081,7 +2064,7 @@ Dim DOMEventsReqd As TradeBuildSP.DOMEventTypes
 Dim supportsDomByPosition As Boolean
 Dim supportsDomByPrice As Boolean
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mRealtimeDataReader.Supports(TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition) Then
@@ -2139,7 +2122,7 @@ Private Function calcValueChange( _
                 ByVal newValue As Variant, _
                 ByVal oldValue As Variant) As ValueChanges
 Const ProcName As String = "calcValueChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If oldValue = 0 Or newValue = 0 Then
@@ -2162,10 +2145,10 @@ Private Sub createBarWriter()
 Const ProcName As String = "createBarWriter"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
-GLogLogger.Log "Ticker: creating bar writer for " & mContract.specifier.LocalSymbol, ModuleName, ProcName, , LogLevelDetail
+GLogLogger.Log "Ticker: creating bar writer for " & mContract.specifier.LocalSymbol, ProcName, ModuleName, LogLevelDetail
 Set mBarWriter = gTB.ServiceProviders.CreateHistoricalDataWriter(Me, _
                             mContract, _
                             "")
@@ -2189,7 +2172,7 @@ Private Sub CreateOutputTickfile()
 Const ProcName As String = "CreateOutputTickfile"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTickWriter = gTB.ServiceProviders.CreateTickfileWriter(Me, _
@@ -2219,7 +2202,7 @@ Private Sub DOMClearCell( _
 Const ProcName As String = "DOMClearCell"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
@@ -2240,7 +2223,7 @@ Private Sub DOMRawUpdate( _
                         ByVal price As Double, _
                         ByVal size As Long)
 Const ProcName As String = "DOMRawUpdate"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mDOMEventsRequired = DOMRawEvents Or _
@@ -2266,7 +2249,7 @@ Const ProcName As String = "DOMReset"
 
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mDOMEventsRequired = DOMNoEvents Then Exit Sub
@@ -2286,7 +2269,7 @@ Private Sub DOMSetCell( _
 Const ProcName As String = "DOMSetCell"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
@@ -2303,7 +2286,7 @@ Private Sub fireAsk()
 Const ProcName As String = "fireAsk"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2330,7 +2313,7 @@ Private Sub fireBarWriterNotify( _
 Const ProcName As String = "fireBarWriterNotify"
 Dim listener As BarWriterListener
 Dim ev As WriterEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2351,7 +2334,7 @@ Private Sub fireBid()
 Const ProcName As String = "fireBid"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2377,7 +2360,7 @@ Private Sub fireHigh( _
 Const ProcName As String = "fireHigh"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2399,7 +2382,7 @@ Private Sub fireLow( _
 Const ProcName As String = "fireLow"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2422,7 +2405,7 @@ Const ProcName As String = "fireMarketDepthNotAvailable"
 Dim listener As MarketDepthListener
 Dim ev As MarketDepthEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2451,7 +2434,7 @@ Private Sub fireOpen( _
 Const ProcName As String = "fireOpen"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2473,7 +2456,7 @@ Private Sub fireOpenInterest( _
 Const ProcName As String = "fireOpenInterest"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2495,7 +2478,7 @@ Private Sub firePreviousClose( _
 Const ProcName As String = "firePreviousClose"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2518,7 +2501,7 @@ Private Sub firePriceChange(ByVal Change As Double, _
 Const ProcName As String = "firePriceChange"
 Dim listener As PriceChangeListener
 Dim ev As PriceChangeEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2541,7 +2524,7 @@ Const ProcName As String = "fireResetMarketDepth"
 Dim listener As MarketDepthListener
 Dim ev As MarketDepthEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2571,7 +2554,7 @@ Private Sub fireSetMarketDepthCell( _
 Const ProcName As String = "fireSetMarketDepthCell"
 Dim listener As MarketDepthListener
 Dim ev As MarketDepthEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2593,7 +2576,7 @@ Private Sub fireStateChange(ByVal newState As TickerStates)
 Const ProcName As String = "fireStateChange"
 Dim listener As StateChangeListener
 Dim ev As StateChangeEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2616,7 +2599,7 @@ Private Sub fireTickfileWriterNotify( _
 Const ProcName As String = "fireTickfileWriterNotify"
 Dim listener As TickfileWriterListener
 Dim ev As WriterEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ev.source = Me
@@ -2637,7 +2620,7 @@ Private Sub fireTrade()
 Const ProcName As String = "fireTrade"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2668,7 +2651,7 @@ Private Sub fireUpdateMarketDepth( _
 Const ProcName As String = "fireUpdateMarketDepth"
 Dim listener As RawMarketDepthListener
 Dim rawMarketDepth As RawMarketDepthEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set rawMarketDepth.source = Me
@@ -2694,7 +2677,7 @@ Private Sub fireVolume( _
 Const ProcName As String = "fireVolume"
 Dim listener As QuoteListener
 Dim quote As QuoteEvent
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set quote.source = Me
@@ -2711,11 +2694,27 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
+Private Function getContractSpec() As ContractSpecifier
+Const ProcName As String = "getContractSpec"
+On Error GoTo Err
+
+If Not mContract Is Nothing Then
+    Set getContractSpec = mContract.specifier
+ElseIf Not mContracts Is Nothing Then
+    Set getContractSpec = mContracts.ContractSpecifier
+End If
+
+Exit Function
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
+
 Private Sub handleContractLoadComplete()
 Const ProcName As String = "handleContractLoadComplete"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If State <> TickerStateStarting Then Exit Sub
@@ -2756,15 +2755,12 @@ Private Sub handleContractLoadError( _
 Const ProcName As String = "handleContractLoadError"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If State <> TickerStateStarting Then Exit Sub
 
 If errorNumber = ErrorCodes.ErrIllegalArgumentException Then
-    
-    failpoint = 100
-    
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
     ev.eventMessage = errorMessage
@@ -2772,9 +2768,6 @@ If errorNumber = ErrorCodes.ErrIllegalArgumentException Then
     StopTicker
     
 Else
-    
-    failpoint = 200
-    
     Err.Raise errorNumber, _
                 ProjectName & "." & ModuleName & ":" & ProcName, _
                 errorMessage
@@ -2788,7 +2781,7 @@ End Sub
 
 Private Sub InitialisePriceTables()
 Const ProcName As String = "InitialisePriceTables"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ReDim mAskPrices(15) As PriceTableEntry
@@ -2805,7 +2798,7 @@ End Sub
 Private Sub MarketDepthNotAvailable( _
                 ByVal reason As String)
 Const ProcName As String = "MarketDepthNotAvailable"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 fireMarketDepthNotAvailable reason
@@ -2821,7 +2814,7 @@ Private Sub notifyConsumers( _
 Const ProcName As String = "notifyConsumers"
 Dim var As Variant
 Dim consumer As TradeBuildSP.IStreamingDataConsumer
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For Each var In mDataConsumers
@@ -2841,7 +2834,7 @@ Private Sub notifyDOMPrices( _
 Const ProcName As String = "notifyDOMPrices"
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 0 To UBound(prices)
@@ -2872,7 +2865,7 @@ Private Sub notifyTrade( _
 Const ProcName As String = "notifyTrade"
 Dim volTick As GenericTick
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mTradePrice = pTick.price
@@ -2924,7 +2917,7 @@ Private Sub notifyVolume( _
 Const ProcName As String = "notifyVolume"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mVolume = pTick.size
@@ -2945,7 +2938,7 @@ Private Sub prepare()
 Const ProcName As String = "prepare"
 Dim orderSubmitter As IOrderSubmitter
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mReplayingTickfile Then
@@ -3003,7 +2996,7 @@ Private Sub processContract()
 Const ProcName As String = "processContract"
 Dim ev As NotificationEvent
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mInputStudy Is Nothing Then
@@ -3018,13 +3011,13 @@ mTickSize = mContract.TickSize
 mTimeframes.Contract = mContract
 
 If mLoadOnly Then
-    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.standardName, ""))
+    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.StandardName, ""))
     prepare
     State = TickerStateReady
 ElseIf mReplayingTickfile Then
     Set mClock = CreateSimulatedClock(mClockRate, _
                                     IIf(mUseExchangeTimeZone, _
-                                    mContract.Timezone.standardName, _
+                                    mContract.Timezone.StandardName, _
                                     ""))
     prepare
     State = TickerStateReady
@@ -3033,7 +3026,7 @@ ElseIf mReplayingTickfile Then
         mTickfileManager.StartTicker mContract
     End If
 Else
-    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.standardName, ""))
+    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.Timezone.StandardName, ""))
     
     prepare
     State = TickerStateReady
@@ -3068,7 +3061,7 @@ End Sub
 Private Sub processTickAsk( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickAsk"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -3109,7 +3102,7 @@ End Sub
 Private Sub processTickBid( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickBid"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -3149,7 +3142,7 @@ End Sub
 Private Sub processTickHigh( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickHigh"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3167,7 +3160,7 @@ End Sub
 Private Sub processTickLow( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickLow"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3185,7 +3178,7 @@ End Sub
 Private Sub processTickMarketDepth( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickMarketDepth"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3230,7 +3223,7 @@ End Sub
 Private Sub processTickOpen( _
                 pTick As GenericTick)
 Const ProcName As String = "processTickOpen"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3248,7 +3241,7 @@ End Sub
 Private Sub processTickOpenInterest( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickOpenInterest"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3266,7 +3259,7 @@ End Sub
 Private Sub processTickPreviousClose( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickPreviousClose"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3291,7 +3284,7 @@ End Sub
 Private Sub processTickResetMarketDepth( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickResetMarketDepth"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 notifyConsumers pTick
@@ -3307,7 +3300,7 @@ End Sub
 Private Sub processTickTrade( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickTrade"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If pTick.size < 0 Then Exit Sub
@@ -3328,7 +3321,9 @@ End Sub
 Private Sub processTickVolume( _
                             pTick As GenericTick)
 Const ProcName As String = "processTickVolume"
-Dim failpoint As Long
+
+Dim failpoint As String
+
 On Error GoTo Err
 
 If pTick.size <= 0 Then
@@ -3336,7 +3331,7 @@ If pTick.size <= 0 Then
     Exit Sub
 End If
 
-failpoint = 200
+failpoint = "200"
 
 mGotFirstVolume = True
 
@@ -3377,11 +3372,11 @@ If mWriteTickData Then mTickWriter.writeTick pTick
 ' note that the previous Trade will have notified Volume of mAccumulatedVolume
 
 
-failpoint = 300
+failpoint = "300"
 
 If pTick.size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
 
-    failpoint = 400
+    failpoint = "400"
 
     If mNoVolumeAdjustments Then
         notifyVolume pTick
@@ -3394,7 +3389,7 @@ ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
         (pTick.size + mVolumeCorrectionIncrement - mAccumulatedVolume) <> mPrevTradeSize _
     Then
 
-        failpoint = 500
+        failpoint = "500"
 
         mAccumulatedVolume = pTick.size + mVolumeCorrectionIncrement
         
@@ -3405,7 +3400,7 @@ ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
         notifyVolume adjustedTick
     Else
 
-        failpoint = 600
+        failpoint = "600"
 
         Dim impliedTick As GenericTick
         impliedTick.tickType = TickTypeTrade
@@ -3424,12 +3419,12 @@ mPrevVolume = mVolume
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Private Function ReadyToReplay() As Boolean
 Const ProcName As String = "ReadyToReplay"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mReplayingTickfile Then Exit Function
@@ -3457,7 +3452,7 @@ Private Sub setTime( _
 Const ProcName As String = "setTime"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mReplayingTickfile Then Exit Sub
@@ -3474,7 +3469,7 @@ End Sub
 Private Sub setupInputStudy()
 Const ProcName As String = "setupInputStudy"
 Dim sourceName As String
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mContract Is Nothing Then
@@ -3573,7 +3568,7 @@ End Sub
 
 Private Sub setupPositionManagers()
 Const ProcName As String = "setupPositionManagers"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mPositionManager = gGetPositionManager(mKey)
@@ -3592,7 +3587,7 @@ End Sub
 
 Private Function getTickers() As Tickers
 Const ProcName As String = "getTickers"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set getTickers = mTickersRef.Target
@@ -3621,7 +3616,7 @@ Dim i As Long
 ' (for example if the Bid drops, the current entry 0 must be deleted - though
 ' it could just be updated, TWS doesn't seem to work this way)
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Select Case operation
@@ -3695,7 +3690,7 @@ Case DOMOperations.DOMDelete
 '        Or _
 '        (position = 0 And side = DOMSides.DOMAsk And prices(position).price = currentAsk) _
 '    Then
-'        ' we get here when we've alReady set the Bid or Ask in the notifyBid/notifyAsk
+'        ' we get here when we've already set the Bid or Ask in the notifyBid/notifyAsk
 '        ' methods, but the marketdepth updates are deleting some entries prior to
 '        ' inserting the Bid/Ask (why it deletes an entry then immediately reinserts
 '        ' it is a mystery to me, but it does!).
@@ -3732,7 +3727,7 @@ Private Function validPrice( _
                 ByVal price As Double) As Boolean
 Const ProcName As String = "validPrice"
 Static prevValidPrice As Double
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mContract.IsValidPrice(price, prevValidPrice) Then Exit Function

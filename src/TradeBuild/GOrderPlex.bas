@@ -17,20 +17,20 @@ Public Enum OpActions
     ActPlaceOrders = 1
     
     ' This Action cancels all outstanding orders whose current status
-    ' indicates that they are not alReady either filled, cancelled or
+    ' indicates that they are not already either filled, cancelled or
     ' cancelling. Note that where an order has not yet been placed, there
     ' may still be work to do, for example logging or notifying listeners.
     ActCancelOrders
     
     ' This Action cancels the stop order if it exists and its current
-    ' status indicates that it is not alReady either filled, cancelled or
+    ' status indicates that it is not already either filled, cancelled or
     ' cancelling. Note that where the order has not yet been placed,
     ' there may still be work to do, for example logging or notifying
     ' listeners.
     ActCancelStopOrder
     
     ' This Action cancels the target order if it exists and its current
-    ' status indicates that it is not alReady either filled, cancelled or
+    ' status indicates that it is not already either filled, cancelled or
     ' cancelling. Note that where the order has not yet been placed,
     ' there may still be work to do, for example logging or notifying
     ' listeners.
@@ -51,7 +51,7 @@ Public Enum OpActions
     ActResubmitStopAndTargetOrders
     
     ' This Action creates and places an orders whose effect is to cancel
-    ' any existing Size alReady acquired by this order plex. For example,
+    ' any existing Size already acquired by this order plex. For example,
     ' if the order plex is currently long 1 contract, the closeout order
     ' must sell 1 contract.
     ActPlaceCloseoutOrder
@@ -114,14 +114,14 @@ Public Enum OpStimuli
     StimExecute = 1
     
     ' This stimulus indicates that the application has requested that
-    ' the order plex be cancelled provided the entry order has not alReady
+    ' the order plex be cancelled provided the entry order has not already
     ' been fully or partially filled. If the entry order is filled during
     ' cancelling, then the stop and target orders (if they exist) must
     ' remain in place
     StimCancelIfNoFill
     
     ' This stimulus indicates that the application has requested that
-    ' the order plex be cancelled even if the entry order has alReady been
+    ' the order plex be cancelled even if the entry order has already been
     ' fully or partially filled. If the entry order is filled during
     ' cancelling, then the stop and target orders (if they exist) must
     ' nevertheless be cancelled.
@@ -235,7 +235,7 @@ Private Sub buildStateTable()
 ' The application requests that the order plex be cancelled provided no
 ' fills have occurred. Since the orders have not yet been placed, we
 ' merely cancel the orders. do any tidying up and set the state to closed.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
@@ -246,7 +246,7 @@ mTableBuilder.addStateTableEntry _
 ' The application requests that the order plex be cancelled even if
 ' fills have occurred. Since the orders have not yet been placed, we
 ' merely cancel the OrderPlexStateCodesorders. do any tidying up and set the state to closed.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
@@ -256,7 +256,7 @@ mTableBuilder.addStateTableEntry _
             
 ' The application requests that the order plex be executed, and it is not
 ' protected. We do that and go to submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             OpStimuli.StimExecute, _
             SpecialConditions.NoConditions, _
@@ -266,7 +266,7 @@ mTableBuilder.addStateTableEntry _
 
 ' The application requests that the order plex be executed: it is
 ' protected and there is a stop order. We do that and go to submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             OpStimuli.StimExecute, _
             OpConditions.CondProtected Or OpConditions.CondStopOrderExists, _
@@ -276,7 +276,7 @@ mTableBuilder.addStateTableEntry _
 
 ' The application requests that the order plex be executed: it is
 ' protected and there is NO stop order. This is a programming error!
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             OpStimuli.StimExecute, _
             OpConditions.CondProtected, _
@@ -290,7 +290,7 @@ mTableBuilder.addStateTableEntry _
 '=======================================================================
 
 ' TWS tells us that the entry order has been filled. Nothing to do here.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
@@ -299,7 +299,7 @@ mTableBuilder.addStateTableEntry _
 
 ' All orders have been completed, so we set the state to closed and do any
 ' tidying up.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
@@ -308,8 +308,8 @@ mTableBuilder.addStateTableEntry _
             OpActions.ActCompletionActions
 
 ' The application requests that the order plex be cancelled provided no fills
-' have occurred. But a fill has alReady occurred, so we do nothing.
-mTableBuilder.addStateTableEntry _
+' have occurred. But a fill has already occurred, so we do nothing.
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimCancelIfNoFill, _
             OpConditions.CondSizeNonZero, _
@@ -317,9 +317,9 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted
 
 ' The application requests that the order plex be cancelled provided no fills
-' have occurred. No fills have alReady occurred, so we cancel all the orders
+' have occurred. No fills have already occurred, so we cancel all the orders
 ' and enter the cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
@@ -329,7 +329,7 @@ mTableBuilder.addStateTableEntry _
 
 ' The application requests that the order plex be cancelled even if fills
 ' have occurred. We cancel all the orders and enter the cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
@@ -341,7 +341,7 @@ mTableBuilder.addStateTableEntry _
 ' may have been rejected by TWS or the user may have cancelled it at TWS).
 ' There has been no fill, so we cancel the stop and target orders (not
 ' really necessary, since TWS should do this, but just in case...).
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -357,7 +357,7 @@ mTableBuilder.addStateTableEntry _
 ' this yet), but we cancel them anyway just in case. We'll be left with an
 ' unprotected position, so as this is a protected order plex, go into
 ' closing out state to negate the unprotected position.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             OpConditions.CondSizeNonZero Or OpConditions.CondProtected, _
@@ -373,7 +373,7 @@ mTableBuilder.addStateTableEntry _
 ' this yet), but we cancel them anyway just in case. We'll be left with an
 ' unprotected position, but since this is NOT a protected order plex
 ' plex, go into Cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimEntryOrderCancelled, _
             OpConditions.CondSizeNonZero, _
@@ -387,7 +387,7 @@ mTableBuilder.addStateTableEntry _
 ' cancel all orders and, as this is a protected order plex, go into closing out state,
 ' because the entry order could be filled before being cancelled, and closing out
 ' will prevent an unprotected position.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondProtected, _
@@ -399,7 +399,7 @@ mTableBuilder.addStateTableEntry _
 ' order. This could be because it has been rejected by TWS, or because the user
 ' has cancelled it at TWS. We can't tell which of these is the case, so we
 ' cancel all orders and, as this is NOT a protected order plex, go into cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -412,7 +412,7 @@ mTableBuilder.addStateTableEntry _
 ' has cancelled it at TWS, or because the target order has been filled. We can't
 ' tell which of these is the case, so, as this is a protected order plex, we enter
 ' the 'awaiting other order cancel' state and set a timeout.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondTargetOrderExists Or OpConditions.CondProtected, _
@@ -425,7 +425,7 @@ mTableBuilder.addStateTableEntry _
 ' has cancelled it at TWS, or because the target order has been filled. We can't
 ' tell which of these is the case, but, as this is NOT a protected order plex, we
 ' don't care so we cancel the target order and enter the cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimStopOrderCancelled, _
             OpConditions.CondTargetOrderExists, _
@@ -435,7 +435,7 @@ mTableBuilder.addStateTableEntry _
 
 ' We are notified that the target order has been cancelled, and this is NOT a
 ' protected order plex. Cancel all orders and go into cancelling state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -449,7 +449,7 @@ mTableBuilder.addStateTableEntry _
 ' not yet notified.  We can't tell which of these is the case, so, as this is
 ' a protected order plex, we enter the 'awaiting other order cancel' state
 ' and set a timeout.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimTargetOrderCancelled, _
             OpConditions.CondStopOrderExists Or OpConditions.CondProtected, _
@@ -459,7 +459,7 @@ mTableBuilder.addStateTableEntry _
 
 ' The application has requested that the order plex be closed out. So cancel any
 ' outstanding orders and go to closing out state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             OpStimuli.StimCloseout, _
             SpecialConditions.NoConditions, _
@@ -472,9 +472,9 @@ mTableBuilder.addStateTableEntry _
 '=======================================================================
 
 ' The application has requested that the order plex be cancelled, provided
-' there have been no fills. Since it is alReady being cancelled, there is
+' there have been no fills. Since it is already being cancelled, there is
 ' nothing to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimCancelIfNoFill, _
             SpecialConditions.NoConditions, _
@@ -482,9 +482,9 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' The application has requested that the order plex be cancelled, even if
-' there have alReady been fills. Since it is alReady being cancelled, there
+' there have already been fills. Since it is already being cancelled, there
 ' is nothing to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimCancelEvenIfFill, _
             SpecialConditions.NoConditions, _
@@ -493,7 +493,7 @@ mTableBuilder.addStateTableEntry _
 
 ' All orders have now been completed, so do any tidying up and go to the
 ' closed state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
@@ -503,7 +503,7 @@ mTableBuilder.addStateTableEntry _
 
 ' We are notified that the entry order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -512,7 +512,7 @@ mTableBuilder.addStateTableEntry _
 
 ' We are notified that the stop order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -521,7 +521,7 @@ mTableBuilder.addStateTableEntry _
 
 ' We are notified that the target order has been cancelled. Now we just need
 ' to wait for any other orders to be cancelled.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -534,7 +534,7 @@ mTableBuilder.addStateTableEntry _
 ' cancellation request from the application was to cancel even if there have
 ' been some fills, we just continue with the cancellation by re-requesting
 ' cancellation of any outstanding orders.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
@@ -548,7 +548,7 @@ mTableBuilder.addStateTableEntry _
 ' cancellation request from the application was to cancel only if there have
 ' been no fills. There now has been a fill. There are no stop or target orders,
 ' so we just return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation, _
@@ -562,7 +562,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order but no target
 ' order, and the stop order has not been cancelled, so we just return to the
 ' submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists, _
@@ -576,7 +576,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order but no target
 ' order, and the stop order has been cancelled, so we resubmit the stop order
 ' and return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled, _
@@ -591,7 +591,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a target order but no stop
 ' order, and the tartget order has not been cancelled, so we return to the
 ' submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondTargetOrderExists, _
@@ -604,7 +604,7 @@ mTableBuilder.addStateTableEntry _
 ' cancellation request from the application was to cancel only if there have
 ' been no fills. There now has been a fill. There is a stop order and a target
 ' order, but neither has been cancelled, so we return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists + OpConditions.CondTargetOrderExists, _
@@ -618,7 +618,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order and a target
 ' order, and the stop order has been cancelled but not the target order, so we
 ' resubmit the stop order and return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderExists, _
@@ -633,7 +633,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a target order but no stop
 ' order, and the target order has been cancelled, so we resubmit the target
 ' order and return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondTargetOrderCancelled, _
@@ -648,7 +648,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order and a target
 ' order, and the target order has been cancelled but not the stop order, so we
 ' resubmit the target order and return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderExists + OpConditions.CondTargetOrderCancelled, _
@@ -663,7 +663,7 @@ mTableBuilder.addStateTableEntry _
 ' been no fills. There now has been a fill. There is a stop order and a target
 ' order, and both have been cancelled, so we resubmit both the stop order and
 ' the target order, and return to the submitted state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             OpStimuli.StimEntryOrderFill, _
             OpConditions.CondNoFillCancellation + OpConditions.CondStopOrderCancelled + OpConditions.CondTargetOrderCancelled, _
@@ -679,7 +679,7 @@ mTableBuilder.addStateTableEntry _
 ' A state timeout has occurred. This means that neither a cancellation nor
 ' a fill notification has arrived, and we take the view that no such will
 ' arrive. Closeout the order plex.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
@@ -689,7 +689,7 @@ mTableBuilder.addStateTableEntry _
 
 ' The application has requested that the order plex be closed out. Place the
 ' closeut order and go to closing out state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimCloseout, _
             SpecialConditions.NoConditions, _
@@ -698,7 +698,7 @@ mTableBuilder.addStateTableEntry _
             OpActions.ActCancelOrders
             
 ' A stop order cancellation has occurred. Enter closing out state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -707,7 +707,7 @@ mTableBuilder.addStateTableEntry _
             SpecialActions.NoAction
 
 ' A target order cancellation has occurred. Enter closing out state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -716,7 +716,7 @@ mTableBuilder.addStateTableEntry _
             SpecialActions.NoAction
 
 ' All orders have completed. We are done, so go to the closed state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
@@ -730,7 +730,7 @@ mTableBuilder.addStateTableEntry _
 '=======================================================================
 
 ' A state timeout has occurred. This can simply be ignored.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateAwaitingOtherOrderCancel, _
             OpStimuli.StimTimeoutExpired, _
             SpecialConditions.NoConditions, _
@@ -739,7 +739,7 @@ mTableBuilder.addStateTableEntry _
             OpActions.ActPlaceCloseoutOrder
 
 ' The entry order has been cancelled, nothing for us to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimEntryOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -750,7 +750,7 @@ mTableBuilder.addStateTableEntry _
 ' time that we requested TWS to cancel the orders and TWS's cancellation
 ' request arriving at the IB servers or the exchange). There is nothing for
 ' us to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimEntryOrderFill, _
             SpecialConditions.NoConditions, _
@@ -758,7 +758,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' The stop order has been cancelled, nothing for us to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimStopOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -766,7 +766,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' The target order has been cancelled, nothing for us to do.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimTargetOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -776,7 +776,7 @@ mTableBuilder.addStateTableEntry _
 ' All orders have completed, and we are left with a non-zero Size. So submit
 ' a closeout order to reduce the Size to zero. Stay in this state awaiting the
 ' next 'all orders complete' stimulus.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimAllOrdersComplete, _
             OpConditions.CondSizeNonZero, _
@@ -786,7 +786,7 @@ mTableBuilder.addStateTableEntry _
 
 ' All orders have completed, and we are left with a zero Size. We are done,
 ' so go to the closed state.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimAllOrdersComplete, _
             SpecialConditions.NoConditions, _
@@ -797,7 +797,7 @@ mTableBuilder.addStateTableEntry _
 ' The closeout order has been cancelled (presumably it has been rejected
 ' by TWS). This is a serious situation since we are left with an unprotected
 ' position, so raise an alarm.
-mTableBuilder.addStateTableEntry _
+mTableBuilder.AddStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             OpStimuli.StimCloseoutOrderCancelled, _
             SpecialConditions.NoConditions, _
@@ -805,6 +805,6 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             OpActions.ActAlarm, OpActions.ActCompletionActions
 
-mTableBuilder.stateTableComplete
+mTableBuilder.StateTableComplete
 End Sub
 
