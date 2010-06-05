@@ -773,7 +773,6 @@ Public Property Get LeftMargin() As Dimension
 Const ProcName As String = "LeftMargin"
 On Error GoTo Err
 
-checkPropertySet TextPropertyLeftMargin
 Set LeftMargin = mLeftMargin
 
 Exit Property
@@ -844,7 +843,6 @@ Public Property Get Offset() As Size
 Const ProcName As String = "Offset"
 On Error GoTo Err
 
-checkPropertySet TextPropertyOffset
 Set Offset = mOffset
 
 Exit Property
@@ -922,7 +920,6 @@ Public Property Get RightMargin() As Dimension
 Const ProcName As String = "RightMargin"
 On Error GoTo Err
 
-checkPropertySet TextPropertyRightMargin
 Set RightMargin = mRightMargin
 
 Exit Property
@@ -948,7 +945,6 @@ Public Property Get Size() As Size
 Const ProcName As String = "Size"
 On Error GoTo Err
 
-checkPropertySet TextPropertySize
 Set Size = mSize
 
 Exit Property
@@ -1087,48 +1083,47 @@ mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
 
 If Not mConfig.GetConfigurationSection(ConfigSectionFont) Is Nothing Then Font = LoadFontFromConfig(mConfig.GetConfigurationSection(ConfigSectionFont))
 
-If mConfig.GetAttribute(ConfigSettingAlign) <> "" Then Align = mConfig.GetSetting(ConfigSettingAlign)
-If mConfig.GetAttribute(ConfigSettingAngle) <> "" Then Angle = mConfig.GetSetting(ConfigSettingAngle)
+If mConfig.GetSetting(ConfigSettingAlign) <> "" Then Align = mConfig.GetSetting(ConfigSettingAlign)
+If mConfig.GetSetting(ConfigSettingAngle) <> "" Then Angle = mConfig.GetSetting(ConfigSettingAngle)
 
-If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+If mConfig.GetSetting(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
 
-If mConfig.GetAttribute(ConfigSettingBox) <> "" Then Box = mConfig.GetSetting(ConfigSettingBox, "False")
-If mConfig.GetAttribute(ConfigSettingBoxColor) <> "" Then BoxColor = mConfig.GetSetting(ConfigSettingBoxColor)
-If mConfig.GetAttribute(ConfigSettingBoxFillColor) <> "" Then BoxFillColor = mConfig.GetSetting(ConfigSettingBoxFillColor)
-If mConfig.GetAttribute(ConfigSettingBoxFillStyle) <> "" Then BoxFillStyle = mConfig.GetSetting(ConfigSettingBoxFillStyle)
-If mConfig.GetAttribute(ConfigSettingBoxFillWithBackgroundColor) <> "" Then BoxFillWithBackgroundColor = mConfig.GetSetting(ConfigSettingBoxFillWithBackgroundColor)
-If mConfig.GetAttribute(ConfigSettingBoxStyle) <> "" Then BoxStyle = mConfig.GetSetting(ConfigSettingBoxStyle)
-If mConfig.GetAttribute(ConfigSettingBoxThickness) <> "" Then BoxThickness = mConfig.GetSetting(ConfigSettingBoxThickness)
+If mConfig.GetSetting(ConfigSettingBox) <> "" Then Box = mConfig.GetSetting(ConfigSettingBox, "False")
+If mConfig.GetSetting(ConfigSettingBoxColor) <> "" Then BoxColor = mConfig.GetSetting(ConfigSettingBoxColor)
+If mConfig.GetSetting(ConfigSettingBoxFillColor) <> "" Then BoxFillColor = mConfig.GetSetting(ConfigSettingBoxFillColor)
+If mConfig.GetSetting(ConfigSettingBoxFillStyle) <> "" Then BoxFillStyle = mConfig.GetSetting(ConfigSettingBoxFillStyle)
+If mConfig.GetSetting(ConfigSettingBoxFillWithBackgroundColor) <> "" Then BoxFillWithBackgroundColor = mConfig.GetSetting(ConfigSettingBoxFillWithBackgroundColor)
+If mConfig.GetSetting(ConfigSettingBoxStyle) <> "" Then BoxStyle = mConfig.GetSetting(ConfigSettingBoxStyle)
+If mConfig.GetSetting(ConfigSettingBoxThickness) <> "" Then BoxThickness = mConfig.GetSetting(ConfigSettingBoxThickness)
 
-If mConfig.GetAttribute(ConfigSettingEllipsis) <> "" Then Ellipsis = mConfig.GetSetting(ConfigSettingEllipsis)
-If mConfig.GetAttribute(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
-If mConfig.GetAttribute(ConfigSettingExpandTabs) <> "" Then ExpandTabs = mConfig.GetSetting(ConfigSettingExpandTabs)
+If mConfig.GetSetting(ConfigSettingEllipsis) <> "" Then Ellipsis = mConfig.GetSetting(ConfigSettingEllipsis)
+If mConfig.GetSetting(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
+If mConfig.GetSetting(ConfigSettingExpandTabs) <> "" Then ExpandTabs = mConfig.GetSetting(ConfigSettingExpandTabs)
 
-If mConfig.GetAttribute(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
-If mConfig.GetAttribute(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
+If mConfig.GetSetting(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
+If mConfig.GetSetting(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
 
-If mConfig.GetAttribute(ConfigSettingHideIfBlank) <> "" Then HideIfBlank = mConfig.GetSetting(ConfigSettingHideIfBlank)
+If mConfig.GetSetting(ConfigSettingHideIfBlank) <> "" Then HideIfBlank = mConfig.GetSetting(ConfigSettingHideIfBlank)
 
-If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetAttribute(ConfigSettingJustification) <> "" Then Justification = mConfig.GetSetting(ConfigSettingJustification)
+If mConfig.GetSetting(ConfigSettingJustification) <> "" Then Justification = mConfig.GetSetting(ConfigSettingJustification)
 
-If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
-If mConfig.GetAttribute(ConfigSettingMultiline) <> "" Then MultiLine = mConfig.GetSetting(ConfigSettingMultiline)
+If mConfig.GetSetting(ConfigSettingMultiline) <> "" Then MultiLine = mConfig.GetSetting(ConfigSettingMultiline)
 
-If mConfig.GetAttribute(ConfigSettingPaddingX) <> "" Then PaddingX = mConfig.GetSetting(ConfigSettingPaddingX)
-If mConfig.GetAttribute(ConfigSettingPaddingY) <> "" Then PaddingY = mConfig.GetSetting(ConfigSettingPaddingY)
+If mConfig.GetSetting(ConfigSettingPaddingX) <> "" Then PaddingX = mConfig.GetSetting(ConfigSettingPaddingX)
+If mConfig.GetSetting(ConfigSettingPaddingY) <> "" Then PaddingY = mConfig.GetSetting(ConfigSettingPaddingY)
 
-If mConfig.GetAttribute(ConfigSettingTabWidth) <> "" Then TabWidth = mConfig.GetSetting(ConfigSettingTabWidth)
+If mConfig.GetSetting(ConfigSettingTabWidth) <> "" Then TabWidth = mConfig.GetSetting(ConfigSettingTabWidth)
 
-If mConfig.GetAttribute(ConfigSettingWordWrap) <> "" Then WordWrap = mConfig.GetSetting(ConfigSettingWordWrap)
+If mConfig.GetSetting(ConfigSettingWordWrap) <> "" Then WordWrap = mConfig.GetSetting(ConfigSettingWordWrap)
 
-If Not mConfig.GetConfigurationSection(ConfigSectionLeftMargin) Then LeftMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionLeftMargin))
-If Not mConfig.GetConfigurationSection(ConfigSectionOffset) Then Offset = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset))
-If Not mConfig.GetConfigurationSection(ConfigSectionRightMargin) Then RightMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionRightMargin))
-If Not mConfig.GetConfigurationSection(ConfigSectionOffset) Then Offset = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset))
-If Not mConfig.GetConfigurationSection(ConfigSectionSize) Then Size = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionSize))
+If Not mConfig.GetConfigurationSection(ConfigSectionLeftMargin) Is Nothing Then LeftMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionLeftMargin))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset) Is Nothing Then Offset = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset))
+If Not mConfig.GetConfigurationSection(ConfigSectionRightMargin) Is Nothing Then RightMargin = gLoadDimensionFromConfig(mConfig.GetConfigurationSection(ConfigSectionRightMargin))
+If Not mConfig.GetConfigurationSection(ConfigSectionSize) Is Nothing Then Size = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionSize))
 
 Exit Sub
 

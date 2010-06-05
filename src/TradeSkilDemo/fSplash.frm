@@ -200,7 +200,7 @@ End Sub
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
 Static formatter As LogFormatter
-Dim failpoint As String
+
 On Error GoTo Err
 
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)

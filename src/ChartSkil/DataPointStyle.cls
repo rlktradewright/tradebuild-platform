@@ -520,23 +520,23 @@ Set mConfig = pConfig
 mName = mConfig.GetSetting(ConfigSettingName)
 mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
 
-If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+If mConfig.GetSetting(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
 
-If mConfig.GetAttribute(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
-If mConfig.GetAttribute(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
+If mConfig.GetSetting(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
+If mConfig.GetSetting(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
 
-If mConfig.GetAttribute(ConfigSettingHistWidth) <> "" Then HistogramBarWidth = mConfig.GetSetting(ConfigSettingHistWidth)
+If mConfig.GetSetting(ConfigSettingHistWidth) <> "" Then HistogramBarWidth = mConfig.GetSetting(ConfigSettingHistWidth)
 
-If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
-If mConfig.GetAttribute(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
-If mConfig.GetAttribute(ConfigSettingLineThickness) <> "" Then LineThickness = mConfig.GetSetting(ConfigSettingLineThickness)
+If mConfig.GetSetting(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
+If mConfig.GetSetting(ConfigSettingLineThickness) <> "" Then LineThickness = mConfig.GetSetting(ConfigSettingLineThickness)
 
-If mConfig.GetAttribute(ConfigSettingPointStyle) <> "" Then PointStyle = mConfig.GetSetting(ConfigSettingPointStyle)
+If mConfig.GetSetting(ConfigSettingPointStyle) <> "" Then PointStyle = mConfig.GetSetting(ConfigSettingPointStyle)
 
-If mConfig.GetAttribute(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
+If mConfig.GetSetting(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
 
 Exit Sub
 
@@ -618,30 +618,6 @@ Case DataPointPropertyHistWidth
     propertyFlagToConfigSetting = ConfigSettingHistWidth
 Case DataPointPropertyIncludeInAutoscale
     propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
-End Select
-End Function
-
-Public Function gDataPointPropertyFlagToString( _
-            ByVal pPropFlag As DataPointPropertyFlags) As String
-Select Case pPropFlag
-Case DataPointPropertyLineThickness
-    gDataPointPropertyFlagToString = "LineThickness"
-Case DataPointPropertyColor
-    gDataPointPropertyFlagToString = "Color"
-Case DataPointPropertyUpColor
-    gDataPointPropertyFlagToString = "UpColor"
-Case DataPointPropertyDownColor
-    gDataPointPropertyFlagToString = "DownColor"
-Case DataPointPropertyLineStyle
-    gDataPointPropertyFlagToString = "LineStyle"
-Case DataPointPropertyPointStyle
-    gDataPointPropertyFlagToString = "PointStyle"
-Case DataPointPropertyDisplayMode
-    gDataPointPropertyFlagToString = "DisplayMode"
-Case DataPointPropertyHistWidth
-    gDataPointPropertyFlagToString = "HistWidth"
-Case DataPointPropertyIncludeInAutoscale
-    gDataPointPropertyFlagToString = "IncludeInAutoscale"
 End Select
 End Function
 

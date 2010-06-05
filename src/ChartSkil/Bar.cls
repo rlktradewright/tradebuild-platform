@@ -565,7 +565,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If IsPropertySet(BarPropertyLayer) Then Layer = mLayer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyLayer) Then Layer = mLocalStyle.Layer
+If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 
 Exit Property
 

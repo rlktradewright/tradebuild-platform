@@ -1,5 +1,5 @@
 Type=OleDll
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{3D7BEB29-CA8E-41F7-99F5-D6C9BA39372F}#3c.0#0#..\TradeBuild\TradeBuild2-6.dll#TradeWright TradeBuild API v2.6
 Reference=*\G{E28CCDAF-C082-4B45-AC09-1594A56F20E8}#57.0#0#..\StudyUtils\StudyUtils2-6.dll#TradeWright Study Utilities v2.6
 Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#1c.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v3.0
@@ -17,7 +17,7 @@ CompatibleEXE32="ConfigUtils26.dll"
 VersionCompatible32="1"
 MajorVer=1
 MinorVer=0
-RevisionVer=131
+RevisionVer=144
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H1fad0000

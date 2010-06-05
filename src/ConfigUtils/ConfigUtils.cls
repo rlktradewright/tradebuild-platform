@@ -77,7 +77,7 @@ Private Const ConfigSectionPathSeparator            As String = "/"
 '@================================================================================
 
 Public Function AddAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal name As String, _
                 ByVal includeDefaultStudyLibrary As Boolean, _
                 Optional ByVal setAsDefault As Boolean = False, _
@@ -91,7 +91,7 @@ Const ProcName As String = "AddAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set AddAppInstanceConfig = addNewAppConfig(pConfigFile, _
+Set AddAppInstanceConfig = addNewAppConfig(pConfigStore, _
                                             name, _
                                             includeDefaultStudyLibrary, _
                                             setAsDefault, _
@@ -109,7 +109,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Function ConfigureTradeBuild( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal appInstanceConfigName As String) As Boolean
 Dim config As ConfigurationSection
 
@@ -117,7 +117,7 @@ Const ProcName As String = "ConfigureTradeBuild"
 Dim failpoint As String
 On Error GoTo Err
 
-Set config = GetAppInstanceConfig(pConfigFile, appInstanceConfigName)
+Set config = GetAppInstanceConfig(pConfigStore, appInstanceConfigName)
 If config Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "ConfigureTradeBuild", _
@@ -151,13 +151,13 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Function GetAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal name As String) As ConfigurationSection
 Const ProcName As String = "GetAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set GetAppInstanceConfig = pConfigFile.GetConfigurationSection(generateSectionPath(name))
+Set GetAppInstanceConfig = pConfigStore.GetConfigurationSection(generateSectionPath(name))
 
 Exit Function
 
@@ -166,7 +166,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Function GetDefaultAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
+                ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
 Dim sections As ConfigurationSection
 Dim section As ConfigurationSection
 
@@ -174,9 +174,9 @@ Const ProcName As String = "GetDefaultAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set sections = getAppInstanceConfigsSection(pConfigFile)
+Set sections = getAppInstanceConfigsSection(pConfigStore)
 For Each section In sections
-    If CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+    If CBool(section.GetAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
         Set GetDefaultAppInstanceConfig = section
         Exit Function
     End If
@@ -190,23 +190,23 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Function InitialiseConfigFile( _
-                ByVal pConfigFile As ConfigurationFile) As ConfigurationFile
+                ByVal pConfigStore As ConfigurationStore) As ConfigurationStore
 Dim sections As ConfigurationSection
 
 Const ProcName As String = "InitialiseConfigFile"
 Dim failpoint As String
 On Error GoTo Err
 
-Set sections = getAppInstanceConfigsSection(pConfigFile)
+Set sections = getAppInstanceConfigsSection(pConfigStore)
 If Not sections Is Nothing Then
     log "Removing existing app instance configs section from config file"
-    pConfigFile.RemoveConfigurationSection getAppInstanceConfigsPath
+    pConfigStore.RemoveConfigurationSection getAppInstanceConfigsPath
 End If
 
 log "Creating app instance configs section in config file"
-pConfigFile.AddConfigurationSection ConfigSectionPathSeparator & ConfigNameAppConfigs
+pConfigStore.AddConfigurationSection ConfigSectionPathSeparator & ConfigNameAppConfigs
 
-Set InitialiseConfigFile = pConfigFile
+Set InitialiseConfigFile = pConfigStore
 
 Exit Function
 
@@ -215,12 +215,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Function IsValidConfigurationFile( _
-                ByVal pConfigFile As ConfigurationFile) As Boolean
+                ByVal pConfigStore As ConfigurationStore) As Boolean
 Const ProcName As String = "IsValidConfigurationFile"
 Dim failpoint As String
 On Error GoTo Err
 
-If getAppInstanceConfigsSection(pConfigFile) Is Nothing Then
+If getAppInstanceConfigsSection(pConfigStore) Is Nothing Then
     IsValidConfigurationFile = False
 Else
     IsValidConfigurationFile = True
@@ -233,13 +233,13 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Sub RemoveAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal name As String)
 Const ProcName As String = "RemoveAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-pConfigFile.RemoveConfigurationSection generateSectionPath(name)
+pConfigStore.RemoveConfigurationSection generateSectionPath(name)
 
 Exit Sub
 
@@ -248,15 +248,15 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Sub
 
 Public Function SetDefaultAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal name As String) As ConfigurationSection
 Const ProcName As String = "SetDefaultAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-checkValidConfigurationFile pConfigFile
+checkValidConfigurationFile pConfigStore
 
-Set SetDefaultAppInstanceConfig = GetAppInstanceConfig(pConfigFile, _
+Set SetDefaultAppInstanceConfig = GetAppInstanceConfig(pConfigStore, _
                                                     name)
 If SetDefaultAppInstanceConfig Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -264,7 +264,7 @@ If SetDefaultAppInstanceConfig Is Nothing Then
             "Specified app instance config does not exist"
 End If
                                             
-setDefault pConfigFile, SetDefaultAppInstanceConfig
+setDefault pConfigStore, SetDefaultAppInstanceConfig
 
 Exit Function
 
@@ -273,14 +273,14 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Public Sub UnsetDefaultAppInstanceConfig( _
-                ByVal pConfigFile As ConfigurationFile)
+                ByVal pConfigStore As ConfigurationStore)
 Dim defaultConfig As ConfigurationSection
 Const ProcName As String = "UnsetDefaultAppInstanceConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-Set defaultConfig = GetDefaultAppInstanceConfig(pConfigFile)
-If Not defaultConfig Is Nothing Then defaultConfig.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
+Set defaultConfig = GetDefaultAppInstanceConfig(pConfigStore)
+If Not defaultConfig Is Nothing Then defaultConfig.SetAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
 
 Exit Sub
 
@@ -293,7 +293,7 @@ End Sub
 '@================================================================================
 
 Private Function addNewAppConfig( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal newAppConfigName As String, _
                 ByVal includeDefaultStudyLibrary As Boolean, _
                 ByVal setAsDefault As Boolean, _
@@ -310,16 +310,16 @@ Const ProcName As String = "addNewAppConfig"
 Dim failpoint As String
 On Error GoTo Err
 
-checkValidConfigurationFile pConfigFile
+checkValidConfigurationFile pConfigStore
 
-If Not GetAppInstanceConfig(pConfigFile, newAppConfigName) Is Nothing Then
+If Not GetAppInstanceConfig(pConfigStore, newAppConfigName) Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "addNewAppConfig", _
             "App instance config already exists"
 End If
 
-Set newAppConfigSection = pConfigFile.AddConfigurationSection(generateSectionPath(newAppConfigName))
-If setAsDefault Then setDefault pConfigFile, newAppConfigSection
+Set newAppConfigSection = pConfigStore.AddConfigurationSection(generateSectionPath(newAppConfigName))
+If setAsDefault Then setDefault pConfigStore, newAppConfigSection
 
 Set newAppTradeBuildSection = newAppConfigSection.AddConfigurationSection(ConfigNameTradeBuild)
 TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection, _
@@ -344,12 +344,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Private Sub checkValidConfigurationFile( _
-                ByVal pConfigFile As ConfigurationFile)
+                ByVal pConfigStore As ConfigurationStore)
 Const ProcName As String = "checkValidConfigurationFile"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not IsValidConfigurationFile(pConfigFile) Then
+If Not IsValidConfigurationFile(pConfigStore) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "checkValidConfigurationFile", _
             "Configuration file has not been correctly intialised"
@@ -389,12 +389,12 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Private Function getAppInstanceConfigsSection( _
-                ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
+                ByVal pConfigStore As ConfigurationStore) As ConfigurationSection
 Const ProcName As String = "getAppInstanceConfigsSection"
 Dim failpoint As String
 On Error GoTo Err
 
-Set getAppInstanceConfigsSection = pConfigFile.GetConfigurationSection(getAppInstanceConfigsPath)
+Set getAppInstanceConfigsSection = pConfigStore.GetConfigurationSection(getAppInstanceConfigsPath)
 
 Exit Function
 
@@ -502,7 +502,7 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Function
 
 Private Sub setDefault( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigStore As ConfigurationStore, _
                 ByVal targetSection As ConfigurationSection)
 Dim sections As ConfigurationSection
 Dim section As ConfigurationSection
@@ -511,15 +511,15 @@ Const ProcName As String = "setDefault"
 Dim failpoint As String
 On Error GoTo Err
 
-Set sections = getAppInstanceConfigsSection(pConfigFile)
+Set sections = getAppInstanceConfigsSection(pConfigStore)
 For Each section In sections
     If section Is targetSection Then
-        If Not CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
-            section.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueTrue
+        If Not CBool(section.GetAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+            section.SetAttribute AttributeNameAppInstanceConfigDefault, AttributeValueTrue
         End If
     Else
-        If CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
-            section.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
+        If CBool(section.GetAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+            section.SetAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
         End If
     End If
 Next

@@ -77,7 +77,7 @@ Public Const WindowStateNormal                      As String = "Normal"
 
 Private mIsInDev                                    As Boolean
 
-Public gConfigFile                                  As ConfigurationFile
+Public gConfigStore                                  As ConfigurationStore
 Public gAppInstanceConfig                           As ConfigurationSection
 
 Private mStudyPickerForm                            As fStudyPicker
@@ -112,7 +112,7 @@ End Property
 Public Property Get gCommandLineParser() As CommandLineParser
 Const ProcName As String = "gCommandLineParser"
 Static clp As CommandLineParser
-Dim failpoint As String
+
 On Error GoTo Err
 
 If clp Is Nothing Then Set clp = CreateCommandLineParser(Command)
@@ -168,7 +168,7 @@ Public Sub gModelessMsgBox( _
 Const ProcName As String = "gModelessMsgBox"
 Dim lMsgBox As New fMsgBox
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 lMsgBox.initialise prompt, buttons, title
@@ -183,7 +183,7 @@ End Sub
 
 Public Sub gSetPermittedServiceProviderRoles()
 Const ProcName As String = "gSetPermittedServiceProviderRoles"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
@@ -204,7 +204,7 @@ Public Sub gShowStudyPicker( _
                 ByVal chartMgr As ChartManager, _
                 ByVal title As String)
 Const ProcName As String = "gShowStudyPicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
@@ -221,7 +221,7 @@ Public Sub gSyncStudyPicker( _
                 ByVal chartMgr As ChartManager, _
                 ByVal title As String)
 Const ProcName As String = "gSyncStudyPicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
@@ -235,7 +235,7 @@ End Sub
 
 Public Sub gUnloadMainForm()
 Const ProcName As String = "gUnloadMainForm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mMainForm Is Nothing Then
@@ -252,7 +252,7 @@ End Sub
 
 Public Sub gUnsyncStudyPicker()
 Const ProcName As String = "gUnsyncStudyPicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mStudyPickerForm Is Nothing Then Exit Sub
@@ -269,10 +269,8 @@ Const ProcName As String = "Main"
 
 Dim lSplash As fSplash
 
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 Debug.Print "Running in development environment: " & CStr(inDev)
 
@@ -290,8 +288,6 @@ TaskConcurrency = 20
 TaskQuantumMillisecs = 32
 
 Set lSplash = showSplashScreen
-
-failpoint = 300
 
 gSetPermittedServiceProviderRoles
 
@@ -331,10 +327,10 @@ Private Function Configure() As Boolean
 Const ProcName As String = "Configure"
 Dim userResponse As Long
 
-Dim failpoint As String
+
 On Error GoTo Err
 
-If ConfigureTradeBuild(gConfigFile, gAppInstanceConfig.InstanceQualifier) Then
+If ConfigureTradeBuild(gConfigStore, gAppInstanceConfig.InstanceQualifier) Then
     Configure = True
 Else
     userResponse = MsgBox("The configuration cannot be loaded. Would you like to " & vbCrLf & _
@@ -354,7 +350,7 @@ Else
         Configure = True
     ElseIf userResponse = vbNo Then
         LogMessage "Creating a new default app instance configuration"
-        Set gAppInstanceConfig = AddAppInstanceConfig(gConfigFile, _
+        Set gAppInstanceConfig = AddAppInstanceConfig(gConfigStore, _
                             DefaultAppInstanceConfigName, _
                             includeDefaultStudyLibrary:=True, _
                             setAsDefault:=True)
@@ -374,7 +370,7 @@ Private Function getConfig() As Boolean
 Const ProcName As String = "getConfig"
 Dim configName As String
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
@@ -382,7 +378,7 @@ If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.
 If configName = "" Then
     LogMessage "Named config not specified - trying default config", LogLevelDetail
     configName = "(Default)"
-    Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigFile)
+    Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigStore)
     If gAppInstanceConfig Is Nothing Then
         LogMessage "No default config defined", LogLevelDetail
     Else
@@ -390,7 +386,7 @@ If configName = "" Then
     End If
 Else
     LogMessage "Getting config with name '" & configName & "'", LogLevelDetail
-    Set gAppInstanceConfig = GetAppInstanceConfig(gConfigFile, configName)
+    Set gAppInstanceConfig = GetAppInstanceConfig(gConfigStore, configName)
     If gAppInstanceConfig Is Nothing Then
         LogMessage "Config '" & configName & "' not found"
     Else
@@ -419,13 +415,10 @@ End Function
 Private Function getConfigFile() As Boolean
 Const ProcName As String = "getConfigFile"
 Dim userResponse As Long
-Dim baseConfigFile As TWUtilities30.ConfigFile
 
-On Error Resume Next
-Set baseConfigFile = LoadXMLConfigurationFile(getConfigFilename)
-On Error GoTo Err
+Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, True, ConfigFileOptionFirstArg)
 
-If baseConfigFile Is Nothing Then
+If gConfigStore Is Nothing Then
     userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
             "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
             "The default configuration will connect to TWS running on the " & vbCrLf & _
@@ -440,34 +433,23 @@ If baseConfigFile Is Nothing Then
             "Attention!")
     If userResponse = vbYes Then
         LogMessage "Creating a new default configuration file"
-        Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
-        Set gConfigFile = CreateConfigurationFile(baseConfigFile, getConfigFilename)
-        InitialiseConfigFile gConfigFile
-        AddAppInstanceConfig gConfigFile, _
+        Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
+        InitialiseConfigFile gConfigStore
+        AddAppInstanceConfig gConfigStore, _
                             DefaultAppInstanceConfigName, _
                             includeDefaultStudyLibrary:=True, _
                             setAsDefault:=True
                             
-    Else
-        getConfigFile = False
-        Exit Function
+        getConfigFile = True
     End If
+ElseIf IsValidConfigurationFile(gConfigStore) Then
+    getConfigFile = True
 Else
-    Set gConfigFile = CreateConfigurationFile(baseConfigFile, _
-                                            getConfigFilename)
-    If gConfigFile.ApplicationName <> App.ProductName Or _
-        gConfigFile.fileVersion <> ConfigFileVersion Or _
-        Not IsValidConfigurationFile(gConfigFile) _
-    Then
-        LogMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
-                    "The program will close."
-        getConfigFile = False
-        Exit Function
-    End If
-
+    LogMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
+                "The program will close."
 End If
 
-getConfigFile = True
+
 
 Exit Function
 
@@ -475,24 +457,6 @@ Err:
 LogMessage "The configuration file format is not correct for this program."
 MsgBox "The configuration file is not the correct format for this program" & vbCrLf & vbCrLf & _
         "The program will close."
-End Function
-
-Private Function getConfigFilename() As String
-Const ProcName As String = "getConfigFilename"
-
-
-Dim failpoint As String
-On Error GoTo Err
-
-getConfigFilename = gCommandLineParser.Arg(0)
-If getConfigFilename = "" Then
-    getConfigFilename = ApplicationSettingsFolder & "\settings.xml"
-End If
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function inDev() As Boolean
@@ -511,7 +475,7 @@ End Function
 Private Sub loadMainForm( _
                 ByVal showConfigEditor As Boolean)
 Const ProcName As String = "loadMainForm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LogMessage "Loading main form"
@@ -530,7 +494,7 @@ Private Function showCommandLineOptions() As Boolean
 Const ProcName As String = "showCommandLineOptions"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If gCommandLineParser.Switch("?") Then

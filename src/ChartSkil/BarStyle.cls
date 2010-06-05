@@ -556,24 +556,24 @@ Set mConfig = pConfig
 mName = mConfig.GetSetting(ConfigSettingName)
 mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
 
-If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+If mConfig.GetSetting(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
 
-If mConfig.GetAttribute(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
-If mConfig.GetAttribute(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
+If mConfig.GetSetting(ConfigSettingDisplayMode) <> "" Then DisplayMode = mConfig.GetSetting(ConfigSettingDisplayMode)
+If mConfig.GetSetting(ConfigSettingDownColor) <> "" Then DownColor = mConfig.GetSetting(ConfigSettingDownColor)
 
-If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
 
-If mConfig.GetAttribute(ConfigSettingOutlineThickness) <> "" Then OutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
+If mConfig.GetSetting(ConfigSettingOutlineThickness) <> "" Then OutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
 
-If mConfig.GetAttribute(ConfigSettingSolidUpBody) <> "" Then SolidUpBody = mConfig.GetSetting(ConfigSettingSolidUpBody)
+If mConfig.GetSetting(ConfigSettingSolidUpBody) <> "" Then SolidUpBody = mConfig.GetSetting(ConfigSettingSolidUpBody)
 
-If mConfig.GetAttribute(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
-If mConfig.GetAttribute(ConfigSettingTailThickness) <> "" Then TailThickness = mConfig.GetSetting(ConfigSettingTailThickness)
+If mConfig.GetSetting(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
+If mConfig.GetSetting(ConfigSettingTailThickness) <> "" Then TailThickness = mConfig.GetSetting(ConfigSettingTailThickness)
 
-If mConfig.GetAttribute(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
-If mConfig.GetAttribute(ConfigSettingWidth) <> "" Then Width = mConfig.GetSetting(ConfigSettingWidth)
+If mConfig.GetSetting(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSetting(ConfigSettingUpColor)
+If mConfig.GetSetting(ConfigSettingWidth) <> "" Then Width = mConfig.GetSetting(ConfigSettingWidth)
 
 Exit Sub
 

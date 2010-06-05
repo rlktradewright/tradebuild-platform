@@ -1261,7 +1261,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If IsPropertySet(LinePropertyLayer) Then Layer = mLayer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyLayer) Then Layer = mLocalStyle.Layer
+If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 
 Exit Property
 
@@ -1321,7 +1322,17 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Offset1() As Size
-Set Offset1 = mOffset1
+Const ProcName As String = "Offset1"
+On Error GoTo Err
+
+Set Offset1 = mSeries.Offset1
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyOffset1) Then Set Offset1 = mLocalStyle.Offset1
+If IsPropertySet(LinePropertyOffset1) Then Set Offset1 = mOffset1
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Offset1(ByVal Value As Size)
@@ -1346,7 +1357,17 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Offset2() As Size
-Set Offset2 = mOffset2
+Const ProcName As String = "Offset2"
+On Error GoTo Err
+
+Set Offset2 = mSeries.Offset2
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyOffset2) Then Set Offset2 = mLocalStyle.Offset2
+If IsPropertySet(LinePropertyOffset2) Then Set Offset2 = mOffset2
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Offset2(ByVal Value As Size)

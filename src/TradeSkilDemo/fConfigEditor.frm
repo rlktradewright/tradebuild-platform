@@ -105,7 +105,7 @@ Private mConfig                                     As ConfigurationSection
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = gAppInstanceConfig
@@ -113,7 +113,7 @@ Set mConfig = gAppInstanceConfig
 Me.left = CLng(mConfig.GetSetting(ConfigSettingConfigEditorLeft, 0)) * Screen.TwipsPerPixelX
 Me.Top = CLng(mConfig.GetSetting(ConfigSettingConfigEditorTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
-ConfigManager1.initialise gConfigFile, App.ProductName, ConfigFileVersion
+ConfigManager1.initialise gConfigStore, App.ProductName, ConfigFileVersion
 
 CurrentConfigNameText = mConfig.InstanceQualifier
 
@@ -125,7 +125,7 @@ End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-Dim failpoint As String
+
 On Error GoTo Err
 
 updateSettings
@@ -166,7 +166,7 @@ End Sub
 
 Private Sub ConfigManager1_SelectedItemChanged()
 Const ProcName As String = "ConfigManager1_SelectedItemChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkOkToLoadConfiguration
@@ -179,7 +179,7 @@ End Sub
 
 Private Sub ConfigureButton_Click()
 Const ProcName As String = "ConfigureButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 updateSettings
@@ -209,7 +209,7 @@ End Sub
 
 Private Sub checkOkToLoadConfiguration()
 Const ProcName As String = "checkOkToLoadConfiguration"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not ConfigManager1.selectedAppConfig Is Nothing Then
@@ -228,7 +228,7 @@ End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then

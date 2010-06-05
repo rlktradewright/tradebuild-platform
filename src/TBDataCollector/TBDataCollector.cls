@@ -68,7 +68,7 @@ Private Const ModuleName                    As String = "GlobalClass"
 '@================================================================================
 
 Public Function CreateDataCollector( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigFile As ConfigurationStore, _
                 ByVal configName As String, _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _

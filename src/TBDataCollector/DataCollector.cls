@@ -69,7 +69,7 @@ Attribute mTradeBuildAPI.VB_VarHelpID = -1
 Private WithEvents mTickers                             As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
-Private mConfigFile                                     As ConfigurationFile
+Private mConfigStore                                    As ConfigurationStore
 Private mConfig                                         As ConfigurationSection
 Private mConfigName                                     As String
 
@@ -235,7 +235,7 @@ Private Sub mTickers_stateChange(ev As StateChangeEvent)
 Const ProcName As String = "mTickers_stateChange"
 On Error GoTo Err
 
-If ev.State = TickerStates.TickerStateRunning Then
+If ev.state = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(ev.Source)
 End If
 
@@ -313,7 +313,7 @@ End Property
 '@================================================================================
 
 Friend Sub initialise( _
-                ByVal pConfigFile As ConfigurationFile, _
+                ByVal pConfigFile As ConfigurationStore, _
                 ByVal configName As String, _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _
@@ -321,9 +321,9 @@ Friend Sub initialise( _
 Const ProcName As String = "initialise"
 On Error GoTo Err
 
-Set mConfigFile = pConfigFile
+Set mConfigStore = pConfigFile
 mConfigName = configName
-Set mConfig = GetAppInstanceConfig(mConfigFile, configName)
+Set mConfig = GetAppInstanceConfig(mConfigStore, configName)
 
 If mConfig Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -503,7 +503,7 @@ mWritebars = False
 mOutputFormat = ""
 mOutputPath = ""
 
-ConfigureTradeBuild mConfigFile, mConfig.InstanceQualifier
+ConfigureTradeBuild mConfigStore, mConfig.InstanceQualifier
 
 AddStudyLibrary CommonStudiesLibProgId, True, "Built-in"
 

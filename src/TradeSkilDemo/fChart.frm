@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -52,17 +52,17 @@ Begin VB.Form fChart
    End
    Begin ComCtl3.CoolBar CoolBar1 
       Align           =   1  'Align Top
-      Height          =   330
+      Height          =   390
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   12525
       _ExtentX        =   22093
-      _ExtentY        =   582
+      _ExtentY        =   688
       BandCount       =   2
       _CBWidth        =   12525
-      _CBHeight       =   330
-      _Version        =   "6.7.9782"
+      _CBHeight       =   390
+      _Version        =   "6.7.9816"
       Child1          =   "ChartToolsToolbar"
       MinWidth1       =   1710
       MinHeight1      =   330
@@ -75,18 +75,18 @@ Begin VB.Form fChart
       NewRow2         =   0   'False
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   2160
+         Left            =   2100
          TabIndex        =   3
-         Top             =   0
-         Width           =   10305
-         _ExtentX        =   18177
+         Top             =   30
+         Width           =   10335
+         _ExtentX        =   18230
          _ExtentY        =   582
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
          Height          =   330
-         Left            =   180
+         Left            =   165
          TabIndex        =   1
-         Top             =   0
+         Top             =   30
          Width           =   1710
          _ExtentX        =   3016
          _ExtentY        =   582
@@ -204,7 +204,7 @@ Private mConfig As ConfigurationSection
 
 Private Sub Form_Activate()
 Const ProcName As String = "Form_Activate"
-Dim failpoint As String
+
 On Error GoTo Err
 
 syncStudyPicker
@@ -218,7 +218,7 @@ End Sub
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Resize
@@ -234,7 +234,7 @@ Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 MultiChart1.Finish
@@ -267,7 +267,7 @@ End Sub
 
 Private Sub Form_Resize()
 Const ProcName As String = "Form_Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Resize
@@ -281,7 +281,7 @@ End Sub
 
 Private Sub Form_Terminate()
 Const ProcName As String = "Form_Terminate"
-logMessage "Chart form terminated", LogLevelDetail
+LogMessage "Chart form terminated", LogLevelDetail
 End Sub
 
 '================================================================================
@@ -292,7 +292,7 @@ Private Sub ChartToolsToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
 Const ProcName As String = "ChartToolsToolbar_ButtonClick"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -325,7 +325,7 @@ End Sub
 Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEvent)
 Const ProcName As String = "MultiChart1_Change"
 Dim changeType As MultiChartChangeTypes
-Dim failpoint As String
+
 On Error GoTo Err
 
 changeType = ev.changeType
@@ -366,7 +366,7 @@ Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities
 Const ProcName As String = "MultiChart1_ChartStateChanged"
 Dim loadingText As Text
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case ev.state
@@ -384,7 +384,7 @@ Case ChartStateInitialised
     loadingText.Font.Size = 16
     loadingText.Font.Italic = True
     loadingText.Align = AlignBottomCentre
-    loadingText.position = MultiChart1.PriceRegion(index).NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
+    loadingText.position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
     loadingText.Text = "Fetching historical data"
 Case ChartStateLoading
     Set loadingText = MultiChart1.loadingText(index)
@@ -407,7 +407,7 @@ End Sub
 
 Private Sub mChartController_PointerModeChanged()
 Const ProcName As String = "mChartController_PointerModeChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSelectionButton
@@ -425,7 +425,7 @@ End Sub
 
 Private Sub mTicker_ask(ev As QuoteEvent)
 Const ProcName As String = "mTicker_ask"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentAsk = GetFormattedPriceFromQuoteEvent(ev)
@@ -440,7 +440,7 @@ End Sub
 
 Private Sub mTicker_bid(ev As QuoteEvent)
 Const ProcName As String = "mTicker_bid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentBid = GetFormattedPriceFromQuoteEvent(ev)
@@ -455,7 +455,7 @@ End Sub
 
 Private Sub mTicker_high(ev As QuoteEvent)
 Const ProcName As String = "mTicker_high"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentHigh = GetFormattedPriceFromQuoteEvent(ev)
@@ -470,7 +470,7 @@ End Sub
 
 Private Sub mTicker_Low(ev As QuoteEvent)
 Const ProcName As String = "mTicker_Low"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentLow = GetFormattedPriceFromQuoteEvent(ev)
@@ -485,7 +485,7 @@ End Sub
 
 Private Sub mTicker_previousClose(ev As QuoteEvent)
 Const ProcName As String = "mTicker_previousClose"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPreviousClose = GetFormattedPriceFromQuoteEvent(ev)
@@ -501,7 +501,7 @@ End Sub
 Private Sub mTicker_stateChange( _
                 ByRef ev As TWUtilities30.StateChangeEvent)
 Const ProcName As String = "mTicker_stateChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ev.state = TickerStates.TickerStateReady Then
@@ -525,7 +525,7 @@ End Sub
 
 Private Sub mTicker_trade(ev As QuoteEvent)
 Const ProcName As String = "mTicker_trade"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentTrade = GetFormattedPriceFromQuoteEvent(ev)
@@ -540,7 +540,7 @@ End Sub
 
 Private Sub mTicker_volume(ev As QuoteEvent)
 Const ProcName As String = "mTicker_volume"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrentVolume = ev.Size
@@ -564,7 +564,7 @@ End Sub
 Friend Function LoadFromConfig( _
                 ByVal config As ConfigurationSection) As Boolean
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -596,7 +596,7 @@ Friend Sub showChart( _
 Const ProcName As String = "showChart"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 mIsHistorical = False
@@ -628,7 +628,7 @@ Friend Sub showHistoricalChart( _
 Const ProcName As String = "showHistoricalChart"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 mIsHistorical = True
@@ -658,7 +658,7 @@ Const ProcName As String = "createFibChartTool"
 Dim ls As LineStyle
 Dim lineSpecs(4) As FibLineSpecifier
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ls = New LineStyle
@@ -698,7 +698,7 @@ Private Sub createLineChartTool()
 Const ProcName As String = "createLineChartTool"
 Dim ls As LineStyle
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ls = New LineStyle
@@ -717,7 +717,7 @@ End Sub
 
 Private Sub getInitialTickerValues()
 Const ProcName As String = "getInitialTickerValues"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTicker.state <> TickerStateRunning Then Exit Sub
@@ -739,7 +739,7 @@ End Sub
 
 Private Sub Resize()
 Const ProcName As String = "Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
@@ -760,7 +760,7 @@ Private Sub setCaption()
 Const ProcName As String = "setCaption"
 Dim s As String
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then
@@ -792,7 +792,7 @@ End Sub
 
 Private Sub setConfig()
 Const ProcName As String = "setConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = gAppInstanceConfig.GetConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
@@ -808,7 +808,7 @@ End Sub
 
 Private Sub setSelectionMode()
 Const ProcName As String = "setSelectionMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mChartController.PointerMode <> PointerModeSelection Then
@@ -827,7 +827,7 @@ End Sub
 
 Private Sub setSelectionButton()
 Const ProcName As String = "setSelectionButton"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mChartController.PointerMode = PointerModeSelection Then
@@ -844,7 +844,7 @@ End Sub
 
 Private Sub setWindow()
 Const ProcName As String = "setWindow"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.Width = CLng(mConfig.GetSetting(ConfigSettingWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
@@ -869,7 +869,7 @@ End Sub
 
 Private Sub syncStudyPicker()
 Const ProcName As String = "syncStudyPicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -885,7 +885,7 @@ End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case Me.WindowState

@@ -917,7 +917,17 @@ HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pMo
 End Property
 
 Public Property Get Layer() As LayerNumbers
-Layer = mLayer
+Const ProcName As String = "Layer"
+On Error GoTo Err
+
+Layer = mBaseStyle.Layer
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(BarPropertyLayer) Then Layer = mStyle.Layer
+If IsPropertySet(BarPropertyLayer) Then Layer = mLayer
+
+Exit Property
+
+Err:
+HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LineStyle() As LineStyles

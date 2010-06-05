@@ -1,5 +1,5 @@
 Type=OleDll
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{76D7EB11-112B-4B1C-AD21-EBFF4C9996C1}#1.0#0#..\TimeframeUtils\TimeframeUtils2-6.dll#TradeWright Timeframe Utilities v2.6
 Reference=*\G{E28CCDAF-C082-4B45-AC09-1594A56F20E8}#4.0#0#..\StudyUtils\StudyUtils2-6.dll#TradeWright Study Utilities v2.6
 Reference=*\G{745422A2-E6CF-4653-AF2E-5994D3509BF5}#2.3#0#..\ContractUtils\ContractUtils26.dll#TradeWright Contract Utilties v2.6
@@ -23,7 +23,7 @@ CompatibleEXE32="TBDataCollector26.dll"
 VersionCompatible32="1"
 MajorVer=2
 MinorVer=6
-RevisionVer=330
+RevisionVer=342
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H73ff0000

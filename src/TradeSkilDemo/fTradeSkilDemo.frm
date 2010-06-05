@@ -1,8 +1,8 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#231.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   68681731
+         Format          =   16515075
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   68681731
+         Format          =   16515075
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -876,7 +876,7 @@ End Sub
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setupLogging
@@ -904,7 +904,7 @@ Private Sub Form_QueryUnload( _
                 cancel As Integer, _
                 UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-Dim failpoint As String
+
 On Error GoTo Err
 
 updateInstanceSettings
@@ -921,7 +921,7 @@ Const ProcName As String = "Form_Resize"
 Static prevHeight As Long
 Static prevWidth As Long
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
@@ -951,7 +951,7 @@ Const ProcName As String = "Form_Unload"
 Dim lTicker As Ticker
 Dim f As Form
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 LogMessage "Unloading program"
@@ -1022,7 +1022,7 @@ Private Sub CancelOrderPlexButton_Click()
 Const ProcName As String = "CancelOrderPlexButton_Click"
 Dim op As OrderPlex
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
@@ -1046,7 +1046,7 @@ Private Sub ChartButton_Click()
 Const ProcName As String = "ChartButton_Click"
 Dim lTicker As Ticker
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lTicker In TickerGrid1.SelectedTickers
@@ -1066,7 +1066,7 @@ Private Sub Chart1Button_Click()
 Const ProcName As String = "Chart1Button_Click"
 Dim lTicker As Ticker
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lTicker In TickerGrid1.SelectedTickers
@@ -1084,7 +1084,7 @@ End Sub
 
 Private Sub ClearTickfileListButton_Click()
 Const ProcName As String = "ClearTickfileListButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickfileList.Clear
@@ -1106,7 +1106,7 @@ End Sub
 
 Private Sub ClosePositionsButton_Click()
 Const ProcName As String = "ClosePositionsButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mTradeBuildAPI.ClosingPositions Then
@@ -1128,7 +1128,7 @@ End Sub
 
 Private Sub ConfigEditorButton_Click()
 Const ProcName As String = "ConfigEditorButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 showConfigEditor
@@ -1142,7 +1142,7 @@ End Sub
 
 Private Sub ControlsSSTab_Click(PreviousTab As Integer)
 Const ProcName As String = "ControlsSSTab_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case ControlsSSTab.Tab
@@ -1177,7 +1177,7 @@ End Sub
 
 Private Sub ControlsTabStrip_Click()
 Const ProcName As String = "ControlsTabStrip_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ControlsSSTab.SetFocus
@@ -1192,7 +1192,7 @@ End Sub
 
 Private Sub FeaturesSSTAB_Click(PreviousTab As Integer)
 Const ProcName As String = "FeaturesSSTAB_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case FeaturesSSTAB.Tab
@@ -1215,7 +1215,7 @@ End Sub
 
 Private Sub HideControlsPicture_Click()
 Const ProcName As String = "HideControlsPicture_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 hideControls
@@ -1229,7 +1229,7 @@ End Sub
 
 Private Sub HideFeaturesPicture_Click()
 Const ProcName As String = "HideFeaturesPicture_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 hideFeatures
@@ -1243,7 +1243,7 @@ End Sub
 
 Private Sub HistContractSearch_Action()
 Const ProcName As String = "HistContractSearch_Action"
-Dim failpoint As String
+
 On Error GoTo Err
 
 createHistoricCharts HistContractSearch.SelectedContracts
@@ -1257,7 +1257,7 @@ End Sub
 
 Private Sub HistContractSearch_NoContracts()
 Const ProcName As String = "HistContractSearch_NoContracts"
-Dim failpoint As String
+
 On Error GoTo Err
 
 MsgBox "No contracts found", vbExclamation, "Attention"
@@ -1271,7 +1271,7 @@ End Sub
 
 Private Sub LiveContractSearch_Action()
 Const ProcName As String = "LiveContractSearch_Action"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTickers.StartTickersFromContracts TickerOptOrdersAreLive + TickerOptUseExchangeTimeZone, _
@@ -1285,7 +1285,7 @@ End Sub
 
 Private Sub LiveContractSearch_NoContracts()
 Const ProcName As String = "LiveContractSearch_NoContracts"
-Dim failpoint As String
+
 On Error GoTo Err
 
 MsgBox "No contracts found", vbExclamation, "Attention"
@@ -1299,7 +1299,7 @@ End Sub
 
 Private Sub LiveChartTimeframeSelector_Click()
 Const ProcName As String = "LiveChartTimeframeSelector_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setChartButtonTooltip
@@ -1313,7 +1313,7 @@ End Sub
 
 Private Sub LiveOrdersSummary_SelectionChanged()
 Const ProcName As String = "LiveOrdersSummary_SelectionChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setOrdersSelection LiveOrdersSummary
@@ -1329,7 +1329,7 @@ Private Sub MarketDepthButton_Click()
 Const ProcName As String = "MarketDepthButton_Click"
 Dim lTicker As Ticker
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lTicker In TickerGrid1.SelectedTickers
@@ -1347,7 +1347,7 @@ End Sub
 
 Private Sub ModifyOrderPlexButton_Click()
 Const ProcName As String = "ModifyOrderPlexButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If OrdersSummaryTabStrip.SelectedItem.index = OrdersTabIndexNumbers.OrdersTabIndexLive Then
@@ -1373,7 +1373,7 @@ End Sub
 
 Private Sub NumHistBarsText_Validate(cancel As Boolean)
 Const ProcName As String = "NumHistBarsText_Validate"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
@@ -1387,7 +1387,7 @@ End Sub
 
 Private Sub NumHistoryBarsText_Validate(cancel As Boolean)
 Const ProcName As String = "NumHistoryBarsText_Validate"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then cancel = True
@@ -1403,7 +1403,7 @@ Private Sub OrdersSummaryTabStrip_Click()
 Const ProcName As String = "OrdersSummaryTabStrip_Click"
 Static currIndex As Long
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If OrdersSummaryTabStrip.SelectedItem.index = currIndex Then Exit Sub
@@ -1427,7 +1427,7 @@ End Sub
 
 Private Sub OrderTicket1Button_Click()
 Const ProcName As String = "OrderTicket1Button_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If getSelectedTicker Is Nothing Then
@@ -1445,7 +1445,7 @@ End Sub
 
 Private Sub OrderTicketButton_Click()
 Const ProcName As String = "OrderTicketButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If getSelectedTicker Is Nothing Then
@@ -1463,7 +1463,7 @@ End Sub
 
 Private Sub PauseReplayButton_Click()
 Const ProcName As String = "PauseReplayButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = True
@@ -1480,7 +1480,7 @@ End Sub
 
 Private Sub PlayTickFileButton_Click()
 Const ProcName As String = "PlayTickFileButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = False
@@ -1510,7 +1510,7 @@ End Sub
 
 Private Sub ReplaySpeedCombo_Click()
 Const ProcName As String = "ReplaySpeedCombo_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mTickfileManager Is Nothing Then
@@ -1532,7 +1532,7 @@ Dim tickfiles As TickFileSpecifiers
 Dim tfs As TickfileSpecifier
 Dim userCancelled As Boolean
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set tickfiles = SelectTickfiles(userCancelled)
@@ -1558,7 +1558,7 @@ End Sub
 
 Private Sub ShowControlsPicture_Click()
 Const ProcName As String = "ShowControlsPicture_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 showControls
@@ -1572,7 +1572,7 @@ End Sub
 
 Private Sub showFeaturesPicture_Click()
 Const ProcName As String = "showFeaturesPicture_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 showFeatures
@@ -1586,7 +1586,7 @@ End Sub
 
 Private Sub SimulatedOrdersSummary_Click()
 Const ProcName As String = "SimulatedOrdersSummary_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setOrdersSelection SimulatedOrdersSummary
@@ -1600,7 +1600,7 @@ End Sub
 
 Private Sub SkipReplayButton_Click()
 Const ProcName As String = "SkipReplayButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LogMessage "Tickfile skipped"
@@ -1615,7 +1615,7 @@ End Sub
 
 Private Sub StopReplayButton_Click()
 Const ProcName As String = "StopReplayButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PlayTickFileButton.Enabled = True
@@ -1637,7 +1637,7 @@ End Sub
 
 Private Sub StopTickerButton_Click()
 Const ProcName As String = "StopTickerButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickerGrid1.stopSelectedTickers
@@ -1651,7 +1651,7 @@ End Sub
 
 Private Sub TickerGrid1_SelectionChanged()
 Const ProcName As String = "TickerGrid1_SelectionChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handleSelectedTickers
@@ -1665,7 +1665,7 @@ End Sub
 
 Private Sub TickerGrid1_TickerStarted(ByVal row As Long)
 Const ProcName As String = "TickerGrid1_TickerStarted"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickerGrid1.deselectSelectedTickers
@@ -1685,7 +1685,7 @@ End Sub
 
 Private Sub mCurrentClock_Tick()
 Const ProcName As String = "mCurrentClock_Tick"
-Dim failpoint As String
+
 On Error GoTo Err
 
 displayTime
@@ -1706,7 +1706,7 @@ Private Sub mTickers_StateChange( _
 Const ProcName As String = "mTickers_StateChange"
 Dim lTicker As Ticker
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 OrderTicketButton.Enabled = Not (getSelectedTicker Is Nothing)
@@ -1761,7 +1761,7 @@ Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal pContract As Contract, _
                 continueMode As ReplayContinueModes)
 Const ProcName As String = "mTickfileManager_QueryReplayNextTickfile"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If tickfileIndex <> 0 Then setCurrentClock getDefaultClock
@@ -1781,7 +1781,7 @@ End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
 Const ProcName As String = "mTickfileManager_ReplayCompleted"
-Dim failpoint As String
+
 On Error GoTo Err
 
 MarketDepthButton.Enabled = False
@@ -1811,7 +1811,7 @@ Private Sub mTickfileManager_ReplayProgress( _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
 Const ProcName As String = "mTickfileManager_ReplayProgress"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReplayProgressBar.value = percentComplete
@@ -1829,7 +1829,7 @@ End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
 Const ProcName As String = "mTickfileManager_TickerAllocated"
-Dim failpoint As String
+
 On Error GoTo Err
 
 pTicker.DOMEventsRequired = DOMProcessedEvents
@@ -1861,7 +1861,7 @@ Private Sub mTradeBuildAPI_Notification( _
 Const ProcName As String = "mTradeBuildAPI_Notification"
 Dim spError As ServiceProviderError
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case ev.eventCode
@@ -1913,7 +1913,7 @@ End Sub
 Public Sub initialise( _
                 ByVal editConfig As Boolean)
 Const ProcName As String = "initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfigEditor = New fConfigEditor
@@ -1937,7 +1937,7 @@ Public Function LoadConfig( _
 Const ProcName As String = "LoadConfig"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 updateInstanceSettings
@@ -1956,7 +1956,7 @@ gSetPermittedServiceProviderRoles
 
 Set gAppInstanceConfig = configToLoad
 
-If ConfigureTradeBuild(gConfigFile, gAppInstanceConfig.InstanceQualifier) Then
+If ConfigureTradeBuild(gConfigStore, gAppInstanceConfig.InstanceQualifier) Then
     Unload mConfigEditor
     loadAppInstanceConfig
     Set mConfigEditor = New fConfigEditor
@@ -1975,7 +1975,7 @@ End Function
 
 Public Sub MakeVisible()
 Const ProcName As String = "MakeVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.Show
@@ -1993,7 +1993,7 @@ End Sub
 
 Private Sub applyInstanceSettings()
 Const ProcName As String = "applyInstanceSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LogMessage "Loading configuration: positioning main form"
@@ -2043,7 +2043,7 @@ End Sub
 
 Private Sub checkOkToStartReplay()
 Const ProcName As String = "checkOkToStartReplay"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TickfileList.ListCount <> 0 Then
@@ -2060,7 +2060,7 @@ End Sub
 
 Private Sub clearSelectedTickers()
 Const ProcName As String = "clearSelectedTickers"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickerGrid1.deselectSelectedTickers
@@ -2075,7 +2075,7 @@ End Sub
 Private Sub closeChartsAndMarketDepthForms()
 Const ProcName As String = "closeChartsAndMarketDepthForms"
 Dim f As Form
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each f In Forms
@@ -2093,7 +2093,7 @@ Const ProcName As String = "createChart"
 Dim chartForm As fChart
 Dim tp As timePeriod
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not pTicker.state = TickerStateRunning Then Exit Sub
@@ -2114,7 +2114,7 @@ Private Sub createChartFromConfig( _
                 ByVal chartConfig As ConfigurationSection)
 Const ProcName As String = "createChartFromConfig"
 Dim chartForm As fChart
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set chartForm = New fChart
@@ -2141,7 +2141,7 @@ Static xAxisRegionStyle As ChartRegionStyle
 Static defaultYAxisRegionStyle As ChartRegionStyle
 Static defaultBarsStyle As BarStyle
 Static defaultVolumeStyle As DataPointStyle
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim GradientFillColors(1) As Long
@@ -2152,7 +2152,7 @@ If defaultRegionStyle Is Nothing Then
     GradientFillColors(0) = RGB(50, 50, 100)
     GradientFillColors(1) = RGB(248, 248, 248)
     defaultRegionStyle.BackGradientFillColors = GradientFillColors
-    defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
+    'defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
     defaultRegionStyle.GridlineSpacingY = 1.8
     defaultRegionStyle.HasGrid = True
     defaultRegionStyle.CursorSnapsToTickBoundaries = True
@@ -2237,7 +2237,7 @@ Dim toDate As Date
 Dim chartForm As fChart
 Dim lContract As Contract
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lContract In pContracts
@@ -2277,7 +2277,7 @@ End Sub
 Private Sub displayTime()
 Const ProcName As String = "displayTime"
 Dim theTime As Date
-Dim failpoint As String
+
 On Error GoTo Err
 
 theTime = mCurrentClock.TimeStamp
@@ -2292,7 +2292,7 @@ End Sub
 
 Private Sub finishUIControls()
 Const ProcName As String = "finishUIControls"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LiveOrdersSummary.Finish
@@ -2310,7 +2310,7 @@ End Sub
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
 Const ProcName As String = "formatLogRecord"
 Static formatter As LogFormatter
-Dim failpoint As String
+
 On Error GoTo Err
 
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
@@ -2325,7 +2325,7 @@ End Function
 Private Function getDefaultClock() As Clock
 Const ProcName As String = "getDefaultClock"
 Static lClock As Clock
-Dim failpoint As String
+
 On Error GoTo Err
 
 If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
@@ -2340,7 +2340,7 @@ End Function
 Private Function getOrderTicket() As fOrderTicket
 Const ProcName As String = "getOrderTicket"
 Static lOrderTicket As fOrderTicket
-Dim failpoint As String
+
 On Error GoTo Err
 
 If lOrderTicket Is Nothing Then
@@ -2357,7 +2357,7 @@ End Function
 
 Private Function getSelectedTicker() As Ticker
 Const ProcName As String = "getSelectedTicker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedTicker = TickerGrid1.SelectedTickers.Item(1)
@@ -2372,7 +2372,7 @@ Private Sub handleSelectedTickers()
 Const ProcName As String = "handleSelectedTickers"
 Dim lTicker As Ticker
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
@@ -2425,7 +2425,7 @@ End Sub
 
 Private Sub hideControls()
 Const ProcName As String = "hideControls"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ControlsSSTab.Visible = False
@@ -2444,7 +2444,7 @@ End Sub
 
 Private Sub hideFeatures()
 Const ProcName As String = "hideFeatures"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FeaturesSSTAB.Visible = False
@@ -2462,7 +2462,7 @@ End Sub
 
 Private Sub killLogging()
 Const ProcName As String = "killLogging"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetLogger("log").RemoveLogListener Me
@@ -2477,7 +2477,7 @@ Private Sub loadAppInstanceConfig()
 Const ProcName As String = "loadAppInstanceConfig"
 
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 LogMessage "Loading configuration: " & gAppInstanceConfig.InstanceQualifier
@@ -2518,7 +2518,7 @@ Private Sub Resize()
 Const ProcName As String = "Resize"
 Dim left As Long
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mControlsHidden Then
@@ -2575,12 +2575,12 @@ End Sub
 
 Private Sub saveSettings()
 Const ProcName As String = "saveSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If gConfigFile.dirty Then
+If gConfigStore.dirty Then
     LogMessage "Saving configuration"
-    gConfigFile.Save
+    gConfigStore.Save
 End If
 
 Exit Sub
@@ -2593,7 +2593,7 @@ Private Sub setChartButtonTooltip()
 Const ProcName As String = "setChartButtonTooltip"
 Dim tp As timePeriod
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set tp = LiveChartTimeframeSelector.TimeframeDesignator
@@ -2612,11 +2612,11 @@ End Sub
 Private Sub setCurrentClock( _
                 ByVal pClock As Clock)
 Const ProcName As String = "setCurrentClock"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mCurrentClock = pClock
-StatusBar1.Panels("timezone") = mCurrentClock.TimeZone.standardName
+StatusBar1.Panels("timezone") = mCurrentClock.TimeZone.StandardName
 displayTime
 
 Exit Sub
@@ -2630,7 +2630,7 @@ Private Sub setOrdersSelection( _
 Const ProcName As String = "setOrdersSelection"
 Dim selection As OrderPlex
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pOrdersSummary.IsEditing Then
@@ -2668,7 +2668,7 @@ End Sub
 
 Private Sub setupExecutionSummaries()
 Const ProcName As String = "setupExecutionSummaries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
@@ -2701,7 +2701,7 @@ End Sub
 
 Private Sub setupLogging()
 Const ProcName As String = "setupLogging"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
@@ -2715,7 +2715,7 @@ End Sub
 
 Private Sub setupOrderSummaries()
 Const ProcName As String = "setupOrderSummaries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTradeBuildAPI.AllOrdersSimulated Then
@@ -2752,7 +2752,7 @@ End Sub
 
 Private Sub setupReplaySpeedCombo()
 Const ProcName As String = "setupReplaySpeedCombo"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReplaySpeedCombo.AddItem "10 Second intervals"
@@ -2784,7 +2784,7 @@ End Sub
 
 Private Sub setupTickerGrid()
 Const ProcName As String = "setupTickerGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickerGrid1.Finish
@@ -2800,7 +2800,7 @@ Private Sub setupTimeframeSelectors()
 Const ProcName As String = "setupTimeframeSelectors"
 ' now set up the timeframe selectors, which depends on what timeframes the historical data service
 ' provider supports (it obtains this info from TradeBuild)
-Dim failpoint As String
+
 On Error GoTo Err
 
 LiveChartTimeframeSelector.initialise   ' use the default settings built-in to the control
@@ -2818,7 +2818,7 @@ End Sub
 
 Private Sub showConfigEditor()
 Const ProcName As String = "showConfigEditor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mConfigEditor.Show vbModeless
@@ -2831,7 +2831,7 @@ End Sub
 
 Private Sub showControls()
 Const ProcName As String = "showControls"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mControlsHidden = False
@@ -2850,7 +2850,7 @@ End Sub
 
 Private Sub showFeatures()
 Const ProcName As String = "showFeatures"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mFeaturesHidden = False
@@ -2870,7 +2870,7 @@ Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
 Const ProcName As String = "showMarketDepthForm"
 Dim mktDepthForm As fMarketDepth
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not pTicker.state = TickerStateRunning Then Exit Sub
@@ -2888,7 +2888,7 @@ End Sub
 
 Private Sub updateInstanceSettings()
 Const ProcName As String = "updateInstanceSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gAppInstanceConfig Is Nothing Then

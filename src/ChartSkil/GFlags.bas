@@ -107,6 +107,8 @@ Case DataPointPropertyHistWidth
     gDataPointPropertyFlagToString = "HistWidth"
 Case DataPointPropertyIncludeInAutoscale
     gDataPointPropertyFlagToString = "IncludeInAutoscale"
+Case DataPointPropertyLayer
+    gDataPointPropertyFlagToString = "Layer"
 End Select
 End Function
 
@@ -119,7 +121,7 @@ End Function
 Public Function gIsFlagSet( _
                 ByVal flags As Long, _
                 ByVal flag As Long) As Boolean
-gIsFlagSet = CBool((flags And flag) <> 0)
+gIsFlagSet = CBool((flags And flag) = flag)
 End Function
 
 Public Function gLinePropertyFlagToString( _
@@ -171,6 +173,8 @@ Case LinePropertyOffset1
     gLinePropertyFlagToString = "Offset1"
 Case LinePropertyOffset2
     gLinePropertyFlagToString = "Offset2"
+Case LinePropertyLayer
+    gLinePropertyFlagToString = "Layer"
 End Select
 End Function
 

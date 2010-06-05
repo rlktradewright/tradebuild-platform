@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   5895
@@ -89,7 +89,7 @@ End Sub
 
 Private Sub Form_Resize()
 Const ProcName As String = "Form_Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Me.ScaleWidth = 0 And _
@@ -125,10 +125,10 @@ End Sub
 
 Private Sub CentreButton_Click()
 Const ProcName As String = "CentreButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
-DOMDisplay1.centre
+DOMDisplay1.Centre
 
 Exit Sub
 
@@ -138,7 +138,7 @@ End Sub
 
 Private Sub DOMDisplay1_Halted()
 Const ProcName As String = "DOMDisplay1_Halted"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.caption = "Market depth data halted"
@@ -151,7 +151,7 @@ End Sub
 
 Private Sub DOMDisplay1_Resumed()
 Const ProcName As String = "DOMDisplay1_Resumed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.caption = mCaption
@@ -168,7 +168,7 @@ End Sub
 
 Private Sub mTicker_MarketDepthNotAvailable(ByVal reason As String)
 Const ProcName As String = "mTicker_MarketDepthNotAvailable"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gModelessMsgBox "Market depth is not available: " & reason, MsgBoxExclamation, "Attention"
@@ -187,7 +187,7 @@ End Sub
 
 Public Property Let numberOfRows(ByVal value As Long)
 Const ProcName As String = "numberOfRows"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DOMDisplay1.numberOfRows = value
@@ -200,7 +200,7 @@ End Property
 
 Public Property Let Ticker(ByVal value As Ticker)
 Const ProcName As String = "Ticker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mTicker = value

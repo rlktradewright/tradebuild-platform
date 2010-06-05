@@ -821,7 +821,6 @@ Public Property Get Offset1() As Size
 Const ProcName As String = "Offset1"
 On Error GoTo Err
 
-checkPropertySet LinePropertyOffset1
 Set Offset1 = mOffset1
 
 Exit Property
@@ -848,7 +847,6 @@ Public Property Get Offset2() As Size
 Const ProcName As String = "Offset2"
 On Error GoTo Err
 
-checkPropertySet LinePropertyOffset2
 Set Offset2 = mOffset2
 
 Exit Property
@@ -955,38 +953,38 @@ Set mConfig = pConfig
 mName = mConfig.GetSetting(ConfigSettingName)
 mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
 
-If mConfig.GetAttribute(ConfigSettingArrowEndColor) <> "" Then ArrowEndColor = mConfig.GetSetting(ConfigSettingArrowEndColor)
-If mConfig.GetAttribute(ConfigSettingArrowEndFillColor) <> "" Then ArrowEndFillColor = mConfig.GetSetting(ConfigSettingArrowEndFillColor)
-If mConfig.GetAttribute(ConfigSettingArrowEndFillStyle) <> "" Then ArrowEndFillStyle = mConfig.GetSetting(ConfigSettingArrowEndFillStyle)
-If mConfig.GetAttribute(ConfigSettingArrowEndLength) <> "" Then ArrowEndLength = mConfig.GetSetting(ConfigSettingArrowEndLength)
-If mConfig.GetAttribute(ConfigSettingArrowEndStyle) <> "" Then ArrowEndStyle = mConfig.GetSetting(ConfigSettingArrowEndStyle)
-If mConfig.GetAttribute(ConfigSettingArrowEndWidth) <> "" Then ArrowEndWidth = mConfig.GetSetting(ConfigSettingArrowEndWidth)
+If mConfig.GetSetting(ConfigSettingArrowEndColor) <> "" Then ArrowEndColor = mConfig.GetSetting(ConfigSettingArrowEndColor)
+If mConfig.GetSetting(ConfigSettingArrowEndFillColor) <> "" Then ArrowEndFillColor = mConfig.GetSetting(ConfigSettingArrowEndFillColor)
+If mConfig.GetSetting(ConfigSettingArrowEndFillStyle) <> "" Then ArrowEndFillStyle = mConfig.GetSetting(ConfigSettingArrowEndFillStyle)
+If mConfig.GetSetting(ConfigSettingArrowEndLength) <> "" Then ArrowEndLength = mConfig.GetSetting(ConfigSettingArrowEndLength)
+If mConfig.GetSetting(ConfigSettingArrowEndStyle) <> "" Then ArrowEndStyle = mConfig.GetSetting(ConfigSettingArrowEndStyle)
+If mConfig.GetSetting(ConfigSettingArrowEndWidth) <> "" Then ArrowEndWidth = mConfig.GetSetting(ConfigSettingArrowEndWidth)
 
-If mConfig.GetAttribute(ConfigSettingArrowStartColor) <> "" Then ArrowStartColor = mConfig.GetSetting(ConfigSettingArrowStartColor)
-If mConfig.GetAttribute(ConfigSettingArrowStartFillColor) <> "" Then ArrowStartFillColor = mConfig.GetSetting(ConfigSettingArrowStartFillColor)
-If mConfig.GetAttribute(ConfigSettingArrowStartfillStyle) <> "" Then ArrowStartFillStyle = mConfig.GetSetting(ConfigSettingArrowStartfillStyle)
-If mConfig.GetAttribute(ConfigSettingArrowStartLength) <> "" Then ArrowStartLength = mConfig.GetSetting(ConfigSettingArrowStartLength)
-If mConfig.GetAttribute(ConfigSettingArrowStartStyle) <> "" Then ArrowStartStyle = mConfig.GetSetting(ConfigSettingArrowStartStyle)
-If mConfig.GetAttribute(ConfigSettingArrowStartWidth) <> "" Then ArrowStartWidth = mConfig.GetSetting(ConfigSettingArrowStartWidth)
+If mConfig.GetSetting(ConfigSettingArrowStartColor) <> "" Then ArrowStartColor = mConfig.GetSetting(ConfigSettingArrowStartColor)
+If mConfig.GetSetting(ConfigSettingArrowStartFillColor) <> "" Then ArrowStartFillColor = mConfig.GetSetting(ConfigSettingArrowStartFillColor)
+If mConfig.GetSetting(ConfigSettingArrowStartfillStyle) <> "" Then ArrowStartFillStyle = mConfig.GetSetting(ConfigSettingArrowStartfillStyle)
+If mConfig.GetSetting(ConfigSettingArrowStartLength) <> "" Then ArrowStartLength = mConfig.GetSetting(ConfigSettingArrowStartLength)
+If mConfig.GetSetting(ConfigSettingArrowStartStyle) <> "" Then ArrowStartStyle = mConfig.GetSetting(ConfigSettingArrowStartStyle)
+If mConfig.GetSetting(ConfigSettingArrowStartWidth) <> "" Then ArrowStartWidth = mConfig.GetSetting(ConfigSettingArrowStartWidth)
 
-If mConfig.GetAttribute(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
+If mConfig.GetSetting(ConfigSettingColor) <> "" Then Color = mConfig.GetSetting(ConfigSettingColor)
 
-If mConfig.GetAttribute(ConfigSettingExtendAfter) <> "" Then ExtendAfter = mConfig.GetSetting(ConfigSettingExtendAfter)
-If mConfig.GetAttribute(ConfigSettingExtendBefore) <> "" Then ExtendBefore = mConfig.GetSetting(ConfigSettingExtendBefore)
-If mConfig.GetAttribute(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
+If mConfig.GetSetting(ConfigSettingExtendAfter) <> "" Then ExtendAfter = mConfig.GetSetting(ConfigSettingExtendAfter)
+If mConfig.GetSetting(ConfigSettingExtendBefore) <> "" Then ExtendBefore = mConfig.GetSetting(ConfigSettingExtendBefore)
+If mConfig.GetSetting(ConfigSettingExtended) <> "" Then Extended = mConfig.GetSetting(ConfigSettingExtended)
 
-If mConfig.GetAttribute(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
-If mConfig.GetAttribute(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
+If mConfig.GetSetting(ConfigSettingFixedX) <> "" Then FixedX = mConfig.GetSetting(ConfigSettingFixedX)
+If mConfig.GetSetting(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSetting(ConfigSettingFixedY)
 
-If mConfig.GetAttribute(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
+If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetAttribute(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
-If mConfig.GetAttribute(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
 
-If mConfig.GetAttribute(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
+If mConfig.GetSetting(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
 
-If Not mConfig.GetConfigurationSection(ConfigSectionOffset1) Then Offset1 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset1))
-If Not mConfig.GetConfigurationSection(ConfigSectionOffset2) Then Offset2 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset2))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset1) Is Nothing Then Offset1 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset1))
+If Not mConfig.GetConfigurationSection(ConfigSectionOffset2) Is Nothing Then Offset2 = gLoadSizeFromConfig(mConfig.GetConfigurationSection(ConfigSectionOffset2))
 
 Exit Sub
 

@@ -1039,6 +1039,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Layer = mSeries.Layer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyLayer) Then Layer = mLocalStyle.Layer
 If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 
 Exit Property
@@ -1053,6 +1054,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set LeftMargin = mSeries.LeftMargin
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyLeftMargin) Then Set LeftMargin = mLocalStyle.LeftMargin
 If IsPropertySet(TextPropertyLeftMargin) Then Set LeftMargin = mLeftMargin
 
 Exit Property
@@ -1141,6 +1143,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set Offset = mSeries.Offset
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyOffset) Then Set Offset = mLocalStyle.Offset
 If IsPropertySet(TextPropertyOffset) Then Set Offset = mOffset
 
 Exit Property
@@ -1272,6 +1275,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set RightMargin = mSeries.RightMargin
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyRightMargin) Then Set RightMargin = mLocalStyle.RightMargin
 If IsPropertySet(TextPropertyRightMargin) Then Set RightMargin = mRightMargin
 
 Exit Property
@@ -1334,6 +1338,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set Size = mSeries.Size
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertySize) Then Set Size = mLocalStyle.Size
 If IsPropertySet(TextPropertySize) Then Set Size = mSize
 
 Exit Property

@@ -66,8 +66,8 @@ Private Const TickfilesPath                 As String = "C:\Data\Tickfiles"
 ' Member variables
 '@================================================================================
 
-Private mConfigFilename                     As String
-Private mConfigFile                         As ConfigurationFile
+Private mConfigStorename                     As String
+Private mConfigStore                         As ConfigurationStore
 Private mAppConfigs                         As ConfigurationSection
 
 Private mCurrAppConfig                      As ConfigurationSection
@@ -101,7 +101,7 @@ Private Sub ChangeListener_Change( _
 Const ProcName As String = "ChangeListener_Change"
 On Error GoTo Err
 
-If ev.Source Is mConfigFile Then
+If ev.Source Is mConfigStore Then
     Select Case ev.changeType
     Case ConfigChangeTypes.ConfigClean
         RaiseEvent Clean
@@ -137,15 +137,15 @@ Err:
 HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Get ConfigurationFile() As ConfigurationFile
-Set ConfigurationFile = mConfigFile
+Public Property Get ConfigurationFile() As ConfigurationStore
+Set ConfigurationFile = mConfigStore
 End Property
 
 Public Property Get Dirty() As Boolean
 Const ProcName As String = "Dirty"
 On Error GoTo Err
 
-If Not mConfigFile Is Nothing Then Dirty = mConfigFile.Dirty
+If Not mConfigStore Is Nothing Then Dirty = mConfigStore.Dirty
 
 Exit Property
 
@@ -227,7 +227,7 @@ If configName = "" Then
     Loop
 End If
 
-Set mCurrAppConfig = AddAppInstanceConfig(mConfigFile, _
+Set mCurrAppConfig = AddAppInstanceConfig(mConfigStore, _
                                     configName, _
                                     includeDefaultStudyLibrary:=False, _
                                     setAsDefault:=False, _
@@ -253,7 +253,7 @@ Public Sub deleteCurrent()
 Const ProcName As String = "deleteCurrent"
 On Error GoTo Err
 
-RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
+RemoveAppInstanceConfig mConfigStore, mCurrAppConfig.InstanceQualifier
 If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
 mConfigNames.Remove mCurrAppConfig.InstanceQualifier
 Set mCurrAppConfig = Nothing
@@ -266,23 +266,23 @@ End Sub
 
 Public Function initialise( _
                 ByVal configFilename As String) As Boolean
-Dim baseConfigFile As TWUtilities30.ConfigFile
+Dim baseConfigFile As ConfigStoreProvider
 Dim appConfig As ConfigurationSection
 
 Const ProcName As String = "initialise"
 On Error GoTo Err
 
-mConfigFilename = configFilename
+mConfigStorename = configFilename
 
 On Error Resume Next
-Set baseConfigFile = LoadXMLConfigurationFile(mConfigFilename)
+Set baseConfigFile = LoadConfigProviderFromXMLFile(mConfigStorename)
 On Error GoTo Err
 If baseConfigFile Is Nothing Then
     LogMessage "No configuration exists - creating skeleton configuration file"
-    Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
-    Set mConfigFile = CreateConfigurationFile(baseConfigFile, mConfigFilename)
-    InitialiseConfigFile mConfigFile
-    Set appConfig = AddAppInstanceConfig(mConfigFile, _
+    Set baseConfigFile = CreateXMLConfigurationProvider(App.ProductName, ConfigFileVersion)
+    Set mConfigStore = CreateConfigurationStore(baseConfigFile, mConfigStorename)
+    InitialiseConfigFile mConfigStore
+    Set appConfig = AddAppInstanceConfig(mConfigStore, _
                         DefaultAppInstanceConfigName, _
                         includeDefaultStudyLibrary:=False, _
                         setAsDefault:=True, _
@@ -297,22 +297,22 @@ If baseConfigFile Is Nothing Then
     mConfigNames.Add DefaultAppInstanceConfigName, DefaultAppInstanceConfigName
 
 Else
-    Set mConfigFile = CreateConfigurationFile(baseConfigFile, _
-                                            mConfigFilename)
-    If mConfigFile.ApplicationName <> App.ProductName Or _
-        mConfigFile.fileVersion <> ConfigFileVersion Or _
-        Not IsValidConfigurationFile(mConfigFile) _
+    Set mConfigStore = CreateConfigurationStore(baseConfigFile, _
+                                            mConfigStorename)
+    If mConfigStore.ApplicationName <> App.ProductName Or _
+        mConfigStore.fileVersion <> ConfigFileVersion Or _
+        Not IsValidConfigurationFile(mConfigStore) _
     Then
         LogMessage "The configuration file is not the correct format for this program"
         Exit Function
     End If
 End If
 
-mConfigFile.AddChangeListener Me
+mConfigStore.AddChangeListener Me
 
-Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
+Set mAppConfigs = mConfigStore.GetConfigurationSection("/" & ConfigNameAppConfigs)
 
-Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigFile)
+Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigStore)
 
 For Each appConfig In mAppConfigs
     mConfigNames.Add appConfig.InstanceQualifier, appConfig.InstanceQualifier
@@ -368,9 +368,9 @@ Const ProcName As String = "saveConfigFile"
 On Error GoTo Err
 
 If filename <> "" Then
-    mConfigFilename = filename
+    mConfigStorename = filename
 End If
-mConfigFile.Save mConfigFilename
+mConfigStore.Save mConfigStorename
 
 Exit Sub
 
@@ -396,10 +396,10 @@ Const ProcName As String = "toggleDefaultConfig"
 On Error GoTo Err
 
 If mCurrAppConfig Is mDefaultAppConfig Then
-    UnsetDefaultAppInstanceConfig mConfigFile
+    UnsetDefaultAppInstanceConfig mConfigStore
     Set mDefaultAppConfig = Nothing
 Else
-    SetDefaultAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
+    SetDefaultAppInstanceConfig mConfigStore, mCurrAppConfig.InstanceQualifier
     
     Set mDefaultAppConfig = mCurrAppConfig
 End If

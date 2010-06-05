@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6135
@@ -79,7 +79,7 @@ End Sub
 Private Sub Form_Load()
 
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
@@ -94,7 +94,7 @@ End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-Dim failpoint As String
+
 On Error GoTo Err
 
 updateSettings
@@ -107,7 +107,7 @@ End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Const ProcName As String = "Form_Unload"
-Dim failpoint As String
+
 On Error GoTo Err
 
 OrderTicket1.Finish
@@ -124,7 +124,7 @@ End Sub
 
 Private Sub OrderTicket1_CaptionChanged(ByVal caption As String)
 Const ProcName As String = "OrderTicket1_CaptionChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.caption = caption
@@ -141,7 +141,7 @@ End Sub
 
 Public Property Let Ticker(ByVal value As Ticker)
 Const ProcName As String = "Ticker"
-Dim failpoint As String
+
 On Error GoTo Err
 
 OrderTicket1.Ticker = value
@@ -160,7 +160,7 @@ Public Sub showOrderPlex( _
                 ByVal value As OrderPlex, _
                 ByVal selectedOrderNumber As Long)
 Const ProcName As String = "showOrderPlex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 OrderTicket1.showOrderPlex value, selectedOrderNumber
@@ -177,7 +177,7 @@ End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gAppInstanceConfig Is Nothing Then

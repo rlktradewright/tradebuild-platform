@@ -99,16 +99,17 @@ Public Property Get gDefaultBarStyle() As BarStyle
 Static lStyle As BarStyle
 If lStyle Is Nothing Then
     Set lStyle = New BarStyle
-    lStyle.TailThickness = 1
-    lStyle.OutlineThickness = 1
-    lStyle.UpColor = vbBlack
-    lStyle.DownColor = vbBlack
-    lStyle.DisplayMode = BarDisplayModeCandlestick
-    lStyle.SolidUpBody = False
-    lStyle.Thickness = 2
-    lStyle.Width = 0.6
     lStyle.Color = -1
+    lStyle.DisplayMode = BarDisplayModeCandlestick
+    lStyle.DownColor = vbBlack
     lStyle.IncludeInAutoscale = True
+    lStyle.Layer = LayerLowestUser
+    lStyle.OutlineThickness = 1
+    lStyle.SolidUpBody = False
+    lStyle.TailThickness = 1
+    lStyle.Thickness = 2
+    lStyle.UpColor = vbBlack
+    lStyle.Width = 0.6
 End If
 Set gDefaultBarStyle = lStyle
 End Property
@@ -117,15 +118,16 @@ Public Property Get gDefaultDataPointStyle() As DataPointStyle
 Static lStyle As DataPointStyle
 If lStyle Is Nothing Then
     Set lStyle = New DataPointStyle
-    lStyle.LineThickness = 1
     lStyle.Color = vbBlack
-    lStyle.LineStyle = LineStyles.LineSolid
-    lStyle.PointStyle = PointRound
     lStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
-    lStyle.HistogramBarWidth = 0.6
     lStyle.DownColor = -1
-    lStyle.UpColor = -1
+    lStyle.HistogramBarWidth = 0.6
     lStyle.IncludeInAutoscale = True
+    lStyle.Layer = LayerLowestUser + 1
+    lStyle.LineStyle = LineStyles.LineSolid
+    lStyle.LineThickness = 1
+    lStyle.PointStyle = PointRound
+    lStyle.UpColor = -1
 End If
 Set gDefaultDataPointStyle = lStyle
 End Property
@@ -134,27 +136,28 @@ Public Property Get gDefaultLineStyle() As LineStyle
 Static lStyle As LineStyle
 If lStyle Is Nothing Then
     Set lStyle = New LineStyle
-    lStyle.Color = vbBlack
-    lStyle.Thickness = 1
-    lStyle.LineStyle = LineStyles.LineSolid
-    lStyle.ExtendBefore = False
-    lStyle.ExtendAfter = False
-    lStyle.ArrowStartStyle = ArrowStyles.ArrowNone
-    lStyle.ArrowStartLength = 10
-    lStyle.ArrowStartWidth = 10
-    lStyle.ArrowStartColor = vbBlack
-    lStyle.ArrowStartFillColor = vbBlack
-    lStyle.ArrowStartFillStyle = FillStyles.FillSolid
-    lStyle.ArrowEndStyle = ArrowStyles.ArrowNone
-    lStyle.ArrowEndLength = 10
-    lStyle.ArrowEndWidth = 10
     lStyle.ArrowEndColor = vbBlack
     lStyle.ArrowEndFillColor = vbBlack
     lStyle.ArrowEndFillStyle = FillStyles.FillSolid
-    lStyle.IncludeInAutoscale = False
+    lStyle.ArrowEndLength = 10
+    lStyle.ArrowEndStyle = ArrowStyles.ArrowNone
+    lStyle.ArrowEndWidth = 10
+    lStyle.ArrowStartColor = vbBlack
+    lStyle.ArrowStartFillColor = vbBlack
+    lStyle.ArrowStartFillStyle = FillStyles.FillSolid
+    lStyle.ArrowStartLength = 10
+    lStyle.ArrowStartStyle = ArrowStyles.ArrowNone
+    lStyle.ArrowStartWidth = 10
+    lStyle.Color = vbBlack
+    lStyle.ExtendAfter = False
+    lStyle.ExtendBefore = False
+    lStyle.Extended = False
     lStyle.FixedX = False
     lStyle.FixedY = False
-    lStyle.Extended = False
+    lStyle.IncludeInAutoscale = False
+    lStyle.Layer = LayerHighestUser
+    lStyle.LineStyle = LineStyles.LineSolid
+    lStyle.Thickness = 1
 End If
 Set gDefaultLineStyle = lStyle
 End Property
@@ -163,15 +166,17 @@ Public Property Get gDefaultTextStyle() As TextStyle
 Static lStyle As TextStyle
 If lStyle Is Nothing Then
     Set lStyle = New TextStyle
-    lStyle.Font = New StdFont
-    lStyle.Font.Bold = False
-    lStyle.Font.Italic = False
-    lStyle.Font.Name = "Arial"
-    lStyle.Font.Size = 8
-    lStyle.Font.Strikethrough = False
-    lStyle.Font.Underline = False
     
-    lStyle.Color = vbBlack
+    Dim aFont As New StdFont
+    aFont.Bold = False
+    aFont.Italic = False
+    aFont.Name = "Arial"
+    aFont.Size = 8
+    aFont.Strikethrough = False
+    aFont.Underline = False
+    
+    lStyle.Angle = 0
+    lStyle.Align = TextAlignModes.AlignTopLeft
     lStyle.Box = False
     lStyle.BoxColor = vbBlack
     lStyle.BoxStyle = LineStyles.LineSolid
@@ -179,22 +184,22 @@ If lStyle Is Nothing Then
     lStyle.BoxFillColor = vbWhite
     lStyle.BoxFillStyle = FillStyles.FillSolid
     lStyle.BoxFillWithBackgroundColor = False
-    lStyle.Align = TextAlignModes.AlignTopLeft
-    lStyle.PaddingX = 1
-    lStyle.PaddingY = 0#
-    lStyle.IncludeInAutoscale = False
-    lStyle.FixedX = False
-    lStyle.FixedY = False
-    lStyle.Extended = False
-    
-    lStyle.Angle = 0
-    lStyle.Justification = TextJustifyModes.JustifyLeft
-    lStyle.MultiLine = False
+    lStyle.Color = vbBlack
+    lStyle.Font = aFont
     lStyle.Ellipsis = EllipsisModes.EllipsisNone
     lStyle.ExpandTabs = True
+    lStyle.Extended = False
+    lStyle.FixedX = False
+    lStyle.FixedY = False
+    lStyle.HideIfBlank = True
+    lStyle.IncludeInAutoscale = False
+    lStyle.Justification = TextJustifyModes.JustifyLeft
+    lStyle.Layer = LayerHighestUser
+    lStyle.MultiLine = False
+    lStyle.PaddingX = 1
+    lStyle.PaddingY = 0#
     lStyle.TabWidth = 8
     lStyle.WordWrap = True
-    lStyle.HideIfBlank = True
 End If
 Set gDefaultTextStyle = lStyle
 End Property
