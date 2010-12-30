@@ -128,7 +128,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================
@@ -169,7 +169,7 @@ Key = Specifier.Key
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Multiplier() As Double
@@ -194,7 +194,7 @@ ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let ProviderIDs(ByRef value As Parameters)
@@ -262,7 +262,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Property
 
@@ -313,7 +313,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function FormatPriceAs32nds( _
@@ -327,7 +327,7 @@ FormatPriceAs32nds = mPriceFormatter.FormatPriceAs32nds(pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function FormatPriceAs32ndsAndFractions( _
@@ -341,7 +341,7 @@ FormatPriceAs32ndsAndFractions = mPriceFormatter.FormatPriceAs32ndsAndFractions(
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function FormatPriceAs64ths( _
@@ -355,7 +355,7 @@ FormatPriceAs64ths = mPriceFormatter.FormatPriceAs64ths(pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function FormatPriceAs64thsAndFractions( _
@@ -369,7 +369,7 @@ FormatPriceAs64thsAndFractions = mPriceFormatter.FormatPriceAs64thsAndFractions(
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function FormatPriceAsDecimals( _
@@ -383,7 +383,7 @@ FormatPriceAsDecimals = mPriceFormatter.FormatPriceAsDecimals(pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub FromXML(ByVal contractXML As String)
@@ -480,7 +480,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function IsValidPrice( _
@@ -520,7 +520,7 @@ IsValidPrice = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePrice( _
@@ -559,7 +559,7 @@ ParsePrice = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePriceAs32nds( _
@@ -574,7 +574,7 @@ ParsePriceAs32nds = mPriceParser.ParsePriceAs32nds(pPriceString, pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePriceAs32ndsAndFractions( _
@@ -589,7 +589,7 @@ ParsePriceAs32ndsAndFractions = mPriceParser.ParsePriceAs32ndsAndFractions(pPric
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePriceAs64ths( _
@@ -604,7 +604,7 @@ ParsePriceAs64ths = mPriceParser.ParsePriceAs64ths(pPriceString, pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePriceAs64thsAndFractions( _
@@ -619,7 +619,7 @@ ParsePriceAs64thsAndFractions = mPriceParser.ParsePriceAs64thsAndFractions(pPric
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ParsePriceAsDecimals( _
@@ -635,7 +635,7 @@ ParsePriceAsDecimals = mPriceParser.ParsePriceAsDecimals(pPriceString, pPrice)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Sub SaveToConfig( _
@@ -662,14 +662,14 @@ With config
     .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(mSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(mSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionTickSize, mTickSize
-    .SetSetting ConfigSettingSessionTimezone, mTimeZone.standardName
+    .SetSetting ConfigSettingSessionTimezone, mTimeZone.StandardName
 End With
 
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function ToString() As String
@@ -686,12 +686,12 @@ ToString = "Specifier=(" & mSpecifier.ToString & "); " & _
             "Multiplier=" & mMultiplier & "; " & _
             "Session start=" & FormatDateTime(mSessionStartTime, vbShortTime) & "; " & _
             "Session end=" & FormatDateTime(mSessionEndTime, vbShortTime) & "; " & _
-            "Timezone=" & mTimeZone.standardName
+            "Timezone=" & mTimeZone.StandardName
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function ToXML() As String
@@ -716,7 +716,7 @@ Contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
 Contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
 Contract.setAttribute "Description", mDescription
 Contract.setAttribute "numberofdecimals", mNumberOfDecimals
-Contract.setAttribute "timezonename", mTimeZone.standardName
+Contract.setAttribute "timezonename", mTimeZone.StandardName
 
 Set Specifier = XMLdoc.createElement("specifier")
 Contract.appendChild Specifier
@@ -755,7 +755,7 @@ ToXML = XMLdoc.xml
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 

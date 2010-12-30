@@ -135,7 +135,7 @@ End Sub
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Set mContractInfoServiceProvider = Nothing
@@ -147,7 +147,7 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -163,7 +163,7 @@ Const ProcName As String = "Initialise"
 
 Dim contractSpec As ContractSpecifier
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mName = Name
@@ -240,7 +240,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -249,7 +249,7 @@ End Sub
 
 Private Sub checkIfFinished()
 Const ProcName As String = "checkIfFinished"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If mNumOutstandingRequests = 0 Then
@@ -260,7 +260,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -292,7 +292,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 

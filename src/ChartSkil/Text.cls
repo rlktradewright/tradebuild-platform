@@ -160,7 +160,7 @@ IGraphicObject_boundingRectangle = mBoundingRect
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
@@ -176,7 +176,7 @@ RectSetXInterval IGraphicObject_BoundingRectangleInViewport, _
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
@@ -193,7 +193,7 @@ IGraphicObject_capabilities = GraphicObjectCapabilities.BlockUndraw
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Sub IGraphicObject_Click()
@@ -218,7 +218,7 @@ Draw
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -252,7 +252,7 @@ IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Property Get IGraphicObject_IncludeInAutoscale() As Boolean
@@ -279,7 +279,7 @@ Private Property Get IGraphicObject_PeriodNumber() As Long
 If isExtended Or Not mBoundingRect.isValid Then
     IGraphicObject_PeriodNumber = &H80000000
 Else
-    IGraphicObject_PeriodNumber = Int(mPosition.XLogical(mViewport))
+    IGraphicObject_PeriodNumber = Int(mPosition.XLogical(mViewport.Region))
 End If
 End Property
 
@@ -323,7 +323,7 @@ End Property
 ' mLocalStyle Event Handlers
 '================================================================================
 
-Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mLocalStyle_PropertyChanged"
 Dim failpoint As String
 On Error GoTo Err
@@ -394,7 +394,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -413,7 +413,7 @@ If IsPropertySet(TextPropertyAlign) Then Align = mAlign
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Align(ByVal Value As TextAlignModes)
@@ -429,7 +429,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Angle() As Double
@@ -444,7 +444,7 @@ If IsPropertySet(TextPropertyAngle) Then Angle = mAngle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Angle(ByVal Value As Double)
@@ -460,7 +460,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Box() As Boolean
@@ -475,7 +475,7 @@ If IsPropertySet(TextPropertyBox) Then Box = mBox
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Box(ByVal Value As Boolean)
@@ -491,7 +491,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxColor() As Long
@@ -506,7 +506,7 @@ If IsPropertySet(TextPropertyBoxColor) Then BoxColor = mBoxColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxColor(ByVal Value As Long)
@@ -522,7 +522,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxFillColor() As Long
@@ -537,7 +537,7 @@ If IsPropertySet(TextPropertyBoxFillColor) Then BoxFillColor = mBoxFillColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxFillColor(ByVal Value As Long)
@@ -553,7 +553,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxFillStyle() As FillStyles
@@ -568,7 +568,7 @@ If IsPropertySet(TextPropertyBoxFillStyle) Then BoxFillStyle = mBoxFillStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxFillStyle(ByVal Value As FillStyles)
@@ -584,7 +584,7 @@ initiateRedraw True, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
@@ -599,7 +599,7 @@ If IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then BoxFillWithBackgro
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
@@ -615,7 +615,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxStyle() As LineStyles
@@ -630,7 +630,7 @@ If IsPropertySet(TextPropertyBoxStyle) Then BoxStyle = mBoxStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxStyle(ByVal Value As LineStyles)
@@ -646,7 +646,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BoxThickness() As Long
@@ -661,7 +661,7 @@ If IsPropertySet(TextPropertyBoxThickness) Then BoxThickness = mBoxThickness
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BoxThickness(ByVal Value As Long)
@@ -677,7 +677,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -692,7 +692,7 @@ If IsPropertySet(TextPropertyColor) Then Color = mColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Color(ByVal Value As Long)
@@ -708,7 +708,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Ellipsis() As EllipsisModes
@@ -723,7 +723,7 @@ If IsPropertySet(TextPropertyEllipsis) Then Ellipsis = mEllipsis
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Ellipsis(ByVal Value As EllipsisModes)
@@ -739,7 +739,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ExpandTabs() As Boolean
@@ -754,7 +754,7 @@ If IsPropertySet(TextPropertyExpandTabs) Then ExpandTabs = mExpandTabs
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ExpandTabs(ByVal Value As Boolean)
@@ -770,7 +770,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Extended() As Boolean
@@ -785,7 +785,7 @@ If IsPropertySet(TextPropertyExtended) Then Extended = mExtended
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
@@ -801,7 +801,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get FixedX() As Boolean
@@ -816,7 +816,7 @@ If IsPropertySet(TextPropertyFixedX) Then FixedX = mFixedX
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
@@ -832,7 +832,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get FixedY() As Boolean
@@ -847,7 +847,7 @@ If IsPropertySet(TextPropertyFixedY) Then FixedY = mFixedY
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
@@ -863,7 +863,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Font() As StdFont
@@ -878,7 +878,7 @@ If IsPropertySet(TextPropertyFont) Then Set Font = mFont
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Font(ByVal Value As StdFont)
@@ -897,7 +897,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Friend Property Get handle() As Long
@@ -916,7 +916,7 @@ If IsPropertySet(TextPropertyHideIfBlank) Then HideIfBlank = mHideIfBlank
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let HideIfBlank(ByVal Value As Boolean)
@@ -932,7 +932,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
@@ -947,7 +947,7 @@ If IsPropertySet(TextPropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncl
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -963,7 +963,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get InScope() As Boolean
@@ -994,7 +994,7 @@ If IsPropertySet(TextPropertyJustification) Then Justification = mJustification
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Justification(ByVal Value As TextJustifyModes)
@@ -1010,7 +1010,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Key() As String
@@ -1030,7 +1030,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Layer() As LayerNumbers
@@ -1045,7 +1045,7 @@ If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LeftMargin() As Dimension
@@ -1060,7 +1060,7 @@ If IsPropertySet(TextPropertyLeftMargin) Then Set LeftMargin = mLeftMargin
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let LeftMargin(ByVal Value As Dimension)
@@ -1084,7 +1084,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LocalStyle() As TextStyle
@@ -1103,7 +1103,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get MultiLine() As Boolean
@@ -1118,7 +1118,7 @@ If IsPropertySet(TextPropertyMultiLine) Then MultiLine = mMultiLine
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let MultiLine(ByVal Value As Boolean)
@@ -1134,7 +1134,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Offset() As Size
@@ -1149,7 +1149,7 @@ If IsPropertySet(TextPropertyOffset) Then Set Offset = mOffset
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Offset(ByVal Value As Size)
@@ -1173,7 +1173,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let PaddingX(ByVal Value As Double)
@@ -1189,7 +1189,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PaddingX() As Double
@@ -1204,7 +1204,7 @@ If IsPropertySet(TextPropertyPaddingX) Then PaddingX = mPaddingX
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let PaddingY(ByVal Value As Double)
@@ -1220,7 +1220,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PaddingY() As Double
@@ -1235,7 +1235,7 @@ If IsPropertySet(TextPropertyPaddingY) Then PaddingY = mPaddingY
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Position() As Point
@@ -1266,7 +1266,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get RightMargin() As Dimension
@@ -1281,7 +1281,7 @@ If IsPropertySet(TextPropertyRightMargin) Then Set RightMargin = mRightMargin
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let RightMargin(ByVal Value As Dimension)
@@ -1305,7 +1305,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Size(ByVal Value As Size)
@@ -1329,7 +1329,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Size() As Size
@@ -1344,7 +1344,7 @@ If IsPropertySet(TextPropertySize) Then Set Size = mSize
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Text(Value As String)
@@ -1360,7 +1360,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get TabWidth() As Long
@@ -1375,7 +1375,7 @@ If IsPropertySet(TextPropertyTabWidth) Then TabWidth = mTabWidth
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let TabWidth(ByVal Value As Long)
@@ -1391,7 +1391,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Text() As String
@@ -1414,7 +1414,7 @@ If IsPropertySet(TextPropertyWordWrap) Then WordWrap = mWordWrap
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
@@ -1430,7 +1430,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '================================================================================
@@ -1448,7 +1448,7 @@ initiateRedraw True, True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Draw()
@@ -1474,7 +1474,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -1499,7 +1499,7 @@ calcBoundingRect
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -1507,8 +1507,8 @@ End Sub
 '================================================================================
 
 Private Sub adjustRectSize( _
-                ByRef pRect As RECT, _
-                ByRef pSizeAdjustment As W32Point)
+                ByRef pRect As GDI_RECT, _
+                ByRef pSizeAdjustment As GDI_POINT)
 pRect.Right = pRect.Right + pSizeAdjustment.X
 If pRect.Right < pRect.Left Then pRect.Right = pRect.Left
 
@@ -1517,12 +1517,12 @@ If pRect.Bottom = pRect.Top Then pRect.Bottom = pRect.Top
 End Sub
 
 Private Sub calcBoundingRect()
-Dim alignmentOffset As W32Point
+Dim alignmentOffset As GDI_POINT
 Dim lTextSize As Size
-Dim lTextRect As RECT
-Dim lBoxRect As RECT
-Dim lBoundingRect As RECT
-Dim sizeAdjustment As W32Point
+Dim lTextRect As GDI_RECT
+Dim lBoxRect As GDI_RECT
+Dim lBoundingRect As GDI_RECT
+Dim sizeAdjustment As GDI_POINT
 
 Const ProcName As String = "calcBoundingRect"
 Dim failpoint As String
@@ -1548,10 +1548,10 @@ Set lTextSize = mCanvas.GetTextSize(mText, _
                                     LeftMargin, _
                                     RightMargin)
 With mTextTRect
-    .Left = mPosition.XLogical(mViewport)
-    .Right = .Left + lTextSize.WidthLogical(mViewport)
-    .Top = mPosition.yLogical(mViewport)
-    .Bottom = .Top - lTextSize.HeightLogical(mViewport)
+    .Left = mPosition.XLogical(mViewport.Region)
+    .Right = .Left + lTextSize.WidthLogical(mViewport.Region)
+    .Top = mPosition.yLogical(mViewport.Region)
+    .Bottom = .Top - lTextSize.HeightLogical(mViewport.Region)
     .isValid = True
 End With
     
@@ -1612,7 +1612,7 @@ lBoundingRect.Right = lBoundingRect.Right + 1
 lBoundingRect.Bottom = lBoundingRect.Bottom + 1
 
 If Angle <> 0 Then
-    Dim alignPoint As W32Point
+    Dim alignPoint As GDI_POINT
     alignPoint = getAlignmentPointW32(lTextRect, lBoxRect)
     W32RectAdjustForRotationAboutPoint lBoundingRect, _
                                     Angle, _
@@ -1626,7 +1626,7 @@ mBoundingRect = mViewport.ConvertRectToTRectangle(lBoundingRect)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -1643,7 +1643,7 @@ canBeDrawn = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub ClearProperty( _
@@ -1657,7 +1657,7 @@ mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function convertPosition(ByVal pPoint As Point) As Point
@@ -1667,12 +1667,12 @@ On Error GoTo Err
 Set convertPosition = pPoint.ChangeCoordinateSystem( _
                                             IIf(FixedX, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
                                             IIf(FixedY, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
-                                            mViewport)
+                                            mViewport.Region)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub drawBox()
@@ -1689,7 +1689,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub drawBoxWithBackgroundFillColor()
@@ -1707,7 +1707,7 @@ mCanvas.RestoreClippingRegion
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub drawBoxWithSpecifiedFillStyle( _
@@ -1728,7 +1728,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub DrawText()
@@ -1751,23 +1751,23 @@ mCanvas.DrawText mText, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function getAlignmentOffset( _
-                ByRef pTextBoundary As RECT, _
-                ByRef pBoxBoundary As RECT) As W32Point
+                ByRef pTextBoundary As GDI_RECT, _
+                ByRef pBoxBoundary As GDI_RECT) As GDI_POINT
 
 Const ProcName As String = "getAlignmentOffset"
 Dim failpoint As String
 On Error GoTo Err
 
-getAlignmentOffset = W32PointSubtract(W32RectTopLeft(pTextBoundary), getAlignmentPointW32(pTextBoundary, pBoxBoundary))
+getAlignmentOffset = GDI_POINTSubtract(W32RectTopLeft(pTextBoundary), getAlignmentPointW32(pTextBoundary, pBoxBoundary))
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getAlignmentPoint( _
@@ -1819,12 +1819,12 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getAlignmentPointW32( _
-                ByRef pTextBoundary As RECT, _
-                ByRef pBoxBoundary As RECT) As W32Point
+                ByRef pTextBoundary As GDI_RECT, _
+                ByRef pBoxBoundary As GDI_RECT) As GDI_POINT
 Const ProcName As String = "getAlignmentPointW32"
 Dim failpoint As String
 On Error GoTo Err
@@ -1871,17 +1871,17 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getSizeAdjustment( _
-                ByRef lBoundingRect As RECT) As W32Point
+                ByRef lBoundingRect As GDI_RECT) As GDI_POINT
 If Me.Size.Width <> 0 Then
-    getSizeAdjustment.X = mViewport.ConvertLogicalToPixelsX(Me.Size.WidthLogical(mViewport)) - _
+    getSizeAdjustment.X = mViewport.ConvertLogicalToPixelsX(Me.Size.WidthLogical(mViewport.Region)) - _
                             (lBoundingRect.Right - lBoundingRect.Left)
 End If
 If Me.Size.Height <> 0 Then
-    getSizeAdjustment.Y = mViewport.ConvertLogicalToPixelsX(Me.Size.HeightLogical(mViewport)) - _
+    getSizeAdjustment.Y = mViewport.ConvertLogicalToPixelsX(Me.Size.HeightLogical(mViewport.Region)) - _
                             (lBoundingRect.Bottom - lBoundingRect.Top)
 End If
 End Function
@@ -1906,7 +1906,7 @@ mGOSP.ObjectChanged mHandle, mBoundingRect
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function isExtended() As Boolean
@@ -1924,7 +1924,7 @@ IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub setPropertyFlag( _
@@ -1938,7 +1938,7 @@ mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub undraw()
@@ -1951,6 +1951,6 @@ If canBeDrawn Then mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

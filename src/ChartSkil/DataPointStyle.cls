@@ -32,7 +32,7 @@ Implements IGraphicObjectStyle
 '@================================================================================
 
 Event PropertyChanged( _
-                ByRef ev As PropertyChangedEvent)
+                ByRef ev As PropertyChangedEventData)
                 
 '@================================================================================
 ' Constants
@@ -136,7 +136,7 @@ setLongProperty mColor, DataPointPropertyColor, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -149,7 +149,7 @@ Color = mColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -183,7 +183,7 @@ If IsPropertySet(DataPointPropertyLayer) Then mConfig.SetSetting ConfigSettingLa
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Property
 
@@ -197,7 +197,7 @@ setLongProperty mDisplayMode, DataPointPropertyDisplayMode, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
@@ -210,7 +210,7 @@ DisplayMode = mDisplayMode
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let DownColor(ByVal Value As Long)
@@ -228,7 +228,7 @@ setLongProperty mDownColor, DataPointPropertyDownColor, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get DownColor() As Long
@@ -241,7 +241,7 @@ DownColor = mDownColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)
@@ -259,7 +259,7 @@ setSingleProperty mHistWidth, DataPointPropertyHistWidth, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get HistogramBarWidth() As Single
@@ -272,7 +272,7 @@ HistogramBarWidth = mHistWidth
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -285,7 +285,7 @@ setBooleanProperty mIncludeInAutoscale, DataPointPropertyIncludeInAutoscale, Val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
@@ -298,7 +298,7 @@ IncludeInAutoscale = mIncludeInAutoscale
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
@@ -306,17 +306,17 @@ Const ProcName As String = "Layer"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not gIsValidColor(Value) And Value <> -1 Then _
+If Value < LayerMin Or Value > LayerMax Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color or -1"
+            "Value is not a valid layer number"
 
 setLongProperty mLayer, BarPropertyLayer, Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Layer() As LayerNumbers
@@ -329,7 +329,7 @@ Layer = mLayer
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
@@ -342,7 +342,7 @@ setLongProperty mLineStyle, DataPointPropertyLineStyle, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LineStyle() As LineStyles
@@ -355,7 +355,7 @@ LineStyle = mLineStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let LineThickness(ByVal Value As Long)
@@ -368,7 +368,7 @@ setLongProperty mLineThickness, DataPointPropertyLineThickness, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LineThickness() As Long
@@ -381,7 +381,7 @@ LineThickness = mLineThickness
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Name(ByVal Value As String)
@@ -400,7 +400,7 @@ If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let PointStyle(ByVal Value As PointStyles)
@@ -413,7 +413,7 @@ setLongProperty mPointStyle, DataPointPropertyPointStyle, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointStyle() As PointStyles
@@ -426,7 +426,7 @@ PointStyle = mPointStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let UpColor(ByVal Value As Long)
@@ -444,7 +444,7 @@ setLongProperty mUpColor, DataPointPropertyUpColor, Value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get UpColor() As Long
@@ -457,7 +457,7 @@ UpColor = mUpColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -477,7 +477,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function clone() As DataPointStyle
@@ -499,7 +499,7 @@ clone.UpColor = mUpColor
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function IsPropertySet( _
@@ -541,7 +541,7 @@ If mConfig.GetSetting(ConfigSettingUpColor) <> "" Then UpColor = mConfig.GetSett
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
                 
 End Sub
 
@@ -555,7 +555,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -576,12 +576,12 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
                 ByVal Name As String)
-Dim ev As PropertyChangedEvent
+Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
 Dim failpoint As String
@@ -594,7 +594,7 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function propertyFlagToConfigSetting( _
@@ -637,7 +637,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setLongProperty( _
@@ -656,7 +656,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setSingleProperty( _
@@ -675,7 +675,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -689,7 +689,7 @@ mPropertyFlags = gSetFlag(mPropertyFlags, flag)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

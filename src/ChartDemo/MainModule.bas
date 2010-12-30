@@ -56,7 +56,7 @@ Private mIsInDev As Boolean
 Public Property Get gAppTitle() As String
 gAppTitle = AppName & _
                 " v" & _
-                App.Major & "." & App.Minor & "." & App.Revision
+                App.Major & "." & App.Minor
 End Property
 
 '@================================================================================

@@ -98,13 +98,13 @@ End Sub
 ' TaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEvent)
+Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEventData)
 
 Const ProcName As String = "TaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
-If ev.errorNumber <> 0 Then
-    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.errorNumber; "; Message: "; ev.errorMessage
+If ev.ErrorNumber <> 0 Then
+    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
 End If
 
 mChartController.EnableDrawing
@@ -112,7 +112,7 @@ mChartController.EnableDrawing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -128,7 +128,7 @@ Set BaseStudy = mBaseStudy
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BaseStudyConfiguration() As StudyConfiguration
@@ -142,7 +142,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BaseStudyConfiguration( _
@@ -164,7 +164,7 @@ setBaseStudyConfiguration sc
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Chart() As ChartController
@@ -176,7 +176,7 @@ Set Chart = mChartController
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -194,7 +194,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get RegionNames() As String()
@@ -219,7 +219,7 @@ RegionNames = names
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let UpdatePerTick(ByVal value As Boolean)
@@ -250,7 +250,7 @@ RaiseEvent StudyAdded(studyConfig)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub ClearChart()
@@ -275,7 +275,7 @@ Set mBars = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Finish()
@@ -332,7 +332,7 @@ sTimestamp = pTimestamp
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Function GetSpecialValue(ByVal valueType As SpecialValues) As Variant
@@ -357,7 +357,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function GetStudyConfig( _
@@ -371,7 +371,7 @@ Set GetStudyConfig = mAllStudyConfigs(studyId)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -388,7 +388,7 @@ Set mPeriods = mChartController.Periods
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
@@ -419,7 +419,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub NotifyInput( _
@@ -435,7 +435,7 @@ mStudyManager.NotifyInput inputHandle, inputValue, timestamp
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function RemoveStudyConfiguration( _
@@ -459,7 +459,7 @@ RaiseEvent StudyRemoved(studyConfig)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function ReplaceStudyConfiguration( _
@@ -498,7 +498,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -515,7 +515,7 @@ mChartController.LastVisiblePeriod = periodNumber + Int((mChartController.LastVi
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetInputRegion( _
@@ -553,7 +553,7 @@ studyValueConfig.ChartRegionName = ChartRegionName
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function StartStudy( _
@@ -575,7 +575,7 @@ mChartController.DisableDrawing
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================
@@ -599,7 +599,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function AddStudy( _
@@ -659,8 +659,8 @@ If studyConfig.StudyHorizontalRules.count > 0 Then
         line.Color = studyHorizRule.Color
         line.LineStyle = studyHorizRule.Style
         line.Thickness = studyHorizRule.Thickness
-        line.Point1 = Region.NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-        line.Point2 = Region.NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.Point1 = NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.Point2 = NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
     Next
     studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
 End If
@@ -670,7 +670,7 @@ Set AddStudy = lStudy
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub AddStudyConfig( _
@@ -695,24 +695,21 @@ mAllStudyConfigs.Add studyConfig, studyConfig.Study.ID
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
 Private Sub determineDefaultRegionName( _
                 ByVal studyConfig As StudyConfiguration)
-Dim underlyingStudyConfig As StudyConfiguration
-
 Const ProcName As String = "determineDefaultRegionName"
 Dim failpoint As String
 On Error GoTo Err
 
-If studyConfig.ChartRegionName = RegionNameDefault Or _
+If studyConfig.ChartRegionName = RegionNameUnderlying Or _
+    studyConfig.ChartRegionName = RegionNameDefault Or _
     studyConfig.ChartRegionName = "" _
 Then
-    ' we will use the Region for the underlying Study
-    Set underlyingStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
-    studyConfig.ChartRegionName = underlyingStudyConfig.ChartRegionName
+    studyConfig.ChartRegionName = getUnderlyingStudyRegionName(studyConfig)
 ElseIf studyConfig.ChartRegionName = RegionNameCustom Then
     studyConfig.ChartRegionName = studyConfig.Study.InstancePath
 End If
@@ -720,7 +717,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function findRegion( _
@@ -760,7 +757,22 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function getUnderlyingStudyRegionName(ByVal pStudyConfig As StudyConfiguration) As String
+Const ProcName As String = "getUnderlyingStudyRegionName"
+On Error GoTo Err
+
+Dim underlyingStudyConfig As StudyConfiguration
+
+Set underlyingStudyConfig = mAllStudyConfigs(pStudyConfig.UnderlyingStudy.ID)
+getUnderlyingStudyRegionName = underlyingStudyConfig.ChartRegionName
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function includeStudyValueInChart( _
@@ -784,7 +796,8 @@ If studyValueConfig.ChartRegionName = RegionNameDefault Or studyValueConfig.Char
     regionName = studyConfig.ChartRegionName
 ElseIf studyValueConfig.ChartRegionName = RegionNameCustom Then
     regionName = studyValueDef.Name & "." & Study.InstancePath
-    'studyValueConfig.ChartRegionName = regionName
+ElseIf studyValueConfig.ChartRegionName = RegionNameUnderlying Then
+    regionName = getUnderlyingStudyRegionName(studyConfig)
 Else
     regionName = studyValueConfig.ChartRegionName
 End If
@@ -813,7 +826,7 @@ Set includeStudyValueInChart = lTaskCompletion
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub moveChildStudyConfigs( _
@@ -832,7 +845,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub reconfigureChildStudies( _
@@ -872,7 +885,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -895,7 +908,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -920,7 +933,7 @@ mInstanceFullyQualifiedNames.Remove studyConfig.InstanceFullyQualifiedName
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub removeStudyValueListeners( _
@@ -970,7 +983,7 @@ mChartController.EnableDrawing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setBaseStudyConfig( _
@@ -991,7 +1004,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setBaseStudyConfiguration( _
@@ -1041,7 +1054,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setInstanceFullyQualifiedName( _
@@ -1082,7 +1095,7 @@ mInstanceFullyQualifiedNames.Add studyConfig.InstanceFullyQualifiedName, studyCo
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function setupStudyValueListeners( _
@@ -1129,7 +1142,7 @@ setupStudyValueListeners = taskCompletions
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 

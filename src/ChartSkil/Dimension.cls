@@ -78,7 +78,7 @@ mConfig.SetSetting ConfigSettingCoordSystem, mCoordSystem
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Property
 
@@ -106,7 +106,7 @@ Equals = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -117,7 +117,7 @@ mCoordSystem = pCoordSystem
 End Sub
 
 Public Function LengthLogicalX( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "LengthLogicalX"
 Dim failpoint As String
 On Error GoTo Err
@@ -126,21 +126,21 @@ Select Case mCoordSystem
 Case CoordsLogical
     LengthLogicalX = mLength
 Case CoordsRelative
-    LengthLogicalX = pViewport.ConvertRelativeToLogicalX(mLength)
+    LengthLogicalX = pRegion.Viewport.ConvertRelativeToLogicalX(mLength)
 Case CoordsDistance
-    LengthLogicalX = pViewport.ConvertDistanceToLogicalX(mLength)
+    LengthLogicalX = pRegion.Viewport.ConvertDistanceToLogicalX(mLength)
 Case CoordsCounterDistance
-    LengthLogicalX = pViewport.ConvertCounterDistanceToLogicalY(mLength)
+    LengthLogicalX = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mLength)
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function LengthLogicalY( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "LengthLogicalY"
 Dim failpoint As String
 On Error GoTo Err
@@ -149,17 +149,17 @@ Select Case mCoordSystem
 Case CoordsLogical
     LengthLogicalY = mLength
 Case CoordsRelative
-    LengthLogicalY = pViewport.ConvertRelativeToLogicalY(mLength)
+    LengthLogicalY = pRegion.Viewport.ConvertRelativeToLogicalY(mLength)
 Case CoordsDistance
-    LengthLogicalY = pViewport.ConvertDistanceToLogicalY(mLength)
+    LengthLogicalY = pRegion.Viewport.ConvertDistanceToLogicalY(mLength)
 Case CoordsCounterDistance
-    LengthLogicalY = pViewport.ConvertCounterDistanceToLogicalY(mLength)
+    LengthLogicalY = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mLength)
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub LoadFromConfig( _
@@ -176,7 +176,7 @@ mCoordSystem = mConfig.GetSetting(ConfigSettingCoordSystem, "0")
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -189,7 +189,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================

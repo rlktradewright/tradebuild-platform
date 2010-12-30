@@ -80,7 +80,7 @@ End Property
 Public Function ChangeCoordinateSystem( _
                 ByVal pCoordSystemX As CoordinateSystems, _
                 ByVal pCoordSystemY As CoordinateSystems, _
-                ByVal pViewport As Viewport) As Point
+                ByVal pRegion As ChartRegion) As Point
 Dim newX As Double
 Dim newY As Double
 
@@ -92,15 +92,15 @@ If pCoordSystemX = Me.CoordinateSystemX And pCoordSystemY = Me.CoordinateSystemY
     Exit Function
 End If
 
-newX = gTransformCoordX(Me.X, Me.CoordinateSystemX, pCoordSystemX, pViewport)
-newY = gTransformCoordY(Me.Y, Me.CoordinateSystemY, pCoordSystemY, pViewport)
+newX = gTransformCoordX(Me.X, Me.CoordinateSystemX, pCoordSystemX, pRegion.Viewport)
+newY = gTransformCoordY(Me.Y, Me.CoordinateSystemY, pCoordSystemY, pRegion.Viewport)
 
 Set ChangeCoordinateSystem = gNewPoint(newX, newY, pCoordSystemX, pCoordSystemY)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function Equals(ByVal aPoint As Point) As Boolean
@@ -124,7 +124,7 @@ Equals = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -141,7 +141,7 @@ Set mOffset = Offset
 End Sub
 
 Public Function XLogical( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "XLogical"
 Dim failpoint As String
 On Error GoTo Err
@@ -150,23 +150,23 @@ Select Case Me.CoordinateSystemX
 Case CoordsLogical
     XLogical = Me.X
 Case CoordsRelative
-    XLogical = pViewport.ConvertRelativeToLogicalX(Me.X) + pViewport.Boundary.Left
+    XLogical = pRegion.Viewport.ConvertRelativeToLogicalX(Me.X) + pRegion.Viewport.Boundary.Left
 Case CoordsDistance
-    XLogical = pViewport.ConvertDistanceToLogicalX(Me.X) + pViewport.Boundary.Left
+    XLogical = pRegion.Viewport.ConvertDistanceToLogicalX(Me.X) + pRegion.Viewport.Boundary.Left
 Case CoordsCounterDistance
-    XLogical = pViewport.ConvertCounterDistanceToLogicalY(Me.X) + pViewport.Boundary.Left
+    XLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(Me.X) + pRegion.Viewport.Boundary.Left
 End Select
 
-If Not Me.Offset Is Nothing Then XLogical = XLogical + Me.Offset.WidthLogical(pViewport)
+If Not Me.Offset Is Nothing Then XLogical = XLogical + Me.Offset.WidthLogical(pRegion.Viewport)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Property Get yLogical( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "YLogical"
 Dim failpoint As String
 On Error GoTo Err
@@ -175,19 +175,19 @@ Select Case Me.CoordinateSystemY
 Case CoordsLogical
     yLogical = Me.Y
 Case CoordsRelative
-    yLogical = pViewport.ConvertRelativeToLogicalY(Me.Y) + pViewport.Boundary.Bottom
+    yLogical = pRegion.Viewport.ConvertRelativeToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
 Case CoordsDistance
-    yLogical = pViewport.ConvertDistanceToLogicalY(Me.Y) + pViewport.Boundary.Bottom
+    yLogical = pRegion.Viewport.ConvertDistanceToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
 Case CoordsCounterDistance
-    yLogical = pViewport.ConvertCounterDistanceToLogicalY(Me.Y) + pViewport.Boundary.Bottom
+    yLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
 End Select
 
-If Not Me.Offset Is Nothing Then yLogical = yLogical + Me.Offset.HeightLogical(pViewport)
+If Not Me.Offset Is Nothing Then yLogical = yLogical + Me.Offset.HeightLogical(pRegion.Viewport)
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '================================================================================

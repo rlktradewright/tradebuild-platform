@@ -54,8 +54,8 @@ End Sub
 '================================================================================
 
 Friend Property Let Region( _
-                ByVal value As ChartRegion)
-Set mRegionRef = CreateWeakReference(value)
+                ByVal Value As ChartRegion)
+Set mRegionRef = CreateWeakReference(Value)
 End Property
 
 '================================================================================
@@ -73,7 +73,7 @@ regionObj.GOSP_AddGraphicObject graphObj
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -91,7 +91,7 @@ regionObj.GOSP_ObjectChanged handle, areaToRedraw
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub ObjectUndrawn(ByVal handle As Long, _
@@ -105,7 +105,7 @@ regionObj.GOSP_ObjectUndrawn handle, undrawnArea
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub PaintRegion( _
@@ -119,7 +119,7 @@ regionObj.GOSP_PaintRegion recalculate
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub RecalcBoundary( _
@@ -133,7 +133,7 @@ regionObj.GOSP_RecalcBoundary SeriesID
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub RemoveObject( _
@@ -147,7 +147,7 @@ regionObj.GOSP_RemoveObject handle
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================

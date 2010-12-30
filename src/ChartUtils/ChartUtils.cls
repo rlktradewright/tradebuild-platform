@@ -83,6 +83,10 @@ Public Property Get ChartRegionNameVolume() As String
 ChartRegionNameVolume = RegionNameVolume
 End Property
 
+Public Property Get ChartRegionNameUnderlying() As String
+ChartRegionNameUnderlying = RegionNameUnderlying
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -101,7 +105,7 @@ CreateAbstractChartTool.Initialise pChart, tool, pointerIcon
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function CreateChartManager( _
@@ -117,7 +121,7 @@ CreateChartManager.Initialise studyManager, pChart
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function CreateChartSpecifier( _
@@ -152,7 +156,7 @@ CreateChartSpecifier.Initialise Timeframe, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function GetDefaultStudyConfiguration( _
@@ -167,7 +171,7 @@ Set GetDefaultStudyConfiguration = gGetDefaultStudyConfiguration(Name, studyLibN
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function LoadChartSpecifierFromConfig( _
@@ -188,7 +192,7 @@ LoadChartSpecifierFromConfig.LoadFromConfig config
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub LoadDefaultStudyConfigurationsFromConfig( _
@@ -202,7 +206,7 @@ gLoadDefaultStudyConfigurationsFromConfig config
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetDefaultStudyConfiguration( _
@@ -216,7 +220,7 @@ gSetDefaultStudyConfiguration value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

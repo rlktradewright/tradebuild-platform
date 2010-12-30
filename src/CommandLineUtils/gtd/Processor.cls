@@ -76,39 +76,39 @@ End Sub
 ' QuoteListener Interface Members
 '@================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_ask(ev As TradeBuild26.QuoteEventData)
 outputPriceAndSize ev, "A"
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_bid(ev As TradeBuild26.QuoteEventData)
 outputPriceAndSize ev, "B"
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_high(ev As TradeBuild26.QuoteEventData)
 outputPrice ev, "H"
 End Sub
 
-Private Sub QuoteListener_low(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_low(ev As TradeBuild26.QuoteEventData)
 outputPrice ev, "L"
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_openInterest(ev As TradeBuild26.QuoteEventData)
 outputSize ev, "I"
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_previousClose(ev As TradeBuild26.QuoteEventData)
 outputPrice ev, "C"
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEventData)
 outputPrice ev, "O"
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_trade(ev As TradeBuild26.QuoteEventData)
 outputPriceAndSize ev, "T"
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_volume(ev As TradeBuild26.QuoteEventData)
 outputSize ev, "V"
 End Sub
 
@@ -116,8 +116,8 @@ End Sub
 ' mTicker Event Handlers
 '@================================================================================
 
-Private Sub mTicker_Notification(ev As TWUtilities30.NotificationEvent)
-gCon.writeLineToConsole "Notification " & ev.eventCode & _
+Private Sub mTicker_Notification(ev As TWUtilities30.NotificationEventData)
+gCon.WriteLineToConsole "Notification " & ev.eventCode & _
                         ": " & ev.eventMessage
 End Sub
 
@@ -125,20 +125,20 @@ End Sub
 ' mTB Event Handlers
 '@================================================================================
 
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
-gCon.writeLineToConsole "Error " & ev.errorCode & _
-                        ": " & ev.errorMessage
+Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
+gCon.WriteLineToConsole "Error " & ev.errorCode & _
+                        ": " & ev.ErrorMessage
 End Sub
 
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)
+Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Dim spe As ServiceProviderError
     Set spe = mTB.GetServiceProviderError
-    gCon.writeLineToConsole "Service provider error " & spe.errorCode & _
-                            ": " & spe.message & _
-                            " (" & spe.serviceProviderName & ")"
+    gCon.WriteLineToConsole "Service provider error " & spe.errorCode & _
+                            ": " & spe.Message & _
+                            " (" & spe.ServiceProviderName & ")"
 Else
-    gCon.writeLineToConsole "Notification " & ev.eventCode & _
+    gCon.WriteLineToConsole "Notification " & ev.eventCode & _
                             ": " & ev.eventMessage
 End If
 End Sub
@@ -147,13 +147,13 @@ End Sub
 ' mTFManager Event Handlers
 '@================================================================================
 
-Private Sub mTFManager_Notification(ev As TWUtilities30.NotificationEvent)
-gCon.writeLineToConsole "Notification " & ev.eventCode & _
+Private Sub mTFManager_Notification(ev As TWUtilities30.NotificationEventData)
+gCon.WriteLineToConsole "Notification " & ev.eventCode & _
                         ": " & ev.eventMessage
 End Sub
 
 Private Sub mTFManager_ReplayCompleted()
-gCon.writeLineToConsole "Replay completed"
+gCon.WriteLineToConsole "Replay completed"
 mTicker.RemoveQuoteListener Me
 Set gProcessor = Nothing
 End Sub
@@ -172,7 +172,7 @@ End Property
 
 Friend Property Let speed( _
                 ByVal value As Long)
-mTFManager.replaySpeed = value
+mTFManager.ReplaySpeed = value
 End Property
 
 '@================================================================================
@@ -212,12 +212,12 @@ Set mTFManager = TradeBuildAPI.Tickers.CreateTickFileManager( _
                                     TickerOptions.TickerOptNoVolumeAdjustments, _
                                     0))
 mTFManager.TickFileSpecifiers = tfSpecs
-mTFManager.replaySpeed = speed
+mTFManager.ReplaySpeed = speed
 mTFManager.StartReplay
 End Sub
 
 Friend Sub stopData()
-mTFManager.stopReplay
+mTFManager.StopReplay
 End Sub
 
 
@@ -226,82 +226,82 @@ End Sub
 '@================================================================================
 
 Private Sub outputPrice( _
-        ByRef ev As QuoteEvent, _
+        ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString GetFormattedPriceFromQuoteEvent(ev)
-gCon.writeString ","
+gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString ","
+gCon.WriteString tickType
+gCon.WriteString ","
+gCon.WriteString GetFormattedPriceFromQuoteEvent(ev)
+gCon.WriteString ","
 
 Select Case ev.PriceChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString PriceDown
+    gCon.WriteString PriceDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString PriceUp
+    gCon.WriteString PriceUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString PriceSame
+    gCon.WriteString PriceSame
 End Select
 
-gCon.writeLine ""
+gCon.WriteLine ""
 End Sub
 
 Private Sub outputPriceAndSize( _
-        ByRef ev As QuoteEvent, _
+        ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString GetFormattedPriceFromQuoteEvent(ev)
-gCon.writeString ","
-gCon.writeString CStr(ev.Size)
-gCon.writeString ","
+gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString ","
+gCon.WriteString tickType
+gCon.WriteString ","
+gCon.WriteString GetFormattedPriceFromQuoteEvent(ev)
+gCon.WriteString ","
+gCon.WriteString CStr(ev.Size)
+gCon.WriteString ","
 
 Select Case ev.PriceChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString PriceDown
+    gCon.WriteString PriceDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString PriceUp
+    gCon.WriteString PriceUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString PriceSame
+    gCon.WriteString PriceSame
 End Select
 
-gCon.writeString ","
+gCon.WriteString ","
 
 Select Case ev.sizeChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString SizeDown
+    gCon.WriteString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString SIzeUp
+    gCon.WriteString SIzeUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString SizeSame
+    gCon.WriteString SizeSame
 End Select
 
-gCon.writeLine ""
+gCon.WriteLine ""
 End Sub
 
 Private Sub outputSize( _
-        ByRef ev As QuoteEvent, _
+        ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString CStr(ev.Size)
-gCon.writeString ","
+gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString ","
+gCon.WriteString tickType
+gCon.WriteString ","
+gCon.WriteString CStr(ev.Size)
+gCon.WriteString ","
 
 Select Case ev.sizeChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString SizeDown
+    gCon.WriteString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString SIzeUp
+    gCon.WriteString SIzeUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString SizeSame
+    gCon.WriteString SizeSame
 End Select
 
-gCon.writeLine ""
+gCon.WriteLine ""
 End Sub
 
 

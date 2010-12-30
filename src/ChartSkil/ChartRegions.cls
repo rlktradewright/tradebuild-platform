@@ -46,7 +46,7 @@ Implements Enumerable
 '
 '@/
 Event CollectionChanged( _
-                ev As CollectionChangeEvent)
+                ev As CollectionChangeEventData)
 
 '@================================================================================
 ' Enums
@@ -145,17 +145,17 @@ End Property
 ' Properties
 '@================================================================================
 
-Friend Property Let Chart(ByVal value As Chart)
+Friend Property Let Chart(ByVal Value As Chart)
 Const ProcName As String = "Chart"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mChartRef = CreateWeakReference(value)
+Set mChartRef = CreateWeakReference(Value)
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Count() As Long
@@ -163,8 +163,8 @@ Count = mNumRegionsInUse
 End Property
 
 Public Property Let DefaultDataRegionStyle( _
-                ByVal value As ChartRegionStyle)
-Set mDefaultDataRegionStyle = value
+                ByVal Value As ChartRegionStyle)
+Set mDefaultDataRegionStyle = Value
 End Property
 
 Public Property Get DefaultDataRegionStyle() As ChartRegionStyle
@@ -178,12 +178,12 @@ Set DefaultDataRegionStyle = mDefaultDataRegionStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let DefaultYAxisRegionStyle( _
-                ByVal value As ChartRegionStyle)
-Set mDefaultYAxisRegionStyle = value
+                ByVal Value As ChartRegionStyle)
+Set mDefaultYAxisRegionStyle = Value
 End Property
 
 Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
@@ -220,7 +220,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -317,7 +317,7 @@ Set Add = lRegion
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function Contains(ByVal Name As String) As Boolean
@@ -333,7 +333,7 @@ If Not lRegion Is Nothing Then Contains = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -357,7 +357,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -373,7 +373,7 @@ Set NewEnum = getEnumerator
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub Remove( _
@@ -407,7 +407,7 @@ fireChange CollItemRemoved, pRegion
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Function ResizeRegion( _
@@ -451,7 +451,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -612,7 +612,7 @@ ResizeY = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================
@@ -633,30 +633,26 @@ Set chartObj = mChartRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedItem As Variant)
-Dim ev As CollectionChangeEvent
+Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
 Dim failpoint As String
 On Error GoTo Err
 
 Set ev.Source = Me
 ev.changeType = changeType
-If IsObject(affectedItem) Then
-    If Not affectedItem Is Nothing Then Set ev.affectedItem = affectedItem
-Else
-    ev.affectedItem = affectedItem
-End If
+gSetVariant ev.affectedItem, affectedItem
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function getEnumerator() As Enumerator
@@ -669,7 +665,7 @@ Set getEnumerator = CreateEnumerator(Me)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function findRegion( _
@@ -686,7 +682,7 @@ Name = UCase$(Name)
 Set en = getEnumerator
 
 Do While en.MoveNext
-    Set lRegion = en.current
+    Set lRegion = en.Current
     If UCase$(lRegion.Name) = Name Then
         Set findRegion = lRegion
         Exit Do
@@ -696,5 +692,5 @@ Loop
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function

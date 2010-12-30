@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#140.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#162.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -398,7 +398,7 @@ Set mElapsedTimer = New ElapsedTimer
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Resize()
@@ -420,7 +420,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
@@ -438,7 +438,7 @@ If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -489,7 +489,7 @@ LoadButton.Enabled = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FibRetracementButton_Click()
@@ -529,7 +529,7 @@ Chart1.SetFocus
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FinishButton_Click()
@@ -545,7 +545,7 @@ FinishButton.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LineButton_Click()
@@ -565,7 +565,7 @@ Chart1.SetFocus
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SelectButton_Click()
@@ -584,7 +584,7 @@ Chart1.SetFocus
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LoadButton_Click()
@@ -686,7 +686,7 @@ mClockText.BoxStyle = LineInvisible     ' ...whose outline is not visible...
 mClockText.BoxThickness = 0             ' ...and is 0 pixels thick...
 mClockText.BoxFillWithBackgroundColor = True    ' ...and fill it with the region's backgruond color(s)...
 mClockText.PaddingX = 1                 ' leave 1 mm padding between the text and the box
-mClockText.Position = mPriceRegion.NewPoint(90, 98, CoordsRelative, CoordsRelative)
+mClockText.Position = NewPoint(90, 98, CoordsRelative, CoordsRelative)
                                         ' position the box 90 percent across the region
                                         ' and 98 percent up the region (this will be
                                         ' the position of the top right corner as
@@ -826,8 +826,8 @@ mSwingLineSeries.Extended = True            ' If this were not set to true, line
 mSwingAmountTicks = MinSwingTicksText.Text
 
 Set mSwingLine = mSwingLineSeries.Add ' create the first swing line
-mSwingLine.Point1 = mPriceRegion.NewPoint(0, 0)
-mSwingLine.Point2 = mPriceRegion.NewPoint(0, mSwingAmountTicks * mTickSize)
+mSwingLine.Point1 = NewPoint(0, 0)
+mSwingLine.Point2 = NewPoint(0, mSwingAmountTicks * mTickSize)
 mSwingLine.Hidden = True                ' hide it because we don't want this one
                                         ' to be visible on the chart
 mSwingingUp = True
@@ -927,10 +927,10 @@ startText.BoxThickness = 1              ' ...1 pixel thick...
 startText.BoxFillColor = vbGreen        ' ...and a green fill
 startText.BoxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.Position = mPriceRegion.NewPoint(mBar.X, mBar.highPrice)
+startText.Position = NewPoint(mBar.X, mBar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
-startText.offset = mPriceRegion.NewDimension(0, 0.4)
+startText.Offset = NewSize(0, 0.4)
                                         ' ...and offset it 4 millimetres above this
 startText.Align = TextAlignModes.AlignBoxBottomRight
                                         ' use the bottom right corner of the text's box
@@ -955,14 +955,14 @@ If InitialNumBarsText > 40 Then
 Else
     X = 1
 End If
-extendedLine.Point1 = mPriceRegion.NewPoint(X, mBarSeries.Item(X).highPrice + 20 * mTickSize)
+extendedLine.Point1 = NewPoint(X, mBarSeries.Item(X).highPrice + 20 * mTickSize)
                                         ' let its 1st point be 20 ticks above the high 40 bars ago
 If InitialNumBarsText > 5 Then
     X = mPeriod.periodNumber - 5
 Else
     X = 1
 End If
-extendedLine.Point2 = mPriceRegion.NewPoint(X, mBarSeries.Item(X).highPrice)
+extendedLine.Point2 = NewPoint(X, mBarSeries.Item(X).highPrice)
                                         ' let its 2nd point be the high 5 bars ago
 
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
@@ -978,7 +978,7 @@ mTickCountText.BoxStyle = LineStyles.LineSolid
 mTickCountText.BoxThickness = 1
 mTickCountText.BoxFillColor = vbBlack
 mTickCountText.BoxFillStyle = FillStyles.FillSolid
-mTickCountText.Position = mPriceRegion.NewPoint(5, 90, CoordsRelative, CoordsRelative)
+mTickCountText.Position = NewPoint(5, 90, CoordsRelative, CoordsRelative)
 mTickCountText.FixedX = True
 mTickCountText.FixedY = True
 mTickCountText.Align = TextAlignModes.AlignTopLeft
@@ -993,7 +993,7 @@ DrawingToolsFrame.Enabled = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub SessionEndTimeText_Validate(Cancel As Boolean)
@@ -1029,7 +1029,7 @@ mClockText.Text = Format(Now, "hh:mm:ss")
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1064,10 +1064,10 @@ mBar.Tick highPrice
 mBar.Tick lowPrice
 mBar.Tick closePrice
 
-mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, closePrice, CoordsRelative), _
-                        mPriceRegion.YAxisRegion.NewPoint(98, closePrice, CoordsRelative)
+mPriceLine.SetPosition NewPoint(1, closePrice, CoordsRelative), _
+                        NewPoint(98, closePrice, CoordsRelative)
 mPriceText.Text = mPriceRegion.FormatYValue(closePrice)
-mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, closePrice)
+mPriceText.Position = NewPoint(20, closePrice)
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' color the bar blue
@@ -1076,9 +1076,9 @@ If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' add a label to the bar
     Set mLatestBarLabel = mBarLabelSeries.Add()
     mLatestBarLabel.Text = mPeriod.periodNumber
-    mLatestBarLabel.Position = mPriceRegion.NewPoint(mPeriod.periodNumber, mBar.lowPrice)
+    mLatestBarLabel.Position = NewPoint(mPeriod.periodNumber, mBar.lowPrice)
     ' position the text 3mm below the bar's low
-    mLatestBarLabel.offset = mPriceRegion.NewDimension(0, -0.3)
+    mLatestBarLabel.Offset = NewSize(0, -0.3)
 Else
     Set mLatestBarLabel = Nothing
 End If
@@ -1108,7 +1108,7 @@ displayStudyValues
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickSimulator_TickPrice( _
@@ -1142,10 +1142,10 @@ mElapsedTimer.StartTiming
 mBar.Tick price
 tickTime = mElapsedTimer.ElapsedTimeMicroseconds
 
-mPriceLine.SetPosition mPriceRegion.YAxisRegion.NewPoint(1, price, CoordsRelative), _
-                        mPriceRegion.YAxisRegion.NewPoint(98, price, CoordsRelative)
+mPriceLine.SetPosition NewPoint(1, price, CoordsRelative), _
+                        NewPoint(98, price, CoordsRelative)
 mPriceText.Text = mPriceRegion.FormatYValue(price)
-mPriceText.Position = mPriceRegion.YAxisRegion.NewPoint(20, price)
+mPriceText.Position = NewPoint(20, price)
 
 calculateStudies price
 
@@ -1165,9 +1165,9 @@ If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
         Set mLatestBarLabel = mBarLabelSeries.Add()
         mLatestBarLabel.Text = mPeriod.periodNumber
     End If
-    mLatestBarLabel.Position = mPriceRegion.NewPoint(mBar.X, mBar.lowPrice)
+    mLatestBarLabel.Position = NewPoint(mBar.X, mBar.lowPrice)
     ' position the text 3mm below the bar's low
-    mLatestBarLabel.offset = mPriceRegion.NewDimension(0, -0.3)
+    mLatestBarLabel.Offset = NewSize(0, -0.3)
 Else
     Set mLatestBarLabel = Nothing
 End If
@@ -1184,7 +1184,7 @@ Debug.Print "Time for tick= " & Format(tickTime, "000000") & _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickSimulator_TickVolume( _
@@ -1200,14 +1200,14 @@ mCumVolume = volume
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
 ' mUnhandledErrorHandler Event Handlers
 '================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEvent)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
 gHandleFatalError
 End Sub
 
@@ -1235,7 +1235,7 @@ mMACD.datavalue value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub clearFields()
@@ -1296,7 +1296,7 @@ mBarTime = 0
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub displayStudyValues()
@@ -1313,7 +1313,7 @@ If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHi
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function getSessionTime(ByVal value As String) As Date
@@ -1429,7 +1429,7 @@ mMACD.SignalPeriods = 5
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setNewStudyPeriod(ByVal timestamp As Date)
@@ -1472,7 +1472,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -1483,7 +1483,7 @@ On Error GoTo Err
 If mSwingingUp Then
     If (mSwingLine.Point2.Y - mSwingLine.Point1.Y) >= mSwingAmountTicks * mTickSize Then
         If price >= mSwingLine.Point2.Y Then
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
         Else
             
             Set mPrevSwingLine = mSwingLine
@@ -1494,25 +1494,25 @@ If mSwingingUp Then
                 Set mNewSwingLine = Nothing
                 mSwingLine.Hidden = False
             End If
-            mSwingLine.Point1 = mPriceRegion.NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point1 = NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
             mSwingingUp = False
         End If
     Else
         If price > mPrevSwingLine.Point2.Y Then
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
         Else
             Set mNewSwingLine = mSwingLine
             mNewSwingLine.Hidden = True
             Set mSwingLine = mPrevSwingLine
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
             mSwingingUp = False
         End If
     End If
 Else
     If (mSwingLine.Point1.Y - mSwingLine.Point2.Y) >= mSwingAmountTicks * mTickSize Then
         If price <= mSwingLine.Point2.Y Then
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
         Else
             
             Set mPrevSwingLine = mSwingLine
@@ -1523,18 +1523,18 @@ Else
                 Set mNewSwingLine = Nothing
                 mSwingLine.Hidden = False
             End If
-            mSwingLine.Point1 = mPriceRegion.NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point1 = NewPoint(mPrevSwingLine.Point2.X, mPrevSwingLine.Point2.Y)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
             mSwingingUp = True
         End If
     Else
         If price < mPrevSwingLine.Point2.Y Then
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
         Else
             Set mNewSwingLine = mSwingLine
             mNewSwingLine.Hidden = True
             Set mSwingLine = mPrevSwingLine
-            mSwingLine.Point2 = mPriceRegion.NewPoint(periodNumber, price)
+            mSwingLine.Point2 = NewPoint(periodNumber, price)
             mSwingingUp = True
         End If
     End If
@@ -1543,7 +1543,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

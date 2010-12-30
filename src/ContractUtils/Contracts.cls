@@ -35,14 +35,14 @@ Option Explicit
 '@================================================================================
 
 Event CollectionChanged( _
-                ev As CollectionChangeEvent)
+                ev As CollectionChangeEventData)
 
 Event ContractSpecifierInvalid(ByVal reason As String)
 
 Event NoMoreContractDetails()
 
 Event Notification( _
-                ByRef ev As NotificationEvent)
+                ByRef ev As NotificationEventData)
 Event TryLater( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
@@ -106,7 +106,7 @@ Count = mContracts.Count
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get Enumerator() As Enumerator
@@ -135,7 +135,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
                 
 Public Property Get SortKeys() As ContractSortKeyIds()
@@ -161,7 +161,7 @@ fireChange CollItemAdded, pContract
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AddCollectionChangeListener( _
@@ -175,7 +175,7 @@ mChangeListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub ContractSpecifierInvalid(ByVal reason As String)
@@ -198,7 +198,7 @@ Set Item = mContracts(index)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub LoadComplete()
@@ -212,7 +212,7 @@ Set NewEnum = mContracts.Enumerator
 End Function
 
 Friend Sub Notify( _
-                ByRef ev As NotificationEvent)
+                ByRef ev As NotificationEventData)
 RaiseEvent Notification(ev)
 End Sub
 
@@ -230,7 +230,7 @@ fireChange CollItemRemoved, lContract
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub RemoveCollectionChangeListener( _
@@ -247,7 +247,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub ServiceProviderCantHandle( _
@@ -283,7 +283,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function ToString() As String
@@ -299,7 +299,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================
@@ -311,7 +311,7 @@ Private Sub fireChange( _
                 ByVal affectedObject As Contract)
 Dim listener As CollectionChangeListener
 Dim i As Long
-Dim ev As CollectionChangeEvent
+Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
 Dim failpoint As String
 On Error GoTo Err
@@ -328,7 +328,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

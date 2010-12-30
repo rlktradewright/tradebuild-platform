@@ -53,7 +53,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -72,7 +72,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -92,7 +92,7 @@ If mStudyDefinition Is Nothing Then
                         "over the specified number of periods. " & _
                         "The true range of a bar is calculated by substituting the " & _
                         "previous close for the bar's low (if lower), or for the high (if higher)."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AtrInputPrice)
@@ -101,7 +101,7 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AtrValueATR)
     valueDef.Description = "The Average True Range value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
@@ -124,7 +124,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

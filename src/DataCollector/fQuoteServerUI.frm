@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Begin VB.Form fDataCollectorUI 
    Caption         =   "TradeBuild Data Collector Version 2.6"
    ClientHeight    =   4230
@@ -511,14 +511,14 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' BarWriterListener Interface Members
 '================================================================================
 
-Private Sub BarWriterListener_notify(ev As TradeBuild26.WriterEvent)
+Private Sub BarWriterListener_notify(ev As TradeBuild26.WriterEventData)
 Dim tk As ticker
 
 Const ProcName As String = "BarWriterListener_notify"
@@ -543,7 +543,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -560,7 +560,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
@@ -584,14 +584,14 @@ LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' QuoteListener Interface Members
 '================================================================================
 
-Private Sub QuoteListener_ask(ev As QuoteEvent)
+Private Sub QuoteListener_ask(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_ask"
 On Error GoTo Err
 
@@ -600,10 +600,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_bid(ev As QuoteEvent)
+Private Sub QuoteListener_bid(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_bid"
 On Error GoTo Err
 
@@ -612,10 +612,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_high(ev As QuoteEvent)
+Private Sub QuoteListener_high(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_high"
 On Error GoTo Err
 
@@ -624,10 +624,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_Low(ev As QuoteEvent)
+Private Sub QuoteListener_Low(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_Low"
 On Error GoTo Err
 
@@ -636,10 +636,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As QuoteEvent)
+Private Sub QuoteListener_openInterest(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_openInterest"
 On Error GoTo Err
 
@@ -648,10 +648,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As QuoteEvent)
+Private Sub QuoteListener_previousClose(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_previousClose"
 On Error GoTo Err
 
@@ -660,10 +660,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEventData)
 Const ProcName As String = "QuoteListener_sessionOpen"
 On Error GoTo Err
 
@@ -672,10 +672,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_trade(ev As QuoteEvent)
+Private Sub QuoteListener_trade(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_trade"
 On Error GoTo Err
 
@@ -684,10 +684,10 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub QuoteListener_volume(ev As QuoteEvent)
+Private Sub QuoteListener_volume(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_volume"
 On Error GoTo Err
 
@@ -696,7 +696,7 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -713,10 +713,10 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub RawMarketDepthListener_resetMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
+Private Sub RawMarketDepthListener_resetMarketDepth(ev As TradeBuild26.RawMarketDepthEventData)
 
 Const ProcName As String = "RawMarketDepthListener_resetMarketDepth"
 On Error GoTo Err
@@ -726,10 +726,10 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub RawMarketDepthListener_updateMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
+Private Sub RawMarketDepthListener_updateMarketDepth(ev As TradeBuild26.RawMarketDepthEventData)
 Const ProcName As String = "RawMarketDepthListener_updateMarketDepth"
 On Error GoTo Err
 
@@ -738,14 +738,14 @@ processTickEvent ev.Source
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' StateChangeListener Interface Members
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEvent)
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Dim tli As TimerListItem
 
 Const ProcName As String = "StateChangeListener_Change"
@@ -753,7 +753,7 @@ On Error GoTo Err
 
 Set tli = ev.Source
 If Not tli Is Nothing Then
-    If ev.State = TimerListItemStates.TimerListItemStateExpired Then
+    If ev.state = TimerListItemStates.TimerListItemStateExpired Then
         switchDataLightOff tli.Data
         Set mTickers(tli.Data).tli = Nothing
     End If
@@ -762,14 +762,14 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
 ' TickfileWriterListener Interface Members
 '================================================================================
 
-Private Sub TickfileWriterListener_notify(ev As TradeBuild26.WriterEvent)
+Private Sub TickfileWriterListener_notify(ev As TradeBuild26.WriterEventData)
 Dim tk As ticker
 
 Const ProcName As String = "TickfileWriterListener_notify"
@@ -794,7 +794,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -978,12 +978,12 @@ Err:
 UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub mDataCollector_Error(ev As TWUtilities30.ErrorEvent)
+Private Sub mDataCollector_Error(ev As TWUtilities30.ErrorEventData)
 Const ProcName As String = "mDataCollector_Error"
 On Error GoTo Err
 
-LogMessage "Error " & ev.ErrorCode & ": " & vbCrLf & _
-            ev.errorMessage, _
+LogMessage "Error " & ev.errorCode & ": " & vbCrLf & _
+            ev.ErrorMessage, _
             LogLevelSevere
 
 stopCollecting "Closing due to error", False
@@ -1007,7 +1007,7 @@ Err:
 UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub mDataCollector_FatalError(ev As TWUtilities30.ErrorEvent)
+Private Sub mDataCollector_FatalError(ev As TWUtilities30.ErrorEventData)
 Const ProcName As String = "mDataCollector_FatalError"
 On Error GoTo Err
 
@@ -1140,7 +1140,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1162,7 +1162,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function generateTaskInfo( _
@@ -1174,7 +1174,7 @@ Const ProcName As String = "generateTaskInfo"
 On Error GoTo Err
 
 Do While en.MoveNext
-    ts = en.current
+    ts = en.Current
     s = s & "Name: " & ts.name & _
         "; Priority: " & ts.priority & _
         "; Start time: " & FormatTimestamp(ts.startTime, TimestampDateAndTimeISO8601) & _
@@ -1188,7 +1188,7 @@ generateTaskInfo = s
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub hideActivityMonitor()
@@ -1205,7 +1205,7 @@ mActivityMonitorVisible = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
     
 Private Sub processTickEvent( _
@@ -1220,7 +1220,7 @@ mTickCount = mTickCount + 1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub resizeHeight()
@@ -1258,7 +1258,7 @@ setupTickerScroll
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub resizeWidth()
@@ -1297,7 +1297,7 @@ mCurrentWidth = Me.Width
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1316,7 +1316,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setStarted()
@@ -1334,7 +1334,7 @@ Set mClock = GetClock
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1356,7 +1356,7 @@ TicksPerSecText = ""
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1389,7 +1389,7 @@ TickerScroll.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showActivityMonitor()
@@ -1406,7 +1406,7 @@ mActivityMonitorVisible = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub startCollecting( _
@@ -1422,7 +1422,7 @@ mDataCollector.startCollection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1444,7 +1444,7 @@ mDataCollector.stopCollection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1470,7 +1470,7 @@ ConnectionStatusText.BackColor = vbGreen
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub switchDataLightOff( _
@@ -1484,6 +1484,6 @@ DataLightLabel(index).Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

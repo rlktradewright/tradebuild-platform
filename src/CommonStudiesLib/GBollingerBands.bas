@@ -60,7 +60,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -83,7 +83,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -103,7 +103,7 @@ If mStudyDefinition Is Nothing Then
                         "number of standard deviations from a moving average. " & _
                         "When volatility increases, the bands widen, and they " & _
                         "narrow when volatility decreases."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionUnderlying
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(BBInputPrice)
@@ -112,7 +112,7 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueTop)
     valueDef.Description = "The top Bollinger band value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle
@@ -120,7 +120,7 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueBottom)
     valueDef.Description = "The bottom Bollinger band value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle
@@ -129,7 +129,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueCentre)
     valueDef.Description = "The MA value between the top and bottom bands"
     valueDef.IncludeInChart = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&H1D9311)
     valueDef.ValueType = ValueTypeReal
@@ -137,7 +137,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueSpread)
     valueDef.Description = "The difference between the top and bottom " & _
                             "band values"
-    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
@@ -176,7 +176,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

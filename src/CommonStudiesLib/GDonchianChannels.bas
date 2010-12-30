@@ -53,7 +53,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -71,7 +71,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -89,7 +89,7 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.Description = "Donchian channels show the highest high and the " & _
                                     "lowest low during the specified preceeding number " & _
                                     "of periods"
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionUnderlying
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(DoncInputPrice)
     inputDef.InputType = InputTypeReal
@@ -98,7 +98,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueLower)
     valueDef.Description = "The lower channel value"
     valueDef.IncludeInChart = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
@@ -106,7 +106,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(DoncValueUpper)
     valueDef.Description = "The upper channel value"
     valueDef.IncludeInChart = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
@@ -122,7 +122,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

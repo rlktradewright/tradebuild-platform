@@ -80,7 +80,7 @@ Private Sub LogListener_finish()
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
-gCon.writeErrorLine VariantToString(logrec.Data)
+gCon.WriteErrorLine VariantToString(logrec.Data)
 End Sub
 
 '@================================================================================
@@ -88,7 +88,7 @@ End Sub
 '@================================================================================
 
 Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
-gCon.writeErrorLine "Line " & mLineNumber & ": Invalid contract spec " & mContractSpec.ToString
+gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid contract spec " & mContractSpec.ToString
 mDone = True
 End Sub
 
@@ -96,21 +96,21 @@ Private Sub mContracts_NoMoreContractDetails()
 mDone = True
 End Sub
 
-Private Sub mContracts_Notification(ev As TWUtilities30.NotificationEvent)
-gCon.writeErrorLine "Line " & mLineNumber & ": Notification: " & ev.eventMessage
+Private Sub mContracts_Notification(ev As TWUtilities30.NotificationEventData)
+gCon.WriteErrorLine "Line " & mLineNumber & ": Notification: " & ev.eventMessage
 mDone = True
 End Sub
 
 Private Sub mContracts_TryLater(ByVal reason As String, ByVal serviceProviderName As String)
-gCon.writeErrorLine "Line " & mLineNumber & ": Try later: " & reason
+gCon.WriteErrorLine "Line " & mLineNumber & ": Try later: " & reason
 mDone = True
 End Sub
 
-Private Sub mContractsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
-If ev.cancelled Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Contract fetch cancelled"
-ElseIf ev.errorNumber <> 0 Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Error " & ev.errorNumber & ": " & ev.errorMessage
+Private Sub mContractsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+If ev.Cancelled Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Contract fetch cancelled"
+ElseIf ev.ErrorNumber <> 0 Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Error " & ev.ErrorNumber & ": " & ev.ErrorMessage
 Else
     If Not IsEmpty(ev.result) Then Set mContracts = ev.result
 End If
@@ -121,17 +121,17 @@ End Sub
 ' mTB Event Handlers
 '@================================================================================
 
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
-gCon.writeErrorLine "TradeBuild error: " & ev.errorMessage
+Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
+gCon.WriteErrorLine "TradeBuild error: " & ev.ErrorMessage
 End Sub
 
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)
+Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
 Dim spe As ServiceProviderError
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTB.GetServiceProviderError
-    gCon.writeErrorLine "Service provider error: " & spe.Message
+    gCon.WriteErrorLine "Service provider error: " & spe.Message
 Else
-    gCon.writeErrorLine "TradeBuild notification: " & ev.eventMessage
+    gCon.WriteErrorLine "TradeBuild notification: " & ev.eventMessage
 End If
 End Sub
 
@@ -165,7 +165,7 @@ Loop
 
 If mContracts.Count <> 0 Then
     For Each lContract In mContracts
-        gCon.writeLine formatName(lContract, nametemplate) & OutputSep & _
+        gCon.WriteLine formatName(lContract, nametemplate) & OutputSep & _
                         lContract.Specifier.LocalSymbol & OutputSep & _
                         lContract.Specifier.symbol & OutputSep & _
                         lContract.Specifier.expiry & OutputSep & _
@@ -178,7 +178,7 @@ If mContracts.Count <> 0 Then
                         lContract.TickValue & OutputSep & _
                         Format(lContract.SessionStartTime, "hh:mm") & OutputSep & _
                         Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
-                        lContract.Timezone.standardName & OutputSep & _
+                        lContract.Timezone.StandardName & OutputSep & _
                         lContract.DaysBeforeExpiryToSwitch & OutputSep & _
                         lContract.NumberOfDecimals & OutputSep & _
                         lContract.Multiplier

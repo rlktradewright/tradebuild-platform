@@ -54,7 +54,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -73,7 +73,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -93,7 +93,7 @@ If mStudyDefinition Is Nothing Then
                                 "It also has another value, called %D, which is " & _
                                 "calculated by smoothing %K."
                                 
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(StochInputValue)
@@ -104,7 +104,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "The stochastic value (%K)"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
@@ -115,7 +115,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "The result of smoothing %K, also known as the signal line (%D)"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
@@ -139,7 +139,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

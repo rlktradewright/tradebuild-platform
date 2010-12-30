@@ -142,7 +142,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -157,8 +157,8 @@ Dim inString As String
 Dim command As String
 Dim params As String
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     mLineNumber = mLineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -190,10 +190,10 @@ Do While inString <> gCon.eofString
         Case HelpCommand, Help1Command
             showStdInHelp
         Case Else
-            gCon.writeErrorLine "Invalid command '" & command & "'"
+            gCon.WriteErrorLine "Invalid command '" & command & "'"
         End Select
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
@@ -227,7 +227,7 @@ If clp.Arg(1) = "?" Or _
     clp.Switch("?") Or _
     clp.NumberOfArgs = 0 _
 Then
-    gCon.writeLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+    gCon.WriteLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
     Exit Sub
 End If
 
@@ -244,7 +244,7 @@ optRightStr = Trim$(clp.Arg(7))
 
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
     validParams = False
 End If
 
@@ -253,16 +253,16 @@ If expiry <> "" Then
         expiry = Format(CDate(expiry), "yyyymmdd")
     ElseIf Len(expiry) = 6 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Right$(expiry, 2) & "/01") Then
-            gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
             validParams = False
         End If
     ElseIf Len(expiry) = 8 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2)) Then
-            gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
             validParams = False
         End If
     Else
-        gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
         validParams = False
     End If
 End If
@@ -271,14 +271,14 @@ If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
     Else
-        gCon.writeErrorLine "Line " & mLineNumber & ": Invalid strike '" & strikeStr & "'"
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid strike '" & strikeStr & "'"
         validParams = False
     End If
 End If
 
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
     validParams = False
 End If
 
@@ -298,7 +298,7 @@ Exit Sub
 
 Err:
 Set mContractSpec = Nothing
-gCon.writeErrorLine "Error: " & Err.Description
+gCon.WriteErrorLine "Error: " & Err.Description
 End Sub
 
 Private Sub processFromCommand( _
@@ -306,7 +306,7 @@ Private Sub processFromCommand( _
 If IsDate(params) Then
     mFrom = CDate(params)
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
 End If
 End Sub
 
@@ -317,10 +317,10 @@ End Sub
 Private Sub processNumberCommand( _
                 ByVal params As String)
 If Not IsInteger(params, 1) And params <> "-1" Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0"
 Else
     mNumber = CLng(params)
-    If mSwitch = FromFile Then gCon.writeLineToConsole "number command is ignored for tickfile input"
+    If mSwitch = FromFile Then gCon.WriteLineToConsole "number command is ignored for tickfile input"
 End If
 End Sub
 
@@ -330,13 +330,13 @@ End Sub
 
 Private Sub processStartCommand()
 If mSwitch <> FromFile And mContractSpec Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mSwitch <> FromFile And mFrom = 0 And mNumber = 0 Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - either from time or number of bars must be specified"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - either from time or number of bars must be specified"
 ElseIf mBarUnits = TimePeriodNone Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - timeframe not specified"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - timeframe not specified"
 ElseIf Not gProcessor Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - already running"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
 Else
        
     Set gProcessor = New Processor
@@ -354,7 +354,7 @@ End Sub
 
 Private Sub processStopCommand()
 If gProcessor Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
 Else
     gProcessor.StopData
     Set gProcessor = Nothing
@@ -371,12 +371,12 @@ mBarLength = 0
 mBarUnits = TimePeriodNone
 
 If clp.NumberOfArgs < 1 Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid timeframe - the bar length must be supplied"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid timeframe - the bar length must be supplied"
     Exit Sub
 End If
 
 If Not IsInteger(clp.Arg(0), 1) Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & ": must be an integer > 0"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar length '" & Trim$(clp.Arg(0)) & ": must be an integer > 0"
     Exit Sub
 End If
 mBarLength = CLng(clp.Arg(0))
@@ -385,7 +385,7 @@ mBarUnits = TimePeriodMinute
 If Trim$(clp.Arg(1)) <> "" Then
     mBarUnits = TimePeriodUnitsFromString(clp.Arg(1))
     If mBarUnits = TimePeriodNone Then
-        gCon.writeErrorLine "Line " & mLineNumber & ": Invalid bar units '" & Trim$(clp.Arg(1)) & ": must be one of s,m,h,d,w,mm,v,tv,tm"
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid bar units '" & Trim$(clp.Arg(1)) & ": must be one of s,m,h,d,w,mm,v,tv,tm"
     Exit Sub
     End If
 End If
@@ -397,7 +397,7 @@ Private Sub processToCommand( _
 If IsDate(params) Then
     mTo = CDate(params)
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
 End If
 End Sub
 
@@ -405,7 +405,7 @@ Private Function setupCommonStudiesLib() As Boolean
 Dim sl As Object
 Set sl = AddStudyLibrary("CmnStudiesLib26.StudyLib", True, "Built-in")
 If sl Is Nothing Then
-    gCon.writeErrorLine "Common studies library is not installed"
+    gCon.WriteErrorLine "Common studies library is not installed"
 Else
     setupCommonStudiesLib = True
 End If
@@ -433,12 +433,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     Exit Function
 End If
 
@@ -455,7 +455,7 @@ Set sp = TradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & password, _
                 Description:="Enable contract data from TradeBuild's database")
 If sp Is Nothing Then
-    gCon.writeErrorLine "Required contract info service provider is not installed"
+    gCon.WriteErrorLine "Required contract info service provider is not installed"
     setupDbServiceProviders = False
 End If
 
@@ -469,7 +469,7 @@ Set sp = TradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & password, _
                 Description:="Enable historical bar data storage/retrieval to/from TradeBuild's database")
 If sp Is Nothing Then
-    gCon.writeErrorLine "Required historical data service provider is not installed"
+    gCon.WriteErrorLine "Required historical data service provider is not installed"
     setupDbServiceProviders = False
 End If
 
@@ -490,7 +490,7 @@ Set sp = TradeBuildAPI.ServiceProviders.Add( _
                 ParamString:="Access mode=ReadOnly", _
                 Description:="Historical tick data input from files")
 If sp Is Nothing Then
-    gCon.writeErrorLine "Required tickfile service provider is not installed"
+    gCon.WriteErrorLine "Required tickfile service provider is not installed"
     setupFileServiceProviders = False
 End If
 
@@ -520,14 +520,14 @@ On Error GoTo 0
 
 If port <> "" Then
     If Not IsInteger(port, 0) Then
-        gCon.writeErrorLine "Error: port must be a positive integer"
+        gCon.WriteErrorLine "Error: port must be a positive integer"
         setupTwsServiceProviders = False
     End If
 End If
     
 If clientId <> "" Then
     If Not IsInteger(clientId) Then
-        gCon.writeErrorLine "Error: clientId must be an integer"
+        gCon.WriteErrorLine "Error: clientId must be an integer"
         setupTwsServiceProviders = False
     End If
 End If
@@ -557,7 +557,7 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupTwsServiceProviders = False
 
 End Function
@@ -583,63 +583,63 @@ If Not setupCommonStudiesLib Then setupServiceProviders = False
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupServiceProviders = False
 
 End Function
 
 Private Sub showContractHelp()
-gCon.writeLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+gCon.WriteLineToConsole "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
 End Sub
 
 Private Sub showStdInHelp()
-gCon.writeLineToConsole "StdIn Format:"
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole "#comment"
+gCon.WriteLineToConsole "StdIn Format:"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "#comment"
 showContractHelp
-gCon.writeLineToConsole "from starttime"
-gCon.writeLineToConsole "to endtime"
-gCon.writeLineToConsole "number n               # -1 => return all available bars"
+gCon.WriteLineToConsole "from starttime"
+gCon.WriteLineToConsole "to endtime"
+gCon.WriteLineToConsole "number n               # -1 => return all available bars"
 showTimeframeHelp
-gCon.writeLineToConsole "nonsess                # include bars outside session"
-gCon.writeLineToConsole "sess                   # include only bars within the session"
-gCon.writeLineToConsole "start"
-gCon.writeLineToConsole "stop"
+gCon.WriteLineToConsole "nonsess                # include bars outside session"
+gCon.WriteLineToConsole "sess                   # include only bars within the session"
+gCon.WriteLineToConsole "start"
+gCon.WriteLineToConsole "stop"
 End Sub
 
 Private Sub showTimeframeHelp()
-gCon.writeLineToConsole "timeframe timeframespec"
-gCon.writeLineToConsole "  where"
-gCon.writeLineToConsole "    timeframespec  ::= length [units]"
-gCon.writeLineToConsole "    units          ::=     m   minutes (default)"
-gCon.writeLineToConsole "                           h   hours"
-gCon.writeLineToConsole "                           d   days"
-gCon.writeLineToConsole "                           w   weeks"
-gCon.writeLineToConsole "                           mm   months"
-gCon.writeLineToConsole "                           v   volume (constant volume bars)"
-gCon.writeLineToConsole "                           tv  tick volume (constant tick volume bars)"
-gCon.writeLineToConsole "                           tm   ticks movement (constant range bars)"
+gCon.WriteLineToConsole "timeframe timeframespec"
+gCon.WriteLineToConsole "  where"
+gCon.WriteLineToConsole "    timeframespec  ::= length [units]"
+gCon.WriteLineToConsole "    units          ::=     m   minutes (default)"
+gCon.WriteLineToConsole "                           h   hours"
+gCon.WriteLineToConsole "                           d   days"
+gCon.WriteLineToConsole "                           w   weeks"
+gCon.WriteLineToConsole "                           mm   months"
+gCon.WriteLineToConsole "                           v   volume (constant volume bars)"
+gCon.WriteLineToConsole "                           tv  tick volume (constant tick volume bars)"
+gCon.WriteLineToConsole "                           tm   ticks movement (constant range bars)"
 End Sub
 
 Private Sub showUsage()
-gCon.writeLineToConsole "Usage:"
-gCon.writeLineToConsole "gbd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.writeLineToConsole "    OR"
-gCon.writeLineToConsole "    -fromfile:tickfilepath"
-gCon.writeLineToConsole "    OR"
-gCon.writeLineToConsole "    -fromtws: [twsserver] [,[port][,[clientid]]]"
-gCon.writeLineToConsole ""
+gCon.WriteLineToConsole "Usage:"
+gCon.WriteLineToConsole "gbd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteLineToConsole "    OR"
+gCon.WriteLineToConsole "    -fromfile:tickfilepath"
+gCon.WriteLineToConsole "    OR"
+gCon.WriteLineToConsole "    -fromtws: [twsserver] [,[port][,[clientid]]]"
+gCon.WriteLineToConsole ""
 showStdInHelp
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole "StdOut Format:"
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole "timestamp,open,high,low,close,volume,tickvolume"
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole "  where"
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole "    timestamp ::= yyyy-mm-dd hh:mm:ss.nnn"
-gCon.writeLineToConsole ""
-gCon.writeLineToConsole ""
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "StdOut Format:"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "timestamp,open,high,low,close,volume,tickvolume"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "  where"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole "    timestamp ::= yyyy-mm-dd hh:mm:ss.nnn"
+gCon.WriteLineToConsole ""
+gCon.WriteLineToConsole ""
 End Sub
 
 

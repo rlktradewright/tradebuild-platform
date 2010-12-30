@@ -65,16 +65,16 @@ Private mYScaleGridSpacing                        As Double
 ' Properties
 '@================================================================================
 
-Friend Property Let GridlineSpacingY(ByVal value As Double)
-mGridlineSpacingY = value
+Friend Property Let GridlineSpacingY(ByVal Value As Double)
+mGridlineSpacingY = Value
 End Property
 
 Friend Property Get YScaleGridSpacing() As Single
 YScaleGridSpacing = mYScaleGridSpacing
 End Property
 
-Friend Property Let YScaleQuantum(ByVal value As Double)
-mYScaleQuantum = value
+Friend Property Let YScaleQuantum(ByVal Value As Double)
+mYScaleQuantum = Value
 End Property
 
 '@================================================================================
@@ -143,7 +143,7 @@ Calculate = mYScaleGridSpacing
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 

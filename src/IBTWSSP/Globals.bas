@@ -212,9 +212,7 @@ Private mTWSAPITableNextIndex As Long
 
 Private mRandomClientIds As Collection
 
-Private mLogger As Logger
-
-Private mLogTokens(9) As String
+Private mLogger As FormattingLogger
 
 '================================================================================
 ' Properties
@@ -230,11 +228,10 @@ Set mCommonServiceConsumer = RHS
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Sub gLog(ByRef pMsg As String, _
-                ByRef pProjName As String, _
                 ByRef pModName As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
@@ -242,33 +239,17 @@ Public Sub gLog(ByRef pMsg As String, _
 Const ProcName As String = "gLog"
 On Error GoTo Err
 
-If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
-mLogTokens(0) = "["
-mLogTokens(1) = pProjName
-mLogTokens(2) = "."
-mLogTokens(3) = pModName
-mLogTokens(4) = ":"
-mLogTokens(5) = pProcName
-mLogTokens(6) = "] "
-mLogTokens(7) = pMsg
-If Len(pMsgQualifier) <> 0 Then
-    mLogTokens(8) = ": "
-    mLogTokens(9) = pMsgQualifier
-Else
-    mLogTokens(8) = vbNullString
-    mLogTokens(9) = vbNullString
-End If
 
-gLogger.Log pLogLevel, Join(mLogTokens, "")
+gLogger.Log pMsg, pProcName, pModName, pLogLevel, pMsgQualifier
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger("tradebuild.log.serviceprovider.ibtwssp")
+Public Property Get gLogger() As FormattingLogger
+If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.serviceprovider.ibtwssp", ProjectName)
 Set gLogger = mLogger
 End Property
 
@@ -286,7 +267,7 @@ Public Function gGetTWSAPIInstance( _
 Const ProcName As String = "gGetTWSAPIInstance"
 Dim i As Long
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If mTWSAPITableNextIndex = 0 Then
@@ -341,7 +322,7 @@ gGetTWSAPIInstance.Connect
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -354,8 +335,39 @@ gHistDataCapabilities = 0
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pProjectName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
 Const ProcName As String = "gHistDataSupports"
@@ -366,7 +378,7 @@ gHistDataSupports = (gHistDataCapabilities And capabilities)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gInputMessageIdToString( _
@@ -448,7 +460,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
                 
 End Function
 
@@ -521,13 +533,13 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseClientId( _
                 value As String) As Long
 Const ProcName As String = "gParseClientId"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -543,13 +555,13 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseConnectionRetryInterval( _
                 value As String) As Long
 Const ProcName As String = "gParseConnectionRetryInterval"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -565,7 +577,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseKeepConnection( _
@@ -588,7 +600,7 @@ End Function
 Public Function gParsePort( _
                 value As String) As Long
 Const ProcName As String = "gParsePort"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -604,7 +616,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseRole( _
@@ -612,7 +624,7 @@ Public Function gParseRole( _
 Const ProcName As String = "gParseRole"
 
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case UCase$(value)
@@ -629,13 +641,13 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gParseTwsLogLevel( _
                 value As String) As TWSLogLevels
 Const ProcName As String = "gParseTwsLogLevel"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -657,7 +669,7 @@ If Err.number = ErrorCodes.ErrIllegalArgumentException Then
             TWSLogLevelDetailString
 End If
 
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gRealtimeDataCapabilities() As Long
@@ -676,7 +688,7 @@ Const ProcName As String = "gReleaseAllTWSAPIInstances"
 
 Dim i As Long
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 For i = 0 To mTWSAPITableNextIndex - 1
@@ -695,7 +707,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
                 
 End Sub
 
@@ -707,7 +719,7 @@ Const ProcName As String = "gReleaseTWSAPIInstance"
 
 Dim i As Long
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 For i = 0 To mTWSAPITableNextIndex - 1
@@ -733,7 +745,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
                 
 End Sub
 
@@ -822,7 +834,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
                 
@@ -835,7 +847,7 @@ gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMi
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
@@ -847,13 +859,13 @@ gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinut
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function gTwsLogLevelFromString( _
                 ByVal value As String) As TWSLogLevels
 Const ProcName As String = "gTwsLogLevelFromString"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Select Case UCase$(value)
@@ -876,7 +888,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '================================================================================
@@ -887,7 +899,7 @@ Private Function clientIdAlreadyInUse( _
                 ByVal value As Long) As Boolean
 Const ProcName As String = "clientIdAlreadyInUse"
 Dim i As Long
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 For i = 0 To mTWSAPITableNextIndex - 1
@@ -900,7 +912,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
                 
 End Function
 
@@ -908,7 +920,7 @@ Private Function getRandomClientId( _
                 ByVal designator As String) As Long
 Const ProcName As String = "getRandomClientId"
                 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If mRandomClientIds Is Nothing Then
@@ -937,7 +949,7 @@ mRandomClientIds.add getRandomClientId, CStr(designator)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 

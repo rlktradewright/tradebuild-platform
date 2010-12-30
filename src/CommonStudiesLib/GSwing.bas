@@ -58,7 +58,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -77,7 +77,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -96,7 +96,7 @@ If mStudyDefinition Is Nothing Then
                                     "the underlying. For a move to be considered a swing, " & _
                                     "it must move at least the distance specified in the " & _
                                     "Minimum swing (ticks) parameter."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionNone
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionUnderlying
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SwingInputValue)
@@ -106,7 +106,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingPoint)
     valueDef.Description = "Swing points"
     valueDef.IsDefault = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.ValueType = ValueTypeReal
@@ -114,7 +114,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
     valueDef.Description = "Swing high points"
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.ValueType = ValueTypeReal
@@ -122,7 +122,7 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
     valueDef.Description = "Swing low points"
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed, DataPointDisplayModePoint, , , , , 5, PointSquare)
     valueDef.ValueType = ValueTypeReal
@@ -131,22 +131,25 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "Swing point lines"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=&H808080, ArrowEndFillColor:=vbYellow, ArrowEndStyle:=ArrowClosed, Color:=&H808080)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighLine)
     valueDef.Description = "Swing high point lines"
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbBlue, ArrowEndFillColor:=vbBlue, ArrowEndStyle:=ArrowClosed, Color:=vbBlue)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowLine)
     valueDef.Description = "Swing low point lines"
     valueDef.IsDefault = False
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeLine
+    valueDef.ValueStyle = gCreateLineStyle(ArrowEndColor:=vbRed, ArrowEndFillColor:=vbRed, ArrowEndStyle:=ArrowClosed, Color:=vbRed)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamMinimumSwingTicks)
@@ -165,7 +168,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

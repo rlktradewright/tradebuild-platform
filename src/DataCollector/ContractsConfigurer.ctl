@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -163,7 +163,7 @@ Const ProcName As String = "ContractsTV_NodeCheck"
 On Error GoTo Err
 
 Set cs = Node.Tag
-cs.setAttribute AttributeNameEnabled, IIf(Node.Checked, "True", "False")
+cs.SetAttribute AttributeNameEnabled, IIf(Node.Checked, "True", "False")
 
 Exit Sub
 
@@ -270,7 +270,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -287,7 +287,7 @@ addConfigurationSection.addConfigurationSection ConfigSectionContractspecifier
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function addListItem( _
@@ -303,7 +303,7 @@ Set addListItem = n
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function ConfigurationSectionToContractSpec( _
@@ -343,7 +343,7 @@ End With
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Function
 
@@ -355,14 +355,14 @@ On Error GoTo Err
 mActionAdd = False
 Set cs = ContractsTV.SelectedItem.Tag
 showContractSpecForm ConfigurationSectionToContractSpec(cs), _
-                       CBool(cs.getAttribute(AttributeNameEnabled, "False")), _
-                       CBool(cs.getAttribute(AttributeNameBidAskBars, "False")), _
-                       CBool(cs.getAttribute(AttributeNameIncludeMktDepth, "False"))
+                       CBool(cs.GetAttribute(AttributeNameEnabled, "False")), _
+                       CBool(cs.GetAttribute(AttributeNameBidAskBars, "False")), _
+                       CBool(cs.GetAttribute(AttributeNameIncludeMktDepth, "False"))
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showContractSpecForm( _
@@ -380,7 +380,7 @@ mContractSpecForm.Show vbModal
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateConfigurationSection( _
@@ -392,9 +392,9 @@ Private Sub updateConfigurationSection( _
 Const ProcName As String = "updateConfigurationSection"
 On Error GoTo Err
 
-contractCS.setAttribute AttributeNameEnabled, IIf(enabled, "True", "False")
-contractCS.setAttribute AttributeNameBidAskBars, IIf(writeBidAskBars, "True", "False")
-contractCS.setAttribute AttributeNameIncludeMktDepth, IIf(includeMktDepth, "True", "False")
+contractCS.SetAttribute AttributeNameEnabled, IIf(enabled, "True", "False")
+contractCS.SetAttribute AttributeNameBidAskBars, IIf(writeBidAskBars, "True", "False")
+contractCS.SetAttribute AttributeNameIncludeMktDepth, IIf(includeMktDepth, "True", "False")
 With contractCS
     .SetSetting ConfigSettingContractSpecLocalSYmbol, contractSpec.localSymbol
     .SetSetting ConfigSettingContractSpecSymbol, contractSpec.symbol
@@ -409,7 +409,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                 
 End Sub
 
@@ -421,17 +421,17 @@ On Error GoTo Err
 
 Set contractCS = pNode.Tag
 pNode.Text = ConfigurationSectionToContractSpec(contractCS).ToString & _
-                                    IIf(CBool(contractCS.getAttribute(AttributeNameBidAskBars, "False")), _
+                                    IIf(CBool(contractCS.GetAttribute(AttributeNameBidAskBars, "False")), _
                                         "Bid/Ask bars;", _
                                         "") & _
-                                    IIf(CBool(contractCS.getAttribute(AttributeNameIncludeMktDepth, "False")), _
+                                    IIf(CBool(contractCS.GetAttribute(AttributeNameIncludeMktDepth, "False")), _
                                         "Mkt depth;", _
                                         "")
-pNode.Checked = CBool(contractCS.getAttribute(AttributeNameEnabled, "False"))
+pNode.Checked = CBool(contractCS.GetAttribute(AttributeNameEnabled, "False"))
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

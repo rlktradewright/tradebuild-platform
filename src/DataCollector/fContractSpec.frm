@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#225.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#241.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fContractSpec 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Contract specifier"
@@ -194,7 +194,7 @@ Set contractSpec = ContractSpecBuilder1.ContractSpecifier
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -221,7 +221,7 @@ IncludeMarketDepthCheck.Value = IIf(includeMktDepth, vbChecked, vbUnchecked)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

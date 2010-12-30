@@ -70,8 +70,8 @@ End Sub
 '================================================================================
 
 Friend Property Let Chart( _
-                ByVal value As Chart)
-Set mChartRef = CreateWeakReference(value)
+                ByVal Value As Chart)
+Set mChartRef = CreateWeakReference(Value)
 End Property
 
 Public Property Get CurrentPeriodNumber() As Long
@@ -88,15 +88,15 @@ Const ProcName As String = "Add"
 Dim failpoint As String
 On Error GoTo Err
 
-If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Periods object is finished"
+If mFinished Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Periods object is finished"
+End If
 Set Add = AddPeriod(Timestamp)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Function AddPeriod( _
@@ -131,7 +131,7 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists And allowDuplicates Then
     duplicateNumber = duplicateNumber + 1
     Resume
 End If
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function Count() As Long
@@ -147,7 +147,7 @@ Count = mPeriods.Count
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Finish()
@@ -177,7 +177,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Function ItemDup( _
@@ -198,7 +198,7 @@ Set ItemDup = mPeriods.Item(generateKey(BarStartTime(index, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -213,7 +213,7 @@ Set NewEnum = mPeriods.Enumerator
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Remove( _
@@ -237,7 +237,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub RemoveDup( _
@@ -258,7 +258,7 @@ mPeriods.Remove generateKey(BarStartTime(index, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -281,7 +281,7 @@ generateKey = Format(Timestamp, "yyyymmddhhnnss") & "." & duplicateNumber
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 

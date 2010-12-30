@@ -60,7 +60,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -81,7 +81,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -103,7 +103,7 @@ If mStudyDefinition Is Nothing Then
                         "difference between the MACD and the signal value gives " & _
                         "another indicator that is usually plotted as a " & _
                         "histogram."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(MACDInputValue)
@@ -114,14 +114,14 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "The MACD value"
     valueDef.IsDefault = True
     valueDef.IncludeInChart = True
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDSignal)
     valueDef.Description = "The MACD signal value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
@@ -129,7 +129,7 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDHist)
     valueDef.Description = "The MACD histogram value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
@@ -138,28 +138,28 @@ If mStudyDefinition Is Nothing Then
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrengthCount)
     valueDef.Description = "The number of consecutive bars for which the current " & _
                             "strength value has not changed"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrength)
     valueDef.Description = "An indication of the strength of the current move"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H43FC2, UpColor:=&H1D9311)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDUpperBalance)
     valueDef.Description = "The price above which is confirmed strength"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDLowerBalance)
     valueDef.Description = "The price below which is confirmed weakness"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
@@ -189,7 +189,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

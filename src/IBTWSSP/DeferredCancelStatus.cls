@@ -71,7 +71,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

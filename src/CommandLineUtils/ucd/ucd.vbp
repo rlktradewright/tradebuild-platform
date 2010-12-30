@@ -1,5 +1,5 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
 Reference=*\G{745422A2-E6CF-4653-AF2E-5994D3509BF5}#10.1#0#..\..\ContractUtils\ContractUtils26.dll#TradeWright Contract Utilities v2.6
 Reference=*\G{6DDDD14A-0661-45BC-9192-7FE80727EA97}#40.1#0#..\..\TradingDO\TradingDO2-6.dll#TradeWright TradeBuild Trading Data Objects v2.6
 Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#a.0#0#..\..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v3.0
@@ -16,7 +16,7 @@ Description="UpdateContractDetails command line utility"
 CompatibleMode="0"
 MajorVer=2
 MinorVer=6
-RevisionVer=56
+RevisionVer=84
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionCompanyName="TradeWright Software Systems"

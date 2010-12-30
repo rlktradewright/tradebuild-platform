@@ -77,34 +77,34 @@ Autoscrolling = chartObj.Autoscrolling
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let Autoscrolling(ByVal value As Boolean)
+Public Property Let Autoscrolling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscrolling"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.Autoscrolling = value
+chartObj.Autoscrolling = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let BarTimePeriod( _
-                ByVal value As TimePeriod)
+                ByVal Value As TimePeriod)
 Const ProcName As String = "BarTimePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.BarTimePeriod = value
+chartObj.BarTimePeriod = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
@@ -117,21 +117,21 @@ Set BarTimePeriod = chartObj.BarTimePeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Friend Property Let Chart( _
-                ByVal value As Chart)
+                ByVal Value As Chart)
 Const ProcName As String = "Chart"
 Dim failpoint As String
 On Error GoTo Err
 
-Set mChartRef = CreateWeakReference(value)
+Set mChartRef = CreateWeakReference(Value)
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
@@ -144,7 +144,7 @@ ChartBackColor = chartObj.ChartBackColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
@@ -157,7 +157,7 @@ chartObj.ChartBackColor = val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ChartLeft() As Single
@@ -170,7 +170,7 @@ ChartLeft = chartObj.ChartLeft
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ChartWidth() As Single
@@ -183,7 +183,7 @@ ChartWidth = chartObj.ChartWidth
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get CurrentPeriodNumber() As Long
@@ -196,7 +196,7 @@ CurrentPeriodNumber = chartObj.CurrentPeriodNumber
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get CurrentSessionEndTime() As Date
@@ -209,7 +209,7 @@ CurrentSessionEndTime = chartObj.CurrentSessionEndTime
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
@@ -222,7 +222,7 @@ CurrentSessionStartTime = chartObj.CurrentSessionStartTime
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get FirstVisiblePeriod() As Long
@@ -235,20 +235,20 @@ FirstVisiblePeriod = chartObj.FirstVisiblePeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let FirstVisiblePeriod(ByVal value As Long)
+Public Property Let FirstVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "FirstVisiblePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.FirstVisiblePeriod = value
+chartObj.FirstVisiblePeriod = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
@@ -261,20 +261,20 @@ HorizontalMouseScrollingAllowed = chartObj.HorizontalMouseScrollingAllowed
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let HorizontalMouseScrollingAllowed(ByVal value As Boolean)
+Public Property Let HorizontalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.HorizontalMouseScrollingAllowed = value
+chartObj.HorizontalMouseScrollingAllowed = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
@@ -287,7 +287,7 @@ HorizontalScrollBarVisible = chartObj.HorizontalScrollBarVisible
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
@@ -300,7 +300,7 @@ chartObj.HorizontalScrollBarVisible = val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get IsDrawingEnabled() As Boolean
@@ -313,7 +313,7 @@ IsDrawingEnabled = chartObj.IsDrawingEnabled
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get IsGridHidden() As Boolean
@@ -326,7 +326,7 @@ IsGridHidden = chartObj.IsGridHidden
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get LastVisiblePeriod() As Long
@@ -339,20 +339,20 @@ LastVisiblePeriod = chartObj.LastVisiblePeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let LastVisiblePeriod(ByVal value As Long)
+Public Property Let LastVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "LastVisiblePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.LastVisiblePeriod = value
+chartObj.LastVisiblePeriod = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Periods() As Periods
@@ -365,7 +365,7 @@ Set Periods = chartObj.Periods
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointerCrosshairsColor() As Long
@@ -378,20 +378,20 @@ PointerCrosshairsColor = chartObj.PointerCrosshairsColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PointerCrosshairsColor(ByVal value As Long)
+Public Property Let PointerCrosshairsColor(ByVal Value As Long)
 Const ProcName As String = "PointerCrosshairsColor"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.PointerCrosshairsColor = value
+chartObj.PointerCrosshairsColor = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointerDiscColor() As Long
@@ -404,20 +404,20 @@ PointerDiscColor = chartObj.PointerDiscColor
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PointerDiscColor(ByVal value As Long)
+Public Property Let PointerDiscColor(ByVal Value As Long)
 Const ProcName As String = "PointerDiscColor"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.PointerDiscColor = value
+chartObj.PointerDiscColor = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointerIcon() As IPictureDisp
@@ -430,20 +430,20 @@ Set PointerIcon = chartObj.PointerIcon
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PointerIcon(ByVal value As IPictureDisp)
+Public Property Let PointerIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "PointerIcon"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.PointerIcon = value
+chartObj.PointerIcon = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointerMode() As PointerModes
@@ -456,7 +456,7 @@ PointerMode = chartObj.PointerMode
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
@@ -469,20 +469,20 @@ PointerStyle = chartObj.PointerStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PointerStyle(ByVal value As PointerStyles)
+Public Property Let PointerStyle(ByVal Value As PointerStyles)
 Const ProcName As String = "PointerStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.PointerStyle = value
+chartObj.PointerStyle = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Regions() As ChartRegions
@@ -495,7 +495,7 @@ Set Regions = chartObj.Regions
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -508,7 +508,7 @@ SessionEndTime = chartObj.SessionEndTime
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let SessionEndTime(ByVal val As Date)
@@ -521,7 +521,7 @@ chartObj.SessionEndTime = val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get SessionStartTime() As Date
@@ -534,7 +534,7 @@ SessionStartTime = chartObj.SessionStartTime
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let SessionStartTime(ByVal val As Date)
@@ -547,7 +547,7 @@ chartObj.SessionStartTime = val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get TwipsPerBar() As Long
@@ -560,7 +560,7 @@ TwipsPerBar = chartObj.TwipsPerBar
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let TwipsPerBar(ByVal val As Long)
@@ -573,21 +573,21 @@ chartObj.TwipsPerBar = val
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let VerticalGridTimePeriod( _
-                ByVal value As TimePeriod)
+                ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.VerticalGridTimePeriod = value
+chartObj.VerticalGridTimePeriod = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get VerticalGridTimePeriod() As TimePeriod
@@ -600,7 +600,7 @@ Set VerticalGridTimePeriod = chartObj.VerticalGridTimePeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
@@ -613,20 +613,20 @@ VerticalMouseScrollingAllowed = chartObj.VerticalMouseScrollingAllowed
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let VerticalMouseScrollingAllowed(ByVal value As Boolean)
+Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.VerticalMouseScrollingAllowed = value
+chartObj.VerticalMouseScrollingAllowed = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get XAxisRegion() As ChartRegion
@@ -639,7 +639,7 @@ Set XAxisRegion = chartObj.XAxisRegion
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get XAxisVisible() As Boolean
@@ -652,33 +652,33 @@ XAxisVisible = chartObj.XAxisVisible
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let XAxisVisible(ByVal value As Boolean)
+Public Property Let XAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "XAxisVisible"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.XAxisVisible = value
+chartObj.XAxisVisible = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let XCursorTextStyle(ByVal value As TextStyle)
+Public Property Let XCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "XCursorTextStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.XCursorTextStyle = value
+chartObj.XCursorTextStyle = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get XCursorTextStyle() As TextStyle
@@ -691,7 +691,7 @@ Set XCursorTextStyle = chartObj.XCursorTextStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -704,7 +704,7 @@ YAxisPosition = chartObj.YAxisPosition
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get YAxisVisible() As Boolean
@@ -717,20 +717,20 @@ YAxisVisible = chartObj.YAxisVisible
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let YAxisVisible(ByVal value As Boolean)
+Public Property Let YAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "YAxisVisible"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.YAxisVisible = value
+chartObj.YAxisVisible = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get YAxisWidthCm() As Single
@@ -743,20 +743,20 @@ YAxisWidthCm = chartObj.YAxisWidthCm
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let YAxisWidthCm(ByVal value As Single)
+Public Property Let YAxisWidthCm(ByVal Value As Single)
 Const ProcName As String = "YAxisWidthCm"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.YAxisWidthCm = value
+chartObj.YAxisWidthCm = Value
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '================================================================================
@@ -773,7 +773,7 @@ chartObj.ClearChart
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub DisableDrawing()
@@ -786,7 +786,7 @@ chartObj.DisableDrawing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub EnableDrawing()
@@ -799,7 +799,7 @@ chartObj.EnableDrawing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Finish()
@@ -812,7 +812,7 @@ chartObj.Finish
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Finished()
@@ -825,7 +825,7 @@ Set mChartRef = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub fireChartCleared()
@@ -865,7 +865,7 @@ GetXFromTimestamp = chartObj.GetXFromTimestamp(Timestamp, forceNewPeriod, duplic
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub HideGrid()
@@ -878,7 +878,7 @@ chartObj.HideGrid
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -891,20 +891,20 @@ IsTimeInSession = chartObj.IsTimeInSession(Timestamp)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Public Sub ScrollX(ByVal value As Long)
+Public Sub ScrollX(ByVal Value As Long)
 Const ProcName As String = "ScrollX"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.ScrollX value
+chartObj.ScrollX Value
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetPointerModeDefault()
@@ -917,7 +917,7 @@ chartObj.SetPointerModeDefault
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetPointerModeSelection()
@@ -930,7 +930,7 @@ chartObj.SetPointerModeSelection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetPointerModeTool( _
@@ -945,7 +945,7 @@ chartObj.SetPointerModeTool toolPointerStyle, icon
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub ShowGrid()
@@ -958,7 +958,7 @@ chartObj.ShowGrid
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -975,6 +975,6 @@ Set chartObj = mChartRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 

@@ -87,7 +87,7 @@ If mLine Is Nothing Then
     mLine.IsSelectable = True
     
     mLine.Layer = LayerNumbers.LayerMax
-    mLine.SetPosition mRegion.NewPoint(X, Y), mRegion.NewPoint(X, Y)
+    mLine.SetPosition NewPoint(X, Y), NewPoint(X, Y)
     mAbstractTool.AddSelectableObject mLine
 Else
     mLine.Layer = mLayer
@@ -99,7 +99,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
@@ -112,7 +112,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_DblClick()
@@ -125,7 +125,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_Delete()
@@ -138,7 +138,7 @@ mRegion.RemoveGraphicObjectSeries mLineSeries
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_Deselected()
@@ -151,7 +151,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_EndResize()
@@ -164,22 +164,22 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
 Const ProcName As String = "IChartTool_Move"
 On Error GoTo Err
 
-mLine.Point1 = mRegion.NewPoint(mLine.Point1.X + X - mPrevX, mLine.Point1.Y + Y - mPrevY)
-mLine.Point2 = mRegion.NewPoint(mLine.Point2.X + X - mPrevX, mLine.Point2.Y + Y - mPrevY)
+mLine.Point1 = NewPoint(mLine.Point1.X + X - mPrevX, mLine.Point1.Y + Y - mPrevY)
+mLine.Point2 = NewPoint(mLine.Point2.X + X - mPrevX, mLine.Point2.Y + Y - mPrevY)
 mPrevX = X
 mPrevY = Y
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
@@ -187,15 +187,15 @@ Const ProcName As String = "IChartTool_MoveResize"
 On Error GoTo Err
 
 If selHandleIndex = 1 Then
-    mLine.Point1 = mRegion.NewPoint(X, Y)
+    mLine.Point1 = NewPoint(X, Y)
 Else
-    mLine.Point2 = mRegion.NewPoint(X, Y)
+    mLine.Point2 = NewPoint(X, Y)
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -209,19 +209,19 @@ If mLineStyle Is Nothing Then Set mLineStyle = New LineStyle
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
 Const ProcName As String = "IChartTool_ResizeCreate"
 On Error GoTo Err
 
-If Not mLine Is Nothing Then mLine.Point2 = mRegion.NewPoint(X, Y)
+If Not mLine Is Nothing Then mLine.Point2 = NewPoint(X, Y)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_StartMove(ByVal X As Single, ByVal Y As Single)
@@ -239,7 +239,7 @@ mLine.Layer = LayerNumbers.LayerMax
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
@@ -256,7 +256,7 @@ mLine.Layer = LayerNumbers.LayerMax
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IChartTool_Undo()
@@ -271,7 +271,7 @@ Set mStartPoint2 = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -296,7 +296,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -312,7 +312,7 @@ Set Region = mRegion
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -333,7 +333,7 @@ Set mAbstractTool = CreateAbstractChartTool(pChart, Me)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

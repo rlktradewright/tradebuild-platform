@@ -242,7 +242,7 @@ Const ProcName As String = "ICommonServiceProvider_Terminate"
 
 On Error GoTo Err
 
-logMessage "Hist Data Service Provider terminating", "IBTWSSP:HistDataServiceProvider"
+logMessage "Hist Data Service Provider terminating", ProcName
 finishReaders
 Set mCommonServiceConsumer = Nothing
 
@@ -369,7 +369,7 @@ mTWSLogLevel = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '================================================================================
@@ -381,7 +381,7 @@ Friend Sub dataReaderFinished( _
 Const ProcName As String = "dataReaderFinished"
 Dim i As Long
 Dim reader As HistDataReader
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 i = 1
@@ -403,7 +403,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -413,7 +413,7 @@ End Sub
 Private Sub finishReaders()
 Const ProcName As String = "finishReaders"
 Dim reader As HistDataReader
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 For Each reader In mHistDataReaders
@@ -430,7 +430,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -463,14 +463,14 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub notifyEvent( _
                 ByVal eventCode As StandardSPEventCodes, _
                 ByVal eventMessage As String)
 Const ProcName As String = "notifyEvent"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If mCommonServiceConsumer Is Nothing Then Exit Sub
@@ -481,7 +481,7 @@ mCommonServiceConsumer.notifyEvent eventCode, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

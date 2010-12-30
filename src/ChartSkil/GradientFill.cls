@@ -48,7 +48,7 @@ Private Const ModuleName                            As String = "GradientFill"
 ' Member variables
 '@================================================================================
 
-Private mArea                               As RECT
+Private mArea                               As GDI_RECT
 Private mGradientFillMode                   As Long
 Private mColors()                           As Long
 Private mVertices()                         As TRIVERTEX
@@ -84,35 +84,35 @@ End Sub
 '@================================================================================
 
 Public Property Let Area( _
-                ByRef value As RECT)
-mArea = value
+                ByRef Value As GDI_RECT)
+mArea = Value
 mRecalcRequired = True
 End Property
 
-Public Property Get Area() As RECT
+Public Property Get Area() As GDI_RECT
 Area = mArea
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 Dim failpoint As String
 On Error GoTo Err
 
 ReDim mColors(0) As Long
-mColors(0) = value
+mColors(0) = Value
 calculateGradientFillParameters
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Color() As Long
 Color = mColors(0)
 End Property
 
-Public Property Let Colors(ByRef value() As Long)
+Public Property Let Colors(ByRef Value() As Long)
 Dim numColors As Long
 
 Const ProcName As String = "Colors"
@@ -120,7 +120,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 On Error Resume Next
-numColors = UBound(value) + 1
+numColors = UBound(Value) + 1
 On Error GoTo Err
 
 If numColors = 0 Then
@@ -140,14 +140,14 @@ If numColors > 5 Then
             "At most 5 background gradient fill colors may be supplied"
 End If
 
-mColors = value
+mColors = Value
 
 calculateGradientFillParameters
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Colors() As Long()
@@ -168,14 +168,14 @@ If mRecalcRequired Then calculateGradientFillParameters
 
 If mGradientFillMode = GRADIENT_FILL_TRIANGLE Then
     GradientFill hDC, _
-                VarPtr(mVertices(0)), _
+                mVertices(0), _
                 UBound(mVertices) + 1, _
                 VarPtr(mMeshTriangle(0)), _
                 UBound(mMeshTriangle) + 1, _
                 GRADIENT_FILL_TRIANGLE
 Else
     GradientFill hDC, _
-                VarPtr(mVertices(0)), _
+                mVertices(0), _
                 UBound(mVertices) + 1, _
                 VarPtr(mMeshRect(0)), _
                 UBound(mMeshRect) + 1, _
@@ -185,7 +185,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -257,7 +257,7 @@ mRecalcRequired = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function calculateMidColor() As Long
@@ -275,7 +275,7 @@ calculateMidColor = CLng(sumColors / (UBound(mColors) + 1))
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub setMeshRect( _
@@ -292,7 +292,7 @@ mMeshRect(index).upperLeft = upperLeft
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setMeshTriangle( _
@@ -311,7 +311,7 @@ mMeshTriangle(index).vertex3 = vertex3
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setVertex( _
@@ -335,7 +335,7 @@ mVertices(index).Alpha = 0
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

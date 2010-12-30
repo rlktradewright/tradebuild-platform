@@ -124,7 +124,7 @@ Private mTextSeries         As TextSeries
 
 Private mValueSeries        As IGraphicObjectSeries
 
-Private mTextOffset         As Dimension
+Private mTextOffset         As Size
 
 Private mConditionalActions()   As ConditionalAction
 Private mConditionalActionsIndex As Long
@@ -155,7 +155,7 @@ End Sub
 '@================================================================================
 
 Private Sub StudyValueListener_notify( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
@@ -229,7 +229,7 @@ mConditionalActions(mConditionalActionsIndex) = pConditionalAction
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -286,7 +286,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -302,7 +302,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -322,7 +322,7 @@ Set mCurrentBar = mBarSeries.Add(timestamp)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub AddDataPointToChart( _
@@ -339,7 +339,7 @@ If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub AddLineToChart()
@@ -354,7 +354,7 @@ Set mCurrentLine = mLineSeries.Add
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub AddTextToChart()
@@ -368,7 +368,7 @@ Set mCurrentText = mTextSeries.Add
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function chartMgr() As ChartManager
@@ -380,11 +380,11 @@ Set chartMgr = mChartManagerRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub processBar( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
 Dim lBar As TimeframeUtils26.Bar
 
@@ -423,7 +423,7 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function processConditionalAction( _
@@ -501,7 +501,7 @@ processConditionalAction = conditionSatisfied
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub processConditionalActions( _
@@ -524,11 +524,11 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processDataPoint( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
 Const ProcName As String = "processDataPoint"
 On Error GoTo Err
@@ -546,11 +546,11 @@ mLatestValue = ev.sVal.value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processLine( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
 Dim studyLine As studyLine
 
@@ -566,10 +566,10 @@ Then
 End If
 
 Set studyLine = ev.sVal.value
-mCurrentLine.SetPosition mRegion.NewPoint( _
+mCurrentLine.SetPosition NewPoint( _
                                 chartMgr.GetPeriod(studyLine.Point1.X).periodNumber, _
                                 studyLine.Point1.Y), _
-                        mRegion.NewPoint( _
+                        NewPoint( _
                                 chartMgr.GetPeriod(studyLine.Point2.X).periodNumber, _
                                 studyLine.Point2.Y)
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
@@ -578,11 +578,11 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processString( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
 
 Const ProcName As String = "processString"
@@ -594,7 +594,7 @@ Then
     AddTextToChart
 End If
 
-mCurrentText.Position = mRegion.NewPoint( _
+mCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(ev.sVal.BarStartTime).periodNumber, _
                                 0, CoordsCounterDistance, CoordsRelative)
 mCurrentText.Text = ev.sVal.value
@@ -604,11 +604,11 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processText( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
 Dim studyText As studyText
 
@@ -622,10 +622,10 @@ Then
 End If
 
 Set studyText = ev.sVal.value
-mCurrentText.Position = mRegion.NewPoint( _
+mCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(studyText.Position.X).periodNumber, _
                                 studyText.Position.Y)
-mCurrentText.offset = mTextOffset
+mCurrentText.Offset = mTextOffset
 mCurrentText.Text = studyText.Text
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
 prevBarNumber = ev.sVal.BarNumber
@@ -633,7 +633,7 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupBarSeries( _
@@ -651,7 +651,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupDataSeries( _
@@ -666,7 +666,7 @@ If Not studyValueConfig.DataPointStyle Is Nothing Then mDataSeries.Style = study
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupLineSeries( _
@@ -681,7 +681,7 @@ If Not studyValueConfig.LineStyle Is Nothing Then mLineSeries.Style = studyValue
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTextSeries( _
@@ -692,11 +692,11 @@ On Error GoTo Err
 Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.Layer)
 Set mValueSeries = mTextSeries
 If Not studyValueConfig.TextStyle Is Nothing Then mTextSeries.Style = studyValueConfig.TextStyle
-Set mTextOffset = mRegion.NewDimension(studyValueConfig.OffsetX, studyValueConfig.OffsetY)
+Set mTextOffset = NewSize(studyValueConfig.OffsetX, studyValueConfig.OffsetY)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

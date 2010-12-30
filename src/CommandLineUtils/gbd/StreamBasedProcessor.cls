@@ -45,7 +45,7 @@ Private Const ModuleName                    As String = "StreamBasedProcessor"
 ' Member variables
 '@================================================================================
 
-Private mSelfRef As FileBasedProcessor
+Private mSelfRef As Object
 
 Private WithEvents mTimeframe As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
@@ -61,7 +61,7 @@ Attribute mTimeframe.VB_VarHelpID = -1
 Private Sub mTimeframe_BarsLoaded()
 gProcessor.Finish
 Set gProcessor = Nothing
-gCon.writeLineToConsole "Completed"
+gCon.WriteLineToConsole "Completed"
 Set mSelfRef = Nothing
 End Sub
 

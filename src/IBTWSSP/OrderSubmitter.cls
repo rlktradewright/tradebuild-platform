@@ -95,8 +95,10 @@ End Sub
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
 Const ProcName As String = "ContractDetailsRequester_contractsLoaded"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
+
+If mServiceConsumer Is Nothing Then Exit Sub
 
 If request.contractWrappers.Count = 1 Then
     Set mContractWrapper = request.contractWrappers(1)
@@ -111,15 +113,17 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
 Const ProcName As String = "ContractDetailsRequester_contractSpecifierInvalid"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
+
+If mServiceConsumer Is Nothing Then Exit Sub
 
 mServiceConsumer.notifyEvent StandardSPEventCodes.LOUnknownContract, _
                         "Contract not known", _
@@ -128,7 +132,7 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.LOUnknownContract, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -319,7 +323,7 @@ Set mOrderSubmissionServiceProvider = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_modifyOrderPlex( _
@@ -526,7 +530,7 @@ End Sub
 Friend Sub ExecutionReport( _
                 ByVal pExecReport As ExecutionReport)
 Const ProcName As String = "ExecutionReport"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.ExecutionReport pExecReport
@@ -534,12 +538,12 @@ mServiceConsumer.ExecutionReport pExecReport
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 finishIt
@@ -548,7 +552,7 @@ Set mOrderSubmissionServiceProvider = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -573,7 +577,7 @@ mTWSAPI.RequestContract mTradeBuildContract.specifier, Me
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub InvalidOrder( _
@@ -581,7 +585,7 @@ Friend Sub InvalidOrder( _
                 ByVal message As String)
 Const ProcName As String = "InvalidOrder"
                 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.RejectOrder orderID, _
@@ -590,7 +594,7 @@ mServiceConsumer.RejectOrder orderID, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub OrderDeferred( _
@@ -598,7 +602,7 @@ Friend Sub OrderDeferred( _
                 ByVal message As String)
 Const ProcName As String = "OrderDeferred"
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.notifyEvent StandardSPEventCodes.LOOrderDeferred, message, mHandle
@@ -606,13 +610,13 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.LOOrderDeferred, message, mHan
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub OrderReport( _
                 ByVal lOrderReport As OrderReport)
 Const ProcName As String = "OrderReport"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.OrderReport lOrderReport
@@ -620,7 +624,7 @@ mServiceConsumer.OrderReport lOrderReport
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub OrderStatusReport( _
@@ -628,7 +632,7 @@ Friend Sub OrderStatusReport( _
 Const ProcName As String = "OrderStatusReport"
 
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.OrderStatusReport pOrderStatusReport
@@ -636,7 +640,7 @@ mServiceConsumer.OrderStatusReport pOrderStatusReport
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 '================================================================================
 ' Helper Functions
@@ -646,7 +650,7 @@ Private Sub cancelOrder( _
                 ByVal pOrder As TradeBuildSP.IOrder, _
                 ByRef orderMode As String)
 Const ProcName As String = "cancelOrder"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 logMessage "Cancel " & orderMode & " order: " & _
@@ -667,12 +671,12 @@ mTWSAPI.cancelOrder pOrder.BrokerId
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishIt()
 Const ProcName As String = "finishIt"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Set mCommonServiceConsumer = Nothing
@@ -683,7 +687,7 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -715,7 +719,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub placeOrder( _
@@ -725,13 +729,13 @@ Private Sub placeOrder( _
                 ByVal ocaGroup As String, _
                 ByRef orderMode As String)
 Const ProcName As String = "placeOrder"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
-gLogger.Log LogLevelNormal, _
-            "Place " & orderMode & " order: " & _
-            "broker id=" & pOrder.BrokerId & _
-            "; TradeBuild id=" & pOrder.tradebuildId
+gLogger.Log "Place " & orderMode & " order: " & _
+                "broker id=" & pOrder.BrokerId & _
+                "; TradeBuild id=" & pOrder.tradebuildId, _
+            ProcName, ModuleName
 mTWSAPI.placeOrder Me, pOrder, transmit, parentId, ocaGroup, ""
 If pOrder.status = OrderStatusCreated Then
     Dim statusRpt As New OrderStatusReport
@@ -742,7 +746,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

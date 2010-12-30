@@ -64,34 +64,34 @@ Private mYScaleGridSpacing                        As Double
 '@================================================================================
 
 Private Function IPriceFormatter_FormatPrice( _
-                ByVal value As Double) As String
+                ByVal Value As Double) As String
 Const ProcName As String = "IPriceFormatter_FormatPrice"
 On Error GoTo Err
 
-If (value - Int(value / mYScaleQuantum) * mYScaleQuantum) = 0 Then
-    IPriceFormatter_FormatPrice = FormatPrice(value, mYScaleFormatStr)
+If (Value - Int(Value / mYScaleQuantum) * mYScaleQuantum) = 0 Then
+    IPriceFormatter_FormatPrice = FormatPrice(Value, mYScaleFormatStr)
 Else
-    IPriceFormatter_FormatPrice = FormatPrice(value, mYScaleSubFormatStr)
+    IPriceFormatter_FormatPrice = FormatPrice(Value, mYScaleSubFormatStr)
 End If
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Property Let IPriceFormatter_IntegerYScale(ByVal value As Boolean)
-mIntegerYScale = value
+Private Property Let IPriceFormatter_IntegerYScale(ByVal Value As Boolean)
+mIntegerYScale = Value
 generateYScaleFormatStr
 End Property
 
-Private Property Let IPriceFormatter_YScaleGridSpacing(ByVal value As Double)
-mYScaleGridSpacing = value
+Private Property Let IPriceFormatter_YScaleGridSpacing(ByVal Value As Double)
+mYScaleGridSpacing = Value
 generateYScaleSubFormatStr
 End Property
 
-Private Property Let IPriceFormatter_YScaleQuantum(ByVal value As Double)
-mYScaleQuantum = value
+Private Property Let IPriceFormatter_YScaleQuantum(ByVal Value As Double)
+mYScaleQuantum = Value
 generateYScaleFormatStr
 generateYScaleSubFormatStr
 End Property
@@ -113,7 +113,7 @@ End Property
 '@================================================================================
 
 Private Function FormatPrice( _
-                ByVal value As Double, _
+                ByVal Value As Double, _
                 ByRef pFormatString As String) As String
 Dim fract As Single
 Dim numerator As Long
@@ -123,13 +123,13 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mYScaleQuantum = 0.03125 Then
-    fract = value - Int(value)
+    fract = Value - Int(Value)
     numerator = Int(fract / 0.03125)
-    FormatPrice = Int(value) & "'" & Format(numerator, "00")
+    FormatPrice = Int(Value) & "'" & Format(numerator, "00")
 ElseIf mYScaleQuantum = 0.015625 Or mYScaleQuantum = 0.0078125 Then
-    fract = value - Int(value)
+    fract = Value - Int(Value)
     numerator = Int(fract / 0.0078125)
-    FormatPrice = Int(value) & "'" & Format(numerator \ 4, "00")
+    FormatPrice = Int(Value) & "'" & Format(numerator \ 4, "00")
     Select Case numerator Mod 4
     Case 0
         FormatPrice = FormatPrice & "0"
@@ -141,13 +141,13 @@ ElseIf mYScaleQuantum = 0.015625 Or mYScaleQuantum = 0.0078125 Then
         FormatPrice = FormatPrice & "7"
     End Select
 Else
-    FormatPrice = Format(value, pFormatString)
+    FormatPrice = Format(Value, pFormatString)
 End If
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -171,7 +171,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub generateYScaleSubFormatStr()
@@ -193,6 +193,6 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub

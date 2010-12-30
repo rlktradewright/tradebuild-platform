@@ -45,7 +45,7 @@ Private Const ModuleName                    As String = "FileBasedProcessor"
 ' Member variables
 '@================================================================================
 
-Private mSelfRef As FileBasedProcessor
+Private mSelfRef As Object
 
 Private WithEvents mTickfileManager As TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
@@ -73,12 +73,12 @@ End Sub
 Private Sub mTickfileManager_ReplayCompleted()
 gProcessor.Finish
 Set gProcessor = Nothing
-gCon.writeLineToConsole "Completed"
+gCon.WriteLineToConsole "Completed"
 Set mSelfRef = Nothing
 End Sub
 
 Private Sub mTickfileManager_ReplayProgress(ByVal tickfileTimestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
-gCon.writeLineToConsole "Processing tickfile: events processed=" & eventsPlayed & "; percent complete=" & Format(percentComplete, "0.0")
+gCon.WriteLineToConsole "Processing tickfile: events processed=" & eventsPlayed & "; percent complete=" & Format(percentComplete, "0.0")
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
@@ -126,7 +126,7 @@ tfs.toDate = toDate
 Set mTickfileManager = TradeBuildAPI.Tickers.CreateTickFileManager(0)
 mTickfileManager.TickfileSpecifier = tfs
 mTickfileManager.ReplayProgressEventIntervalMillisecs = 1000
-mTickfileManager.replaySpeed = 0
+mTickfileManager.ReplaySpeed = 0
 mTickfileManager.StartReplay
 
 Set mTimer = CreateBaseIntervalTimer(1000, , 1000)
@@ -141,5 +141,5 @@ End Sub
 Private Sub mTimer_TimerExpired()
 Static lCounter As Long
 lCounter = lCounter + 1
-gCon.writeLineToConsole "Timer tick " & lCounter
+gCon.WriteLineToConsole "Timer tick " & lCounter
 End Sub

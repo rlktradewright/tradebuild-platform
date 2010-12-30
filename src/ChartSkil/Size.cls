@@ -84,7 +84,7 @@ mConfig.SetSetting ConfigSettingCoordSystemHeight, mCoordSystemHeight
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Property
 
@@ -129,7 +129,7 @@ Equals = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -159,7 +159,7 @@ mCoordSystemWidth = mConfig.GetSetting(ConfigSettingCoordSystemWidth, "0")
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -172,11 +172,11 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function WidthLogical( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "WidthLogical"
 Dim failpoint As String
 On Error GoTo Err
@@ -185,21 +185,21 @@ Select Case mCoordSystemWidth
 Case CoordsLogical
     WidthLogical = mWidth
 Case CoordsRelative
-    WidthLogical = pViewport.ConvertRelativeToLogicalX(mWidth)
+    WidthLogical = pRegion.Viewport.ConvertRelativeToLogicalX(mWidth)
 Case CoordsDistance
-    WidthLogical = pViewport.ConvertDistanceToLogicalX(mWidth)
+    WidthLogical = pRegion.Viewport.ConvertDistanceToLogicalX(mWidth)
 Case CoordsCounterDistance
-    WidthLogical = pViewport.ConvertCounterDistanceToLogicalX(mWidth)
+    WidthLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalX(mWidth)
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function HeightLogical( _
-                ByVal pViewport As Viewport) As Double
+                ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "HeightLogical"
 Dim failpoint As String
 On Error GoTo Err
@@ -208,17 +208,17 @@ Select Case mCoordSystemHeight
 Case CoordsLogical
     HeightLogical = mHeight
 Case CoordsRelative
-    HeightLogical = pViewport.ConvertRelativeToLogicalY(mHeight)
+    HeightLogical = pRegion.Viewport.ConvertRelativeToLogicalY(mHeight)
 Case CoordsDistance
-    HeightLogical = pViewport.ConvertDistanceToLogicalY(mHeight)
+    HeightLogical = pRegion.Viewport.ConvertDistanceToLogicalY(mHeight)
 Case CoordsCounterDistance
-    HeightLogical = pViewport.ConvertCounterDistanceToLogicalY(mHeight)
+    HeightLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mHeight)
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '================================================================================

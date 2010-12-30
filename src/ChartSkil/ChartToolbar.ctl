@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Begin VB.UserControl ChartToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -462,7 +462,7 @@ Case ChartNavCommandScrollRight
 Case ChartNavCommandScrollEnd
     mController.LastVisiblePeriod = mController.CurrentPeriodNumber
 Case ChartNavCommandAutoScale
-    If Button.value = tbrPressed Then
+    If Button.Value = tbrPressed Then
         mRegion.Autoscaling = True
     Else
         mRegion.Autoscaling = False
@@ -472,14 +472,14 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
 ' mBarSeries Event Handlers
 '================================================================================
 
-Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mBarSeries_PropertyChanged"
 Dim failpoint As String
 On Error GoTo Err
@@ -489,7 +489,7 @@ If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -501,12 +501,12 @@ Const ProcName As String = "mRegion_AutoscalingChanged"
 Dim failpoint As String
 On Error GoTo Err
 
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -524,21 +524,21 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
 Dim failpoint As String
 On Error GoTo Err
 
-UserControl.Enabled = value
+UserControl.Enabled = Value
 If Not mController Is Nothing And _
     Not mRegion Is Nothing And _
     Not mBarSeries Is Nothing _
 Then
-    Toolbar1.Enabled = value
+    Toolbar1.Enabled = Value
 Else
     Toolbar1.Enabled = False
 End If
@@ -547,7 +547,7 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -582,7 +582,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -600,19 +600,19 @@ If mBarSeries Is Nothing Then Exit Sub
 setupDisplayModeButtons
 
 If mRegion.PointerStyle = PointerStyles.PointerCrosshairs Then
-    Toolbar1.Buttons(ChartNavCommandShowCrosshair).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrUnpressed
 Else
-    Toolbar1.Buttons(ChartNavCommandShowCrosshair).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrPressed
 End If
 
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -622,25 +622,25 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowBars).Value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).Value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
 ElseIf mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick Then
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowBars).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).Value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).Value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Width > 0.1)
 Else
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowLine).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowBars).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowLine).Value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

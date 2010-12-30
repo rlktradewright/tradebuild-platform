@@ -82,7 +82,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEventData)
 
 outputBar
 Set mBar = ev.affectedItem
@@ -100,27 +100,27 @@ End Sub
 Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
 Static formatter As LogFormatter
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter
-gCon.writeLineToConsole formatter.FormatRecord(Logrec)
+gCon.WriteLineToConsole formatter.FormatRecord(Logrec)
 End Sub
 
 '@================================================================================
 ' mTB Event Handlers
 '@================================================================================
 
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
-gCon.writeErrorLine "Error " & ev.errorCode & _
-                        ": " & ev.errorMessage
+Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
+gCon.WriteErrorLine "Error " & ev.errorCode & _
+                        ": " & ev.ErrorMessage
 End Sub
 
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)
+Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Dim spe As ServiceProviderError
     Set spe = mTB.GetServiceProviderError
-    gCon.writeLineToConsole "Service provider error " & spe.errorCode & _
-                            ": " & spe.message & _
-                            " (" & spe.serviceProviderName & ")"
+    gCon.WriteLineToConsole "Service provider error " & spe.errorCode & _
+                            ": " & spe.Message & _
+                            " (" & spe.ServiceProviderName & ")"
 Else
-    gCon.writeLineToConsole ev.eventMessage
+    gCon.WriteLineToConsole ev.eventMessage
 End If
 End Sub
 
@@ -135,7 +135,7 @@ End Property
 
 Friend Property Let Timeframe( _
                 ByVal value As Timeframe)
-Set mBars = value.tradeStudy.Bars
+Set mBars = value.TradeStudy.Bars
 mBars.AddCollectionChangeListener Me
 End Property
 
@@ -164,20 +164,20 @@ Dim sv As SValue
 
 If mBar Is Nothing Then Exit Sub
 
-gCon.writeString FormatTimestamp(mBar.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString mTicker.FormatPrice(mBar.OpenValue)
-gCon.writeString ","
-gCon.writeString mTicker.FormatPrice(mBar.HighValue)
-gCon.writeString ","
-gCon.writeString mTicker.FormatPrice(mBar.LowValue)
-gCon.writeString ","
-gCon.writeString mTicker.FormatPrice(mBar.CloseValue)
-gCon.writeString ","
-gCon.writeString mBar.Volume
-gCon.writeString ","
-gCon.writeString mBar.TickVolume
-gCon.writeString ","
-gCon.writeLine mBar.OpenInterest
+gCon.WriteString FormatTimestamp(mBar.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString ","
+gCon.WriteString mTicker.FormatPrice(mBar.OpenValue)
+gCon.WriteString ","
+gCon.WriteString mTicker.FormatPrice(mBar.HighValue)
+gCon.WriteString ","
+gCon.WriteString mTicker.FormatPrice(mBar.LowValue)
+gCon.WriteString ","
+gCon.WriteString mTicker.FormatPrice(mBar.CloseValue)
+gCon.WriteString ","
+gCon.WriteString mBar.Volume
+gCon.WriteString ","
+gCon.WriteString mBar.TickVolume
+gCon.WriteString ","
+gCon.WriteLine mBar.OpenInterest
 End Sub
 

@@ -31,6 +31,7 @@ Public Const OneMicroSecond                 As Double = 1.15740740740741E-11
 
 Public Const RegionNameCustom               As String = "$custom"
 Public Const RegionNameDefault              As String = "$default"
+Public Const RegionNameUnderlying           As String = "$underlying"
 Public Const RegionNamePrice                As String = "Price"
 Public Const RegionNameVolume               As String = "Volume"
 
@@ -107,12 +108,14 @@ Else
     studyConfig.StudyLibraryName = studyLibName
 
     Select Case sd.DefaultRegion
-        Case StudyDefaultRegions.DefaultRegionNone
-            studyConfig.ChartRegionName = RegionNameDefault
-        Case StudyDefaultRegions.DefaultRegionCustom
+        Case StudyDefaultRegions.StudyDefaultRegionNone
+            studyConfig.ChartRegionName = RegionNameUnderlying
+        Case StudyDefaultRegions.StudyDefaultRegionCustom
             studyConfig.ChartRegionName = RegionNameCustom
+        Case StudyDefaultRegions.StudyDefaultRegionUnderlying
+            studyConfig.ChartRegionName = RegionNameUnderlying
         Case Else
-            studyConfig.ChartRegionName = RegionNameDefault
+            studyConfig.ChartRegionName = RegionNameUnderlying
     End Select
 
     studyConfig.Parameters = GetStudyDefaultParameters(Name, studyLibName)
@@ -152,10 +155,14 @@ Else
         End Select
 
         Select Case studyValueDef.DefaultRegion
-            Case StudyDefaultRegions.DefaultRegionNone
+            Case StudyValueDefaultRegions.StudyValueDefaultRegionNone
                 studyValueConfig.ChartRegionName = RegionNameDefault
-            Case StudyDefaultRegions.DefaultRegionCustom
+            Case StudyValueDefaultRegions.StudyValueDefaultRegionCustom
                 studyValueConfig.ChartRegionName = RegionNameCustom
+            Case StudyValueDefaultRegions.StudyValueDefaultRegionDefault
+                studyValueConfig.ChartRegionName = RegionNameDefault
+            Case StudyValueDefaultRegions.StudyValueDefaultRegionUnderlying
+                studyValueConfig.ChartRegionName = RegionNameUnderlying
         End Select
 
     Next
@@ -166,8 +173,38 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 Public Sub gLoadDefaultStudyConfigurationsFromConfig( _
                 ByVal config As ConfigurationSection)
@@ -196,7 +233,7 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     gLogger.Log LogLevelNormal, "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")"
     Resume Next
 End If
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gSetDefaultStudyConfiguration( _
@@ -231,7 +268,7 @@ sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultSt
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

@@ -62,7 +62,7 @@ Set mDefaultParameters = value.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -80,7 +80,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -101,7 +101,7 @@ If mStudyDefinition Is Nothing Then
                         "divide price movement into periods (bars) of equal price movement. " & _
                         "For each period the open, high, low and close price values " & _
                         "are determined."
-    mStudyDefinition.DefaultRegion = StudyDefaultRegions.DefaultRegionCustom
+    mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstMomentumBarsInputPrice)
@@ -122,70 +122,81 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstMomentumBarsValueBar)
     valueDef.Description = "The constant momentum bars"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeBar
+    valueDef.ValueStyle = gCreateBarStyle
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpen)
     valueDef.Description = "Bar open value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&H8000&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHigh)
     valueDef.Description = "Bar high value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueLow)
     valueDef.Description = "Bar low value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueClose)
     valueDef.Description = "Bar close value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&H80&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
     valueDef.Description = "Bar volume"
-    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)
     valueDef.Description = "Bar tick volume"
-    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H800000, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpenInterest)
     valueDef.Description = "Bar open interest"
-    valueDef.DefaultRegion = DefaultRegionCustom
+    valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80&, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
     valueDef.Description = "Bar H+L/2 value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&HFF&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHLC3)
     valueDef.Description = "Bar H+L+C/3 value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&HFF00&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOHLC4)
     valueDef.Description = "Bar O+H+L+C/4 value"
-    valueDef.DefaultRegion = DefaultRegionNone
+    valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
+    valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000)
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstMomentumBarsParamTicksPerBar)
@@ -199,7 +210,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

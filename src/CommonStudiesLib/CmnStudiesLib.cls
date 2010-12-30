@@ -45,8 +45,7 @@ Private Const ModuleName                As String = "CmnStudiesLib"
 '@================================================================================
 
 Public Enum SwingPointTypes
-    SwingUnknownHigh
-    SwingUnknownLow
+    SwingUnknown
     SwingMajorHigh
     SwingMajorLow
     SwingMinorHigh
@@ -73,9 +72,10 @@ Public Type SwingPoint
     value           As Variant
     barNumber       As Long
     barStartTime    As Date
-    swingType       As SwingPointTypes
+    SwingType       As SwingPointTypes
     timestamp       As Date
-    implied         As Boolean
+    Implied         As Boolean
+    SequenceNumber  As Long
 End Type
 
 '@================================================================================

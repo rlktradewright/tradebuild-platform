@@ -110,7 +110,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -244,7 +244,7 @@ End Sub
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 Set mHistDataServiceProvider = Nothing
@@ -255,13 +255,13 @@ Set mTWSAPI = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub HistoricalDataAvailable( _
                 ByVal numberOfBars As Long)
 Const ProcName As String = "HistoricalDataAvailable"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mWaitingForBarData = False
@@ -276,7 +276,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -297,7 +297,7 @@ End Sub
 Friend Sub HistoricalDataRequestFailed( _
                 ByVal reason As String)
 Const ProcName As String = "HistoricalDataRequestFailed"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestFailed, _
@@ -307,13 +307,13 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestFailed, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub HistoricalDataRequestInvalid( _
                 ByVal reason As String)
 Const ProcName As String = "HistoricalDataRequestInvalid"
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestInvalid, _
@@ -323,7 +323,7 @@ mServiceConsumer.notifyEvent StandardSPEventCodes.HDRequestInvalid, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -359,7 +359,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub ProcessBar()
@@ -367,7 +367,7 @@ Const ProcName As String = "ProcessBar"
 Dim lBar As Bar
 Dim barTimePeriod As TimePeriod
 
-Dim failpoint As Long
+Dim failpoint As String
 On Error GoTo Err
 
 If mTWSAPI.ReadHistoricalBar(mRequestId, lBar, barTimePeriod) Then
@@ -384,7 +384,7 @@ mRequestId = -1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
