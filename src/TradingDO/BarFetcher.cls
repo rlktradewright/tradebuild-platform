@@ -138,7 +138,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -251,7 +251,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -266,15 +266,15 @@ End Property
 ' mAppendBarsTaskController Event Handlers
 '@===============================================================================
 
-Private Sub mAppendBarsTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mAppendBarsTaskController_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mAppendBarsTaskController_Completed"
 Dim failpoint As String
 On Error GoTo Err
 
-If ev.cancelled Then
+If ev.Cancelled Then
     mTaskContext.Finish Empty, True
-ElseIf ev.errorNumber <> 0 Then
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
+ElseIf ev.ErrorNumber <> 0 Then
+    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 Else
     If needMoreTicks Then
         connectToDB
@@ -291,7 +291,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -342,7 +342,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -365,7 +365,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
@@ -389,7 +389,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -449,14 +449,14 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mSession Event Handlers
 '@================================================================================
 
-Private Sub mSession_SessionStarted(ev As SessionEvent)
+Private Sub mSession_SessionStarted(ev As SessionEventData)
 mAccumulatedVolume = 0
 End Sub
 
@@ -526,7 +526,7 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -558,7 +558,7 @@ Set FetchbarsAsync = StartTask(Me, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -576,7 +576,7 @@ createNewSession
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -599,7 +599,7 @@ Set builder = mBuilder
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function closeValue() As Double
@@ -613,7 +613,7 @@ closeValue = mRs("closeprice")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub connectToDB()
@@ -630,7 +630,7 @@ If mAsynchronous Then mAsyncState = Connecting
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createNewCustomSession()
@@ -650,7 +650,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createNewSession()
@@ -668,7 +668,7 @@ Set mSession = mSessionBuilder.Session
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub doFetchBars( _
@@ -690,7 +690,7 @@ If Not mAsynchronous Then Execute
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub doFetchTicks( _
@@ -708,7 +708,7 @@ If Not mAsynchronous Then Execute
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Execute()
@@ -745,7 +745,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function filterByTime( _
@@ -770,7 +770,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub generateNextRequest()
@@ -792,7 +792,7 @@ createNewSession
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub generateRequestDetails( _
@@ -807,35 +807,35 @@ On Error GoTo Err
 Select Case mSpecifier.barTimePeriod.Units
 Case TimePeriodUnits.TimePeriodDay
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * mSpecifier.barTimePeriod.Length
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodHour
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.Length
+    mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodMinute
-    If (mSpecifier.barTimePeriod.Length Mod 60) = 0 Then
+    If (mSpecifier.barTimePeriod.length Mod 60) = 0 Then
         mBarLengthMinutes = 60
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.Length / 60)
-    ElseIf (mSpecifier.barTimePeriod.Length Mod 15) = 0 Then
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 60)
+    ElseIf (mSpecifier.barTimePeriod.length Mod 15) = 0 Then
         mBarLengthMinutes = 15
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.Length / 15)
-    ElseIf (mSpecifier.barTimePeriod.Length Mod 5) = 0 Then
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 15)
+    ElseIf (mSpecifier.barTimePeriod.length Mod 5) = 0 Then
         mBarLengthMinutes = 5
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.Length / 5)
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 5)
     Else
         mBarLengthMinutes = 1
-        mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.Length
+        mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.length
     End If
 Case TimePeriodUnits.TimePeriodMonth
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 22 * mSpecifier.barTimePeriod.Length
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 22 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodSecond
     mRequestTicks = True
 Case TimePeriodUnits.TimePeriodWeek
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 5 * mSpecifier.barTimePeriod.Length
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 5 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodYear
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 260 * mSpecifier.barTimePeriod.Length
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 260 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodVolume, _
         TimePeriodUnits.TimePeriodTickMovement, _
         TimePeriodUnits.TimePeriodTickVolume
@@ -911,7 +911,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function highValue() As Double
@@ -925,7 +925,7 @@ highValue = mRs("highprice")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -948,7 +948,7 @@ lowValue = mRs("lowprice")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function needMoreTicks() As Boolean
@@ -963,7 +963,7 @@ needMoreTicks = builder.Bars.Count < mSpecifier.maxNumberOfBars And _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function noTicks() As Boolean
@@ -977,7 +977,7 @@ noTicks = mRs.EOF
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function openInterest() As Long
@@ -991,7 +991,7 @@ openInterest = mRs("openInterest")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function openValue() As Double
@@ -1005,7 +1005,7 @@ openValue = mRs("openprice")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub processBar()
@@ -1060,7 +1060,7 @@ mAccumulatedVolume = mAccumulatedVolume + volume
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function processBars() As Bars
@@ -1083,7 +1083,7 @@ Set processBars = builder.Bars
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub processTickData()
@@ -1143,7 +1143,7 @@ Loop
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processTicks()
@@ -1160,7 +1160,7 @@ Loop
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupFetchBarsCommand( _
@@ -1240,7 +1240,7 @@ mCmd.Parameters.Append param
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -1288,7 +1288,7 @@ mCmd.Parameters.Append param
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -1303,7 +1303,7 @@ tickVolume = mRs("tickVolume")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function toSValue( _
@@ -1319,7 +1319,7 @@ toSValue.timestamp = mRs("datetime")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function volume() As Long
@@ -1333,7 +1333,7 @@ volume = mRs("Volume")
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 

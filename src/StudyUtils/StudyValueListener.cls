@@ -63,8 +63,8 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub notify( _
-                ByRef ev As StudyValueEvent)
+Public Sub Notify( _
+                ByRef ev As StudyValueEventData)
 
 End Sub
 

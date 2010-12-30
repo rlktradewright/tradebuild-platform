@@ -80,7 +80,7 @@ Attribute mStartTickersTC.VB_VarHelpID = -1
 ' mContractsLoadTC Event Handlers
 '@================================================================================
 
-Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mContractsLoadTC_Completed"
 Dim failpoint As String
 On Error GoTo Err
@@ -95,14 +95,14 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mStartTickersTC Event Handlers
 '@================================================================================
 
-Private Sub mStartTickersTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mStartTickersTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 If ev.errorNumber <> 0 Then
     RaiseEvent Error(ev.errorNumber, ev.errorMessage)
 Else
@@ -149,7 +149,7 @@ Set mContractsLoadTC = TradeBuildAPI.LoadContracts(mContractSpec)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
@@ -172,7 +172,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -198,7 +198,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

@@ -103,11 +103,7 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-If IsObject(value) Then
-    Set mValues(mNewest).value = value
-Else
-    mValues(mNewest).value = value
-End If
+gSetVariant mValues(mNewest).value, value
 mValues(mNewest).BarNumber = BarNumber
 mValues(mNewest).Timestamp = Timestamp
 mValues(mNewest).BarStartTime = BarStartTime
@@ -115,7 +111,7 @@ mValues(mNewest).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub AppendValues( _
@@ -135,7 +131,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function AppendValuesAsync( _
@@ -153,7 +149,7 @@ Set AppendValuesAsync = StartTask(avt, PriorityNormal)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetSValue(Optional ByVal ref As Long) As SValue
@@ -167,16 +163,12 @@ valueEntry = mValues(refToIndex(ref))
 GetSValue.BarNumber = valueEntry.BarNumber
 GetSValue.Timestamp = valueEntry.Timestamp
 GetSValue.BarStartTime = valueEntry.BarStartTime
-If IsObject(valueEntry.value) Then
-    Set GetSValue.value = valueEntry.value
-Else
-    GetSValue.value = valueEntry.value
-End If
+gSetVariant GetSValue.value, valueEntry.value
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetValue(Optional ByVal ref As Long) As Variant
@@ -187,16 +179,12 @@ Dim failpoint As String
 On Error GoTo Err
 
 index = refToIndex(ref)
-If IsObject(mValues(index).value) Then
-    Set GetValue = mValues(index).value
-Else
-    GetValue = mValues(index).value
-End If
+gSetVariant GetValue, mValues(index).value
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Sub Initialise( _
@@ -220,7 +208,7 @@ mValueName = ValueName
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub UpdateValue( _
@@ -235,11 +223,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 i = refToIndex(ref)
-If IsObject(value) Then
-    Set mValues(i).value = value
-Else
-    mValues(i).value = value
-End If
+gSetVariant mValues(i).value, value
 If BarNumber > 0 Then mValues(i).BarNumber = BarNumber
 If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
 If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
@@ -247,7 +231,7 @@ If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -262,9 +246,7 @@ On Error GoTo Err
 If ref > mNumValues Or _
     ref < (1 - mNumValues) _
 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "<ref> out of bounds"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "<ref> out of bounds"
 End If
     
 If mCyclicSize <> 0 Then
@@ -288,7 +270,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 

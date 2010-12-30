@@ -90,7 +90,7 @@ NumberOfPendingWrites = mPendingWrites.Count
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileWriter)
@@ -102,7 +102,7 @@ Set mWriter = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get ready() As Boolean
@@ -114,7 +114,7 @@ ready = mServiceProviderWriterReady
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -132,7 +132,7 @@ mWriter.CloseOutputFile
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()
@@ -144,21 +144,27 @@ mServiceProviderWriterReady = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
-Dim Item As Variant
-Dim pendingTick As GenericTick
+Dim lItem As Variant
+Dim lPendingTick As GenericTick
+Dim lComment As TickWriterComment
 
 Const ProcName As String = "ServiceProviderWriterReady"
 On Error GoTo Err
 
 mServiceProviderWriterReady = True
 
-For Each Item In mPendingWrites
-    pendingTick = Item
-    mWriter.writeTick pendingTick
+For Each lItem In mPendingWrites
+    If TypeName(lItem) = "TickWriterComment" Then
+        lComment = lItem
+        mWriter.WriteComment lComment.Comment, lComment.Timestamp
+    Else
+        lPendingTick = lItem
+        mWriter.WriteTick lPendingTick
+    End If
 Next
 
 Set mPendingWrites = New Collection
@@ -166,24 +172,43 @@ Set mPendingWrites = New Collection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub writeTick( _
-                pTick As GenericTick)
-Const ProcName As String = "writeTick"
+Friend Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+Const ProcName As String = "WriteComment"
 On Error GoTo Err
 
 If Not mServiceProviderWriterReady Then
-    mPendingWrites.Add pTick
+    Dim lComment As TickWriterComment
+    lComment.Comment = pComment
+    lComment.Timestamp = pTimestamp
+    mPendingWrites.Add lComment
 Else
-    mWriter.writeTick pTick
+    mWriter.WriteComment pComment, pTimestamp
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Sub
+
+Friend Sub WriteTick( _
+                pTick As GenericTick)
+Const ProcName As String = "WriteTick"
+On Error GoTo Err
+
+If Not mServiceProviderWriterReady Then
+    mPendingWrites.Add pTick
+Else
+    mWriter.WriteTick pTick
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

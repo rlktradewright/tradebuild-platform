@@ -40,7 +40,7 @@ Implements TradeBuildSP.IBarDataReader
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TBInfoBase26"
+
 Private Const ModuleName As String = "HistDataReader"
 
 '@===============================================================================
@@ -199,20 +199,20 @@ End Function
 ' mBarsTC Event Handlers
 '@===============================================================================
 
-Private Sub mBarsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mBarsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mBarsTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
     logMessage pMsg:="Failed to retrieve bars for " & _
                         mBarDataSpecifier.Contract.Specifier.ToString & vbCrLf & _
-                        "Error " & ev.errorNumber & ": " & ev.errorMessage, _
+                        "Error " & ev.ErrorNumber & ": " & ev.ErrorMessage, _
                 pProcName:="mBarsTC_Completed", _
                 pLogLevel:=LogLevelSevere
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestFailed, _
-                        "Error " & ev.errorNumber & ": " & ev.errorMessage, _
+                        "Error " & ev.ErrorNumber & ": " & ev.ErrorMessage, _
                         mHistDataServiceProvider.handle
 Else
     If Not mRequestInProgress Then
@@ -244,7 +244,7 @@ Set mBarsTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -261,7 +261,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not mBarsTC Is Nothing Then
-    mBarsTC.cancelTask
+    mBarsTC.CancelTask
     Set mBarsTC = Nothing
 End If
 Set mServiceConsumer = Nothing
@@ -270,7 +270,7 @@ Set mDataConsumer = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -300,7 +300,7 @@ Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -348,7 +348,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If mEnumerator.MoveNext Then
-    Set lBar = mEnumerator.current
+    Set lBar = mEnumerator.Current
     mDataConsumer.Bar lBar, mBarDataSpecifier.barTimePeriod
     mNumBarsProcessed = mNumBarsProcessed + 1
     If mNumBarsProcessed Mod 10 = 0 Then mServiceConsumer.Progress mNumBarsProcessed, 100 * mNumBarsProcessed / mBars.Count
@@ -359,6 +359,6 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

@@ -37,10 +37,10 @@ Option Explicit
 '@================================================================================
 
 Event FatalStudyLibraryError( _
-                ByRef ev As ErrorEvent)
+                ByRef ev As ErrorEventData)
 
 Event StudyLibraryError( _
-                ByRef ev As ErrorEvent)
+                ByRef ev As ErrorEventData)
 
 '@================================================================================
 ' Constants
@@ -132,7 +132,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Friend Property Get StudyDefinition( _
@@ -161,7 +161,7 @@ Next
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -210,7 +210,7 @@ studyLib.initialise Me, mMaxLibIndex
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -231,13 +231,13 @@ If mConfig Is Nothing Then Exit Sub
 'End If
 
 Set sl = mStudyLibs.AddConfigurationSection(ConfigNameStudyLibrary & "(" & Name & ")")
-sl.setAttribute AttributeNameEnabled, enabled
-sl.setAttribute AttributeNameStudyLibraryProgId, progId
+sl.SetAttribute AttributeNameEnabled, enabled
+sl.SetAttribute AttributeNameStudyLibraryProgId, progId
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Function AddStudyLibrary( _
@@ -257,7 +257,7 @@ AddConfigEntry progId, enabled, Name
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function CreateStudy( _
@@ -286,14 +286,14 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub ErrorInLibrary( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal libHandle As Long)
-Dim ev As ErrorEvent
+Dim ev As ErrorEventData
 Const ProcName As String = "ErrorInLibrary"
 On Error GoTo Err
 
@@ -307,7 +307,7 @@ RaiseEvent StudyLibraryError(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub FatalErrorInLibrary( _
@@ -315,7 +315,7 @@ Public Sub FatalErrorInLibrary( _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
                 ByVal libHandle As Long)
-Dim ev As ErrorEvent
+Dim ev As ErrorEventData
 Const ProcName As String = "FatalErrorInLibrary"
 On Error GoTo Err
 
@@ -329,7 +329,7 @@ RaiseEvent FatalStudyLibraryError(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Function FetchStudyDefaultParameters( _
@@ -358,7 +358,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub LoadStudyLibraryConfiguration( _
@@ -379,7 +379,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub Remove( _
@@ -407,7 +407,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub RemoveAll( _
@@ -433,7 +433,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Function SetStudyDefaultParameters( _
@@ -463,7 +463,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================
@@ -481,14 +481,14 @@ Const ProcName As String = "loadStudyLibs"
 On Error GoTo Err
 
 For Each sl In mStudyLibs
-    slEnabled = sl.getAttribute(AttributeNameEnabled, "True")
+    slEnabled = sl.GetAttribute(AttributeNameEnabled, "True")
     If CBool(slEnabled) Then
         slName = sl.InstanceQualifier
         
-        If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
+        If sl.GetAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
             slProgId = BuiltInStudyLibProgId
         Else
-            slProgId = sl.getAttribute(AttributeNameStudyLibraryProgId)
+            slProgId = sl.GetAttribute(AttributeNameStudyLibraryProgId)
             If slProgId = "" Then _
                 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
@@ -511,7 +511,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

@@ -39,10 +39,10 @@ Private Const ModuleName                As String = "GlobalsClass"
 '@================================================================================
 
 Public Enum BarChangeTypes
-    BarPriceChanged
-    BarVolumeChanged
-    BarOpenInterestChanged
-    BarTickVolumeChanged    ' only fired when TickVolume is specifically incremented
+    BarPriceChanged = 1
+    BarVolumeChanged = 2
+    BarOpenInterestChanged = 4
+    BarTickVolumeChanged = 8 ' only fired when TickVolume is specifically incremented
                             ' BarPriceChanged implicitly includes BarTickVolumeChanged
 End Enum
 
@@ -58,55 +58,11 @@ Public Enum SessionChangeTypes
     SessionChangeStart
 End Enum
 
-''
-' These values identify different Units for measuring elapsed time.
-'
-' @param TimePeriodNone
-'   The unit is not specified.
-' @param TimePeriodSecond
-'   The unit is in seconds.
-' @param TimePeriodMinute
-'   The unit is in minutes
-' @param TimePeriodHour
-'   The unit is in hours
-' @param TimePeriodDay
-'   The unit is in days.
-' @param TimePeriodWeek
-'   The unit is in weeks.
-' @param TimePeriodMonth
-'   The unit is in months.
-' @param TimePeriodYear
-'   The unit is in years.
-' @param TimePeriodTickMovement
-'   The unit is a number of price Ticks. The corresponding time is the
-'   period during which price moves in a range of the specified number of Ticks.
-' @param TimePeriodTickVolume
-'   The unit is a trade Tick. The corresponding time is the
-'   period during which accumulated Tick Volume increases by the specified number.
-' @param TimePeriodVolume
-'   The unit is a contract or share traded. The corresponding time is the
-'   period during which accumulated Volume increases by the specified number.
-'@/
-Public Enum TimePeriodUnits
-    TimePeriodNone = 0
-    TimePeriodSecond = 1
-    TimePeriodMinute = 2
-    TimePeriodHour = 3
-    TimePeriodDay = 4
-    TimePeriodWeek = 5
-    TimePeriodMonth = 6
-'    TimePeriodLunarMonth = 7
-    TimePeriodYear = 8
-    TimePeriodTickMovement = 9     ' for constant momentum, point & figure, etc
-    TimePeriodTickVolume = 10
-    TimePeriodVolume = 11
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
 
-Public Type SessionEvent
+Public Type SessionEventData
     source              As Object
     Timestamp           As Date
     changeType          As SessionChangeTypes
@@ -165,7 +121,7 @@ BarEndTime = gBarEndTime(Timestamp, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function BarLength( _
@@ -180,16 +136,14 @@ Case TimePeriodMinute
 Case TimePeriodHour
 Case TimePeriodDay
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Can't calculate Bar length for this time unit"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Can't calculate Bar length for this time unit"
 End Select
 BarLength = gCalcBarLength(BarTimePeriod)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function BarStartTime( _
@@ -207,7 +161,7 @@ BarStartTime = gBarStartTime(Timestamp, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateBar( _
@@ -236,7 +190,7 @@ CreateBar.Initialise Timestamp, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateBarsBuilder( _
@@ -245,23 +199,12 @@ Public Function CreateBarsBuilder( _
                 Optional ByVal TickSize As Double, _
                 Optional ByVal numberOfBarsToCache As Long) As BarsBuilder
 Set CreateBarsBuilder = New BarsBuilder
+If pSession Is Nothing Then
+    Dim lSB As New SessionBuilder
+    Set pSession = lSB.Session
+End If
 CreateBarsBuilder.Initialise BarTimePeriod, _
                             pSession, TickSize, numberOfBarsToCache
-End Function
-
-Public Function GetTimePeriod( _
-                ByVal Length As Long, _
-                ByVal Units As TimePeriodUnits) As TimePeriod
-Const ProcName As String = "GetTimePeriod"
-Dim failpoint As String
-On Error GoTo Err
-
-Set GetTimePeriod = gGetTimePeriod(Length, Units)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateValueCache( _
@@ -277,7 +220,7 @@ CreateValueCache.Initialise CyclicSize, ValueName
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function CreateVolumeParser( _
@@ -292,7 +235,7 @@ CreateVolumeParser.Initialise pSession
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetSessionTimes( _
@@ -314,7 +257,7 @@ GetSessionTimes = st
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -338,24 +281,8 @@ GetOffsetSessionTimes = st
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
-
-Public Function MonthStartDate( _
-                ByVal monthNumber As Long, _
-                ByVal baseDate As Date) As Date
-Const ProcName As String = "MonthStartDate"
-Dim failpoint As String
-On Error GoTo Err
-
-MonthStartDate = gCalcMonthStartDate(monthNumber, baseDate)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
 
 Public Function NumberOfBarsInSession( _
                 ByVal BarTimePeriod As TimePeriod, _
@@ -370,9 +297,7 @@ Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Can't calculate number of Bars in session for this time unit"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Can't calculate number of Bars in session for this time unit"
 End Select
 
 NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
@@ -383,7 +308,7 @@ NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function OffsetBarStartTime( _
@@ -397,9 +322,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If BarTimePeriod.Units = TimePeriodNone Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid time Units argument"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid time Units argument"
 End If
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                                 Timestamp, _
@@ -411,126 +334,8 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
-
-Public Function TimePeriodFromString( _
-                ByVal value As String) As TimePeriod
-Dim i As Long
-Dim Length As Long
-
-Const ProcName As String = "TimePeriodFromString"
-Dim failpoint As String
-On Error GoTo Err
-
-value = Trim$(value)
-
-i = 1
-Do While IsNumeric(Mid$(value, i, 1))
-    i = i + 1
-Loop
-
-If i = 1 Then
-    Length = 1
-Else
-    Length = CLng(Left$(value, i - 1))
-End If
-    
-Set TimePeriodFromString = gGetTimePeriod(Length, _
-                                        TimePeriodUnitsFromString(Trim$(Right$(value, Len(value) - i + 1))))
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function TimePeriodUnitsFromString( _
-                timeUnits As String) As TimePeriodUnits
-Const ProcName As String = "TimePeriodUnitsFromString"
-Dim failpoint As String
-On Error GoTo Err
-
-TimePeriodUnitsFromString = gTimePeriodUnitsFromString(timeUnits)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function TimePeriodUnitsToString( _
-                timeUnits As TimePeriodUnits) As String
-Const ProcName As String = "TimePeriodUnitsToString"
-Dim failpoint As String
-On Error GoTo Err
-
-TimePeriodUnitsToString = gTimePeriodUnitsToString(timeUnits)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function TimePeriodUnitsToShortString( _
-                timeUnits As TimePeriodUnits) As String
-Const ProcName As String = "TimePeriodUnitsToShortString"
-Dim failpoint As String
-On Error GoTo Err
-
-TimePeriodUnitsToShortString = gTimePeriodUnitsToShortString(timeUnits)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function WeekStartDate( _
-                ByVal weekNumber As Long, _
-                ByVal baseDate As Date) As Date
-Const ProcName As String = "WeekStartDate"
-Dim failpoint As String
-On Error GoTo Err
-
-WeekStartDate = gCalcWeekStartDate(weekNumber, baseDate)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function WorkingDayDate( _
-                ByVal dayNumber As Long, _
-                ByVal baseDate As Date) As Date
-Const ProcName As String = "WorkingDayDate"
-Dim failpoint As String
-On Error GoTo Err
-
-WorkingDayDate = gCalcWorkingDayDate(dayNumber, baseDate)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function WorkingDayNumber( _
-                ByVal pDate As Date) As Long
-Const ProcName As String = "WorkingDayNumber"
-Dim failpoint As String
-On Error GoTo Err
-
-WorkingDayNumber = gCalcWorkingDayNumber(pDate)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
 
 '@================================================================================
 ' Helper Functions

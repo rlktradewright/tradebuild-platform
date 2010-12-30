@@ -63,7 +63,7 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub Notify(ByRef ev As WriterEvent)
+Public Sub notify(ByRef ev As WriterEventData)
 End Sub
 
 '@================================================================================

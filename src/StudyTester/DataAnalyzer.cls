@@ -51,7 +51,6 @@ Private Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
 Private mDataValues()           As Double
 Private mDataValuesMaxIndex     As Long
-Private mminimumDifference      As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -60,7 +59,6 @@ Private mminimumDifference      As Double
 Private Sub Class_Initialize()
 ReDim mDataValues(1000) As Double
 mDataValuesMaxIndex = -1
-mminimumDifference = MaxDouble
 End Sub
 
 '@================================================================================
@@ -74,10 +72,6 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Public Property Get minimumDifference() As Double
-minimumDifference = mminimumDifference
-End Property
 
 '@================================================================================
 ' Methods
@@ -97,28 +91,33 @@ mDataValues(mDataValuesMaxIndex) = value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Public Sub Analyze()
-Dim i As Long
-Dim diff As Double
-
+Public Function Analyze() As Double
 Const ProcName As String = "analyze"
 On Error GoTo Err
+
+Dim i As Long
+Dim diff As Double
+Dim lMinimumDifference As Double
+
+lMinimumDifference = MaxDouble
 
 SortDoubles mDataValues, False, 0, mDataValuesMaxIndex
 
 For i = 0 To mDataValuesMaxIndex - 1
     diff = mDataValues(i + 1) - mDataValues(i)
-    If diff <> 0 And diff < mminimumDifference Then mminimumDifference = diff
+    If diff <> 0 And diff < lMinimumDifference Then lMinimumDifference = diff
 Next
 
-Exit Sub
+Analyze = lMinimumDifference
+
+Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions

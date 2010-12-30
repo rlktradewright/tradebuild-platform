@@ -42,15 +42,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum StudyInputTypes
-    InputTypeNone = 0
-    InputTypeInteger = 1
-    InputTypeReal = 2
-    InputTypeString = 3
-    InputTypeDate = 4
-    InputTypeBoolean = 5
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================

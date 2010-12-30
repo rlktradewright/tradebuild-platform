@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
 Begin VB.Form fPathChooser 
    Caption         =   "Choose folder"
    ClientHeight    =   2775
@@ -119,7 +119,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -140,7 +140,7 @@ mCancelled = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NewFolderButton_Click()
@@ -152,7 +152,7 @@ PathChooser1.NewFolder
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OKButton_Click()
@@ -165,7 +165,7 @@ Me.Hide
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -185,7 +185,7 @@ cancelled = mCancelled
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Let path(ByVal newvalue As String)
@@ -197,7 +197,7 @@ PathChooser1.path = newvalue
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get path() As String
@@ -209,7 +209,7 @@ If Not mCancelled Then path = PathChooser1.path
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

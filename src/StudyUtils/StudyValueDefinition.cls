@@ -42,30 +42,9 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum StudyValueModes
-    ValueModeNone = 0
-    ValueModeLine = 1
-    ValueModeBar = 2
-    ValueModeText = 3
-End Enum
-
-Public Enum StudyValueTypes
-    ValueTypeNone = 0
-    ValueTypeInteger = 1
-    ValueTypeReal = 2
-    ValueTypeString = 3
-    ValueTypeDate = 4
-    ValueTypeBoolean = 5
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
-
-Public Enum StudyDefaultRegions
-    DefaultRegionNone = 0
-    DefaultRegionCustom
-End Enum
 
 '@================================================================================
 ' Member variables
@@ -76,7 +55,7 @@ Private mDescription As String
 
 Private mIsDefault As Boolean
 
-Private mDefaultRegion As StudyDefaultRegions
+Private mDefaultRegion As StudyValueDefaultRegions
 
 Private mValueType As StudyValueTypes
 Private mValueMode As StudyValueModes
@@ -104,11 +83,11 @@ Private mIncludeInChart As Boolean
 '@================================================================================
 
 Public Property Let DefaultRegion( _
-                ByVal RHS As StudyDefaultRegions)
+                ByVal RHS As StudyValueDefaultRegions)
 mDefaultRegion = RHS
 End Property
 
-Public Property Get DefaultRegion() As StudyDefaultRegions
+Public Property Get DefaultRegion() As StudyValueDefaultRegions
 DefaultRegion = mDefaultRegion
 End Property
 

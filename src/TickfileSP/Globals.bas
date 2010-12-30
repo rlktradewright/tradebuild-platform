@@ -12,6 +12,7 @@ Public Const ProviderKey As String = "TickfileSP"
 
 Public Const ParamNameAccessMode As String = "Access Mode"
 Public Const ParamNameTickfilePath As String = "Tickfile Path"
+Public Const ParamNameTickfileGranularity = "Tickfile Granularity"
 
 Public Const TRADEBUILD_TICKFILE_CURR_VERSION As Integer = 5
 
@@ -57,11 +58,18 @@ Public Enum TickfileFormats
     TickfileCrescendo
 End Enum
 
+Public Enum TickfileGranularities
+    TickfileGranularityDay
+    TickfileGranularityWeek
+    TickfileGranularitySession
+    TickfileGranularityExecution
+End Enum
+
 Public Enum TickfileFieldsV1
     TimestampString
-    exchange
-    symbol
-    expiry
+    Exchange
+    Symbol
+    Expiry
     tickType
     tickPrice
     TickSize
@@ -96,18 +104,18 @@ End Enum
 Public Enum TickfileHeaderFieldsV2
     ContentDeclarer
     version
-    exchange
-    symbol
-    expiry
+    Exchange
+    Symbol
+    Expiry
     startTime
 End Enum
 
 Public Enum TickfileHeaderFieldsV3
     ContentDeclarer
     version
-    exchange
-    symbol
-    expiry
+    Exchange
+    Symbol
+    Expiry
     startTime
 End Enum
 
@@ -123,9 +131,9 @@ Public Enum TickFileVersions
 End Enum
 
 Public Enum FileTickTypes
-    Bid = 1
+    bid = 1
     bidSize
-    Ask
+    ask
     AskSize
     Last
     lastSize
@@ -346,6 +354,38 @@ Case Else
     formatId = TickfileFormats.TickfileUnknown
     version = TickFileVersions.UnknownVersion
 End Select
+End Sub
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pProjectName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+HandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pProjectName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Function gSupports( _

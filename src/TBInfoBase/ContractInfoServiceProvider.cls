@@ -173,7 +173,7 @@ createDatabase
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -301,7 +301,7 @@ End Function
 '@===============================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
-                ByRef ev As TWUtilities30.TaskCompletionEvent)
+                ByRef ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "TaskCompletionListener_taskCompleted"
 Dim lContracts As Contracts
 Dim lContract As Contract
@@ -312,10 +312,10 @@ Dim failpoint As Long
 On Error GoTo Err
 
 index = CLng(ev.cookie)
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
     decrementRequestCount index
-    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, ev.errorMessage, mHandle
+    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, ev.ErrorMessage, mHandle
 Else
     If Not IsEmpty(ev.result) Then
         Set lContracts = ev.result
@@ -335,7 +335,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -404,7 +404,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub createDatabase()
@@ -426,7 +426,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function decrementRequestCount( _
@@ -440,7 +440,7 @@ decrementRequestCount = mRequests(index).numberOfRequests
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub handleFatalError( _
@@ -477,7 +477,7 @@ mRequests(index).numberOfRequests = mRequests(index).numberOfRequests + 1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -504,7 +504,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub releaseRequestEntry( _
@@ -520,6 +520,6 @@ mRequests(index).numberOfRequests = 0
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

@@ -35,11 +35,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum ReplayNumbers
-    ReplayAll = -1
-    ReplayAsRequired = -2
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -98,7 +93,7 @@ End Property
 
 Public Function AddStudy( _
                 ByVal pStudy As Study, _
-                ByRef ValueNames() As String, _
+                ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
@@ -107,7 +102,7 @@ End Function
                 
 Public Function AddStudyValueListener( _
                 ByVal listener As StudyValueListener, _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
@@ -115,33 +110,33 @@ Public Function AddStudyValueListener( _
 End Function
 
 Public Function GetStudyValue( _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal ref As Long) As SValue
 
 End Function
 
 Public Function GetValueTicksize( _
-                ByVal ValueName As String) As Double
+                ByVal valueName As String) As Double
                 
 End Function
      
-Public Sub Initialise( _
+Public Sub initialise( _
                 ByVal Id As String, _
                 ByVal params As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByRef ValueNames() As String, _
+                ByRef valueNames() As String, _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As Session)
 
 End Sub
 
 Public Sub Notify( _
-                ByRef ev As StudyValueEvent)
+                ByRef ev As StudyValueEventData)
 
 End Sub
 
 Public Function NumberOfCachedValues( _
-                Optional ByVal ValueName As String) As Long
+                Optional ByVal valueName As String) As Long
                 
 End Function
 

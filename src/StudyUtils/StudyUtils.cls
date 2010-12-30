@@ -37,11 +37,68 @@ Private Const ModuleName                As String = "StudyUtils"
 ' Enums
 '@================================================================================
 
+Public Enum ReplayNumbers
+    ReplayAll = -1
+    ReplayAsRequired = -2
+End Enum
+
+Public Enum StudyDefaultRegions
+    StudyDefaultRegionNone = 0
+    StudyDefaultRegionCustom
+    StudyDefaultRegionUnderlying
+End Enum
+
+Public Enum StudyValueDefaultRegions
+    StudyValueDefaultRegionNone = 0
+    StudyValueDefaultRegionCustom
+    StudyValueDefaultRegionUnderlying
+    StudyValueDefaultRegionDefault
+End Enum
+
+Public Enum StudyInputTypes
+    InputTypeNone = 0
+    InputTypeInteger = 1
+    InputTypeReal = 2
+    InputTypeString = 3
+    InputTypeDate = 4
+    InputTypeBoolean = 5
+End Enum
+
+Public Enum StudyParameterTypes
+    ParameterTypeNone = 0
+    ParameterTypeInteger = 1
+    ParameterTypeReal = 2
+    ParameterTypeString = 3
+    ParameterTypeDate = 4
+    ParameterTypeBoolean = 5
+End Enum
+
+Public Enum StudyValueModes
+    ValueModeNone = 0
+    ValueModeLine = 1
+    ValueModeBar = 2
+    ValueModeText = 3
+End Enum
+
+Public Enum StudyValueTypes
+    ValueTypeNone = 0
+    ValueTypeInteger = 1
+    ValueTypeReal = 2
+    ValueTypeString = 3
+    ValueTypeDate = 4
+    ValueTypeBoolean = 5
+End Enum
+
+Public Enum TaskDiscriminators
+    TaskAddStudy
+    TaskAddStudyValueListener
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
 
-Public Type StudyValueEvent
+Public Type StudyValueEventData
     source              As Object
     valueName           As String
     sVal                As SValue
@@ -92,7 +149,7 @@ Set AddStudyLibrary = Globals.StudyLibraryManager.AddStudyLibrary( _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function AvailableStudies() As StudyListEntry()
@@ -104,7 +161,7 @@ AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function CreateCacheReplayTask( _
@@ -112,7 +169,7 @@ Public Function CreateCacheReplayTask( _
                 ByVal target As Object, _
                 ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
-                ByVal Discriminator As Long) As CacheReplayTask
+                ByVal discriminator As Long) As CacheReplayTask
 Const ProcName As String = "CreateCacheReplayTask"
 On Error GoTo Err
 
@@ -121,12 +178,12 @@ CreateCacheReplayTask.initialise valueCache, _
                             target, _
                             sourceStudy, _
                             numberOfValuesToReplay, _
-                            Discriminator
+                            discriminator
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function CreateStudyPoint( _
@@ -142,7 +199,7 @@ CreateStudyPoint.Y = Y
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function DefaultStudyValueName() As String
@@ -154,7 +211,7 @@ DefaultStudyValueName = DefaultStudyValueNameStr
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function GetStudyDefaultParameters( _
@@ -170,7 +227,7 @@ Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultPar
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function GetStudyDefinition( _
@@ -184,7 +241,7 @@ Set GetStudyDefinition = Globals.StudyLibraryManager.StudyDefinition(Name, libra
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub LoadStudyLibraryConfiguration( _
@@ -197,7 +254,7 @@ Globals.StudyLibraryManager.LoadStudyLibraryConfiguration config
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function MovingAverageStudyValueName() As String
@@ -209,7 +266,7 @@ MovingAverageStudyValueName = MovingAverageStudyValueNameStr
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub RemoveStudyLibrary( _
@@ -222,7 +279,7 @@ Globals.StudyLibraryManager.Remove library
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub RemoveAllStudyLibraries()
@@ -234,7 +291,7 @@ Globals.StudyLibraryManager.RemoveAll
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub SetDefaultStudyLibraryConfig( _
@@ -259,13 +316,13 @@ Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries, ,
 
 Set currSL = currSLsList.AddConfigurationSection(ConfigNameStudyLibrary & "(" & BuiltInStudyLibraryName & ")")
 
-currSL.setAttribute AttributeNameEnabled, "True"
-currSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
+currSL.SetAttribute AttributeNameEnabled, "True"
+currSL.SetAttribute AttributeNameStudyLibraryBuiltIn, "True"
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function SetStudyDefaultParameters( _
@@ -283,7 +340,7 @@ SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameter
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================

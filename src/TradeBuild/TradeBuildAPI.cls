@@ -17,14 +17,14 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-'Implements TradeBuildSP.IStreamingDataConsumer
+Implements ErrorListener
 
 '@================================================================================
 ' Events
 '@================================================================================
 
-Event Error(ByRef ev As ErrorEvent)
-Event Notification(ByRef ev As NotificationEvent)
+Event Error(ByRef ev As ErrorEventData)
+Event Notification(ByRef ev As NotificationEventData)
 
 '@================================================================================
 ' Constants
@@ -70,6 +70,8 @@ Private Sub Class_Initialize()
 
 InitialiseTWUtilities
 
+UnhandledErrorHandler.AddErrorListener Me
+
 Initialise
 End Sub
 
@@ -79,10 +81,19 @@ Debug.Print "TradeBuildAPI terminated"
 End Sub
 
 '@================================================================================
+' ErrorListener Interface Members
+'@================================================================================
+
+Private Sub ErrorListener_Notify(ev As TWUtilities30.ErrorEventData)
+On Error Resume Next
+mServiceProviders.RemoveAll
+End Sub
+
+'@================================================================================
 ' mClosePositionsTC Event Handlers
 '@================================================================================
 
-Private Sub mClosePositionsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mClosePositionsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Set mClosePositionsTC = Nothing
 End Sub
 
@@ -100,7 +111,7 @@ AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ClosingPositions() As Boolean
@@ -113,7 +124,7 @@ ClosingPositions = Not (mClosePositionsTC Is Nothing)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DefaultWorkSpace() As WorkSpace
@@ -126,7 +137,7 @@ Set DefaultWorkSpace = mDefaultWorkSpace
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Executions() As Executions
@@ -139,7 +150,7 @@ Set Executions = mExecutions
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ExecutionsSimulated() As Executions
@@ -152,7 +163,7 @@ Set Executions = mExecutionsSimulated
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get OrderPlexRecoveryController() As OrderPlexRecoveryCtlr
@@ -176,7 +187,7 @@ mServiceProviders.PermittedServiceProviderRoles = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
@@ -189,7 +200,7 @@ PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
@@ -202,7 +213,7 @@ Set ServiceProviders = mServiceProviders
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SessionId() As String
@@ -219,7 +230,7 @@ SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriod
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
@@ -232,7 +243,7 @@ SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
@@ -245,7 +256,7 @@ SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormat
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Tickers() As Tickers
@@ -258,7 +269,7 @@ Set Tickers = mTickers
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get WorkSpaces() As WorkSpaces
@@ -271,7 +282,7 @@ Set WorkSpaces = mWorkSpaces
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -299,7 +310,7 @@ Set CloseAllPositions = mClosePositionsTC
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ConfigureDefaults( _
@@ -325,7 +336,7 @@ AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub EndSession()
@@ -334,7 +345,6 @@ Const ProcName As String = "EndSession"
 
 On Error GoTo Err
 
-StopAllTickers
 ServiceProviders.RemoveAll
 
 Initialise
@@ -342,7 +352,7 @@ Initialise
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function GenerateTickfileSpecifiers( _
@@ -608,7 +618,7 @@ Set GenerateTickfileSpecifiers = lTickfileSpecifiers
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -623,7 +633,7 @@ Set GetServiceProviderError = mServiceProviderError
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise()
@@ -648,7 +658,7 @@ Set mOrderPlexRecoveryController = New OrderPlexRecoveryCtlr
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -663,7 +673,7 @@ IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPer
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function LoadContracts( _
@@ -678,10 +688,10 @@ Set LoadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContrac
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
-Friend Sub notify(ByRef ev As NotificationEvent)
+Friend Sub notify(ByRef ev As NotificationEventData)
 Const ProcName As String = "notify"
 
 On Error GoTo Err
@@ -694,7 +704,7 @@ RaiseEvent Notification(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyFatalError( _
@@ -702,7 +712,7 @@ Friend Sub NotifyFatalError( _
                 ByVal errorMessage As String, _
                 ByVal errorSource As String)
 Const ProcName As String = "NotifyFatalError"
-Dim ev As ErrorEvent
+Dim ev As ErrorEventData
 
 On Error Resume Next
 
@@ -742,7 +752,7 @@ Friend Sub SetServiceProviderError( _
                 ByVal ErrorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal ServiceProviderName As String)
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 Const ProcName As String = "SetServiceProviderError"
 
@@ -762,7 +772,7 @@ notify ev
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
                     
 End Sub
 
@@ -783,7 +793,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -808,7 +818,7 @@ Set editContractSessionTimes = lContractBuilder.Contract
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub logMessage( _

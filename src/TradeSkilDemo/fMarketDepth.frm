@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#241.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   5895
@@ -107,7 +107,7 @@ DOMDisplay1.Height = Me.ScaleHeight - DOMDisplay1.Top
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
@@ -133,7 +133,7 @@ DOMDisplay1.Centre
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DOMDisplay1_Halted()
@@ -146,7 +146,7 @@ Me.caption = "Market depth data halted"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DOMDisplay1_Resumed()
@@ -159,7 +159,7 @@ Me.caption = mCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -177,7 +177,7 @@ Unload Me
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -195,7 +195,7 @@ DOMDisplay1.numberOfRows = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let Ticker(ByVal value As Ticker)
@@ -214,7 +214,7 @@ DOMDisplay1.Ticker = mTicker
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '================================================================================

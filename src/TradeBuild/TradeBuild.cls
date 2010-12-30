@@ -467,34 +467,34 @@ Public Type ClosePositionsResult
     numberOfPositionsNotClosed  As Long
 End Type
 
-Public Type InfoEvent
+Public Type InfoEventData
     source          As Object
     valueType       As Long
     Data            As Variant
 End Type
 
-Public Type PriceChangeEvent
+Public Type PriceChangeEventData
     source          As Object
     Change          As Double
     ChangeString    As String
     ChangePercent   As Double
 End Type
 
-Public Type ProfitEvent
+Public Type ProfitEventData
     source          As Object
     profitType    As Long
     ProfitAmount    As Currency
     currencyCode    As String
 End Type
 
-Public Type MarketDepthEvent
+Public Type MarketDepthEventData
     source          As Object
     type            As DOMUpdateTypes
     price           As Double
     size            As Long
 End Type
 
-Public Type QuoteEvent
+Public Type QuoteEventData
     source          As Object
     price           As Double
     size            As Long
@@ -504,7 +504,7 @@ Public Type QuoteEvent
     recentSizeChange      As ValueChanges   ' if sizeChange = ValueChangeNone
 End Type
 
-Public Type RawMarketDepthEvent
+Public Type RawMarketDepthEventData
     source          As Object
     position        As Long
     marketMaker     As String
@@ -514,17 +514,6 @@ Public Type RawMarketDepthEvent
     size            As Long
 End Type
 
-'Public Type Tick
-'    Timestamp       As Date
-'    TickType        As TickTypes
-'    TickPrice       As Double
-'    TickSize        As Long
-'    MDPosition      As Long
-'    MDMarketMaker   As String
-'    MDOperation     As Long
-'    MDSide          As Long
-'End Type
-
 Public Type TickfileFormatSpecifier
     FormatType      As TickfileFormatType
     capabilities    As Long
@@ -533,7 +522,12 @@ Public Type TickfileFormatSpecifier
     FileExtension   As String
 End Type
 
-Public Type WriterEvent
+Public Type TickWriterComment
+    Timestamp       As Date
+    Comment         As String
+End Type
+
+Public Type WriterEventData
     source          As Object
     action          As WriterNotifications
     Filename        As String
@@ -597,7 +591,7 @@ EntryOrderTypeToShortString = GEntryOrderTypeToShortString(value)
 End Function
 
 Public Function GetFormattedPriceFromQuoteEvent( _
-                ByRef ev As QuoteEvent) As String
+                ByRef ev As QuoteEventData) As String
 Dim lTicker As Ticker
 Set lTicker = ev.source
 GetFormattedPriceFromQuoteEvent = lTicker.FormatPrice(ev.price)

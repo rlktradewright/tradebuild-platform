@@ -103,14 +103,14 @@ If Not mEnumerator.MoveNext Then
     Exit Sub
 End If
 
-Set contractConfig = mEnumerator.current
+Set contractConfig = mEnumerator.Current
 
 failpoint = 100 '=====================================================
 
-If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
+If CBool(contractConfig.GetAttribute(AttributeNameEnabled)) Then
 
-    includeMarketDepth = CBool(contractConfig.getAttribute(AttributeNameIncludeMktDepth, "False"))
-    writeBidAskBars = CBool(contractConfig.getAttribute(AttributeNameBidAskBars, "False"))
+    includeMarketDepth = CBool(contractConfig.GetAttribute(AttributeNameIncludeMktDepth, "False"))
+    writeBidAskBars = CBool(contractConfig.GetAttribute(AttributeNameBidAskBars, "False"))
 
     failpoint = 200 '=====================================================
     
@@ -161,7 +161,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -176,17 +176,17 @@ End Property
 ' mTickersTC Event Handlers
 '@================================================================================
 
-Private Sub mTickersTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mTickersTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mTickersTC_Completed"
 On Error GoTo Err
 
-If ev.errorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.errorNumber & " starting tickers: " & ev.errorMessage
+If ev.ErrorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
 mTaskContext.Continue
 
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -219,7 +219,7 @@ Set mEnumerator = mContractsConfig.ChildEnumerator
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

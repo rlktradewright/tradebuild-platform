@@ -17,7 +17,7 @@ Option Explicit
 ' Description
 '@================================================================================
 '
-' This is the listener interface for the QuoteEvent
+' This is the listener interface for the QuoteEventData
 '
 '@================================================================================
 ' Amendment history
@@ -71,31 +71,31 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub Ask(ByRef ev As QuoteEvent)
+Public Sub Ask(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub Bid(ByRef ev As QuoteEvent)
+Public Sub Bid(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub High(ByRef ev As QuoteEvent)
+Public Sub High(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub Low(ByRef ev As QuoteEvent)
+Public Sub Low(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub SessionOpen(ByRef ev As QuoteEvent)
+Public Sub SessionOpen(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub OpenInterest(ByRef ev As QuoteEvent)
+Public Sub OpenInterest(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub PreviousClose(ByRef ev As QuoteEvent)
+Public Sub PreviousClose(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub Trade(ByRef ev As QuoteEvent)
+Public Sub Trade(ByRef ev As QuoteEventData)
 End Sub
 
-Public Sub Volume(ByRef ev As QuoteEvent)
+Public Sub Volume(ByRef ev As QuoteEventData)
 End Sub
 
 '@================================================================================

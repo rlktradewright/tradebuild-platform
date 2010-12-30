@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#243.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -212,7 +212,7 @@ syncStudyPicker
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -226,7 +226,7 @@ Resize
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -261,7 +261,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -275,7 +275,7 @@ Resize
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -313,7 +313,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -322,7 +322,7 @@ Const ProcName As String = "CoolBar1_HeightChanged"
 Resize
 End Sub
 
-Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEvent)
+Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEventData)
 Const ProcName As String = "MultiChart1_Change"
 Dim changeType As MultiChartChangeTypes
 
@@ -358,11 +358,11 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities30.StateChangeEvent)
+Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities30.StateChangeEventData)
 Const ProcName As String = "MultiChart1_ChartStateChanged"
 Dim loadingText As Text
 
@@ -397,7 +397,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -415,7 +415,7 @@ setSelectionButton
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -423,7 +423,7 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_ask(ev As QuoteEvent)
+Private Sub mTicker_ask(ev As QuoteEventData)
 Const ProcName As String = "mTicker_ask"
 
 On Error GoTo Err
@@ -434,11 +434,11 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_bid(ev As QuoteEvent)
+Private Sub mTicker_bid(ev As QuoteEventData)
 Const ProcName As String = "mTicker_bid"
 
 On Error GoTo Err
@@ -449,11 +449,11 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_high(ev As QuoteEvent)
+Private Sub mTicker_high(ev As QuoteEventData)
 Const ProcName As String = "mTicker_high"
 
 On Error GoTo Err
@@ -464,11 +464,11 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_Low(ev As QuoteEvent)
+Private Sub mTicker_Low(ev As QuoteEventData)
 Const ProcName As String = "mTicker_Low"
 
 On Error GoTo Err
@@ -479,11 +479,11 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_previousClose(ev As QuoteEvent)
+Private Sub mTicker_previousClose(ev As QuoteEventData)
 Const ProcName As String = "mTicker_previousClose"
 
 On Error GoTo Err
@@ -494,12 +494,12 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
 Private Sub mTicker_stateChange( _
-                ByRef ev As TWUtilities30.StateChangeEvent)
+                ByRef ev As TWUtilities30.StateChangeEventData)
 Const ProcName As String = "mTicker_stateChange"
 
 On Error GoTo Err
@@ -519,11 +519,11 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_trade(ev As QuoteEvent)
+Private Sub mTicker_trade(ev As QuoteEventData)
 Const ProcName As String = "mTicker_trade"
 
 On Error GoTo Err
@@ -534,11 +534,11 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub mTicker_volume(ev As QuoteEvent)
+Private Sub mTicker_volume(ev As QuoteEventData)
 Const ProcName As String = "mTicker_volume"
 
 On Error GoTo Err
@@ -549,7 +549,7 @@ setCaption
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -587,7 +587,8 @@ LoadFromConfig = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Set mTicker = Nothing
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub showChart( _
@@ -617,7 +618,8 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Set mTicker = Nothing
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub showHistoricalChart( _
@@ -646,7 +648,7 @@ setCaption
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -691,7 +693,7 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createLineChartTool()
@@ -712,7 +714,7 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub getInitialTickerValues()
@@ -734,7 +736,7 @@ mPreviousClose = mTicker.FormatPrice(mTicker.ClosePrice)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Resize()
@@ -753,7 +755,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setCaption()
@@ -787,7 +789,7 @@ Me.caption = s
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setConfig()
@@ -803,7 +805,7 @@ MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSection
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSelectionMode()
@@ -822,7 +824,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setSelectionButton()
@@ -839,7 +841,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setWindow()
@@ -864,7 +866,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub syncStudyPicker()
@@ -880,7 +882,7 @@ gSyncStudyPicker MultiChart1.ChartManager, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateSettings()
@@ -904,7 +906,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

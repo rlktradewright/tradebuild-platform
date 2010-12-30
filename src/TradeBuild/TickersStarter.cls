@@ -158,7 +158,7 @@ mTaskContext.suspend mInterval
 
 Exit Sub
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -170,8 +170,8 @@ On Error GoTo Err
 
 Set mTaskContext = value
 
-If IsObject(mTaskContext.Data) Then
-    Set obj = mTaskContext.Data
+If IsObject(mTaskContext.data) Then
+    Set obj = mTaskContext.data
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
@@ -191,7 +191,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -203,7 +203,7 @@ End Property
 ' mContractsLoadTC Event Handlers
 '@================================================================================
 
-Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mContractsLoadTC_Completed"
 On Error GoTo Err
 
@@ -218,10 +218,10 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEvent)
+Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEventData)
 Const ProcName As String = "mContractsLoadTC_Notification"
 On Error GoTo Err
 
@@ -230,7 +230,7 @@ GLogLogger.Log mTaskContext.name & " notification " & ev.eventCode & ":" & ev.ev
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -271,7 +271,7 @@ mLoadOnly = pLoadOnly
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -282,7 +282,7 @@ Private Sub handleContractLoadError( _
                 ByVal errorNumber As Long, _
                 ByVal errorMessage As String)
 Const ProcName As String = "handleContractLoadError"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 On Error GoTo Err
 
@@ -312,6 +312,6 @@ Set tckrs = lTickersRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#40.1#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#46.0#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -150,7 +150,7 @@ mSortKeys(5) = ContractSortKeyRight
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -177,7 +177,7 @@ setupGrid
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
@@ -190,7 +190,7 @@ TWGrid1.Move 0, 0, UserControl.Width, UserControl.Height
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
@@ -205,7 +205,7 @@ Call PropBag.WriteProperty("RowBackColorEven", TWGrid1.RowBackColorEven, 0)
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -222,7 +222,7 @@ Initialise pContracts
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Property Get IContractSelector_SelectedContracts() As ContractUtils26.Contracts
@@ -235,7 +235,7 @@ Set IContractSelector_SelectedContracts = SelectedContracts
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -270,7 +270,7 @@ RaiseEvent Click
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TWGrid1_DblClick()
@@ -344,7 +344,7 @@ RowBackColorOdd = TWGrid1.RowBackColorOdd
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let RowBackColorOdd(ByVal New_RowBackColorOdd As OLE_COLOR)
@@ -358,7 +358,7 @@ PropertyChanged "RowBackColorOdd"
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get RowBackColorEven() As OLE_COLOR
@@ -371,7 +371,7 @@ RowBackColorEven = TWGrid1.RowBackColorEven
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let RowBackColorEven(ByVal New_RowBackColorEven As OLE_COLOR)
@@ -385,7 +385,7 @@ PropertyChanged "RowBackColorEven"
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ScrollBars() As ScrollBarsSettings
@@ -398,7 +398,7 @@ ScrollBars = TWGrid1.ScrollBars
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Let ScrollBars(ByVal New_ScrollBars As ScrollBarsSettings)
@@ -412,7 +412,7 @@ PropertyChanged "ScrollBars"
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 Public Property Get SelectedContracts() As Contracts
@@ -436,7 +436,7 @@ Set SelectedContracts = scb.Contracts
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -503,7 +503,7 @@ mCurrExchange = ""
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -522,7 +522,7 @@ highlightRow row
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub deselectSelectedContracts()
@@ -541,7 +541,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub highlightRow(ByVal rowNumber As Long)
@@ -571,7 +571,7 @@ TWGrid1.InvertCellColors
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub
 
@@ -591,7 +591,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isFullHeadingSecType( _
@@ -610,7 +610,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isHeadingWithoutExchangeSecType( _
@@ -628,7 +628,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isHeadingWithoutCurrencySecType( _
@@ -647,7 +647,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function isRowSelected( _
@@ -662,7 +662,7 @@ isRowSelected = (CLng(mSelectedRows(CStr(row))) = row)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needFullHeadingRow( _
@@ -682,7 +682,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRow( _
@@ -702,7 +702,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithoutExchange( _
@@ -722,7 +722,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithoutCurrency( _
@@ -742,7 +742,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Function needHeadingRowWithSectypeOnly( _
@@ -761,7 +761,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub selectContract( _
@@ -776,11 +776,10 @@ highlightRow row
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupGrid()
-'TWGrid1.AllowBigSelection = True
 Const ProcName As String = "setupGrid"
 Dim failpoint As String
 On Error GoTo Err
@@ -796,27 +795,21 @@ TWGrid1.SelectionMode = TwGridSelectionByRow
 TWGrid1.BackColorBkg = SystemColorConstants.vbWindowBackground
 TWGrid1.FocusRect = TwGridFocusNone
 
-'setupGridColumn 0, ContractsGridColumns.localSymbol, ContractsGridColumnWidths.LocalSymbolWidth, "Symbol", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-setupGridColumn 0, ContractsGridColumns.secType, ContractsGridColumnWidths.SecTypeWidth, "Sec Type", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-setupGridColumn 0, ContractsGridColumns.exchange, ContractsGridColumnWidths.ExchangeWidth, "Exchange", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-'setupGridColumn 0, ContractsGridColumns.expiry, ContractsGridColumnWidths.ExpiryWidth, "Expiry", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-setupGridColumn 0, ContractsGridColumns.currencyCode, ContractsGridColumnWidths.CurrencyWidth, "Curr", True, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
-'setupGridColumn 0, ContractsGridColumns.strike, ContractsGridColumnWidths.StrikeWidth, "Strike", False, TWControls10.AlignmentSettings.TwGridAlignRightCenter
-setupGridColumn 0, ContractsGridColumns.OptionRight, ContractsGridColumnWidths.OptionRightWidth, "Right", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-'setupGridColumn 0, ContractsGridColumns.Description, ContractsGridColumnWidths.DescriptionWidth, "Description", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
-'setupGridColumn 0, ContractsGridColumns.Filler, ContractsGridColumnWidths.FillerWidth, "", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupGridColumn 0, ContractsGridColumns.secType, ContractsGridColumnWidths.SecTypeWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupGridColumn 0, ContractsGridColumns.exchange, ContractsGridColumnWidths.ExchangeWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupGridColumn 0, ContractsGridColumns.currencyCode, ContractsGridColumnWidths.CurrencyWidth, True, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupGridColumn 0, ContractsGridColumns.OptionRight, ContractsGridColumnWidths.OptionRightWidth, True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupGridColumn( _
                 ByVal rowNumber As Long, _
                 ByVal columnNumber As Long, _
                 ByVal columnWidth As Single, _
-                ByVal columnHeader As String, _
                 ByVal isLetters As Boolean, _
                 ByVal align As TWControls10.AlignmentSettings)
     
@@ -845,14 +838,12 @@ With TWGrid1
     .colWidth(columnNumber) = lColumnWidth
     
     .ColAlignment(columnNumber) = align
-'    .ColAlignmentFixed(columnNumber) = align
-'    .TextMatrix(rowNumber, columnNumber) = columnHeader
 End With
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub toggleRowSelection( _
@@ -870,7 +861,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub writeHeadingRow( _
@@ -922,7 +913,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub writeRow( _
@@ -977,6 +968,6 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 
 End Sub

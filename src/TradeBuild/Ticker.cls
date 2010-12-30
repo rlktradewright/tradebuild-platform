@@ -28,42 +28,42 @@ Implements StateChangeListener
 ' Events
 '@================================================================================
 
-Event Ask(ByRef ev As QuoteEvent)
+Event Ask(ByRef ev As QuoteEventData)
 
-Event BarWriterNotification(ByRef ev As WriterEvent)
+Event BarWriterNotification(ByRef ev As WriterEventData)
 
-Event Bid(ByRef ev As QuoteEvent)
+Event Bid(ByRef ev As QuoteEventData)
 
-Event DOMSetCell(ByRef ev As MarketDepthEvent)
+Event DOMSetCell(ByRef ev As MarketDepthEventData)
                 
-Event DOMReset(ByRef ev As MarketDepthEvent)
+Event DOMReset(ByRef ev As MarketDepthEventData)
                 
-Event High(ByRef ev As QuoteEvent)
+Event High(ByRef ev As QuoteEventData)
 
-Event Low(ByRef ev As QuoteEvent)
+Event Low(ByRef ev As QuoteEventData)
 
 Event MarketDepthNotAvailable(ByVal reason As String)
 
-Event OpenInterest(ByRef ev As QuoteEvent)
+Event OpenInterest(ByRef ev As QuoteEventData)
 
-Event PreviousClose(ByRef ev As QuoteEvent)
+Event PreviousClose(ByRef ev As QuoteEventData)
 
-Event PriceChange(ByRef ev As PriceChangeEvent)
+Event PriceChange(ByRef ev As PriceChangeEventData)
 
-Event RawMarketDepthUpdate(ByRef ev As RawMarketDepthEvent)
+Event RawMarketDepthUpdate(ByRef ev As RawMarketDepthEventData)
                 
-Event StateChange(ByRef ev As StateChangeEvent)
+Event StateChange(ByRef ev As StateChangeEventData)
 
 Event TickfileWriterNotification( _
-                ByRef ev As WriterEvent)
+                ByRef ev As WriterEventData)
 
-Event Trade(ByRef ev As QuoteEvent)
+Event Trade(ByRef ev As QuoteEventData)
 
 Event TradingSessionEnded()
 
 Event TradingSessionStarted()
 
-Event Volume(ByRef ev As QuoteEvent)
+Event Volume(ByRef ev As QuoteEventData)
 
 '@================================================================================
 ' Constants
@@ -321,7 +321,7 @@ Private Sub IBarDataOutputServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 Const ProcName As String = "IBarDataOutputServiceConsumer_NotifyEvent"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -341,7 +341,7 @@ gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, s
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_NotReady()
@@ -356,7 +356,7 @@ fireBarWriterNotify WriterNotifications.WriterNotReady, ""
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -372,7 +372,7 @@ fireBarWriterNotify WriterNotifications.WriterFileCreated, _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Ready()
@@ -392,7 +392,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -426,7 +426,7 @@ tf.AddStateChangeListener Me
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -448,10 +448,10 @@ mInEventHandler = True
 Select Case eventCode
 'Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
 '    StopTicker
-'Case TradeBuildSP.StandardSPEventCodes.RTDisconnectedFromDataSource
-'    StopTicker
-'Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
-'    StopTicker
+Case TradeBuildSP.StandardSPEventCodes.RTDisconnectedFromDataSource
+    If mWriteTickData Then mTickWriter.WriteComment "Disconnected from data source: " & eventMessage, Timestamp
+Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
+    If mWriteTickData Then mTickWriter.WriteComment "Lost connection to data source: " & eventMessage, Timestamp
 Case TradeBuildSP.StandardSPEventCodes.RTRequestFailed
     StopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTRequestInvalid
@@ -466,7 +466,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -517,7 +517,7 @@ If mWriteTickData Then
     If (Tick.tickType <> TickTypeVolume And Tick.tickType <> TickTypeMarketDepth) Or _
         (Tick.tickType = TickTypeMarketDepth And mIncludeMarketDepthInTickfile) _
     Then
-        mTickWriter.writeTick Tick
+        mTickWriter.WriteTick Tick
     End If
 End If
 
@@ -554,7 +554,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -590,7 +590,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_NotReady()
@@ -611,7 +611,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
@@ -634,7 +634,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub ITickfileOutputServiceConsumer_Ready()
@@ -665,7 +665,7 @@ Exit Sub
 
 Err:
 mInEventHandler = False
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -673,7 +673,7 @@ End Sub
 '@================================================================================
 
 Private Sub StateChangeListener_Change( _
-                ev As TWUtilities30.StateChangeEvent)
+                ev As TWUtilities30.StateChangeEventData)
 Const ProcName As String = "StateChangeListener_Change"
 
 On Error GoTo Err
@@ -693,14 +693,14 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
 ' mContractsLoadTC Event Handlers
 '@================================================================================
 
-Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mContractsLoadTC_Completed"
 
 On Error GoTo Err
@@ -742,7 +742,7 @@ End Sub
 ' mSession Event Handlers
 '@================================================================================
 
-Private Sub mSession_sessionEnded(ev As SessionEvent)
+Private Sub mSession_sessionEnded(ev As SessionEventData)
 Const ProcName As String = "mSession_sessionEnded"
 On Error GoTo Err
 
@@ -754,7 +754,7 @@ Err:
 GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub mSession_SessionStarted(ev As SessionEvent)
+Private Sub mSession_SessionStarted(ev As SessionEventData)
 Const ProcName As String = "mSession_SessionStarted"
 
 On Error GoTo Err
@@ -830,7 +830,7 @@ End If
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ClosePrice() As Double
@@ -855,7 +855,7 @@ handleContractLoadComplete
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get Contracts() As Contracts
@@ -888,7 +888,7 @@ Description = mContract.Description
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
@@ -906,7 +906,7 @@ mDOMEventsRequired = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DOMEventsRequired() As DOMEvents
@@ -988,7 +988,7 @@ Set InputStudy = mInputStudy
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsHistorical() As Boolean
@@ -1041,7 +1041,7 @@ mOutputTickfileFormat = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OutputTickfileFormat() As String
@@ -1064,7 +1064,7 @@ mOutputTickfilePath = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OutputTickfilePath() As String
@@ -1108,7 +1108,7 @@ fireStateChange mState
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -1153,7 +1153,7 @@ setTime value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Timestamp() As Date
@@ -1166,7 +1166,7 @@ Timestamp = mClock.Timestamp
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TradePrice() As Double
@@ -1214,7 +1214,7 @@ Set WorkSpace = mWorkspaceRef.Target
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -1232,7 +1232,7 @@ mBarWriterListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub AddDataConsumer( _
@@ -1248,7 +1248,7 @@ If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddPriceChangeListener( _
@@ -1262,7 +1262,7 @@ mPriceChangeListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddMarketDepthListener( _
@@ -1274,7 +1274,7 @@ On Error GoTo Err
 mMarketDepthListeners.Add value
 
 ' send all the current DOM values to the new listener
-Dim processedMarketDepth As MarketDepthEvent
+Dim processedMarketDepth As MarketDepthEventData
 Dim i As Long
 
 Set processedMarketDepth.source = Me
@@ -1300,7 +1300,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1317,7 +1317,7 @@ RefreshQuotes value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddRawMarketDepthListener(ByVal value As RawMarketDepthListener)
@@ -1330,7 +1330,7 @@ mRawMarketDepthListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddStateChangeListener( _
@@ -1344,7 +1344,7 @@ mStateChangeListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddTickfileWriterListener(ByVal value As TickfileWriterListener)
@@ -1357,7 +1357,7 @@ mTickfileWriterListeners.Add value
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function AddTimer(ByVal expiryTime As Variant, _
@@ -1375,7 +1375,7 @@ Set AddTimer = mTimerList.Add(Data, expiryTime, expiryTimeUnits)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub CancelMarketDepth(Optional ByVal forceCancel As Boolean = False)
@@ -1406,7 +1406,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function FormatPrice( _
@@ -1422,7 +1422,7 @@ FormatPrice = mContract.FormatPrice(price)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub Initialise( _
@@ -1468,7 +1468,7 @@ State = TickerStates.TickerStateCreated
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -1482,7 +1482,7 @@ IsTimeInSession = mSession.IsTimeInSession(Timestamp)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub LoadTicker(ByVal pContractSpecifier As ContractSpecifier)
@@ -1503,7 +1503,7 @@ Set mContractsLoadTC = gTB.LoadContracts(pContractSpecifier)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub LoadTickerFromContract(ByVal pContract As Contract)
@@ -1517,6 +1517,7 @@ If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllega
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "Ticker is already in use"
 
+mLoadOnly = True
 State = TickerStateStarting
 Set mContract = pContract
 processContract
@@ -1524,7 +1525,7 @@ processContract
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyCurrentVolume()
@@ -1540,7 +1541,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function ParsePrice( _
@@ -1555,7 +1556,7 @@ ParsePrice = mContract.ParsePrice(priceString, price)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub PauseTicker()
@@ -1568,13 +1569,13 @@ State = TickerStates.TickerStatePaused
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RefreshPriceChange( _
                 ByVal listener As PriceChangeListener)
 Const ProcName As String = "RefreshPriceChange"
-Dim ev As PriceChangeEvent
+Dim ev As PriceChangeEventData
 
 
 On Error GoTo Err
@@ -1590,13 +1591,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RefreshQuotes( _
                 ByVal listener As QuoteListener)
 Const ProcName As String = "RefreshQuotes"
-Dim ev As QuoteEvent
+Dim ev As QuoteEventData
 
 
 On Error GoTo Err
@@ -1656,7 +1657,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveBarWriterListener( _
@@ -1673,7 +1674,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RemoveDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
@@ -1690,7 +1691,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemovePriceChangeListener(ByVal value As PriceChangeListener)
@@ -1707,7 +1708,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal value As StateChangeListener)
@@ -1724,7 +1725,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveMarketDepthListener(ByVal value As MarketDepthListener)
@@ -1750,7 +1751,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveQuoteListener(ByVal value As QuoteListener)
@@ -1769,7 +1770,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveRawMarketDepthListener(ByVal value As RawMarketDepthListener)
@@ -1786,7 +1787,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveTickfileWriterListener(ByVal value As TickfileWriterListener)
@@ -1803,7 +1804,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RemoveTimer(ByVal theTimer As TimerListItem)
@@ -1816,7 +1817,7 @@ mTimerList.Remove theTimer
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
@@ -1892,7 +1893,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub StartTicker(ByVal pContractSpecifier As ContractSpecifier)
@@ -1916,7 +1917,7 @@ Set mContractsLoadTC = gTB.LoadContracts(pContractSpecifier)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1940,7 +1941,7 @@ processContract
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub StopTicker()
@@ -2050,7 +2051,7 @@ State = TickerStates.TickerStateStopped
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2115,7 +2116,7 @@ calculateSpDomRequirement = DOMEventsReqd
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function calcValueChange( _
@@ -2138,12 +2139,12 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub createBarWriter()
 Const ProcName As String = "createBarWriter"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -2164,13 +2165,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub CreateOutputTickfile()
 Const ProcName As String = "CreateOutputTickfile"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -2192,7 +2193,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2212,7 +2213,7 @@ fireSetMarketDepthCell side, price, 0
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Private Sub DOMRawUpdate( _
@@ -2240,7 +2241,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2259,7 +2260,7 @@ fireResetMarketDepth
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Private Sub DOMSetCell( _
@@ -2279,13 +2280,13 @@ fireSetMarketDepthCell side, price, size
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                 
 Private Sub fireAsk()
 Const ProcName As String = "fireAsk"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2304,7 +2305,7 @@ RaiseEvent Ask(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireBarWriterNotify( _
@@ -2312,7 +2313,7 @@ Private Sub fireBarWriterNotify( _
                 ByVal Filename As String)
 Const ProcName As String = "fireBarWriterNotify"
 Dim listener As BarWriterListener
-Dim ev As WriterEvent
+Dim ev As WriterEventData
 
 On Error GoTo Err
 
@@ -2327,13 +2328,13 @@ RaiseEvent BarWriterNotification(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                                 
 Private Sub fireBid()
 Const ProcName As String = "fireBid"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2352,14 +2353,14 @@ RaiseEvent Bid(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireHigh( _
                 ByVal price As Double)
 Const ProcName As String = "fireHigh"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2374,14 +2375,14 @@ RaiseEvent High(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireLow( _
                 ByVal price As Double)
 Const ProcName As String = "fireLow"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2396,14 +2397,14 @@ RaiseEvent Low(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireMarketDepthNotAvailable( _
                 ByVal reason As String)
 Const ProcName As String = "fireMarketDepthNotAvailable"
 Dim listener As MarketDepthListener
-Dim ev As MarketDepthEvent
+Dim ev As MarketDepthEventData
 
 
 On Error GoTo Err
@@ -2415,7 +2416,7 @@ Next
 RaiseEvent DOMReset(ev)
 
 Dim rawListener As RawMarketDepthListener
-Dim evRaw As RawMarketDepthEvent
+Dim evRaw As RawMarketDepthEventData
 
 Set evRaw.source = Me
 For Each rawListener In mRawMarketDepthListeners
@@ -2426,14 +2427,14 @@ RaiseEvent MarketDepthNotAvailable(reason)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireOpen( _
                 ByVal price As Double)
 Const ProcName As String = "fireOpen"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2448,14 +2449,14 @@ RaiseEvent Low(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireOpenInterest( _
                 ByVal size As Long)
 Const ProcName As String = "fireOpenInterest"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2470,14 +2471,14 @@ RaiseEvent OpenInterest(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub firePreviousClose( _
                 ByVal price As Double)
 Const ProcName As String = "firePreviousClose"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2492,7 +2493,7 @@ RaiseEvent PreviousClose(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub firePriceChange(ByVal Change As Double, _
@@ -2500,7 +2501,7 @@ Private Sub firePriceChange(ByVal Change As Double, _
                 ByVal ChangePercent As Double)
 Const ProcName As String = "firePriceChange"
 Dim listener As PriceChangeListener
-Dim ev As PriceChangeEvent
+Dim ev As PriceChangeEventData
 
 On Error GoTo Err
 
@@ -2516,13 +2517,13 @@ RaiseEvent PriceChange(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireResetMarketDepth()
 Const ProcName As String = "fireResetMarketDepth"
 Dim listener As MarketDepthListener
-Dim ev As MarketDepthEvent
+Dim ev As MarketDepthEventData
 
 
 On Error GoTo Err
@@ -2534,7 +2535,7 @@ Next
 RaiseEvent DOMReset(ev)
 
 Dim rawListener As RawMarketDepthListener
-Dim evRaw As RawMarketDepthEvent
+Dim evRaw As RawMarketDepthEventData
 
 Set evRaw.source = Me
 For Each rawListener In mRawMarketDepthListeners
@@ -2544,7 +2545,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireSetMarketDepthCell( _
@@ -2553,7 +2554,7 @@ Private Sub fireSetMarketDepthCell( _
                 ByVal size As Long)
 Const ProcName As String = "fireSetMarketDepthCell"
 Dim listener As MarketDepthListener
-Dim ev As MarketDepthEvent
+Dim ev As MarketDepthEventData
 
 On Error GoTo Err
 
@@ -2569,13 +2570,13 @@ RaiseEvent DOMSetCell(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireStateChange(ByVal newState As TickerStates)
 Const ProcName As String = "fireStateChange"
 Dim listener As StateChangeListener
-Dim ev As StateChangeEvent
+Dim ev As StateChangeEventData
 
 On Error GoTo Err
 
@@ -2590,7 +2591,7 @@ getTickers.StateChange ev
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireTickfileWriterNotify( _
@@ -2598,7 +2599,7 @@ Private Sub fireTickfileWriterNotify( _
                 ByVal Filename As String)
 Const ProcName As String = "fireTickfileWriterNotify"
 Dim listener As TickfileWriterListener
-Dim ev As WriterEvent
+Dim ev As WriterEventData
 
 On Error GoTo Err
 
@@ -2613,13 +2614,13 @@ RaiseEvent TickfileWriterNotification(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
                                 
 Private Sub fireTrade()
 Const ProcName As String = "fireTrade"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2638,7 +2639,7 @@ RaiseEvent Trade(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireUpdateMarketDepth( _
@@ -2650,7 +2651,7 @@ Private Sub fireUpdateMarketDepth( _
                 ByVal size As Long)
 Const ProcName As String = "fireUpdateMarketDepth"
 Dim listener As RawMarketDepthListener
-Dim rawMarketDepth As RawMarketDepthEvent
+Dim rawMarketDepth As RawMarketDepthEventData
 
 On Error GoTo Err
 
@@ -2669,14 +2670,14 @@ RaiseEvent RawMarketDepthUpdate(rawMarketDepth)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireVolume( _
                 ByVal size As Long)
 Const ProcName As String = "fireVolume"
 Dim listener As QuoteListener
-Dim quote As QuoteEvent
+Dim quote As QuoteEventData
 
 On Error GoTo Err
 
@@ -2691,7 +2692,7 @@ RaiseEvent Volume(quote)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getContractSpec() As ContractSpecifier
@@ -2707,12 +2708,12 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub handleContractLoadComplete()
 Const ProcName As String = "handleContractLoadComplete"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -2746,14 +2747,14 @@ processContract
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub handleContractLoadError( _
                 ByVal errorNumber As Long, _
                 ByVal errorMessage As String)
 Const ProcName As String = "handleContractLoadError"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -2776,7 +2777,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub InitialisePriceTables()
@@ -2792,7 +2793,7 @@ mMaxBidPricesIndex = -1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub MarketDepthNotAvailable( _
@@ -2806,7 +2807,7 @@ fireMarketDepthNotAvailable reason
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyConsumers( _
@@ -2825,7 +2826,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyDOMPrices( _
@@ -2857,7 +2858,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyTrade( _
@@ -2909,7 +2910,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub notifyVolume( _
@@ -2931,7 +2932,7 @@ fireVolume mVolume
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub prepare()
@@ -2988,13 +2989,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
 Private Sub processContract()
 Const ProcName As String = "processContract"
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 
 
 On Error GoTo Err
@@ -3055,7 +3056,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickAsk( _
@@ -3095,7 +3096,7 @@ fireAsk
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 
@@ -3136,7 +3137,7 @@ fireBid
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickHigh( _
@@ -3154,7 +3155,7 @@ fireHigh mHighPrice
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickLow( _
@@ -3172,7 +3173,7 @@ fireLow mLowPrice
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickMarketDepth( _
@@ -3217,7 +3218,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickOpen( _
@@ -3235,7 +3236,7 @@ fireOpen mOpenPrice
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickOpenInterest( _
@@ -3253,7 +3254,7 @@ mPrevOpenInterest = mOpenInterest
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickPreviousClose( _
@@ -3278,7 +3279,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickResetMarketDepth( _
@@ -3294,7 +3295,7 @@ DOMReset
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickTrade( _
@@ -3315,7 +3316,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processTickVolume( _
@@ -3367,7 +3368,7 @@ End If
 ' we write the corrected Size to the tickfile rather than the raw Size because
 ' otherwise replaying from the start of the Session gives inflated Volume figures
 ' if the first tick was subject to correction
-If mWriteTickData Then mTickWriter.writeTick pTick
+If mWriteTickData Then mTickWriter.WriteTick pTick
 
 ' note that the previous Trade will have notified Volume of mAccumulatedVolume
 
@@ -3419,7 +3420,7 @@ mPrevVolume = mVolume
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
 End Sub
 
 Private Function ReadyToReplay() As Boolean
@@ -3444,7 +3445,7 @@ ReadyToReplay = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub setTime( _
@@ -3463,7 +3464,7 @@ mClock.setTime pTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupInputStudy()
@@ -3563,7 +3564,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupPositionManagers()
@@ -3582,7 +3583,7 @@ mPositionManagerSimulated.Ticker = Me
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getTickers() As Tickers
@@ -3595,7 +3596,7 @@ Set getTickers = mTickersRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub updatePrices(ByRef prices() As PriceTableEntry, _
@@ -3719,7 +3720,7 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -3737,7 +3738,7 @@ validPrice = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
                 
 

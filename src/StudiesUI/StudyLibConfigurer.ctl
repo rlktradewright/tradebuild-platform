@@ -273,7 +273,7 @@ disableFields
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_LostFocus()
@@ -285,7 +285,7 @@ checkForOutstandingUpdates
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Resize()
@@ -298,7 +298,7 @@ UserControl.Height = OutlineBox.Height
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -351,7 +351,7 @@ ProgIdText = ""
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ApplyButton_Click()
@@ -377,7 +377,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BuiltInOpt_Click()
@@ -393,7 +393,7 @@ enableCancelButton True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CancelButton_Click()
@@ -413,7 +413,7 @@ StudyLibList.selected(Index) = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub CustomOpt_Click()
@@ -429,7 +429,7 @@ enableCancelButton True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DownButton_Click()
@@ -459,7 +459,7 @@ setDownButton
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub EnabledCheck_Click()
@@ -473,7 +473,7 @@ enableCancelButton True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub NameText_Change()
@@ -487,7 +487,7 @@ enableCancelButton True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ProgIdText_Change()
@@ -501,7 +501,7 @@ enableCancelButton True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveButton_Click()
@@ -537,7 +537,7 @@ RemoveButton.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StudyLibList_Click()
@@ -569,24 +569,24 @@ Set mCurrSL = findSL(StudyLibList)
 mCurrSLIndex = StudyLibList.ListIndex
 
 mNoCheck = True
-EnabledCheck = IIf(mCurrSL.getAttribute(AttributeNameStudyLibraryEnabled) = "True", vbChecked, vbUnchecked)
+EnabledCheck = IIf(mCurrSL.GetAttribute(AttributeNameStudyLibraryEnabled) = "True", vbChecked, vbUnchecked)
 NameText = mCurrSL.InstanceQualifier
-If mCurrSL.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
+If mCurrSL.GetAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
     BuiltInOpt = True
     On Error Resume Next
     ' preserve whatever is in the config
-    ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
+    ProgIdText = mCurrSL.GetAttribute(AttributeNameStudyLibraryProgId)
     On Error GoTo Err
 Else
     CustomOpt = True
-    ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
+    ProgIdText = mCurrSL.GetAttribute(AttributeNameStudyLibraryProgId)
 End If
 mNoCheck = False
 
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UpButton_Click()
@@ -617,7 +617,7 @@ setUpButton
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -637,7 +637,7 @@ Dirty = ApplyButton.Enabled
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -657,7 +657,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub Initialise( _
@@ -678,7 +678,7 @@ If mReadOnly Then disableControls
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -700,13 +700,13 @@ End If
 If mCurrSL.InstanceQualifier <> NameText Then
     mCurrSL.InstanceQualifier = NameText
 End If
-mCurrSL.setAttribute AttributeNameStudyLibraryEnabled, IIf(EnabledCheck = vbChecked, "True", "False")
+mCurrSL.SetAttribute AttributeNameStudyLibraryEnabled, IIf(EnabledCheck = vbChecked, "True", "False")
 If BuiltInOpt Then
-    mCurrSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
-    If ProgIdText <> "" Then mCurrSL.setAttribute AttributeNameStudyLibraryProgId, ProgIdText
+    mCurrSL.SetAttribute AttributeNameStudyLibraryBuiltIn, "True"
+    If ProgIdText <> "" Then mCurrSL.SetAttribute AttributeNameStudyLibraryProgId, ProgIdText
 Else
-    mCurrSL.setAttribute AttributeNameStudyLibraryBuiltIn, "False"
-    mCurrSL.setAttribute AttributeNameStudyLibraryProgId, ProgIdText
+    mCurrSL.SetAttribute AttributeNameStudyLibraryBuiltIn, "False"
+    mCurrSL.SetAttribute AttributeNameStudyLibraryProgId, ProgIdText
 End If
 
 applyProperties = True
@@ -714,7 +714,7 @@ applyProperties = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub checkForOutstandingUpdates()
@@ -733,7 +733,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearFields()
@@ -749,7 +749,7 @@ mNoCheck = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearSelection()
@@ -764,7 +764,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub disableControls()
@@ -781,7 +781,7 @@ ApplyButton.Enabled = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub disableFields()
@@ -797,7 +797,7 @@ ProgIdText.Enabled = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableApplyButton( _
@@ -817,7 +817,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableCancelButton( _
@@ -837,7 +837,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub enableFields()
@@ -853,7 +853,7 @@ ProgIdText.Enabled = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function findSL( _
@@ -867,7 +867,7 @@ Set findSL = mCurrSLsList.GetConfigurationSection(ConfigNameStudyLibrary & "(" &
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function hasBuiltIn() As Boolean
@@ -877,7 +877,7 @@ On Error GoTo Err
 
 If mCurrSLsList Is Nothing Then Exit Function
 For Each sl In mCurrSLsList
-    If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
+    If sl.GetAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
         hasBuiltIn = True
         Exit Function
     End If
@@ -886,7 +886,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function invalidName(ByVal name As String) As Boolean
@@ -935,7 +935,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub loadConfig( _
@@ -969,7 +969,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setDownButton()
@@ -989,7 +989,7 @@ DownButton.Enabled = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setRemoveButton()
@@ -1005,7 +1005,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setUpButton()
@@ -1025,7 +1025,7 @@ UpButton.Enabled = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

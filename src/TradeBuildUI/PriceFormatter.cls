@@ -48,13 +48,6 @@ Private Const ModuleName                            As String = "PriceFormatter"
 
 Private mcontract As Contract
 
-Private mIntegerYScale                              As Boolean
-
-Private mYScaleFormatStr                            As String
-Private mYScaleSubFormatStr                         As String
-
-Private mYScaleGridSpacing                        As Double
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -73,7 +66,7 @@ IPriceFormatter_FormatPrice = mcontract.FormatPrice(pValue)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Property Let IPriceFormatter_IntegerYScale(ByVal RHS As Boolean)

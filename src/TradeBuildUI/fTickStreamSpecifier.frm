@@ -115,7 +115,7 @@ TickStreamSpecifier1.load
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TickStreamSpecifier1_NotReady()

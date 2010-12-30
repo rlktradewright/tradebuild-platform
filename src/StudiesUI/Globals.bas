@@ -125,9 +125,142 @@ Public gCustColors(15) As Long
 ' Properties
 '@================================================================================
 
+Public Property Get gDefaultBarStyle() As BarStyle
+Dim lStyle As BarStyle
+Set lStyle = New BarStyle
+lStyle.Color = -1
+lStyle.DisplayMode = BarDisplayModeCandlestick
+lStyle.DownColor = vbBlack
+lStyle.IncludeInAutoscale = True
+lStyle.Layer = LayerLowestUser
+lStyle.OutlineThickness = 1
+lStyle.SolidUpBody = False
+lStyle.TailThickness = 1
+lStyle.Thickness = 2
+lStyle.UpColor = vbBlack
+lStyle.Width = 0.6
+Set gDefaultBarStyle = lStyle
+End Property
+
+Public Property Get gDefaultDataPointStyle() As DataPointStyle
+Dim lStyle As DataPointStyle
+Set lStyle = New DataPointStyle
+lStyle.Color = vbBlack
+lStyle.DisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
+lStyle.DownColor = -1
+lStyle.HistogramBarWidth = 0.6
+lStyle.IncludeInAutoscale = True
+lStyle.Layer = LayerLowestUser + 1
+lStyle.LineStyle = LineStyles.LineSolid
+lStyle.LineThickness = 1
+lStyle.PointStyle = PointRound
+lStyle.UpColor = -1
+Set gDefaultDataPointStyle = lStyle
+End Property
+
+Public Property Get gDefaultLineStyle() As LineStyle
+Dim lStyle As LineStyle
+Set lStyle = New LineStyle
+lStyle.ArrowEndColor = vbBlack
+lStyle.ArrowEndFillColor = vbBlack
+lStyle.ArrowEndFillStyle = FillStyles.FillSolid
+lStyle.ArrowEndLength = 10
+lStyle.ArrowEndStyle = ArrowStyles.ArrowNone
+lStyle.ArrowEndWidth = 10
+lStyle.ArrowStartColor = vbBlack
+lStyle.ArrowStartFillColor = vbBlack
+lStyle.ArrowStartFillStyle = FillStyles.FillSolid
+lStyle.ArrowStartLength = 10
+lStyle.ArrowStartStyle = ArrowStyles.ArrowNone
+lStyle.ArrowStartWidth = 10
+lStyle.Color = vbBlack
+lStyle.ExtendAfter = False
+lStyle.ExtendBefore = False
+lStyle.Extended = False
+lStyle.FixedX = False
+lStyle.FixedY = False
+lStyle.IncludeInAutoscale = False
+lStyle.Layer = LayerHighestUser
+lStyle.LineStyle = LineStyles.LineSolid
+lStyle.Thickness = 1
+Set gDefaultLineStyle = lStyle
+End Property
+
+Public Property Get gDefaultTextStyle() As TextStyle
+Dim lStyle As TextStyle
+Set lStyle = New TextStyle
+
+Dim aFont As New StdFont
+aFont.Bold = False
+aFont.Italic = False
+aFont.name = "Arial"
+aFont.Size = 8
+aFont.Strikethrough = False
+aFont.Underline = False
+
+lStyle.Angle = 0
+lStyle.Align = TextAlignModes.AlignTopLeft
+lStyle.Box = False
+lStyle.BoxColor = vbBlack
+lStyle.BoxStyle = LineStyles.LineSolid
+lStyle.BoxThickness = 1
+lStyle.BoxFillColor = vbWhite
+lStyle.BoxFillStyle = FillStyles.FillSolid
+lStyle.BoxFillWithBackgroundColor = False
+lStyle.Color = vbBlack
+lStyle.Font = aFont
+lStyle.Ellipsis = EllipsisModes.EllipsisNone
+lStyle.ExpandTabs = True
+lStyle.Extended = False
+lStyle.FixedX = False
+lStyle.FixedY = False
+lStyle.HideIfBlank = True
+lStyle.IncludeInAutoscale = False
+lStyle.Justification = TextJustifyModes.JustifyLeft
+lStyle.Layer = LayerHighestUser
+lStyle.MultiLine = False
+lStyle.PaddingX = 1
+lStyle.PaddingY = 0#
+lStyle.TabWidth = 8
+lStyle.WordWrap = True
+Set gDefaultTextStyle = lStyle
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pProjectName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+gHandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pProjectName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 Public Function gLineStyleToString( _
                 ByVal value As LineStyles) As String
@@ -193,7 +326,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function isPrice( _
@@ -217,7 +350,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub notImplemented()

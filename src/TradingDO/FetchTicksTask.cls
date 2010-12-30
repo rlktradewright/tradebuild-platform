@@ -76,14 +76,14 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not mInstrumentTaskController Is Nothing Then
-    mInstrumentTaskController.cancelTask
+    mInstrumentTaskController.CancelTask
 End If
 mTaskContext.Finish Empty, True
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -105,7 +105,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -120,17 +120,17 @@ End Property
 ' mInstrumentTaskController Event Handlers
 '@================================================================================
 
-Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTaskController_Completed"
 Dim lInstrument As instrument
 
 
 On Error GoTo Err
 
-If ev.cancelled Then
+If ev.Cancelled Then
     mTaskContext.Finish Empty, True
-ElseIf ev.errorNumber <> 0 Then
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
+ElseIf ev.ErrorNumber <> 0 Then
+    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 ElseIf IsEmpty(ev.result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, _
                         "Specified object does not exist"
@@ -142,7 +142,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================

@@ -80,7 +80,7 @@ Do While mIndex <= mSourceValues.Count And i < 100
     mDestValues.AddValue val.value, val.BarNumber, val.Timestamp, val.BarStartTime
     
     If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mSourceValues.Count
+        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mSourceValues.Count, Empty
     End If
     
     mIndex = mIndex + 1
@@ -88,7 +88,7 @@ Do While mIndex <= mSourceValues.Count And i < 100
 Loop
 
 If mIndex > mSourceValues.Count Then
-    mTaskContext.Progress 100
+    mTaskContext.Progress 100, Empty
     mTaskContext.Finish Empty, False
     Exit Sub
 End If
@@ -96,7 +96,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
     
 End Sub
 
@@ -134,7 +134,7 @@ If mSourceValues.Count / 20 >= 200 Then mProgressModulus = mSourceValues.Count /
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

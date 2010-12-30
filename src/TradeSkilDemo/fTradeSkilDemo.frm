@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#240.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#243.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -106,9 +106,9 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "&2. Executions"
       TabPicture(1)   =   "fTradeSkilDemo.frx":166C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "SimulatedExecutionsSummary"
+      Tab(1).Control(0)=   "LiveExecutionsSummary"
       Tab(1).Control(1)=   "ExecutionsSummaryTabStrip"
-      Tab(1).Control(2)=   "LiveExecutionsSummary"
+      Tab(1).Control(2)=   "SimulatedExecutionsSummary"
       Tab(1).ControlCount=   3
       TabCaption(2)   =   "&3. Log"
       TabPicture(2)   =   "fTradeSkilDemo.frx":1688
@@ -317,51 +317,51 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(1)   =   "Tab 1"
       TabPicture(1)   =   "fTradeSkilDemo.frx":16C0
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label18"
-      Tab(1).Control(1)=   "Label22"
-      Tab(1).Control(2)=   "LiveChartTimeframeSelector"
-      Tab(1).Control(3)=   "NumHistoryBarsText"
-      Tab(1).Control(4)=   "SessionOnlyCheck"
-      Tab(1).Control(5)=   "ChartButton"
+      Tab(1).Control(0)=   "ChartButton"
+      Tab(1).Control(1)=   "SessionOnlyCheck"
+      Tab(1).Control(2)=   "NumHistoryBarsText"
+      Tab(1).Control(3)=   "LiveChartTimeframeSelector"
+      Tab(1).Control(4)=   "Label22"
+      Tab(1).Control(5)=   "Label18"
       Tab(1).ControlCount=   6
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":16DC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "FromDatePicker"
-      Tab(2).Control(5)=   "ToDatePicker"
-      Tab(2).Control(6)=   "HistTimeframeSelector"
-      Tab(2).Control(7)=   "NumHistBarsText"
-      Tab(2).Control(8)=   "HistSessionOnlyCheck"
-      Tab(2).Control(9)=   "HistContractSearch"
+      Tab(2).Control(0)=   "HistContractSearch"
+      Tab(2).Control(1)=   "HistSessionOnlyCheck"
+      Tab(2).Control(2)=   "NumHistBarsText"
+      Tab(2).Control(3)=   "HistTimeframeSelector"
+      Tab(2).Control(4)=   "ToDatePicker"
+      Tab(2).Control(5)=   "FromDatePicker"
+      Tab(2).Control(6)=   "Label3"
+      Tab(2).Control(7)=   "Label2"
+      Tab(2).Control(8)=   "Label4"
+      Tab(2).Control(9)=   "Label5"
       Tab(2).ControlCount=   10
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":16F8
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "ReplayProgressLabel"
-      Tab(3).Control(3)=   "ReplayProgressBar"
-      Tab(3).Control(4)=   "TickfileList"
-      Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "ClearTickfileListButton"
-      Tab(3).Control(6)=   "SelectTickfilesButton"
-      Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(8)=   "StopReplayButton"
-      Tab(3).Control(9)=   "PauseReplayButton"
-      Tab(3).Control(10)=   "PlayTickFileButton"
-      Tab(3).Control(11)=   "SkipReplayButton"
+      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "PauseReplayButton"
+      Tab(3).Control(3)=   "StopReplayButton"
+      Tab(3).Control(4)=   "ReplaySpeedCombo"
+      Tab(3).Control(5)=   "SelectTickfilesButton"
+      Tab(3).Control(6)=   "ClearTickfileListButton"
+      Tab(3).Control(7)=   "TickfileList"
+      Tab(3).Control(7).Enabled=   0   'False
+      Tab(3).Control(8)=   "ReplayProgressBar"
+      Tab(3).Control(9)=   "ReplayProgressLabel"
+      Tab(3).Control(10)=   "ReplayContractLabel"
+      Tab(3).Control(11)=   "Label20"
       Tab(3).ControlCount=   12
       TabCaption(4)   =   "Tab 4"
       TabPicture(4)   =   "fTradeSkilDemo.frx":1714
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ConfigEditorButton"
+      Tab(4).Control(0)=   "Label6"
       Tab(4).Control(1)=   "CurrentConfigNameText"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "Label6"
+      Tab(4).Control(2)=   "ConfigEditorButton"
       Tab(4).ControlCount=   3
       Begin TradeBuildUI26.ContractSearch HistContractSearch 
          Height          =   5055
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   16580611
+         Format          =   70647811
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +618,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   16580611
+         Format          =   70647811
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -896,7 +896,7 @@ LogMessage "Main form loaded successfully", LogLevelDetail
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -912,7 +912,7 @@ updateInstanceSettings
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -939,7 +939,7 @@ Resize
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Terminate()
@@ -980,7 +980,7 @@ killLogging
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1013,7 +1013,7 @@ LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -1040,7 +1040,7 @@ ModifyOrderPlexButton.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1060,7 +1060,7 @@ clearSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1080,7 +1080,7 @@ clearSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1102,7 +1102,7 @@ Chart1Button.Enabled = False
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1124,7 +1124,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1138,7 +1138,7 @@ showConfigEditor
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1173,7 +1173,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1188,7 +1188,7 @@ ControlsSSTab.Tab = ControlsTabStrip.SelectedItem.index - 1
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1211,7 +1211,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1225,7 +1225,7 @@ hideControls
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1239,7 +1239,7 @@ hideFeatures
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1253,7 +1253,7 @@ createHistoricCharts HistContractSearch.SelectedContracts
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1267,7 +1267,7 @@ MsgBox "No contracts found", vbExclamation, "Attention"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1282,7 +1282,7 @@ mTickers.StartTickersFromContracts TickerOptOrdersAreLive + TickerOptUseExchange
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LiveContractSearch_NoContracts()
@@ -1295,7 +1295,7 @@ MsgBox "No contracts found", vbExclamation, "Attention"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1309,7 +1309,7 @@ setChartButtonTooltip
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1323,7 +1323,7 @@ setOrdersSelection LiveOrdersSummary
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1343,7 +1343,7 @@ clearSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1369,7 +1369,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1383,7 +1383,7 @@ If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1397,7 +1397,7 @@ If Not IsInteger(NumHistoryBarsText.Text, 0, 2000) Then cancel = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1424,7 +1424,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub OrderTicket1Button_Click()
@@ -1441,7 +1441,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1459,7 +1459,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1476,7 +1476,7 @@ mTickfileManager.PauseReplay
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1506,7 +1506,7 @@ mTickfileManager.StartReplay
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1522,7 +1522,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1554,7 +1554,7 @@ ClearTickfileListButton.Enabled = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1568,7 +1568,7 @@ showControls
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1582,7 +1582,7 @@ showFeatures
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1596,7 +1596,7 @@ setOrdersSelection SimulatedOrdersSummary
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1611,7 +1611,7 @@ mTickfileManager.SkipTickfile
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1633,7 +1633,7 @@ mTickfileManager.Ticker.StopTicker
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1647,7 +1647,7 @@ TickerGrid1.stopSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1661,7 +1661,7 @@ handleSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1677,7 +1677,7 @@ handleSelectedTickers
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1695,7 +1695,7 @@ displayTime
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1704,7 +1704,7 @@ End Sub
 '================================================================================
 
 Private Sub mTickers_StateChange( _
-                ev As StateChangeEvent)
+                ev As StateChangeEventData)
 Const ProcName As String = "mTickers_StateChange"
 Dim lTicker As Ticker
 
@@ -1748,7 +1748,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1777,7 +1777,7 @@ ReplayContractLabel.caption = Replace(pContract.Specifier.ToString, vbCrLf, "; "
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1804,7 +1804,7 @@ LogMessage "Tickfile replay completed"
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1825,7 +1825,7 @@ ReplayProgressLabel.caption = tickfileTimestamp & _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1839,7 +1839,7 @@ pTicker.DOMEventsRequired = DOMProcessedEvents
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1849,7 +1849,7 @@ End Sub
 
 ' fires when an unrecoverable error has occurred in TradeBuild.
 Private Sub mTradeBuildAPI_Error( _
-                ByRef ev As ErrorEvent)
+                ByRef ev As ErrorEventData)
 Const ProcName As String = "mTradeBuildAPI_Error"
 On Error Resume Next    ' ignore any further errors
 
@@ -1859,7 +1859,7 @@ gHandleFatalError
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
-                ByRef ev As NotificationEvent)
+                ByRef ev As NotificationEventData)
 Const ProcName As String = "mTradeBuildAPI_Notification"
 Dim spError As ServiceProviderError
 
@@ -1900,7 +1900,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -1931,7 +1931,7 @@ loadAppInstanceConfig
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function LoadConfig( _
@@ -1972,7 +1972,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub MakeVisible()
@@ -1986,7 +1986,7 @@ If Not mControlsHidden Then ControlsTabStrip.Tabs(1).Selected = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '================================================================================
@@ -2040,7 +2040,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkOkToStartReplay()
@@ -2057,7 +2057,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub clearSelectedTickers()
@@ -2071,7 +2071,7 @@ handleSelectedTickers
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub closeChartsAndMarketDepthForms()
@@ -2087,7 +2087,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
@@ -2109,7 +2109,16 @@ chartForm.Show vbModeless
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Dim errNumber As Long: errNumber = Err.Number
+Dim errDesc As String: errDesc = Err.Description
+Dim errSource As String: errSource = Err.Source
+
+Unload chartForm
+
+On Error GoTo ErrErr
+Err.Raise errNumber, errSource, errDesc
+ErrErr:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub createChartFromConfig( _
@@ -2129,7 +2138,16 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Dim errNumber As Long: errNumber = Err.Number
+Dim errDesc As String: errDesc = Err.Description
+Dim errSource As String: errSource = Err.Source
+
+Unload chartForm
+
+On Error GoTo ErrErr
+Err.Raise errNumber, errSource, errDesc
+ErrErr:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function createChartSpec( _
@@ -2151,7 +2169,7 @@ ReDim GradientFillColors(1) As Long
 If defaultRegionStyle Is Nothing Then
     Set defaultRegionStyle = New ChartRegionStyle
     defaultRegionStyle.Autoscaling = True
-    GradientFillColors(0) = RGB(50, 50, 100)
+    GradientFillColors(0) = RGB(192, 192, 192)
     GradientFillColors(1) = RGB(248, 248, 248)
     defaultRegionStyle.BackGradientFillColors = GradientFillColors
     'defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
@@ -2227,7 +2245,7 @@ createChartSpec.ChartBackColor = &H7F7FFF
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub createHistoricCharts( _
@@ -2273,7 +2291,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub displayTime()
@@ -2289,7 +2307,7 @@ StatusBar1.Panels("datetime") = FormatDateTime(theTime, vbShortDate) & _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub finishUIControls()
@@ -2306,7 +2324,7 @@ TickerGrid1.Finish
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
@@ -2321,7 +2339,7 @@ formatLogRecord = formatter.FormatRecord(Logrec)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getDefaultClock() As Clock
@@ -2336,7 +2354,7 @@ Set getDefaultClock = lClock
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getOrderTicket() As fOrderTicket
@@ -2354,7 +2372,7 @@ Set getOrderTicket = lOrderTicket
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getSelectedTicker() As Ticker
@@ -2367,7 +2385,7 @@ If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedTicker = TickerGrid
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub handleSelectedTickers()
@@ -2422,7 +2440,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub hideControls()
@@ -2441,7 +2459,7 @@ Me.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub hideFeatures()
@@ -2459,7 +2477,7 @@ Me.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub killLogging()
@@ -2472,7 +2490,7 @@ GetLogger("log").RemoveLogListener Me
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub loadAppInstanceConfig()
@@ -2513,7 +2531,7 @@ Me.caption = gAppTitle & _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub Resize()
@@ -2572,7 +2590,7 @@ SimulatedExecutionsSummary.Width = FeaturesSSTAB.Width - 120 - 120
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub saveSettings()
@@ -2588,7 +2606,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setChartButtonTooltip()
@@ -2608,7 +2626,7 @@ Chart1Button.ToolTipText = ChartButton.ToolTipText
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setCurrentClock( _
@@ -2624,7 +2642,7 @@ displayTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setOrdersSelection( _
@@ -2665,7 +2683,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupExecutionSummaries()
@@ -2698,7 +2716,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupLogging()
@@ -2711,7 +2729,7 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2749,7 +2767,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupReplaySpeedCombo()
@@ -2781,7 +2799,7 @@ ReplaySpeedCombo.Text = "Actual speed"
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupTickerGrid()
@@ -2795,7 +2813,7 @@ TickerGrid1.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupTimeframeSelectors()
@@ -2815,7 +2833,7 @@ setChartButtonTooltip
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showConfigEditor()
@@ -2828,7 +2846,7 @@ mConfigEditor.Show vbModeless
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showControls()
@@ -2847,7 +2865,7 @@ HideControlsPicture.Visible = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showFeatures()
@@ -2865,7 +2883,7 @@ HideFeaturesPicture.Visible = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
@@ -2885,7 +2903,7 @@ mktDepthForm.Show vbModeless
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateInstanceSettings()
@@ -2916,7 +2934,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 

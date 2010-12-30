@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Begin VB.UserControl StudyConfigurer 
    ClientHeight    =   5595
    ClientLeft      =   0
@@ -568,6 +568,7 @@ Private Const CompatibleNode As String = "YES"
 
 Private Const RegionDefault As String = "Use default"
 Private Const RegionCustom As String = "Use own region"
+Private Const RegionUnderlying As String = "Use underlying study's region"
 
 '@================================================================================
 ' Enums
@@ -628,7 +629,7 @@ notImplemented
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub BaseStudiesTree_Click()
@@ -649,7 +650,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ColorLabel_Click( _
@@ -666,7 +667,7 @@ ColorLabel(Index).BackColor = chooseAColor(ColorLabel(Index).BackColor, _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DisplayModeCombo_Click(Index As Integer)
@@ -689,7 +690,7 @@ Case ValueModeNone
     If Not studyValueconfig Is Nothing Then
         Set dpStyle = studyValueconfig.DataPointStyle
     Else
-        Set dpStyle = New DataPointStyle
+        Set dpStyle = gDefaultDataPointStyle
     End If
         
     Select Case DisplayModeCombo(Index).SelectedItem.text
@@ -713,7 +714,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DisplayModeCombo_Validate( _
@@ -727,7 +728,7 @@ If DisplayModeCombo(Index).SelectedItem Is Nothing Then Cancel = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub DownColorLabel_Click(Index As Integer)
@@ -748,7 +749,7 @@ DownColorLabel(Index).BackColor = chooseAColor(DownColorLabel(Index).BackColor, 
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FontButton_Click(Index As Integer)
@@ -782,7 +783,7 @@ ColorLabel(Index).BackColor = CommonDialog1.Color
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub LineColorLabel_Click(Index As Integer)
@@ -794,7 +795,7 @@ LineColorLabel(Index).BackColor = chooseAColor(LineColorLabel(Index).BackColor, 
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StyleCombo_Validate( _
@@ -808,7 +809,7 @@ If StyleCombo(Index).SelectedItem Is Nothing Then Cancel = True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ThicknessText_KeyPress(Index As Integer, KeyAscii As Integer)
@@ -820,7 +821,7 @@ filterNonNumericKeyPress KeyAscii
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UpColorLabel_Click(Index As Integer)
@@ -841,7 +842,7 @@ UpColorLabel(Index).BackColor = chooseAColor(UpColorLabel(Index).BackColor, _
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -885,13 +886,17 @@ studyConfig.inputValueNames = inputValueNames
 
 If ChartRegionCombo.SelectedItem.text = RegionDefault Then
     Select Case mStudyDefinition.DefaultRegion
-    Case DefaultRegionNone
-        regionName = ChartRegionNameDefault
-    Case DefaultRegionCustom
+    Case StudyDefaultRegionNone
+        regionName = ChartRegionNameUnderlying
+    Case StudyDefaultRegionCustom
         regionName = ChartRegionNameCustom
+    Case StudyDefaultRegionUnderlying
+        regionName = ChartRegionNameUnderlying
     End Select
 ElseIf ChartRegionCombo.SelectedItem.text = RegionCustom Then
     regionName = ChartRegionNameCustom
+ElseIf ChartRegionCombo.SelectedItem.text = RegionUnderlying Then
+    regionName = ChartRegionNameUnderlying
 Else
     regionName = ChartRegionCombo.SelectedItem.text
 End If
@@ -925,10 +930,14 @@ For i = 0 To ValueNameLabel.UBound
         studyValueconfig.ChartRegionName = mStudyValueRegionNames(i)
     Else
         Select Case studyValueDef.DefaultRegion
-        Case DefaultRegionNone
+        Case StudyValueDefaultRegionNone
             studyValueconfig.ChartRegionName = ChartRegionNameDefault
-        Case DefaultRegionCustom
+        Case StudyValueDefaultRegionDefault
+            studyValueconfig.ChartRegionName = ChartRegionNameDefault
+        Case StudyValueDefaultRegionCustom
             studyValueconfig.ChartRegionName = ChartRegionNameCustom
+        Case StudyValueDefaultRegionUnderlying
+            studyValueconfig.ChartRegionName = ChartRegionNameUnderlying
         End Select
     End If
     
@@ -936,7 +945,7 @@ For i = 0 To ValueNameLabel.UBound
     Case ValueModeNone
         Dim dpStyle As DataPointStyle
         
-        Set dpStyle = New DataPointStyle
+        Set dpStyle = gDefaultDataPointStyle
         
         dpStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         dpStyle.Color = ColorLabel(i).BackColor
@@ -1004,7 +1013,7 @@ For i = 0 To ValueNameLabel.UBound
     Case ValueModeLine
         Dim lnStyle As LineStyle
 
-        Set lnStyle = New LineStyle
+        Set lnStyle = gDefaultLineStyle
         
         lnStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         lnStyle.Color = ColorLabel(i).BackColor
@@ -1054,8 +1063,9 @@ For i = 0 To ValueNameLabel.UBound
     Case ValueModeBar
         Dim brStyle As BarStyle
         
-        Set brStyle = New BarStyle
+        Set brStyle = gDefaultBarStyle
         
+        brStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         brStyle.Color = IIf(ColorLabel(i).BackColor = NullColor, _
                             -1, _
                             ColorLabel(i).BackColor)
@@ -1096,7 +1106,7 @@ For i = 0 To ValueNameLabel.UBound
     Case ValueModeText
         Dim txStyle As TextStyle
 
-        Set txStyle = New LineStyle
+        Set txStyle = gDefaultTextStyle
         
         txStyle.IncludeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         txStyle.Color = ColorLabel(i).BackColor
@@ -1152,7 +1162,7 @@ Set StudyConfiguration = studyConfig
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -1169,7 +1179,7 @@ initialiseControls
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub Initialise( _
@@ -1208,7 +1218,7 @@ processStudyDefinition defaultParameters, noParameterModification
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -1269,14 +1279,14 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function chooseAColor( _
                 ByVal initialColor As Long, _
                 ByVal allowNull As Boolean) As Long
 Dim simpleColorPicker As New fSimpleColorPicker
-Dim cursorpos As W32Point
+Dim cursorpos As GDI_POINT
 
 Const ProcName As String = "chooseAColor"
 On Error GoTo Err
@@ -1294,7 +1304,7 @@ Unload simpleColorPicker
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub initialiseControls()
@@ -1413,7 +1423,7 @@ BaseStudiesTree.Enabled = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseBarDisplayModeCombo( _
@@ -1445,7 +1455,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseBarStyleCombo( _
@@ -1481,7 +1491,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseHistogramStyleCombo( _
@@ -1517,7 +1527,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseInputValueCombo( _
@@ -1559,7 +1569,7 @@ InputValueCombo(Index).Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseLineDisplayModeCombo( _
@@ -1591,7 +1601,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseLineStyleCombo( _
@@ -1626,7 +1636,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialisePointDisplayModeCombo( _
@@ -1656,7 +1666,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialisePointStyleCombo( _
@@ -1682,7 +1692,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub initialiseTextDisplayModeCombo( _
@@ -1724,7 +1734,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function nextTabIndex() As Long
@@ -1737,7 +1747,7 @@ mNextTabIndex = mNextTabIndex + 1
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub processRegionNames( _
@@ -1751,6 +1761,7 @@ ChartRegionCombo.ComboItems.Clear
 
 ChartRegionCombo.ComboItems.Add , , RegionDefault
 ChartRegionCombo.ComboItems.Add , , RegionCustom
+ChartRegionCombo.ComboItems.Add , , RegionUnderlying
 
 For i = 0 To UBound(regionNames)
     ChartRegionCombo.ComboItems.Add , , regionNames(i)
@@ -1761,7 +1772,7 @@ ChartRegionCombo.Refresh
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processStudyDefinition( _
@@ -2114,9 +2125,8 @@ For i = 1 To studyValueDefinitions.Count
             Set dpStyle = studyValueconfig.DataPointStyle
         ElseIf Not studyValueDef.ValueStyle Is Nothing Then
             Set dpStyle = studyValueDef.ValueStyle
-        Else
-            Set dpStyle = New DataPointStyle
         End If
+        If dpStyle Is Nothing Then Set dpStyle = gDefaultDataPointStyle
         
         AutoscaleCheck(i - 1) = IIf(dpStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = dpStyle.Color
@@ -2153,9 +2163,10 @@ For i = 1 To studyValueDefinitions.Count
         
         If Not studyValueconfig Is Nothing Then
             Set lnStyle = studyValueconfig.LineStyle
-        Else
-            Set lnStyle = New LineStyle
+        ElseIf Not studyValueDef.ValueStyle Is Nothing Then
+            Set lnStyle = studyValueDef.ValueStyle
         End If
+        If lnStyle Is Nothing Then Set lnStyle = gDefaultLineStyle
         
         AutoscaleCheck(i - 1) = IIf(lnStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = lnStyle.Color
@@ -2186,9 +2197,10 @@ For i = 1 To studyValueDefinitions.Count
         
         If Not studyValueconfig Is Nothing Then
             Set brStyle = studyValueconfig.BarStyle
-        Else
-            Set brStyle = New BarStyle
+        ElseIf Not studyValueDef.ValueStyle Is Nothing Then
+            Set brStyle = studyValueDef.ValueStyle
         End If
+        If brStyle Is Nothing Then Set brStyle = gDefaultBarStyle
         
         AutoscaleCheck(i - 1) = IIf(brStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = IIf(brStyle.Color = -1, NullColor, brStyle.Color)
@@ -2229,9 +2241,10 @@ For i = 1 To studyValueDefinitions.Count
         
         If Not studyValueconfig Is Nothing Then
             Set txStyle = studyValueconfig.TextStyle
-        Else
-            Set txStyle = New TextStyle
+        ElseIf Not studyValueDef.ValueStyle Is Nothing Then
+            Set txStyle = studyValueDef.ValueStyle
         End If
+        If txStyle Is Nothing Then Set txStyle = gDefaultTextStyle
         
         AutoscaleCheck(i - 1) = IIf(txStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = txStyle.Color
@@ -2265,7 +2278,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setComboSelection( _
@@ -2285,7 +2298,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupBaseStudiesTree()
@@ -2306,7 +2319,7 @@ addBaseStudiesTreeEntry studyConfig, Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -2334,7 +2347,7 @@ Next
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function typesCompatible( _
@@ -2371,7 +2384,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 

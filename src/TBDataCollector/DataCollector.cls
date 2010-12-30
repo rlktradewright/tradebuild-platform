@@ -29,11 +29,11 @@ Event CollectionStopped()
 Event Connected()
 Event ConnectFailed(ByVal description As String)
 Event ConnectionClosed()
-Event Error(ev As ErrorEvent)
+Event Error(ev As ErrorEventData)
 Event ExitProgram()
-Event FatalError(ev As ErrorEvent)
+Event FatalError(ev As ErrorEventData)
 Event Notification( _
-                ev As NotificationEvent)
+                ev As NotificationEventData)
 Event Reconnecting()
 Event ServiceProviderError( _
                 ByVal errorCode As Long, _
@@ -123,7 +123,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
 On Error GoTo Err
 
@@ -134,7 +134,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -150,7 +150,7 @@ stopAll True
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -168,7 +168,7 @@ RaiseEvent ExitProgram
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -184,23 +184,23 @@ startCollection
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mStartTasksTC Event Handlers
 '@================================================================================
 
-Private Sub mStartTasksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mStartTasksTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mStartTasksTC_Completed"
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
     gLogger.Log LogLevelSevere, _
-                "Error " & ev.errorNumber & " starting tickers: " & _
-                ev.errorMessage & vbCrLf & _
-                ev.errorSource
+                "Error " & ev.ErrorNumber & " starting tickers: " & _
+                ev.ErrorMessage & vbCrLf & _
+                ev.ErrorSource
 Else
     gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
 End If
@@ -208,14 +208,14 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
-Private Sub mTickers_CollectionChanged(ev As TWUtilities30.CollectionChangeEvent)
+Private Sub mTickers_CollectionChanged(ev As TWUtilities30.CollectionChangeEventData)
 Dim lTicker As ticker
 Const ProcName As String = "mTickers_CollectionChanged"
 On Error GoTo Err
@@ -228,10 +228,10 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub mTickers_stateChange(ev As StateChangeEvent)
+Private Sub mTickers_stateChange(ev As StateChangeEventData)
 Const ProcName As String = "mTickers_stateChange"
 On Error GoTo Err
 
@@ -242,19 +242,19 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mTradeBuildAPI Event Handlers
 '@================================================================================
 
-Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
+Private Sub mTradeBuildAPI_Error(ev As ErrorEventData)
 RaiseEvent FatalError(ev)
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
-                ev As NotificationEvent)
+                ev As NotificationEventData)
 Dim spError As ServiceProviderError
 Const ProcName As String = "mTradeBuildAPI_Notification"
 On Error GoTo Err
@@ -289,7 +289,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -342,7 +342,7 @@ scheduleStart
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub startCollection()
@@ -375,7 +375,7 @@ RaiseEvent CollectionStarted
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub stopCollection()
@@ -387,7 +387,7 @@ stopAll True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -463,7 +463,7 @@ If calcTimeFromDescriptor <= Now Then calcTimeFromDescriptor = calcTimeFromDescr
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub determineProcessingTimes( _
@@ -483,7 +483,7 @@ If exitTimeDescriptor <> "" Then mExitProgramTime = calcTimeFromDescriptor(exitT
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -526,9 +526,9 @@ If mWriteticks Then
             End If
         Next
         If mOutputFormat = "" Then
-            Dim ev As ErrorEvent
+            Dim ev As ErrorEventData
             ev.errorCode = ErrorCodes.ErrIllegalArgumentException
-            ev.errorMessage = "Invalid tickfile output format specified in config file"
+            ev.ErrorMessage = "Invalid tickfile output format specified in config file"
             RaiseEvent Error(ev)
             Exit Sub
         End If
@@ -542,7 +542,7 @@ Set mContractsConfig = mConfig.GetConfigurationSection(ConfigSectionContracts)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub scheduleStart()
@@ -576,7 +576,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -596,7 +596,7 @@ Set mStartTasksTC = StartTask(stTask, PriorityNormal, "StartTickers")
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub stopAll( _
@@ -631,7 +631,7 @@ RaiseEvent CollectionStopped
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

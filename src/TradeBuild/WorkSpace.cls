@@ -88,7 +88,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
 
 On Error GoTo Err
@@ -146,7 +146,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

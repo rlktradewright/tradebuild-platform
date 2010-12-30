@@ -69,6 +69,8 @@ Private mTickfileDataWriters As Collection
 
 Private mTickfilePath As String
 
+Private mTickfileGranularity As TickfileGranularities
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -133,6 +135,22 @@ For Each param In params
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     ProjectName & "." & ModuleName & ":" & ProcName, _
                     "Invalid access mode parameter"
+            Exit Sub
+        End Select
+    Case UCase$(ParamNameTickfileGranularity)
+        Select Case UCase$(param.value)
+        Case "FILE PER DAY", "DAY"
+            mTickfileGranularity = TickfileGranularityDay
+        Case "FILE PER WEEK", "WEEK"
+            mTickfileGranularity = TickfileGranularityWeek
+        Case "FILE PER TRADING SESSION", "FILE PER SESSION", "SESSION"
+            mTickfileGranularity = TickfileGranularitySession
+        Case "FILE PER EXECUTION", "EXECUTION"
+            mTickfileGranularity = TickfileGranularityExecution
+        Case Else
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    ProjectName & "." & ModuleName & ":" & ProcName, _
+                    "Invalid tickfile granularity parameter"
             Exit Sub
         End Select
     End Select
@@ -216,7 +234,8 @@ writer.Initialise mHandle, _
                     pContract, _
                     formatId, _
                     formatVersion, _
-                    IIf(location <> "", location, mTickfilePath)
+                    IIf(location <> "", location, mTickfilePath), _
+                    mTickfileGranularity
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
@@ -316,7 +335,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub dataWriterFinished( _
@@ -339,7 +358,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -359,7 +378,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishWriters()
@@ -375,7 +394,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _

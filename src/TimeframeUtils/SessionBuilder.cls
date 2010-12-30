@@ -84,9 +84,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.SessionStartTime = value
@@ -94,7 +92,7 @@ mSession.SessionStartTime = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
                 
 Public Property Let SessionEndTime( _
@@ -104,9 +102,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.SessionEndTime = value
@@ -114,7 +110,7 @@ mSession.SessionEndTime = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Let TimeZone( _
@@ -124,9 +120,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 mSession.TimeZone = value
@@ -134,7 +128,7 @@ mSession.TimeZone = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 '@================================================================================
@@ -161,9 +155,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not objectToLink.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Target session not linkable"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Target session not linkable"
 End If
 
 objectToLink.SessionStartTime = mSession.SessionStartTime
@@ -174,7 +166,7 @@ mLinkedSessions.Add objectToLink
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub SetLinkable()
@@ -187,11 +179,11 @@ mSession.IsLinkable = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Function SetSessionCurrentTime( _
-                ByVal Timestamp As Date) As SessionEvent
+                ByVal Timestamp As Date) As SessionEventData
 Dim sess As Session
 
 Const ProcName As String = "SetSessionCurrentTime"
@@ -199,9 +191,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 End If
 
 SetSessionCurrentTime = mSession.SetSessionCurrentTime(Timestamp)
@@ -215,7 +205,7 @@ mLatestTimeNotified = Timestamp
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 ''
@@ -244,7 +234,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

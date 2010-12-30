@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "Bar"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,12 +30,14 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Stringable
+
 '@================================================================================
 ' Events
 '@================================================================================
 
 Event Changed( _
-                ByRef ev As ChangeEvent)
+                ByRef ev As ChangeEventData)
 
 '@================================================================================
 ' Constants
@@ -97,8 +99,12 @@ mClose = MaxDouble
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' Stringable Interface Members
 '@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -234,10 +240,10 @@ fireChange BarTickVolumeChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
-Friend Sub Initialise( _
+Public Sub Initialise( _
                 ByVal Timestamp As Date, _
                 ByVal OpenValue As Double, _
                 ByVal HighValue As Double, _
@@ -269,15 +275,15 @@ If mVolume <> 0 Then mVolumeChanged = True
 If mOpenInterest <> 0 Then mOpenInterestChanged = True
 If mTickVolume <> 0 Then mTickVolumeChanged = True
 
-fireChange BarPriceChanged
-If mVolume <> 0 Then fireChange BarVolumeChanged
-If mOpenInterest <> 0 Then fireChange BarOpenInterestChanged
-If mTickVolume <> 0 Then fireChange BarTickVolumeChanged
+fireChange BarPriceChanged Or _
+        IIf(mVolume <> 0, BarVolumeChanged, 0) Or _
+        IIf(mOpenInterest <> 0, BarOpenInterestChanged, 0) Or _
+        IIf(mTickVolume <> 0, BarTickVolumeChanged, 0)
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyOpenInterest( _
@@ -297,7 +303,7 @@ fireChange BarOpenInterestChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyValue(ByVal value As Double)
@@ -338,7 +344,7 @@ If mBarChanged Then fireChange BarPriceChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Friend Sub NotifyVolume( _
@@ -358,7 +364,7 @@ fireChange BarVolumeChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Public Sub ResetChangeIndicators()
@@ -371,8 +377,18 @@ clean
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
+
+Public Function ToString() As String
+ToString = "Bar{Time:" & FormatTimestamp(mTimestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
+            ", Open:" & mOpen & _
+            ", High:" & mHigh & _
+            ", Low:" & mLow & _
+            ", Close:" & mClose & _
+            ", Volume:" & mVolume & _
+            ", OpenInterest:" & mOpenInterest & "}"
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -394,12 +410,12 @@ mOpenInterestChanged = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As BarChangeTypes)
-Dim ev As ChangeEvent
+Dim ev As ChangeEventData
 
 Const ProcName As String = "fireChange"
 Dim failpoint As String
@@ -412,7 +428,7 @@ RaiseEvent Changed(ev)
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 

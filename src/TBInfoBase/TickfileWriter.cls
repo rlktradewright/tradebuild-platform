@@ -46,7 +46,7 @@ Implements ITickfileWriter
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TBInfoBase26"
+
 Private Const ModuleName As String = "TickfileWriter"
 
 '@===============================================================================
@@ -104,6 +104,10 @@ Err:
 handleFatalError ProcName
 End Sub
 
+Private Sub ITickfileWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+
+End Sub
+
 Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
 Const ProcName As String = "ITickfileWriter_WriteTick"
 On Error GoTo Err
@@ -117,16 +121,16 @@ End Sub
 ' mInstrumentTC Event Handlers
 '@===============================================================================
 
-Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTC_Completed"
 Dim lInstrument As Instrument
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
-                            ev.errorMessage, _
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
+                            ev.ErrorMessage, _
                             mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
@@ -145,7 +149,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -193,7 +197,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not mInstrumentTC Is Nothing Then
-    mInstrumentTC.cancelTask
+    mInstrumentTC.CancelTask
     Set mInstrumentTC = Nothing
 End If
 
@@ -210,7 +214,7 @@ Exit Sub
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -251,7 +255,7 @@ Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================

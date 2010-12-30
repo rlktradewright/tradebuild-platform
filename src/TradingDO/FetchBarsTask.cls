@@ -86,16 +86,16 @@ Dim failpoint As String
 On Error GoTo Err
 
 If Not mFetchTaskController Is Nothing Then
-    mFetchTaskController.cancelTask
+    mFetchTaskController.CancelTask
 ElseIf Not mInstrumentTaskController Is Nothing Then
-    mInstrumentTaskController.cancelTask
+    mInstrumentTaskController.CancelTask
 End If
 mTaskContext.Finish Empty, True
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -130,7 +130,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -145,17 +145,17 @@ End Property
 ' mFetchTaskController Event Handlers
 '@================================================================================
 
-Private Sub mFetchTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mFetchTaskController_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mFetchTaskController_Completed"
 
 On Error GoTo Err
 
-If ev.cancelled Then
+If ev.Cancelled Then
     mTaskContext.Finish Empty, True
-ElseIf ev.errorNumber <> 0 Then
+ElseIf ev.ErrorNumber <> 0 Then
     gLogger.Log LogLevelDetail, "FetchBarsTask failed for " & mSpecifier.ToString & vbCrLf & _
-                                "Error " & ev.errorNumber & ": " & ev.errorMessage
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
+                                "Error " & ev.ErrorNumber & ": " & ev.ErrorMessage
+    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 ElseIf IsEmpty(ev.result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalStateException, _
                         "No bars returned"
@@ -168,23 +168,23 @@ Set mFetchTaskController = Nothing
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mInstrumentTaskController Event Handlers
 '@================================================================================
 
-Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTaskController_Completed"
 
 
 On Error GoTo Err
 
-If ev.cancelled Then
+If ev.Cancelled Then
     mTaskContext.Finish Empty, True
-ElseIf ev.errorNumber <> 0 Then
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
+ElseIf ev.ErrorNumber <> 0 Then
+    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 ElseIf IsEmpty(ev.result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, _
                         "Specified object does not exist"
@@ -198,7 +198,7 @@ Set mInstrumentTaskController = Nothing
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================

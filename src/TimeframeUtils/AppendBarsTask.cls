@@ -79,7 +79,7 @@ Do While mIndex <= mNumberToAppend And i < 100
                     mSourceBars.Bar(mIndex).Timestamp
     
     If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mNumberToAppend
+        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mNumberToAppend, Empty
     End If
     
     mIndex = mIndex + 1
@@ -87,7 +87,7 @@ Do While mIndex <= mNumberToAppend And i < 100
 Loop
 
 If mIndex > mNumberToAppend Then
-    mTaskContext.Progress 100
+    mTaskContext.Progress 100, Empty
     mTaskContext.Finish Empty, False
     Exit Sub
 End If
@@ -95,7 +95,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
     
 End Sub
 

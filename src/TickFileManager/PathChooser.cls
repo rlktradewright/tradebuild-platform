@@ -28,7 +28,7 @@ Set mForm = New fPathChooser
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Class_Terminate()
@@ -40,7 +40,7 @@ Unload mForm
 Exit Sub
 
 Err:
-UnhandledErrorHandler.notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Public Property Get cancelled() As Boolean
@@ -67,6 +67,6 @@ mPath = mForm.path
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

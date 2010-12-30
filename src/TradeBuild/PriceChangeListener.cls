@@ -71,7 +71,7 @@ Option Explicit
 '@================================================================================
 
 Public Sub Change( _
-                ByRef ev As PriceChangeEvent)
+                ByRef ev As PriceChangeEventData)
                 
 End Sub
 

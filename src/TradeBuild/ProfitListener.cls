@@ -70,7 +70,7 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub ProfitAmount(ByRef ev As ProfitEvent)
+Public Sub ProfitAmount(ByRef ev As ProfitEventData)
 
 End Sub
 

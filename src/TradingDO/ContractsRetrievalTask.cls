@@ -77,12 +77,12 @@ Const ProcName As String = "Task_Cancel"
 Dim failpoint As String
 On Error GoTo Err
 
-If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.cancelTask
+If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.CancelTask
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -102,7 +102,7 @@ Else
     If Not mInstrEnumerator.MoveNext Then
         mTaskContext.Finish mBuilder.Contracts, False
     Else
-        Set instrument = mInstrEnumerator.current
+        Set instrument = mInstrEnumerator.Current
         mBuilder.AddContract gContractFromInstrument(instrument)
     End If
 End If
@@ -126,7 +126,7 @@ If Err.Number = 3265 Then
     Exit Sub
 End If
     
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Let Task_TaskContext( _
@@ -144,17 +144,17 @@ End Property
 '@================================================================================
 
 Private Sub mFetchInstrumentsTC_Completed( _
-                ev As TWUtilities30.TaskCompletionEvent)
+                ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mFetchInstrumentsTC_Completed"
 Dim instruments As DataObjects
 
 
 On Error GoTo Err
 
-If ev.cancelled Then
+If ev.Cancelled Then
     mTaskContext.Finish Empty, True
-ElseIf ev.errorNumber <> 0 Then
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
+ElseIf ev.ErrorNumber <> 0 Then
+    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 Else
     Set instruments = ev.result
     Set mInstrEnumerator = instruments.Enumerator
@@ -165,7 +165,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================

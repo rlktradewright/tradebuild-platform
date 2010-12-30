@@ -41,7 +41,7 @@ Implements TaskCompletionListener
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TBInfoBase26"
+
 Private Const ModuleName As String = "HistDataWriter"
 
 '@===============================================================================
@@ -139,7 +139,7 @@ With data
     If mUseSynchronousWrites Then
         mInstrument.WriteBar .TimeStamp, _
                             barType, _
-                            barTimePeriod.Length, _
+                            barTimePeriod.length, _
                             .OpenValue, _
                             .HighValue, _
                             .LowValue, _
@@ -150,7 +150,7 @@ With data
     Else
         Set tc = mInstrument.WriteBarAsync(.TimeStamp, _
                                             barType, _
-                                            barTimePeriod.Length, _
+                                            barTimePeriod.length, _
                                             .OpenValue, _
                                             .HighValue, _
                                             .LowValue, _
@@ -161,7 +161,7 @@ With data
         tc.AddTaskCompletionListener Me
     End If
     For index = 0 To UBound(mTimeframeTable)
-        If mTimeframeTable(index).timeframe.Length = barTimePeriod.Length Then
+        If mTimeframeTable(index).timeframe.length = barTimePeriod.length Then
             With mTimeframeTable(index)
                 If .prevTimestamp <> data.TimeStamp Then
                     .barsWritten = .barsWritten + 1
@@ -178,7 +178,7 @@ End With
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -186,37 +186,37 @@ End Sub
 '@===============================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
-                ev As TWUtilities30.TaskCompletionEvent)
+                ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "TaskCompletionListener_taskCompleted"
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.errorNumber <> 0 Then
-    logMessage pMsg:="error (" & ev.errorNumber & "): " & ev.errorMessage, pProcName:="TaskCompletionListener_taskCompleted", pLogLevel:=LogLevelHighDetail
-    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
-                                        ev.errorMessage, _
+If ev.ErrorNumber <> 0 Then
+    logMessage pMsg:="error (" & ev.ErrorNumber & "): " & ev.ErrorMessage, pProcName:="TaskCompletionListener_taskCompleted", pLogLevel:=LogLevelHighDetail
+    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
+                                        ev.ErrorMessage, _
                                         mHistDataServiceProvider.handle
 End If
 
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
 ' mInstrumentTC Event Handlers
 '@===============================================================================
 
-Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error " & ev.errorNumber & ": " & ev.errorMessage, _
+                                "Error " & ev.ErrorNumber & ": " & ev.ErrorMessage, _
                                 mHistDataServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
@@ -235,7 +235,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -264,7 +264,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If Not mInstrumentTC Is Nothing Then
-    mInstrumentTC.cancelTask
+    mInstrumentTC.CancelTask
     Set mInstrumentTC = Nothing
 End If
 
@@ -281,7 +281,7 @@ Set mServiceConsumer = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -319,7 +319,7 @@ Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -376,7 +376,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 

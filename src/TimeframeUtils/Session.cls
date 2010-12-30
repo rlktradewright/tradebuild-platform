@@ -30,10 +30,10 @@ Option Explicit
 '@================================================================================
 
 Event SessionStarted( _
-                ByRef ev As SessionEvent)
+                ByRef ev As SessionEventData)
 
 Event SessionEnded( _
-                ByRef ev As SessionEvent)
+                ByRef ev As SessionEventData)
 
 '@================================================================================
 ' Constants
@@ -116,7 +116,7 @@ SessionCurrentTime = mClock.Timestamp
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Friend Property Let SessionEndTime( _
@@ -130,7 +130,7 @@ mSessionEndTime = gNormaliseTime(value)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -148,7 +148,7 @@ mSessionStartTime = gNormaliseTime(value)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
                 
 Public Property Get SessionStartTime() As Date
@@ -162,12 +162,12 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set mTimezone = value
-Set mClock = CreateSimulatedClock(1, mTimezone.standardName)
+Set mClock = CreateSimulatedClock(1, mTimezone.StandardName)
 
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
 Public Property Get TimeZone() As TimeZone
@@ -190,7 +190,7 @@ BarEndTime = gBarEndTime(Timestamp, BarTimePeriod, mSessionStartTime, mSessionSt
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function BarStartTime( _
@@ -205,7 +205,7 @@ BarStartTime = gBarStartTime(Timestamp, BarTimePeriod, mSessionStartTime)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetSessionTimes( _
@@ -221,7 +221,7 @@ GetSessionTimes = st
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -243,7 +243,17 @@ GetOffsetSessionTimes = st
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Function
+
+Public Function IsTimeInFirstSessionForWeek(ByVal pTimestamp As Date) As Boolean
+Dim lSessionTimes As SessionTimes
+lSessionTimes = GetSessionTimes(pTimestamp)
+If TimeValue(lSessionTimes.startTime) >= CDate("12:00") Then
+    IsTimeInFirstSessionForWeek = (weekday(lSessionTimes.startTime, vbSunday) = 1)
+Else
+    IsTimeInFirstSessionForWeek = (weekday(lSessionTimes.startTime, vbMonday) = 1)
+End If
 End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -261,7 +271,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function NumberOfBarsInSession( _
@@ -275,7 +285,7 @@ NumberOfBarsInSession = gCalcNumberOfBarsInSession(BarTimePeriod, mSessionStartT
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 
@@ -297,12 +307,12 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Friend Function SetSessionCurrentTime( _
-                ByVal pTimestamp As Date) As SessionEvent
-Dim ev As SessionEvent
+                ByVal pTimestamp As Date) As SessionEventData
+Dim ev As SessionEventData
 Static sessionStartNotified As Boolean
 Const ProcName As String = "SetSessionCurrentTime"
 Dim failpoint As String
@@ -354,7 +364,7 @@ SetSessionCurrentTime = ev
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 '@================================================================================

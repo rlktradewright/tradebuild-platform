@@ -40,7 +40,7 @@ Implements ITickfileReader
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TBInfoBase26"
+
 Private Const ModuleName As String = "TickfileReader"
 
 '@===============================================================================
@@ -131,7 +131,7 @@ Set ITickfileReader_Contract = mContracts.Item(1)
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
@@ -143,7 +143,7 @@ Set ITickfileReader_ContractSpecifier = mContracts.Item(1).Specifier
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
@@ -161,7 +161,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
@@ -173,7 +173,7 @@ ITickfileReader_FirstTickFileTime = mFirstTick.TimeStamp
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
@@ -235,15 +235,15 @@ End Property
 ' mFetchTicksTC Event Handlers
 '@===============================================================================
 
-Private Sub mFetchTicksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mFetchTicksTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mFetchTicksTC_Completed"
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
-                                                ev.errorMessage, _
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
+                                                ev.ErrorMessage, _
                                                 mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent TFContractSpecifierInvalid, _
@@ -258,24 +258,24 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
 ' mLoadContractsTC Event Handlers
 '@===============================================================================
 
-Private Sub mLoadContractsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Private Sub mLoadContractsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
 Const ProcName As String = "mLoadContractsTC_Completed"
 
 
 Dim failpoint As Long
 On Error GoTo Err
 
-If ev.cancelled Then
-ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.errorNumber, _
-                                                ev.errorMessage, _
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
+                                                ev.ErrorMessage, _
                                                 mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent TFContractDetailsInvalid, _
@@ -289,7 +289,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -310,7 +310,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@===============================================================================
@@ -333,7 +333,7 @@ Set mTickfileServiceProvider = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub initialise( _
@@ -367,7 +367,7 @@ mUseSynchronousReads = useSynchronousReads
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -413,7 +413,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -464,7 +464,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub notifyTick( _
@@ -532,6 +532,6 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

@@ -84,7 +84,7 @@ End Sub
 '@================================================================================
 
 Private Sub mSession_SessionStarted( _
-                ev As SessionEvent)
+                ev As SessionEventData)
 If Not mSwitchedSession Then
     mPrevSessionVolume = mCurrSessionVolume
     mCurrSessionVolume = 0
@@ -143,7 +143,7 @@ Debug.Print "VolumeParser(" & mObjId & "): Volume increment returned " & Notify
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -176,7 +176,7 @@ mVolumeResetPending = False
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================

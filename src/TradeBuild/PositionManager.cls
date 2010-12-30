@@ -184,7 +184,7 @@ mTicker.RemoveDataConsumer consumer
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_ExecutionReport(ByVal pExecutionReport As TradeBuildSP.IExecutionReport)
@@ -221,7 +221,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
@@ -237,7 +237,7 @@ gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, s
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_notReady()
@@ -254,7 +254,7 @@ RaiseEvent ProviderNotReady
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_OrderReport(ByVal OrderReport As TradeBuildSP.IOrderReport)
@@ -267,7 +267,7 @@ mOrders(OrderReport.TradeBuildId).SyncToOrderReport OrderReport, mKey
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_OrderStatusReport(ByVal pOrderStatusReport As TradeBuildSP.IOrderStatusReport)
@@ -282,7 +282,7 @@ lOrder.UpdateStatus pOrderStatusReport.Status, mKey
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_preFill( _
@@ -305,13 +305,13 @@ RaiseEvent ProviderReady
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_rejectOrder( _
                 ByVal orderId As String, _
                 ByVal reason As String)
-Dim ev As NotificationEvent
+Dim ev As NotificationEventData
 Dim lOrder As Order
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_rejectOrder"
 
@@ -328,7 +328,7 @@ gTB.notify ev
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_requestTickData( _
@@ -343,14 +343,14 @@ mTicker.AddDataConsumer consumer, includeMarketDepth
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
 ' QuoteListener Interface Members
 '@================================================================================
 
-Private Sub QuoteListener_Ask(ev As QuoteEvent)
+Private Sub QuoteListener_Ask(ev As QuoteEventData)
 
 Const ProcName As String = "QuoteListener_Ask"
 
@@ -370,11 +370,11 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
-Private Sub QuoteListener_Bid(ev As QuoteEvent)
+Private Sub QuoteListener_Bid(ev As QuoteEventData)
 
 Const ProcName As String = "QuoteListener_Bid"
 
@@ -394,31 +394,31 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
-Private Sub QuoteListener_High(ev As QuoteEvent)
+Private Sub QuoteListener_High(ev As QuoteEventData)
 
 End Sub
 
-Private Sub QuoteListener_Low(ev As QuoteEvent)
+Private Sub QuoteListener_Low(ev As QuoteEventData)
 
 End Sub
 
-Private Sub QuoteListener_OpenInterest(ev As QuoteEvent)
+Private Sub QuoteListener_OpenInterest(ev As QuoteEventData)
 
 End Sub
 
-Private Sub QuoteListener_PreviousClose(ev As QuoteEvent)
+Private Sub QuoteListener_PreviousClose(ev As QuoteEventData)
 
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As QuoteEvent)
+Private Sub QuoteListener_sessionOpen(ev As QuoteEventData)
 
 End Sub
 
-Private Sub QuoteListener_Trade(ev As QuoteEvent)
+Private Sub QuoteListener_Trade(ev As QuoteEventData)
 
 Const ProcName As String = "QuoteListener_Trade"
 
@@ -430,11 +430,11 @@ If ev.price < mLastBid Then QuoteListener_Bid ev    ' because the Bid price must
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
-Private Sub QuoteListener_Volume(ev As QuoteEvent)
+Private Sub QuoteListener_Volume(ev As QuoteEventData)
 
 End Sub
 
@@ -467,7 +467,7 @@ End Sub
 ' mTicker Event Handlers
 '@================================================================================
 
-Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEvent)
+Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEventData)
 Dim lContract As Contract
 
 Const ProcName As String = "mTicker_StateChange"
@@ -521,7 +521,7 @@ GLogProfitProfile FormatTimestamp(mTicker.Timestamp, TimestampDateAndTimeISO8601
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub mTicker_TradingSessionStarted()
@@ -538,7 +538,7 @@ If Not needExistingOrderPlexes Then setupNewSession
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -555,7 +555,7 @@ Drawdown = mMaxProfit - mProfit
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DrawdownLastTrade() As Currency
@@ -572,7 +572,7 @@ DrawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Executions() As Executions
@@ -598,7 +598,7 @@ mOrderContexts.IsSimulated = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -638,7 +638,7 @@ mOrderContexts.orderSubmitter = value
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PendingPositionSize() As Integer
@@ -658,7 +658,7 @@ PendingPositionSize = size
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PositionSize() As Integer
@@ -680,7 +680,7 @@ If mTickValue <> 0 Then mProfitIncrement = mProfitIncrementTicks * mTickValue
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ProfitLastTrade() As Currency
@@ -718,7 +718,7 @@ Risk = totRisk
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
@@ -736,7 +736,7 @@ mTicker.AddQuoteListener Me
 Exit Property
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Property
 
@@ -762,7 +762,7 @@ On Error GoTo Err
 
 mProfitListeners.Add pListener
 
-Dim ev As ProfitEvent
+Dim ev As ProfitEventData
 
 Set ev.source = Me
 ev.currencyCode = mcurrencyCode
@@ -818,7 +818,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddStudy( _
@@ -833,7 +833,7 @@ mStudies.Add study, valueNames
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function AllowOrder(ByVal orderLong As Boolean, _
@@ -871,7 +871,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ClosePositions( _
@@ -908,7 +908,7 @@ If Not cancellingOrders And PositionSize <> 0 Then placeBalancingOrder
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -933,29 +933,38 @@ Set mOrderSubmitter = Nothing
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Friend Sub FinishRecovery()
+Friend Function FinishRecovery() As Boolean
 Const ProcName As String = "FinishRecovery"
 On Error GoTo Err
 
 mRecovering = False
 
-If needExistingOrderPlexes Then
+If mTicker Is Nothing Then
+    ' the ticker hasn't been started at all - probably no longer in the
+    ' config. Nothing further can be done with this PositionManager so
+    ' delete it.
+    gTB.OrderPlexRecoveryController.DeleteRecoveryInfo mKey
+    FinishRecovery = False
+ElseIf needExistingOrderPlexes Then
     setupSessionOrderPlexes
     calcTradeProfit 0
+    FinishRecovery = True
 ElseIf Not inRecoveredTradingSession Then
     setupNewSession
+    FinishRecovery = True
 Else
     calcTradeProfit 0
+    FinishRecovery = True
 End If
 
-Exit Sub
+Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+End Function
 
 Friend Sub Initialise( _
                 ByVal pKey As String, _
@@ -1019,7 +1028,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal value As ChangeListener)
@@ -1035,7 +1044,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveProfitListener(ByVal value As ProfitListener)
@@ -1051,7 +1060,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub StartRecovery()
@@ -1063,7 +1072,7 @@ mRecovering = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SyncToSummary( _
@@ -1088,7 +1097,7 @@ mTradingSessionStartTime = pSummary.TradingSessionStartTime
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -1098,7 +1107,7 @@ End Sub
 Private Sub calcTradeProfit(Optional ByVal price As Double)
 
 Dim Profit As Currency
-Dim ev As StudyValueEvent
+Dim ev As StudyValueEventData
 
 Const ProcName As String = "calcTradeProfit"
 
@@ -1187,7 +1196,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1228,13 +1237,13 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As PositionManagerChangeTypes)
 Dim listener As ChangeListener
-Dim Change As ChangeEvent
+Dim Change As ChangeEventData
 Const ProcName As String = "fireChange"
 
 On Error GoTo Err
@@ -1248,14 +1257,14 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub fireProfit( _
                 ByVal ProfitAmount As Double, _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
-Dim Profit As ProfitEvent
+Dim Profit As ProfitEventData
 Const ProcName As String = "fireProfit"
 
 On Error GoTo Err
@@ -1271,7 +1280,7 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function inRecoveredTradingSession() As Boolean
@@ -1289,7 +1298,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function needExistingOrderPlexes() As Boolean
@@ -1301,7 +1310,7 @@ needExistingOrderPlexes = Not (noActiveOrderPlexes And mQuantityOutstanding = 0)
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function noActiveOrderPlexes() As Boolean
@@ -1320,7 +1329,7 @@ noActiveOrderPlexes = True
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub placeBalancingOrder()
@@ -1355,7 +1364,7 @@ mBalancingOrderContext.ExecuteOrderPlex mBalancingOrderPlex
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub processExecution(ByVal pExec As Execution)
@@ -1426,7 +1435,7 @@ RaiseEvent PositionChanged
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub SaveRecoveryInfo()
@@ -1462,7 +1471,7 @@ gTB.OrderPlexRecoveryController.SaveRecoveryInfo mKey, summary
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupNewSession()
@@ -1509,7 +1518,7 @@ gTB.OrderPlexRecoveryController.DeleteRecoveryInfo mKey
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupSessionOrderPlexes()
@@ -1534,6 +1543,6 @@ Next
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 

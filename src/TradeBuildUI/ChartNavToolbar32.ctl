@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Begin VB.UserControl ChartNavToolbar32 
    Alignable       =   -1  'True
    ClientHeight    =   4845
@@ -335,7 +335,6 @@ Implements ChangeListener
 Private Const ModuleName                    As String = "ChartNavToolbar32"
 
 Private Const ChartNavCommandAutoScale           As String = "Autoscaling"
-Private Const ChartNavCommandAutoScroll          As String = "autoscroll"
 
 Private Const ChartNavCommandIncreaseSpacing     As String = "increasespacing"
 Private Const ChartNavCommandReduceSpacing       As String = "reducespacing"
@@ -353,7 +352,6 @@ Private Const ChartNavCommandShowBars            As String = "showbars"
 Private Const ChartNavCommandShowCandlesticks    As String = "showcandlesticks"
 Private Const ChartNavCommandShowLine            As String = "showline"
 Private Const ChartNavCommandShowCrosshair       As String = "showcrosshair"
-Private Const ChartNavCommandShowPlainCursor     As String = "showplaincursor"
 Private Const ChartNavCommandShowDiscCursor      As String = "showdisccursor"
 
 Private Const ChartNavCommandThickerBars         As String = "thickerbars"
@@ -465,14 +463,14 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
 ' ChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEvent)
+Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEventData)
 Dim changeType As MultiChartChangeTypes
 Const ProcName As String = "ChangeListener_Change"
 Dim failpoint As String
@@ -491,14 +489,14 @@ End Select
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
 ' mBarSeries Event Handlers
 '================================================================================
 
-Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mBarSeries_PropertyChanged"
 Dim failpoint As String
 On Error GoTo Err
@@ -508,7 +506,7 @@ If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -525,14 +523,14 @@ Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling,
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
 ' mTradeBuildChart Event Handlers
 '@================================================================================
 
-Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEvent)
+Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEventData)
 Dim State As ChartStates
 Const ProcName As String = "mTradeBuildChart_StateChange"
 Dim failpoint As String
@@ -553,7 +551,7 @@ End Select
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -604,7 +602,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -624,7 +622,7 @@ If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub attachToCurrentChart()
@@ -645,7 +643,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Function multiChartObj() As MultiChart
@@ -658,7 +656,7 @@ Set multiChartObj = mMultichartRef.Target
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
 
 Private Sub setupChartNavButtons()
@@ -687,7 +685,7 @@ Toolbar1.Enabled = True
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupDisplayModeButtons()
@@ -708,7 +706,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
 

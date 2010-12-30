@@ -133,21 +133,21 @@ task_TaskName = mTaskContext.Name
 End Property
 
 Private Sub Task_run()
-Dim ev As StudyValueEvent
+Dim ev As StudyValueEventData
 Dim valueEntry As SValue
 
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
 If mValueCache.Count = 0 Then
-    mTaskContext.Progress 100
+    mTaskContext.Progress 100, Empty
     mTaskContext.Finish mResult, False
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
 If mTaskContext.CancelPending Then
-    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1)
+    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
     mTaskContext.Finish mResult, True
     Set mTaskContext = Nothing
     Exit Sub
@@ -174,12 +174,12 @@ mValuesNotified = mValuesNotified + 1
 
 If mValuesNotified Mod 20 = 0 Then
     ' Notify progress each 20 values
-    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1)
+    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
 End If
 
 If mNextValueNumber > mValueCache.Count Then
     Debug.Print "Cache for " & mValueName & " replayed " & mValuesNotified & " values"
-    mTaskContext.Progress 100
+    mTaskContext.Progress 100, Empty
     mTaskContext.Finish mResult, False
     Set mTaskContext = Nothing
 End If
@@ -187,7 +187,7 @@ End If
 Exit Sub
 
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
@@ -202,8 +202,8 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Get Discriminator() As Long
-Discriminator = 0
+Public Property Get discriminator() As Long
+discriminator = 0
 End Property
 
 Public Property Get notifyName() As String
@@ -239,7 +239,7 @@ Friend Sub initialise( _
                 ByVal target As Object, _
                 ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
-                ByVal Discriminator As Long)
+                ByVal discriminator As Long)
 Dim numValuesToNotify As Long
 Dim studyEntry As StudyTableEntry
 
@@ -287,7 +287,7 @@ mFirstValueNumber = mNextValueNumber
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 

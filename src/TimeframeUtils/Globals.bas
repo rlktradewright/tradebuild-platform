@@ -27,36 +27,6 @@ Public Const OneSecond As Double = 1 / 86400
 Public Const OneMinute As Double = 1 / 1440
 Public Const OneHour As Double = 1 / 24
 
-Public Const TimePeriodNameSecond As String = "Second"
-Public Const TimePeriodNameMinute As String = "Minute"
-Public Const TimePeriodNameHour As String = "Hourly"
-Public Const TimePeriodNameDay As String = "Daily"
-Public Const TimePeriodNameWeek As String = "Weekly"
-Public Const TimePeriodNameMonth As String = "Monthly"
-Public Const TimePeriodNameYear As String = "Yearly"
-
-Public Const TimePeriodNameSeconds As String = "Seconds"
-Public Const TimePeriodNameMinutes As String = "Minutes"
-Public Const TimePeriodNameHours As String = "Hours"
-Public Const TimePeriodNameDays As String = "Days"
-Public Const TimePeriodNameWeeks As String = "Weeks"
-Public Const TimePeriodNameMonths As String = "Months"
-Public Const TimePeriodNameYears As String = "Years"
-Public Const TimePeriodNameVolumeIncrement As String = "Volume"
-Public Const TimePeriodNameTickVolumeIncrement As String = "Tick Volume"
-Public Const TimePeriodNameTickIncrement As String = "Ticks Movement"
-
-Public Const TimePeriodShortNameSeconds As String = "s"
-Public Const TimePeriodShortNameMinutes As String = "m"
-Public Const TimePeriodShortNameHours As String = "h"
-Public Const TimePeriodShortNameDays As String = "D"
-Public Const TimePeriodShortNameWeeks As String = "W"
-Public Const TimePeriodShortNameMonths As String = "M"
-Public Const TimePeriodShortNameYears As String = "Y"
-Public Const TimePeriodShortNameVolumeIncrement As String = "V"
-Public Const TimePeriodShortNameTickVolumeIncrement As String = "TV"
-Public Const TimePeriodShortNameTickIncrement As String = "T"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -121,19 +91,19 @@ startTime = gBarStartTime( _
                 SessionStartTime)
 Select Case BarTimePeriod.Units
 Case TimePeriodSecond
-    gBarEndTime = startTime + (BarTimePeriod.Length / 86400) - OneMicroSecond
+    gBarEndTime = startTime + (BarTimePeriod.length / 86400) - OneMicroSecond
 Case TimePeriodMinute
-    gBarEndTime = startTime + (BarTimePeriod.Length / 1440) - OneMicroSecond
+    gBarEndTime = startTime + (BarTimePeriod.length / 1440) - OneMicroSecond
 Case TimePeriodHour
-    gBarEndTime = startTime + (BarTimePeriod.Length / 24) - OneMicroSecond
+    gBarEndTime = startTime + (BarTimePeriod.length / 24) - OneMicroSecond
 Case TimePeriodDay
-    gBarEndTime = gCalcWorkingDayDate(gCalcWorkingDayNumber(startTime) + BarTimePeriod.Length, startTime)
+    gBarEndTime = WorkingDayDate(WorkingDayNumber(startTime) + BarTimePeriod.length, startTime)
 Case TimePeriodWeek
-    gBarEndTime = startTime + 7 * BarTimePeriod.Length
+    gBarEndTime = startTime + 7 * BarTimePeriod.length
 Case TimePeriodMonth
-    gBarEndTime = DateAdd("m", BarTimePeriod.Length, startTime)
+    gBarEndTime = DateAdd("m", BarTimePeriod.length, startTime)
 Case TimePeriodYear
-    gBarEndTime = DateAdd("yyyy", BarTimePeriod.Length, startTime)
+    gBarEndTime = DateAdd("yyyy", BarTimePeriod.length, startTime)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement
@@ -152,7 +122,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gBarStartTime( _
@@ -186,7 +156,7 @@ Case TimePeriodSecond
         theTimeSecs = theTimeSecs + 86400
     End If
     gBarStartTime = theDate + _
-                (BarTimePeriod.Length * Int((theTimeSecs - sessionOffset * 60) / BarTimePeriod.Length) + _
+                (BarTimePeriod.length * Int((theTimeSecs - sessionOffset * 60) / BarTimePeriod.length) + _
                     sessionOffset * 60) / 86400
 Case TimePeriodMinute
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
@@ -195,7 +165,7 @@ Case TimePeriodMinute
         theTimeMins = theTimeMins + 1440
     End If
     gBarStartTime = theDate + _
-                (BarTimePeriod.Length * Int((theTimeMins - sessionOffset) / BarTimePeriod.Length) + _
+                (BarTimePeriod.length * Int((theTimeMins - sessionOffset) / BarTimePeriod.length) + _
                     sessionOffset) / 1440
 Case TimePeriodHour
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
@@ -204,7 +174,7 @@ Case TimePeriodHour
         theTimeMins = theTimeMins + 1440
     End If
     gBarStartTime = theDate + _
-                (60 * BarTimePeriod.Length * Int((theTimeMins - sessionOffset) / (60 * BarTimePeriod.Length)) + _
+                (60 * BarTimePeriod.length * Int((theTimeMins - sessionOffset) / (60 * BarTimePeriod.length)) + _
                     sessionOffset) / 1440
 Case TimePeriodDay
     Dim workingDayNum As Long
@@ -212,12 +182,12 @@ Case TimePeriodDay
         theDate = theDate - 1
     End If
     
-    If BarTimePeriod.Length = 1 Then
+    If BarTimePeriod.length = 1 Then
         gBarStartTime = theDate + SessionStartTime
     Else
-        workingDayNum = gCalcWorkingDayNumber(theDate)
+        workingDayNum = WorkingDayNumber(theDate)
         
-        gBarStartTime = gCalcWorkingDayDate(1 + BarTimePeriod.Length * Int((workingDayNum - 1) / BarTimePeriod.Length), _
+        gBarStartTime = WorkingDayDate(1 + BarTimePeriod.length * Int((workingDayNum - 1) / BarTimePeriod.length), _
                                         theDate) + SessionStartTime
     End If
 Case TimePeriodWeek
@@ -228,17 +198,17 @@ Case TimePeriodWeek
         ' this must be part of the final week of the previous year
         theDate = DateAdd("yyyy", -1, theDate)
     End If
-    gBarStartTime = gCalcWeekStartDate(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
+    gBarStartTime = WeekStartDateFromWeekNumber(1 + BarTimePeriod.length * Int((weekNum - 1) / BarTimePeriod.length), _
                                     theDate) + SessionStartTime
 
 Case TimePeriodMonth
     Dim monthNum As Long
     
     monthNum = Month(theDate)
-    gBarStartTime = gCalcMonthStartDate(1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
+    gBarStartTime = MonthStartDateFromMonthNumber(1 + BarTimePeriod.length * Int((monthNum - 1) / BarTimePeriod.length), _
                                     theDate) + SessionStartTime
 Case TimePeriodYear
-    gBarStartTime = DateSerial(1900 + BarTimePeriod.Length * Int((Year(theDate) - 1900) / BarTimePeriod.Length), 1, 1)
+    gBarStartTime = DateSerial(1900 + BarTimePeriod.length * Int((Year(theDate) - 1900) / BarTimePeriod.length), 1, 1)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement
@@ -248,7 +218,7 @@ End Select
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -260,39 +230,20 @@ On Error GoTo Err
 
 Select Case BarTimePeriod.Units
 Case TimePeriodSecond
-    gCalcBarLength = BarTimePeriod.Length * OneSecond
+    gCalcBarLength = BarTimePeriod.length * OneSecond
 Case TimePeriodMinute
-    gCalcBarLength = BarTimePeriod.Length * OneMinute
+    gCalcBarLength = BarTimePeriod.length * OneMinute
 Case TimePeriodHour
-    gCalcBarLength = BarTimePeriod.Length * OneHour
+    gCalcBarLength = BarTimePeriod.length * OneHour
 Case TimePeriodDay
-    gCalcBarLength = BarTimePeriod.Length
+    gCalcBarLength = BarTimePeriod.length
 End Select
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
-
-Public Function gCalcMonthStartDate( _
-                ByVal monthNumber As Long, _
-                ByVal baseDate As Date) As Date
-Dim yearStart As Date
-
-Const ProcName As String = "gCalcMonthStartDate"
-Dim failpoint As String
-On Error GoTo Err
-
-yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
-gCalcMonthStartDate = DateAdd("m", monthNumber - 1, yearStart)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
 
 Public Function gCalcNumberOfBarsInSession( _
                 ByVal BarTimePeriod As TimePeriod, _
@@ -312,7 +263,7 @@ End If
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Public Function gCalcOffsetBarStartTime( _
@@ -343,28 +294,28 @@ Case TimePeriodHour
 Case TimePeriodDay
     gCalcOffsetBarStartTime = calcOffsetDailyBarStartTime( _
                                                     Timestamp, _
-                                                    BarTimePeriod.Length, _
+                                                    BarTimePeriod.length, _
                                                     offset, _
                                                     SessionStartTime)
     Exit Function
 Case TimePeriodWeek
     gCalcOffsetBarStartTime = calcOffsetWeeklyBarStartTime( _
                                                     Timestamp, _
-                                                    BarTimePeriod.Length, _
+                                                    BarTimePeriod.length, _
                                                     offset, _
                                                     SessionStartTime)
     Exit Function
 Case TimePeriodMonth
     gCalcOffsetBarStartTime = calcOffsetMonthlyBarStartTime( _
                                                     Timestamp, _
-                                                    BarTimePeriod.Length, _
+                                                    BarTimePeriod.length, _
                                                     offset, _
                                                     SessionStartTime)
     Exit Function
 Case TimePeriodYear
     gCalcOffsetBarStartTime = calcOffsetYearlyBarStartTime( _
                                                     Timestamp, _
-                                                    BarTimePeriod.Length, _
+                                                    BarTimePeriod.length, _
                                                     offset, _
                                                     SessionStartTime)
     Exit Function
@@ -466,7 +417,7 @@ gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Function
 
@@ -487,9 +438,9 @@ On Error GoTo Err
 
 gCalcSessionTimes Timestamp, startTime, endTime, datumSessionStart, datumSessionEnd
 
-targetWorkingDayNum = gCalcWorkingDayNumber(datumSessionStart) + offset
+targetWorkingDayNum = WorkingDayNumber(datumSessionStart) + offset
 
-gCalcSessionTimes gCalcWorkingDayDate(targetWorkingDayNum, datumSessionStart), _
+gCalcSessionTimes WorkingDayDate(targetWorkingDayNum, datumSessionStart), _
                     startTime, _
                     endTime, _
                     SessionStartTime, _
@@ -498,7 +449,7 @@ gCalcSessionTimes gCalcWorkingDayDate(targetWorkingDayNum, datumSessionStart), _
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
                 
 End Sub
 
@@ -547,245 +498,52 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 
-Public Function gCalcWeekStartDate( _
-                ByVal weekNumber As Long, _
-                ByVal baseDate As Date) As Date
-Dim yearStart As Date
-Dim week1Date As Date
-Dim dow1 As Long    ' day of week of 1st jan of base year
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-Const ProcName As String = "gCalcWeekStartDate"
-Dim failpoint As String
-On Error GoTo Err
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
 
-yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-dow1 = DatePart("w", yearStart, vbMonday)
-
-If dow1 = 1 Then
-    week1Date = yearStart
-Else
-    week1Date = DateAdd("d", 8 - dow1, yearStart)
-End If
-
-gCalcWeekStartDate = DateAdd("ww", weekNumber - 1, week1Date)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-
-Public Function gCalcWorkingDayDate( _
-                ByVal dayNumber As Long, _
-                ByVal baseDate As Date) As Date
-Dim yearStart As Date
-Dim yearEnd As Date
-Dim doy As Long
-
-Dim wd1 As Long     ' weekdays in first week (excluding weekend)
-Dim we1 As Long     ' weekend days at start of first week
-
-Dim dow1 As Long    ' day of week of 1st jan of base year
-
-' number of whole weeks after the first week
-Dim numWholeWeeks As Long
-
-Const ProcName As String = "gCalcWorkingDayDate"
-Dim failpoint As String
-On Error GoTo Err
-
-yearStart = DateAdd("d", 1 - DatePart("y", baseDate), baseDate)
-
-Do While dayNumber < 0
-    yearEnd = yearStart - 1
-    yearStart = DateAdd("yyyy", -1, yearStart)
-    dayNumber = dayNumber + gCalcWorkingDayNumber(yearEnd) + 1
-Loop
-
-dow1 = DatePart("w", yearStart, vbMonday)
-
-If dow1 = 7 Then
-    ' Sunday
-    wd1 = 0
-    we1 = 1
-ElseIf dow1 = 6 Then
-    ' Saturday
-    wd1 = 0
-    we1 = 2
-Else
-    wd1 = 5 - dow1 + 1
-    we1 = 2
-End If
-
-If dayNumber <= wd1 Then
-    doy = dayNumber
-ElseIf dayNumber - wd1 <= 5 Then
-    doy = we1 + dayNumber
-Else
-    numWholeWeeks = Int((dayNumber - wd1) / 5) - 1
-    doy = wd1 + we1 + IIf(numWholeWeeks > 0, 7 * numWholeWeeks + 5, 5) + IIf(((dayNumber - wd1) Mod 5) > 0, ((dayNumber - wd1) Mod 5) + 2, 0)
-End If
-
-gCalcWorkingDayDate = DateAdd("d", doy - 1, yearStart)
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-
-
-Public Function gCalcWorkingDayNumber( _
-                ByVal pDate As Date) As Long
-Dim doy As Long     ' day of year
-Dim woy As Long     ' week of year
-Dim wd1 As Long     ' weekdays in first week (excluding weekend)
-'Dim we1 As Long     ' weekend days at start of first week
-Dim wdN As Long     ' weekdays in last week
-
-Dim dow1 As Long    ' day of week of 1st jan
-Dim dow As Long     ' day of week of sUpplied date
-
-Const ProcName As String = "gCalcWorkingDayNumber"
-Dim failpoint As String
-On Error GoTo Err
-
-doy = DatePart("y", pDate, vbMonday)
-woy = DatePart("ww", pDate, vbMonday)
-dow = DatePart("w", pDate, vbMonday)
-dow1 = DatePart("w", pDate - doy + 1, vbMonday)
-
-If dow1 = 7 Then
-    ' Sunday
-    wd1 = 0
-'    we1 = 1
-ElseIf dow1 = 6 Then
-    ' Saturday
-    wd1 = 0
-'    we1 = 2
-Else
-    wd1 = 5 - dow1 + 1
-'    we1 = 0
-End If
-
-If dow = 7 Or dow = 6 Then
-    wdN = 5
-Else
-    wdN = dow
-End If
-
-gCalcWorkingDayNumber = wd1 + 5 * (woy - 2) + wdN
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-
-End Function
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 Public Function gNormaliseTime( _
             ByVal Timestamp As Date) As Date
 gNormaliseTime = Timestamp - Int(Timestamp)
 End Function
 
-Public Function gTimePeriodUnitsFromString( _
-                timeUnits As String) As TimePeriodUnits
-
-Const ProcName As String = "gTimePeriodUnitsFromString"
-Dim failpoint As String
-On Error GoTo Err
-
-Select Case UCase$(timeUnits)
-Case UCase$(TimePeriodNameSecond), UCase$(TimePeriodNameSeconds), "SEC", "SECS", "S"
-    gTimePeriodUnitsFromString = TimePeriodSecond
-Case UCase$(TimePeriodNameMinute), UCase$(TimePeriodNameMinutes), "MIN", "MINS", "M"
-    gTimePeriodUnitsFromString = TimePeriodMinute
-Case UCase$(TimePeriodNameHour), UCase$(TimePeriodNameHours), "HR", "HRS", "H"
-    gTimePeriodUnitsFromString = TimePeriodHour
-Case UCase$(TimePeriodNameDay), UCase$(TimePeriodNameDays), "D", "DY", "DYS"
-    gTimePeriodUnitsFromString = TimePeriodDay
-Case UCase$(TimePeriodNameWeek), UCase$(TimePeriodNameWeeks), "W", "WK", "WKS"
-    gTimePeriodUnitsFromString = TimePeriodWeek
-Case UCase$(TimePeriodNameMonth), UCase$(TimePeriodNameMonths), "MTH", "MNTH", "MTHS", "MNTHS", "MM"
-    gTimePeriodUnitsFromString = TimePeriodMonth
-Case UCase$(TimePeriodNameYear), UCase$(TimePeriodNameYears), "YR", "YRS", "Y", "YY", "YS"
-    gTimePeriodUnitsFromString = TimePeriodYear
-Case UCase$(TimePeriodNameVolumeIncrement), "VOL", "V"
-    gTimePeriodUnitsFromString = TimePeriodVolume
-Case UCase$(TimePeriodNameTickVolumeIncrement), "TICKVOL", "TICK VOL", "TICKVOLUME", "TV"
-    gTimePeriodUnitsFromString = TimePeriodTickVolume
-Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "T", "TM", "TICKSMOVEMENT", "TICKMOVEMENT"
-    gTimePeriodUnitsFromString = TimePeriodTickMovement
-Case Else
-    gTimePeriodUnitsFromString = TimePeriodNone
-End Select
-
-Exit Function
-
-Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
-End Function
-
-Public Function gTimePeriodUnitsToString( _
-                timeUnits As TimePeriodUnits) As String
-
-Select Case timeUnits
-Case TimePeriodSecond
-    gTimePeriodUnitsToString = TimePeriodNameSeconds
-Case TimePeriodMinute
-    gTimePeriodUnitsToString = TimePeriodNameMinutes
-Case TimePeriodHour
-    gTimePeriodUnitsToString = TimePeriodNameHours
-Case TimePeriodDay
-    gTimePeriodUnitsToString = TimePeriodNameDays
-Case TimePeriodWeek
-    gTimePeriodUnitsToString = TimePeriodNameWeeks
-Case TimePeriodMonth
-    gTimePeriodUnitsToString = TimePeriodNameMonths
-Case TimePeriodYear
-    gTimePeriodUnitsToString = TimePeriodNameYears
-Case TimePeriodVolume
-    gTimePeriodUnitsToString = TimePeriodNameVolumeIncrement
-Case TimePeriodTickVolume
-    gTimePeriodUnitsToString = TimePeriodNameTickVolumeIncrement
-Case TimePeriodTickMovement
-    gTimePeriodUnitsToString = TimePeriodNameTickIncrement
-End Select
-End Function
-
-Public Function gTimePeriodUnitsToShortString( _
-                timeUnits As TimePeriodUnits) As String
-
-Select Case timeUnits
-Case TimePeriodSecond
-    gTimePeriodUnitsToShortString = TimePeriodShortNameSeconds
-Case TimePeriodMinute
-    gTimePeriodUnitsToShortString = TimePeriodShortNameMinutes
-Case TimePeriodHour
-    gTimePeriodUnitsToShortString = TimePeriodShortNameHours
-Case TimePeriodDay
-    gTimePeriodUnitsToShortString = TimePeriodShortNameDays
-Case TimePeriodWeek
-    gTimePeriodUnitsToShortString = TimePeriodShortNameWeeks
-Case TimePeriodMonth
-    gTimePeriodUnitsToShortString = TimePeriodShortNameMonths
-Case TimePeriodYear
-    gTimePeriodUnitsToShortString = TimePeriodShortNameYears
-Case TimePeriodVolume
-    gTimePeriodUnitsToShortString = TimePeriodShortNameVolumeIncrement
-Case TimePeriodTickVolume
-    gTimePeriodUnitsToShortString = TimePeriodShortNameTickVolumeIncrement
-Case TimePeriodTickMovement
-    gTimePeriodUnitsToShortString = TimePeriodShortNameTickIncrement
-End Select
-End Function
+Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
+If IsObject(pSource) Then
+    Set pTarget = pSource
+Else
+    pTarget = pSource
+End If
+End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -803,16 +561,16 @@ Const ProcName As String = "calcOffsetDailyBarStartTime"
 Dim failpoint As String
 On Error GoTo Err
 
-datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodDay), SessionStartTime)
+datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodDay), SessionStartTime)
 
-targetWorkingDayNum = gCalcWorkingDayNumber(datumBarStart) + offset * BarLength
+targetWorkingDayNum = WorkingDayNumber(datumBarStart) + offset * BarLength
 
-calcOffsetDailyBarStartTime = gCalcWorkingDayDate(targetWorkingDayNum, datumBarStart)
+calcOffsetDailyBarStartTime = WorkingDayDate(targetWorkingDayNum, datumBarStart)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function calcOffsetMonthlyBarStartTime( _
@@ -826,14 +584,14 @@ Const ProcName As String = "calcOffsetMonthlyBarStartTime"
 Dim failpoint As String
 On Error GoTo Err
 
-datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodMonth), SessionStartTime)
+datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodMonth), SessionStartTime)
 
 calcOffsetMonthlyBarStartTime = DateAdd("m", offset * BarLength, datumBarStart)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Function calcOffsetWeeklyBarStartTime( _
@@ -852,7 +610,7 @@ Const ProcName As String = "calcOffsetWeeklyBarStartTime"
 Dim failpoint As String
 On Error GoTo Err
 
-datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
+datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
 datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
 
 yearStart = DateAdd("d", 1 - DatePart("y", datumBarStart), datumBarStart)
@@ -867,7 +625,7 @@ Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
         yearEnd = yearStart - 1
         yearStart = DateAdd("yyyy", -1, yearStart)
         yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-        datumBarStart = gBarStartTime(yearEnd, gGetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
+        datumBarStart = gBarStartTime(yearEnd, GetTimePeriod(BarLength, TimePeriodWeek), SessionStartTime)
         datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
         
         proposedWeekNumber = datumWeekNumber + offset * BarLength
@@ -887,12 +645,12 @@ Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
     
 Loop
 
-calcOffsetWeeklyBarStartTime = gCalcWeekStartDate(proposedWeekNumber, yearStart)
+calcOffsetWeeklyBarStartTime = WeekStartDateFromWeekNumber(proposedWeekNumber, yearStart)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 
@@ -907,14 +665,14 @@ Const ProcName As String = "calcOffsetYearlyBarStartTime"
 Dim failpoint As String
 On Error GoTo Err
 
-datumBarStart = gBarStartTime(Timestamp, gGetTimePeriod(BarLength, TimePeriodYear), SessionStartTime)
+datumBarStart = gBarStartTime(Timestamp, GetTimePeriod(BarLength, TimePeriodYear), SessionStartTime)
 
 calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * BarLength, datumBarStart)
 
 Exit Function
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Function
 
 Private Sub calcSessionTimesHelper( _
@@ -961,7 +719,7 @@ End If
 Exit Sub
 
 Err:
-HandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 
 End Sub
 

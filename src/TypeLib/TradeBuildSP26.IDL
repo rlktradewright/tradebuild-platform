@@ -11,16 +11,16 @@ library TradeBuildSP
     importlib("stdole2.tlb");
 
 	// TradeWright Utilities
-	importlib("E:\Projects\TradeWright Common\TWUtilities\TWUtilities30.dll");
+	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities30.dll");
 	
 	// TradeWright Contract Utilities
-	importlib("E:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
+	importlib("C:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
 	
 	// TradeWright Timeframe Utilities
-	importlib("E:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
+	importlib("C:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
 	
 	// TradeWright Tick Utilities
-	importlib("E:\Projects\TradeBuild Platform\TickUtils\TickUtils26.dll");
+	importlib("C:\Projects\TradeBuild Platform\TickUtils\TickUtils26.dll");
 	
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
@@ -1651,6 +1651,10 @@ library TradeBuildSP
 		// Methods =====================================================
 
         HRESULT CloseOutputFile();
+
+		HRESULT WriteComment(
+			[in] BSTR pComment, 
+			[in] DATE pTimestamp);
 
 		HRESULT WriteTick(
 			[in, out] GenericTick* pTick);
