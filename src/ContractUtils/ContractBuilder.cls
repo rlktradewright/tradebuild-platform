@@ -85,7 +85,7 @@ Public Property Let Multiplier(ByVal value As Double)
 mContract.Multiplier = value
 End Property
 
-Public Property Let ProviderIDs(ByRef value As Parameters)
+Public Property Let ProviderIDs(ByVal value As Parameters)
 mContract.ProviderIDs = value
 End Property
 

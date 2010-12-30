@@ -197,7 +197,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
 End Property
 
-Friend Property Let ProviderIDs(ByRef value As Parameters)
+Friend Property Let ProviderIDs(ByVal value As Parameters)
 Set mProviderIDs = value
 End Property
 
