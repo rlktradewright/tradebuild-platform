@@ -3721,7 +3721,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
 End Sub
 
 Private Function validPrice( _
@@ -3731,7 +3730,14 @@ Static prevValidPrice As Double
 
 On Error GoTo Err
 
-If Not mContract.IsValidPrice(price, prevValidPrice) Then Exit Function
+If Not mContract.IsValidPrice(price, prevValidPrice) Then
+    GLogLogger.Log "Invalid price: " & price & "; prev valid price: " & prevValidPrice, _
+                    ProcName, _
+                    ModuleName, _
+                    LogLevels.LogLevelDetail
+    Exit Function
+End If
+
 prevValidPrice = price
 validPrice = True
 
