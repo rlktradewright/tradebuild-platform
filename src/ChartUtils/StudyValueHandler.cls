@@ -100,6 +100,8 @@ End Enum
 
 Private mChartManagerRef    As WeakReference
 
+Private mStudy              As Study
+
 Private mValueMode As StudyValueModes
 Private mValueType As StudyValueTypes
 
@@ -234,52 +236,54 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Friend Sub Initialise( _
-                ByVal chartMgr As ChartManager, _
-                ByVal Region As ChartRegion, _
-                ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudyValueDefinition, _
+                ByVal pChartMgr As ChartManager, _
+                ByVal pRegion As ChartRegion, _
+                ByVal pStudy As Study, _
+                ByVal pStudyValueConfig As StudyValueConfiguration, _
+                ByVal pStudyValueDef As StudyValueDefinition, _
                 ByVal pUpdatePerTick As Boolean)
 
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mChartManagerRef = CreateWeakReference(chartMgr)
-Set mRegion = Region
+Set mChartManagerRef = CreateWeakReference(pChartMgr)
+Set mRegion = pRegion
+Set mStudy = pStudy
                 
 mUpdatePerTick = pUpdatePerTick
-mValueName = studyValueConfig.ValueName
+mValueName = pStudyValueConfig.ValueName
 
-If Not IsEmpty(studyValueDef.MaximumValue) Or _
-    Not IsEmpty(studyValueDef.MinimumValue) _
+If Not IsEmpty(pStudyValueDef.MaximumValue) Or _
+    Not IsEmpty(pStudyValueDef.MinimumValue) _
 Then
-    Region.Autoscaling = False
-    Region.SetVerticalScale CSng(studyValueDef.MinimumValue), _
-                            CSng(studyValueDef.MaximumValue)
+    pRegion.Autoscaling = False
+    pRegion.SetVerticalScale CSng(pStudyValueDef.MinimumValue), _
+                            CSng(pStudyValueDef.MaximumValue)
 End If
 
-mValueMode = studyValueDef.ValueMode
-mValueType = studyValueDef.valueType
+mValueMode = pStudyValueDef.ValueMode
+mValueType = pStudyValueDef.valueType
 
 Select Case mValueMode
 Case ValueModeNone
     Select Case mValueType
     Case ValueTypeInteger
-        setupDataSeries studyValueConfig
+        setupDataSeries pStudyValueConfig
     Case ValueTypeReal
-        setupDataSeries studyValueConfig
+        setupDataSeries pStudyValueConfig
     Case ValueTypeString
-        setupTextSeries studyValueConfig
+        setupTextSeries pStudyValueConfig
     Case ValueTypeDate
 
     Case ValueTypeBoolean
 
     End Select
 Case ValueModeLine
-    setupLineSeries studyValueConfig
+    setupLineSeries pStudyValueConfig
 Case ValueModeBar
-    setupBarSeries studyValueConfig
+    setupBarSeries pStudyValueConfig
 Case ValueModeText
-    setupTextSeries studyValueConfig
+    setupTextSeries pStudyValueConfig
 End Select
 
 
@@ -645,7 +649,9 @@ Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.
 Set mValueSeries = mBarSeries
 If Not studyValueConfig.BarStyle Is Nothing Then mBarSeries.Style = studyValueConfig.BarStyle
 If Not studyValueConfig.BarFormatterFactory Is Nothing Then
-    Set mBarFormatter = studyValueConfig.BarFormatterFactory.CreateBarFormatter(studyValueConfig.Bars)
+    Dim lBarStudy As BarStudy
+    Set lBarStudy = mStudy
+    Set mBarFormatter = studyValueConfig.BarFormatterFactory.CreateBarFormatter(lBarStudy.Bars)
 End If
 
 Exit Sub

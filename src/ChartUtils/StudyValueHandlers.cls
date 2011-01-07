@@ -93,6 +93,7 @@ End Property
 Friend Function Add( _
                 ByVal chartMgr As ChartManager, _
                 ByVal Region As ChartRegion, _
+                ByVal pStudy As Study, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
                 ByVal UpdatePerTick As Boolean) As StudyValueHandler
@@ -102,6 +103,7 @@ On Error GoTo Err
 Set Add = New StudyValueHandler
 Add.Initialise chartMgr, _
                 Region, _
+                pStudy, _
                 studyValueConfig, _
                 studyValueDef, _
                 UpdatePerTick

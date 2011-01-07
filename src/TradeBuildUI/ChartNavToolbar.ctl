@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#161.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#169.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -62,6 +62,8 @@ Private Const ModuleName                    As String = "ChartNavToolbar"
 
 Private WithEvents mTradeBuildChart             As TradeBuildChart
 Attribute mTradeBuildChart.VB_VarHelpID = -1
+Private WithEvents mChartManager                As ChartManager
+Attribute mChartManager.VB_VarHelpID = -1
 Private mMultichartRef                          As WeakReference
 
 '@================================================================================
@@ -110,6 +112,14 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pP
 End Sub
 
 '@================================================================================
+' mChartManager Event Handlers
+'@================================================================================
+
+Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As ChartUtils26.StudyConfiguration)
+setupChartNavButtons
+End Sub
+
+'@================================================================================
 ' mTradeBuildChart Event Handlers
 '@================================================================================
 
@@ -128,6 +138,7 @@ Case ChartStateCreated
 Case ChartStateInitialised
 
 Case ChartStateLoaded
+    setChartManager
     setupChartNavButtons
 End Select
 
@@ -207,7 +218,10 @@ Dim failpoint As String
 On Error GoTo Err
 
     Set mTradeBuildChart = pChart
-    If mTradeBuildChart.State = ChartStateLoaded Then setupChartNavButtons
+    If mTradeBuildChart.State = ChartStateLoaded Then
+        setChartManager
+        setupChartNavButtons
+    End If
 
 Exit Sub
 
@@ -244,6 +258,10 @@ Exit Function
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Function
+
+Private Sub setChartManager()
+Set mChartManager = mTradeBuildChart.ChartManager
+End Sub
 
 Private Sub setupChartNavButtons()
 

@@ -219,12 +219,7 @@ Set newStudyConfig = showConfigForm(studyConfig.name, _
                 studyConfig)
 If Not newStudyConfig Is Nothing Then
     
-    If studyConfig.Study Is mChartManager.BaseStudy Then
-        newStudyConfig.Study = studyConfig.Study
-        mChartManager.BaseStudyConfiguration = newStudyConfig
-    Else
-        ReplaceStudyInChart studyConfig, newStudyConfig
-    End If
+    mChartManager.ReplaceStudyConfiguration studyConfig, newStudyConfig
     
     RemoveButton.Enabled = False
     ChangeButton.Enabled = False
@@ -474,19 +469,6 @@ On Error GoTo Err
 
 mChartManager.AddStudyConfiguration studyConfig
 mChartManager.StartStudy studyConfig.Study
-Exit Sub
-
-Err:
-Initialise Nothing
-End Sub
-
-Private Sub ReplaceStudyInChart( _
-                ByVal oldStudyConfig As StudyConfiguration, _
-                ByVal newStudyConfig As StudyConfiguration)
-Const ProcName As String = "ReplaceStudyInChart"
-On Error GoTo Err
-
-mChartManager.ReplaceStudyConfiguration oldStudyConfig, newStudyConfig
 Exit Sub
 
 Err:

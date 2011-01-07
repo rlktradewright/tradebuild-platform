@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#168.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#169.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -158,8 +158,6 @@ Private mBarFormatterFactory                            As BarFormatterFactory
 
 Private mConfig                                         As ConfigurationSection
 Private mLoadedFromConfig                               As Boolean
-
-Private mTradeBarSeries                                 As BarSeries
 
 Private mDeferStart                                     As Boolean
 
@@ -786,7 +784,7 @@ Const ProcName As String = "TradeBarSeries"
 Dim failpoint As Long
 On Error GoTo Err
 
-Set TradeBarSeries = mTradeBarSeries
+Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
 
 Exit Property
 
@@ -934,7 +932,6 @@ Set baseStudyConfig = mManager.BaseStudyConfiguration
 
 Set mPriceRegion = Nothing
 Set mVolumeRegion = Nothing
-Set mTradeBarSeries = Nothing
 
 mManager.ClearChart
 
@@ -944,7 +941,7 @@ mChartSpec.Timeframe = Timeframe
 
 createTimeframe
 baseStudyConfig.Study = mTimeframe.TradeStudy
-baseStudyConfig.StudyValueConfigurations.item("Bar").SetBarFormatterFactory mBarFormatterFactory, mTimeframe.TradeBars
+baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterFactory = mBarFormatterFactory
 Dim lStudy As Study
 Set lStudy = mTimeframe.TradeStudy
 baseStudyConfig.Parameters = lStudy.Parameters
@@ -1011,7 +1008,6 @@ Set mcontract = Nothing
 
 Set mPriceRegion = Nothing
 Set mVolumeRegion = Nothing
-Set mTradeBarSeries = Nothing
 
 Set mLoadingText = Nothing
 
@@ -1223,7 +1219,7 @@ inputValueNames(2) = mTicker.InputNameTickVolume
 inputValueNames(3) = mTicker.InputNameOpenInterest
 studyConfig.inputValueNames = inputValueNames
 studyConfig.name = studyDef.name
-params.SetParameterValue "Bar length", mChartSpec.Timeframe.length
+params.SetParameterValue "Bar length", mChartSpec.Timeframe.Length
 params.SetParameterValue "Time units", TimePeriodUnitsToString(mChartSpec.Timeframe.Units)
 studyConfig.Parameters = params
 
@@ -1231,7 +1227,7 @@ Set studyValueConfig = studyConfig.StudyValueConfigurations.Add("Bar")
 studyValueConfig.ChartRegionName = ChartRegionNamePrice
 studyValueConfig.IncludeInChart = True
 studyValueConfig.Layer = 200
-studyValueConfig.SetBarFormatterFactory mBarFormatterFactory, mTimeframe.TradeBars
+studyValueConfig.BarFormatterFactory = mBarFormatterFactory
 
 If Not mChartSpec.BarsStyle Is Nothing Then
     Set BarsStyle = mChartSpec.BarsStyle
@@ -1427,7 +1423,6 @@ Dim failpoint As Long
 On Error GoTo Err
 
 mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.TradeStudy
-setTradeBarSeries
 
 Exit Sub
 
@@ -1503,19 +1498,6 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
 End Sub
 
-Private Sub setTradeBarSeries()
-Const ProcName As String = "setTradeBarSeries"
-Dim failpoint As Long
-On Error GoTo Err
-
-Set mTradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
 Private Sub showStudies( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "showStudies"
@@ -1523,7 +1505,6 @@ Dim failpoint As Long
 On Error GoTo Err
 
 mManager.BaseStudyConfiguration = studyConfig
-setTradeBarSeries
 
 Exit Sub
 

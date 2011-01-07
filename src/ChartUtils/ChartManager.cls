@@ -36,6 +36,7 @@ Implements TaskCompletionListener
 ' Events
 '@================================================================================
 
+Event BaseStudyConfigurationChanged(ByVal studyConfig As StudyConfiguration)
 Event StudyAdded(ByVal studyConfig As StudyConfiguration)
 Event StudyRemoved(ByVal studyConfig As StudyConfiguration)
 
@@ -104,7 +105,7 @@ Const ProcName As String = "TaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then
-    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
+    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.errorMessage
 End If
 
 mChartController.EnableDrawing
@@ -180,13 +181,13 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 If Not mBaseStudyConfig Is Nothing Then
     mBaseStudyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBaseStudyConfig)
 End If
@@ -222,8 +223,8 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let UpdatePerTick(ByVal value As Boolean)
-mUpdatePerTick = value
+Public Property Let UpdatePerTick(ByVal Value As Boolean)
+mUpdatePerTick = Value
 End Property
 
 '@================================================================================
@@ -263,7 +264,7 @@ Set mPeriods = mChartController.Periods
 
 If Not mBaseStudyConfig Is Nothing Then
     mBaseStudyConfig.Finish
-    mBaseStudyConfig.RemoveFromConfig
+    mBaseStudyConfig.removeFromConfig
     Set mBaseStudyConfig = Nothing
     Set mBaseStudy = Nothing
 End If
@@ -470,29 +471,36 @@ Const ProcName As String = "ReplaceStudyConfiguration"
 Dim failpoint As String
 On Error GoTo Err
 
-Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
-removeStudyValueListeners oldStudyConfig
-
-If newStudyConfig.Study Is oldStudyConfig.Study Then
-    
-    moveChildStudyConfigs oldStudyConfig, newStudyConfig
-
-    removeStudyConfig oldStudyConfig
-    
-    AddStudyConfig newStudyConfig
+If oldStudyConfig.Study Is BaseStudy Then
+    newStudyConfig.Study = oldStudyConfig.Study
+    BaseStudyConfiguration = newStudyConfig
+    Set ReplaceStudyConfiguration = newStudyConfig.Study
 Else
-
-    AddStudyConfig newStudyConfig
     
-    RaiseEvent StudyRemoved(oldStudyConfig)
-    RaiseEvent StudyAdded(newStudyConfig)
+    Set ReplaceStudyConfiguration = AddStudy(newStudyConfig)
+    removeStudyValueListeners oldStudyConfig
     
-    reconfigureChildStudies oldStudyConfig, newStudyConfig
+    If newStudyConfig.Study Is oldStudyConfig.Study Then
+        
+        moveChildStudyConfigs oldStudyConfig, newStudyConfig
     
-    removeStudyConfig oldStudyConfig
+        removeStudyConfig oldStudyConfig
+        
+        AddStudyConfig newStudyConfig
+    Else
     
-    StartStudy newStudyConfig.Study
-
+        AddStudyConfig newStudyConfig
+        
+        RaiseEvent StudyRemoved(oldStudyConfig)
+        RaiseEvent StudyAdded(newStudyConfig)
+        
+        reconfigureChildStudies oldStudyConfig, newStudyConfig
+        
+        removeStudyConfig oldStudyConfig
+        
+        StartStudy newStudyConfig.Study
+    
+    End If
 End If
 
 Exit Function
@@ -631,8 +639,8 @@ Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             InputValueNames, _
                             studyConfig.Parameters, _
                             studyConfig.StudyLibraryName)
-' AddStudy will have replaced any $DEFAULT input value names with
-' the correct default Study value Name
+' AddStudy will have replaced any $DEFAULT input Value names with
+' the correct default Study Value Name
 studyConfig.InputValueNames = InputValueNames
 
 If lStudy Is mBaseStudy Then
@@ -645,24 +653,25 @@ studyConfig.Study = lStudy
 
 determineDefaultRegionName studyConfig
 
-Set Region = findRegion(studyConfig.ChartRegionName, lStudy.InstanceName, False)
-    
 setupStudyValueListeners studyConfig
 
 If studyConfig.StudyHorizontalRules.count > 0 Then
-    Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
-    horizRulesLineSeries.Extended = True
-    horizRulesLineSeries.ExtendAfter = True
-    horizRulesLineSeries.ExtendBefore = True
-    For Each studyHorizRule In studyConfig.StudyHorizontalRules
-        Set line = horizRulesLineSeries.Add
-        line.Color = studyHorizRule.Color
-        line.LineStyle = studyHorizRule.Style
-        line.Thickness = studyHorizRule.Thickness
-        line.Point1 = NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-        line.Point2 = NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-    Next
-    studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
+    If isRegionInUse(studyConfig.ChartRegionName) Then
+        Set Region = findRegion(studyConfig.ChartRegionName, lStudy.InstanceName, False)
+        Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
+        horizRulesLineSeries.Extended = True
+        horizRulesLineSeries.ExtendAfter = True
+        horizRulesLineSeries.ExtendBefore = True
+        For Each studyHorizRule In studyConfig.StudyHorizontalRules
+            Set line = horizRulesLineSeries.Add
+            line.Color = studyHorizRule.Color
+            line.LineStyle = studyHorizRule.Style
+            line.Thickness = studyHorizRule.Thickness
+            line.Point1 = NewPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+            line.Point2 = NewPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        Next
+        studyConfig.HorizontalRulesLineSeries = horizRulesLineSeries
+    End If
 End If
 
 Set AddStudy = lStudy
@@ -743,7 +752,6 @@ If findRegion Is Nothing Then
         Set findRegion = mChartController.Regions.Add(20, , , , regionName)
         findRegion.GridlineSpacingY = 0.8
         findRegion.title.Text = title
-        findRegion.title.Color = vbBlue
     End If
     Set re.Region = findRegion
     If incrementUsageCount Then re.usageCount = 1
@@ -806,6 +814,7 @@ Set Region = findRegion(regionName, Study.InstanceName, True)
 
 Set lStudyValueHandler = studyConfig.StudyValueHandlers.Add(Me, _
                                         Region, _
+                                        Study, _
                                         studyValueConfig, _
                                         studyValueDef, _
                                         mUpdatePerTick)
@@ -815,13 +824,33 @@ Set lTaskCompletion = Study.AddStudyValueListener( _
                             lStudyValueHandler, _
                             studyValueConfig.ValueName, _
                             ReplayNumbers.ReplayAll, _
-                            "AddStudyValueListener for value " & studyValueConfig.ValueName & " to Study " & Study.InstanceName)
+                            "AddStudyValueListener for Value " & studyValueConfig.ValueName & " to Study " & Study.InstanceName)
 
 If Not lTaskCompletion Is Nothing Then
     lTaskCompletion.AddTaskCompletionListener Me
     mChartController.DisableDrawing
 End If
 Set includeStudyValueInChart = lTaskCompletion
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function isRegionInUse( _
+                ByVal regionName As String) As Boolean
+Dim re As RegionEntry
+
+Const ProcName As String = "isRegionInUse"
+Dim failpoint As String
+On Error GoTo Err
+
+On Error Resume Next
+re = mRegionEntries(regionName)
+On Error GoTo Err
+
+If re.Region Is Nothing Then Exit Function
 
 Exit Function
 
@@ -919,7 +948,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If studyConfig.Study Is mBaseStudy Then
-    mBaseStudyConfig.RemoveFromConfig
+    mBaseStudyConfig.removeFromConfig
 Else
     Dim parentStudyConfig As StudyConfiguration
     Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
@@ -1050,6 +1079,8 @@ Else
     AddStudyConfig mBaseStudyConfig
     
 End If
+
+RaiseEvent BaseStudyConfigurationChanged(studyConfig)
 
 Exit Sub
 

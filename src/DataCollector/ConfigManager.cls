@@ -228,8 +228,7 @@ End If
 
 Set mCurrAppConfig = AddAppInstanceConfig(mConfigStore, _
                                     configName, _
-                                    includeDefaultStudyLibrary:=False, _
-                                    setAsDefault:=False, _
+                                    0, _
                                     TWSServer:=TWSServer, _
                                     TWSPort:=TWSPort, _
                                     clientId:=TWSClientId, _
@@ -283,8 +282,7 @@ If baseConfigFile Is Nothing Then
     InitialiseConfigFile mConfigStore
     Set appConfig = AddAppInstanceConfig(mConfigStore, _
                         DefaultAppInstanceConfigName, _
-                        includeDefaultStudyLibrary:=False, _
-                        setAsDefault:=True, _
+                        ConfigFlagSetAsDefault, _
                         TWSServer:=TWSServer, _
                         TWSPort:=TWSPort, _
                         clientId:=TWSClientId, _

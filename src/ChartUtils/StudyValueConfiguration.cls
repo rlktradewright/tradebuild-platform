@@ -80,7 +80,6 @@ Private mOffsetX As Double
 Private mOffsetY As Double
 
 Private mBarFormatterFactory As BarFormatterFactory
-Private mBars As Bars
 
 Private mConfig As ConfigurationSection
 
@@ -105,6 +104,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let BarFormatterFactory(ByVal formatterFactory As BarFormatterFactory)
+Set mBarFormatterFactory = formatterFactory
+End Property
+
 Public Property Get BarFormatterFactory() As BarFormatterFactory
 Const ProcName As String = "BarFormatterFactory"
 On Error GoTo Err
@@ -117,23 +120,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get Bars() As Bars
-Const ProcName As String = "Bars"
-On Error GoTo Err
-
-Set Bars = mBars
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-    
-Public Property Let BarStyle(ByVal value As BarStyle)
+Public Property Let BarStyle(ByVal Value As BarStyle)
 Const ProcName As String = "BarStyle"
 On Error GoTo Err
 
-Set mBarStyle = value
+Set mBarStyle = Value
 storeSettings
 
 Exit Property
@@ -154,11 +145,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let ChartRegionName(ByVal value As String)
+Public Property Let ChartRegionName(ByVal Value As String)
 Const ProcName As String = "ChartRegionName"
 On Error GoTo Err
 
-mChartRegionName = value
+mChartRegionName = Value
 storeSettings
 
 Exit Property
@@ -180,12 +171,12 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Friend Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 storeSettings
 
 Exit Property
@@ -194,11 +185,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let DataPointStyle(ByVal value As DataPointStyle)
+Public Property Let DataPointStyle(ByVal Value As DataPointStyle)
 Const ProcName As String = "DataPointStyle"
 On Error GoTo Err
 
-Set mDataPointStyle = value
+Set mDataPointStyle = Value
 storeSettings
 
 Exit Property
@@ -219,11 +210,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let IncludeInChart(ByVal value As Boolean)
+Public Property Let IncludeInChart(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInChart"
 On Error GoTo Err
 
-mIncludeInChart = value
+mIncludeInChart = Value
 storeSettings
 
 Exit Property
@@ -244,11 +235,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let Layer(ByVal value As Long)
+Public Property Let Layer(ByVal Value As Long)
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-mLayer = value
+mLayer = Value
 storeSettings
 
 Exit Property
@@ -269,11 +260,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let LineStyle(ByVal value As LineStyle)
+Public Property Let LineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "LineStyle"
 On Error GoTo Err
 
-Set mLineStyle = value
+Set mLineStyle = Value
 storeSettings
 
 Exit Property
@@ -294,11 +285,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let OffsetX(ByVal value As Double)
+Public Property Let OffsetX(ByVal Value As Double)
 Const ProcName As String = "OffsetX"
 On Error GoTo Err
 
-mOffsetX = value
+mOffsetX = Value
 storeSettings
 
 Exit Property
@@ -319,11 +310,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let OffsetY(ByVal value As Double)
+Public Property Let OffsetY(ByVal Value As Double)
 Const ProcName As String = "OffsetY"
 On Error GoTo Err
 
-mOffsetY = value
+mOffsetY = Value
 storeSettings
 
 Exit Property
@@ -344,11 +335,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let TextStyle(ByVal value As TextStyle)
+Public Property Let TextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "TextStyle"
 On Error GoTo Err
 
-Set mTextStyle = value
+Set mTextStyle = Value
 storeSettings
 
 Exit Property
@@ -369,11 +360,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Friend Property Let ValueName(ByVal value As String)
+Friend Property Let ValueName(ByVal Value As String)
 Const ProcName As String = "ValueName"
 On Error GoTo Err
 
-mValueName = value
+mValueName = Value
 storeSettings
 
 Exit Property
@@ -398,7 +389,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub RemoveFromConfig()
+Friend Sub removeFromConfig()
 Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
@@ -411,14 +402,12 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Friend Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection, _
-                ByVal pBars As Bars)
+                ByVal config As ConfigurationSection)
 Dim cs As ConfigurationSection
 
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mBars = pBars
 Set mConfig = config
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionBarStyle)
@@ -457,24 +446,6 @@ mChartRegionName = mConfig.GetSetting(ConfigSettingChartRegionName)
 mLayer = mConfig.GetSetting(ConfigSettingLayer)
 mOffsetX = mConfig.GetSetting(ConfigSettingOffsetX)
 mOffsetY = mConfig.GetSetting(ConfigSettingOffsetY)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Public Sub SetBarFormatterFactory(ByVal formatterFactory As BarFormatterFactory, ByVal Bars As Bars)
-Const ProcName As String = "SetBarFormatterFactory"
-On Error GoTo Err
-
-If Not formatterFactory Is Nothing And Bars Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "A Bars object must be supplied"
-End If
-Set mBarFormatterFactory = formatterFactory
-Set mBars = Bars
 
 Exit Sub
 

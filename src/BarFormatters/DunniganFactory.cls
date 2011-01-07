@@ -69,7 +69,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Private Function BarFormatterFactory_CreateBarFormatter( _
-                ByVal pBars As TimeframeUtils26.bars) As ChartUtils26.BarFormatter
+                ByVal pBars As TimeframeUtils26.bars) As BarFormatter
 Dim bf As New DunniganBarFormatter
 Const ProcName As String = "BarFormatterFactory_CreateBarFormatter"
 On Error GoTo Err

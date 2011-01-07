@@ -92,18 +92,6 @@ Err:
 UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub Form_Unload(Cancel As Integer)
-Const ProcName As String = "Form_Unload"
-On Error GoTo Err
-
-TerminateTWUtilities
-
-Exit Sub
-
-Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
-End Sub
-
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================

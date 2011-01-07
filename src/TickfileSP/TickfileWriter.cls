@@ -137,13 +137,14 @@ End Sub
 '================================================================================
 
 Private Sub mSession_SessionEnded(ev As TimeframeUtils26.SessionEventData)
+If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
 writeComment "Session ended at " & FormatTimestamp(mSession.CurrentSessionEndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
 End Sub
 
 Private Sub mSession_SessionStarted(ev As TimeframeUtils26.SessionEventData)
 Select Case mTickfileGranularity
 Case TickfileGranularityDay
-    createTickfile mSession.SessionCurrentTime
+    If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
 Case TickfileGranularityWeek
     If mTsOut Is Nothing Or _
         mSession.IsTimeInFirstSessionForWeek(mSession.SessionCurrentTime) _
@@ -538,6 +539,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If text = "" Then Exit Sub
+If mTsOut Is Nothing Then Exit Sub
 
 mTsOut.WriteLine text
 mBytesWritten = mBytesWritten + Len(text)

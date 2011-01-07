@@ -30,6 +30,12 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum ConfigFlags
+    ConfigFlagSetAsDefault = 1
+    ConfigFlagIncludeDefaultStudyLibrary = 2
+    ConfigFlagIncludeDefaultBarFormatterLibrary = 4
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -77,9 +83,8 @@ Private Const ConfigSectionPathSeparator            As String = "/"
 
 Public Function AddAppInstanceConfig( _
                 ByVal pConfigStore As ConfigurationStore, _
-                ByVal name As String, _
-                ByVal includeDefaultStudyLibrary As Boolean, _
-                Optional ByVal setAsDefault As Boolean = False, _
+                ByVal pName As String, _
+                ByVal pFlags As ConfigFlags, _
                 Optional ByVal twsServer As String, _
                 Optional ByVal twsPort As Long = 7496, _
                 Optional ByVal clientId As Long = -1, _
@@ -91,9 +96,8 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set AddAppInstanceConfig = addNewAppConfig(pConfigStore, _
-                                            name, _
-                                            includeDefaultStudyLibrary, _
-                                            setAsDefault, _
+                                            pName, _
+                                            pFlags, _
                                             twsServer, _
                                             twsPort, _
                                             clientId, _
@@ -294,8 +298,7 @@ End Sub
 Private Function addNewAppConfig( _
                 ByVal pConfigStore As ConfigurationStore, _
                 ByVal newAppConfigName As String, _
-                ByVal includeDefaultStudyLibrary As Boolean, _
-                ByVal setAsDefault As Boolean, _
+                ByVal pFlags As ConfigFlags, _
                 Optional ByVal twsServer As String, _
                 Optional ByVal twsPort As Long = 7496, _
                 Optional ByVal clientId As Long = -1, _
@@ -318,7 +321,7 @@ If Not GetAppInstanceConfig(pConfigStore, newAppConfigName) Is Nothing Then
 End If
 
 Set newAppConfigSection = pConfigStore.AddConfigurationSection(generateSectionPath(newAppConfigName))
-If setAsDefault Then setDefault pConfigStore, newAppConfigSection
+If (pFlags And ConfigFlagSetAsDefault) Then setDefault pConfigStore, newAppConfigSection
 
 Set newAppTradeBuildSection = newAppConfigSection.AddConfigurationSection(ConfigNameTradeBuild)
 TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection, _
@@ -329,8 +332,12 @@ TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection, _
                                                     twsLogLevel, _
                                                     tickfilesPath
 
-If includeDefaultStudyLibrary Then
+If (pFlags And ConfigFlagIncludeDefaultStudyLibrary) Then
     SetDefaultStudyLibraryConfig newAppTradeBuildSection
+End If
+
+If (pFlags And ConfigFlagIncludeDefaultBarFormatterLibrary) Then
+    SetDefaultBarFormatterLibraryConfig newAppTradeBuildSection
 End If
 
 Set addNewAppConfig = newAppConfigSection

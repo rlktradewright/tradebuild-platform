@@ -352,13 +352,13 @@ Set newSvcs = Clone.StudyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
     Set newSvc = newSvcs.Add(svc.ValueName)
+    newSvc.BarFormatterFactory = svc.BarFormatterFactory
     newSvc.BarStyle = svc.BarStyle
     newSvc.ChartRegionName = svc.ChartRegionName
     newSvc.DataPointStyle = svc.DataPointStyle
     newSvc.IncludeInChart = svc.IncludeInChart
     newSvc.Layer = svc.Layer
     newSvc.LineStyle = svc.LineStyle
-    newSvc.SetBarFormatterFactory svc.BarFormatterFactory, svc.Bars
     newSvc.TextStyle = svc.TextStyle
 Next
 

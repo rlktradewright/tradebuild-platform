@@ -60,10 +60,7 @@ Private mTimezone As TimeZone
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 
-Private mReferenceTime As Date
-
-Private mCurrentSessionStartTime As Date
-Private mCurrentSessionEndTime As Date
+Private mCurrentSessionTimes As SessionTimes
 
 Private mIsLinkable As Boolean
 
@@ -90,11 +87,11 @@ End Sub
 '@================================================================================
 
 Public Property Get CurrentSessionEndTime() As Date
-CurrentSessionEndTime = mCurrentSessionEndTime
+CurrentSessionEndTime = mCurrentSessionTimes.endTime
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
-CurrentSessionStartTime = mCurrentSessionStartTime
+CurrentSessionStartTime = mCurrentSessionTimes.startTime
 End Property
 
 Friend Property Let IsLinkable( _
@@ -210,13 +207,11 @@ End Function
 
 Public Function GetSessionTimes( _
                             ByVal Timestamp As Date) As SessionTimes
-Dim st As SessionTimes
 Const ProcName As String = "GetSessionTimes"
 Dim failpoint As String
 On Error GoTo Err
 
-gCalcSessionTimes Timestamp, mSessionStartTime, mSessionEndTime, st.startTime, st.endTime
-GetSessionTimes = st
+GetSessionTimes = gCalcSessionTimes(Timestamp, mSessionStartTime, mSessionEndTime)
 
 Exit Function
 
@@ -227,18 +222,11 @@ End Function
 Public Function GetOffsetSessionTimes( _
                 ByVal Timestamp As Date, _
                 ByVal offset As Long) As SessionTimes
-Dim st As SessionTimes
 Const ProcName As String = "GetOffsetSessionTimes"
 Dim failpoint As String
 On Error GoTo Err
 
-gCalcOffsetSessionTimes Timestamp, _
-                        offset, _
-                        mSessionStartTime, _
-                        mSessionEndTime, _
-                        st.startTime, _
-                        st.endTime
-GetOffsetSessionTimes = st
+GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, offset, mSessionStartTime, mSessionEndTime)
 
 Exit Function
 
@@ -262,8 +250,8 @@ Const ProcName As String = "IsTimeInSession"
 Dim failpoint As String
 On Error GoTo Err
 
-If Timestamp >= mCurrentSessionStartTime And _
-    Timestamp < mCurrentSessionEndTime _
+If Timestamp >= mCurrentSessionTimes.startTime And _
+    Timestamp < mCurrentSessionTimes.endTime _
 Then
     IsTimeInSession = True
 End If
@@ -312,51 +300,51 @@ End Function
 
 Friend Function SetSessionCurrentTime( _
                 ByVal pTimestamp As Date) As SessionEventData
-Dim ev As SessionEventData
-Static sessionStartNotified As Boolean
 Const ProcName As String = "SetSessionCurrentTime"
-Dim failpoint As String
 On Error GoTo Err
 
-Set ev.source = Me
+Static lInitialised As Boolean
+Static lSessionEndNotified As Boolean
+Static lNextSessionTimes As SessionTimes
+
+Dim ev As SessionEventData
+
+Set ev.Source = Me
 ev.changeType = SessionChangeNone
 
-If mReferenceTime = 0 Then
-    mReferenceTime = pTimestamp
-    gCalcSessionTimes pTimestamp, _
-                        mSessionStartTime, _
-                        mSessionEndTime, _
-                        mCurrentSessionStartTime, _
-                        mCurrentSessionEndTime
+If Not lInitialised Then
+    lInitialised = True
+    mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
+    lNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime)
+    ev.changeType = SessionChangeStart
+    ev.Timestamp = mCurrentSessionTimes.startTime
+    RaiseEvent SessionStarted(ev)
 End If
 
 mClock.SetTime pTimestamp
 
-If pTimestamp >= mCurrentSessionEndTime Then
+If pTimestamp >= mCurrentSessionTimes.endTime And Not lSessionEndNotified Then
+    lSessionEndNotified = True
     ev.changeType = SessionChangeEnd
-    ev.Timestamp = mCurrentSessionEndTime
+    ev.Timestamp = mCurrentSessionTimes.endTime
     RaiseEvent SessionEnded(ev)
-    sessionStartNotified = False
+    lSessionEndNotified = True
 End If
 
-If pTimestamp >= mCurrentSessionEndTime Or _
-    pTimestamp < mReferenceTime _
-Then
-    mReferenceTime = pTimestamp
-    gCalcSessionTimes pTimestamp, _
-                        mSessionStartTime, _
-                        mSessionEndTime, _
-                        mCurrentSessionStartTime, _
-                        mCurrentSessionEndTime
-End If
+'If pTimestamp >= lNextSessionTimes.StartTime Or _
+'    pTimestamp < mReferenceTime _
+'Then
+'    mReferenceTime = pTimestamp
+'    mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
+'End If
 
-If pTimestamp >= mCurrentSessionStartTime And _
-    Not sessionStartNotified _
-Then
+If pTimestamp >= lNextSessionTimes.startTime Then
+    mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
+    lNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime)
+    lSessionEndNotified = False
     ev.changeType = SessionChangeStart
-    ev.Timestamp = mCurrentSessionStartTime
+    ev.Timestamp = mCurrentSessionTimes.startTime
     RaiseEvent SessionStarted(ev)
-    sessionStartNotified = True
 End If
 
 SetSessionCurrentTime = ev
@@ -364,7 +352,7 @@ SetSessionCurrentTime = ev
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================

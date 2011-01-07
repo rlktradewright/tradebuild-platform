@@ -63,18 +63,18 @@ End Enum
 '@================================================================================
 
 Public Type SessionEventData
-    source              As Object
+    Source              As Object
     Timestamp           As Date
-    changeType          As SessionChangeTypes
+    ChangeType          As SessionChangeTypes
 End Type
 
 Public Type SessionTimes
-    startTime       As Date
-    endTime         As Date
+    StartTime       As Date
+    EndTime         As Date
 End Type
 
 Public Type SValue
-    value           As Variant
+    Value           As Variant
     BarNumber       As Long
     Timestamp       As Date
     BarStartTime    As Date
@@ -240,19 +240,15 @@ End Function
 
 Public Function GetSessionTimes( _
                 ByVal Timestamp As Date, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date) As SessionTimes
-Dim st As SessionTimes
+                Optional ByVal StartTime As Date, _
+                Optional ByVal EndTime As Date) As SessionTimes
 Const ProcName As String = "GetSessionTimes"
 Dim failpoint As String
 On Error GoTo Err
 
-gCalcSessionTimes Timestamp, _
-                            gNormaliseTime(startTime), _
-                            gNormaliseTime(endTime), _
-                            st.startTime, _
-                            st.endTime
-GetSessionTimes = st
+GetSessionTimes = gCalcSessionTimes(Timestamp, _
+                            gNormaliseTime(StartTime), _
+                            gNormaliseTime(EndTime))
 
 Exit Function
 
@@ -263,20 +259,16 @@ End Function
 Public Function GetOffsetSessionTimes( _
                 ByVal Timestamp As Date, _
                 ByVal offset As Long, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date) As SessionTimes
-Dim st As SessionTimes
+                Optional ByVal StartTime As Date, _
+                Optional ByVal EndTime As Date) As SessionTimes
 Const ProcName As String = "GetOffsetSessionTimes"
 Dim failpoint As String
 On Error GoTo Err
 
-gCalcOffsetSessionTimes Timestamp, _
+GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
                             offset, _
-                            gNormaliseTime(startTime), _
-                            gNormaliseTime(endTime), _
-                            st.startTime, _
-                            st.endTime
-GetOffsetSessionTimes = st
+                            gNormaliseTime(StartTime), _
+                            gNormaliseTime(EndTime))
 
 Exit Function
 

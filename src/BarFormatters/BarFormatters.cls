@@ -7,8 +7,8 @@ BEGIN
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
 Attribute VB_Name = "BarFormatters"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_GlobalNameSpace = True
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit

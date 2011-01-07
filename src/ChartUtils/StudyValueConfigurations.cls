@@ -183,7 +183,7 @@ If mConfig Is Nothing Then Exit Sub
 
 For Each svcSect In mConfig
     Set svc = New StudyValueConfiguration
-    svc.LoadFromConfig svcSect, mBars
+    svc.LoadFromConfig svcSect
     mStudyValueConfigurations.Add svc, svc.ValueName
 Next
 

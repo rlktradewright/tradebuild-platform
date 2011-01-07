@@ -256,7 +256,7 @@ Set sc = mDefaultStudyConfigurations(key)
 On Error GoTo Err
 
 If Not sc Is Nothing Then
-    sc.RemoveFromConfig
+    sc.removeFromConfig
     mDefaultStudyConfigurations.Remove key
 End If
 

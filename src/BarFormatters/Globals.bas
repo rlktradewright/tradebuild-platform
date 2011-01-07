@@ -29,6 +29,20 @@ Option Explicit
 Public Const ProjectName                                As String = "BarFormatters26"
 Private Const ModuleName                                As String = "Globals"
 
+Public Const NameDunnigan                               As String = "Dunnigan"
+
+Public Const AttributeNameEnabled                       As String = "Enabled"
+Public Const AttributeNameBarFormatterLibraryBuiltIn    As String = "BuiltIn"
+Public Const AttributeNameBarFormatterLibraryProgId     As String = "ProgId"
+
+Public Const BarFormatterLibrariesRenderer              As String = "BarFormattersUI26.BarFormatterLibConfigurer"
+
+Public Const BuiltInBarFormatterLibProgId               As String = "ChartUtils26.BarFormatterLibrary"
+Public Const BuiltInBarFormatterLibName                 As String = "BuiltIn"
+
+Public Const ConfigNameBarFormatterLibraries            As String = "BarFormatterLibraries"
+Public Const ConfigNameBarFormatterLibrary              As String = "BarFormatterLibrary"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -48,6 +62,11 @@ Private Const ModuleName                                As String = "Globals"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gBarFormatterLibManager() As BarFormatterLibManager
+Static lBarFormatterLibManager As New BarFormatterLibManager
+Set gBarFormatterLibManager = lBarFormatterLibManager
+End Property
 
 '@================================================================================
 ' Methods

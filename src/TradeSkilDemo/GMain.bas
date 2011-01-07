@@ -384,8 +384,9 @@ Else
         LogMessage "Creating a new default app instance configuration"
         Set gAppInstanceConfig = AddAppInstanceConfig(gConfigStore, _
                             DefaultAppInstanceConfigName, _
-                            includeDefaultStudyLibrary:=True, _
-                            setAsDefault:=True)
+                            ConfigFlagIncludeDefaultBarFormatterLibrary Or _
+                                ConfigFlagIncludeDefaultStudyLibrary Or _
+                                ConfigFlagSetAsDefault)
         Configure = True
     Else
         Configure = False
@@ -469,8 +470,9 @@ If gConfigStore Is Nothing Then
         InitialiseConfigFile gConfigStore
         AddAppInstanceConfig gConfigStore, _
                             DefaultAppInstanceConfigName, _
-                            includeDefaultStudyLibrary:=True, _
-                            setAsDefault:=True
+                            ConfigFlagIncludeDefaultBarFormatterLibrary Or _
+                                ConfigFlagIncludeDefaultStudyLibrary Or _
+                                ConfigFlagSetAsDefault
                             
         getConfigFile = True
     End If

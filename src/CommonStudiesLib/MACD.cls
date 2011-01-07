@@ -531,7 +531,7 @@ If IsEmpty(mMACD) Or _
 
 determineLowerBalancePoint = True
 
-If mMACD < MACD.value Or mMACDHist < MACDHist.value Then
+If mMACD < MACD.value And mMACDHist < MACDHist.value Then
     Do
         trialPrice = trialPrice + mTickSize
         ev.sVal.value = trialPrice

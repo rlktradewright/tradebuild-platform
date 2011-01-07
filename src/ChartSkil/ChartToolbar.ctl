@@ -484,7 +484,10 @@ Const ProcName As String = "mBarSeries_PropertyChanged"
 Dim failpoint As String
 On Error GoTo Err
 
-If UCase$(ev.PropertyName) = "DISPLAYMODE" Then setupDisplayModeButtons
+Select Case UCase$(ev.PropertyName)
+Case "DISPLAYMODE"
+    setupDisplayModeButtons
+End Select
 
 Exit Sub
 
