@@ -66,7 +66,7 @@ Public Enum MultiChartChangeTypes
     MultiChartSelectionChanged
     MultiChartAdd
     MultiChartRemove
-    MultiChartTimeframeChanged
+    MultiChartPeriodLengthChanged
 End Enum
 
 '@================================================================================
@@ -139,7 +139,7 @@ Set SelectTickfiles = lTickfileOrganiser.TickfileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function StartTickersWithUserSelection( _
@@ -162,7 +162,7 @@ StartTickersWithUserSelection.Initialise pWorkspace, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================

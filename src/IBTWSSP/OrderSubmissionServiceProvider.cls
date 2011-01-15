@@ -214,6 +214,8 @@ Private Sub IOrderSubmissionSrvcProvider_StartOrderRecovery( _
 Const ProcName As String = "IOrderSubmissionSrvcProvider_StartOrderRecovery"
 On Error GoTo Err
 
+If pStartFrom = 0 Then Exit Sub
+
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, _
                                     mPort, _

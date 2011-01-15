@@ -5,9 +5,9 @@ Begin VB.UserControl ChartToolbar
    ClientHeight    =   3600
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   6945
+   ClientWidth     =   7425
    ScaleHeight     =   3600
-   ScaleWidth      =   6945
+   ScaleWidth      =   7425
    Begin MSComctlLib.ImageList ImageList4 
       Left            =   600
       Top             =   1440
@@ -173,13 +173,12 @@ Begin VB.UserControl ChartToolbar
       EndProperty
    End
    Begin MSComctlLib.Toolbar Toolbar1 
-      Align           =   1  'Align Top
       Height          =   330
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   6945
-      _ExtentX        =   12250
+      Width           =   6465
+      _ExtentX        =   11404
       _ExtentY        =   582
       ButtonWidth     =   609
       ButtonHeight    =   582
@@ -376,6 +375,7 @@ Attribute mBarSeries.VB_VarHelpID = -1
 
 Private Sub UserControl_Resize()
 UserControl.Height = Toolbar1.Height
+UserControl.Width = Toolbar1.Width
 End Sub
 
 Private Sub UserControl_Terminate()

@@ -66,7 +66,7 @@ IPriceFormatter_FormatPrice = mcontract.FormatPrice(pValue)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Property Let IPriceFormatter_IntegerYScale(ByVal RHS As Boolean)

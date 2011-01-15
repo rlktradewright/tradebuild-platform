@@ -71,6 +71,21 @@ Private mConfig                             As ConfigurationSection
 ' Properties
 '@================================================================================
 
+Public Property Get gChartStylesManager() As ChartStylesManager
+Const ProcName As String = "gChartStylesManager"
+On Error GoTo Err
+
+Static lChartStylesManager As ChartStylesManager
+
+If lChartStylesManager Is Nothing Then Set lChartStylesManager = New ChartStylesManager
+Set gChartStylesManager = lChartStylesManager
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get gLogger() As Logger
 Static lLogger As Logger
 If lLogger Is Nothing Then Set lLogger = GetLogger("log")
@@ -256,7 +271,7 @@ Set sc = mDefaultStudyConfigurations(key)
 On Error GoTo Err
 
 If Not sc Is Nothing Then
-    sc.removeFromConfig
+    sc.RemoveFromConfig
     mDefaultStudyConfigurations.Remove key
 End If
 

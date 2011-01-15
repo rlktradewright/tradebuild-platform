@@ -203,7 +203,7 @@ Set mData = New ChartRegionData
 Set mGraphObjSeriesCollection = New GraphObjSeriesCollection
 mGraphObjSeriesCollection.Initialise Me
 
-Set mStyle = New ChartRegionStyle
+Set mStyle = gDefaultChartRegionStyle.clone
 
 mUseDeferredPainting = True
 Set mDeferredPainter = New DeferredRegionPainter

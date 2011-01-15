@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#246.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#254.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -22,7 +22,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":0152
       ScaleHeight     =   480
       ScaleWidth      =   480
-      TabIndex        =   57
+      TabIndex        =   0
       ToolTipText     =   "Show features"
       Top             =   9345
       Width           =   480
@@ -37,7 +37,7 @@ Begin VB.Form fTradeSkilDemo
       Picture         =   "fTradeSkilDemo.frx":06E6
       ScaleHeight     =   480
       ScaleWidth      =   480
-      TabIndex        =   56
+      TabIndex        =   20
       ToolTipText     =   "Hide features"
       Top             =   5040
       Width           =   480
@@ -327,16 +327,16 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "Tab 2"
       TabPicture(2)   =   "fTradeSkilDemo.frx":16DC
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label5"
-      Tab(2).Control(1)=   "Label4"
-      Tab(2).Control(2)=   "Label2"
-      Tab(2).Control(3)=   "Label3"
-      Tab(2).Control(4)=   "FromDatePicker"
-      Tab(2).Control(5)=   "ToDatePicker"
-      Tab(2).Control(6)=   "HistTimeframeSelector"
-      Tab(2).Control(7)=   "NumHistBarsText"
-      Tab(2).Control(8)=   "HistSessionOnlyCheck"
-      Tab(2).Control(9)=   "HistContractSearch"
+      Tab(2).Control(0)=   "HistContractSearch"
+      Tab(2).Control(1)=   "HistSessionOnlyCheck"
+      Tab(2).Control(2)=   "NumHistBarsText"
+      Tab(2).Control(3)=   "HistTimeframeSelector"
+      Tab(2).Control(4)=   "ToDatePicker"
+      Tab(2).Control(5)=   "FromDatePicker"
+      Tab(2).Control(6)=   "Label3"
+      Tab(2).Control(7)=   "Label2"
+      Tab(2).Control(8)=   "Label4"
+      Tab(2).Control(9)=   "Label5"
       Tab(2).ControlCount=   10
       TabCaption(3)   =   "Tab 3"
       TabPicture(3)   =   "fTradeSkilDemo.frx":16F8
@@ -363,24 +363,23 @@ Begin VB.Form fTradeSkilDemo
       Tab(4).Control(1).Enabled=   0   'False
       Tab(4).Control(2)=   "Label6"
       Tab(4).ControlCount=   3
-      Begin TradeBuildUI26.ContractSearch HistContractSearch 
-         Height          =   5055
-         Left            =   -74880
-         TabIndex        =   20
-         Top             =   3000
-         Width           =   3855
-         _ExtentX        =   6800
-         _ExtentY        =   8916
-         IncludeHistoricalContracts=   -1  'True
-      End
       Begin TradeBuildUI26.ContractSearch LiveContractSearch 
          Height          =   5415
          Left            =   120
-         TabIndex        =   0
+         TabIndex        =   57
          Top             =   360
          Width           =   3855
          _ExtentX        =   6800
          _ExtentY        =   9551
+      End
+      Begin TradeBuildUI26.ContractSearch HistContractSearch 
+         Height          =   4815
+         Left            =   -74880
+         TabIndex        =   56
+         Top             =   3000
+         Width           =   3855
+         _ExtentX        =   6800
+         _ExtentY        =   8493
       End
       Begin VB.CommandButton ConfigEditorButton 
          Caption         =   "Show config editor"
@@ -604,7 +603,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   16580611
+         Format          =   71041027
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -618,7 +617,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   16580611
+         Format          =   71041027
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -862,6 +861,8 @@ Attribute mConfigEditor.VB_VarHelpID = -1
 Private mControlsHidden                         As Boolean
 Private mFeaturesHidden                         As Boolean
 
+Private mCurrentChartStyle                      As ChartStyle
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -1013,7 +1014,7 @@ LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -1935,7 +1936,7 @@ loadAppInstanceConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function LoadConfig( _
@@ -1976,7 +1977,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub MakeVisible()
@@ -1990,7 +1991,7 @@ If Not mControlsHidden Then ControlsTabStrip.Tabs(1).Selected = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -2029,22 +2030,10 @@ Else
     showFeatures
 End If
 
-LogMessage "Loading configuration: starting tickers"
-TickerGrid1.LoadFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionTickerGrid)
-
-LogMessage "Loading configuration: loading default study configurations"
-LoadDefaultStudyConfigurationsFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
-
-LogMessage "Loading configuration: starting charts"
-Dim chartConfig As ConfigurationSection
-For Each chartConfig In gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
-    createChartFromConfig chartConfig
-Next
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub checkOkToStartReplay()
@@ -2061,7 +2050,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub clearSelectedTickers()
@@ -2075,7 +2064,7 @@ handleSelectedTickers
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub closeChartsAndMarketDepthForms()
@@ -2091,13 +2080,13 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
 Const ProcName As String = "createChart"
 Dim chartForm As fChart
-Dim tp As timePeriod
+Dim tp As TimePeriod
 
 
 On Error GoTo Err
@@ -2107,7 +2096,10 @@ If Not pTicker.state = TickerStateRunning Then Exit Sub
 Set tp = LiveChartTimeframeSelector.TimeframeDesignator
 Set chartForm = New fChart
 chartForm.showChart pTicker, _
-                    createChartSpec(tp, CLng(NumHistoryBarsText.Text), SessionOnlyCheck = vbChecked)
+                    tp, _
+                    CreateChartSpecifier(CLng(NumHistoryBarsText.Text), Not (SessionOnlyCheck = vbChecked)), _
+                    mCurrentChartStyle
+                    
 chartForm.Show vbModeless
 
 Exit Sub
@@ -2122,7 +2114,7 @@ Unload chartForm
 On Error GoTo ErrErr
 Err.Raise errNumber, errSource, errDesc
 ErrErr:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createChartFromConfig( _
@@ -2151,106 +2143,8 @@ Unload chartForm
 On Error GoTo ErrErr
 Err.Raise errNumber, errSource, errDesc
 ErrErr:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
-
-Private Function createChartSpec( _
-                ByVal timePeriod As timePeriod, _
-                ByVal initialNumberOfBars As Long, _
-                ByVal sessionOnly As Boolean) As ChartSpecifier
-Const ProcName As String = "createChartSpec"
-Static defaultRegionStyle As ChartRegionStyle
-Static volumeRegionStyle As ChartRegionStyle
-Static xAxisRegionStyle As ChartRegionStyle
-Static defaultYAxisRegionStyle As ChartRegionStyle
-Static defaultBarsStyle As BarStyle
-Static defaultVolumeStyle As DataPointStyle
-
-On Error GoTo Err
-
-ReDim GradientFillColors(1) As Long
-
-If defaultRegionStyle Is Nothing Then
-    Set defaultRegionStyle = New ChartRegionStyle
-    defaultRegionStyle.Autoscaling = True
-    GradientFillColors(0) = RGB(192, 192, 192)
-    GradientFillColors(1) = RGB(248, 248, 248)
-    defaultRegionStyle.BackGradientFillColors = GradientFillColors
-    'defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
-    defaultRegionStyle.GridlineSpacingY = 1.8
-    defaultRegionStyle.HasGrid = True
-    defaultRegionStyle.CursorSnapsToTickBoundaries = True
-End If
-
-If volumeRegionStyle Is Nothing Then
-    Set volumeRegionStyle = defaultRegionStyle.Clone
-    volumeRegionStyle.GridlineSpacingY = 0.8
-    volumeRegionStyle.MinimumHeight = 10
-    volumeRegionStyle.IntegerYScale = True
-End If
-
-If xAxisRegionStyle Is Nothing Then
-    Set xAxisRegionStyle = defaultRegionStyle.Clone
-    xAxisRegionStyle.HasGrid = False
-    xAxisRegionStyle.HasGridText = True
-    GradientFillColors(0) = RGB(230, 236, 207)
-    GradientFillColors(1) = RGB(222, 236, 215)
-    xAxisRegionStyle.BackGradientFillColors = GradientFillColors
-End If
-
-If defaultYAxisRegionStyle Is Nothing Then
-    Set defaultYAxisRegionStyle = defaultRegionStyle.Clone
-    GradientFillColors(0) = RGB(234, 246, 254)
-    GradientFillColors(1) = RGB(226, 246, 255)
-    defaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
-    defaultYAxisRegionStyle.HasGrid = False
-End If
-
-If defaultBarsStyle Is Nothing Then
-    Set defaultBarsStyle = New BarStyle
-    defaultBarsStyle.Thickness = 2
-    defaultBarsStyle.Width = 0.6
-    defaultBarsStyle.DisplayMode = BarDisplayModeCandlestick
-    defaultBarsStyle.DownColor = &H43FC2
-    defaultBarsStyle.IncludeInAutoscale = True
-    defaultBarsStyle.OutlineThickness = 1
-    defaultBarsStyle.SolidUpBody = False
-    defaultBarsStyle.TailThickness = 1
-    defaultBarsStyle.UpColor = &H1D9311
-End If
-
-If defaultVolumeStyle Is Nothing Then
-    Set defaultVolumeStyle = New DataPointStyle
-    defaultVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
-    defaultVolumeStyle.DownColor = &H43FC2
-    defaultVolumeStyle.HistogramBarWidth = 0.6
-    defaultVolumeStyle.IncludeInAutoscale = True
-    defaultVolumeStyle.LineStyle = LineSolid
-    defaultVolumeStyle.LineThickness = 1
-    defaultVolumeStyle.PointStyle = PointRound
-    defaultVolumeStyle.UpColor = &H1D9311
-End If
-
-Set createChartSpec = CreateChartSpecifier(timePeriod, _
-                       initialNumberOfBars, _
-                       Not sessionOnly, _
-                       20, _
-                       defaultRegionStyle, _
-                       volumeRegionStyle, _
-                       xAxisRegionStyle, _
-                       defaultYAxisRegionStyle, _
-                       defaultBarsStyle, _
-                       defaultVolumeStyle)
-
-createChartSpec.TwipsPerBar = 100
-
-createChartSpec.ChartBackColor = &H7F7FFF
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
 
 Private Sub createHistoricCharts( _
                 ByVal pContracts As Contracts)
@@ -2283,10 +2177,10 @@ For Each lContract In pContracts
     End If
     
     Set chartForm = New fChart
-    chartForm.showHistoricalChart lTicker, _
-                        createChartSpec(HistTimeframeSelector.TimeframeDesignator, CLng(NumHistBarsText.Text), HistSessionOnlyCheck = vbChecked), _
-                        fromDate, _
-                        toDate
+    chartForm.showChart lTicker, _
+                        HistTimeframeSelector.TimeframeDesignator, _
+                        CreateChartSpecifier(CLng(NumHistBarsText.Text), Not (HistSessionOnlyCheck = vbChecked), fromDate, toDate), _
+                        mCurrentChartStyle
     chartForm.Show vbModeless
     chartForm.Visible = True
 
@@ -2295,7 +2189,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub displayTime()
@@ -2311,7 +2205,7 @@ StatusBar1.Panels("datetime") = FormatDateTime(theTime, vbShortDate) & _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub finishUIControls()
@@ -2328,7 +2222,7 @@ TickerGrid1.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function formatLogRecord(ByVal Logrec As LogRecord) As String
@@ -2343,7 +2237,7 @@ formatLogRecord = formatter.FormatRecord(Logrec)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getDefaultClock() As Clock
@@ -2358,7 +2252,87 @@ Set getDefaultClock = lClock
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function getInitialChartStyle() As ChartStyle
+Const ProcName As String = "getInitialChartStyle"
+Dim defaultRegionStyle As ChartRegionStyle
+Dim volumeRegionStyle As ChartRegionStyle
+Dim xAxisRegionStyle As ChartRegionStyle
+Dim defaultYAxisRegionStyle As ChartRegionStyle
+Dim defaultBarsStyle As BarStyle
+Dim defaultVolumeStyle As DataPointStyle
+
+On Error GoTo Err
+
+ReDim GradientFillColors(1) As Long
+
+Set defaultRegionStyle = New ChartRegionStyle
+defaultRegionStyle.Autoscaling = True
+GradientFillColors(0) = RGB(192, 192, 192)
+GradientFillColors(1) = RGB(248, 248, 248)
+defaultRegionStyle.BackGradientFillColors = GradientFillColors
+'defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
+defaultRegionStyle.GridlineSpacingY = 1.8
+defaultRegionStyle.HasGrid = True
+defaultRegionStyle.CursorSnapsToTickBoundaries = True
+    
+Set volumeRegionStyle = defaultRegionStyle.Clone
+volumeRegionStyle.GridlineSpacingY = 0.8
+volumeRegionStyle.MinimumHeight = 10
+volumeRegionStyle.IntegerYScale = True
+    
+Set xAxisRegionStyle = defaultRegionStyle.Clone
+xAxisRegionStyle.HasGrid = False
+xAxisRegionStyle.HasGridText = True
+GradientFillColors(0) = RGB(230, 236, 207)
+GradientFillColors(1) = RGB(222, 236, 215)
+xAxisRegionStyle.BackGradientFillColors = GradientFillColors
+    
+Set defaultYAxisRegionStyle = defaultRegionStyle.Clone
+GradientFillColors(0) = RGB(234, 246, 254)
+GradientFillColors(1) = RGB(226, 246, 255)
+defaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+defaultYAxisRegionStyle.HasGrid = False
+    
+Set defaultBarsStyle = New BarStyle
+defaultBarsStyle.Thickness = 2
+defaultBarsStyle.Width = 0.6
+defaultBarsStyle.DisplayMode = BarDisplayModeCandlestick
+defaultBarsStyle.DownColor = &H43FC2
+defaultBarsStyle.IncludeInAutoscale = True
+defaultBarsStyle.OutlineThickness = 1
+defaultBarsStyle.SolidUpBody = False
+defaultBarsStyle.TailThickness = 1
+defaultBarsStyle.UpColor = &H1D9311
+    
+Set defaultVolumeStyle = New DataPointStyle
+defaultVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
+defaultVolumeStyle.DownColor = &H43FC2
+defaultVolumeStyle.HistogramBarWidth = 0.6
+defaultVolumeStyle.IncludeInAutoscale = True
+defaultVolumeStyle.LineStyle = LineSolid
+defaultVolumeStyle.LineThickness = 1
+defaultVolumeStyle.PointStyle = PointRound
+defaultVolumeStyle.UpColor = &H1D9311
+
+Set getInitialChartStyle = ChartStylesManager.Add(InitialChartStyleName, _
+                       100, _
+                       20, _
+                       defaultRegionStyle, _
+                       volumeRegionStyle, _
+                       xAxisRegionStyle, _
+                       defaultYAxisRegionStyle, _
+                       defaultBarsStyle, _
+                       defaultVolumeStyle)
+
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+
 End Function
 
 Private Function getOrderTicket() As fOrderTicket
@@ -2375,7 +2349,7 @@ Set getOrderTicket = lOrderTicket
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getSelectedTicker() As Ticker
@@ -2388,7 +2362,7 @@ If TickerGrid1.SelectedTickers.Count = 1 Then Set getSelectedTicker = TickerGrid
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub handleSelectedTickers()
@@ -2444,7 +2418,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub hideControls()
@@ -2463,7 +2437,7 @@ Me.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub hideFeatures()
@@ -2481,7 +2455,7 @@ Me.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub killLogging()
@@ -2494,7 +2468,7 @@ GetLogger("log").RemoveLogListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub loadAppInstanceConfig()
@@ -2525,6 +2499,21 @@ mTradeBuildAPI.RecoverOrders gAppInstanceConfig.InstanceQualifier
 
 applyInstanceSettings
 
+LogMessage "Loading configuration: starting tickers"
+TickerGrid1.LoadFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionTickerGrid)
+
+LogMessage "Loading configuration: loading default study configurations"
+LoadDefaultStudyConfigurationsFromConfig gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
+
+LogMessage " Loading configuration: setting current chart style"
+setCurrentChartStyle
+
+LogMessage "Loading configuration: starting charts"
+Dim chartConfig As ConfigurationSection
+For Each chartConfig In gAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionCharts)
+    createChartFromConfig chartConfig
+Next
+
 FeaturesSSTAB.Tab = FeaturesTabIndexNumbers.FeaturesTabIndexOrders
 
 LogMessage "Loaded configuration: " & gAppInstanceConfig.InstanceQualifier
@@ -2535,7 +2524,7 @@ Me.caption = gAppTitle & _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Resize()
@@ -2594,7 +2583,7 @@ SimulatedExecutionsSummary.Width = FeaturesSSTAB.Width - 120 - 120
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub saveSettings()
@@ -2610,12 +2599,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setChartButtonTooltip()
 Const ProcName As String = "setChartButtonTooltip"
-Dim tp As timePeriod
+Dim tp As TimePeriod
 
 
 On Error GoTo Err
@@ -2630,7 +2619,34 @@ Chart1Button.ToolTipText = ChartButton.ToolTipText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setCurrentChartStyle()
+Dim lStyleName As String
+
+Const ProcName As String = "setCurrentChartStyle"
+On Error GoTo Err
+
+If gAppInstanceConfig Is Nothing Then
+    Set mCurrentChartStyle = getInitialChartStyle
+Else
+    gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionApplication
+    lStyleName = gAppInstanceConfig.GetSetting(ConfigSettingAppCurrentChartStyle, "")
+    If ChartStylesManager.Contains(lStyleName) Then
+        Set mCurrentChartStyle = ChartStylesManager(lStyleName)
+    ElseIf ChartStylesManager.Contains(InitialChartStyleName) Then
+        Set mCurrentChartStyle = ChartStylesManager(InitialChartStyleName)
+    Else
+        Set mCurrentChartStyle = getInitialChartStyle
+        gAppInstanceConfig.SetSetting ConfigSettingAppCurrentChartStyle, InitialChartStyleName
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setCurrentClock( _
@@ -2646,7 +2662,7 @@ displayTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setOrdersSelection( _
@@ -2687,7 +2703,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupExecutionSummaries()
@@ -2720,7 +2736,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupLogging()
@@ -2733,7 +2749,7 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -2771,7 +2787,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupReplaySpeedCombo()
@@ -2803,7 +2819,7 @@ ReplaySpeedCombo.Text = "Actual speed"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTickerGrid()
@@ -2817,7 +2833,7 @@ TickerGrid1.MonitorWorkspace mTradeBuildAPI.DefaultWorkSpace
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupTimeframeSelectors()
@@ -2837,7 +2853,7 @@ setChartButtonTooltip
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showConfigEditor()
@@ -2850,7 +2866,7 @@ mConfigEditor.Show vbModeless
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showControls()
@@ -2869,7 +2885,7 @@ HideControlsPicture.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showFeatures()
@@ -2887,7 +2903,7 @@ HideFeaturesPicture.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
@@ -2907,7 +2923,7 @@ mktDepthForm.Show vbModeless
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub updateInstanceSettings()
@@ -2938,7 +2954,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

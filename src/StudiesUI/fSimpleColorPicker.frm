@@ -177,7 +177,6 @@ Begin VB.Form fSimpleColorPicker
    End
    Begin VB.Label ColorLabel 
       BackColor       =   &H00000000&
-      Caption         =   "Label7"
       Height          =   120
       Index           =   0
       Left            =   120
@@ -415,7 +414,7 @@ mSelectedColor = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Friend Property Get selectedColor() As Long
@@ -427,7 +426,7 @@ selectedColor = mSelectedColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================

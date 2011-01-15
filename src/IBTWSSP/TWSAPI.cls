@@ -1977,7 +1977,6 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub createInMessageBuilder()
-'If mInMessageBuilder Is Nothing And mSocketLogger.isLoggable(LogLevelHighDetail) then
 Const ProcName As String = "createInMessageBuilder"
 On Error GoTo Err
 
@@ -4964,6 +4963,9 @@ On Error GoTo Err
 
 If Not mSocket Is Nothing Then
     mSocket.Close
+    Set mSocket = Nothing
+    Unload mWinsockForm
+    Set mWinsockForm = Nothing
 End If
 
 Exit Sub

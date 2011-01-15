@@ -39,11 +39,6 @@ Private Type LibraryTableEntry
     libObject       As BarFormatterLibrary
 End Type
 
-Public Type BarFormatterFactoryListEntry
-    Name            As String
-    BarFormatterFactory As String
-End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -101,7 +96,7 @@ For i = 0 To mMaxLibIndex
                 ReDim Preserve bffList(2 * (UBound(bffList) + 1) - 1) As BarFormatterFactoryListEntry
             End If
             bffList(nextBffListIndex).Name = spList(j)
-            bffList(nextBffListIndex).BarFormatterFactory = mBarFormatterLibraries(i).Name
+            bffList(nextBffListIndex).LibraryName = mBarFormatterLibraries(i).Name
             nextBffListIndex = nextBffListIndex + 1
         Next
     End If
@@ -326,7 +321,7 @@ For Each sl In mBarFormatterLibs
         slName = sl.InstanceQualifier
         
         If sl.GetAttribute(AttributeNameBarFormatterLibraryBuiltIn) = "True" Then
-            slProgId = AttributeNameBarFormatterLibraryBuiltIn
+            slProgId = BuiltInBarFormatterLibProgId
         Else
             slProgId = sl.GetAttribute(AttributeNameBarFormatterLibraryProgId)
             If slProgId = "" Then _

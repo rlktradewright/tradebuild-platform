@@ -114,7 +114,7 @@ Set lPeriod = New Period
 mCurrentPeriodNumber = mCurrentPeriodNumber + 1
 lPeriod.PeriodNumber = mCurrentPeriodNumber
 periodStart = BarStartTime(Timestamp, _
-                            chartObj.BarTimePeriod, _
+                            chartObj.PeriodLength, _
                             chartObj.SessionStartTime)
 lPeriod.Timestamp = periodStart
 mPeriods.Add lPeriod, generateKey(periodStart, duplicateNumber)
@@ -167,7 +167,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "Periods object is finished"
 If VarType(index) = vbDate Then
     Set Item = mPeriods.Item(generateKey(BarStartTime(index, _
-                                                    chartObj.BarTimePeriod, _
+                                                    chartObj.PeriodLength, _
                                                     chartObj.SessionStartTime), _
                                         0))
 Else
@@ -191,7 +191,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Periods object is finished"
 Set ItemDup = mPeriods.Item(generateKey(BarStartTime(index, _
-                                                chartObj.BarTimePeriod, _
+                                                chartObj.PeriodLength, _
                                                 chartObj.SessionStartTime), _
                                     duplicateNumber))
 
@@ -227,7 +227,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "Periods object is finished"
 If VarType(index) = vbDate Then
     mPeriods.Remove generateKey(BarStartTime(index, _
-                                            chartObj.BarTimePeriod, _
+                                            chartObj.PeriodLength, _
                                             chartObj.SessionStartTime), _
                                 0)
 Else
@@ -251,7 +251,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Periods object is finished"
 mPeriods.Remove generateKey(BarStartTime(index, _
-                                        chartObj.BarTimePeriod, _
+                                        chartObj.PeriodLength, _
                                         chartObj.SessionStartTime), _
                             duplicateNumber)
 

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#243.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#254.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -12,17 +12,18 @@ Begin VB.Form fChart
    ScaleWidth      =   12525
    StartUpPosition =   3  'Windows Default
    Begin TradeBuildUI26.MultiChart MultiChart1 
-      Height          =   6135
+      Align           =   1  'Align Top
+      Height          =   5415
       Left            =   0
-      TabIndex        =   2
-      Top             =   330
+      TabIndex        =   3
+      Top             =   390
       Width           =   12525
       _ExtentX        =   22093
-      _ExtentY        =   10821
+      _ExtentY        =   9551
    End
    Begin MSComctlLib.ImageList ImageList1 
-      Left            =   11400
-      Top             =   840
+      Left            =   0
+      Top             =   6240
       _ExtentX        =   1005
       _ExtentY        =   1005
       BackColor       =   -2147483643
@@ -59,27 +60,43 @@ Begin VB.Form fChart
       Width           =   12525
       _ExtentX        =   22093
       _ExtentY        =   688
-      BandCount       =   2
+      BackColor       =   16777215
       _CBWidth        =   12525
       _CBHeight       =   390
       _Version        =   "6.7.9816"
+      BandBackColor1  =   -2147483628
       Child1          =   "ChartToolsToolbar"
       MinWidth1       =   1710
       MinHeight1      =   330
       Width1          =   1710
+      UseCoolbarColors1=   0   'False
       NewRow1         =   0   'False
-      Child2          =   "ChartNavToolbar1"
-      MinWidth2       =   6585
+      Child2          =   "BarFormatterPicker"
+      MinWidth2       =   2250
       MinHeight2      =   330
-      Width2          =   6585
+      Width2          =   2250
       NewRow2         =   0   'False
+      Child3          =   "ChartNavToolbar1"
+      MinWidth3       =   6465
+      MinHeight3      =   330
+      Width3          =   6465
+      NewRow3         =   0   'False
+      Begin TradeBuildUI26.BarFormatterPicker BarFormatterPicker 
+         Height          =   330
+         Left            =   2040
+         TabIndex        =   4
+         Top             =   0
+         Width           =   2295
+         _ExtentX        =   4048
+         _ExtentY        =   582
+      End
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   2100
-         TabIndex        =   3
+         Left            =   4575
+         TabIndex        =   2
          Top             =   30
-         Width           =   10335
-         _ExtentX        =   18230
+         Width           =   6465
+         _ExtentX        =   11404
          _ExtentY        =   582
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
@@ -301,7 +318,7 @@ Select Case Button.Key
 Case ChartToolsCommandStudies
     gShowStudyPicker MultiChart1.ChartManager, _
                     mSymbol & _
-                    " (" & MultiChart1.timePeriod.ToString & ")"
+                    " (" & MultiChart1.TimePeriod.ToString & ")"
 Case ChartToolsCommandSelection
     setSelectionMode
 Case ChartToolsCommandLines
@@ -314,7 +331,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub CoolBar1_HeightChanged(ByVal NewHeight As Single)
@@ -348,8 +364,10 @@ Case MultiChartAdd
 
 Case MultiChartRemove
     gUnsyncStudyPicker
-Case MultiChartTimeframeChanged
-    If MultiChart1.Count > 0 Then Set mChartController = MultiChart1.BaseChartController
+Case MultiChartChangeTypes.MultiChartPeriodLengthChanged
+    If MultiChart1.Count > 0 Then
+        Set mChartController = MultiChart1.BaseChartController
+    End If
     setCaption
     setSelectionButton
     syncStudyPicker
@@ -575,6 +593,7 @@ If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionM
 End If
 
 ChartNavToolbar1.initialise , MultiChart1
+BarFormatterPicker.initialise , MultiChart1
 
 Set mTicker = MultiChart1.Ticker
 If Not mIsHistorical Then getInitialTickerValues
@@ -588,30 +607,33 @@ Exit Function
 
 Err:
 Set mTicker = Nothing
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Friend Sub showChart( _
                 ByVal pTicker As Ticker, _
-                ByVal chartspec As ChartSpecifier)
+                ByVal pPeriodLength As TimePeriod, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle)
 Const ProcName As String = "showChart"
 
 
 
 On Error GoTo Err
 
-mIsHistorical = False
+mIsHistorical = (pSpec.toTime <> CDate(0))
 
 Set mTicker = pTicker
 
 getInitialTickerValues
 
+MultiChart1.initialise mTicker, pSpec, pStyle
 If Not mTicker.ReplayingTickfile Then setConfig
 
-MultiChart1.initialise mTicker, chartspec, , , New DunniganFactory
-MultiChart1.Add chartspec.Timeframe
+MultiChart1.Add pPeriodLength
 
 ChartNavToolbar1.initialise , MultiChart1
+BarFormatterPicker.initialise , MultiChart1
 
 setCaption
 
@@ -619,36 +641,7 @@ Exit Sub
 
 Err:
 Set mTicker = Nothing
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Friend Sub showHistoricalChart( _
-                ByVal pTicker As Ticker, _
-                ByVal chartspec As ChartSpecifier, _
-                ByVal fromtime As Date, _
-                ByVal totime As Date)
-Const ProcName As String = "showHistoricalChart"
-
-
-
-On Error GoTo Err
-
-mIsHistorical = True
-
-Set mTicker = pTicker
-
-setConfig
-
-MultiChart1.initialise mTicker, chartspec, fromtime, totime, New DunniganFactory
-MultiChart1.Add chartspec.Timeframe
-
-ChartNavToolbar1.initialise , MultiChart1
-setCaption
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '================================================================================
@@ -693,7 +686,7 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub createLineChartTool()
@@ -714,7 +707,7 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub getInitialTickerValues()
@@ -736,7 +729,7 @@ mPreviousClose = mTicker.FormatPrice(mTicker.ClosePrice)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub Resize()
@@ -746,7 +739,6 @@ On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
 
-MultiChart1.Width = Me.ScaleWidth
 If Me.ScaleHeight >= CoolBar1.Height Then
     MultiChart1.Height = Me.ScaleHeight - CoolBar1.Height
     MultiChart1.Top = CoolBar1.Height
@@ -755,7 +747,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setCaption()
@@ -768,7 +760,7 @@ On Error GoTo Err
 If MultiChart1.Count = 0 Then
     s = mSymbol
 Else
-    s = mSymbol & " (" & MultiChart1.timePeriod.ToString & ")"
+    s = mSymbol & " (" & MultiChart1.TimePeriod.ToString & ")"
 End If
     
 If mIsHistorical Then
@@ -789,7 +781,7 @@ Me.caption = s
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setConfig()
@@ -805,7 +797,7 @@ MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setSelectionMode()
@@ -824,7 +816,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setSelectionButton()
@@ -841,7 +833,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setWindow()
@@ -866,7 +858,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub syncStudyPicker()
@@ -877,12 +869,12 @@ On Error GoTo Err
 If MultiChart1.Count = 0 Then Exit Sub
 gSyncStudyPicker MultiChart1.ChartManager, _
                 "Study picker for " & mSymbol & _
-                " (" & MultiChart1.timePeriod.ToString & ")"
+                " (" & MultiChart1.TimePeriod.ToString & ")"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub updateSettings()
@@ -906,7 +898,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 

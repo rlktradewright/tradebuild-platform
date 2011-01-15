@@ -37,7 +37,7 @@ Public Const AttributeNameBarFormatterLibraryProgId     As String = "ProgId"
 
 Public Const BarFormatterLibrariesRenderer              As String = "BarFormattersUI26.BarFormatterLibConfigurer"
 
-Public Const BuiltInBarFormatterLibProgId               As String = "ChartUtils26.BarFormatterLibrary"
+Public Const BuiltInBarFormatterLibProgId               As String = "BarFormatters26.BarFormattersLib"
 Public Const BuiltInBarFormatterLibName                 As String = "BuiltIn"
 
 Public Const ConfigNameBarFormatterLibraries            As String = "BarFormatterLibraries"

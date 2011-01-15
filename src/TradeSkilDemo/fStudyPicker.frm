@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#180.0#0"; "StudiesUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#193.0#0"; "StudiesUI2-6.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -95,7 +95,7 @@ Me.caption = title
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "ChartStyle"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -40,12 +40,8 @@ Option Explicit
 
 Private Const ModuleName                                As String = "ChartStyle"
 
-Private Const ConfigSettingTimeframe                    As String = ".Timefame"
-Private Const ConfigSettingInitialNumberOfBars          As String = ".InitialNumberOfBars"
-Private Const ConfigSettingIncludeBarsOutsideSession    As String = ".IncludeBarsOutsideSession"
-Private Const ConfigSettingMinimumTicksHeight           As String = ".MinimumTicksHeight"
-Private Const ConfigSettingTwipsPerBar                  As String = ".TwipsPerBar"
-Private Const ConfigSettingChartBackColor               As String = ".ChartBackColor"
+Private Const ConfigSettingMinimumTicksHeight           As String = "&MinimumTicksHeight"
+Private Const ConfigSettingTwipsPerPeriod               As String = "&TwipsPerPeriod"
 
 Private Const ConfigSectionDefaultRegionStyle           As String = "DefaultRegionStyle"
 Private Const ConfigSectionDefaultYAxisRegionStyle      As String = "DefaultYAxisRegionStyle"
@@ -58,21 +54,17 @@ Private Const ConfigSectionVolumeStyle                  As String = "VolumeStyle
 ' Member variables
 '@================================================================================
 
-Private mTimeframe                          As TimePeriod
-Private mInitialNumberOfBars                As Integer
-Private mIncludeBarsOutsideSession          As Boolean
-Private mMinimumTicksHeight                 As Integer
+Private mName                               As String
+Private mMinimumTicksHeight                 As Long
+Private mTwipsPerPeriod                     As Long
 Private mDefaultRegionStyle                 As ChartRegionStyle
 Private mDefaultYAxisRegionStyle            As ChartRegionStyle
 Private mXAxisRegionStyle                   As ChartRegionStyle
 Private mVolumeRegionStyle                  As ChartRegionStyle
 Private mBarsStyle                          As BarStyle
 Private mVolumeStyle                        As DataPointStyle
-Private mTwipsPerBar                        As Long
-Private mChartBackColor                     As Long
 
 Private mConfig                             As ConfigurationSection
-
 
 '@================================================================================
 ' Class Event Handlers
@@ -94,24 +86,7 @@ Public Property Get BarsStyle() As BarStyle
 Set BarsStyle = mBarsStyle
 End Property
 
-Public Property Get ChartBackColor() As OLE_COLOR
-ChartBackColor = mChartBackColor
-End Property
-
-Public Property Let ChartBackColor(ByVal value As OLE_COLOR)
-Const ProcName As String = "ChartBackColor"
-On Error GoTo Err
-
-mChartBackColor = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingChartBackColor, CStr(value)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Let ConfigurationSection( _
+Friend Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
@@ -119,18 +94,14 @@ On Error GoTo Err
 If value Is mConfig Then Exit Property
 Set mConfig = value
 If Not mConfig Is Nothing Then
-    mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.ToString
-    mConfig.SetSetting ConfigSettingInitialNumberOfBars, mInitialNumberOfBars
-    mConfig.SetBooleanSetting ConfigSettingIncludeBarsOutsideSession, mIncludeBarsOutsideSession
     mConfig.SetSetting ConfigSettingMinimumTicksHeight, mMinimumTicksHeight
-    mConfig.SetSetting ConfigSettingChartBackColor, CStr(mChartBackColor)
+    mConfig.SetSetting ConfigSettingTwipsPerPeriod, mTwipsPerPeriod
     mDefaultRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
     mVolumeRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionVolumeRegionStyle)
     mXAxisRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
     mDefaultYAxisRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
     mBarsStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBarsStyle)
     mVolumeStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionVolumeStyle)
-    mConfig.SetSetting ConfigSettingTwipsPerBar, mTwipsPerBar
 End If
 
 Exit Property
@@ -163,45 +134,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let InitialNumberOfBars( _
-                ByVal value As Integer)
-Const ProcName As String = "InitialNumberOfBars"
-On Error GoTo Err
-
-mInitialNumberOfBars = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingInitialNumberOfBars, mInitialNumberOfBars
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get InitialNumberOfBars() As Integer
-Const ProcName As String = "InitialNumberOfBars"
-On Error GoTo Err
-
-InitialNumberOfBars = mInitialNumberOfBars
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get IncludeBarsOutsideSession() As Boolean
-Const ProcName As String = "IncludeBarsOutsideSession"
-On Error GoTo Err
-
-IncludeBarsOutsideSession = mIncludeBarsOutsideSession
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get MinimumTicksHeight() As Integer
+Public Property Get MinimumTicksHeight() As Long
 Const ProcName As String = "MinimumTicksHeight"
 On Error GoTo Err
 
@@ -213,49 +146,15 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get Timeframe() As TimePeriod
-Const ProcName As String = "Timeframe"
-On Error GoTo Err
-
-Set Timeframe = mTimeframe
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Let Timeframe(ByVal value As TimePeriod)
-Const ProcName As String = "Timeframe"
+Public Property Get TwipsPerPeriod() As Long
+Const ProcName As String = "TwipsPerPeriod"
 On Error GoTo Err
 
-Set mTimeframe = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTimeframe, mTimeframe.ToString
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get TwipsPerBar() As Long
-Const ProcName As String = "TwipsPerBar"
-On Error GoTo Err
-
-TwipsPerBar = mTwipsPerBar
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Let TwipsPerBar(ByVal value As Long)
-Const ProcName As String = "TwipsPerBar"
-On Error GoTo Err
-
-mTwipsPerBar = value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTwipsPerBar, mTwipsPerBar
+TwipsPerPeriod = mTwipsPerPeriod
 
 Exit Property
 
@@ -303,23 +202,20 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function Clone() As ChartSpecifier
-Const ProcName As String = "Clone"
+Friend Function CloneWithNewName(ByVal pName As String) As ChartStyle
+Const ProcName As String = "CloneWithNewName"
 On Error GoTo Err
 
-Set Clone = New ChartSpecifier
-Clone.Initialise mTimeframe, _
-                mInitialNumberOfBars, _
-                mIncludeBarsOutsideSession, _
+Set CloneWithNewName = New ChartStyle
+CloneWithNewName.Initialise pName, _
+                mTwipsPerPeriod, _
                 mMinimumTicksHeight, _
-                mDefaultRegionStyle, _
-                mVolumeRegionStyle, _
-                mXAxisRegionStyle, _
-                mDefaultYAxisRegionStyle, _
-                mBarsStyle, _
-                mVolumeStyle
-Clone.ChartBackColor = mChartBackColor
-Clone.TwipsPerBar = mTwipsPerBar
+                mDefaultRegionStyle.Clone, _
+                mVolumeRegionStyle.Clone, _
+                mXAxisRegionStyle.Clone, _
+                mDefaultYAxisRegionStyle.Clone, _
+                mBarsStyle.Clone, _
+                mVolumeStyle.Clone
 
 Exit Function
 
@@ -328,32 +224,84 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Function
 
 Friend Sub Initialise( _
-                ByVal Timeframe As TimePeriod, _
-                ByVal InitialNumberOfBars As Integer, _
-                ByVal IncludeBarsOutsideSession As Boolean, _
-                ByVal MinimumTicksHeight As Integer, _
-                ByVal DefaultRegionStyle As ChartRegionStyle, _
-                ByVal VolumeRegionStyle As ChartRegionStyle, _
-                ByVal XAxisRegionStyle As ChartRegionStyle, _
-                ByVal DefaultYAxisRegionStyle As ChartRegionStyle, _
+                ByVal pName As String, _
+                ByVal pTwipsPerPeriod As Long, _
+                ByVal pMinimumTicksHeight As Long, _
+                ByVal pDefaultRegionStyle As ChartRegionStyle, _
+                ByVal pVolumeRegionStyle As ChartRegionStyle, _
+                ByVal pXAxisRegionStyle As ChartRegionStyle, _
+                ByVal pDefaultYAxisRegionStyle As ChartRegionStyle, _
                 ByVal pBarsStyle As BarStyle, _
-                ByVal VolumeStyle As DataPointStyle)
+                ByVal pVolumeStyle As DataPointStyle)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mTimeframe = Timeframe
-validateTimeFrame Timeframe
-mInitialNumberOfBars = InitialNumberOfBars
-mIncludeBarsOutsideSession = IncludeBarsOutsideSession
+mName = pName
+mTwipsPerPeriod = pTwipsPerPeriod
 mMinimumTicksHeight = MinimumTicksHeight
-Set mDefaultRegionStyle = DefaultRegionStyle.Clone
-Set mVolumeRegionStyle = VolumeRegionStyle.Clone
-Set mXAxisRegionStyle = XAxisRegionStyle.Clone
-Set mDefaultYAxisRegionStyle = DefaultYAxisRegionStyle.Clone
-Set mBarsStyle = pBarsStyle.Clone
-Set mVolumeStyle = VolumeStyle.Clone
 
-mChartBackColor = &H602008
+If Not pDefaultRegionStyle Is Nothing Then
+    Set mDefaultRegionStyle = pDefaultRegionStyle
+Else
+    Set mDefaultRegionStyle = GetDefaultChartRegionStyle.Clone
+    mDefaultRegionStyle.Autoscaling = True
+    mDefaultRegionStyle.GridlineSpacingY = 1.8
+    mDefaultRegionStyle.HasGrid = True
+    mDefaultRegionStyle.CursorSnapsToTickBoundaries = True
+End If
+
+If Not pVolumeRegionStyle Is Nothing Then
+    Set mVolumeRegionStyle = pVolumeRegionStyle
+Else
+    Set mVolumeRegionStyle = mDefaultRegionStyle.Clone
+    mVolumeRegionStyle.GridlineSpacingY = 0.8
+    mVolumeRegionStyle.MinimumHeight = 10
+    mVolumeRegionStyle.IntegerYScale = True
+End If
+
+If Not pXAxisRegionStyle Is Nothing Then
+    Set mXAxisRegionStyle = pXAxisRegionStyle
+Else
+    Set mXAxisRegionStyle = mDefaultRegionStyle.Clone
+    mXAxisRegionStyle.HasGrid = False
+    mXAxisRegionStyle.HasGridText = True
+End If
+
+If Not pDefaultYAxisRegionStyle Is Nothing Then
+    Set mDefaultYAxisRegionStyle = pDefaultYAxisRegionStyle
+Else
+    Set mDefaultYAxisRegionStyle = mDefaultRegionStyle.Clone
+    mDefaultYAxisRegionStyle.HasGrid = False
+End If
+
+If Not pBarsStyle Is Nothing Then
+    Set mBarsStyle = pBarsStyle
+Else
+    Set mBarsStyle = GetDefaultBarStyle.Clone
+    mBarsStyle.Thickness = 2
+    mBarsStyle.Width = 0.6
+    mBarsStyle.DisplayMode = BarDisplayModeCandlestick
+    mBarsStyle.DownColor = &H43FC2
+    mBarsStyle.IncludeInAutoscale = True
+    mBarsStyle.OutlineThickness = 1
+    mBarsStyle.SolidUpBody = False
+    mBarsStyle.TailThickness = 1
+    mBarsStyle.UpColor = &H1D9311
+End If
+
+If Not pVolumeStyle Is Nothing Then
+    Set mVolumeStyle = pVolumeStyle
+Else
+    Set mVolumeStyle = GetDefaultDataPointStyle.Clone
+    mVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
+    mVolumeStyle.DownColor = &H43FC2
+    mVolumeStyle.HistogramBarWidth = 0.6
+    mVolumeStyle.IncludeInAutoscale = True
+    mVolumeStyle.LineStyle = LineSolid
+    mVolumeStyle.LineThickness = 1
+    mVolumeStyle.PointStyle = PointRound
+    mVolumeStyle.UpColor = &H1D9311
+End If
 
 Exit Sub
 
@@ -373,11 +321,9 @@ On Error GoTo Err
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
 
-Set mTimeframe = TimePeriodFromString(mConfig.GetSetting(ConfigSettingTimeframe, "5 Minutes"))
-
-mInitialNumberOfBars = mConfig.GetSetting(ConfigSettingInitialNumberOfBars, 500)
-mIncludeBarsOutsideSession = CBool(mConfig.GetSetting(ConfigSettingIncludeBarsOutsideSession, "False"))
+mName = mConfig.InstanceQualifier
 mMinimumTicksHeight = mConfig.GetSetting(ConfigSettingMinimumTicksHeight, 20)
+mTwipsPerPeriod = mConfig.GetSetting(ConfigSettingTwipsPerPeriod, 100)
 
 Set mDefaultRegionStyle = New ChartRegionStyle
 mDefaultRegionStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionDefaultRegionStyle)
@@ -397,48 +343,27 @@ mBarsStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionBarsStyle
 Set mVolumeStyle = New DataPointStyle
 mVolumeStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionVolumeStyle)
 
-mChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(&H602008))
-
-mTwipsPerBar = mConfig.GetSetting(ConfigSettingTwipsPerBar, 100)
-
 Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
+End Sub
+
+Friend Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+On Error GoTo Err
+
+mConfig.Remove
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub validateTimeFrame(ByVal tf As TimePeriod)
-
-Const ProcName As String = "validateTimeFrame"
-On Error GoTo Err
-
-Select Case tf.Units
-Case TimePeriodUnits.TimePeriodSecond, _
-        TimePeriodUnits.TimePeriodMinute, _
-        TimePeriodUnits.TimePeriodHour, _
-        TimePeriodUnits.TimePeriodDay, _
-        TimePeriodUnits.TimePeriodWeek, _
-        TimePeriodUnits.TimePeriodMonth, _
-        TimePeriodUnits.TimePeriodYear, _
-        TimePeriodUnits.TimePeriodVolume, _
-        TimePeriodUnits.TimePeriodTickMovement
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Time period units not supported"
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
-End Sub
-
 
 

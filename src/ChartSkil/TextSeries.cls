@@ -125,10 +125,6 @@ End Sub
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
-Private Property Let IGraphicObjectSeries_Canvas(ByVal Value As Canvas)
-Set mViewport = Value
-End Property
-
 Private Sub IGraphicObjectSeries_Click()
 RaiseEvent Click
 End Sub

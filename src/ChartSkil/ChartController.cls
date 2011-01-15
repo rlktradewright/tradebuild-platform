@@ -93,13 +93,13 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let BarTimePeriod( _
+Public Property Let PeriodLength( _
                 ByVal Value As TimePeriod)
-Const ProcName As String = "BarTimePeriod"
+Const ProcName As String = "PeriodLength"
 Dim failpoint As String
 On Error GoTo Err
 
-chartObj.BarTimePeriod = Value
+chartObj.PeriodLength = Value
 
 Exit Property
 
@@ -107,12 +107,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get BarTimePeriod() As TimePeriod
-Const ProcName As String = "BarTimePeriod"
+Public Property Get PeriodLength() As TimePeriod
+Const ProcName As String = "PeriodLength"
 Dim failpoint As String
 On Error GoTo Err
 
-Set BarTimePeriod = chartObj.BarTimePeriod
+Set PeriodLength = chartObj.PeriodLength
 
 Exit Property
 

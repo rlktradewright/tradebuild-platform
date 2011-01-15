@@ -66,10 +66,12 @@ Private Const ConfigSettingIncludeInAutoscale       As String = "&IncludeInAutos
 Private Const ConfigSettingFixedX                   As String = "&FixedX"
 Private Const ConfigSettingFixedY                   As String = "&FixedY"
 Private Const ConfigSettingExtended                 As String = "&Extended"
+Private Const ConfigSettingFont                     As String = "&Font"
 Private Const ConfigSettingJustification            As String = "&Justification"
 Private Const ConfigSettingMultiline                As String = "&Multiline"
 Private Const ConfigSettingEllipsis                 As String = "&Ellipsis"
 Private Const ConfigSettingExpandTabs               As String = "&ExpandTabs"
+Private Const ConfigSettingSize                     As String = "&Size"
 Private Const ConfigSettingTabWidth                 As String = "&TabWidth"
 Private Const ConfigSettingWordWrap                 As String = "&WordWrap"
 Private Const ConfigSettingHideIfBlank              As String = "&HideIfBlank"
@@ -1039,30 +1041,35 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set clone = New TextStyle
-clone.Align = mAlign
-clone.Angle = mAngle
-clone.Box = mBox
-clone.BoxColor = mBoxColor
-clone.BoxFillColor = mBoxFillColor
-clone.BoxFillStyle = mBoxFillStyle
-clone.BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
-clone.BoxStyle = mBoxStyle
-clone.BoxThickness = mBoxThickness
-clone.Color = mColor
-clone.Ellipsis = mEllipsis
-clone.ExpandTabs = mExpandTabs
-clone.Extended = mExtended
-clone.FixedX = mFixedX
-clone.FixedY = mFixedY
-clone.Font = gCloneFont(mFont)
-clone.HideIfBlank = mHideIfBlank
-clone.IncludeInAutoscale = mIncludeInAutoscale
-clone.Justification = mJustification
-clone.MultiLine = mMultiLine
-clone.PaddingX = mPaddingX
-clone.PaddingY = mPaddingY
-clone.TabWidth = mTabWidth
-clone.WordWrap = mWordWrap
+If IsPropertySet(TextPropertyAlign) Then clone.Align = mAlign
+If IsPropertySet(TextPropertyAngle) Then clone.Angle = mAngle
+If IsPropertySet(TextPropertyBox) Then clone.Box = mBox
+If IsPropertySet(TextPropertyBoxColor) Then clone.BoxColor = mBoxColor
+If IsPropertySet(TextPropertyBoxFillColor) Then clone.BoxFillColor = mBoxFillColor
+If IsPropertySet(TextPropertyBoxFillStyle) Then clone.BoxFillStyle = mBoxFillStyle
+If IsPropertySet(TextPropertyBoxFillWithBackgroundColor) Then clone.BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+If IsPropertySet(TextPropertyBoxStyle) Then clone.BoxStyle = mBoxStyle
+If IsPropertySet(TextPropertyBoxThickness) Then clone.BoxThickness = mBoxThickness
+If IsPropertySet(TextPropertyColor) Then clone.Color = mColor
+If IsPropertySet(TextPropertyEllipsis) Then clone.Ellipsis = mEllipsis
+If IsPropertySet(TextPropertyExpandTabs) Then clone.ExpandTabs = mExpandTabs
+If IsPropertySet(TextPropertyExtended) Then clone.Extended = mExtended
+If IsPropertySet(TextPropertyFixedX) Then clone.FixedX = mFixedX
+If IsPropertySet(TextPropertyFixedY) Then clone.FixedY = mFixedY
+If IsPropertySet(TextPropertyFont) Then clone.Font = gCloneFont(mFont)
+If IsPropertySet(TextPropertyHideIfBlank) Then clone.HideIfBlank = mHideIfBlank
+If IsPropertySet(TextPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
+If IsPropertySet(TextPropertyJustification) Then clone.Justification = mJustification
+If IsPropertySet(TextPropertyLayer) Then clone.Layer = mLayer
+If IsPropertySet(TextPropertyLeftMargin) Then clone.LeftMargin = mLeftMargin
+If IsPropertySet(TextPropertyMultiLine) Then clone.MultiLine = mMultiLine
+If IsPropertySet(TextPropertyOffset) Then clone.Offset = mOffset
+If IsPropertySet(TextPropertyPaddingX) Then clone.PaddingX = mPaddingX
+If IsPropertySet(TextPropertyPaddingY) Then clone.PaddingY = mPaddingY
+If IsPropertySet(TextPropertyRightMargin) Then clone.RightMargin = mRightMargin
+If IsPropertySet(TextPropertySize) Then clone.Size = mSize
+If IsPropertySet(TextPropertyTabWidth) Then clone.TabWidth = mTabWidth
+If IsPropertySet(TextPropertyWordWrap) Then clone.WordWrap = mWordWrap
 Exit Function
 
 Err:
@@ -1194,6 +1201,9 @@ End Sub
 
 Private Function propertyFlagToConfigSetting( _
             ByVal pPropFlag As TextPropertyFlags) As String
+Const ProcName As String = "propertyFlagToConfigSetting"
+On Error GoTo Err
+
 Select Case pPropFlag
 Case TextPropertyColor
     propertyFlagToConfigSetting = ConfigSettingColor
@@ -1215,6 +1225,8 @@ Case TextPropertyPaddingX
     propertyFlagToConfigSetting = ConfigSettingPaddingX
 Case TextPropertyPaddingY
     propertyFlagToConfigSetting = ConfigSettingPaddingY
+Case TextPropertyFont
+    propertyFlagToConfigSetting = ConfigSettingFont
 Case TextPropertyBoxFillWithBackgroundColor
     propertyFlagToConfigSetting = ConfigSettingBoxFillWithBackgroundColor
 Case TextPropertyFixedX
@@ -1225,6 +1237,10 @@ Case TextPropertyIncludeInAutoscale
     propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
 Case TextPropertyExtended
     propertyFlagToConfigSetting = ConfigSettingExtended
+Case TextPropertyLayer
+    propertyFlagToConfigSetting = ConfigSettingLayer
+Case TextPropertySize
+    propertyFlagToConfigSetting = ConfigSettingSize
 Case TextPropertyAngle
     propertyFlagToConfigSetting = ConfigSettingAngle
 Case TextPropertyJustification
@@ -1239,15 +1255,22 @@ Case TextPropertyTabWidth
     propertyFlagToConfigSetting = ConfigSettingTabWidth
 Case TextPropertyWordWrap
     propertyFlagToConfigSetting = ConfigSettingWordWrap
-Case TextPropertyHideIfBlank
-    propertyFlagToConfigSetting = ConfigSettingHideIfBlank
 Case TextPropertyLeftMargin
     propertyFlagToConfigSetting = ConfigSectionLeftMargin
 Case TextPropertyRightMargin
     propertyFlagToConfigSetting = ConfigSectionRightMargin
 Case TextPropertyOffset
     propertyFlagToConfigSetting = ConfigSectionOffset
+Case TextPropertyHideIfBlank
+    propertyFlagToConfigSetting = ConfigSettingHideIfBlank
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
             
 End Function
 

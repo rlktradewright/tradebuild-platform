@@ -510,7 +510,7 @@ Else
     Else
         If price <= 0 Then Exit Function
         If price / mTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
-        If price < (0.5 * prevValidPrice) Or price > (1.5 * prevValidPrice) Then Exit Function
+        If price < (2 * prevValidPrice) / 3 Or price > (3 * prevValidPrice) / 2 Then Exit Function
     End If
     
 End If

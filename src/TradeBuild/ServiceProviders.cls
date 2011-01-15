@@ -1418,8 +1418,6 @@ Const ProcName As String = "RemoveAll"
 
 On Error GoTo Err
 
-gTB.StopAllTickers
-
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         Set sp = mServiceProviders(i).SPObject

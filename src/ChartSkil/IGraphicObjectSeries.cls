@@ -73,7 +73,7 @@ Public Property Get Name() As String
 
 End Property
 
-Public Property Let Selected(ByVal value As Boolean)
+Public Property Let Selected(ByVal Value As Boolean)
 
 End Property
 
@@ -119,7 +119,7 @@ Public Sub Remove(ByVal index As Long)
 
 End Sub
 
-Public Sub RemoveObject(ByVal value As IGraphicObject)
+Public Sub RemoveObject(ByVal Value As IGraphicObject)
 
 End Sub
 

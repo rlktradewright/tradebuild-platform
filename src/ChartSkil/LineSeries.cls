@@ -61,7 +61,6 @@ Private mFinished As Boolean
 
 Private mLines As Collection
 
-'Private mSurface As PictureBox
 Private mViewport As Viewport
 Private mLayer As Long
 

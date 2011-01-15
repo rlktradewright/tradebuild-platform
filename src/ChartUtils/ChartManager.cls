@@ -105,7 +105,7 @@ Const ProcName As String = "TaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then
-    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.errorMessage
+    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
 End If
 
 mChartController.EnableDrawing
@@ -160,6 +160,8 @@ End If
 
 Dim sc As StudyConfiguration
 Set sc = studyConfig.Clone ' take a defensive copy
+sc.ClearStudyValueHandlers
+sc.ClearStudyConfigs
 setBaseStudyConfiguration sc
 
 Exit Property
@@ -181,13 +183,13 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal Value As ConfigurationSection)
+                ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If Value Is mConfig Then Exit Property
-Set mConfig = Value
+If value Is mConfig Then Exit Property
+Set mConfig = value
 If Not mBaseStudyConfig Is Nothing Then
     mBaseStudyConfig.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBaseStudyConfig)
 End If
@@ -223,8 +225,8 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let UpdatePerTick(ByVal Value As Boolean)
-mUpdatePerTick = Value
+Public Property Let UpdatePerTick(ByVal value As Boolean)
+mUpdatePerTick = value
 End Property
 
 '@================================================================================
@@ -243,7 +245,7 @@ Set lStudy = AddStudy(studyConfig)
 
 removeExistingStudyConfig lStudy
 
-AddStudyConfig studyConfig
+addStudyConfig studyConfig
 
 Set AddStudyConfiguration = lStudy
 RaiseEvent StudyAdded(studyConfig)
@@ -264,7 +266,7 @@ Set mPeriods = mChartController.Periods
 
 If Not mBaseStudyConfig Is Nothing Then
     mBaseStudyConfig.Finish
-    mBaseStudyConfig.removeFromConfig
+    mBaseStudyConfig.RemoveFromConfig
     Set mBaseStudyConfig = Nothing
     Set mBaseStudy = Nothing
 End If
@@ -486,10 +488,10 @@ Else
     
         removeStudyConfig oldStudyConfig
         
-        AddStudyConfig newStudyConfig
+        addStudyConfig newStudyConfig
     Else
     
-        AddStudyConfig newStudyConfig
+        addStudyConfig newStudyConfig
         
         RaiseEvent StudyRemoved(oldStudyConfig)
         RaiseEvent StudyAdded(newStudyConfig)
@@ -682,7 +684,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Sub AddStudyConfig( _
+Private Sub addStudyConfig( _
                 ByVal studyConfig As StudyConfiguration)
 Dim parentStudyConfig As StudyConfiguration
 
@@ -899,7 +901,7 @@ For Each oldChildStudyConfig In oldStudyConfig.StudyConfigurations
     
     AddStudy newChildStudyConfig
     
-    AddStudyConfig newChildStudyConfig
+    addStudyConfig newChildStudyConfig
     
     reconfigureChildStudies oldChildStudyConfig, newChildStudyConfig
     
@@ -948,7 +950,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 If studyConfig.Study Is mBaseStudy Then
-    mBaseStudyConfig.removeFromConfig
+    mBaseStudyConfig.RemoveFromConfig
 Else
     Dim parentStudyConfig As StudyConfiguration
     Set parentStudyConfig = mAllStudyConfigs(studyConfig.UnderlyingStudy.ID)
@@ -1046,14 +1048,14 @@ On Error GoTo Err
 If mBaseStudy Is Nothing Then
     setBaseStudyConfig studyConfig
     
-    AddStudyConfig studyConfig
+    addStudyConfig studyConfig
     
     setupStudyValueListeners mBaseStudyConfig
     RaiseEvent StudyAdded(mBaseStudyConfig)
     AddDependentStudies studyConfig
 
 ElseIf Not studyConfig.Study Is mBaseStudy Then
-    AddStudyConfig studyConfig
+    addStudyConfig studyConfig
     
     setupStudyValueListeners studyConfig
     removeStudyValueListeners mBaseStudyConfig
@@ -1076,7 +1078,7 @@ Else
     removeStudyConfig mBaseStudyConfig
     
     setBaseStudyConfig studyConfig
-    AddStudyConfig mBaseStudyConfig
+    addStudyConfig mBaseStudyConfig
     
 End If
 

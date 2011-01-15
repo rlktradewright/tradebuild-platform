@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#187.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#168.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#202.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#181.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -75,32 +75,32 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "&Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(0)=   "ErrorText"
       Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "Label1"
+      Tab(1).Control(1)=   "StudyConfigurer1"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "Label19"
+      Tab(1).Control(2)=   "RemoveLibButton"
       Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "StudiesCombo"
+      Tab(1).Control(3)=   "StudyLibraryList"
       Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "LibToAddText"
+      Tab(1).Control(4)=   "AddLibButton"
       Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "AddLibButton"
+      Tab(1).Control(5)=   "LibToAddText"
       Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "StudyLibraryList"
+      Tab(1).Control(6)=   "StudiesCombo"
       Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "RemoveLibButton"
+      Tab(1).Control(7)=   "Label19"
       Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "StudyConfigurer1"
+      Tab(1).Control(8)=   "Label1"
       Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "ErrorText"
+      Tab(1).Control(9)=   "Label2"
       Tab(1).Control(9).Enabled=   0   'False
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Chart1"
-      Tab(2).Control(1)=   "ChartToolbar1"
+      Tab(2).Control(0)=   "ChartToolbar1"
+      Tab(2).Control(1)=   "Chart1"
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -118,8 +118,8 @@ Begin VB.Form StudyTestForm
          Left            =   -74880
          TabIndex        =   18
          Top             =   360
-         Width           =   12375
-         _ExtentX        =   21828
+         Width           =   6465
+         _ExtentX        =   11404
          _ExtentY        =   582
       End
       Begin ChartSkil26.Chart Chart1 
@@ -909,7 +909,7 @@ Chart1.ChartBackColor = vbWhite
 Chart1.PointerStyle = PointerCrosshairs
 Chart1.HorizontalScrollBarVisible = True
 
-If Not mBars Is Nothing Then Chart1.BarTimePeriod = mBars.BarTimePeriod
+If Not mBars Is Nothing Then Chart1.PeriodLength = mBars.BarTimePeriod
 
 If defaultRegionStyle Is Nothing Then
     Set defaultRegionStyle = New ChartRegionStyle

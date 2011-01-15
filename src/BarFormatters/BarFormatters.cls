@@ -34,6 +34,11 @@ Option Explicit
 ' Types
 '@================================================================================
 
+Public Type BarFormatterFactoryListEntry
+    Name                As String
+    LibraryName         As String
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -77,6 +82,19 @@ Set AddBarFormatterLibrary = Globals.gBarFormatterLibManager.AddBarFormatterLibr
                                 Enabled, _
                                 Name)
 
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Public Function CreateBarFormatterFactory( _
+                ByVal pBarFormatterName As String, _
+                ByVal pLibraryName As String) As BarFormatterFactory
+Const ProcName As String = "CreateBarFormatterFactory"
+On Error GoTo Err
+
+Set CreateBarFormatterFactory = gBarFormatterLibManager.CreateBarFormatterFactory(pBarFormatterName, pLibraryName)
 Exit Function
 
 Err:

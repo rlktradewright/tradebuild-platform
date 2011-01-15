@@ -236,7 +236,7 @@ Public Sub RectExpandBySize( _
                 ByRef pRect As TRectangle, _
                 ByVal pSize As Size, _
                 ByVal pViewport As Viewport)
-RectExpand pRect, pSize.WidthLogical(pViewport), pSize.HeightLogical(pViewport)
+RectExpand pRect, pSize.WidthLogical(pViewport.Region), pSize.HeightLogical(pViewport.Region)
 End Sub
 
 Public Function RectGetXInterval( _
@@ -312,7 +312,7 @@ Public Sub RectOffsetBySize( _
                 ByRef pRect As TRectangle, _
                 ByRef pOffset As Size, _
                 ByVal pViewport As Viewport)
-RectOffset pRect, pOffset.WidthLogical(pViewport), pOffset.HeightLogical(pViewport)
+RectOffset pRect, pOffset.WidthLogical(pViewport.Region), pOffset.HeightLogical(pViewport.Region)
 End Sub
 
 Public Sub RectOffsetPoint( _

@@ -73,6 +73,10 @@ Private mBarFormatters()                            As BarFormatterFactoryListEn
 
 Private WithEvents mChartManager                    As ChartManager
 Attribute mChartManager.VB_VarHelpID = -1
+Private WithEvents mTradeBuildChart                 As TradeBuildChart
+Attribute mTradeBuildChart.VB_VarHelpID = -1
+Private WithEvents mMultiChart                      As MultiChart
+Attribute mMultiChart.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -102,11 +106,11 @@ On Error GoTo Err
 Set lBaseStudyConfig = mChartManager.BaseStudyConfiguration
 Set lBarsValueConfig = lBaseStudyConfig.StudyValueConfigurations("Bar")
 
-If BarFormattersCombo.SelectedItem.Index = 1 Then
+If BarFormattersCombo.SelectedItem.index = 1 Then
     lBarsValueConfig.BarFormatterFactoryName = ""
     lBarsValueConfig.BarFormatterLibraryName = ""
 Else
-    lEntry = mBarFormatters(BarFormattersCombo.SelectedItem.Index - 2)
+    lEntry = mBarFormatters(BarFormattersCombo.SelectedItem.index - 2)
     lBarsValueConfig.BarFormatterFactoryName = lEntry.name
     lBarsValueConfig.BarFormatterLibraryName = lEntry.LibraryName
 End If
@@ -124,26 +128,123 @@ End Sub
 '@================================================================================
 
 Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As ChartUtils26.StudyConfiguration)
+Const ProcName As String = "mChartManager_BaseStudyConfigurationChanged"
+On Error GoTo Err
+
 selectItem
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mMultiChart Event Handlers
+'@================================================================================
+
+Private Sub mMultiChart_Change(ev As TWUtilities30.ChangeEventData)
+Dim changeType As MultiChartChangeTypes
+Const ProcName As String = "mMultiChart_Change"
+Dim failpoint As String
+On Error GoTo Err
+
+changeType = ev.changeType
+Select Case changeType
+Case MultiChartSelectionChanged
+    attachToCurrentChart
+Case MultiChartAdd
+
+Case MultiChartRemove
+
+End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mTradeBuildChart Event Handlers
+'@================================================================================
+
+Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEventData)
+Dim State As ChartStates
+Const ProcName As String = "mTradeBuildChart_StateChange"
+Dim failpoint As String
+On Error GoTo Err
+
+State = ev.State
+Select Case State
+Case ChartStateBlank
+
+Case ChartStateCreated
+
+Case ChartStateInitialised
+
+Case ChartStateLoaded
+    setChartManager
+    selectItem
+End Select
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
+Public Property Get Enabled() As Boolean
+Attribute Enabled.VB_UserMemId = -514
+Enabled = UserControl.Enabled
+End Property
+
+Public Property Let Enabled( _
+                ByVal value As Boolean)
+Const ProcName As String = "Enabled"
+Dim failpoint As String
+On Error GoTo Err
+
+UserControl.Enabled = value
+BarFormattersCombo.Enabled = value
+PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub Initialise(ByVal pChartMgr As ChartManager)
+Public Sub Initialise( _
+                Optional ByVal pChart As TradeBuildChart, _
+                Optional ByVal pMultiChart As MultiChart)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mChartManager = pChartMgr
+If pChart Is Nothing And pMultiChart Is Nothing Or _
+    (Not pChart Is Nothing And Not pMultiChart Is Nothing) _
+Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Either a Chart or a Multichart (but not both) must be supplied"
+End If
+
+If Not pChart Is Nothing Then
+    attachToChart pChart
+ElseIf Not pMultiChart Is Nothing Then
+    Set mMultiChart = pMultiChart
+    attachToCurrentChart
+End If
 
 loadCombo
-
-selectItem
 
 Exit Sub
 
@@ -154,6 +255,40 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub attachToChart(ByVal pChart As TradeBuildChart)
+Const ProcName As String = "attachToChart"
+Dim failpoint As String
+On Error GoTo Err
+
+Set mTradeBuildChart = pChart
+If mTradeBuildChart.State = ChartStateLoaded Then
+    setChartManager
+    selectItem
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub attachToCurrentChart()
+Const ProcName As String = "attachToCurrentChart"
+Dim failpoint As String
+On Error GoTo Err
+
+If mMultiChart.Count > 0 Then
+    attachToChart mMultiChart.Chart
+Else
+    Set mTradeBuildChart = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
 
 Private Function itemKey(ByVal pFormatterName As String, ByVal pLibraryName As String) As String
 itemKey = pFormatterName & "  (" & pLibraryName & ")"
@@ -199,9 +334,9 @@ On Error GoTo Err
 Set lBarsValueConfig = mChartManager.BaseStudyConfiguration.StudyValueConfigurations("Bar")
 
 If lBarsValueConfig.BarFormatterFactoryName = "" Then
-    BarFormattersCombo.ComboItems.item(NoBarFormatter).selected = True
+    BarFormattersCombo.ComboItems.item(NoBarFormatter).Selected = True
 Else
-    BarFormattersCombo.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).selected = True
+    BarFormattersCombo.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).Selected = True
 End If
 
 BarFormattersCombo.Refresh
@@ -211,4 +346,9 @@ Exit Sub
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
+
+Private Sub setChartManager()
+Set mChartManager = mTradeBuildChart.ChartManager
+End Sub
+
 

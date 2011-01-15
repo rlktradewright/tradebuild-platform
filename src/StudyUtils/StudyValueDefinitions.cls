@@ -100,6 +100,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyValueDefinition
+Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 On Error GoTo Err
 

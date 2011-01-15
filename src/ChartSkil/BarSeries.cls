@@ -717,7 +717,7 @@ If Key = "" Then
 End If
 lBar.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
-lBar.X = chartObj.GetXFromTimestamp(Timestamp, True)
+lBar.X = chartObj.GetXFromTimestamp(Timestamp, False)
 
 If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
 mBars.Add lBar, Key

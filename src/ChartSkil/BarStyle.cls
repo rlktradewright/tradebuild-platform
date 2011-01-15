@@ -522,16 +522,17 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set clone = New BarStyle
-clone.Color = mColor
-clone.Thickness = mThickness
-clone.Width = mWidth
-clone.DisplayMode = mDisplayMode
-clone.DownColor = mDownColor
-clone.IncludeInAutoscale = mIncludeInAutoscale
-clone.OutlineThickness = mOutlineThickness
-clone.SolidUpBody = mSolidUpBody
-clone.TailThickness = mTailThickness
-clone.UpColor = mUpColor
+If IsPropertySet(BarPropertyColor) Then clone.Color = mColor
+If IsPropertySet(BarPropertyDisplayMode) Then clone.DisplayMode = mDisplayMode
+If IsPropertySet(BarPropertyDownColor) Then clone.DownColor = mDownColor
+If IsPropertySet(BarPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
+If IsPropertySet(BarPropertyLayer) Then clone.Layer = mLayer
+If IsPropertySet(BarPropertyOutlineThickness) Then clone.OutlineThickness = mOutlineThickness
+If IsPropertySet(BarPropertySolidUpBody) Then clone.SolidUpBody = mSolidUpBody
+If IsPropertySet(BarPropertyTailThickness) Then clone.TailThickness = mTailThickness
+If IsPropertySet(BarPropertyThickness) Then clone.Thickness = mThickness
+If IsPropertySet(BarPropertyUpColor) Then clone.UpColor = mUpColor
+If IsPropertySet(BarPropertyWidth) Then clone.Width = mWidth
 
 Exit Function
 
@@ -636,6 +637,9 @@ End Sub
 
 Private Function propertyFlagToConfigSetting( _
             ByVal pPropFlag As BarPropertyFlags) As String
+Const ProcName As String = "propertyFlagToConfigSetting"
+On Error GoTo Err
+
 Select Case pPropFlag
 Case BarPropertyColor
     propertyFlagToConfigSetting = ConfigSettingColor
@@ -659,7 +663,14 @@ Case BarPropertyIncludeInAutoscale
     propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
 Case BarPropertyLayer
     propertyFlagToConfigSetting = ConfigSettingLayer
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub setBooleanProperty( _

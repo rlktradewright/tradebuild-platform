@@ -114,6 +114,87 @@ End If
 Set gDefaultBarStyle = lStyle
 End Property
 
+Public Property Get gDefaultChartRegionStyle() As ChartRegionStyle
+Static lStyle As ChartRegionStyle
+
+Dim aFont As StdFont
+
+If lStyle Is Nothing Then
+    Set lStyle = New ChartRegionStyle
+    lStyle.HasGrid = True
+    lStyle.HasGridText = False
+    lStyle.Autoscaling = True
+    lStyle.IntegerYScale = False
+    lStyle.YScaleQuantum = 0.01
+    lStyle.GridlineSpacingY = 1.8
+    lStyle.MinimumHeight = 0
+    lStyle.CursorSnapsToTickBoundaries = True
+    ReDim mBackGradientFillColors(0) As Long
+    mBackGradientFillColors(0) = vbWhite
+    lStyle.BackGradientFillColors = mBackGradientFillColors
+    
+    lStyle.GridLineStyle = gDefaultLineStyle.clone
+    lStyle.GridLineStyle.Color = &HC0C0C0
+    
+    lStyle.GridTextStyle = gDefaultTextStyle.clone
+    lStyle.GridTextStyle.Box = True
+    lStyle.GridTextStyle.BoxFillWithBackgroundColor = True
+    lStyle.GridTextStyle.BoxStyle = LineInvisible
+    lStyle.GridTextStyle.Color = vbBlack
+        
+    Set aFont = New StdFont
+    aFont.Italic = False
+    aFont.Name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    lStyle.GridTextStyle.Font = aFont
+    
+    lStyle.SessionEndGridLineStyle = gDefaultLineStyle.clone
+    lStyle.SessionEndGridLineStyle.Color = &HC0C0C0
+    lStyle.SessionEndGridLineStyle.LineStyle = LineDash
+    
+    lStyle.SessionStartGridLineStyle = gDefaultLineStyle.clone
+    lStyle.SessionStartGridLineStyle.Color = &HC0C0C0
+    lStyle.SessionStartGridLineStyle.Thickness = 3
+    
+    lStyle.YAxisTextStyle = gDefaultTextStyle.clone
+    lStyle.YAxisTextStyle.Box = True
+    lStyle.YAxisTextStyle.BoxFillWithBackgroundColor = True
+    lStyle.YAxisTextStyle.BoxStyle = LineInvisible
+    lStyle.YAxisTextStyle.Color = vbBlack
+        
+    Set aFont = New StdFont
+    aFont.Italic = False
+    aFont.Name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    lStyle.YAxisTextStyle.Font = aFont
+    
+    lStyle.YCursorTextStyle = gDefaultTextStyle.clone
+    lStyle.YCursorTextStyle.Box = True
+    lStyle.YCursorTextStyle.BoxColor = vbBlack
+    lStyle.YCursorTextStyle.BoxFillColor = vbWhite
+    lStyle.YCursorTextStyle.BoxFillStyle = FillSolid
+    lStyle.YCursorTextStyle.BoxThickness = 1
+    lStyle.YCursorTextStyle.Color = vbBlack
+    lStyle.YCursorTextStyle.PaddingX = 1
+    lStyle.YCursorTextStyle.PaddingY = 0
+    lStyle.YCursorTextStyle.Justification = JustifyCentre
+        
+    Set aFont = New StdFont
+    aFont.Italic = False
+    aFont.Name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    lStyle.YCursorTextStyle.Font = aFont
+
+End If
+Set gDefaultChartRegionStyle = lStyle
+End Property
+
 Public Property Get gDefaultDataPointStyle() As DataPointStyle
 Static lStyle As DataPointStyle
 If lStyle Is Nothing Then
@@ -246,9 +327,9 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
-Public Property Get gLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("chartskil.log")
+Public Property Get gLogger() As FormattingLogger
+Static lLogger As FormattingLogger
+If lLogger Is Nothing Then Set lLogger = CreateFormattingLogger("chartskil.log", ProjectName)
 Set gLogger = lLogger
 End Property
 

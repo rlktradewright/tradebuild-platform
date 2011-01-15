@@ -80,13 +80,13 @@ End Sub
 '@================================================================================
 
 Public Property Let ConfigurationSection( _
-                ByVal Value As ConfigurationSection)
+                ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 Dim failpoint As String
 On Error GoTo Err
 
-If Value Is mConfig Then Exit Property
-Set mConfig = Value
+If value Is mConfig Then Exit Property
+Set mConfig = value
 storeSettings
 
 Exit Property
@@ -191,7 +191,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 mStudyConfigurations.Remove studyConfig.ID
-studyConfig.removeFromConfig
+studyConfig.RemoveFromConfig
 
 Exit Sub
 

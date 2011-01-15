@@ -62,19 +62,6 @@ Public Enum BarPropertyFlags
     BarPropertyLayer = &H400&
 End Enum
 
-Public Enum DataPointPropertyFlags
-    DataPointPropertyLineThickness = 1
-    DataPointPropertyColor = 2
-    DataPointPropertyUpColor = 4
-    DataPointPropertyDownColor = 8
-    DataPointPropertyLineStyle = &H10&
-    DataPointPropertyPointStyle = &H20&
-    DataPointPropertyDisplayMode = &H40&
-    DataPointPropertyHistWidth = &H80&
-    DataPointPropertyIncludeInAutoscale = &H100&
-    DataPointPropertyLayer = &H200&
-End Enum
-
 Public Enum GraphicObjectCapabilities
     ComplexBounding = 1
     PartialRedraw = 2
@@ -93,6 +80,19 @@ Public Enum DataPointDisplayModes
     DataPointDisplayModeLine
     DataPointDisplayModeStep
     DataPointDisplayModeHistogram
+End Enum
+
+Public Enum DataPointPropertyFlags
+    DataPointPropertyLineThickness = 1
+    DataPointPropertyColor = 2
+    DataPointPropertyUpColor = 4
+    DataPointPropertyDownColor = 8
+    DataPointPropertyLineStyle = &H10&
+    DataPointPropertyPointStyle = &H20&
+    DataPointPropertyDisplayMode = &H40&
+    DataPointPropertyHistWidth = &H80&
+    DataPointPropertyIncludeInAutoscale = &H100&
+    DataPointPropertyLayer = &H200&
 End Enum
 
 Public Enum DrawModes
@@ -368,6 +368,26 @@ End Property
 Public Function DegreesToRadians( _
                 ByVal degrees As Double) As Double
 DegreesToRadians = gDegreesToRadians(degrees)
+End Function
+
+Public Function GetDefaultBarStyle() As BarStyle
+Set GetDefaultBarStyle = gDefaultBarStyle
+End Function
+
+Public Function GetDefaultChartRegionStyle() As ChartRegionStyle
+Set GetDefaultChartRegionStyle = gDefaultChartRegionStyle
+End Function
+
+Public Function GetDefaultDataPointStyle() As DataPointStyle
+Set GetDefaultDataPointStyle = gDefaultDataPointStyle
+End Function
+
+Public Function GetDefaultLineStyle() As LineStyle
+Set GetDefaultLineStyle = gDefaultLineStyle
+End Function
+
+Public Function GetDefaultTextStyle() As TextStyle
+Set GetDefaultTextStyle = gDefaultTextStyle
 End Function
 
 Public Function LoadDimensionFromConfig( _

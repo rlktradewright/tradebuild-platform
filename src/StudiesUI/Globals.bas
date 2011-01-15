@@ -230,9 +230,36 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function gChooseAColor( _
+                ByVal pInitialColor As Long, _
+                ByVal pAllowNull As Boolean, _
+                ByVal pParent As Form) As Long
+Static lSimpleColorPicker As fSimpleColorPicker
+Dim cursorpos As GDI_POINT
+
+Const ProcName As String = "gChooseAColor"
+On Error GoTo Err
+
+GetCursorPos cursorpos
+
+If lSimpleColorPicker Is Nothing Then Set lSimpleColorPicker = New fSimpleColorPicker
+
+lSimpleColorPicker.Top = cursorpos.Y * Screen.TwipsPerPixelY
+lSimpleColorPicker.Left = cursorpos.X * Screen.TwipsPerPixelX
+lSimpleColorPicker.initialColor = pInitialColor
+If pAllowNull Then lSimpleColorPicker.NoColorButton.Enabled = True
+lSimpleColorPicker.ZOrder 0
+lSimpleColorPicker.Show vbModal, pParent
+gChooseAColor = lSimpleColorPicker.selectedColor
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pReRaise As Boolean = True, _
@@ -244,12 +271,11 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-gHandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pErrorNumber As Long, _
@@ -259,7 +285,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Function gLineStyleToString( _
@@ -326,7 +352,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function isPrice( _
@@ -350,7 +376,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub notImplemented()

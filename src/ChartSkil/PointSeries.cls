@@ -61,7 +61,7 @@ Private mFinished           As Boolean
 
 Private mDataPoints         As Collection
 
-Private mViewport           As Viewport
+Private mViewport As Viewport
 Private mLayer              As Long
 
 Private mGOSP               As GraphObjServiceProvider

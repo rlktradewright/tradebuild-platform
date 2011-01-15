@@ -421,7 +421,7 @@ ChangeButton.Enabled = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Sub
 
@@ -460,7 +460,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub addStudyToChart(ByVal studyConfig As StudyConfiguration)
@@ -505,13 +505,13 @@ mConfigForm.Initialise mChartManager.Chart, _
                         defaultConfiguration, _
                         GetStudyDefaultParameters(studyName, slName), _
                         noParameterModification
-mConfigForm.Show vbModal, Me
+mConfigForm.Show vbModal, UserControl.Parent
 If Not mConfigForm.Cancelled Then Set showConfigForm = mConfigForm.StudyConfiguration
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 

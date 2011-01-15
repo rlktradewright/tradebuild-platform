@@ -860,14 +860,13 @@ ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToPixelsX = MinusInfinityLong
 Else
     ConvertLogicalToPixelsX = mCanvas.Surface.ScaleX(Value, vbUser, vbPixels)
-    'ConvertLogicalToPixelsX = value / mGaugeX
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+    End Function
 
 Public Function ConvertLogicalToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertLogicalToPixelsY"
@@ -880,7 +879,6 @@ ElseIf Value = MinusInfinityDouble Then
     ConvertLogicalToPixelsY = MinusInfinityLong
 Else
     ConvertLogicalToPixelsY = -Canvas.Surface.ScaleY(Value, vbUser, vbPixels)
-    'ConvertLogicalToPixelsY = value / mGaugeY
 End If
 Exit Function
 
@@ -1229,7 +1227,7 @@ Const ProcName As String = "Finish"
 Dim failpoint As String
 On Error GoTo Err
 
-gLogger.Log LogLevelHighDetail, "Viewport finished"
+gLogger.Log "Viewport finished", ProcName, ModuleName, LogLevelHighDetail
 mCanvas.Finish
 Set mCanvas = Nothing
 

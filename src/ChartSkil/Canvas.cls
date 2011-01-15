@@ -493,10 +493,18 @@ Friend Sub Finish()
 ' See this Microsoft bug: http://support.microsoft.com/kb/q190511/
 ' We have to make sure that all references to ControlArray members are released
 ' to ensure that this ActiveX control's memory is released
-gLogger.Log LogLevelHighDetail, "Canvas finished"
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+gLogger.Log "Canvas finished", ProcName, ModuleName, LogLevelHighDetail
 Set mSurface = Nothing
 
 Set mViewport = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Function GetTextSize( _

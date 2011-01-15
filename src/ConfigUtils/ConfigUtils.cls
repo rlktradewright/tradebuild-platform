@@ -140,6 +140,10 @@ If Not setupStudyLibraries(config) Then
     log "Failed loading study libraries from configuration: " & config.InstanceQualifier, LogLevelNormal
     ConfigureTradeBuild = False
 End If
+If Not setupBarFormatterLibraries(config) Then
+    log "Failed loading bar formatter libraries from configuration: " & config.InstanceQualifier, LogLevelNormal
+    ConfigureTradeBuild = False
+End If
 
 If ConfigureTradeBuild Then
     log "Loaded configuration: " & config.InstanceQualifier, LogLevelNormal
@@ -320,6 +324,11 @@ If Not GetAppInstanceConfig(pConfigStore, newAppConfigName) Is Nothing Then
             "App instance config already exists"
 End If
 
+If clientId < 0 Then
+    Randomize
+    clientId = Rnd * &H6FFFFFFF + &H10000000
+End If
+
 Set newAppConfigSection = pConfigStore.AddConfigurationSection(generateSectionPath(newAppConfigName))
 If (pFlags And ConfigFlagSetAsDefault) Then setDefault pConfigStore, newAppConfigSection
 
@@ -434,6 +443,7 @@ On Error GoTo Err
 
 If Not TradeBuildAPI Is Nothing Then TradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
+RemoveAllBarFormatterLibraries
 
 Exit Sub
 
@@ -500,6 +510,39 @@ log "Study library configuration failed: " & Err.Description & vbCrLf & _
     Err.Source, _
     LogLevelSevere
 setupStudyLibraries = False
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function setupBarFormatterLibraries( _
+                ByVal config As ConfigurationSection) As Boolean
+Dim tradebuildEntry As ConfigurationSection
+
+Const ProcName As String = "setupBarFormatterLibraries"
+Dim failpoint As String
+On Error GoTo Err
+
+Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
+
+If tradebuildEntry Is Nothing Then
+    log "No bar formatter libraries defined in this configuration", LogLevelNormal
+    setupBarFormatterLibraries = True
+Else
+    On Error GoTo ConfigErr
+    LoadBarFormatterLibraryConfiguration tradebuildEntry
+    setupBarFormatterLibraries = True
+End If
+
+Exit Function
+
+ConfigErr:
+log "Bar formatter library configuration failed: " & Err.Description & vbCrLf & _
+    Err.Source, _
+    LogLevelSevere
+setupBarFormatterLibraries = False
 
 Exit Function
 

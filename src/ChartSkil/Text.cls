@@ -1627,7 +1627,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
 End Sub
 
 Private Function canBeDrawn() As Boolean

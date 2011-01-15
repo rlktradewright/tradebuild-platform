@@ -231,8 +231,8 @@ Private mSessionBuilder As SessionBuilder
 Private mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
-Private mBarTimePeriod As TimePeriod
-Private mBarTimePeriodSet As Boolean
+Private mPeriodLength As TimePeriod
+Private mPeriodLengthSet As Boolean
 
 Private mVerticalGridTimePeriod As TimePeriod
 Private mVerticalGridTimePeriodSet As Boolean
@@ -315,7 +315,7 @@ Initialise
 HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
 VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
 Autoscrolling = PropDfltAutoscrolling
-Set mBarTimePeriod = GetTimePeriod(PropDfltPeriodLength, PropDfltPeriodUnits)
+Set mPeriodLength = GetTimePeriod(PropDfltPeriodLength, PropDfltPeriodUnits)
 PointerCrosshairsColor = PropDfltPointerCrosshairsColor
 PointerDiscColor = PropDfltPointerDiscColor
 PointerStyle = PropDfltPointerStyle
@@ -428,7 +428,7 @@ Initialise
 
 Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
 
-Set mBarTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNamePeriodLength, PropDfltPeriodLength), _
+Set mPeriodLength = GetTimePeriod(PropBag.ReadProperty(PropNamePeriodLength, PropDfltPeriodLength), _
                                     PropBag.ReadProperty(PropNamePeriodUnits, PropDfltPeriodUnits))
 
 
@@ -494,16 +494,14 @@ Debug.Print "ChartSkil chart terminated"
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-Const ProcName As String = "UserControl_WriteProperties"
-Dim failpoint As String
-On Error GoTo Err
+On Error Resume Next
 
 PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
 PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
 PropBag.WriteProperty PropNameAutoscrolling, Autoscrolling, PropDfltAutoscrolling
 PropBag.WriteProperty PropNameChartBackColor, mChartBackColor
-PropBag.WriteProperty PropNamePeriodLength, mBarTimePeriod.Length, PropDfltPeriodLength
-PropBag.WriteProperty PropNamePeriodUnits, mBarTimePeriod.Units, PropDfltPeriodUnits
+PropBag.WriteProperty PropNamePeriodLength, mPeriodLength.Length, PropDfltPeriodLength
+PropBag.WriteProperty PropNamePeriodUnits, mPeriodLength.Units, PropDfltPeriodUnits
 PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
 PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
 PropBag.WriteProperty PropNamePointerStyle, mPointerStyle, PropDfltPointerStyle
@@ -515,10 +513,6 @@ PropBag.WriteProperty PropNameXAxisVisible, XAxisVisible, PropDfltXAxisVisible
 PropBag.WriteProperty PropNameYAxisVisible, YAxisVisible, PropDfltYAxisVisible
 PropBag.WriteProperty PropNameYAxisWidthCm, YAxisWidthCm, PropDfltYAxisWidthCm
 
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
@@ -1013,40 +1007,19 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let BarTimePeriod( _
+Public Property Let PeriodLength( _
                 ByVal Value As TimePeriod)
-Const ProcName As String = "BarTimePeriod"
+Const ProcName As String = "PeriodLength"
 Dim failpoint As String
 On Error GoTo Err
 
-If mBarTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+If mPeriodLengthSet Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "BarTimePeriod has already been set"
-If Value.Length < 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "BarTimePeriod length cannot be negative"
-                                    
-Select Case Value.Units
-Case TimePeriodNone
-Case TimePeriodSecond
-Case TimePeriodMinute
-Case TimePeriodHour
-Case TimePeriodDay
-Case TimePeriodWeek
-Case TimePeriodMonth
-Case TimePeriodYear
-Case TimePeriodVolume
-Case TimePeriodTickVolume
-Case TimePeriodTickMovement
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid period unit - must be a member of the TimePeriodUnits enum"
-End Select
+                                    "PeriodLength has already been set"
 
-Set mBarTimePeriod = Value
+Set mPeriodLength = Value
 
-mBarTimePeriodSet = True
+mPeriodLengthSet = True
 
 If Not mVerticalGridTimePeriodSet Then calcVerticalGridParams
 setRegionPeriodAndVerticalGridParameters
@@ -1058,9 +1031,9 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 
 End Property
 
-Public Property Get BarTimePeriod() As TimePeriod
-Attribute BarTimePeriod.VB_MemberFlags = "400"
-Set BarTimePeriod = mBarTimePeriod
+Public Property Get PeriodLength() As TimePeriod
+Attribute PeriodLength.VB_MemberFlags = "400"
+Set PeriodLength = mPeriodLength
 End Property
 
 Public Property Get Autoscrolling() As Boolean
@@ -1596,7 +1569,7 @@ ev = mSessionBuilder.SetSessionCurrentTime(pTimestamp)
 
 For Each Region In mRegions
     Region.AddPeriod pPeriodNumber, pTimestamp
-    Select Case mBarTimePeriod.Units
+    Select Case mPeriodLength.Units
     Case TimePeriodSecond, _
             TimePeriodMinute, _
             TimePeriodHour, _
@@ -1728,7 +1701,7 @@ Const ProcName As String = "GetXFromTimestamp"
 Dim failpoint As String
 On Error GoTo Err
 
-Select Case BarTimePeriod.Units
+Select Case PeriodLength.Units
 Case TimePeriodNone, _
         TimePeriodSecond, _
         TimePeriodMinute, _
@@ -1754,7 +1727,7 @@ Case TimePeriodNone, _
     End If
     
     periodEndtime = BarEndTime(lPeriod.Timestamp, _
-                            BarTimePeriod, _
+                            PeriodLength, _
                             SessionStartTime)
     GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
     
@@ -1991,11 +1964,11 @@ Const ProcName As String = "calcVerticalGridParams"
 Dim failpoint As String
 On Error GoTo Err
 
-Select Case mBarTimePeriod.Units
+Select Case mPeriodLength.Units
 Case TimePeriodNone
     Set mVerticalGridTimePeriod = Nothing
 Case TimePeriodSecond
-    Select Case mBarTimePeriod.Length
+    Select Case mPeriodLength.Length
     Case 1
         Set mVerticalGridTimePeriod = GetTimePeriod(15, TimePeriodSecond)
     Case 2
@@ -2022,7 +1995,7 @@ Case TimePeriodSecond
         Set mVerticalGridTimePeriod = Nothing
     End Select
 Case TimePeriodMinute
-    Select Case mBarTimePeriod.Length
+    Select Case mPeriodLength.Length
     Case 1
         Set mVerticalGridTimePeriod = GetTimePeriod(15, TimePeriodMinute)
     Case 2
@@ -2352,7 +2325,7 @@ mXCursorText.Position = gNewPoint( _
                             CoordsLogical, _
                             CoordsCounterDistance)
 
-Select Case mBarTimePeriod.Units
+Select Case mPeriodLength.Units
 Case TimePeriodNone, TimePeriodMinute, TimePeriodHour
     mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate) & _
                         " " & _
@@ -2377,7 +2350,7 @@ Const ProcName As String = "finishBackgroundCanvas"
 Dim failpoint As String
 On Error GoTo Err
 
-gLogger.Log LogLevelHighDetail, "Finish background canvas"
+gLogger.Log "Finish background canvas", ProcName, ModuleName, LogLevelHighDetail
 If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.Finish
 Set mBackGroundViewport = Nothing
 
@@ -2433,7 +2406,7 @@ Set mSession = mSessionBuilder.Session
 
 setupBackgroundViewport
 
-mBarTimePeriodSet = False
+mPeriodLengthSet = False
 mVerticalGridTimePeriodSet = False
 
 mPointerMode = PointerModes.PointerModeDefault

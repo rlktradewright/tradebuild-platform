@@ -907,30 +907,30 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set clone = New LineStyle
-clone.ArrowEndColor = mArrowEndColor
-clone.ArrowEndFillColor = mArrowEndFillColor
-clone.ArrowEndFillStyle = mArrowEndFillStyle
-clone.ArrowEndLength = mArrowEndLength
-clone.ArrowEndStyle = mArrowEndStyle
-clone.ArrowEndWidth = mArrowEndWidth
-clone.ArrowStartColor = mArrowStartColor
-clone.ArrowStartFillColor = mArrowStartFillColor
-clone.ArrowStartFillStyle = mArrowStartfillStyle
-clone.ArrowStartLength = mArrowStartLength
-clone.ArrowStartStyle = mArrowStartStyle
-clone.ArrowStartWidth = mArrowStartWidth
-clone.Color = mColor
-clone.ExtendAfter = mExtendAfter
-clone.ExtendBefore = mExtendBefore
-clone.IncludeInAutoscale = mIncludeInAutoscale
-clone.Extended = mExtended
-clone.FixedX = mFixedX
-clone.FixedY = mFixedY
-clone.Layer = mLayer
-clone.Offset1 = mOffset1
-clone.Offset2 = mOffset2
-clone.LineStyle = mLineStyle
-clone.Thickness = mThickness
+If IsPropertySet(LinePropertyArrowEndColor) Then clone.ArrowEndColor = mArrowEndColor
+If IsPropertySet(LinePropertyArrowEndFillColor) Then clone.ArrowEndFillColor = mArrowEndFillColor
+If IsPropertySet(LinePropertyArrowEndFillStyle) Then clone.ArrowEndFillStyle = mArrowEndFillStyle
+If IsPropertySet(LinePropertyArrowEndLength) Then clone.ArrowEndLength = mArrowEndLength
+If IsPropertySet(LinePropertyArrowEndStyle) Then clone.ArrowEndStyle = mArrowEndStyle
+If IsPropertySet(LinePropertyArrowEndWidth) Then clone.ArrowEndWidth = mArrowEndWidth
+If IsPropertySet(LinePropertyArrowStartColor) Then clone.ArrowStartColor = mArrowStartColor
+If IsPropertySet(LinePropertyArrowStartFillColor) Then clone.ArrowStartFillColor = mArrowStartFillColor
+If IsPropertySet(LinePropertyArrowStartFillStyle) Then clone.ArrowStartFillStyle = mArrowStartfillStyle
+If IsPropertySet(LinePropertyArrowStartLength) Then clone.ArrowStartLength = mArrowStartLength
+If IsPropertySet(LinePropertyArrowStartStyle) Then clone.ArrowStartStyle = mArrowStartStyle
+If IsPropertySet(LinePropertyArrowStartWidth) Then clone.ArrowStartWidth = mArrowStartWidth
+If IsPropertySet(LinePropertyColor) Then clone.Color = mColor
+If IsPropertySet(LinePropertyExtendAfter) Then clone.ExtendAfter = mExtendAfter
+If IsPropertySet(LinePropertyExtendBefore) Then clone.ExtendBefore = mExtendBefore
+If IsPropertySet(LinePropertyExtended) Then clone.Extended = mExtended
+If IsPropertySet(LinePropertyFixedX) Then clone.FixedX = mFixedX
+If IsPropertySet(LinePropertyFixedY) Then clone.FixedY = mFixedY
+If IsPropertySet(LinePropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
+If IsPropertySet(LinePropertyLayer) Then clone.Layer = mLayer
+If IsPropertySet(LinePropertyLineStyle) Then clone.LineStyle = mLineStyle
+If IsPropertySet(LinePropertyOffset1) Then clone.Offset1 = mOffset1
+If IsPropertySet(LinePropertyOffset2) Then clone.Offset2 = mOffset2
+If IsPropertySet(LinePropertyThickness) Then clone.Thickness = mThickness
 
 Exit Function
 
@@ -1049,6 +1049,9 @@ End Sub
 
 Private Function propertyFlagToConfigSetting( _
             ByVal pPropFlag As LinePropertyFlags) As String
+Const ProcName As String = "propertyFlagToConfigSetting"
+On Error GoTo Err
+
 Select Case pPropFlag
 Case LinePropertyColor
     propertyFlagToConfigSetting = ConfigSettingColor
@@ -1092,11 +1095,20 @@ Case LinePropertyIncludeInAutoscale
     propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
 Case LinePropertyExtended
     propertyFlagToConfigSetting = ConfigSettingExtended
+Case LinePropertyLayer
+    propertyFlagToConfigSetting = ConfigSettingLayer
 Case LinePropertyOffset1
     propertyFlagToConfigSetting = ConfigSectionOffset1
 Case LinePropertyOffset2
     propertyFlagToConfigSetting = ConfigSectionOffset2
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub setBooleanProperty( _

@@ -229,28 +229,6 @@ Public Property Get Parameters() As Parameters
 Set Parameters = mParameters
 End Property
 
-Public Property Let StudyLibraryName(ByVal value As String)
-Const ProcName As String = "StudyLibraryName"
-Dim failpoint As String
-On Error GoTo Err
-
-mStudyLibraryName = value
-storeSettings
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get StudyLibraryName() As String
-StudyLibraryName = mStudyLibraryName
-End Property
-
-Public Property Get StudyHorizontalRules() As StudyHorizontalRules
-Set StudyHorizontalRules = mStudyHorizontalRules
-End Property
-
 Public Property Let Study(ByVal value As Study)
 Dim lBarStudy As BarStudy
 
@@ -279,6 +257,28 @@ End Property
 
 Public Property Get StudyConfigurations() As StudyConfigurations
 Set StudyConfigurations = mStudyConfigs
+End Property
+
+Public Property Get StudyHorizontalRules() As StudyHorizontalRules
+Set StudyHorizontalRules = mStudyHorizontalRules
+End Property
+
+Public Property Let StudyLibraryName(ByVal value As String)
+Const ProcName As String = "StudyLibraryName"
+Dim failpoint As String
+On Error GoTo Err
+
+mStudyLibraryName = value
+storeSettings
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get StudyLibraryName() As String
+StudyLibraryName = mStudyLibraryName
 End Property
 
 Public Property Get StudyValueConfigurations() As StudyValueConfigurations
@@ -318,6 +318,14 @@ End Property
 ' Methods
 '@================================================================================
 
+Friend Sub ClearStudyConfigs()
+Set mStudyConfigs = New StudyConfigurations
+End Sub
+
+Friend Sub ClearStudyValueHandlers()
+Set mStudyValueHandlers = New StudyValueHandlers
+End Sub
+
 Public Function Clone() As StudyConfiguration
 Const ProcName As String = "Clone"
 Dim failpoint As String
@@ -352,7 +360,8 @@ Set newSvcs = Clone.StudyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
     Set newSvc = newSvcs.Add(svc.ValueName)
-    newSvc.BarFormatterFactory = svc.BarFormatterFactory
+    newSvc.BarFormatterFactoryName = svc.BarFormatterFactoryName
+    newSvc.BarFormatterLibraryName = svc.BarFormatterLibraryName
     newSvc.BarStyle = svc.BarStyle
     newSvc.ChartRegionName = svc.ChartRegionName
     newSvc.DataPointStyle = svc.DataPointStyle

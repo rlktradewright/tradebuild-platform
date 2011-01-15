@@ -486,15 +486,16 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set clone = New DataPointStyle
-clone.Color = mColor
-clone.DisplayMode = mDisplayMode
-clone.DownColor = mDownColor
-clone.HistogramBarWidth = mHistWidth
-clone.IncludeInAutoscale = mIncludeInAutoscale
-clone.LineStyle = mLineStyle
-clone.LineThickness = mLineThickness
-clone.PointStyle = PointStyle
-clone.UpColor = mUpColor
+If IsPropertySet(DataPointPropertyColor) Then clone.Color = mColor
+If IsPropertySet(DataPointPropertyDisplayMode) Then clone.DisplayMode = mDisplayMode
+If IsPropertySet(DataPointPropertyDownColor) Then clone.DownColor = mDownColor
+If IsPropertySet(DataPointPropertyHistWidth) Then clone.HistogramBarWidth = mHistWidth
+If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
+If IsPropertySet(DataPointPropertyLayer) Then clone.Layer = mLayer
+If IsPropertySet(DataPointPropertyLineStyle) Then clone.LineStyle = mLineStyle
+If IsPropertySet(DataPointPropertyLineThickness) Then clone.LineThickness = mLineThickness
+If IsPropertySet(DataPointPropertyPointStyle) Then clone.PointStyle = PointStyle
+If IsPropertySet(DataPointPropertyUpColor) Then clone.UpColor = mUpColor
 
 Exit Function
 
@@ -599,6 +600,9 @@ End Sub
 
 Private Function propertyFlagToConfigSetting( _
             ByVal pPropFlag As DataPointPropertyFlags) As String
+Const ProcName As String = "propertyFlagToConfigSetting"
+On Error GoTo Err
+
 Select Case pPropFlag
 Case DataPointPropertyLineThickness
     propertyFlagToConfigSetting = ConfigSettingLineThickness
@@ -618,7 +622,16 @@ Case DataPointPropertyHistWidth
     propertyFlagToConfigSetting = ConfigSettingHistWidth
 Case DataPointPropertyIncludeInAutoscale
     propertyFlagToConfigSetting = ConfigSettingIncludeInAutoscale
+Case DataPointPropertyLayer
+    propertyFlagToConfigSetting = ConfigSettingLayer
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub setBooleanProperty( _

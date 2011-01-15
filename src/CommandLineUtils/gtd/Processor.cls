@@ -40,7 +40,6 @@ Implements QuoteListener
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gxd"
 Private Const ModuleName                    As String = "Processor"
 
 Private Const PriceDown                     As String = "-"

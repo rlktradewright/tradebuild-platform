@@ -40,18 +40,18 @@ Option Explicit
 
 Private Const ModuleName                As String = "StudyValueConfiguration"
 
-Private Const ConfigSectionBarFormatterFactory                  As String = "BarFormatterFactory"
 Private Const ConfigSectionBarStyle                             As String = "BarStyle"
 Private Const ConfigSectionDataPointStyle                       As String = "DataPointStyle"
 Private Const ConfigSectionLineStyle                            As String = "LineStyle"
 Private Const ConfigSectionTextStyle                            As String = "TextStyle"
 
+Private Const ConfigSettingBarFormatterFactoryName              As String = "&BarFormatterFactoryName"
+Private Const ConfigSettingBarFormatterLibraryName              As String = "&BarFormatterLibraryName"
 Private Const ConfigSettingChartRegionName                      As String = "&ChartRegionName"
 Private Const ConfigSettingIncludeInChart                       As String = "&IncludeInChart"
 Private Const ConfigSettingLayer                                As String = "&Layer"
 Private Const ConfigSettingOffsetX                              As String = "&X"
 Private Const ConfigSettingOffsetY                              As String = "&Y"
-Private Const ConfigSettingProgId                               As String = "&ProgId"
 Private Const ConfigSettingValueName                            As String = "&ValueName"
 
 '@================================================================================
@@ -79,7 +79,8 @@ Private mLayer As Long
 Private mOffsetX As Double
 Private mOffsetY As Double
 
-Private mBarFormatterFactory As BarFormatterFactory
+Private mBarFormatterFactoryName As String
+Private mBarFormatterLibraryName As String
 
 Private mConfig As ConfigurationSection
 
@@ -104,15 +105,49 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let BarFormatterFactory(ByVal formatterFactory As BarFormatterFactory)
-Set mBarFormatterFactory = formatterFactory
-End Property
-
-Public Property Get BarFormatterFactory() As BarFormatterFactory
-Const ProcName As String = "BarFormatterFactory"
+Public Property Let BarFormatterFactoryName(ByVal Value As String)
+Const ProcName As String = "BarFormatterFactoryName"
 On Error GoTo Err
 
-Set BarFormatterFactory = mBarFormatterFactory
+mBarFormatterFactoryName = Value
+storeSettings
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get BarFormatterFactoryName() As String
+Const ProcName As String = "BarFormatterFactoryName"
+On Error GoTo Err
+
+BarFormatterFactoryName = mBarFormatterFactoryName
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let BarFormatterLibraryName(ByVal Value As String)
+Const ProcName As String = "BarFormatterLibraryName"
+On Error GoTo Err
+
+mBarFormatterLibraryName = Value
+storeSettings
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get BarFormatterLibraryName() As String
+Const ProcName As String = "BarFormatterLibraryName"
+On Error GoTo Err
+
+BarFormatterLibraryName = mBarFormatterLibraryName
 
 Exit Property
 
@@ -389,7 +424,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub removeFromConfig()
+Friend Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
@@ -434,12 +469,8 @@ If Not cs Is Nothing Then
     mTextStyle.LoadFromConfig cs
 End If
 
-Set cs = mConfig.GetConfigurationSection(ConfigSectionBarFormatterFactory)
-If Not cs Is Nothing Then
-    Set mBarFormatterFactory = CreateObject(cs.GetSetting(ConfigSettingProgId))
-    mBarFormatterFactory.LoadFromConfig cs
-End If
-
+mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
+mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 mIncludeInChart = mConfig.GetSetting(ConfigSettingIncludeInChart)
 mValueName = mConfig.GetSetting(ConfigSettingValueName)
 mChartRegionName = mConfig.GetSetting(ConfigSettingChartRegionName)
@@ -467,13 +498,9 @@ If Not mBarStyle Is Nothing Then mBarStyle.ConfigurationSection = mConfig.AddCon
 If Not mDataPointStyle Is Nothing Then mDataPointStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDataPointStyle)
 If Not mLineStyle Is Nothing Then mLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionLineStyle)
 If Not mTextStyle Is Nothing Then mTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionTextStyle)
-If Not mBarFormatterFactory Is Nothing Then
-    Dim bfSect As ConfigurationSection
-    Set bfSect = mConfig.AddConfigurationSection(ConfigSectionBarFormatterFactory)
-    bfSect.SetSetting ConfigSettingProgId, GetProgIdFromObject(mBarFormatterFactory)
-    mBarFormatterFactory.ConfigurationSection = bfSect
-End If
 
+mConfig.SetSetting ConfigSettingBarFormatterFactoryName, mBarFormatterFactoryName
+mConfig.SetSetting ConfigSettingBarFormatterLibraryName, mBarFormatterLibraryName
 mConfig.SetSetting ConfigSettingIncludeInChart, mIncludeInChart
 mConfig.SetSetting ConfigSettingValueName, mValueName
 mConfig.SetSetting ConfigSettingChartRegionName, mChartRegionName

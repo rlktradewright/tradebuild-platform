@@ -23,12 +23,14 @@ Private Const ModuleName                            As String = "GMain"
 
 Public Const AppName                                As String = "TradeSkil Demo Edition"
 
-Public Const ConfigFileVersion                      As String = "1.1"
+Public Const ConfigFileVersion                      As String = "1.2"
 
+Public Const ConfigSectionApplication               As String = "Application"
 Public Const ConfigSectionChart                     As String = "Chart"
 Public Const ConfigSectionCharts                    As String = "Charts"
 Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
 Public Const ConfigSectionDefaultStudyConfigs       As String = "DefaultStudyConfigs"
+Public Const ConfigSectionChartStyles               As String = "/ChartStyles"
 Public Const ConfigSectionMainForm                  As String = "MainForm"
 Public Const ConfigSectionMultiChart                As String = "MultiChart"
 Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
@@ -39,6 +41,10 @@ Public Const ConfigSettingLeft                      As String = ".Left"
 Public Const ConfigSettingTop                       As String = ".Top"
 Public Const ConfigSettingWidth                     As String = ".Width"
 Public Const ConfigSettingWindowstate               As String = ".Windowstate"
+
+Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
+
+Public Const ConfigSettingAppCurrentChartStyle      As String = ConfigSectionApplication & ConfigSettingCurrentChartStyle
 
 Public Const ConfigSettingConfigEditorLeft          As String = ConfigSectionConfigEditor & ConfigSettingLeft
 Public Const ConfigSettingConfigEditorTop           As String = ConfigSectionConfigEditor & ConfigSettingTop
@@ -55,6 +61,8 @@ Public Const ConfigSettingOrderTicketLeft           As String = ConfigSectionOrd
 Public Const ConfigSettingOrderTicketTop            As String = ConfigSectionOrderTicket & ConfigSettingTop
 
 Private Const DefaultAppInstanceConfigName          As String = "Default Config"
+
+Public Const InitialChartStyleName                  As String = "Application default"
 
 Public Const LB_SETHORZEXTENT                       As Long = &H194
 
@@ -121,7 +129,7 @@ Set gCommandLineParser = clp
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get gMainForm() As fTradeSkilDemo
@@ -134,6 +142,9 @@ End Property
 
 Public Sub gHandleFatalError()
 On Error Resume Next    ' ignore any further errors that might arise
+
+' kill off any timers
+TerminateTWUtilities
 
 MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
         "Please email the log file located at" & vbCrLf & vbCrLf & _
@@ -163,7 +174,6 @@ End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pReRaise As Boolean = True, _
@@ -175,12 +185,11 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-HandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pErrorNumber As Long, _
@@ -190,7 +199,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Sub gModelessMsgBox( _
@@ -210,7 +219,7 @@ lMsgBox.Show vbModeless, gMainForm
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gSetPermittedServiceProviderRoles()
@@ -229,7 +238,7 @@ TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeDat
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gShowStudyPicker( _
@@ -246,7 +255,7 @@ mStudyPickerForm.Show vbModeless
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gSyncStudyPicker( _
@@ -262,7 +271,7 @@ mStudyPickerForm.initialise chartMgr, title
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gUnloadMainForm()
@@ -279,7 +288,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub gUnsyncStudyPicker()
@@ -293,7 +302,7 @@ mStudyPickerForm.initialise Nothing, "Study picker"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub Main()
@@ -362,6 +371,9 @@ Dim userResponse As Long
 
 On Error GoTo Err
 
+LogMessage "Loading configuration: loading chart styles"
+ChartStylesManager.LoadFromConfig gConfigStore.AddPrivateConfigurationSection(ConfigSectionChartStyles)
+    
 If ConfigureTradeBuild(gConfigStore, gAppInstanceConfig.InstanceQualifier) Then
     Configure = True
 Else
@@ -396,7 +408,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getConfig() As Boolean
@@ -441,7 +453,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -503,7 +515,7 @@ inDev = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub loadMainForm( _
@@ -514,14 +526,13 @@ On Error GoTo Err
 
 LogMessage "Loading main form"
 If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
-'mMainForm.Show
 mMainForm.initialise showConfigEditor
 mMainForm.Show
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function showCommandLineOptions() As Boolean
@@ -560,7 +571,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function showSplashScreen() As Form
@@ -577,5 +588,5 @@ SetWindowPos lSplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function

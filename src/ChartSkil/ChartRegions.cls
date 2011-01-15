@@ -172,7 +172,7 @@ Const ProcName As String = "DefaultDataRegionStyle"
 Dim failpoint As String
 On Error GoTo Err
 
-If mDefaultDataRegionStyle Is Nothing Then Set mDefaultDataRegionStyle = New ChartRegionStyle
+If mDefaultDataRegionStyle Is Nothing Then Set mDefaultDataRegionStyle = gDefaultChartRegionStyle.clone
 Set DefaultDataRegionStyle = mDefaultDataRegionStyle
 
 Exit Property
@@ -187,7 +187,7 @@ Set mDefaultYAxisRegionStyle = Value
 End Property
 
 Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
-If mDefaultYAxisRegionStyle Is Nothing Then Set mDefaultYAxisRegionStyle = DefaultDataRegionStyle
+If mDefaultYAxisRegionStyle Is Nothing Then Set mDefaultYAxisRegionStyle = DefaultDataRegionStyle.clone
 Set DefaultYAxisRegionStyle = mDefaultYAxisRegionStyle
 End Property
 

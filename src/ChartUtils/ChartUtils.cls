@@ -87,6 +87,18 @@ Public Property Get ChartRegionNameUnderlying() As String
 ChartRegionNameUnderlying = RegionNameUnderlying
 End Property
 
+Public Property Get ChartStylesManager() As ChartStylesManager
+Const ProcName As String = "ChartStylesManager"
+On Error GoTo Err
+
+Set ChartStylesManager = gChartStylesManager
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -125,33 +137,19 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Function
 
 Public Function CreateChartSpecifier( _
-                Optional ByVal Timeframe As TimePeriod, _
-                Optional ByVal InitialNumberOfBars As Integer = 200, _
-                Optional ByVal IncludeBarsOutsideSession As Boolean = False, _
-                Optional ByVal MinimumTicksHeight As Integer = 20, _
-                Optional ByVal DefaultRegionStyle As ChartRegionStyle, _
-                Optional ByVal VolumeRegionStyle As ChartRegionStyle, _
-                Optional ByVal XAxisRegionStyle As ChartRegionStyle, _
-                Optional ByVal DefaultYAxisRegionStyle As ChartRegionStyle, _
-                Optional ByVal pBarsStyle As BarStyle, _
-                Optional ByVal VolumeStyle As DataPointStyle) As ChartSpecifier
+                Optional ByVal pInitialNumberOfBars As Long = 200, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean = False, _
+                Optional ByVal pFromTime As Date, _
+                Optional ByVal pTotime As Date) As ChartSpecifier
 Const ProcName As String = "CreateChartSpecifier"
 Dim failpoint As String
 On Error GoTo Err
 
-If Timeframe Is Nothing Then Set Timeframe = GetTimePeriod(5, TimePeriodMinute)
-
 Set CreateChartSpecifier = New ChartSpecifier
-CreateChartSpecifier.Initialise Timeframe, _
-                InitialNumberOfBars, _
-                IncludeBarsOutsideSession, _
-                MinimumTicksHeight, _
-                DefaultRegionStyle, _
-                VolumeRegionStyle, _
-                XAxisRegionStyle, _
-                DefaultYAxisRegionStyle, _
-                pBarsStyle, _
-                VolumeStyle
+CreateChartSpecifier.Initialise pInitialNumberOfBars, _
+                pIncludeBarsOutsideSession, _
+                pFromTime, _
+                pTotime
 
 Exit Function
 

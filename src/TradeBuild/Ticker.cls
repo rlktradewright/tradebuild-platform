@@ -277,6 +277,10 @@ mMaxAskPricesIndex = -1
 mMaxBidPricesIndex = -1
 
 mClockRate = 1
+
+mTradePrice = 0#
+mTradeSize = 0
+
 End Sub
 
 Private Sub Class_Terminate()

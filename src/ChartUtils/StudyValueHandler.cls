@@ -648,10 +648,11 @@ On Error GoTo Err
 Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.Layer)
 Set mValueSeries = mBarSeries
 If Not studyValueConfig.BarStyle Is Nothing Then mBarSeries.Style = studyValueConfig.BarStyle
-If Not studyValueConfig.BarFormatterFactory Is Nothing Then
+If studyValueConfig.BarFormatterFactoryName <> "" Then
     Dim lBarStudy As BarStudy
     Set lBarStudy = mStudy
-    Set mBarFormatter = studyValueConfig.BarFormatterFactory.CreateBarFormatter(lBarStudy.Bars)
+    Set mBarFormatter = CreateBarFormatterFactory(studyValueConfig.BarFormatterFactoryName, _
+                                                studyValueConfig.BarFormatterLibraryName).CreateBarFormatter(lBarStudy.Bars)
 End If
 
 Exit Sub

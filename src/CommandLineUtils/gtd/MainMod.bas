@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gtd"
+Public Const ProjectName                    As String = "gtd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -102,7 +102,7 @@ ElseIf Not setupServiceProviders(clp.switchValue("fromdb")) Then
 ElseIf Not clp.Switch("speed") Then
     process
 ElseIf Not IsInteger(clp.switchValue("speed")) Then
-    gCon.writeErrorLine "Speed must be an integer"
+    gCon.WriteErrorLine "Speed must be an integer"
 Else
     mSpeed = CLng(clp.switchValue("speed"))
     process
@@ -113,7 +113,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -128,8 +128,8 @@ Dim inString As String
 Dim command As String
 Dim params As String
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     mLineNumber = mLineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -157,10 +157,10 @@ Do While inString <> gCon.eofString
         Case RawCommand
             processRawCommand params
         Case Else
-            gCon.writeErrorLine "Invalid command '" & command & "'"
+            gCon.WriteErrorLine "Invalid command '" & command & "'"
         End Select
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
@@ -182,7 +182,7 @@ Dim optRightStr As String
 Dim optRight As OptionRights
 
 If Not gProcessor Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot set contract - already running"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot set contract - already running"
     Exit Sub
 End If
 
@@ -201,7 +201,7 @@ optRightStr = Trim$(clp.Arg(7))
 
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid sectype '" & sectypeStr & "'"
     validParams = False
 End If
 
@@ -210,16 +210,16 @@ If expiry <> "" Then
         expiry = Format(CDate(expiry), "yyyymmdd")
     ElseIf Len(expiry) = 6 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Right$(expiry, 2) & "/01") Then
-            gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
             validParams = False
         End If
     ElseIf Len(expiry) = 8 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2)) Then
-            gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
             validParams = False
         End If
     Else
-        gCon.writeErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid expiry '" & expiry & "'"
         validParams = False
     End If
 End If
@@ -228,14 +228,14 @@ If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
     Else
-        gCon.writeErrorLine "Line " & mLineNumber & ": Invalid strike '" & strikeStr & "'"
+        gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid strike '" & strikeStr & "'"
         validParams = False
     End If
 End If
 
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid right '" & optRightStr & "'"
     validParams = False
 End If
 
@@ -257,15 +257,15 @@ Private Sub processFromCommand( _
 If IsDate(params) Then
     mFrom = CDate(params)
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
 End If
 End Sub
 
 Private Sub processPauseCommand()
 If gProcessor Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot pause - not started"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot pause - not started"
 ElseIf gProcessor.tickerState <> TickerStatePaused Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Already paused"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Already paused"
 Else
     gProcessor.stopData
     Set gProcessor = Nothing
@@ -282,7 +282,7 @@ Case "ON", "YES", "TRUE", "T"
 Case "OFF", "NO", "FALSE", "F"
     mRaw = True
 Case Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid raw command '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid raw command '" & params & "'"
 End Select
 End Sub
 
@@ -294,29 +294,29 @@ If IsInteger(params) Then
         gProcessor.speed = mSpeed
     End If
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid speed factor '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid speed factor '" & params & "'"
 End If
 End Sub
 
 
 Private Sub processStartCommand()
 If mContractSpec Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mFrom = 0 Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - from time not specified"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - from time not specified"
 ElseIf gProcessor Is Nothing Then
     Set gProcessor = New Processor
     gProcessor.startData mContractSpec, mFrom, mTo, mSpeed, mRaw
 ElseIf gProcessor.tickerState = TickerStatePaused Then
     gProcessor.resumeData
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - already running"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
 End If
 End Sub
 
 Private Sub processStopCommand()
 If gProcessor Is Nothing Then
-    gCon.writeErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
 Else
     gProcessor.stopData
     Set gProcessor = Nothing
@@ -328,7 +328,7 @@ Private Sub processToCommand( _
 If IsDate(params) Then
     mTo = CDate(params)
 Else
-    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
 End If
 End Sub
 
@@ -358,12 +358,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupServiceProviders = False
 End If
     
@@ -380,7 +380,7 @@ If setupServiceProviders Then
                                 ";Password=" & password, _
                     Description:="Enable contract data from TradeBuild's database")
     If sp Is Nothing Then
-        gCon.writeErrorLine "Required contract info service provider is not installed"
+        gCon.WriteErrorLine "Required contract info service provider is not installed"
         setupServiceProviders = False
     End If
     Set sp = TradeBuildAPI.ServiceProviders.Add( _
@@ -393,7 +393,7 @@ If setupServiceProviders Then
                                 ";Password=" & password, _
                     Description:="Enable historical tick data storage/retrieval to/from TradeBuild's database")
     If sp Is Nothing Then
-        gCon.writeErrorLine "Required tickfile service provider is not installed"
+        gCon.WriteErrorLine "Required tickfile service provider is not installed"
         setupServiceProviders = False
     End If
 End If
@@ -401,47 +401,47 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupServiceProviders = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "gtd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.writeErrorLine "    -speed:n"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "StdIn Format:"
-gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
-gCon.writeErrorLine "from starttime"
-gCon.writeErrorLine "to endtime"
-gCon.writeErrorLine "speed n"
-gCon.writeErrorLine "raw [on | off]"
-gCon.writeErrorLine "start"
-gCon.writeErrorLine "pause"
-gCon.writeErrorLine "stop"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "StdOUt Format:"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "timestamp, ticktype, tickvalues"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "  where"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "    timestamp ::= yyyy-mm-dd hh:mm:ss.nnn"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "    ticktype ::=   B   bid"
-gCon.writeErrorLine "                   A   ask"
-gCon.writeErrorLine "                   T   trade"
-gCon.writeErrorLine "                   V   volume"
-gCon.writeErrorLine "                   I   open interest"
-gCon.writeErrorLine "                   O   open"
-gCon.writeErrorLine "                   H   high"
-gCon.writeErrorLine "                   L   low"
-gCon.writeErrorLine "                   C   previous session close"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "    tickvalues ::=  price[,size][,+ | - | =][,+ | - | =]"
-gCon.writeErrorLine ""
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "gtd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "    -speed:n"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "StdIn Format:"
+gCon.WriteErrorLine "#comment"
+gCon.WriteErrorLine "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+gCon.WriteErrorLine "from starttime"
+gCon.WriteErrorLine "to endtime"
+gCon.WriteErrorLine "speed n"
+gCon.WriteErrorLine "raw [on | off]"
+gCon.WriteErrorLine "start"
+gCon.WriteErrorLine "pause"
+gCon.WriteErrorLine "stop"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "StdOUt Format:"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "timestamp, ticktype, tickvalues"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "  where"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "    timestamp ::= yyyy-mm-dd hh:mm:ss.nnn"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "    ticktype ::=   B   bid"
+gCon.WriteErrorLine "                   A   ask"
+gCon.WriteErrorLine "                   T   trade"
+gCon.WriteErrorLine "                   V   volume"
+gCon.WriteErrorLine "                   I   open interest"
+gCon.WriteErrorLine "                   O   open"
+gCon.WriteErrorLine "                   H   high"
+gCon.WriteErrorLine "                   L   low"
+gCon.WriteErrorLine "                   C   previous session close"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "    tickvalues ::=  price[,size][,+ | - | =][,+ | - | =]"
+gCon.WriteErrorLine ""
 End Sub
 
 

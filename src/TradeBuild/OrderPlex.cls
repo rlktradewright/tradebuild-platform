@@ -757,12 +757,10 @@ Select Case mStopOrder.Status
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
         logOrderMessage "Stop order cancelled (id=" & mStopOrder.Id & ")"
-        mStateEngine.SetConditions OpConditions.CondStopOrderCancelled
         handleStimulus OpStimuli.StimStopOrderCancelled
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
         logOrderMessage "Stop order rejected (id=" & mStopOrder.Id & ")"
-        mStateEngine.SetConditions OpConditions.CondStopOrderCancelled
         handleStimulus OpStimuli.StimStopOrderCancelled
         checkAllOrdersComplete
 End Select
@@ -857,12 +855,10 @@ Select Case mTargetOrder.Status
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
         logOrderMessage "Target order cancelled (id=" & mTargetOrder.Id & ")"
-        mStateEngine.SetConditions OpConditions.CondTargetOrderCancelled
         handleStimulus OpStimuli.StimTargetOrderCancelled
         checkAllOrdersComplete
     Case OrderStatuses.OrderStatusRejected
         logOrderMessage "Target order rejected (id=" & mTargetOrder.Id & ")"
-        mStateEngine.SetConditions OpConditions.CondTargetOrderCancelled
         handleStimulus OpStimuli.StimTargetOrderCancelled
         checkAllOrdersComplete
     

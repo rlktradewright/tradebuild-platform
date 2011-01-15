@@ -332,6 +332,7 @@ mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
                                                     tickfilesPath
 
 AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
+addbarformatterlibrary "BarFormatters26.BarFormattersLib", True, "Built-in"
 
 Exit Sub
 
@@ -344,6 +345,8 @@ Public Sub EndSession()
 Const ProcName As String = "EndSession"
 
 On Error GoTo Err
+
+gTB.StopAllTickers
 
 ServiceProviders.RemoveAll
 

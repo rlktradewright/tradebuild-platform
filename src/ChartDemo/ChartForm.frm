@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#162.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#181.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -15,8 +15,8 @@ Begin VB.Form ChartForm
       Left            =   0
       TabIndex        =   24
       Top             =   0
-      Width           =   12120
-      _ExtentX        =   21378
+      Width           =   6465
+      _ExtentX        =   11404
       _ExtentY        =   582
    End
    Begin ChartSkil26.Chart Chart1 
@@ -609,7 +609,7 @@ Chart1.DisableDrawing               ' tells the chart not to draw anything. This
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
-Chart1.BarTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
+Chart1.PeriodLength = GetTimePeriod(mBarLength, TimePeriodMinute)
 
 mSessionStartTime = getSessionTime(SessionStartTimeText.Text)
 mSessionEndTime = getSessionTime(SessionEndTimeText.Text)

@@ -99,7 +99,6 @@ End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pReRaise As Boolean = True, _
@@ -111,12 +110,11 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-HandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pErrorNumber As Long, _
@@ -126,7 +124,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Function gLoadDefaultStudyConfiguration( _
@@ -149,7 +147,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Sub gNotImplemented()
@@ -178,7 +176,7 @@ mDefaultStudyConfigurations.Add sc, calcDefaultStudyKey(value.name, value.StudyL
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
