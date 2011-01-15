@@ -240,7 +240,7 @@ Case ValueModeNone
     If Not mStudyValueConfig Is Nothing Then
         Set dpStyle = mStudyValueConfig.DataPointStyle
     Else
-        Set dpStyle = gDefaultDataPointStyle
+        Set dpStyle = GetDefaultDataPointStyle.Clone
     End If
         
     Select Case DisplayModeCombo.SelectedItem.text
@@ -394,7 +394,7 @@ Select Case mStudyValueDef.ValueMode
 Case ValueModeNone
     Dim dpStyle As DataPointStyle
     
-    Set dpStyle = gDefaultDataPointStyle
+    Set dpStyle = GetDefaultDataPointStyle.Clone
     
     dpStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
     dpStyle.Color = ColorLabel.BackColor
@@ -462,7 +462,7 @@ Case ValueModeNone
 Case ValueModeLine
     Dim lnStyle As LineStyle
 
-    Set lnStyle = gDefaultLineStyle
+    Set lnStyle = GetDefaultLineStyle.Clone
     
     lnStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
     lnStyle.Color = ColorLabel.BackColor
@@ -512,7 +512,7 @@ Case ValueModeLine
 Case ValueModeBar
     Dim brStyle As BarStyle
     
-    Set brStyle = gDefaultBarStyle
+    Set brStyle = GetDefaultBarStyle.Clone
     
     brStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
     brStyle.Color = IIf(ColorLabel.BackColor = NullColor, _
@@ -555,7 +555,7 @@ Case ValueModeBar
 Case ValueModeText
     Dim txStyle As TextStyle
 
-    Set txStyle = gDefaultTextStyle
+    Set txStyle = GetDefaultTextStyle.Clone
     
     txStyle.IncludeInAutoscale = (AutoscaleCheck.value = vbChecked)
     txStyle.Color = ColorLabel.BackColor
@@ -651,7 +651,7 @@ Case ValueModeNone
     ElseIf Not mStudyValueDef.ValueStyle Is Nothing Then
         Set dpStyle = mStudyValueDef.ValueStyle
     End If
-    If dpStyle Is Nothing Then Set dpStyle = gDefaultDataPointStyle
+    If dpStyle Is Nothing Then Set dpStyle = GetDefaultDataPointStyle.Clone
     
     AutoscaleCheck = IIf(dpStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
     ColorLabel.BackColor = dpStyle.Color
@@ -691,7 +691,7 @@ Case ValueModeLine
     ElseIf Not mStudyValueDef.ValueStyle Is Nothing Then
         Set lnStyle = mStudyValueDef.ValueStyle
     End If
-    If lnStyle Is Nothing Then Set lnStyle = gDefaultLineStyle
+    If lnStyle Is Nothing Then Set lnStyle = GetDefaultLineStyle.Clone
     
     AutoscaleCheck = IIf(lnStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
     ColorLabel.BackColor = lnStyle.Color
@@ -725,7 +725,7 @@ Case ValueModeBar
     ElseIf Not mStudyValueDef.ValueStyle Is Nothing Then
         Set brStyle = mStudyValueDef.ValueStyle
     End If
-    If brStyle Is Nothing Then Set brStyle = gDefaultBarStyle
+    If brStyle Is Nothing Then Set brStyle = GetDefaultBarStyle.Clone
     
     AutoscaleCheck = IIf(brStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
     ColorLabel.BackColor = IIf(brStyle.Color = -1, NullColor, brStyle.Color)
@@ -769,7 +769,7 @@ Case ValueModeText
     ElseIf Not mStudyValueDef.ValueStyle Is Nothing Then
         Set txStyle = mStudyValueDef.ValueStyle
     End If
-    If txStyle Is Nothing Then Set txStyle = gDefaultTextStyle
+    If txStyle Is Nothing Then Set txStyle = GetDefaultTextStyle.Clone
     
     AutoscaleCheck = IIf(txStyle.IncludeInAutoscale, vbChecked, vbUnchecked)
     ColorLabel.BackColor = txStyle.Color

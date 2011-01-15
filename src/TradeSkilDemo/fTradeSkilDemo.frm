@@ -603,7 +603,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   71041027
+         Format          =   16580611
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -617,7 +617,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   71041027
+         Format          =   16580611
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -2240,23 +2240,8 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Function getDefaultClock() As Clock
-Const ProcName As String = "getDefaultClock"
-Static lClock As Clock
-
-On Error GoTo Err
-
-If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
-Set getDefaultClock = lClock
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function getInitialChartStyle() As ChartStyle
-Const ProcName As String = "getInitialChartStyle"
+Private Function getAppDefaultChartStyle() As ChartStyle
+Const ProcName As String = "getAppDefaultChartStyle"
 Dim defaultRegionStyle As ChartRegionStyle
 Dim volumeRegionStyle As ChartRegionStyle
 Dim xAxisRegionStyle As ChartRegionStyle
@@ -2268,7 +2253,7 @@ On Error GoTo Err
 
 ReDim GradientFillColors(1) As Long
 
-Set defaultRegionStyle = New ChartRegionStyle
+Set defaultRegionStyle = GetDefaultChartRegionStyle.Clone
 defaultRegionStyle.Autoscaling = True
 GradientFillColors(0) = RGB(192, 192, 192)
 GradientFillColors(1) = RGB(248, 248, 248)
@@ -2296,7 +2281,8 @@ GradientFillColors(1) = RGB(226, 246, 255)
 defaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
 defaultYAxisRegionStyle.HasGrid = False
     
-Set defaultBarsStyle = New BarStyle
+Set defaultBarsStyle = GetDefaultBarStyle.Clone
+defaultBarsStyle.Color = -1
 defaultBarsStyle.Thickness = 2
 defaultBarsStyle.Width = 0.6
 defaultBarsStyle.DisplayMode = BarDisplayModeCandlestick
@@ -2307,7 +2293,7 @@ defaultBarsStyle.SolidUpBody = False
 defaultBarsStyle.TailThickness = 1
 defaultBarsStyle.UpColor = &H1D9311
     
-Set defaultVolumeStyle = New DataPointStyle
+Set defaultVolumeStyle = GetDefaultDataPointStyle.Clone
 defaultVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
 defaultVolumeStyle.DownColor = &H43FC2
 defaultVolumeStyle.HistogramBarWidth = 0.6
@@ -2317,7 +2303,7 @@ defaultVolumeStyle.LineThickness = 1
 defaultVolumeStyle.PointStyle = PointRound
 defaultVolumeStyle.UpColor = &H1D9311
 
-Set getInitialChartStyle = ChartStylesManager.Add(InitialChartStyleName, _
+Set getAppDefaultChartStyle = ChartStylesManager.Add(InitialChartStyleName, _
                        100, _
                        20, _
                        defaultRegionStyle, _
@@ -2332,7 +2318,21 @@ Exit Function
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
 
+Private Function getDefaultClock() As Clock
+Const ProcName As String = "getDefaultClock"
+Static lClock As Clock
+
+On Error GoTo Err
+
+If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
+Set getDefaultClock = lClock
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getOrderTicket() As fOrderTicket
@@ -2629,7 +2629,7 @@ Const ProcName As String = "setCurrentChartStyle"
 On Error GoTo Err
 
 If gAppInstanceConfig Is Nothing Then
-    Set mCurrentChartStyle = getInitialChartStyle
+    Set mCurrentChartStyle = getAppDefaultChartStyle
 Else
     gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionApplication
     lStyleName = gAppInstanceConfig.GetSetting(ConfigSettingAppCurrentChartStyle, "")
@@ -2638,7 +2638,7 @@ Else
     ElseIf ChartStylesManager.Contains(InitialChartStyleName) Then
         Set mCurrentChartStyle = ChartStylesManager(InitialChartStyleName)
     Else
-        Set mCurrentChartStyle = getInitialChartStyle
+        Set mCurrentChartStyle = getAppDefaultChartStyle
         gAppInstanceConfig.SetSetting ConfigSettingAppCurrentChartStyle, InitialChartStyleName
     End If
 End If

@@ -154,14 +154,14 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "The price above which is confirmed strength"
     valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
+    valueDef.ValueStyle = gCreateDataPointStyle(RGB(68, 126, 196))
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDLowerBalance)
     valueDef.Description = "The price below which is confirmed weakness"
     valueDef.DefaultRegion = StudyValueDefaultRegionUnderlying
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
+    valueDef.ValueStyle = gCreateDataPointStyle(RGB(199, 68, 65))
     valueDef.ValueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamShortPeriods)

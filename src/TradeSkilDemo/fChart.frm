@@ -60,7 +60,7 @@ Begin VB.Form fChart
       Width           =   12525
       _ExtentX        =   22093
       _ExtentY        =   688
-      BackColor       =   16777215
+      BackColor       =   -2147483638
       _CBWidth        =   12525
       _CBHeight       =   390
       _Version        =   "6.7.9816"
@@ -72,9 +72,9 @@ Begin VB.Form fChart
       UseCoolbarColors1=   0   'False
       NewRow1         =   0   'False
       Child2          =   "BarFormatterPicker"
-      MinWidth2       =   2250
+      MinWidth2       =   1800
       MinHeight2      =   330
-      Width2          =   2250
+      Width2          =   1800
       NewRow2         =   0   'False
       Child3          =   "ChartNavToolbar1"
       MinWidth3       =   6465
@@ -83,16 +83,16 @@ Begin VB.Form fChart
       NewRow3         =   0   'False
       Begin TradeBuildUI26.BarFormatterPicker BarFormatterPicker 
          Height          =   330
-         Left            =   2040
+         Left            =   2100
          TabIndex        =   4
-         Top             =   0
-         Width           =   2295
-         _ExtentX        =   4048
+         Top             =   30
+         Width           =   1800
+         _ExtentX        =   3175
          _ExtentY        =   582
       End
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   4575
+         Left            =   4125
          TabIndex        =   2
          Top             =   30
          Width           =   6465

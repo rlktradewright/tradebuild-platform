@@ -40,16 +40,16 @@ Event PropertyChanged( _
 
 Private Const ModuleName                As String = "DataPointStyle"
 
-Private Const ConfigSettingColor                As String = "&BarColor"
+Private Const ConfigSettingColor                As String = "&Color"
 Private Const ConfigSettingUpColor              As String = "&UpColor"
 Private Const ConfigSettingDownColor            As String = "&DownColor"
 Private Const ConfigSettingDisplayMode          As String = "&DisplayMode"
 Private Const ConfigSettingLineThickness        As String = "&LineThickness"
 Private Const ConfigSettingLineStyle            As String = "&LineStyle"
 Private Const ConfigSettingPointStyle           As String = "&PointStyle"
-Private Const ConfigSettingHistWidth            As String = "&HistBarWidth"
+Private Const ConfigSettingHistWidth            As String = "&HistWidth"
 Private Const ConfigSettingIncludeInAutoscale   As String = "&IncludeInAutoscale"
-Private Const ConfigSettingLayer                 As String = "&Layer"
+Private Const ConfigSettingLayer                As String = "&Layer"
 
 '@================================================================================
 ' Enums
