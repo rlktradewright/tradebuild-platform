@@ -314,14 +314,12 @@ If ev.State = TickerStates.TickerStateReady Then
     ' this means that the Ticker object has retrieved the contract info, so we can
     ' now start the chart
     
+    Set mcontract = mTicker.Contract
+    
     If mDeferStart Then Exit Sub
 
+    setupStudies
     loadchart
-    If mLoadedFromConfig Then
-        loadStudiesFromConfig
-    Else
-        showStudies createBarsStudyConfig
-    End If
 End If
 
 Exit Sub
@@ -942,6 +940,7 @@ setState ChartStateBlank
 Set mPeriodLength = pNewPeriodLength
 
 createTimeframe
+
 baseStudyConfig.Study = mTimeframe.TradeStudy
 baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterFactoryName = mBarFormatterFactoryName
 baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterLibraryName = mBarFormatterLibraryName
@@ -950,9 +949,9 @@ Set lStudy = mTimeframe.TradeStudy
 baseStudyConfig.Parameters = lStudy.Parameters
 
 initialiseChart
+setupStudies
 
 loadchart
-showStudies baseStudyConfig
 
 RaiseEvent PeriodLengthChange
 
@@ -1186,7 +1185,7 @@ studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 If Not mChartStyle.BarsStyle Is Nothing Then
     Set BarsStyle = mChartStyle.BarsStyle
 Else
-    Set BarsStyle = New BarStyle
+    Set BarsStyle = GetDefaultBarStyle.Clone
     BarsStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
     BarsStyle.OutlineThickness = 1
     BarsStyle.TailThickness = 1
@@ -1204,7 +1203,7 @@ Then
     If Not mChartStyle.VolumeStyle Is Nothing Then
         Set VolumeStyle = mChartStyle.VolumeStyle
     Else
-        Set VolumeStyle = New DataPointStyle
+        Set VolumeStyle = GetDefaultDataPointStyle.Clone
         VolumeStyle.UpColor = vbGreen
         VolumeStyle.DownColor = vbRed
         VolumeStyle.DisplayMode = DataPointDisplayModeHistogram
@@ -1301,8 +1300,6 @@ Const ProcName As String = "loadchart"
 Dim failpoint As Long
 On Error GoTo Err
 
-Set mcontract = mTicker.Contract
-
 Chart1.DisableDrawing
 
 Chart1.PeriodLength = mPeriodLength
@@ -1395,12 +1392,10 @@ initialiseChart
 If mTicker.State = TickerStates.TickerStateReady Or _
     mTicker.State = TickerStates.TickerStateRunning _
 Then
+    Set mcontract = mTicker.Contract
+
+    setupStudies
     loadchart
-    If mLoadedFromConfig Then
-        loadStudiesFromConfig
-    Else
-        showStudies createBarsStudyConfig
-    End If
 End If
 
 Exit Sub
@@ -1451,13 +1446,15 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub showStudies( _
-                ByVal studyConfig As StudyConfiguration)
-Const ProcName As String = "showStudies"
-Dim failpoint As Long
+Private Sub setupStudies()
+Const ProcName As String = "setupStudies"
 On Error GoTo Err
 
-mManager.BaseStudyConfiguration = studyConfig
+If mLoadedFromConfig Then
+    loadStudiesFromConfig
+Else
+    mManager.BaseStudyConfiguration = createBarsStudyConfig
+End If
 
 Exit Sub
 

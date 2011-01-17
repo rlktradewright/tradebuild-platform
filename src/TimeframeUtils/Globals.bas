@@ -332,31 +332,26 @@ lSessTimes = gCalcSessionTimes(Timestamp, _
 
 If offset > 0 Then
     
-    If datumBarStart < lSessTimes.startTime Then
+    If datumBarStart > lSessTimes.endTime Then
         ' specified Timestamp was between sessions
+        lSessTimes = gCalcOffsetSessionTimes(datumBarStart, 1, SessionStartTime, SessionEndTime)
         datumBarStart = lSessTimes.startTime
         offset = offset - 1
     End If
     
-    BarsToSessEnd = Round((lSessTimes.endTime - datumBarStart) / BarLengthDays, 0)
-    If BarsToSessEnd >= offset Then
+    BarsToSessEnd = -Int(-(lSessTimes.endTime - datumBarStart) / BarLengthDays)
+    If BarsToSessEnd > offset Then
         ' all required Bars are in this session
         proposedStart = datumBarStart + offset * BarLengthDays
     Else
         remainingOffset = offset - BarsToSessEnd
-        proposedStart = datumBarStart + BarsToSessEnd * BarLengthDays
-        Do While remainingOffset > 0
-            i = 1
-            Do
-                i = 1 + 1
-                lSessTimes = gCalcSessionTimes(proposedStart + i, _
-                                    SessionStartTime, _
-                                    SessionEndTime)
-            Loop Until lSessTimes.startTime > proposedStart
+        proposedStart = lSessTimes.endTime
+        Do While remainingOffset >= 0
+            lSessTimes = gCalcOffsetSessionTimes(proposedStart, 1, SessionStartTime, SessionEndTime)
             
-            If numBarsInSession >= remainingOffset Then
+            If numBarsInSession > remainingOffset Then
                 proposedStart = lSessTimes.startTime + remainingOffset * BarLengthDays
-                remainingOffset = 0
+                remainingOffset = -1
             Else
                 proposedStart = lSessTimes.endTime
                 remainingOffset = remainingOffset - numBarsInSession
@@ -366,27 +361,25 @@ If offset > 0 Then
 Else
     offset = -offset
 
-    If datumBarStart < lSessTimes.startTime Then
+    If datumBarStart >= lSessTimes.endTime Then
         ' specified Timestamp was between sessions
-        datumBarStart = lSessTimes.startTime
+        datumBarStart = lSessTimes.endTime
     End If
     
     proposedStart = lSessTimes.startTime
-    BarsFromSessStart = Round((datumBarStart - lSessTimes.startTime) / BarLengthDays, 0)
+    BarsFromSessStart = -Int(-(datumBarStart - lSessTimes.startTime) / BarLengthDays)
     If BarsFromSessStart >= offset Then
         ' all required Bars are in this session
         'proposedStart = datumBarStart - offset * BarLengthDays
         proposedStart = lSessTimes.startTime + (BarsFromSessStart - offset) * BarLengthDays
     Else
         remainingOffset = offset - BarsFromSessStart
-        proposedStart = lSessTimes.startTime
+        'proposedStart = lSessTimes.startTime
         Do While remainingOffset > 0
-            lSessTimes = gCalcSessionTimes(proposedStart - 1, _
-                                SessionStartTime, _
-                                SessionEndTime)
+            lSessTimes = gCalcSessionTimes(proposedStart - 1, SessionStartTime, SessionEndTime)
             
             If numBarsInSession >= remainingOffset Then
-                proposedStart = lSessTimes.startTime + (numBarsInSession - remainingOffset) * BarLengthDays
+                proposedStart = lSessTimes.endTime - remainingOffset * BarLengthDays
                 remainingOffset = 0
             Else
                 proposedStart = lSessTimes.startTime
@@ -396,10 +389,10 @@ Else
     End If
 End If
 
-gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
-                                        BarTimePeriod, _
-                                        SessionStartTime)
-
+'gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
+'                                        BarTimePeriod, _
+'                                        SessionStartTime)
+gCalcOffsetBarStartTime = proposedStart
 
 Exit Function
 
