@@ -4995,6 +4995,7 @@ With mTickerTable(index)
     .incarnation = .incarnation + IncarnationIncrement
     Set .Contract = Nothing
     .receivingMarketDepth = False
+    .dataHasbeenReceived = False
     Set .dataConsumer = Nothing
     Set .dataReader = Nothing
 End With
