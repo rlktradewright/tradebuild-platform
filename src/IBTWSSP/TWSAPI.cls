@@ -167,6 +167,7 @@ Private Type TickerTableEntry
     prevClose               As Double
     inUse                   As Boolean
     receivingMarketDepth    As Boolean
+    dataHasbeenReceived     As Boolean
     dataConsumer            As IStreamingDataConsumer
     dataReader              As RealtimeDataReader
 End Type
@@ -2900,6 +2901,12 @@ Case 200    ' security definition not known
 
         processContractError errorMsg
     Case IdTypeRealtimeData
+        ' first make sure we are not already successfully receiving data
+        ' for this ticker. Occasionally TWS will send a 200 spuriously
+        ' while the data stream is running
+        
+        If mTickerTable(id Mod IncarnationIncrement).dataHasbeenReceived Then Exit Sub
+        
         ' this must relate to a reqMktData - this can occur even though
         ' we make sure the contract is valid before starting the ticker:
         ' for example the contract may have expired while waiting for TWS
@@ -3021,7 +3028,7 @@ Case 399
         mapEntry.OrderSubmitter.OrderDeferred mapEntry.order.tradebuildId, errorMsg
     End If
 
-Case 1100
+Case 1100, 2110
     failpoint = "1300"
 
     ' connectivity between TWS and IB has been lost
@@ -4222,6 +4229,8 @@ failpoint = "500"
 With mTickerTable(tickerId Mod IncarnationIncrement)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    .dataHasbeenReceived = True
 
     tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.Timezone)
     
@@ -4300,6 +4309,8 @@ failpoint = "400"
 With mTickerTable(tickerId Mod IncarnationIncrement)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    .dataHasbeenReceived = True
     
     tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.Timezone)
     
