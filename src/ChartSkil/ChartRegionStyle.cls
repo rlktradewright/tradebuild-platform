@@ -25,8 +25,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IGraphicObjectStyle
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -259,7 +257,7 @@ End Property
 
 Public Property Let Autoscaling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscaling"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mAutoscaling = Value
@@ -278,7 +276,7 @@ End Property
 
 Public Property Let BackColor(ByVal Value As Long)
 Const ProcName As String = "BackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim mBackGradientFillColors(0) As Long
@@ -300,7 +298,7 @@ Public Property Let BackGradientFillColors(ByRef Value() As Long)
 Dim numColors As Long
 
 Const ProcName As String = "BackGradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -340,7 +338,7 @@ Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -379,7 +377,7 @@ End Property
 
 Public Property Let CursorSnapsToTickBoundaries(ByVal Value As Boolean)
 Const ProcName As String = "CursorSnapsToTickBoundaries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCursorSnapsToTickBoundaries = Value
@@ -402,7 +400,7 @@ End Property
 
 Public Property Let GridlineSpacingY(ByVal Value As Double)
 Const ProcName As String = "GridlineSpacingY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mGridlineSpacingY = Value
@@ -421,7 +419,7 @@ End Property
 
 Public Property Let GridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "GridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mGridLineStyle = Value
@@ -440,7 +438,7 @@ End Property
 
 Public Property Let GridTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "GridTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mGridTextStyle = Value
@@ -459,7 +457,7 @@ End Property
 
 Public Property Let HasGrid(ByVal val As Boolean)
 Const ProcName As String = "HasGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mHasGrid = val
@@ -478,7 +476,7 @@ End Property
 
 Public Property Let HasGridText(ByVal val As Boolean)
 Const ProcName As String = "HasGridText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mHasGridText = val
@@ -497,7 +495,7 @@ End Property
 
 Public Property Let IntegerYScale(ByVal Value As Boolean)
 Const ProcName As String = "IntegerYScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mIntegerYScale = Value
@@ -516,7 +514,7 @@ End Property
 
 Public Property Let MinimumHeight(ByVal Value As Double)
 Const ProcName As String = "MinimumHeight"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMinimumHeight = Value
@@ -554,7 +552,7 @@ End Property
 
 Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionEndGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSessionEndGridLineStyle = Value
@@ -573,7 +571,7 @@ End Property
 
 Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionStartGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSessionStartGridLineStyle = Value
@@ -592,7 +590,7 @@ End Property
 
 Public Property Let YAxisTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YAxisTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mYAxisTextStyle = Value
@@ -611,7 +609,7 @@ End Property
 
 Public Property Let YCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mYCursorTextStyle = Value
@@ -630,7 +628,7 @@ End Property
 
 Public Property Let YScaleQuantum(ByVal Value As Double)
 Const ProcName As String = "YScaleQuantum"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mYScaleQuantum = Value
@@ -649,7 +647,7 @@ End Property
 
 Public Function clone() As ChartRegionStyle
 Const ProcName As String = "clone"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set clone = New ChartRegionStyle
@@ -681,7 +679,7 @@ Dim ar() As String
 Dim i As Long
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -719,7 +717,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -737,7 +735,7 @@ End Sub
 Private Sub getGridLineStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getGridLineStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionGridlineStyle)
@@ -755,7 +753,7 @@ End Sub
 Private Sub getGridTextStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getGridTextStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionGridTextStyle)
@@ -773,7 +771,7 @@ End Sub
 Private Sub getSessionEndGridLineStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getSessionEndGridLineStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionEndGridlineStyle)
@@ -791,7 +789,7 @@ End Sub
 Private Sub getSessionStartGridLineStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getSessionStartGridLineStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionStartGridlineStyle)
@@ -809,7 +807,7 @@ End Sub
 Private Sub getYAxisTextStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getYAxisTextStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionYAxisTextStyle)
@@ -827,7 +825,7 @@ End Sub
 Private Sub getYCursorTextStyleFromConfig()
 Dim cs As ConfigurationSection
 Const ProcName As String = "getYCursorTextStyleFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionYCursorTextStyle)
@@ -847,7 +845,7 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -864,7 +862,7 @@ Private Sub setBackGradientFillColorsConfig()
 Dim i As Long
 Dim s As String
 Const ProcName As String = "setBackGradientFillColorsConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To UBound(mBackGradientFillColors)
@@ -881,7 +879,7 @@ End Sub
 
 Private Sub setInitialGridLineStyle()
 Const ProcName As String = "setInitialGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mGridLineStyle = New LineStyle
@@ -894,10 +892,10 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setInitialGridTextStyle()
-Dim aFont As StdFont
+Dim afont As StdFont
 
 Const ProcName As String = "setInitialGridTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mGridTextStyle = New TextStyle
@@ -906,13 +904,13 @@ mGridTextStyle.BoxFillWithBackgroundColor = True
 mGridTextStyle.BoxStyle = LineInvisible
 mGridTextStyle.Color = vbBlack
     
-Set aFont = New StdFont
-aFont.Italic = False
-aFont.Name = "Arial"
-aFont.Size = 8
-aFont.Underline = False
-aFont.Bold = False
-mGridTextStyle.Font = aFont
+Set afont = New StdFont
+afont.Italic = False
+afont.Name = "Arial"
+afont.Size = 8
+afont.Underline = False
+afont.Bold = False
+mGridTextStyle.Font = afont
 
 Exit Sub
 
@@ -923,7 +921,7 @@ End Sub
 
 Private Sub setInitialSessionEndGridLineStyle()
 Const ProcName As String = "setInitialSessionEndGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSessionEndGridLineStyle = New LineStyle
@@ -938,7 +936,7 @@ End Sub
 
 Private Sub setInitialSessionStartGridLineStyle()
 Const ProcName As String = "setInitialSessionStartGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSessionStartGridLineStyle = New LineStyle
@@ -952,10 +950,10 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setInitialYAxisTextStyle()
-Dim aFont As StdFont
+Dim afont As StdFont
 
 Const ProcName As String = "setInitialYAxisTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mYAxisTextStyle = New TextStyle
@@ -964,13 +962,13 @@ mYAxisTextStyle.BoxFillWithBackgroundColor = True
 mYAxisTextStyle.BoxStyle = LineInvisible
 mYAxisTextStyle.Color = vbBlack
     
-Set aFont = New StdFont
-aFont.Italic = False
-aFont.Name = "Arial"
-aFont.Size = 8
-aFont.Underline = False
-aFont.Bold = False
-mYAxisTextStyle.Font = aFont
+Set afont = New StdFont
+afont.Italic = False
+afont.Name = "Arial"
+afont.Size = 8
+afont.Underline = False
+afont.Bold = False
+mYAxisTextStyle.Font = afont
 
 Exit Sub
 
@@ -980,10 +978,10 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setInitialYCursorTextStyle()
-Dim aFont As StdFont
+Dim afont As StdFont
 
 Const ProcName As String = "setInitialYCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mYCursorTextStyle = New TextStyle
@@ -997,13 +995,13 @@ mYCursorTextStyle.PaddingX = 1
 mYCursorTextStyle.PaddingY = 0
 mYCursorTextStyle.Justification = JustifyCentre
     
-Set aFont = New StdFont
-aFont.Italic = False
-aFont.Name = "Arial"
-aFont.Size = 8
-aFont.Underline = False
-aFont.Bold = False
-mYCursorTextStyle.Font = aFont
+Set afont = New StdFont
+afont.Italic = False
+afont.Name = "Arial"
+afont.Size = 8
+afont.Underline = False
+afont.Bold = False
+mYCursorTextStyle.Font = afont
 
 Exit Sub
 

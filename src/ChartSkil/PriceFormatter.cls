@@ -119,7 +119,7 @@ Dim fract As Single
 Dim numerator As Long
 
 Const ProcName As String = "ormatPrice"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mYScaleQuantum = 0.03125 Then

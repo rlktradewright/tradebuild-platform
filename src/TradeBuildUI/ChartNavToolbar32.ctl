@@ -429,14 +429,14 @@ Case ChartNavCommandThickerBars
     End Select
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = True
 Case ChartNavCommandReduceSpacing
-    If mTradeBuildChart.TwipsPerBar >= 50 Then
-        mTradeBuildChart.TwipsPerBar = mTradeBuildChart.TwipsPerBar - 25
+    If mTradeBuildChart.TwipsPerPeriod >= 50 Then
+        mTradeBuildChart.TwipsPerPeriod = mTradeBuildChart.TwipsPerPeriod - 25
     End If
-    If mTradeBuildChart.TwipsPerBar < 50 Then
+    If mTradeBuildChart.TwipsPerPeriod < 50 Then
         Button.Enabled = False
     End If
 Case ChartNavCommandIncreaseSpacing
-    mTradeBuildChart.TwipsPerBar = mTradeBuildChart.TwipsPerBar + 25
+    mTradeBuildChart.TwipsPerPeriod = mTradeBuildChart.TwipsPerPeriod + 25
     Toolbar1.Buttons(ChartNavCommandReduceSpacing).Enabled = True
 Case ChartNavCommandScaleDown
     mPriceRegion.ScaleUp -0.09091
@@ -453,7 +453,7 @@ Case ChartNavCommandScrollRight
 Case ChartNavCommandScrollEnd
     mTradeBuildChart.BaseChartController.LastVisiblePeriod = mTradeBuildChart.BaseChartController.CurrentPeriodNumber
 Case ChartNavCommandAutoScale
-    If Button.value = tbrPressed Then
+    If Button.Value = tbrPressed Then
         mPriceRegion.Autoscaling = True
     Else
         mPriceRegion.Autoscaling = False
@@ -518,7 +518,7 @@ Const ProcName As String = "mPriceRegion_AutoscaleChanged"
 Dim failpoint As String
 On Error GoTo Err
 
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
 Exit Sub
 
@@ -564,8 +564,8 @@ Enabled = UserControl.Enabled
 End Property
 
 Public Property Let Enabled( _
-                ByVal value As Boolean)
-UserControl.Enabled = value
+                ByVal Value As Boolean)
+UserControl.Enabled = Value
 PropertyChanged "Enabled"
 End Property
 
@@ -671,14 +671,14 @@ If mBarSeries Is Nothing Then Exit Sub
 setupDisplayModeButtons
 
 If mPriceRegion.PointerStyle = PointerStyles.PointerCrosshairs Then
-    Toolbar1.Buttons(ChartNavCommandShowCrosshair).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrUnpressed
 Else
-    Toolbar1.Buttons(ChartNavCommandShowCrosshair).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowCrosshair).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowDiscCursor).Value = tbrPressed
 End If
 
-Toolbar1.Buttons(ChartNavCommandAutoScale).value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
+Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mPriceRegion.Autoscaling, tbrPressed, tbrUnpressed)
 
 Toolbar1.Enabled = True
 
@@ -694,12 +694,12 @@ Dim failpoint As String
 On Error GoTo Err
 
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrPressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowBars).Value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).Value = tbrUnpressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Thickness > 1)
 Else
-    Toolbar1.Buttons(ChartNavCommandShowBars).value = tbrUnpressed
-    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).value = tbrPressed
+    Toolbar1.Buttons(ChartNavCommandShowBars).Value = tbrUnpressed
+    Toolbar1.Buttons(ChartNavCommandShowCandlesticks).Value = tbrPressed
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = (mBarSeries.Width > 0.1)
 End If
 

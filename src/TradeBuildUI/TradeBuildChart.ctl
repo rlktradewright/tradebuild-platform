@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#181.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#185.2#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -87,6 +87,7 @@ Event PeriodLengthChange()
 
 Private Const ModuleName                                As String = "TradeBuildChart"
 
+Private Const ConfigSectionChartControl                 As String = "ChartControl"
 Private Const ConfigSectionChartSpecifier               As String = "ChartSpecifier"
 Private Const ConfigSectionStudies                      As String = "Studies"
 
@@ -106,7 +107,7 @@ Private Const PropNamePointerDiscColor                  As String = "PointerDisc
 Private Const PropNamePointerCrosshairsColor            As String = "PointerCrosshairsColor"
 Private Const PropNamePointerStyle                      As String = "PointerStyle"
 Private Const PropNameShowHorizontalScrollBar           As String = "HorizontalScrollBarVisible"
-Private Const PropNameTwipsPerBar                       As String = "TwipsPerBar"
+Private Const PropNameTwipsPerPeriod                    As String = "TwipsPerPeriod"
 Private Const PropNameYAxisWidthCm                      As String = "YAxisWidthCm"
 
 Private Const PropDfltHorizontalMouseScrollingAllowed   As Boolean = True
@@ -117,7 +118,7 @@ Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
 Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
 Private Const PropDfltShowHorizontalScrollBar           As Boolean = True
-Private Const PropDfltTwipsPerBar                       As Long = 150
+Private Const PropDfltTwipsPerPeriod                    As Long = 150
 Private Const PropDfltYAxisWidthCm                      As Single = 1.5
 
 '@================================================================================
@@ -132,7 +133,7 @@ Private mTimeframes                                     As Timeframes
 Private WithEvents mTimeframe                           As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
 
-Private mPeriodLength                                      As TimePeriod
+Private mPeriodLength                                   As TimePeriod
 
 Private mUpdatePerTick                                  As Boolean
 
@@ -162,6 +163,15 @@ Private mLoadedFromConfig                               As Boolean
 
 Private mDeferStart                                     As Boolean
 
+Private mMinimumTicksHeight                             As Long
+
+Private mTwipsPerPeriodFromConfig                       As Long
+
+' this is a temporary style that is used initially to apply property bag settings.
+' This prevents the property bag settings from overriding any style that is later
+' applied.
+Private mInitialStyle                                   As ChartStyle
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -173,21 +183,23 @@ mPrevHeight = UserControl.Height
 
 mUpdatePerTick = True
 
+Set mInitialStyle = ChartStylesManager.Add(GenerateGUIDString, ChartStylesManager.DefaultStyle, pTemporary:=True)
+
 End Sub
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
-HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-Autoscrolling = PropDfltAutoscroll
-ChartBackColor = PropDfltChartBackColor
+mInitialStyle.HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+mInitialStyle.VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+mInitialStyle.Autoscrolling = PropDfltAutoscroll
+mInitialStyle.ChartBackColor = PropDfltChartBackColor
 PointerStyle = PropDfltPointerStyle
 PointerCrosshairsColor = PropDfltPointerCrosshairsColor
 PointerDiscColor = PropDfltPointerDiscColor
-HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
-TwipsPerBar = PropDfltTwipsPerBar
-YAxisWidthCm = PropDfltYAxisWidthCm
+mInitialStyle.HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
+mInitialStyle.TwipsPerPeriod = PropDfltTwipsPerPeriod
+mInitialStyle.YAxisWidthCm = PropDfltYAxisWidthCm
 
 End Sub
 
@@ -195,64 +207,18 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
 On Error Resume Next
 
-HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
-If Err.Number <> 0 Then
-    HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-    Err.Clear
-End If
-
-VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
-If Err.Number <> 0 Then
-    VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-    Err.Clear
-End If
-
-Autoscrolling = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
-If Err.Number <> 0 Then
-    Autoscrolling = PropDfltAutoscroll
-    Err.Clear
-End If
-
-ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor)
+mInitialStyle.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
+mInitialStyle.VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
+mInitialStyle.Autoscrolling = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
+mInitialStyle.ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor)
 ' if no ChartBackColor has been set, we'll just use the ChartSkil default
-If Err.Number <> 0 Then Err.Clear
 
 PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
-If Err.Number <> 0 Then
-    PointerStyle = PropDfltPointerStyle
-    Err.Clear
-End If
-
 PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
-If Err.Number <> 0 Then
-    PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-    Err.Clear
-End If
-
 PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
-If Err.Number <> 0 Then
-    PointerDiscColor = PropDfltPointerDiscColor
-    Err.Clear
-End If
-
-HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
-If Err.Number <> 0 Then
-    HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
-    Err.Clear
-End If
-
-TwipsPerBar = PropBag.ReadProperty(PropNameTwipsPerBar, PropDfltTwipsPerBar)
-If Err.Number <> 0 Then
-    TwipsPerBar = PropDfltTwipsPerBar
-    Err.Clear
-End If
-
-YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
-If Err.Number <> 0 Then
-    YAxisWidthCm = PropDfltYAxisWidthCm
-    Err.Clear
-End If
-
+mInitialStyle.HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
+mInitialStyle.TwipsPerPeriod = PropBag.ReadProperty(PropNameTwipsPerPeriod, PropDfltTwipsPerPeriod)
+mInitialStyle.YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 End Sub
 
 Private Sub UserControl_Resize()
@@ -273,16 +239,16 @@ End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
-PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
-PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
-PropBag.WriteProperty PropNameAutoscroll, Autoscrolling, PropDfltAutoscroll
-PropBag.WriteProperty PropNameChartBackColor, ChartBackColor, PropDfltChartBackColor
+PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, mInitialStyle.HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
+PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, mInitialStyle.VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
+PropBag.WriteProperty PropNameAutoscroll, mInitialStyle.Autoscrolling, PropDfltAutoscroll
+PropBag.WriteProperty PropNameChartBackColor, mInitialStyle.ChartBackColor, PropDfltChartBackColor
 PropBag.WriteProperty PropNamePointerStyle, PointerStyle, PropDfltPointerStyle
 PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
 PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
-PropBag.WriteProperty PropNameShowHorizontalScrollBar, HorizontalScrollBarVisible, PropDfltShowHorizontalScrollBar
-PropBag.WriteProperty PropNameTwipsPerBar, TwipsPerBar, PropDfltTwipsPerBar
-PropBag.WriteProperty PropNameYAxisWidthCm, YAxisWidthCm, PropDfltYAxisWidthCm
+PropBag.WriteProperty PropNameShowHorizontalScrollBar, mInitialStyle.HorizontalScrollBarVisible, PropDfltShowHorizontalScrollBar
+PropBag.WriteProperty PropNameTwipsPerPeriod, mInitialStyle.TwipsPerPeriod, PropDfltTwipsPerPeriod
+PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDfltYAxisWidthCm
 End Sub
 
 '@================================================================================
@@ -307,7 +273,7 @@ End Sub
 
 Private Sub mTicker_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mTicker_StateChange"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If ev.State = TickerStates.TickerStateReady Then
@@ -334,7 +300,7 @@ End Sub
 
 Private Sub mTimeframe_BarsLoaded()
 Const ProcName As String = "mTimeframe_BarsLoaded"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 LoadingProgressBar.Visible = False
@@ -351,7 +317,7 @@ End Sub
 
 Private Sub mTimeframe_BarLoadProgress(ByVal barsRetrieved As Long, ByVal percentComplete As Single)
 Const ProcName As String = "mTimeframe_BarLoadProgress"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not LoadingProgressBar.Visible Then
@@ -380,7 +346,7 @@ End Sub
 Public Property Let Autoscrolling( _
                 ByVal value As Boolean)
 Const ProcName As String = "Autoscrolling"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.Autoscrolling = value
@@ -393,7 +359,7 @@ End Property
 
 Public Property Get Autoscrolling() As Boolean
 Const ProcName As String = "Autoscrolling"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Autoscrolling = Chart1.Autoscrolling
@@ -406,7 +372,7 @@ End Property
 
 Public Property Get BaseChartController() As ChartController
 Const ProcName As String = "BaseChartController"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set BaseChartController = Chart1.Controller
@@ -419,7 +385,7 @@ End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
 Const ProcName As String = "ChartBackColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ChartBackColor = Chart1.ChartBackColor
@@ -432,7 +398,7 @@ End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 Const ProcName As String = "ChartBackColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.ChartBackColor = val
@@ -445,7 +411,7 @@ End Property
 
 Public Property Get ChartManager() As ChartManager
 Const ProcName As String = "ChartManager"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set ChartManager = mManager
@@ -459,13 +425,14 @@ End Property
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If value Is mConfig Then Exit Property
 Set mConfig = value
 storeSettings
 
+Chart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartControl)
 If Not mManager Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
 
 Exit Property
@@ -477,7 +444,7 @@ End Property
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -491,7 +458,7 @@ End Property
 Public Property Let Enabled( _
                 ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 UserControl.Enabled = value
@@ -506,7 +473,7 @@ End Property
 Public Property Let HorizontalMouseScrollingAllowed( _
                 ByVal value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.HorizontalMouseScrollingAllowed = value
@@ -519,7 +486,7 @@ End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 HorizontalMouseScrollingAllowed = Chart1.HorizontalMouseScrollingAllowed
@@ -532,7 +499,7 @@ End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
 Const ProcName As String = "HorizontalScrollBarVisible"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 HorizontalScrollBarVisible = Chart1.HorizontalScrollBarVisible
@@ -545,7 +512,7 @@ End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.HorizontalScrollBarVisible = val
@@ -559,7 +526,7 @@ End Property
 Public Property Get InitialNumberOfBars() As Long
 Attribute InitialNumberOfBars.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Const ProcName As String = "InitialNumberOfBars"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 InitialNumberOfBars = mChartSpec.InitialNumberOfBars
@@ -572,7 +539,7 @@ End Property
 
 Public Property Get LoadingText() As Text
 Const ProcName As String = "LoadingText"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set LoadingText = mLoadingText
@@ -583,13 +550,26 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Let MinimumTicksHeight(ByVal value As Double)
+Const ProcName As String = "MinimumTicksHeight"
+
+On Error GoTo Err
+
+mMinimumTicksHeight = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get MinimumTicksHeight() As Double
 Attribute MinimumTicksHeight.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Const ProcName As String = "MinimumTicksHeight"
-Dim failpoint As Long
+
 On Error GoTo Err
 
-MinimumTicksHeight = mChartStyle.MinimumTicksHeight
+MinimumTicksHeight = mMinimumTicksHeight
 
 Exit Property
 
@@ -599,7 +579,7 @@ End Property
 
 Public Property Get PointerCrosshairsColor() As OLE_COLOR
 Const ProcName As String = "PointerCrosshairsColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 PointerCrosshairsColor = Chart1.PointerCrosshairsColor
@@ -612,7 +592,7 @@ End Property
 
 Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerCrosshairsColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.PointerCrosshairsColor = value
@@ -625,7 +605,7 @@ End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
 Const ProcName As String = "PointerDiscColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 PointerDiscColor = Chart1.PointerDiscColor
@@ -638,7 +618,7 @@ End Property
 
 Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerDiscColor"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.PointerDiscColor = value
@@ -651,7 +631,7 @@ End Property
 
 Public Property Get PointerStyle() As PointerStyles
 Const ProcName As String = "PointerStyle"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 PointerStyle = Chart1.PointerStyle
@@ -664,7 +644,7 @@ End Property
 
 Public Property Let PointerStyle(ByVal value As PointerStyles)
 Const ProcName As String = "PointerStyle"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.PointerStyle = value
@@ -677,7 +657,7 @@ End Property
 
 Public Property Get PriceRegion() As ChartRegion
 Const ProcName As String = "PriceRegion"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set PriceRegion = mPriceRegion
@@ -690,7 +670,7 @@ End Property
 
 Public Property Get RegionNames() As String()
 Const ProcName As String = "RegionNames"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RegionNames = mManager.RegionNames
@@ -703,7 +683,7 @@ End Property
 
 Public Property Get State() As ChartStates
 Const ProcName As String = "State"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 State = mState
@@ -716,7 +696,7 @@ End Property
 
 Public Property Get Ticker() As Ticker
 Const ProcName As String = "Ticker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Ticker = mTicker
@@ -729,7 +709,7 @@ End Property
 
 Public Property Get TimeframeCaption() As String
 Const ProcName As String = "TimeframeCaption"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TimeframeCaption = mPeriodLength.ToString
@@ -742,7 +722,7 @@ End Property
 
 Public Property Get TimeframeShortCaption() As String
 Const ProcName As String = "TimeframeShortCaption"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TimeframeShortCaption = mPeriodLength.ToShortString
@@ -755,7 +735,7 @@ End Property
 
 Public Property Get Timeframe() As Timeframe
 Const ProcName As String = "Timeframe"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set Timeframe = mTimeframe
@@ -768,7 +748,7 @@ End Property
 
 Public Property Get PeriodLength() As TimePeriod
 Const ProcName As String = "TimePeriod"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set PeriodLength = mPeriodLength
@@ -781,7 +761,7 @@ End Property
 
 Friend Property Get TradeBarSeries() As BarSeries
 Const ProcName As String = "TradeBarSeries"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
@@ -792,12 +772,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get TwipsPerBar() As Long
-Const ProcName As String = "TwipsPerBar"
-Dim failpoint As Long
+Public Property Get TwipsPerPeriod() As Long
+Const ProcName As String = "TwipsPerPeriod"
+
 On Error GoTo Err
 
-TwipsPerBar = Chart1.TwipsPerBar
+TwipsPerPeriod = Chart1.TwipsPerPeriod
 
 Exit Property
 
@@ -805,12 +785,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let TwipsPerBar(ByVal val As Long)
-Const ProcName As String = "TwipsPerBar"
-Dim failpoint As Long
+Public Property Let TwipsPerPeriod(ByVal value As Long)
+Const ProcName As String = "TwipsPerPeriod"
+
 On Error GoTo Err
 
-Chart1.TwipsPerBar = val
+Chart1.TwipsPerPeriod = value
 
 Exit Property
 
@@ -821,7 +801,7 @@ End Property
 Public Property Let UpdatePerTick(ByVal value As Boolean)
 Attribute UpdatePerTick.VB_ProcData.VB_Invoke_PropertyPut = ";Behavior"
 Const ProcName As String = "UpdatePerTick"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mUpdatePerTick = value
@@ -835,7 +815,7 @@ End Property
 Public Property Let VerticalMouseScrollingAllowed( _
                 ByVal value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.VerticalMouseScrollingAllowed = value
@@ -848,7 +828,7 @@ End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 VerticalMouseScrollingAllowed = Chart1.VerticalMouseScrollingAllowed
@@ -861,7 +841,7 @@ End Property
 
 Public Property Get VolumeRegion() As ChartRegion
 Const ProcName As String = "VolumeRegion"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set VolumeRegion = mVolumeRegion
@@ -872,22 +852,9 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get VolumeRegionStyle() As ChartRegionStyle
-Const ProcName As String = "VolumeRegionStyle"
-Dim failpoint As Long
-On Error GoTo Err
-
-Set VolumeRegionStyle = mChartStyle.VolumeRegionStyle
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 Public Property Get YAxisWidthCm() As Single
 Const ProcName As String = "YAxisWidthCm"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 YAxisWidthCm = Chart1.YAxisWidthCm
@@ -900,7 +867,7 @@ End Property
 
 Public Property Let YAxisWidthCm(ByVal value As Single)
 Const ProcName As String = "YAxisWidthCm"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.YAxisWidthCm = value
@@ -919,7 +886,7 @@ Public Sub ChangePeriodLength(ByVal pNewPeriodLength As TimePeriod)
 Dim baseStudyConfig As StudyConfiguration
 
 Const ProcName As String = "ChangePeriodLength"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If State <> ChartStateLoaded Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -963,7 +930,7 @@ End Sub
 
 Public Sub DisableDrawing()
 Const ProcName As String = "DisableDrawing"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.DisableDrawing
@@ -976,7 +943,7 @@ End Sub
 
 Public Sub EnableDrawing()
 Const ProcName As String = "EnableDrawing"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.EnableDrawing
@@ -989,7 +956,7 @@ End Sub
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ' update the number of bars in case this chart is reloaded from the config
@@ -1028,7 +995,7 @@ Public Sub LoadFromConfig( _
 Dim cs As ConfigurationSection
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -1048,6 +1015,8 @@ Else
     Set mChartStyle = ChartStylesManager.DefaultStyle
 End If
 
+Chart1.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionChartControl)
+
 mIsHistoricChart = CBool(mConfig.GetSetting(ConfigSettingIsHistoricChart, "False"))
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
@@ -1062,7 +1031,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -1076,7 +1045,7 @@ End Sub
 
 Public Sub ScrollToTime(ByVal pTime As Date)
 Const ProcName As String = "ScrollToTime"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mManager.ScrollToTime pTime
@@ -1095,7 +1064,7 @@ Public Sub ShowChart( _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String)
 Const ProcName As String = "ShowChart"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTicker = pTicker
@@ -1143,7 +1112,7 @@ Dim lStudy As Study
 Dim studyDef As StudyDefinition
 
 Const ProcName As String = "createBarsStudyConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ReDim inputValueNames(3) As String
@@ -1182,17 +1151,13 @@ studyValueConfig.Layer = 200
 studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 
-If Not mChartStyle.BarsStyle Is Nothing Then
-    Set BarsStyle = mChartStyle.BarsStyle
-Else
-    Set BarsStyle = GetDefaultBarStyle.Clone
-    BarsStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
-    BarsStyle.OutlineThickness = 1
-    BarsStyle.TailThickness = 1
-    BarsStyle.UpColor = &HA0A0A0
-    BarsStyle.SolidUpBody = False
-End If
-studyValueConfig.BarStyle = BarsStyle
+'Set BarsStyle = GetDefaultBarStyle.Clone
+'BarsStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
+'BarsStyle.OutlineThickness = 1
+'BarsStyle.TailThickness = 1
+'BarsStyle.UpColor = &HA0A0A0
+'BarsStyle.SolidUpBody = False
+'studyValueConfig.BarStyle = BarsStyle
 
 If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash And _
     mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
@@ -1200,18 +1165,14 @@ Then
     Set studyValueConfig = studyConfig.StudyValueConfigurations.Add("Volume")
     studyValueConfig.ChartRegionName = ChartRegionNameVolume
     studyValueConfig.IncludeInChart = True
-    If Not mChartStyle.VolumeStyle Is Nothing Then
-        Set VolumeStyle = mChartStyle.VolumeStyle
-    Else
-        Set VolumeStyle = GetDefaultDataPointStyle.Clone
-        VolumeStyle.UpColor = vbGreen
-        VolumeStyle.DownColor = vbRed
-        VolumeStyle.DisplayMode = DataPointDisplayModeHistogram
-        VolumeStyle.HistogramBarWidth = 0.5
-        VolumeStyle.IncludeInAutoscale = True
-        VolumeStyle.LineThickness = 1
-    End If
-    studyValueConfig.DataPointStyle = VolumeStyle
+'    Set VolumeStyle = GetDefaultDataPointStyle.Clone
+'    'VolumeStyle.UpColor = vbGreen
+'    'VolumeStyle.DownColor = vbRed
+'    VolumeStyle.DisplayMode = DataPointDisplayModeHistogram
+'    VolumeStyle.HistogramBarWidth = 0.5
+'    VolumeStyle.IncludeInAutoscale = True
+'    VolumeStyle.LineThickness = 1
+'    studyValueConfig.DataPointStyle = VolumeStyle
 End If
 
 Set createBarsStudyConfig = studyConfig
@@ -1229,7 +1190,7 @@ End Function
 
 Private Sub createTimeframe()
 Const ProcName As String = "createTimeframe"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mTimeframes = mTicker.Timeframes
@@ -1260,7 +1221,7 @@ Private Sub initialiseChart()
 Static notFirstTime As Boolean
 
 Const ProcName As String = "initialiseChart"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.DisableDrawing
@@ -1269,13 +1230,10 @@ If Not notFirstTime Then
     Set mManager = CreateChartManager(mTicker.StudyManager, Chart1.Controller)
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
     
-    Chart1.Regions.DefaultDataRegionStyle = mChartStyle.DefaultRegionStyle
-    Chart1.Regions.DefaultYAxisRegionStyle = mChartStyle.DefaultYAxisRegionStyle
-    Chart1.TwipsPerBar = mChartStyle.TwipsPerPeriod
+    Chart1.Style = mChartStyle
+    If mTwipsPerPeriodFromConfig <> 0 Then Chart1.TwipsPerPeriod = mTwipsPerPeriodFromConfig
     notFirstTime = True
 End If
-
-If Not mChartStyle.XAxisRegionStyle Is Nothing Then Chart1.XAxisRegion.Style = mChartStyle.XAxisRegionStyle
 
 Set mPriceRegion = Chart1.Regions.Add(100, _
                                         25, _
@@ -1297,7 +1255,7 @@ Private Sub loadchart()
 Dim volRegionStyle As ChartRegionStyle
 
 Const ProcName As String = "loadchart"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Chart1.DisableDrawing
@@ -1308,8 +1266,8 @@ Chart1.SessionStartTime = mcontract.SessionStartTime
 Chart1.SessionEndTime = mcontract.SessionEndTime
 
 mPriceRegion.YScaleQuantum = mcontract.tickSize
-If mChartStyle.MinimumTicksHeight * mcontract.tickSize <> 0 Then
-    mPriceRegion.MinimumHeight = mChartStyle.MinimumTicksHeight * mcontract.tickSize
+If mMinimumTicksHeight * mcontract.tickSize <> 0 Then
+    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mcontract.tickSize
 End If
 mPriceRegion.PriceFormatter = createPriceFormatter
 
@@ -1321,14 +1279,10 @@ mPriceRegion.Title.Color = vbBlue
 If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash _
     And mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
-    If Not mChartStyle.VolumeRegionStyle Is Nothing Then
-        Set volRegionStyle = mChartStyle.VolumeRegionStyle
-    Else
-        Set volRegionStyle = mChartStyle.DefaultRegionStyle.Clone
-        volRegionStyle.GridlineSpacingY = 0.8
-        volRegionStyle.MinimumHeight = 10
-        volRegionStyle.IntegerYScale = True
-    End If
+    Set volRegionStyle = mChartStyle.DefaultRegionStyle.Clone
+    volRegionStyle.GridlineSpacingY = 0.8
+    volRegionStyle.MinimumHeight = 10
+    volRegionStyle.IntegerYScale = True
     
     On Error Resume Next
     Set mVolumeRegion = Chart1.Regions.item(ChartRegionNameVolume)
@@ -1342,6 +1296,8 @@ Then
                                                 , _
                                                 ChartRegionNameVolume)
     
+    Else
+        mVolumeRegion.Style = volRegionStyle
     End If
     
     mVolumeRegion.Title.Text = "Volume"
@@ -1369,7 +1325,7 @@ End Sub
 
 Private Sub loadStudiesFromConfig()
 Const ProcName As String = "loadStudiesFromConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.TradeStudy
@@ -1383,7 +1339,7 @@ End Sub
 Private Sub prepareChart()
 
 Const ProcName As String = "prepareChart"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 createTimeframe
@@ -1407,7 +1363,7 @@ End Sub
 
 Private Sub setLoadingText()
 Const ProcName As String = "setLoadingText"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mLoadingText = mPriceRegion.AddText(, ChartSkil26.LayerNumbers.LayerHighestUser)
@@ -1432,7 +1388,7 @@ End Sub
 Private Sub setState(ByVal value As ChartStates)
 Dim stateEv As StateChangeEventData
 Const ProcName As String = "setState"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mState = value
@@ -1466,7 +1422,7 @@ Private Sub storeSettings()
 Dim cs As ConfigurationSection
 
 Const ProcName As String = "storeSettings"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub

@@ -26,6 +26,9 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event PropertyChanged( _
+                ByRef ev As PropertyChangedEventData)
+                
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -40,35 +43,26 @@ Option Explicit
 
 Private Const ModuleName                                As String = "ChartStyle"
 
-Private Const ConfigSettingMinimumTicksHeight           As String = "&MinimumTicksHeight"
-Private Const ConfigSettingTwipsPerPeriod               As String = "&TwipsPerPeriod"
-
-Private Const ConfigSectionDefaultRegionStyle           As String = "DefaultRegionStyle"
-Private Const ConfigSectionDefaultYAxisRegionStyle      As String = "DefaultYAxisRegionStyle"
-Private Const ConfigSectionXAxisRegionStyle             As String = "XAxisRegionStyle"
-Private Const ConfigSectionVolumeRegionStyle            As String = "VolumeRegionStyle"
-Private Const ConfigSectionBarsStyle                    As String = "BarsStyle"
-Private Const ConfigSectionVolumeStyle                  As String = "VolumeStyle"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mName                               As String
-Private mMinimumTicksHeight                 As Long
-Private mTwipsPerPeriod                     As Long
-Private mDefaultRegionStyle                 As ChartRegionStyle
-Private mDefaultYAxisRegionStyle            As ChartRegionStyle
-Private mXAxisRegionStyle                   As ChartRegionStyle
-Private mVolumeRegionStyle                  As ChartRegionStyle
-Private mBarsStyle                          As BarStyle
-Private mVolumeStyle                        As DataPointStyle
+Private mName                                           As String
 
-Private mConfig                             As ConfigurationSection
+Private mEPhost                                         As ExtendedPropertyHost
+
+Private mBasedOn                                        As ChartStyle
+
+Private mConfig                                         As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mEPhost = New ExtendedPropertyHost
+GChart.gRegisterProperties
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -82,26 +76,159 @@ Private mConfig                             As ConfigurationSection
 ' Properties
 '@================================================================================
 
-Public Property Get BarsStyle() As BarStyle
-Set BarsStyle = mBarsStyle
+Public Property Let Autoscrolling(ByVal Value As Boolean)
+Const ProcName As String = "Autoscrolling"
+On Error GoTo Err
+
+setProperty GChart.gAutoscrollingProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingAutoscrolling, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get Autoscrolling() As Boolean
+Const ProcName As String = "Autoscrolling"
+On Error GoTo Err
+
+Autoscrolling = mEPhost.GetLocalValue(GChart.gAutoscrollingProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let BasedOn(ByVal Value As ChartStyle)
+Const ProcName As String = "BasedOn"
+On Error GoTo Err
+
+Set mBasedOn = Value
+If mBasedOn Is Nothing Then
+    ' only happens for the default style when it is first created
+Else
+    mEPhost.Style = mBasedOn.ExtendedPropertyHost
+    If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingBasedOn, Value.Name
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get BasedOn() As ChartStyle
+Set BasedOn = mBasedOn
+End Property
+
+Public Property Let ChartBackColor(ByVal Value As OLE_COLOR)
+Const ProcName As String = "ChartBackColor"
+On Error GoTo Err
+
+setProperty GChart.gChartBackColorProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingChartBackColor, gLongToHexString(Value)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get ChartBackColor() As OLE_COLOR
+Const ProcName As String = "ChartBackColor"
+On Error GoTo Err
+
+ChartBackColor = mEPhost.GetLocalValue(GChart.gChartBackColorProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Friend Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
-If Not mConfig Is Nothing Then
-    mConfig.SetSetting ConfigSettingMinimumTicksHeight, mMinimumTicksHeight
-    mConfig.SetSetting ConfigSettingTwipsPerPeriod, mTwipsPerPeriod
-    mDefaultRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
-    mVolumeRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionVolumeRegionStyle)
-    mXAxisRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
-    mDefaultYAxisRegionStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
-    mBarsStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionBarsStyle)
-    mVolumeStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionVolumeStyle)
+If Value Is Nothing Then
+    RemoveFromConfig
+    Set mConfig = Nothing
+    Exit Property
+End If
+
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
+
+If Not mBasedOn Is Nothing Then mConfig.SetSetting ConfigSettingBasedOn, mBasedOn.Name
+
+If isLocalValueSet(GChart.gTwipsPerPeriodProperty) Then mConfig.SetSetting ConfigSettingTwipsPerPeriod, mEPhost.GetLocalValue(GChart.gTwipsPerPeriodProperty)
+
+If isLocalValueSet(GChart.gAutoscrollingProperty) Then mConfig.SetSetting ConfigSettingAutoscrolling, mEPhost.GetLocalValue(GChart.gAutoscrollingProperty)
+If isLocalValueSet(GChart.gChartBackColorProperty) Then mConfig.SetSetting ConfigSettingChartBackColor, mEPhost.GetLocalValue(GChart.gChartBackColorProperty)
+If isLocalValueSet(GChart.gHorizontalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingHorizontalMouseScrollingAllowed, mEPhost.GetLocalValue(GChart.gHorizontalMouseScrollingAllowedProperty)
+If isLocalValueSet(GChart.gHorizontalScrollBarVisibleProperty) Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, mEPhost.GetLocalValue(GChart.gHorizontalScrollBarVisibleProperty)
+If isLocalValueSet(GChart.gVerticalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingVerticalMouseScrollingAllowed, mEPhost.GetLocalValue(GChart.gVerticalMouseScrollingAllowedProperty)
+If isLocalValueSet(GChart.gXAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingXAxisVisible, mEPhost.GetLocalValue(GChart.gXAxisVisibleProperty)
+If isLocalValueSet(GChart.gYAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingYAxisVisible, mEPhost.GetLocalValue(GChart.gYAxisVisibleProperty)
+If isLocalValueSet(GChart.gYAxisWidthCmProperty) Then mConfig.SetSetting ConfigSettingYAxisWidthCm, mEPhost.GetLocalValue(GChart.gYAxisWidthCmProperty)
+
+If isLocalValueSet(GChart.gCrosshairLineStyleProperty) Then mEPhost.GetLocalValue(GChart.gCrosshairLineStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCrosshairLineStyle)
+If isLocalValueSet(GChart.gDefaultRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gDefaultRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
+If isLocalValueSet(GChart.gDefaultYAxisRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gDefaultYAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
+If isLocalValueSet(GChart.gXAxisRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gXAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
+If isLocalValueSet(GChart.gXCursorTextStyleProperty) Then mEPhost.GetLocalValue(GChart.gXCursorTextStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let CrosshairLineStyle(ByVal Value As LineStyle)
+Const ProcName As String = "CrosshairLineStyle"
+
+On Error GoTo Err
+
+Dim prevValue As LineStyle
+If setProperty(GChart.gCrosshairLineStyleProperty, Value, prevValue) Then
+    If Not mConfig Is Nothing Then
+        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCrosshairLineStyle)
+        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
+    End If
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get CrosshairLineStyle() As LineStyle
+Const ProcName As String = "CrosshairLineStyle"
+On Error GoTo Err
+
+Set CrosshairLineStyle = mEPhost.GetLocalValue(GChart.gCrosshairLineStyleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let DefaultRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "DefaultRegionStyle"
+
+On Error GoTo Err
+
+Dim prevValue As ChartRegionStyle
+If setProperty(GChart.gDefaultRegionStyleProperty, Value, prevValue) Then
+    If Not mConfig Is Nothing Then
+        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
+        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
+    End If
 End If
 
 Exit Property
@@ -114,7 +241,26 @@ Public Property Get DefaultRegionStyle() As ChartRegionStyle
 Const ProcName As String = "DefaultRegionStyle"
 On Error GoTo Err
 
-Set DefaultRegionStyle = mDefaultRegionStyle
+Set DefaultRegionStyle = mEPhost.GetLocalValue(GChart.gDefaultRegionStyleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let DefaultYAxisRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "DefaultYAxisRegionStyle"
+
+On Error GoTo Err
+
+Dim prevValue As ChartRegionStyle
+If setProperty(GChart.gDefaultYAxisRegionStyleProperty, Value, prevValue) Then
+    If Not mConfig Is Nothing Then
+        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
+        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
+    End If
+End If
 
 Exit Property
 
@@ -126,7 +272,7 @@ Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
 Const ProcName As String = "DefaultYAxisRegionStyle"
 On Error GoTo Err
 
-Set DefaultYAxisRegionStyle = mDefaultYAxisRegionStyle
+Set DefaultYAxisRegionStyle = mEPhost.GetLocalValue(GChart.gDefaultYAxisRegionStyleProperty)
 
 Exit Property
 
@@ -134,11 +280,53 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get MinimumTicksHeight() As Long
-Const ProcName As String = "MinimumTicksHeight"
+Friend Property Get ExtendedPropertyHost() As ExtendedPropertyHost
+Set ExtendedPropertyHost = mEPhost
+End Property
+
+Public Property Let HorizontalMouseScrollingAllowed(ByVal Value As Boolean)
+Const ProcName As String = "HorizontalMouseScrollingAllowed"
 On Error GoTo Err
 
-MinimumTicksHeight = mMinimumTicksHeight
+setProperty GChart.gHorizontalMouseScrollingAllowedProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHorizontalMouseScrollingAllowed, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+Const ProcName As String = "HorizontalMouseScrollingAllowed"
+On Error GoTo Err
+
+HorizontalMouseScrollingAllowed = mEPhost.GetLocalValue(GChart.gHorizontalMouseScrollingAllowedProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
+Const ProcName As String = "HorizontalScrollBarVisible"
+On Error GoTo Err
+
+setProperty GChart.gHorizontalScrollBarVisibleProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get HorizontalScrollBarVisible() As Boolean
+Const ProcName As String = "HorizontalScrollBarVisible"
+On Error GoTo Err
+
+HorizontalScrollBarVisible = mEPhost.GetLocalValue(GChart.gHorizontalScrollBarVisibleProperty)
 
 Exit Property
 
@@ -150,11 +338,24 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
+Public Property Let TwipsPerPeriod(ByVal Value As Long)
+Const ProcName As String = "TwipsPerPeriod"
+On Error GoTo Err
+
+setProperty GChart.gTwipsPerPeriodProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTwipsPerPeriod, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get TwipsPerPeriod() As Long
 Const ProcName As String = "TwipsPerPeriod"
 On Error GoTo Err
 
-TwipsPerPeriod = mTwipsPerPeriod
+TwipsPerPeriod = mEPhost.GetLocalValue(GChart.gTwipsPerPeriodProperty)
 
 Exit Property
 
@@ -162,11 +363,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get VolumeRegionStyle() As ChartRegionStyle
-Const ProcName As String = "VolumeRegionStyle"
+Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
+Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
-Set VolumeRegionStyle = mVolumeRegionStyle
+setProperty GChart.gVerticalMouseScrollingAllowedProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingVerticalMouseScrollingAllowed, Value
 
 Exit Property
 
@@ -174,11 +376,55 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get VolumeStyle() As DataPointStyle
-Const ProcName As String = "VolumeStyle"
+Public Property Get VerticalMouseScrollingAllowed() As Boolean
+Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
-Set VolumeStyle = mVolumeStyle
+VerticalMouseScrollingAllowed = mEPhost.GetLocalValue(GChart.gVerticalMouseScrollingAllowedProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let XAxisVisible(ByVal Value As Boolean)
+Const ProcName As String = "XAxisVisible"
+On Error GoTo Err
+
+setProperty GChart.gXAxisVisibleProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingXAxisVisible, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get XAxisVisible() As Boolean
+Const ProcName As String = "XAxisVisible"
+On Error GoTo Err
+
+XAxisVisible = mEPhost.GetLocalValue(GChart.gXAxisVisibleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let XAxisRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "XAxisRegionStyle"
+
+On Error GoTo Err
+
+Dim prevValue As ChartRegionStyle
+If setProperty(GChart.gXAxisRegionStyleProperty, Value, prevValue) Then
+    If Not mConfig Is Nothing Then
+        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
+        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
+    End If
+End If
 
 Exit Property
 
@@ -190,7 +436,89 @@ Public Property Get XAxisRegionStyle() As ChartRegionStyle
 Const ProcName As String = "XAxisRegionStyle"
 On Error GoTo Err
 
-Set XAxisRegionStyle = mXAxisRegionStyle
+Set XAxisRegionStyle = mEPhost.GetLocalValue(GChart.gXAxisRegionStyleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Friend Property Let XCursorTextStyle(ByVal Value As TextStyle)
+Const ProcName As String = "XCursorTextStyle"
+
+On Error GoTo Err
+
+Dim prevValue As TextStyle
+If setProperty(GChart.gXCursorTextStyleProperty, Value, prevValue) Then
+    If Not mConfig Is Nothing Then
+        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
+        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
+    End If
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get XCursorTextStyle() As TextStyle
+Const ProcName As String = "XCursorTextStyle"
+On Error GoTo Err
+
+Set XCursorTextStyle = mEPhost.GetLocalValue(GChart.gXCursorTextStyleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let YAxisVisible(ByVal Value As Boolean)
+Const ProcName As String = "YAxisVisible"
+On Error GoTo Err
+
+setProperty GChart.gYAxisVisibleProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYAxisVisible, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get YAxisVisible() As Boolean
+Const ProcName As String = "YAxisVisible"
+On Error GoTo Err
+
+YAxisVisible = mEPhost.GetLocalValue(GChart.gYAxisVisibleProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let YAxisWidthCm(ByVal Value As Single)
+Const ProcName As String = "YAxisWidthCm"
+On Error GoTo Err
+
+setProperty GChart.gYAxisWidthCmProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYAxisWidthCm, Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get YAxisWidthCm() As Single
+
+Const ProcName As String = "YAxisWidthCm"
+On Error GoTo Err
+
+YAxisWidthCm = mEPhost.GetLocalValue(GChart.gYAxisWidthCmProperty)
 
 Exit Property
 
@@ -202,106 +530,29 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function CloneWithNewName(ByVal pName As String) As ChartStyle
-Const ProcName As String = "CloneWithNewName"
-On Error GoTo Err
-
-Set CloneWithNewName = New ChartStyle
-CloneWithNewName.Initialise pName, _
-                mTwipsPerPeriod, _
-                mMinimumTicksHeight, _
-                mDefaultRegionStyle.Clone, _
-                mVolumeRegionStyle.Clone, _
-                mXAxisRegionStyle.Clone, _
-                mDefaultYAxisRegionStyle.Clone, _
-                mBarsStyle.Clone, _
-                mVolumeStyle.Clone
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
 Friend Sub Initialise( _
                 ByVal pName As String, _
-                ByVal pTwipsPerPeriod As Long, _
-                ByVal pMinimumTicksHeight As Long, _
+                ByVal pBasedOn As ChartStyle, _
                 ByVal pDefaultRegionStyle As ChartRegionStyle, _
-                ByVal pVolumeRegionStyle As ChartRegionStyle, _
                 ByVal pXAxisRegionStyle As ChartRegionStyle, _
                 ByVal pDefaultYAxisRegionStyle As ChartRegionStyle, _
-                ByVal pBarsStyle As BarStyle, _
-                ByVal pVolumeStyle As DataPointStyle)
+                ByVal pCrosshairLineStyle As LineStyle, _
+                ByVal pXCursorTextStyle As TextStyle)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = pName
-mTwipsPerPeriod = pTwipsPerPeriod
-mMinimumTicksHeight = MinimumTicksHeight
+BasedOn = pBasedOn
 
-If Not pDefaultRegionStyle Is Nothing Then
-    Set mDefaultRegionStyle = pDefaultRegionStyle
-Else
-    Set mDefaultRegionStyle = GetDefaultChartRegionStyle.Clone
-    mDefaultRegionStyle.Autoscaling = True
-    mDefaultRegionStyle.GridlineSpacingY = 1.8
-    mDefaultRegionStyle.HasGrid = True
-    mDefaultRegionStyle.CursorSnapsToTickBoundaries = True
-End If
+If Not pDefaultRegionStyle Is Nothing Then DefaultRegionStyle = pDefaultRegionStyle
 
-If Not pVolumeRegionStyle Is Nothing Then
-    Set mVolumeRegionStyle = pVolumeRegionStyle
-Else
-    Set mVolumeRegionStyle = mDefaultRegionStyle.Clone
-    mVolumeRegionStyle.GridlineSpacingY = 0.8
-    mVolumeRegionStyle.MinimumHeight = 10
-    mVolumeRegionStyle.IntegerYScale = True
-End If
+If Not pXAxisRegionStyle Is Nothing Then XAxisRegionStyle = pXAxisRegionStyle
 
-If Not pXAxisRegionStyle Is Nothing Then
-    Set mXAxisRegionStyle = pXAxisRegionStyle
-Else
-    Set mXAxisRegionStyle = mDefaultRegionStyle.Clone
-    mXAxisRegionStyle.HasGrid = False
-    mXAxisRegionStyle.HasGridText = True
-End If
+If Not pDefaultYAxisRegionStyle Is Nothing Then DefaultYAxisRegionStyle = pDefaultYAxisRegionStyle
 
-If Not pDefaultYAxisRegionStyle Is Nothing Then
-    Set mDefaultYAxisRegionStyle = pDefaultYAxisRegionStyle
-Else
-    Set mDefaultYAxisRegionStyle = mDefaultRegionStyle.Clone
-    mDefaultYAxisRegionStyle.HasGrid = False
-End If
+If Not pCrosshairLineStyle Is Nothing Then CrosshairLineStyle = pCrosshairLineStyle
 
-If Not pBarsStyle Is Nothing Then
-    Set mBarsStyle = pBarsStyle
-Else
-    Set mBarsStyle = GetDefaultBarStyle.Clone
-    mBarsStyle.Thickness = 2
-    mBarsStyle.Width = 0.6
-    mBarsStyle.DisplayMode = BarDisplayModeCandlestick
-    mBarsStyle.DownColor = &H43FC2
-    mBarsStyle.IncludeInAutoscale = True
-    mBarsStyle.OutlineThickness = 1
-    mBarsStyle.SolidUpBody = False
-    mBarsStyle.TailThickness = 1
-    mBarsStyle.UpColor = &H1D9311
-End If
-
-If Not pVolumeStyle Is Nothing Then
-    Set mVolumeStyle = pVolumeStyle
-Else
-    Set mVolumeStyle = GetDefaultDataPointStyle.Clone
-    mVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
-    mVolumeStyle.DownColor = &H43FC2
-    mVolumeStyle.HistogramBarWidth = 0.6
-    mVolumeStyle.IncludeInAutoscale = True
-    mVolumeStyle.LineStyle = LineSolid
-    mVolumeStyle.LineThickness = 1
-    mVolumeStyle.PointStyle = PointRound
-    mVolumeStyle.UpColor = &H1D9311
-End If
+If Not pXCursorTextStyle Is Nothing Then XCursorTextStyle = pXCursorTextStyle
 
 Exit Sub
 
@@ -312,9 +563,6 @@ End Sub
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
-Dim ar() As String
-Dim i As Long
-
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
@@ -322,32 +570,56 @@ Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
 
 mName = mConfig.InstanceQualifier
-mMinimumTicksHeight = mConfig.GetSetting(ConfigSettingMinimumTicksHeight, 20)
-mTwipsPerPeriod = mConfig.GetSetting(ConfigSettingTwipsPerPeriod, 100)
 
-Set mDefaultRegionStyle = New ChartRegionStyle
-mDefaultRegionStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionDefaultRegionStyle)
+If mConfig.GetSetting(ConfigSettingBasedOn) <> "" Then BasedOn = gChartStylesManager(mConfig.GetSetting(ConfigSettingBasedOn))
 
-Set mVolumeRegionStyle = New ChartRegionStyle
-mVolumeRegionStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionVolumeRegionStyle)
+If mConfig.GetSetting(ConfigSettingAutoscrolling) <> "" Then Autoscrolling = mConfig.GetSetting(ConfigSettingAutoscrolling, "True")
+If mConfig.GetSetting(ConfigSettingChartBackColor) <> "" Then ChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(vbWhite))
+If mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed) <> "" Then HorizontalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed, "true")
+If mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible) <> "" Then HorizontalScrollBarVisible = mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible, "true")
+If mConfig.GetSetting(ConfigSettingTwipsPerPeriod) <> "" Then TwipsPerPeriod = mConfig.GetSetting(ConfigSettingTwipsPerPeriod, "120")
+If mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed) <> "" Then VerticalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed, "true")
+If mConfig.GetSetting(ConfigSettingXAxisVisible) <> "" Then XAxisVisible = mConfig.GetSetting(ConfigSettingXAxisVisible, "true")
+If mConfig.GetSetting(ConfigSettingYAxisVisible) <> "" Then YAxisVisible = mConfig.GetSetting(ConfigSettingYAxisVisible, "true")
+If mConfig.GetSetting(ConfigSettingYAxisWidthCm) <> "" Then YAxisWidthCm = mConfig.GetSetting(ConfigSettingYAxisWidthCm, "1.8")
 
-Set mXAxisRegionStyle = New ChartRegionStyle
-mXAxisRegionStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionXAxisRegionStyle)
+Dim ls As LineStyle
+If Not mConfig.GetConfigurationSection(ConfigSectionCrosshairLineStyle) Is Nothing Then
+    Set ls = New LineStyle
+    ls.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionCrosshairLineStyle)
+    CrosshairLineStyle = ls
+End If
 
-Set mDefaultYAxisRegionStyle = New ChartRegionStyle
-mDefaultYAxisRegionStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
+Dim crs As ChartRegionStyle
+If Not mConfig.GetConfigurationSection(ConfigSectionDefaultRegionStyle) Is Nothing Then
+    Set crs = New ChartRegionStyle
+    crs.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionDefaultRegionStyle)
+    DefaultRegionStyle = crs
+End If
 
-Set mBarsStyle = New BarStyle
-mBarsStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionBarsStyle)
+If Not mConfig.GetConfigurationSection(ConfigSectionDefaultYAxisRegionStyle) Is Nothing Then
+    Set crs = New ChartRegionStyle
+    crs.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
+    DefaultYAxisRegionStyle = crs
+End If
 
-Set mVolumeStyle = New DataPointStyle
-mVolumeStyle.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionVolumeStyle)
+If Not mConfig.GetConfigurationSection(ConfigSectionXAxisRegionStyle) Is Nothing Then
+    Set crs = New ChartRegionStyle
+    crs.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionXAxisRegionStyle)
+    XAxisRegionStyle = crs
+End If
+
+Dim ts As TextStyle
+If Not mConfig.GetConfigurationSection(ConfigSectionXCursorTextStyle) Is Nothing Then
+    Set ts = New TextStyle
+    ts.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionXCursorTextStyle)
+    XCursorTextStyle = ts
+End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
 End Sub
 
 Friend Sub RemoveFromConfig()
@@ -365,5 +637,41 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub firePropertyChanged( _
+                ByVal Name As String)
+Dim ev As PropertyChangedEventData
+
+Set ev.Source = Me
+ev.PropertyName = Name
+RaiseEvent PropertyChanged(ev)
+End Sub
+
+Private Function isLocalValueSet(ByVal pExtProp As ExtendedProperty) As Boolean
+Const ProcName As String = "isLocalValueSet"
+On Error GoTo Err
+
+isLocalValueSet = mEPhost.IsPropertySet(pExtProp)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function setProperty( _
+                ByVal pExtProp As ExtendedProperty, _
+                ByVal pNewValue As Variant, _
+                Optional ByRef pPrevValue As Variant) As Boolean
+Const ProcName As String = "setProperty"
+On Error GoTo Err
+
+setProperty = gSetProperty(mEPhost, pExtProp, pNewValue, pPrevValue)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
 
 

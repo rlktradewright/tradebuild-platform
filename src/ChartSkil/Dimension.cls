@@ -60,7 +60,7 @@ Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -92,7 +92,7 @@ End Property
 
 Public Function Equals(ByVal aDim As Dimension) As Boolean
 Const ProcName As String = "Equals"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If aDim Is Nothing Then Exit Function
@@ -119,7 +119,7 @@ End Sub
 Public Function LengthLogicalX( _
                 ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "LengthLogicalX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case mCoordSystem
@@ -142,7 +142,7 @@ End Function
 Public Function LengthLogicalY( _
                 ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "LengthLogicalY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case mCoordSystem
@@ -166,7 +166,7 @@ Friend Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -181,7 +181,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove

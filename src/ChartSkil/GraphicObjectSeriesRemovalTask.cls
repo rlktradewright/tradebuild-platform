@@ -74,21 +74,14 @@ Private Sub Task_run()
 Dim i As Long
 
 Const ProcName As String = "Task_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
-failpoint = 100
-
 Do While mGraphObjSeries.Count <> 0
-
-    failpoint = 200
-
     ' we remove the latest object first, since later objects may have references to earlier
     ' objects, so that removing the earliest first would mean they can't actually be
     ' terminated
     If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
-    
-    failpoint = 400
     
     mGraphObjSeries.Remove mGraphObjSeries.Count
     i = i + 1
@@ -100,8 +93,6 @@ Loop
 mGraphObjSeries.Finish
 Set mGraphObjSeries = Nothing
 Set mRegion = Nothing
-
-failpoint = 500
 
 mTaskContext.Finish Empty, False
 

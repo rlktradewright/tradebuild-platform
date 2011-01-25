@@ -389,7 +389,7 @@ End Sub
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
 Const ProcName As String = "Toolbar1_ButtonClick"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case Button.Key
@@ -438,14 +438,14 @@ Case ChartNavCommandThickerBars
     End Select
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = True
 Case ChartNavCommandReduceSpacing
-    If mController.TwipsPerBar >= 50 Then
-        mController.TwipsPerBar = mController.TwipsPerBar - 25
+    If mController.TwipsPerPeriod >= 50 Then
+        mController.TwipsPerPeriod = mController.TwipsPerPeriod - 25
     End If
-    If mController.TwipsPerBar < 50 Then
+    If mController.TwipsPerPeriod < 50 Then
         Button.Enabled = False
     End If
 Case ChartNavCommandIncreaseSpacing
-    mController.TwipsPerBar = mController.TwipsPerBar + 25
+    mController.TwipsPerPeriod = mController.TwipsPerPeriod + 25
     Toolbar1.Buttons(ChartNavCommandReduceSpacing).Enabled = True
 Case ChartNavCommandScaleDown
     mRegion.ScaleUp -0.09091
@@ -481,7 +481,7 @@ End Sub
 
 Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mBarSeries_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -501,7 +501,7 @@ End Sub
 
 Private Sub mRegion_AutoscalingChanged()
 Const ProcName As String = "mRegion_AutoscalingChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrPressed, tbrUnpressed)
@@ -519,7 +519,7 @@ End Sub
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
 Const ProcName As String = "Enabled"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -533,7 +533,7 @@ End Property
 Public Property Let Enabled( _
                 ByVal Value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As String
+
 On Error GoTo Err
 
 UserControl.Enabled = Value
@@ -563,7 +563,7 @@ Public Sub Initialise( _
                 ByVal pBarSeries As BarSeries)
 
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not pChartController Is Nothing And _
@@ -595,7 +595,7 @@ End Sub
 Private Sub setupChartNavButtons()
 
 Const ProcName As String = "setupChartNavButtons"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBarSeries Is Nothing Then Exit Sub
@@ -621,7 +621,7 @@ End Sub
 
 Private Sub setupDisplayModeButtons()
 Const ProcName As String = "setupDisplayModeButtons"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBarSeries.DisplayMode = BarDisplayModes.BarDisplayModeBar Then

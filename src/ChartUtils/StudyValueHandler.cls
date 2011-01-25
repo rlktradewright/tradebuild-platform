@@ -268,22 +268,22 @@ Select Case mValueMode
 Case ValueModeNone
     Select Case mValueType
     Case ValueTypeInteger
-        setupDataSeries pStudyValueConfig
+        setupDataSeries pStudyValueConfig, pStudyValueDef
     Case ValueTypeReal
-        setupDataSeries pStudyValueConfig
+        setupDataSeries pStudyValueConfig, pStudyValueDef
     Case ValueTypeString
-        setupTextSeries pStudyValueConfig
+        setupTextSeries pStudyValueConfig, pStudyValueDef
     Case ValueTypeDate
 
     Case ValueTypeBoolean
 
     End Select
 Case ValueModeLine
-    setupLineSeries pStudyValueConfig
+    setupLineSeries pStudyValueConfig, pStudyValueDef
 Case ValueModeBar
-    setupBarSeries pStudyValueConfig
+    setupBarSeries pStudyValueConfig, pStudyValueDef
 Case ValueModeText
-    setupTextSeries pStudyValueConfig
+    setupTextSeries pStudyValueConfig, pStudyValueDef
 End Select
 
 
@@ -641,13 +641,19 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setupBarSeries( _
-                ByVal studyValueConfig As StudyValueConfiguration)
+                ByVal studyValueConfig As StudyValueConfiguration, _
+                ByVal studyValueDef As StudyValueDefinition)
 Const ProcName As String = "setupBarSeries"
 On Error GoTo Err
 
 Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.Layer)
 Set mValueSeries = mBarSeries
-If Not studyValueConfig.BarStyle Is Nothing Then mBarSeries.Style = studyValueConfig.BarStyle
+If Not studyValueConfig.BarStyle Is Nothing Then
+    mBarSeries.Style = studyValueConfig.BarStyle
+Else
+    mBarSeries.Style = studyValueDef.ValueStyle
+End If
+
 If studyValueConfig.BarFormatterFactoryName <> "" Then
     Dim lBarStudy As BarStudy
     Set lBarStudy = mStudy
@@ -662,13 +668,18 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setupDataSeries( _
-                ByVal studyValueConfig As StudyValueConfiguration)
+                ByVal studyValueConfig As StudyValueConfiguration, _
+                ByVal studyValueDef As StudyValueDefinition)
 Const ProcName As String = "setupDataSeries"
 On Error GoTo Err
 
 Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.Layer)
 Set mValueSeries = mDataSeries
-If Not studyValueConfig.DataPointStyle Is Nothing Then mDataSeries.Style = studyValueConfig.DataPointStyle
+If Not studyValueConfig.DataPointStyle Is Nothing Then
+    mDataSeries.Style = studyValueConfig.DataPointStyle
+Else
+    mDataSeries.Style = studyValueDef.ValueStyle
+End If
 
 Exit Sub
 
@@ -677,13 +688,18 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setupLineSeries( _
-                ByVal studyValueConfig As StudyValueConfiguration)
+                ByVal studyValueConfig As StudyValueConfiguration, _
+                ByVal studyValueDef As StudyValueDefinition)
 Const ProcName As String = "setupLineSeries"
 On Error GoTo Err
 
 Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.Layer)
 Set mValueSeries = mLineSeries
-If Not studyValueConfig.LineStyle Is Nothing Then mLineSeries.Style = studyValueConfig.LineStyle
+If Not studyValueConfig.LineStyle Is Nothing Then
+    mLineSeries.Style = studyValueConfig.LineStyle
+Else
+    mLineSeries.Style = studyValueDef.ValueStyle
+End If
 
 Exit Sub
 
@@ -692,13 +708,18 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub setupTextSeries( _
-                ByVal studyValueConfig As StudyValueConfiguration)
+                ByVal studyValueConfig As StudyValueConfiguration, _
+                ByVal studyValueDef As StudyValueDefinition)
 Const ProcName As String = "setupTextSeries"
 On Error GoTo Err
 
 Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.Layer)
 Set mValueSeries = mTextSeries
-If Not studyValueConfig.TextStyle Is Nothing Then mTextSeries.Style = studyValueConfig.TextStyle
+If Not studyValueConfig.TextStyle Is Nothing Then
+    mTextSeries.Style = studyValueConfig.TextStyle
+Else
+    mTextSeries.Style = studyValueDef.ValueStyle
+End If
 Set mTextOffset = NewSize(studyValueConfig.OffsetX, studyValueConfig.OffsetY)
 
 Exit Sub

@@ -80,6 +80,14 @@ Private Const ModuleName                As String = "ChartRegion"
 ' Types
 '================================================================================
 
+Private Type PeriodLabels
+    PeriodNumber As Long
+    Key As String
+    Label As String
+    CoarseKey As String
+    CoarseLabel As String
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
@@ -99,6 +107,8 @@ Private mName As String
 
 Private mRegionType As RegionTypes
 
+Private WithEvents mBaseStyle As ChartRegionStyle
+Attribute mBaseStyle.VB_VarHelpID = -1
 Private WithEvents mStyle As ChartRegionStyle
 Attribute mStyle.VB_VarHelpID = -1
 
@@ -144,7 +154,6 @@ Private mYAxisPosition As Long
 
 Private mPerformanceTextVisible As Boolean
 
-Private mPointerCrosshairsColor As Long
 Private mPointerDiscColor As Long
 
 Private mPrevCursorX As Single
@@ -188,8 +197,6 @@ Private mPaintingInProgress                         As Boolean
 
 Private mPriceFormatter                             As IPriceFormatter
 
-Private mGridHidden                                 As Boolean
-
 Private mHorizontalGridSpacer                       As HorizontalGridSpacer
 
 '================================================================================
@@ -203,7 +210,7 @@ Set mData = New ChartRegionData
 Set mGraphObjSeriesCollection = New GraphObjSeriesCollection
 mGraphObjSeriesCollection.Initialise Me
 
-Set mStyle = gDefaultChartRegionStyle.clone
+Set mBaseStyle = gDefaultChartRegionStyle
 
 mUseDeferredPainting = True
 Set mDeferredPainter = New DeferredRegionPainter
@@ -211,10 +218,6 @@ mDeferredPainter.Initialise Me
 
 Set mGraphObjServiceProvider = New GraphObjServiceProvider
 mGraphObjServiceProvider.Region = Me
-
-Set mPriceFormatter = New PriceFormatter
-
-Set mHorizontalGridSpacer = New HorizontalGridSpacer
 
 End Sub
 
@@ -233,7 +236,7 @@ End Sub
 Friend Sub GOSP_AddGraphicObject( _
                 ByVal graphObj As IGraphicObject)
 Const ProcName As String = "GOSP_AddGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.AddGraphicObject graphObj
@@ -251,7 +254,7 @@ Dim graphObj As IGraphicObject
 Dim RedrawArea As TRectangle
 
 Const ProcName As String = "GOSP_ObjectChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set graphObj = mData.GetGraphicObject(handle)
@@ -290,7 +293,7 @@ End Sub
 
 Friend Sub GOSP_ObjectUndrawn(ByVal handle As Long, undrawnArea As TRectangle)
 Const ProcName As String = "GOSP_ObjectUndrawn"
-Dim failpoint As String
+
 On Error GoTo Err
 
 UndrawArea undrawnArea, mData.GetGraphicObject(handle)
@@ -304,7 +307,7 @@ End Sub
 Friend Sub GOSP_PaintRegion( _
                 ByVal recalculate As Boolean)
 Const ProcName As String = "GOSP_PaintRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If recalculate Then
@@ -322,7 +325,7 @@ End Sub
 Friend Sub GOSP_RecalcBoundary( _
                 ByVal SeriesID As Long)
 Const ProcName As String = "GOSP_RecalcBoundary"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.RecalcBoundaryForObjectsInSeries SeriesID
@@ -336,7 +339,7 @@ End Sub
 Friend Sub GOSP_RemoveObject( _
                 ByVal handle As Long)
 Const ProcName As String = "GOSP_RemoveObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 RemoveGraphicObjectEx mData.GetGraphicObject(handle), True, False
@@ -348,12 +351,29 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 '================================================================================
+' mBaseStyle Event Handlers
+'================================================================================
+
+Private Sub mBaseStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Const ProcName As String = "mBaseStyle_PropertyChanged"
+
+On Error GoTo Err
+
+handleStylePropertyChanged ev
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
 ' mViewport Event Handlers
 '================================================================================
 
 Private Sub mViewport_BoundaryChanged()
 Const ProcName As String = "mViewport_BoundaryChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.SetViewport mViewport.Boundary
@@ -370,7 +390,7 @@ End Sub
 
 Private Sub mGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mGridLineStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setGridLineStyle
@@ -387,7 +407,7 @@ End Sub
 
 Private Sub mGridTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mGridTextStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setGridTextStyle
@@ -404,7 +424,7 @@ End Sub
 
 Private Sub mSessionEndGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mSessionEndGridLineStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSessionEndGridLineStyle
@@ -421,7 +441,7 @@ End Sub
 
 Private Sub mSessionStartGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mSessionStartGridLineStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSessionStartGridLineStyle
@@ -438,47 +458,10 @@ End Sub
 
 Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Select Case UCase$(ev.PropertyName)
-Case UCase$("Autoscaling")
-    setAutoscaling
-Case UCase$("BackColor")
-    setBackColor
-Case UCase$("BackGradientFillColors")
-    setBackGradientFillColors
-Case UCase$("GridlineSpacingY")
-    setGridlineSpacingY
-Case UCase$("GridLineStyle")
-    setGridLineStyle
-Case UCase$("GridTextStyle")
-    setGridTextStyle
-Case UCase$("HasGrid")
-    setHasGrid
-Case UCase$("HasGridText")
-    setHasGridText
-Case UCase$("IntegerYScale")
-    setIntegerYScale
-Case UCase$("MinimumHeight")
-    setMinimumHeight
-Case UCase$("CursorSnapsToTickBoundaries")
-    setCursorSnapsToTickBoundaries
-Case UCase$("SessionEndGridLineStyle")
-    setSessionEndGridLineStyle
-Case UCase$("SessionStartGridLineStyle")
-    setSessionStartGridLineStyle
-Case UCase$("YAxisTextStyle")
-    setYAxisTextStyle
-Case UCase$("YCursorTextStyle")
-    setYCursorTextStyle
-Case UCase$("YScaleQuantum")
-    setYScaleQuantum
-Case Else
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Unhandled property change"
-End Select
+handleStylePropertyChanged ev
 
 Exit Sub
 
@@ -492,7 +475,7 @@ End Sub
 
 Private Sub mYAxisTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mYAxisTextStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setYAxisTextStyle
@@ -509,7 +492,7 @@ End Sub
 
 Private Sub mYCursorTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mYCursorTextStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setYCursorTextStyle
@@ -534,11 +517,16 @@ End Property
 
 Public Property Get Autoscaling() As Boolean
 Const ProcName As String = "Autoscaling"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Autoscaling = mStyle.Autoscaling
-If IsPropertySet(AutoscalingIsSet) Then Autoscaling = mAutoscaling
+If IsPropertySet(AutoscalingIsSet) Then
+    Autoscaling = mAutoscaling
+ElseIf Not mStyle Is Nothing Then
+    Autoscaling = mStyle.Autoscaling
+Else
+    Autoscaling = mBaseStyle.Autoscaling
+End If
 
 Exit Property
 
@@ -548,7 +536,7 @@ End Property
 
 Public Property Let Autoscaling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscaling"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mAutoscaling = Value And IsPropertySet(AutoscalingIsSet) Then Exit Property
@@ -564,11 +552,16 @@ End Property
 
 Public Property Get BackColor() As Long
 Const ProcName As String = "BackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
-BackColor = mStyle.BackColor
-If IsPropertySet(BackGradientFillColorsIsSet) Then BackColor = mBackGradientFillColors(0)
+If IsPropertySet(BackGradientFillColorsIsSet) Then
+    BackColor = mBackGradientFillColors(0)
+ElseIf Not mStyle Is Nothing Then
+    BackColor = mStyle.BackColor
+Else
+    BackColor = mBaseStyle.BackColor
+End If
 
 Exit Property
 
@@ -578,7 +571,7 @@ End Property
 
 Public Property Let BackColor(ByVal Value As Long)
 Const ProcName As String = "BackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim mBackGradientFillColors(0) As Long
@@ -594,11 +587,16 @@ End Property
 
 Public Property Get BackGradientFillColors() As Long()
 Const ProcName As String = "BackGradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
-BackGradientFillColors = mStyle.BackGradientFillColors
-If IsPropertySet(BackGradientFillColorsIsSet) Then BackGradientFillColors = mBackGradientFillColors
+If IsPropertySet(BackGradientFillColorsIsSet) Then
+    BackGradientFillColors = mBackGradientFillColors
+ElseIf Not mStyle Is Nothing Then
+    BackGradientFillColors = mStyle.BackGradientFillColors
+Else
+    BackGradientFillColors = mBaseStyle.BackGradientFillColors
+End If
 
 Exit Property
 
@@ -609,7 +607,7 @@ End Property
 Public Property Let BackGradientFillColors(ByRef Value() As Long)
 Dim ar() As Long
 Const ProcName As String = "BackGradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ar = Value
@@ -623,9 +621,33 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Friend Property Let BaseStyle( _
+                ByVal Value As ChartRegionStyle)
+Const ProcName As String = "BaseStyle"
+
+On Error GoTo Err
+
+If Value Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Value must not be Nothing"
+End If
+
+Set mBaseStyle = Value
+
+If mViewport Is Nothing Then Exit Property
+
+processStyle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get Bottom() As Double
 Const ProcName As String = "Bottom"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Bottom = mViewport.Boundary.Bottom
@@ -638,7 +660,7 @@ End Property
 
 Friend Property Let Bottom(ByVal Value As Double)
 Const ProcName As String = "Bottom"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.Bottom = Value
@@ -654,7 +676,7 @@ End Property
 
 Friend Property Get Canvas() As Canvas
 Const ProcName As String = "Canvas"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Canvas = mViewport.Canvas
@@ -665,9 +687,39 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Friend Property Let CrosshairLineStyle(ByVal Value As LineStyle)
+Dim lUseDeferredPainting As Boolean
+
+Const ProcName As String = "CrosshairLineStyle"
+
+On Error GoTo Err
+
+If IsXAxisRegion Or IsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Cannot set CrosshairLineStyle for an axis region"
+End If
+
+lUseDeferredPainting = mUseDeferredPainting
+mUseDeferredPainting = False
+If Not Value Is Nothing Then
+    mCrosshairLineHoriz.LocalStyle = Value
+    mCrosshairLineVert.LocalStyle = Value
+Else
+    mCrosshairLineHoriz.LocalStyle = gDefaultLineStyle
+    mCrosshairLineVert.LocalStyle = gDefaultLineStyle
+End If
+mUseDeferredPainting = lUseDeferredPainting
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Let CursorSnapsToTickBoundaries(ByVal Value As Boolean)
 Const ProcName As String = "CursorSnapsToTickBoundaries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -688,11 +740,16 @@ End Property
 
 Public Property Get CursorSnapsToTickBoundaries() As Boolean
 Const ProcName As String = "CursorSnapsToTickBoundaries"
-Dim failpoint As String
+
 On Error GoTo Err
 
-CursorSnapsToTickBoundaries = mStyle.CursorSnapsToTickBoundaries
-If IsPropertySet(CursorSnapsToTickBoundariesIsSet) Then CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+If IsPropertySet(CursorSnapsToTickBoundariesIsSet) Then
+    CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+ElseIf Not mStyle Is Nothing Then
+    CursorSnapsToTickBoundaries = mStyle.CursorSnapsToTickBoundaries
+Else
+    CursorSnapsToTickBoundaries = mBaseStyle.CursorSnapsToTickBoundaries
+End If
 
 Exit Property
 
@@ -702,11 +759,16 @@ End Property
 
 Public Property Get GridlineSpacingY() As Double
 Const ProcName As String = "GridlineSpacingY"
-Dim failpoint As String
+
 On Error GoTo Err
 
-GridlineSpacingY = mStyle.GridlineSpacingY
-If IsPropertySet(GridlineSpacingYIsSet) Then GridlineSpacingY = mGridlineSpacingY
+If IsPropertySet(GridlineSpacingYIsSet) Then
+    GridlineSpacingY = mGridlineSpacingY
+ElseIf Not mStyle Is Nothing Then
+    GridlineSpacingY = mStyle.GridlineSpacingY
+Else
+    GridlineSpacingY = mBaseStyle.GridlineSpacingY
+End If
 
 Exit Property
 
@@ -716,7 +778,7 @@ End Property
 
 Public Property Let GridlineSpacingY(ByVal Value As Double)
 Const ProcName As String = "GridlineSpacingY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mGridlineSpacingY = Value And IsPropertySet(GridlineSpacingYIsSet) Then Exit Property
@@ -732,11 +794,16 @@ End Property
 
 Public Property Get GridLineStyle() As LineStyle
 Const ProcName As String = "GridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set GridLineStyle = mStyle.GridLineStyle
-If IsPropertySet(GridLineStyleIsSet) Then Set GridLineStyle = mGridLineStyle
+If IsPropertySet(GridLineStyleIsSet) Then
+    Set GridLineStyle = mGridLineStyle
+ElseIf Not mStyle Is Nothing Then
+    Set GridLineStyle = mStyle.GridLineStyle
+Else
+    Set GridLineStyle = mBaseStyle.GridLineStyle
+End If
 
 Exit Property
 
@@ -746,7 +813,7 @@ End Property
 
 Public Property Let GridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "GridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mGridLineStyle Is Value And IsPropertySet(GridLineStyleIsSet) Then Exit Property
@@ -766,11 +833,16 @@ End Property
 
 Public Property Get GridTextStyle() As TextStyle
 Const ProcName As String = "GridTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set GridTextStyle = mStyle.GridTextStyle
-If IsPropertySet(GridTextStyleIsSet) Then Set GridTextStyle = mGridTextStyle
+If IsPropertySet(GridTextStyleIsSet) Then
+    Set GridTextStyle = mGridTextStyle
+ElseIf Not mStyle Is Nothing Then
+    Set GridTextStyle = mStyle.GridTextStyle
+Else
+    Set GridTextStyle = mBaseStyle.GridTextStyle
+End If
 
 Exit Property
 
@@ -780,7 +852,7 @@ End Property
 
 Public Property Let GridTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "GridTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mGridTextStyle Is Value And IsPropertySet(GridTextStyleIsSet) Then Exit Property
@@ -808,11 +880,16 @@ End Property
 
 Public Property Get HasGrid() As Boolean
 Const ProcName As String = "HasGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
-HasGrid = mStyle.HasGrid
-If IsPropertySet(HasGridIsSet) Then HasGrid = mHasGrid
+If IsPropertySet(HasGridIsSet) Then
+    HasGrid = mHasGrid
+ElseIf Not mStyle Is Nothing Then
+    HasGrid = mStyle.HasGrid
+Else
+    HasGrid = mBaseStyle.HasGrid
+End If
 
 Exit Property
 
@@ -822,7 +899,7 @@ End Property
 
 Public Property Let HasGrid(ByVal Value As Boolean)
 Const ProcName As String = "HasGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mHasGrid = Value And IsPropertySet(HasGridIsSet) Then Exit Property
@@ -838,11 +915,16 @@ End Property
 
 Public Property Get HasGridText() As Boolean
 Const ProcName As String = "HasGridText"
-Dim failpoint As String
+
 On Error GoTo Err
 
-HasGridText = mStyle.HasGridText
-If IsPropertySet(HasGridTextProperty) Then HasGridText = mHasGridText
+If IsPropertySet(HasGridTextProperty) Then
+    HasGridText = mHasGridText
+ElseIf Not mStyle Is Nothing Then
+    HasGridText = mStyle.HasGridText
+Else
+    HasGridText = mBaseStyle.HasGridText
+End If
 
 Exit Property
 
@@ -852,7 +934,7 @@ End Property
 
 Public Property Let HasGridText(ByVal Value As Boolean)
 Const ProcName As String = "HasGridText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mHasGridText = Value And IsPropertySet(HasGridTextProperty) Then Exit Property
@@ -868,7 +950,7 @@ End Property
 
 Public Property Get Height() As Double
 Const ProcName As String = "Height"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Height = mViewport.Height
@@ -881,7 +963,7 @@ End Property
 
 Public Property Let IntegerYScale(ByVal Value As Boolean)
 Const ProcName As String = "IntegerYScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -893,6 +975,7 @@ End If
 If mIntegerYScale = Value And IsPropertySet(IntegerYScaleIsSet) Then Exit Property
 mIntegerYScale = Value
 setPropertyFlag IntegerYScaleIsSet
+
 setIntegerYScale
 
 Exit Property
@@ -903,11 +986,16 @@ End Property
 
 Public Property Get IntegerYScale() As Boolean
 Const ProcName As String = "IntegerYScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
-IntegerYScale = mStyle.IntegerYScale
-If IsPropertySet(IntegerYScaleIsSet) Then IntegerYScale = mIntegerYScale
+If IsPropertySet(IntegerYScaleIsSet) Then
+    IntegerYScale = mIntegerYScale
+ElseIf Not mStyle Is Nothing Then
+    IntegerYScale = mStyle.IntegerYScale
+Else
+    IntegerYScale = mBaseStyle.IntegerYScale
+End If
 
 Exit Property
 
@@ -921,7 +1009,7 @@ End Property
 
 Friend Property Let IsDrawingEnabled(ByVal Value As Boolean)
 Const ProcName As String = "IsDrawingEnabled"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsDrawingEnabled = Value Then Exit Property
@@ -965,7 +1053,7 @@ End Property
 
 Public Property Get Left() As Double
 Const ProcName As String = "Left"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Left = mViewport.Left
@@ -978,7 +1066,7 @@ End Property
 
 Friend Property Let Left(ByVal Value As Double)
 Const ProcName As String = "Left"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.Left = Value
@@ -991,11 +1079,16 @@ End Property
 
 Public Property Get MinimumHeight() As Double
 Const ProcName As String = "MinimumHeight"
-Dim failpoint As String
+
 On Error GoTo Err
 
-MinimumHeight = mStyle.MinimumHeight
-If IsPropertySet(MinimumHeightIsSet) Then MinimumHeight = mMinimumHeight
+If IsPropertySet(MinimumHeightIsSet) Then
+    MinimumHeight = mMinimumHeight
+ElseIf Not mStyle Is Nothing Then
+    MinimumHeight = mStyle.MinimumHeight
+Else
+    MinimumHeight = mBaseStyle.MinimumHeight
+End If
 
 Exit Property
 
@@ -1005,7 +1098,7 @@ End Property
 
 Public Property Let MinimumHeight(ByVal Value As Double)
 Const ProcName As String = "MinimumHeight"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -1035,7 +1128,7 @@ End Property
 
 Public Property Get MousePosition() As Point
 Const ProcName As String = "MousePosition"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set MousePosition = gNewPoint(mCurrX, mCurrY)
@@ -1066,44 +1159,13 @@ Public Property Let PerformanceTextVisible(ByVal Value As Boolean)
 mPerformanceTextVisible = Value
 End Property
 
-Public Property Get PointerCrosshairsColor() As Long
-PointerCrosshairsColor = mPointerCrosshairsColor
-End Property
-
-Friend Property Let PointerCrosshairsColor(ByVal Value As Long)
-Dim lUseDeferredPainting As Boolean
-
-Const ProcName As String = "PointerCrosshairsColor"
-Dim failpoint As String
-On Error GoTo Err
-
-If IsXAxisRegion Or IsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Cannot set PointerCrossHairsColor for an axis region"
-End If
-
-mPointerCrosshairsColor = Value
-
-lUseDeferredPainting = mUseDeferredPainting
-mUseDeferredPainting = False
-mCrosshairLineHoriz.Color = mPointerCrosshairsColor
-mCrosshairLineVert.Color = mPointerCrosshairsColor
-mUseDeferredPainting = lUseDeferredPainting
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 Public Property Get PointerDiscColor() As Long
 PointerDiscColor = mPointerDiscColor
 End Property
 
 Friend Property Let PointerDiscColor(ByVal Value As Long)
 Const ProcName As String = "PointerDiscColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -1127,7 +1189,7 @@ End Property
 Public Property Let PointerIcon(ByVal Value As IPictureDisp)
 
 Const ProcName As String = "PointerIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then Exit Property
@@ -1212,10 +1274,9 @@ End If
 mPriceFormatter.IntegerYScale = IntegerYScale
 mPriceFormatter.YScaleQuantum = YScaleQuantum
 
-If Not mHorizontalGrid Is Nothing Then
-    mHorizontalGrid.PriceFormatter = Value
-    doRepaint
-End If
+mHorizontalGrid.PriceFormatter = Value
+doRepaint
+
 End Property
 
 Public Property Get PriceFormatter() As IPriceFormatter
@@ -1224,11 +1285,16 @@ End Property
 
 Public Property Get SessionEndGridLineStyle() As LineStyle
 Const ProcName As String = "SessionEndGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set SessionEndGridLineStyle = mStyle.SessionEndGridLineStyle
-If IsPropertySet(SessionEndGridLineStyleIsSet) Then Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+If IsPropertySet(SessionEndGridLineStyleIsSet) Then
+    Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+ElseIf Not mStyle Is Nothing Then
+    Set SessionEndGridLineStyle = mStyle.SessionEndGridLineStyle
+Else
+    Set SessionEndGridLineStyle = mBaseStyle.SessionEndGridLineStyle
+End If
 
 Exit Property
 
@@ -1238,7 +1304,7 @@ End Property
 
 Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionEndGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSessionEndGridLineStyle Is Value And IsPropertySet(SessionEndGridLineStyleIsSet) Then Exit Property
@@ -1258,11 +1324,16 @@ End Property
 
 Public Property Get SessionStartGridLineStyle() As LineStyle
 Const ProcName As String = "SessionStartGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set SessionStartGridLineStyle = mStyle.SessionStartGridLineStyle
-If IsPropertySet(SessionStartGridLineStyleIsSet) Then Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+If IsPropertySet(SessionStartGridLineStyleIsSet) Then
+    Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+ElseIf Not mStyle Is Nothing Then
+    Set SessionStartGridLineStyle = mStyle.SessionStartGridLineStyle
+Else
+    Set SessionStartGridLineStyle = mBaseStyle.SessionStartGridLineStyle
+End If
 
 Exit Property
 
@@ -1272,7 +1343,7 @@ End Property
 
 Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
 Const ProcName As String = "SessionStartGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSessionStartGridLineStyle Is Value And IsPropertySet(SessionStartGridLineStyleIsSet) Then Exit Property
@@ -1301,14 +1372,8 @@ End Property
 Public Property Let Style( _
                 ByVal Value As ChartRegionStyle)
 Const ProcName As String = "Style"
-Dim failpoint As String
-On Error GoTo Err
 
-If Value Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value must not be Nothing"
-End If
+On Error GoTo Err
 
 Set mStyle = Value
 
@@ -1324,14 +1389,14 @@ End Property
 
 Public Property Get Title() As Text
 Const ProcName As String = "Title"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If IsXAxisRegion Or IsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "An axis region does not have a title"
-End If
+'If IsXAxisRegion Or IsYAxisRegion Then
+'    Err.Raise ErrorCodes.ErrIllegalStateException, _
+'            ProjectName & "." & ModuleName & ":" & ProcName, _
+'            "An axis region does not have a title"
+'End If
 
 If mTitle Is Nothing Then setupTitle
 Set Title = mTitle
@@ -1344,7 +1409,7 @@ End Property
 
 Public Property Get Top() As Double
 Const ProcName As String = "Top"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Top = mViewport.Top
@@ -1357,7 +1422,7 @@ End Property
 
 Friend Property Let Top(ByVal Value As Double)
 Const ProcName As String = "Top"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.Top = Value
@@ -1381,7 +1446,7 @@ End Property
 
 Public Property Get Width() As Single
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Width = mViewport.Width
@@ -1399,13 +1464,10 @@ End Property
 Friend Property Let YAxisRegion(ByVal Value As ChartRegion)
 
 Const ProcName As String = "YAxisRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mYAxisRegion = Value
-
-mYAxisRegion.HasGrid = False
-mYAxisRegion.HasGridText = False
 
 mYAxisRegion.IsDrawingEnabled = mIsDrawingEnabled
 mYAxisRegion.Bottom = 0
@@ -1419,7 +1481,7 @@ mYCursorText.Align = AlignBoxCentreLeft
 mYCursorText.Size = gNewSize(90, 0, CoordsRelative)
 setYCursorTextStyle
 
-If Not mHorizontalGrid Is Nothing Then mHorizontalGrid.YAxisRegion = mYAxisRegion
+mHorizontalGrid.YAxisRegion = mYAxisRegion
 setYAxisTextStyle
 
 Exit Property
@@ -1435,11 +1497,16 @@ End Property
 
 Public Property Get YAxisTextStyle() As TextStyle
 Const ProcName As String = "YAxisTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set YAxisTextStyle = mStyle.YAxisTextStyle
-If IsPropertySet(YAxisTextStyleIsSet) Then Set YAxisTextStyle = mYAxisTextStyle
+If IsPropertySet(YAxisTextStyleIsSet) Then
+    Set YAxisTextStyle = mYAxisTextStyle
+ElseIf Not mStyle Is Nothing Then
+    Set YAxisTextStyle = mStyle.YAxisTextStyle
+Else
+    Set YAxisTextStyle = mBaseStyle.YAxisTextStyle
+End If
 
 Exit Property
 
@@ -1449,7 +1516,7 @@ End Property
 
 Public Property Let YAxisTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YAxisTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mYAxisTextStyle Is Value And IsPropertySet(YAxisTextStyleIsSet) Then Exit Property
@@ -1469,11 +1536,16 @@ End Property
 
 Public Property Get YCursorTextStyle() As TextStyle
 Const ProcName As String = "YCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set YCursorTextStyle = mStyle.YCursorTextStyle
-If IsPropertySet(YCursorTextStyleIsSet) Then Set YCursorTextStyle = mYCursorTextStyle
+If IsPropertySet(YCursorTextStyleIsSet) Then
+    Set YCursorTextStyle = mYCursorTextStyle
+ElseIf Not mStyle Is Nothing Then
+    Set YCursorTextStyle = mStyle.YCursorTextStyle
+Else
+    Set YCursorTextStyle = mBaseStyle.YCursorTextStyle
+End If
 
 Exit Property
 
@@ -1483,7 +1555,7 @@ End Property
 
 Public Property Let YCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "YCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mYCursorTextStyle Is Value And IsPropertySet(YCursorTextStyleIsSet) Then Exit Property
@@ -1503,7 +1575,7 @@ End Property
 
 Public Property Get YScaleGridSpacing() As Single
 Const ProcName As String = "YScaleGridSpacing"
-Dim failpoint As String
+
 On Error GoTo Err
 
 YScaleGridSpacing = mHorizontalGridSpacer.YScaleGridSpacing
@@ -1516,7 +1588,7 @@ End Property
 
 Public Property Let YScaleQuantum(ByVal Value As Double)
 Const ProcName As String = "YScaleQuantum"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -1544,11 +1616,16 @@ End Property
 
 Public Property Get YScaleQuantum() As Double
 Const ProcName As String = "YScaleQuantum"
-Dim failpoint As String
+
 On Error GoTo Err
 
-YScaleQuantum = mStyle.YScaleQuantum
-If IsPropertySet(YScaleQuantumIsSet) Then YScaleQuantum = mYScaleQuantum
+If IsPropertySet(YScaleQuantumIsSet) Then
+    YScaleQuantum = mYScaleQuantum
+ElseIf Not mStyle Is Nothing Then
+    YScaleQuantum = mStyle.YScaleQuantum
+Else
+    YScaleQuantum = mBaseStyle.YScaleQuantum
+End If
 
 Exit Property
 
@@ -1565,7 +1642,7 @@ Public Function AddGraphicObjectSeries( _
                 Optional ByVal Layer As Long = -1, _
                 Optional ByVal Name As String) As IGraphicObjectSeries
 Const ProcName As String = "AddGraphicObjectSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set AddGraphicObjectSeries = mGraphObjSeriesCollection.Add( _
@@ -1589,7 +1666,7 @@ Static miscLines As LineSeries
 Dim lLine As Line
 
 Const ProcName As String = "AddLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If miscLines Is Nothing Then
@@ -1610,7 +1687,7 @@ End Function
 Friend Sub AddPeriod(ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "AddPeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.AddPeriod pPeriodNumber, pTimestamp
@@ -1625,12 +1702,12 @@ End Sub
 Friend Sub AddSessionEndGridline( _
                 ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date)
-                
+               
 Const ProcName As String = "AddSessionEndGridline"
-Dim failpoint As String
+
 On Error GoTo Err
 
-setVerticalGridLine(pTimestamp, pPeriodNumber, True).LocalStyle = SessionEndGridLineStyle
+addStyledVerticalGridline pPeriodNumber, pTimestamp, SessionEndGridLineStyle
 
 Exit Sub
 
@@ -1641,12 +1718,11 @@ End Sub
 Friend Sub AddSessionStartGridline( _
                 ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date)
-                
 Const ProcName As String = "AddSessionStartGridline"
-Dim failpoint As String
+
 On Error GoTo Err
 
-setVerticalGridLine(pTimestamp, pPeriodNumber, True).LocalStyle = SessionStartGridLineStyle
+addStyledVerticalGridline pPeriodNumber, pTimestamp, SessionStartGridLineStyle
 
 Exit Sub
 
@@ -1662,7 +1738,7 @@ Static miscTexts As TextSeries
 Dim lText As Text
 
 Const ProcName As String = "AddText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If miscTexts Is Nothing Then
@@ -1683,7 +1759,7 @@ End Function
 
 Friend Sub CalculateAndRepaint()
 Const ProcName As String = "CalculateAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.DetermineInScopeObjects
@@ -1703,7 +1779,7 @@ End Sub
 
 Friend Sub ChangeGaugeAndRepaint()
 Const ProcName As String = "changeGaugeAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.CalculateInscopeGaugeDependentObjects
@@ -1718,7 +1794,7 @@ End Sub
 
 Friend Sub ClearRegion()
 Const ProcName As String = "ClearRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsCleared Then Exit Sub
@@ -1759,7 +1835,7 @@ End Sub
 
 Public Sub ClearSelection()
 Const ProcName As String = "ClearSelection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 deSelectObjectOrSeries mSelectedObject
@@ -1773,7 +1849,7 @@ End Sub
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -1787,7 +1863,7 @@ End Sub
 
 Friend Sub Click()
 Const ProcName As String = "Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 clickSelectedObjectOrSeries
@@ -1801,7 +1877,7 @@ End Sub
 
 Friend Sub DblCLick()
 Const ProcName As String = "DblCLick"
-Dim failpoint As String
+
 On Error GoTo Err
 
 dblClickSelectedObjectOrSeries
@@ -1815,7 +1891,7 @@ End Sub
 
 Friend Sub DrawCursor(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
 Const ProcName As String = "DrawCursor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Y = MinusInfinitySingle Then
@@ -1838,7 +1914,7 @@ End Sub
 
 Public Function FormatYValue(ByVal Y As Double) As String
 Const ProcName As String = "FormatYValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FormatYValue = mPriceFormatter.FormatPrice(Y)
@@ -1851,10 +1927,10 @@ End Function
 
 Public Sub HideGrid()
 Const ProcName As String = "HideGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If mGridHidden Then Exit Sub
+If mHorizontalGrid.Hidden Then Exit Sub
 
 mHorizontalGrid.Hidden = True
 doRepaint
@@ -1871,7 +1947,7 @@ Friend Sub Initialise( _
                 ByVal pCanvas As Canvas, _
                 ByVal pRegionType As RegionTypes)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mName = Name
@@ -1886,6 +1962,7 @@ mRegionType = pRegionType
 
 mData.Initialise pChart, Me, mGraphObjSeriesCollection
 
+setupGrid
 setupCrosshairs
 processStyle
 
@@ -1897,7 +1974,7 @@ End Sub
 
 Public Function IsGridHidden() As Boolean
 Const ProcName As String = "IsGridHidden"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsGridHidden = mHorizontalGrid.Hidden
@@ -1913,7 +1990,7 @@ Friend Sub MouseDown(Button As Integer, _
                 X As Single, _
                 Y As Single)
 Const ProcName As String = "MouseDown"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCurrX = X
@@ -1948,7 +2025,7 @@ Friend Sub NotifyResizedY()
 ' the Position of any in-scope gauge-dependent objects.
 
 Const ProcName As String = "NotifyResizedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.NotifyResizedY
@@ -1972,7 +2049,7 @@ Friend Sub RepaintAreas( _
 Const ProcName As String = "RepaintAreas"
 Dim i As Long
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.MarkObjectsForRedraw pAreas, pCount
@@ -2003,7 +2080,7 @@ End Sub
 
 Friend Sub RepaintRegion()
 Const ProcName As String = "RepaintRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 paint
@@ -2020,7 +2097,7 @@ Friend Sub RedrawObject( _
                 ByRef areaToRedraw As TRectangle)
 'unDrawCursor areaToRedraw
 Const ProcName As String = "RedrawObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 drawObject graphObj, areaToRedraw
@@ -2035,7 +2112,7 @@ End Sub
 Public Sub RemoveGraphicObject( _
                 ByVal graphObj As IGraphicObject)
 Const ProcName As String = "RemoveGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 RemoveGraphicObjectEx graphObj, True, True
@@ -2051,20 +2128,13 @@ Friend Sub RemoveGraphicObjectEx( _
                 ByVal undraw As Boolean, _
                 ByVal removeFromSeries As Boolean)
 Const ProcName As String = "RemoveGraphicObjectEx"
-Dim failpoint As String
 On Error GoTo Err
-
-failpoint = 100
 
 If Not mSelectedObject Is Nothing Then
     If graphObj Is mSelectedObject Then ClearSelection
 End If
 
-failpoint = 300
-
 If removeFromSeries Then mGraphObjSeriesCollection.Item(graphObj.SeriesID).RemoveObject graphObj
-
-failpoint = 800
 
 If undraw Then UndrawArea graphObj.BoundingRectangleInViewport, graphObj
 
@@ -2079,7 +2149,7 @@ End Sub
 Public Sub RemoveGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
 Const ProcName As String = "RemoveGraphicObjectSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pSeries Is Nothing Then
@@ -2098,7 +2168,7 @@ End Sub
 
 Friend Sub ScaleAndRepaint()
 Const ProcName As String = "ScaleAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 calculateVerticalBounds
@@ -2115,7 +2185,7 @@ End Sub
 
 Public Sub ScaleUp(ByVal factor As Single)
 Const ProcName As String = "ScaleUp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -2137,7 +2207,7 @@ End Sub
 
 Public Sub ScrollVertical(ByVal amount As Single)
 Const ProcName As String = "ScrollVertical"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -2157,7 +2227,7 @@ End Sub
 
 Public Sub ScrollVerticalProportion(ByVal proportion As Single)
 Const ProcName As String = "ScrollVerticalProportion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -2185,7 +2255,7 @@ Dim periodrect As TRectangle
 Dim redrawAreas(0) As TRectangle
 
 Const ProcName As String = "SetPeriodBackgroundColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mData.PeriodBackColor(PeriodNumber) = Color
@@ -2218,7 +2288,7 @@ Friend Sub SetPeriodsInView( _
                 ByVal minValue As Single, _
                 ByVal maxValue As Single)
 Const ProcName As String = "SetPeriodsInView"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMinInViewPeriod = minValue
@@ -2237,7 +2307,7 @@ End Sub
 
 Friend Sub SetPointerModeDefault()
 Const ProcName As String = "SetPointerModeDefault"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPointerMode = PointerModeDefault Then Exit Sub
@@ -2262,7 +2332,7 @@ End Sub
 
 Friend Sub SetPointerModeSelection()
 Const ProcName As String = "SetPointerModeSelection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPointerMode = PointerModeSelection Then Exit Sub
@@ -2287,7 +2357,7 @@ Friend Sub SetPointerModeTool( _
                 ByVal icon As IPictureDisp)
 
 Const ProcName As String = "SetPointerModeTool"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsDrawingEnabled Then hideCursor
@@ -2312,7 +2382,7 @@ End Sub
 Public Sub SetVerticalScale(ByRef lowValue As Double, _
                             ByRef highValue As Double)
 Const ProcName As String = "SetVerticalScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -2334,7 +2404,7 @@ End Sub
 Friend Sub SetVerticalScaleInternal(ByRef lowValue As Double, _
                             ByRef highValue As Double)
 Const ProcName As String = "SetVerticalScaleInternal"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setViewportVerticalBounds lowValue, highValue
@@ -2349,10 +2419,10 @@ End Sub
 
 Public Sub ShowGrid()
 Const ProcName As String = "ShowGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If Not mGridHidden Then Exit Sub
+If Not mHorizontalGrid.Hidden Then Exit Sub
 
 mHorizontalGrid.Hidden = False
 doRepaint
@@ -2367,20 +2437,12 @@ Friend Sub UndrawAreaEx( _
                 ByRef undrawnArea As TRectangle, _
                 Optional ByVal objToExclude As IGraphicObject)
     Const ProcName As String = "UndrawAreaEx"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 ' redraw objects in the undrawn area, preserving layering
 If mIsDrawingEnabled And undrawnArea.isValid Then
-    
-    failpoint = 200
-
     mViewport.UndrawArea undrawnArea
-    
-    failpoint = 400
-    
     RedrawArea undrawnArea, MinLayer, objToExclude
     
 End If
@@ -2395,85 +2457,109 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function addVerticalGridLine(ByVal PeriodNumber As Long, _
-                                ByVal Key As String, _
-                                ByVal label As String, _
-                                ByVal coarseKey As String, _
-                                ByVal coarseLabel As String) As ChartSkil26.Line
-Dim vGridLine As ChartSkil26.Line
+Friend Sub addStyledVerticalGridline( _
+                ByVal pPeriodNumber As Long, _
+                ByVal pTimestamp As Date, _
+                ByVal pStyle As LineStyle)
+               
+Const ProcName As String = "addStyledVerticalGridline"
+
+On Error GoTo Err
+
+Dim lLine As ChartSkil26.Line
+
+Set lLine = setVerticalGridLine(pTimestamp, pPeriodNumber, True)
+If Not lLine Is Nothing Then lLine.LocalStyle = pStyle
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub addVerticalGridText(ByRef pLabels As PeriodLabels)
+Const ProcName As String = "addVerticalGridText"
+
+On Error GoTo Err
+
 Dim vGridText As Text
 Dim vGridTextCoarse As Text
 
+On Error Resume Next
+Set vGridText = mXGridTexts.Item(pLabels.Key)
+On Error GoTo Err
+If vGridText Is Nothing Then
+    Set vGridText = mXGridTexts.Add(pLabels.Key)
+    vGridText.FixedX = False
+    vGridText.FixedY = True
+    vGridText.Position = gNewPoint(pLabels.PeriodNumber - 0.5, _
+                                0#, _
+                                CoordsLogical, _
+                                CoordsDistance)
+    vGridText.Text = pLabels.Label
+End If
+
+On Error Resume Next
+Set vGridTextCoarse = mXGridTextsCoarse.Item(pLabels.CoarseKey)
+On Error GoTo Err
+If vGridTextCoarse Is Nothing Then
+    Set vGridTextCoarse = mXGridTextsCoarse.Add(pLabels.CoarseKey)
+    vGridTextCoarse.FixedX = False
+    vGridTextCoarse.FixedY = True
+    vGridTextCoarse.Position = gNewPoint(pLabels.PeriodNumber - 0.5, _
+                                0#, _
+                                CoordsLogical, _
+                                CoordsCounterDistance)
+    vGridTextCoarse.Text = pLabels.CoarseLabel
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+
+End Sub
+
+Private Function addVerticalGridLine(ByRef pLabels As PeriodLabels) As ChartSkil26.Line
+Dim vGridLine As ChartSkil26.Line
+
 Const ProcName As String = "addVerticalGridLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If HasGrid Then
-    On Error Resume Next
-    Set vGridLine = mXGridLines.Item(Key)
-    On Error GoTo Err
-    If vGridLine Is Nothing Then
-        Set vGridLine = mXGridLines.Add(Key)
-        vGridLine.FixedX = False
-        vGridLine.FixedY = True
-        vGridLine.SetPosition gNewPoint(PeriodNumber - 0.5, _
+On Error Resume Next
+Set vGridLine = mXGridLines.Item(pLabels.Key)
+On Error GoTo Err
+If vGridLine Is Nothing Then
+    Set vGridLine = mXGridLines.Add(pLabels.Key)
+    vGridLine.FixedX = False
+    vGridLine.FixedY = True
+    vGridLine.SetPosition gNewPoint(pLabels.PeriodNumber - 0.5, _
+                                0, _
+                                CoordsLogical, _
+                                CoordsRelative), _
+                            gNewPoint(pLabels.PeriodNumber - 0.5, _
+                                100, _
+                                CoordsLogical, _
+                                CoordsRelative)
+Else
+    If vGridLine.Point1.XLogical(mViewport.Region) > pLabels.PeriodNumber Then
+        vGridLine.SetPosition gNewPoint(pLabels.PeriodNumber - 0.5, _
                                     0, _
                                     CoordsLogical, _
                                     CoordsRelative), _
-                                gNewPoint(PeriodNumber - 0.5, _
+                                gNewPoint(pLabels.PeriodNumber - 0.5, _
                                     100, _
                                     CoordsLogical, _
                                     CoordsRelative)
-    Else
-        If vGridLine.Point1.XLogical(mViewport.Region) > PeriodNumber Then
-            vGridLine.SetPosition gNewPoint(PeriodNumber - 0.5, _
-                                        0, _
-                                        CoordsLogical, _
-                                        CoordsRelative), _
-                                    gNewPoint(PeriodNumber - 0.5, _
-                                        100, _
-                                        CoordsLogical, _
-                                        CoordsRelative)
-        End If
-    End If
-    Set addVerticalGridLine = vGridLine
-End If
-
-If HasGridText Then
-    On Error Resume Next
-    Set vGridText = mXGridTexts.Item(Key)
-    On Error GoTo Err
-    If vGridText Is Nothing Then
-        Set vGridText = mXGridTexts.Add(Key)
-        vGridText.FixedX = False
-        vGridText.FixedY = True
-        vGridText.Position = gNewPoint(PeriodNumber - 0.5, _
-                                    0#, _
-                                    CoordsLogical, _
-                                    CoordsDistance)
-        vGridText.Text = label
-    End If
-
-    On Error Resume Next
-    Set vGridTextCoarse = mXGridTextsCoarse.Item(coarseKey)
-    On Error GoTo Err
-    If vGridTextCoarse Is Nothing Then
-        Set vGridTextCoarse = mXGridTextsCoarse.Add(coarseKey)
-        vGridTextCoarse.FixedX = False
-        vGridTextCoarse.FixedY = True
-        vGridTextCoarse.Position = gNewPoint(PeriodNumber - 0.5, _
-                                    0#, _
-                                    CoordsLogical, _
-                                    CoordsCounterDistance)
-        vGridTextCoarse.Text = coarseLabel
     End If
 End If
+Set addVerticalGridLine = vGridLine
 
 Exit Function
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
 End Function
 
 Private Sub calculateVerticalBounds()
@@ -2481,7 +2567,7 @@ Dim scaleMax As Double
 Dim scaleMin As Double
 
 Const ProcName As String = "calculateVerticalBounds"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not Autoscaling Then Exit Sub
@@ -2515,7 +2601,7 @@ End Sub
 
 Private Function chartObj() As Chart
 Const ProcName As String = "chartObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set chartObj = mChartRef.Target
@@ -2529,7 +2615,7 @@ End Function
 Private Sub ClearProperty( _
                 ByVal flag As PropertyOverrideFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -2542,7 +2628,7 @@ End Sub
 
 Private Function clickSelectedObjectOrSeries() As Boolean
 Const ProcName As String = "clickSelectedObjectOrSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSelectedObject Is Nothing Then
@@ -2565,7 +2651,7 @@ End Function
 
 Private Function dblClickSelectedObjectOrSeries() As Boolean
 Const ProcName As String = "dblClickSelectedObjectOrSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSelectedObject Is Nothing Then
@@ -2588,7 +2674,7 @@ End Function
 
 Private Function deSelectObjectOrSeries(ByVal graphObj As IGraphicObject) As Boolean
 Const ProcName As String = "deSelectObjectOrSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If graphObj Is Nothing Then
@@ -2610,7 +2696,7 @@ End Function
 
 Private Sub doRepaint()
 Const ProcName As String = "doRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsDrawingEnabled Then
@@ -2629,7 +2715,7 @@ End Sub
 
 Private Sub doScaleAndRepaint()
 Const ProcName As String = "doScaleAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsDrawingEnabled Then
@@ -2648,7 +2734,7 @@ End Sub
 
 Private Sub doCalculateAndRepaint()
 Const ProcName As String = "doCalculateAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIsDrawingEnabled Then
@@ -2669,7 +2755,7 @@ Private Sub drawCrosshairsPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
 
 Const ProcName As String = "drawCrosshairsPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -2690,7 +2776,7 @@ End Sub
 Private Sub drawCustomPointer(ByVal X As Single, ByVal Y As Single)
 
 Const ProcName As String = "drawCustomPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -2706,7 +2792,7 @@ Dim lineX As Single
 Dim Size As Size
 
 Const ProcName As String = "drawDiscPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -2742,7 +2828,7 @@ Private Sub drawObject( _
                 ByRef areaToRedraw As TRectangle)
 Dim drawAreas(0) As TRectangle
 Const ProcName As String = "drawObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 drawAreas(0) = RectIntersection(mViewport.Boundary, areaToRedraw)
@@ -2758,7 +2844,7 @@ End Sub
 Private Sub drawSelectionPointer(ByVal X As Single, ByVal Y As Single)
 
 Const ProcName As String = "drawSelectionPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -2776,7 +2862,7 @@ Dim lineX As Single
 Dim lSize As Size
 
 Const ProcName As String = "drawToolPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -2797,7 +2883,7 @@ End Sub
 
 Private Sub drawYCursorText(ByVal Y As Single)
 Const ProcName As String = "drawYCursorText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mYAxisRegion Is Nothing Then
@@ -2816,7 +2902,7 @@ Static perfText As Text
 Dim perffont As StdFont
 
 Const ProcName As String = "getPerformanceText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If perfText Is Nothing Then
@@ -2852,11 +2938,146 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
+Private Function getPeriodLabels(ByVal pTimestamp As Date, _
+                            ByVal pPeriodNumber As Long, _
+                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As PeriodLabels
+Const ProcName As String = "getPeriodLabels"
+
+Dim lGridLineTime As Date
+
+On Error GoTo Err
+
+With getPeriodLabels
+    .PeriodNumber = pPeriodNumber
+    If pIgnoreVerticalGridTimePeriod Then
+        ' just draw a vertical gridline at the specified period
+        .Key = Format(pTimestamp, "yyyymmddhhnnss")
+        .Label = FormatDateTime(pTimestamp, vbShortTime)
+        .CoarseKey = Format(pTimestamp, "yyyymmdd")
+        .CoarseLabel = Format(pTimestamp, "d Mmm yy")
+        Exit Function
+    End If
+    
+    If mVerticalGridTimePeriod Is Nothing Then
+        ' just draw a vertical gridline every 10 bars
+        If pPeriodNumber Mod 10 = 1 Then
+            .Key = Format(pTimestamp, "yyyymmddhhnnss")
+            .Label = FormatDateTime(pTimestamp, vbShortTime)
+            .CoarseKey = Format(pTimestamp, "yyyymmdd")
+            .CoarseLabel = Format(pTimestamp, "d Mmm yy")
+        End If
+        Exit Function
+    End If
+    
+    lGridLineTime = BarStartTime(pTimestamp, mVerticalGridTimePeriod, mSessionStartTime)
+        
+    Select Case mVerticalGridTimePeriod.Units
+    Case TimePeriodSecond
+        .Key = Format(lGridLineTime, "yyyymmddhhnnss")
+        .Label = FormatDateTime(lGridLineTime, vbLongTime)
+        .CoarseKey = Format(lGridLineTime, "yyyymmdd")
+        .CoarseLabel = Format(lGridLineTime, "d Mmm yy")
+    Case TimePeriodMinute
+        .Key = Format(lGridLineTime, "yyyymmddhhnn")
+        .Label = FormatDateTime(lGridLineTime, vbShortTime)
+        .CoarseKey = Format(lGridLineTime, "yyyymmdd")
+        .CoarseLabel = Format(lGridLineTime, "d Mmm yy")
+    Case TimePeriodHour
+        .Key = Format(lGridLineTime, "yyyymmddhh")
+        .Label = FormatDateTime(lGridLineTime, vbShortTime)
+        .CoarseKey = Format(lGridLineTime, "yyyymmdd")
+        .CoarseLabel = Format(lGridLineTime, "d Mmm yy")
+    Case TimePeriodDay
+        .Key = Format(lGridLineTime, "yyyymmdd")
+        .Label = Format(lGridLineTime, "d")
+        .CoarseKey = Format(lGridLineTime, "yyyymm")
+        .CoarseLabel = Format(lGridLineTime, "Mmm yy")
+    Case TimePeriodWeek
+        .Key = Format(lGridLineTime, "yyyymmdd")
+        .Label = Format(lGridLineTime, "d Mmm")
+        .CoarseKey = Format(lGridLineTime, "yyyy")
+        .CoarseLabel = Format(lGridLineTime, "yyyy")
+    Case TimePeriodMonth
+        .Key = Format(lGridLineTime, "yyyymm")
+        .Label = Format(lGridLineTime, "Mmm")
+        .CoarseKey = Format(lGridLineTime, "yyyy")
+        .CoarseLabel = Format(lGridLineTime, "yyyy")
+    Case TimePeriodYear
+        .Key = Format(lGridLineTime, "yyyy")
+        .Label = Format(lGridLineTime, "YYYY")
+        .CoarseKey = "$"
+        .CoarseLabel = ""
+    Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+        If pPeriodNumber Mod 10 = 1 Then
+            .Key = Format(lGridLineTime, "yyyymmddhhnnss")
+            .Label = FormatDateTime(lGridLineTime, vbLongTime)
+            .CoarseKey = Format(lGridLineTime, "yyyymmdd")
+            .CoarseLabel = Format(lGridLineTime, "d Mmm yy")
+        End If
+    End Select
+End With
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Sub handleStylePropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Const ProcName As String = "handleStylePropertyChanged"
+
+On Error GoTo Err
+
+Select Case UCase$(ev.PropertyName)
+Case UCase$("Autoscaling")
+    setAutoscaling
+Case UCase$("BackColor")
+    setBackColor
+Case UCase$("BackGradientFillColors")
+    setBackGradientFillColors
+Case UCase$("GridlineSpacingY")
+    setGridlineSpacingY
+Case UCase$("GridLineStyle")
+    setGridLineStyle
+Case UCase$("GridTextStyle")
+    setGridTextStyle
+Case UCase$("HasGrid")
+    setHasGrid
+Case UCase$("HasGridText")
+    setHasGridText
+Case UCase$("IntegerYScale")
+    setIntegerYScale
+Case UCase$("MinimumHeight")
+    setMinimumHeight
+Case UCase$("CursorSnapsToTickBoundaries")
+    setCursorSnapsToTickBoundaries
+Case UCase$("SessionEndGridLineStyle")
+    setSessionEndGridLineStyle
+Case UCase$("SessionStartGridLineStyle")
+    setSessionStartGridLineStyle
+Case UCase$("YAxisTextStyle")
+    setYAxisTextStyle
+Case UCase$("YCursorTextStyle")
+    setYCursorTextStyle
+Case UCase$("YScaleQuantum")
+    setYScaleQuantum
+Case Else
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & ProcName, _
+            "Unhandled property change"
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
 Private Sub hideCursor()
 Dim lPointerStyle As PointerStyles
 
 Const ProcName As String = "hideCursor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 'mUseDeferredPainting = False
@@ -2901,7 +3122,7 @@ Dim index As Long
 
 Static repaintCount As Long
 Const ProcName As String = "paint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 repaintCount = repaintCount + 1
@@ -2944,11 +3165,9 @@ Private Sub paintHorizontalGrid()
 Const ProcName As String = "paintHorizontalGrid"
 On Error GoTo Err
 
-If Not (IsYAxisRegion Or IsXAxisRegion) And HasGrid Then
-    mPriceFormatter.YScaleGridSpacing = mHorizontalGridSpacer.Calculate(mViewport.Height, mViewport.HeightCm)
-    
-    mHorizontalGrid.Generate mViewport.Bottom, mViewport.Top, mHorizontalGridSpacer.YScaleGridSpacing
-End If
+mPriceFormatter.YScaleGridSpacing = mHorizontalGridSpacer.Calculate(mViewport.Height, mViewport.HeightCm)
+
+mHorizontalGrid.Generate mViewport.Bottom, mViewport.Top, mHorizontalGridSpacer.YScaleGridSpacing
 
 Exit Sub
 
@@ -2961,7 +3180,7 @@ Private Sub paintPerformanceText( _
                 ByVal elapsedTimeMillisecs As Single)
 Dim perfText As Text
 Const ProcName As String = "paintPerformanceText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPerformanceTextVisible Then
@@ -2982,7 +3201,7 @@ End Sub
 Private Sub paintPeriodBackgrounds()
 Dim i As Long
 Const ProcName As String = "paintPeriodBackgrounds"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mViewport
@@ -3004,7 +3223,7 @@ End Sub
 Private Sub processStyle()
 
 Const ProcName As String = "processStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBackColor
@@ -3012,9 +3231,9 @@ setBackGradientFillColors
 setHasGrid
 setHasGridText
 setGridTextStyle
+setGridlineSpacingY
 If Not IsXAxisRegion And Not IsYAxisRegion Then
     setAutoscaling
-    setGridlineSpacingY
     setIntegerYScale
     setMinimumHeight
     setCursorSnapsToTickBoundaries
@@ -3035,16 +3254,11 @@ Private Sub RedrawArea( _
                 ByVal startLayer As Long, _
                 Optional ByVal objToExclude As IGraphicObject)
 Const ProcName As String = "redrawArea"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 ' redraw objects in the undrawn area, preserving layering
 If mIsDrawingEnabled And areaToRedraw.isValid Then
-    
-    failpoint = 100
-
     If RectOverlaps(mViewport.Boundary, areaToRedraw) Then
         mData.RedrawArea RectIntersection(mViewport.Boundary, areaToRedraw), startLayer, objToExclude
     End If
@@ -3064,7 +3278,7 @@ Dim i As Long
 Dim handled As Boolean
 
 Const ProcName As String = "redrawChangedObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If areaToRedraw.isValid Then
@@ -3085,7 +3299,7 @@ End Sub
 
 Private Function selectObjectOrSeries(ByVal graphObj As IGraphicObject) As Boolean
 Const ProcName As String = "selectObjectOrSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If graphObj.IsSelectable Then
@@ -3106,7 +3320,7 @@ End Function
 
 Private Sub setAutoscaling()
 Const ProcName As String = "setAutoscaling"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsXAxisRegion Or IsYAxisRegion Then
@@ -3127,7 +3341,7 @@ End Sub
 
 Private Sub setBackColor()
 Const ProcName As String = "setBackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.BackColor = BackColor
@@ -3141,7 +3355,7 @@ End Sub
 
 Private Sub setBackGradientFillColors()
 Const ProcName As String = "setBackGradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.GradientFillColors = BackGradientFillColors
@@ -3158,7 +3372,7 @@ Private Sub setViewportVerticalBounds( _
                 ByRef Top As Double)
     
 Const ProcName As String = "setViewportVerticalBounds"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Bottom > Top Then Exit Sub
@@ -3192,14 +3406,8 @@ End Sub
 
 Private Sub setGridlineSpacingY()
 Const ProcName As String = "setGridlineSpacingY"
-Dim failpoint As String
-On Error GoTo Err
 
-If IsXAxisRegion Or IsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Cannot set gridline spacing for an axis region"
-End If
+On Error GoTo Err
 
 mHorizontalGridSpacer.GridlineSpacingY = GridlineSpacingY
 doRepaint
@@ -3212,13 +3420,11 @@ End Sub
 
 Private Sub setGridLineStyle()
 Const ProcName As String = "setGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If Not mHorizontalGrid Is Nothing Then
-    mHorizontalGrid.GridLineStyle = GridLineStyle
-    doRepaint
-End If
+mHorizontalGrid.GridLineStyle = GridLineStyle
+doRepaint
 
 Exit Sub
 
@@ -3228,7 +3434,7 @@ End Sub
 
 Private Sub setGridTextStyle()
 Const ProcName As String = "setGridTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setHasGridText
@@ -3241,26 +3447,15 @@ End Sub
 
 Private Sub setHasGrid()
 Const ProcName As String = "setHasGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If HasGrid Then
+    mHorizontalGrid.GridLineStyle = GridLineStyle
     Set mXGridLines = Me.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid)
     mXGridLines.Style = GridLineStyle
-    
-    If mHorizontalGrid Is Nothing Then Set mHorizontalGrid = New HorizontalGrid
-    mHorizontalGrid.Initialise Me
-    mHorizontalGrid.GridLineStyle = GridLineStyle
-    mHorizontalGrid.Hidden = mGridHidden
-    mHorizontalGrid.PriceFormatter = mPriceFormatter
-    mHorizontalGrid.TextStyle = YAxisTextStyle
-    mHorizontalGrid.YAxisRegion = mYAxisRegion
 Else
     Set mXGridLines = Nothing
-    If Not mHorizontalGrid Is Nothing Then
-        mHorizontalGrid.Finish
-        Set mHorizontalGrid = Nothing
-    End If
 End If
 doRepaint
 
@@ -3273,7 +3468,7 @@ End Sub
 Private Sub setHasGridText()
 
 Const ProcName As String = "setHasGridText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If HasGridText Then
@@ -3319,13 +3514,11 @@ End Sub
 
 Private Sub setIntegerYScale()
 Const ProcName As String = "setIntegerYScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If Not mHorizontalGrid Is Nothing Then
-    mPriceFormatter.IntegerYScale = IntegerYScale
-    doRepaint
-End If
+mPriceFormatter.IntegerYScale = IntegerYScale
+doRepaint
 
 Exit Sub
 
@@ -3335,7 +3528,7 @@ End Sub
 
 Private Sub setMinimumHeight()
 Const ProcName As String = "setMinimumHeight"
-Dim failpoint As String
+
 On Error GoTo Err
 
 doScaleAndRepaint
@@ -3349,7 +3542,7 @@ End Sub
 Private Sub setMouseIcon( _
                 ByVal PointerStyle As PointerStyles)
 Const ProcName As String = "setMouseIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mViewport.MousePointer = vbCustom
@@ -3384,7 +3577,7 @@ Private Sub setSelectedObjectOrSeries()
 Dim newSelectedObject As IGraphicObject
 
 Const ProcName As String = "setSelectedObjectOrSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set newSelectedObject = mData.GetNextSelectableObjectOrSeriesAtPoint(mSelectedObject, mCurrX, mCurrY)
@@ -3413,7 +3606,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As PropertyOverrideFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
@@ -3426,7 +3619,7 @@ End Sub
 
 Private Sub setSessionEndGridLineStyle()
 Const ProcName As String = "setSessionEndGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setHasGrid
@@ -3439,7 +3632,7 @@ End Sub
 
 Private Sub setSessionStartGridLineStyle()
 Const ProcName As String = "setSessionStartGridLineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setHasGrid
@@ -3452,22 +3645,20 @@ End Sub
 
 Private Sub setupCrosshairs()
 Const ProcName As String = "setupCrosshairs"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mCrosshairLineHoriz = AddLine(LayerNumbers.LayerPointer)
-mCrosshairLineHoriz.Color = vbRed
+mCrosshairLineHoriz.LocalStyle = gDefaultLineStyle
 mCrosshairLineHoriz.Extended = True
 mCrosshairLineHoriz.IncludeInAutoscale = False
-mCrosshairLineHoriz.LineStyle = LineSolid
-mCrosshairLineHoriz.Thickness = 1
+mCrosshairLineHoriz.Layer = LayerPointer
 
 Set mCrosshairLineVert = AddLine(LayerNumbers.LayerPointer)
-mCrosshairLineVert.Color = vbRed
+mCrosshairLineVert.LocalStyle = gDefaultLineStyle
 mCrosshairLineVert.Extended = True
 mCrosshairLineVert.IncludeInAutoscale = False
-mCrosshairLineVert.LineStyle = LineSolid
-mCrosshairLineVert.Thickness = 1
+mCrosshairLineVert.Layer = LayerPointer
 
 Exit Sub
 
@@ -3477,7 +3668,7 @@ End Sub
 
 Private Sub setupTitle()
 Const ProcName As String = "setupTitle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mTitle = AddText(, LayerTitle)
@@ -3500,93 +3691,38 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Function setVerticalGridLine(ByVal Timestamp As Date, _
-                            ByVal PeriodNumber As Long, _
-                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As ChartSkil26.Line
-Dim gridLineTime As Date
-
-Const ProcName As String = "setVerticalGridLine"
-Dim failpoint As String
+Private Sub setupGrid()
+Const ProcName As String = "setupGrid"
 On Error GoTo Err
 
-If CDbl(Timestamp) = 0 Then Exit Function
+Set mHorizontalGrid = New HorizontalGrid
+mHorizontalGrid.Initialise Me
 
-If pIgnoreVerticalGridTimePeriod Then
-    ' just draw a vertical gridline at the specified period
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(Timestamp, "yyyymmddhhnnss"), _
-                                                FormatDateTime(Timestamp, vbShortTime), _
-                                                Format(Timestamp, "yyyymmdd"), _
-                                                Format(Timestamp, "d Mmm yy"))
-    Exit Function
-End If
+Set mPriceFormatter = New PriceFormatter
+mHorizontalGrid.PriceFormatter = mPriceFormatter
 
-If mVerticalGridTimePeriod Is Nothing Then
-    ' just draw a vertical gridline every 10 bars
-    If PeriodNumber Mod 10 = 1 Then
-        Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                    Format(Timestamp, "yyyymmddhhnnss"), _
-                                                    FormatDateTime(Timestamp, vbShortTime), _
-                                                    Format(Timestamp, "yyyymmdd"), _
-                                                    Format(Timestamp, "d Mmm yy"))
-    End If
-    Exit Function
-End If
+Set mHorizontalGridSpacer = New HorizontalGridSpacer
 
-gridLineTime = BarStartTime(Timestamp, mVerticalGridTimePeriod, mSessionStartTime)
-    
-Select Case mVerticalGridTimePeriod.Units
-Case TimePeriodSecond
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymmddhhnnss"), _
-                                                FormatDateTime(gridLineTime, vbLongTime), _
-                                                Format(gridLineTime, "yyyymmdd"), _
-                                                Format(gridLineTime, "d Mmm yy"))
-Case TimePeriodMinute
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymmddhhnn"), _
-                                                FormatDateTime(gridLineTime, vbShortTime), _
-                                                Format(gridLineTime, "yyyymmdd"), _
-                                                Format(gridLineTime, "d Mmm yy"))
-Case TimePeriodHour
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymmddhh"), _
-                                                FormatDateTime(gridLineTime, vbShortTime), _
-                                                Format(gridLineTime, "yyyymmdd"), _
-                                                Format(gridLineTime, "d Mmm yy"))
-Case TimePeriodDay
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymmdd"), _
-                                                Format(gridLineTime, "d"), _
-                                                Format(gridLineTime, "yyyymm"), _
-                                                Format(gridLineTime, "Mmm yy"))
-Case TimePeriodWeek
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymmdd"), _
-                                                Format(gridLineTime, "d Mmm"), _
-                                                Format(gridLineTime, "yyyy"), _
-                                                Format(gridLineTime, "yyyy"))
-Case TimePeriodMonth
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                Format(gridLineTime, "yyyymm"), _
-                                                Format(gridLineTime, "Mmm"), _
-                                                Format(gridLineTime, "yyyy"), _
-                                                Format(gridLineTime, "yyyy"))
-Case TimePeriodYear
-    Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                        Format(gridLineTime, "yyyy"), _
-                                        Format(gridLineTime, "YYYY"), _
-                                        "$", _
-                                        "")
-Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    If PeriodNumber Mod 10 = 1 Then
-        Set setVerticalGridLine = addVerticalGridLine(PeriodNumber, _
-                                                    Format(gridLineTime, "yyyymmddhhnnss"), _
-                                                    FormatDateTime(gridLineTime, vbLongTime), _
-                                                    Format(gridLineTime, "yyyymmdd"), _
-                                                    Format(gridLineTime, "d Mmm yy"))
-    End If
-End Select
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Function setVerticalGridLine(ByVal pTimestamp As Date, _
+                            ByVal pPeriodNumber As Long, _
+                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As ChartSkil26.Line
+Const ProcName As String = "setVerticalGridLine"
+
+On Error GoTo Err
+
+Dim lPeriodLabels As PeriodLabels
+
+If CDbl(pTimestamp) = 0 Then Exit Function
+
+If HasGrid Or HasGridText Then lPeriodLabels = getPeriodLabels(pTimestamp, pPeriodNumber, pIgnoreVerticalGridTimePeriod)
+If HasGrid Then Set setVerticalGridLine = addVerticalGridLine(lPeriodLabels)
+If HasGridText Then addVerticalGridText lPeriodLabels
 
 Exit Function
 
@@ -3596,13 +3732,11 @@ End Function
 
 Private Sub setYAxisTextStyle()
 Const ProcName As String = "setYAxisTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If Not mHorizontalGrid Is Nothing Then
-    mHorizontalGrid.TextStyle = YAxisTextStyle
-    doRepaint
-End If
+mHorizontalGrid.TextStyle = YAxisTextStyle
+doRepaint
 
 Exit Sub
 
@@ -3612,7 +3746,7 @@ End Sub
 
 Private Sub setYCursorTextStyle()
 Const ProcName As String = "setYCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mYCursorText Is Nothing Then mYCursorText.LocalStyle = YCursorTextStyle
@@ -3625,16 +3759,14 @@ End Sub
 
 Private Sub setYScaleQuantum()
 Const ProcName As String = "setYScaleQuantum"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPriceFormatter.YScaleQuantum = YScaleQuantum
 
-If Not mHorizontalGrid Is Nothing Then
-    mPriceFormatter.YScaleQuantum = YScaleQuantum
-    mHorizontalGridSpacer.YScaleQuantum = YScaleQuantum
-    doRepaint
-End If
+mPriceFormatter.YScaleQuantum = YScaleQuantum
+mHorizontalGridSpacer.YScaleQuantum = YScaleQuantum
+doRepaint
 
 Exit Sub
 
@@ -3648,7 +3780,7 @@ Private Sub showCursor( _
 Dim PointerStyle As PointerStyles
 
 Const ProcName As String = "showCursor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 'mUseDeferredPainting = False
@@ -3690,7 +3822,7 @@ End Sub
 Private Function IsPropertySet( _
                 ByVal flag As PropertyOverrideFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -3705,7 +3837,7 @@ Private Sub UndrawArea( _
                 ByRef undrawnArea As TRectangle, _
                 ByVal objToExclude As IGraphicObject)
 Const ProcName As String = "UndrawArea"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPaintingInProgress Then Exit Sub
@@ -3743,7 +3875,7 @@ Dim lSize As Size
 Dim prevLineX As Single
 
 Const ProcName As String = "undrawDiscPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub
@@ -3784,7 +3916,7 @@ End Sub
 Private Sub undrawToolPointer()
 
 Const ProcName As String = "undrawToolPointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mIsDrawingEnabled Then Exit Sub

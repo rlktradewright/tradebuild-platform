@@ -148,7 +148,7 @@ Static i As Long
 Dim j As Long
 
 Const ProcName As String = "Task_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Do While i < mNextGraphicObjectIndex
@@ -200,7 +200,7 @@ Friend Property Let PeriodBackColor( _
                 ByVal PeriodNumber As Long, _
                 ByVal Value As Long)
 Const ProcName As String = "PeriodBackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPeriodTable(PeriodNumber).BackColor = Value
@@ -214,7 +214,7 @@ End Property
 Friend Property Get PeriodBackColor( _
                 ByVal PeriodNumber As Long) As Long
 Const ProcName As String = "PeriodBackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PeriodBackColor = mPeriodTable(PeriodNumber).BackColor
@@ -234,7 +234,7 @@ Friend Function AddGraphicObject( _
 Dim handle As Long
 
 Const ProcName As String = "AddGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handle = allocateGraphicObjectTableEntry
@@ -277,7 +277,7 @@ Friend Sub AddPeriod( _
                 ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "AddPeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 addNewPeriod pPeriodNumber
@@ -291,7 +291,7 @@ End Sub
 Friend Function CalculateInscopeGaugeDependentObjects()
 Dim index As Long
 Const ProcName As String = "CalculateInscopeGaugeDependentObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -323,7 +323,7 @@ Dim objMin As Double
 Dim index As Long
 
 Const ProcName As String = "CalcVerticalBoundsForGaugeDependentObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -368,7 +368,7 @@ Dim objMin As Double
 Dim index As Long
 
 Const ProcName As String = "CalcVerticalBoundsForNonGaugeDependentObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -408,7 +408,7 @@ End Function
 
 Friend Sub Clear()
 Const ProcName As String = "Clear"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mChartRef = Nothing
@@ -430,7 +430,7 @@ Dim numberExtended As Long
 Dim numberInScope As Long
 
 Const ProcName As String = "DetermineInScopeObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 et.StartTiming
@@ -489,7 +489,7 @@ Dim numberExamined As Long
 Dim numberVisible As Long
 
 Const ProcName As String = "DetermineVisibleObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 et.StartTiming
@@ -521,7 +521,7 @@ End Sub
 Friend Function GetGraphicObject( _
                 ByVal handle As Long) As IGraphicObject
 Const ProcName As String = "GetGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set GetGraphicObject = mGraphicObjects(handle).graphObj
@@ -543,7 +543,7 @@ Dim index As Long
 Dim currObjStillSelectable As Boolean
 
 Const ProcName As String = "GetNextSelectableObjectOrSeriesAtPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If currObject Is Nothing Then
@@ -596,7 +596,7 @@ Friend Function GetNextUserLayer(Optional ByVal Layer As Long = -1) As Long
 Static lNextLayer As Long
 
 Const ProcName As String = "GetNextUserLayer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If lNextLayer = 0 Then lNextLayer = LayerNumbers.LayerLowestUser
@@ -625,7 +625,7 @@ Friend Sub Initialise( _
                 ByVal pRegion As ChartRegion, _
                 ByVal pGraphObjSeriesCollection As GraphObjSeriesCollection)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mChartRef = CreateWeakReference(pChart)
@@ -647,23 +647,15 @@ Dim i As Long
 Dim br As TRectangle
 
 Const ProcName As String = "MarkObjectsForRedraw"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 ' mark objects that overlap the redraw area
 
 For Layer = MinLayer To MaxLayer
-
-    failpoint = 400
-
     index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
-
-            failpoint = 500
-            
             br = .graphObj.BoundingRectangle
             
             For i = 0 To pCount - 1
@@ -694,7 +686,7 @@ Dim index As Long
 Dim drawAreas(0) As TRectangle
 
 Const ProcName As String = "PaintAllVisibleObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = MinLayer To MaxLayer
@@ -726,7 +718,7 @@ Dim index As Long
 Dim drawAreas(0) As TRectangle
 
 Const ProcName As String = "PaintMarkedObjects"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = MinLayer To MaxLayer
@@ -757,7 +749,7 @@ Dim i As Long
 Dim index As Long
 
 Const ProcName As String = "RecalcBoundaryForObjectsInSeries"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = MinLayer To MaxLayer
@@ -788,33 +780,21 @@ Dim Layer As Long
 Dim index As Long
 
 Const ProcName As String = "RedrawArea"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 ' redraw objects in the undrawn area, preserving layering
 
 Dim rects(0) As TRectangle
 
 For Layer = startLayer To MaxLayer
-
-    failpoint = 400
-
     index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
-
-            failpoint = 500
-
             If Not .graphObj Is objToExclude Then
                 rects(0) = RectIntersection(areaToRedraw, .graphObj.BoundingRectangle)
 
                 If rects(0).isValid Then
-                'If RectOverlaps(.graphObj.BoundingRectangle, areaToRedraw) Then
-
-                    failpoint = 600
-
                     .graphObj.Draw rects
                 End If
             End If
@@ -834,39 +814,23 @@ Friend Sub RemoveGraphicObject( _
 Dim handle As Long
 
 Const ProcName As String = "RemoveGraphicObject"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 handle = graphObj.handle
 
 If Not graphObj.ExtendedObject Then
-
-    failpoint = 400
-
     removeEntryFromPeriodList handle
 Else
-
-    failpoint = 500
-
     removeEntryFromExtendedList handle
 End If
 
 If graphicObjectIsInScope(handle) Then
-
-    failpoint = 600
-
     removeEntryFromInScopeList handle
     If graphicObjectIsVisible(handle) Then
-
-        failpoint = 700
-
         removeEntryFromVisibleList handle
     End If
 End If
-
-failpoint = 800
 
 Set mGraphicObjects(handle).graphObj = Nothing
 graphObj.handle = -1
@@ -890,7 +854,7 @@ Friend Function UpdateGraphicObject( _
 Dim handle As Long
 
 Const ProcName As String = "UpdateGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handle = graphObj.handle
@@ -948,7 +912,7 @@ End Function
 
 Private Sub addEntryToExtendedList(ByVal index As Long)
 Const ProcName As String = "addEntryToExtendedList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -967,7 +931,7 @@ End Sub
 
 Private Sub addEntryToInScopeList(ByVal index As Long)
 Const ProcName As String = "addEntryToInScopeList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -993,7 +957,7 @@ Dim lastindex As Long
 Dim newPeriodNumber As Long
 
 Const ProcName As String = "addEntryToPeriodList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 newPeriodNumber = mGraphicObjects(index).graphObj.PeriodNumber
@@ -1031,7 +995,7 @@ End Function
 Private Sub addEntryToVisibleList(ByVal index As Long)
 Dim lastindex As Long
 Const ProcName As String = "addEntryToVisibleList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -1056,7 +1020,7 @@ Private Sub addNewPeriod(ByVal PeriodNumber As Long)
 Dim i As Long
 
 Const ProcName As String = "addNewPeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If PeriodNumber > UBound(mPeriodTable) Then
@@ -1080,7 +1044,7 @@ End Sub
 
 Private Function allocateGraphicObjectTableEntry() As Long
 Const ProcName As String = "allocateGraphicObjectTableEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
 allocateGraphicObjectTableEntry = mNextGraphicObjectIndex
@@ -1112,7 +1076,7 @@ Dim overlapXInterval As TInterval
 Dim periodRange As TInterval
 
 Const ProcName As String = "calculateObjectHighAndLowInPeriodRange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 high = MinusInfinityDouble
@@ -1163,7 +1127,7 @@ End Sub
 
 Private Function chartObj() As Chart
 Const ProcName As String = "chartObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set chartObj = mChartRef.Target
@@ -1178,7 +1142,7 @@ Private Sub clearInScopeObjectList()
 Dim index As Long
 
 Const ProcName As String = "clearInScopeObjectList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -1202,7 +1166,7 @@ Dim i As Long
 Dim index As Long
 
 Const ProcName As String = "clearVisibleObjectList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = MinLayer To MaxLayer
@@ -1246,7 +1210,7 @@ Dim j As Long
 Dim k As Long
 
 Const ProcName As String = "getObjectOverlaps"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set graphobj1 = mGraphicObjects(index1).graphObj
@@ -1387,7 +1351,7 @@ End Function
 
 Private Function graphicObjectIsInScope(ByVal index As Long) As Boolean
 Const ProcName As String = "graphicObjectIsInScope"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -1414,7 +1378,7 @@ Dim i As Long
 Dim j As Long
 
 Const ProcName As String = "graphicObjectIsVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index).graphObj
@@ -1450,7 +1414,7 @@ End Function
 
 Private Sub initialiseInScopeObjectList()
 Const ProcName As String = "initialiseInScopeObjectList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mInScopeCycle = mInScopeCycle + 1
@@ -1467,7 +1431,7 @@ Private Sub initialisePeriodTableEntry( _
                 ByVal index As Long)
 'With mPeriodTable(index)
 Const ProcName As String = "initialisePeriodTableEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
     If mPeriodTable(index).firstIndex = 0 Then
@@ -1488,7 +1452,7 @@ Private Sub initialiseVisibleObjectList()
 Dim i As Long
 
 Const ProcName As String = "initialiseVisibleObjectList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mVisibleCycle = mVisibleCycle + 1
@@ -1507,7 +1471,7 @@ End Sub
 
 Private Function isObjectOrSeriesSelectable(ByVal graphObj As IGraphicObject) As Boolean
 Const ProcName As String = "isObjectOrSeriesSelectable"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If graphObj.IsSelectable Then
@@ -1526,7 +1490,7 @@ End Function
 
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
 Const ProcName As String = "removeEntryFromExtendedList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -1545,7 +1509,7 @@ End Sub
 
 Private Sub removeEntryFromInScopeList(ByVal index As Long)
 Const ProcName As String = "removeEntryFromInScopeList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -1566,7 +1530,7 @@ End Sub
 
 Private Sub removeEntryFromPeriodList(ByVal index As Long)
 Const ProcName As String = "removeEntryFromPeriodList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)
@@ -1585,7 +1549,7 @@ End Sub
 
 Private Sub removeEntryFromVisibleList(ByVal index As Long)
 Const ProcName As String = "removeEntryFromVisibleList"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mGraphicObjects(index)

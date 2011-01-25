@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#254.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#255.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   9960
@@ -603,7 +603,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   85262339
+         Format          =   69074947
          CurrentDate     =   39365
       End
       Begin MSComCtl2.DTPicker FromDatePicker 
@@ -617,7 +617,7 @@ Begin VB.Form fTradeSkilDemo
          _Version        =   393216
          CheckBox        =   -1  'True
          CustomFormat    =   "yyy-MM-dd HH:mm"
-         Format          =   85262339
+         Format          =   69074947
          CurrentDate     =   39365
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
@@ -2242,76 +2242,61 @@ End Function
 
 Private Function getAppDefaultChartStyle() As ChartStyle
 Const ProcName As String = "getAppDefaultChartStyle"
-Dim defaultRegionStyle As ChartRegionStyle
-Dim volumeRegionStyle As ChartRegionStyle
-Dim xAxisRegionStyle As ChartRegionStyle
-Dim defaultYAxisRegionStyle As ChartRegionStyle
-Dim defaultBarsStyle As BarStyle
-Dim defaultVolumeStyle As DataPointStyle
+Dim lDefaultRegionStyle As ChartRegionStyle
+Dim lxAxisRegionStyle As ChartRegionStyle
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
+Dim lCrosshairLineStyle As LineStyle
+Dim lCursorTextStyle As TextStyle
+Dim lFont As StdFont
 
 On Error GoTo Err
 
 ReDim GradientFillColors(1) As Long
 
-Set defaultRegionStyle = GetDefaultChartRegionStyle.Clone
-defaultRegionStyle.Autoscaling = True
+Set lCursorTextStyle = New TextStyle
+lCursorTextStyle.Align = AlignBoxTopCentre
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillWithBackgroundColor = True
+lCursorTextStyle.BoxStyle = LineInvisible
+lCursorTextStyle.BoxThickness = 0
+lCursorTextStyle.Color = &H80&
+lCursorTextStyle.PaddingX = 2
+lCursorTextStyle.PaddingY = 0
+Set lFont = New StdFont
+lFont.name = "Courier New"
+lFont.Bold = True
+lFont.Size = 8
+lCursorTextStyle.Font = lFont
+
+Set lDefaultRegionStyle = GetDefaultChartRegionStyle.Clone
 GradientFillColors(0) = RGB(192, 192, 192)
 GradientFillColors(1) = RGB(248, 248, 248)
-defaultRegionStyle.BackGradientFillColors = GradientFillColors
-'defaultRegionStyle.GridLineStyle.Color = &HC0C0C0
-defaultRegionStyle.GridlineSpacingY = 1.8
-defaultRegionStyle.HasGrid = True
-defaultRegionStyle.CursorSnapsToTickBoundaries = True
+lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+lDefaultRegionStyle.YCursorTextStyle = lCursorTextStyle
     
-Set volumeRegionStyle = defaultRegionStyle.Clone
-volumeRegionStyle.GridlineSpacingY = 0.8
-volumeRegionStyle.MinimumHeight = 10
-volumeRegionStyle.IntegerYScale = True
-    
-Set xAxisRegionStyle = defaultRegionStyle.Clone
-xAxisRegionStyle.HasGrid = False
-xAxisRegionStyle.HasGridText = True
+Set lxAxisRegionStyle = lDefaultRegionStyle.Clone
+lxAxisRegionStyle.HasGrid = False
+lxAxisRegionStyle.HasGridText = True
 GradientFillColors(0) = RGB(230, 236, 207)
 GradientFillColors(1) = RGB(222, 236, 215)
-xAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
     
-Set defaultYAxisRegionStyle = defaultRegionStyle.Clone
+Set lDefaultYAxisRegionStyle = lDefaultRegionStyle.Clone
 GradientFillColors(0) = RGB(234, 246, 254)
 GradientFillColors(1) = RGB(226, 246, 255)
-defaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
-defaultYAxisRegionStyle.HasGrid = False
+lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lDefaultYAxisRegionStyle.HasGrid = False
     
-Set defaultBarsStyle = GetDefaultBarStyle.Clone
-defaultBarsStyle.Color = -1
-defaultBarsStyle.Thickness = 2
-defaultBarsStyle.Width = 0.6
-defaultBarsStyle.DisplayMode = BarDisplayModeCandlestick
-defaultBarsStyle.DownColor = &H43FC2
-defaultBarsStyle.IncludeInAutoscale = True
-defaultBarsStyle.OutlineThickness = 1
-defaultBarsStyle.SolidUpBody = False
-defaultBarsStyle.TailThickness = 1
-defaultBarsStyle.UpColor = &H1D9311
-    
-Set defaultVolumeStyle = GetDefaultDataPointStyle.Clone
-defaultVolumeStyle.DisplayMode = DataPointDisplayModeHistogram
-defaultVolumeStyle.DownColor = &H43FC2
-defaultVolumeStyle.HistogramBarWidth = 0.6
-defaultVolumeStyle.IncludeInAutoscale = True
-defaultVolumeStyle.LineStyle = LineSolid
-defaultVolumeStyle.LineThickness = 1
-defaultVolumeStyle.PointStyle = PointRound
-defaultVolumeStyle.UpColor = &H1D9311
+Set lCrosshairLineStyle = New LineStyle
+lCrosshairLineStyle.Color = &H7F
 
 Set getAppDefaultChartStyle = ChartStylesManager.Add(InitialChartStyleName, _
-                       100, _
-                       20, _
-                       defaultRegionStyle, _
-                       volumeRegionStyle, _
-                       xAxisRegionStyle, _
-                       defaultYAxisRegionStyle, _
-                       defaultBarsStyle, _
-                       defaultVolumeStyle)
+                                                    ChartStylesManager.DefaultStyle, _
+                                                    lDefaultRegionStyle, _
+                                                    lxAxisRegionStyle, _
+                                                    lDefaultYAxisRegionStyle, _
+                                                    lCrosshairLineStyle, _
+                                                    lCursorTextStyle)
 
 
 Exit Function

@@ -110,7 +110,7 @@ Static prevRect As TRectangle
 Dim viewportChanges As Long
 
 Const ProcName As String = "IGraphicObject_boundingRectangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 viewportChanges = mViewport.CompareTo(prevGaugeX, prevGaugeY, prevRect)
@@ -136,7 +136,7 @@ End Property
 
 Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
 Const ProcName As String = "IGraphicObject_BoundingRectangleInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_BoundingRectangleInViewport = IGraphicObject_boundingRectangle
@@ -156,7 +156,7 @@ End Property
 
 Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
 Const ProcName As String = "IGraphicObject_capabilities"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
@@ -178,7 +178,7 @@ End Sub
 Private Sub IGraphicObject_draw( _
                 ByRef areas() As TRectangle)
 Const ProcName As String = "IGraphicObject_draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 'mCanvas.SetClippingRegion mViewport.ConvertTRectangleToRect(areas(0))
@@ -223,7 +223,7 @@ End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
 Const ProcName As String = "IGraphicObject_HitTest"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
@@ -236,7 +236,7 @@ End Function
 
 Private Property Get IGraphicObject_IncludeInAutoscale() As Boolean
 Const ProcName As String = "IGraphicObject_IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_IncludeInAutoscale = IncludeInAutoscale
@@ -285,7 +285,7 @@ End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
 Const ProcName As String = "IGraphicObject_SeriesID"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_SeriesID = mSeries.Id
@@ -319,7 +319,7 @@ End Property
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mLocalStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -366,7 +366,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -389,7 +389,7 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Color = mSeries.Color
@@ -408,7 +408,7 @@ End Property
 
 Public Property Let DataValue(Value As Double)
 Const ProcName As String = "DataValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = mDataValue Then Exit Property
@@ -424,7 +424,7 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyDisplayMode) Then
@@ -442,7 +442,7 @@ End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DisplayMode = mSeries.DisplayMode
@@ -457,7 +457,7 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -480,7 +480,7 @@ End Property
 
 Public Property Get DownColor() As Long
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DownColor = mSeries.DownColor
@@ -504,7 +504,7 @@ End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)
 Const ProcName As String = "HistogramBarWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value <= 0 Or Value > 1 Then _
@@ -526,7 +526,7 @@ End Property
 
 Public Property Get HistogramBarWidth() As Single
 Const ProcName As String = "HistogramBarWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HistogramBarWidth = mSeries.HistogramBarWidth
@@ -541,7 +541,7 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
@@ -556,7 +556,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then
@@ -594,7 +594,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyLayer) Then
@@ -612,7 +612,7 @@ End Property
 
 Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Layer = mSeries.Layer
@@ -627,7 +627,7 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyLineStyle) Then
@@ -645,7 +645,7 @@ End Property
 
 Public Property Get LineStyle() As LineStyles
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LineStyle = mSeries.LineStyle
@@ -660,7 +660,7 @@ End Property
 
 Public Property Let LineThickness(ByVal Value As Long)
 Const ProcName As String = "LineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyLineThickness) Then
@@ -678,7 +678,7 @@ End Property
 
 Public Property Get LineThickness() As Long
 Const ProcName As String = "LineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LineThickness = mSeries.LineThickness
@@ -699,7 +699,7 @@ Public Property Let LocalStyle( _
                 ByVal Value As DataPointStyle)
 
 Const ProcName As String = "LocalStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mLocalStyle = Value
@@ -713,7 +713,7 @@ End Property
 
 Public Property Let PointStyle(ByVal Value As PointStyles)
 Const ProcName As String = "PointStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If IsPropertySet(DataPointPropertyPointStyle) Then
@@ -731,7 +731,7 @@ End Property
 
 Public Property Get PointStyle() As PointStyles
 Const ProcName As String = "PointStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PointStyle = mSeries.PointStyle
@@ -746,7 +746,7 @@ End Property
 
 Public Property Get PreviousDataPoint() As DataPoint
 Const ProcName As String = "PreviousDataPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPrevDataPointRef Is Nothing Then Exit Property
@@ -760,7 +760,7 @@ End Property
 
 Friend Property Let PreviousDataPoint(ByVal Value As DataPoint)
 Const ProcName As String = "PreviousDataPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mPrevDataPointRef = CreateWeakReference(Value)
@@ -773,7 +773,7 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -795,7 +795,7 @@ End Property
 
 Public Property Get UpColor() As Long
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 UpColor = mSeries.UpColor
@@ -815,7 +815,7 @@ End Property
 
 Public Property Let X(ByVal Value As Double)
 Const ProcName As String = "X"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = mX Then Exit Property
@@ -839,7 +839,7 @@ End Property
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -860,7 +860,7 @@ Friend Sub Initialise( _
                 ByVal pLocalStyle As DataPointStyle)
                 
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSeries = pSeries
@@ -886,7 +886,7 @@ End Sub
 Private Sub calcBoundingRect()
 
 Const ProcName As String = "calcBoundingRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If DisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
@@ -911,7 +911,7 @@ Dim boundingRect As TRectangle
 Dim pixelRect As GDI_RECT
     
 Const ProcName As String = "calcBoundingRectForHistogram"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With boundingRect
@@ -944,7 +944,7 @@ Dim prevValue As Double
 Dim lt As Long
 
 Const ProcName As String = "calcBoundingRectForLineOrSteppedLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 prevX = prevDataPointObj.X
@@ -989,7 +989,7 @@ Private Sub calcBoundingRectForPoint()
 Dim pixelRect As GDI_RECT
 
 Const ProcName As String = "calcBoundingRectForPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 pixelRect = getPaintingRect
@@ -1007,7 +1007,7 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1021,7 +1021,7 @@ End Sub
 Private Sub Draw()
 
 Const ProcName As String = "Draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mPrevDataPointRef Is Nothing Then
@@ -1042,7 +1042,7 @@ End Sub
 
 Private Function drawAsPoint() As Boolean
 Const ProcName As String = "drawAsPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPrevDataPointRef Is Nothing Then
@@ -1065,7 +1065,7 @@ Private Sub DrawPoint(ByVal Color As Long)
 Dim PreviousDataPoint As DataPoint
 
 Const ProcName As String = "DrawPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Blank Then Exit Sub
@@ -1115,7 +1115,7 @@ Dim pixelRect As GDI_RECT
 Dim lt As Long
 
 Const ProcName As String = "getPaintingRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lt = LineThickness
@@ -1154,7 +1154,7 @@ End Function
 Private Function getProperties() As DataPointProperties
 Static props As DataPointProperties
 Const ProcName As String = "getProperties"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If props Is Nothing Then Set props = New DataPointProperties
@@ -1170,7 +1170,7 @@ Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "initiateRedraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mHandle = 0 Then
@@ -1196,7 +1196,7 @@ End Sub
 Private Function IsPropertySet( _
                 ByVal flag As DataPointPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -1209,7 +1209,7 @@ End Function
 
 Private Function prevDataPointObj() As DataPoint
 Const ProcName As String = "prevDataPointObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set prevDataPointObj = mPrevDataPointRef.Target
@@ -1223,7 +1223,7 @@ End Function
 Private Sub setPropertyFlag( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
@@ -1236,7 +1236,7 @@ End Sub
 
 Private Sub undraw()
 Const ProcName As String = "undraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mVisible Then Exit Sub

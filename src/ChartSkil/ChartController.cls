@@ -69,7 +69,7 @@ Attribute mChartRef.VB_VarHelpID = -1
 
 Public Property Get Autoscrolling() As Boolean
 Const ProcName As String = "Autoscrolling"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Autoscrolling = chartObj.Autoscrolling
@@ -82,7 +82,7 @@ End Property
 
 Public Property Let Autoscrolling(ByVal Value As Boolean)
 Const ProcName As String = "Autoscrolling"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.Autoscrolling = Value
@@ -96,7 +96,7 @@ End Property
 Public Property Let PeriodLength( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "PeriodLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.PeriodLength = Value
@@ -109,7 +109,7 @@ End Property
 
 Public Property Get PeriodLength() As TimePeriod
 Const ProcName As String = "PeriodLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set PeriodLength = chartObj.PeriodLength
@@ -123,7 +123,7 @@ End Property
 Friend Property Let Chart( _
                 ByVal Value As Chart)
 Const ProcName As String = "Chart"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mChartRef = CreateWeakReference(Value)
@@ -136,7 +136,7 @@ End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
 Const ProcName As String = "ChartBackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ChartBackColor = chartObj.ChartBackColor
@@ -149,7 +149,7 @@ End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 Const ProcName As String = "ChartBackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.ChartBackColor = val
@@ -162,7 +162,7 @@ End Property
 
 Public Property Get ChartLeft() As Single
 Const ProcName As String = "ChartLeft"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ChartLeft = chartObj.ChartLeft
@@ -175,7 +175,7 @@ End Property
 
 Public Property Get ChartWidth() As Single
 Const ProcName As String = "ChartWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ChartWidth = chartObj.ChartWidth
@@ -186,9 +186,34 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get CrosshairLineStyle() As LineStyle
+Const ProcName As String = "CrosshairLineStyle"
+On Error GoTo Err
+
+Set CrosshairLineStyle = chartObj.CrosshairLineStyle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let CrosshairLineStyle(ByVal Value As LineStyle)
+Const ProcName As String = "CrosshairLineStyle"
+
+On Error GoTo Err
+
+chartObj.CrosshairLineStyle = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get CurrentPeriodNumber() As Long
 Const ProcName As String = "CurrentPeriodNumber"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CurrentPeriodNumber = chartObj.CurrentPeriodNumber
@@ -201,7 +226,7 @@ End Property
 
 Public Property Get CurrentSessionEndTime() As Date
 Const ProcName As String = "CurrentSessionEndTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CurrentSessionEndTime = chartObj.CurrentSessionEndTime
@@ -214,7 +239,7 @@ End Property
 
 Public Property Get CurrentSessionStartTime() As Date
 Const ProcName As String = "CurrentSessionStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CurrentSessionStartTime = chartObj.CurrentSessionStartTime
@@ -225,9 +250,59 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get DefaultRegionStyle() As ChartRegionStyle
+Const ProcName As String = "DefaultRegionStyle"
+On Error GoTo Err
+
+Set DefaultRegionStyle = chartObj.DefaultRegionStyle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let DefaultRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "DefaultRegionStyle"
+
+On Error GoTo Err
+
+chartObj.DefaultRegionStyle = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
+Const ProcName As String = "DefaultYAxisRegionStyle"
+On Error GoTo Err
+
+Set DefaultYAxisRegionStyle = chartObj.DefaultYAxisRegionStyle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let DefaultYAxisRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "DefaultYAxisRegionStyle"
+
+On Error GoTo Err
+
+chartObj.DefaultYAxisRegionStyle = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get FirstVisiblePeriod() As Long
 Const ProcName As String = "FirstVisiblePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FirstVisiblePeriod = chartObj.FirstVisiblePeriod
@@ -240,7 +315,7 @@ End Property
 
 Public Property Let FirstVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "FirstVisiblePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.FirstVisiblePeriod = Value
@@ -253,7 +328,7 @@ End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HorizontalMouseScrollingAllowed = chartObj.HorizontalMouseScrollingAllowed
@@ -266,7 +341,7 @@ End Property
 
 Public Property Let HorizontalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.HorizontalMouseScrollingAllowed = Value
@@ -279,7 +354,7 @@ End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
 Const ProcName As String = "HorizontalScrollBarVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HorizontalScrollBarVisible = chartObj.HorizontalScrollBarVisible
@@ -292,7 +367,7 @@ End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.HorizontalScrollBarVisible = val
@@ -305,7 +380,7 @@ End Property
 
 Public Property Get IsDrawingEnabled() As Boolean
 Const ProcName As String = "IsDrawingEnabled"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsDrawingEnabled = chartObj.IsDrawingEnabled
@@ -318,7 +393,7 @@ End Property
 
 Public Property Get IsGridHidden() As Boolean
 Const ProcName As String = "IsGridHidden"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsGridHidden = chartObj.IsGridHidden
@@ -331,7 +406,7 @@ End Property
 
 Public Property Get LastVisiblePeriod() As Long
 Const ProcName As String = "LastVisiblePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LastVisiblePeriod = chartObj.LastVisiblePeriod
@@ -344,7 +419,7 @@ End Property
 
 Public Property Let LastVisiblePeriod(ByVal Value As Long)
 Const ProcName As String = "LastVisiblePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.LastVisiblePeriod = Value
@@ -357,7 +432,7 @@ End Property
 
 Public Property Get Periods() As Periods
 Const ProcName As String = "Periods"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Periods = chartObj.Periods
@@ -370,7 +445,7 @@ End Property
 
 Public Property Get PointerCrosshairsColor() As Long
 Const ProcName As String = "PointerCrosshairsColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PointerCrosshairsColor = chartObj.PointerCrosshairsColor
@@ -383,7 +458,7 @@ End Property
 
 Public Property Let PointerCrosshairsColor(ByVal Value As Long)
 Const ProcName As String = "PointerCrosshairsColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.PointerCrosshairsColor = Value
@@ -396,7 +471,7 @@ End Property
 
 Public Property Get PointerDiscColor() As Long
 Const ProcName As String = "PointerDiscColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PointerDiscColor = chartObj.PointerDiscColor
@@ -409,7 +484,7 @@ End Property
 
 Public Property Let PointerDiscColor(ByVal Value As Long)
 Const ProcName As String = "PointerDiscColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.PointerDiscColor = Value
@@ -422,7 +497,7 @@ End Property
 
 Public Property Get PointerIcon() As IPictureDisp
 Const ProcName As String = "PointerIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set PointerIcon = chartObj.PointerIcon
@@ -435,7 +510,7 @@ End Property
 
 Public Property Let PointerIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "PointerIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.PointerIcon = Value
@@ -448,7 +523,7 @@ End Property
 
 Public Property Get PointerMode() As PointerModes
 Const ProcName As String = "PointerMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PointerMode = chartObj.PointerMode
@@ -461,7 +536,7 @@ End Property
 
 Public Property Get PointerStyle() As PointerStyles
 Const ProcName As String = "PointerStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PointerStyle = chartObj.PointerStyle
@@ -474,7 +549,7 @@ End Property
 
 Public Property Let PointerStyle(ByVal Value As PointerStyles)
 Const ProcName As String = "PointerStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.PointerStyle = Value
@@ -487,7 +562,7 @@ End Property
 
 Public Property Get Regions() As ChartRegions
 Const ProcName As String = "Regions"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Regions = chartObj.Regions
@@ -500,7 +575,7 @@ End Property
 
 Public Property Get SessionEndTime() As Date
 Const ProcName As String = "SessionEndTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 SessionEndTime = chartObj.SessionEndTime
@@ -513,7 +588,7 @@ End Property
 
 Public Property Let SessionEndTime(ByVal val As Date)
 Const ProcName As String = "SessionEndTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.SessionEndTime = val
@@ -526,7 +601,7 @@ End Property
 
 Public Property Get SessionStartTime() As Date
 Const ProcName As String = "SessionStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 SessionStartTime = chartObj.SessionStartTime
@@ -539,7 +614,7 @@ End Property
 
 Public Property Let SessionStartTime(ByVal val As Date)
 Const ProcName As String = "SessionStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.SessionStartTime = val
@@ -550,12 +625,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get TwipsPerBar() As Long
-Const ProcName As String = "TwipsPerBar"
-Dim failpoint As String
+Public Property Get TwipsPerPeriod() As Long
+Const ProcName As String = "TwipsPerPeriod"
+
 On Error GoTo Err
 
-TwipsPerBar = chartObj.TwipsPerBar
+TwipsPerPeriod = chartObj.TwipsPerPeriod
 
 Exit Property
 
@@ -563,12 +638,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let TwipsPerBar(ByVal val As Long)
-Const ProcName As String = "TwipsPerBar"
-Dim failpoint As String
+Public Property Let TwipsPerPeriod(ByVal val As Long)
+Const ProcName As String = "TwipsPerPeriod"
+
 On Error GoTo Err
 
-chartObj.TwipsPerBar = val
+chartObj.TwipsPerPeriod = val
 
 Exit Property
 
@@ -579,7 +654,7 @@ End Property
 Public Property Let VerticalGridTimePeriod( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.VerticalGridTimePeriod = Value
@@ -592,7 +667,7 @@ End Property
 
 Public Property Get VerticalGridTimePeriod() As TimePeriod
 Const ProcName As String = "VerticalGridTimePeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set VerticalGridTimePeriod = chartObj.VerticalGridTimePeriod
@@ -605,7 +680,7 @@ End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 VerticalMouseScrollingAllowed = chartObj.VerticalMouseScrollingAllowed
@@ -618,7 +693,7 @@ End Property
 
 Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.VerticalMouseScrollingAllowed = Value
@@ -631,7 +706,7 @@ End Property
 
 Public Property Get XAxisRegion() As ChartRegion
 Const ProcName As String = "XAxisRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set XAxisRegion = chartObj.XAxisRegion
@@ -642,9 +717,34 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get XAxisRegionStyle() As ChartRegionStyle
+Const ProcName As String = "XAxisRegionStyle"
+On Error GoTo Err
+
+Set XAxisRegionStyle = chartObj.XAxisRegionStyle
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let XAxisRegionStyle(ByVal Value As ChartRegionStyle)
+Const ProcName As String = "XAxisRegionStyle"
+
+On Error GoTo Err
+
+chartObj.XAxisRegionStyle = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get XAxisVisible() As Boolean
 Const ProcName As String = "XAxisVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 XAxisVisible = chartObj.XAxisVisible
@@ -657,7 +757,7 @@ End Property
 
 Public Property Let XAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "XAxisVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.XAxisVisible = Value
@@ -670,7 +770,7 @@ End Property
 
 Public Property Let XCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "XCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.XCursorTextStyle = Value
@@ -683,7 +783,7 @@ End Property
 
 Public Property Get XCursorTextStyle() As TextStyle
 Const ProcName As String = "XCursorTextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set XCursorTextStyle = chartObj.XCursorTextStyle
@@ -696,7 +796,7 @@ End Property
 
 Public Property Get YAxisPosition() As Long
 Const ProcName As String = "YAxisPosition"
-Dim failpoint As String
+
 On Error GoTo Err
 
 YAxisPosition = chartObj.YAxisPosition
@@ -709,7 +809,7 @@ End Property
 
 Public Property Get YAxisVisible() As Boolean
 Const ProcName As String = "YAxisVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 YAxisVisible = chartObj.YAxisVisible
@@ -722,7 +822,7 @@ End Property
 
 Public Property Let YAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "YAxisVisible"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.YAxisVisible = Value
@@ -735,7 +835,7 @@ End Property
 
 Public Property Get YAxisWidthCm() As Single
 Const ProcName As String = "YAxisWidthCm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 YAxisWidthCm = chartObj.YAxisWidthCm
@@ -748,7 +848,7 @@ End Property
 
 Public Property Let YAxisWidthCm(ByVal Value As Single)
 Const ProcName As String = "YAxisWidthCm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.YAxisWidthCm = Value
@@ -765,7 +865,7 @@ End Property
 
 Public Sub ClearChart()
 Const ProcName As String = "ClearChart"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.ClearChart
@@ -778,7 +878,7 @@ End Sub
 
 Public Sub DisableDrawing()
 Const ProcName As String = "DisableDrawing"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.DisableDrawing
@@ -791,7 +891,7 @@ End Sub
 
 Public Sub EnableDrawing()
 Const ProcName As String = "EnableDrawing"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.EnableDrawing
@@ -804,7 +904,7 @@ End Sub
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.Finish
@@ -817,7 +917,7 @@ End Sub
 
 Friend Sub Finished()
 Const ProcName As String = "Finished"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mChartRef = Nothing
@@ -857,7 +957,7 @@ Public Function GetXFromTimestamp( _
                 Optional ByVal forceNewPeriod As Boolean, _
                 Optional ByVal duplicateNumber As Long) As Double
 Const ProcName As String = "GetXFromTimestamp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetXFromTimestamp = chartObj.GetXFromTimestamp(Timestamp, forceNewPeriod, duplicateNumber)
@@ -870,7 +970,7 @@ End Function
 
 Public Sub HideGrid()
 Const ProcName As String = "HideGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.HideGrid
@@ -883,7 +983,7 @@ End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 Const ProcName As String = "IsTimeInSession"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsTimeInSession = chartObj.IsTimeInSession(Timestamp)
@@ -896,7 +996,7 @@ End Function
 
 Public Sub ScrollX(ByVal Value As Long)
 Const ProcName As String = "ScrollX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.ScrollX Value
@@ -909,7 +1009,7 @@ End Sub
 
 Public Sub SetPointerModeDefault()
 Const ProcName As String = "SetPointerModeDefault"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.SetPointerModeDefault
@@ -922,7 +1022,7 @@ End Sub
 
 Public Sub SetPointerModeSelection()
 Const ProcName As String = "SetPointerModeSelection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.SetPointerModeSelection
@@ -937,7 +1037,7 @@ Public Sub SetPointerModeTool( _
                 Optional ByVal toolPointerStyle As PointerStyles = PointerTool, _
                 Optional ByVal icon As IPictureDisp)
 Const ProcName As String = "SetPointerModeTool"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.SetPointerModeTool toolPointerStyle, icon
@@ -950,7 +1050,7 @@ End Sub
 
 Public Sub ShowGrid()
 Const ProcName As String = "ShowGrid"
-Dim failpoint As String
+
 On Error GoTo Err
 
 chartObj.ShowGrid
@@ -967,7 +1067,7 @@ End Sub
 
 Private Function chartObj() As Chart
 Const ProcName As String = "chartObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set chartObj = mChartRef.Target

@@ -207,7 +207,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove

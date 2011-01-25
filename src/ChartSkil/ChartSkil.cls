@@ -357,6 +357,18 @@ Private Const ModuleName                    As String = "ChartSkil"
 ' Properties
 '@================================================================================
 
+Public Property Get ChartStylesManager() As ChartStylesManager
+Const ProcName As String = "ChartStylesManager"
+On Error GoTo Err
+
+Set ChartStylesManager = gChartStylesManager
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get GraphicObjectStyleManager() As GraphicObjectStyleManager
 Set GraphicObjectStyleManager = gGraphicObjectStyleManager
 End Property
@@ -420,7 +432,7 @@ Public Function NewDimension( _
                 ByVal pLength As Double, _
                 Optional ByVal pCoordSystem As CoordinateSystems = CoordsDistance) As Dimension
 Const ProcName As String = "NewDimension"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set NewDimension = gNewDimension(pLength, pCoordSystem)
@@ -453,7 +465,7 @@ Public Function NewSize( _
                 Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance, _
                 Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As Size
 Const ProcName As String = "NewSize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set NewSize = gNewSize(X, Y, coordSystemX, coordSystemY)

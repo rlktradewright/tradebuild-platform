@@ -123,7 +123,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -155,7 +155,7 @@ End Property
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -189,7 +189,7 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mDisplayMode, DataPointPropertyDisplayMode, Value
@@ -215,7 +215,7 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -246,7 +246,7 @@ End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)
 Const ProcName As String = "HistogramBarWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value <= 0 Or Value > 1 Then _
@@ -277,7 +277,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, DataPointPropertyIncludeInAutoscale, Value
@@ -303,7 +303,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value < LayerMin Or Value > LayerMax Then _
@@ -334,7 +334,7 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mLineStyle, DataPointPropertyLineStyle, Value
@@ -360,7 +360,7 @@ End Property
 
 Public Property Let LineThickness(ByVal Value As Long)
 Const ProcName As String = "LineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mLineThickness, DataPointPropertyLineThickness, Value
@@ -405,7 +405,7 @@ End Property
 
 Public Property Let PointStyle(ByVal Value As PointStyles)
 Const ProcName As String = "PointStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mPointStyle, DataPointPropertyPointStyle, Value
@@ -431,7 +431,7 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -467,7 +467,7 @@ End Property
 Public Sub ClearProperty( _
                 ByVal pPropFlag As DataPointPropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
@@ -482,7 +482,7 @@ End Sub
 
 Public Function clone() As DataPointStyle
 Const ProcName As String = "clone"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set clone = New DataPointStyle
@@ -514,7 +514,7 @@ Public Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -548,7 +548,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -585,7 +585,7 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -694,7 +694,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gSetFlag(mPropertyFlags, flag)

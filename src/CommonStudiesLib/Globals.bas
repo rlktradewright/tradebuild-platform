@@ -124,16 +124,16 @@ End Property
 '@================================================================================
 
 Public Function gCreateBarStyle( _
-                Optional ByVal Color As Long = -1, _
+                Optional ByVal Color As Long = &H808080, _
                 Optional ByVal DisplayMode As BarDisplayModes = BarDisplayModeCandlestick, _
-                Optional ByVal DownColor As Long = vbBlack, _
+                Optional ByVal DownColor As Long = &H808080, _
                 Optional ByVal IncludeInAutoscale As Boolean = True, _
                 Optional ByVal Layer As Long = LayerLowestUser, _
                 Optional ByVal OutlineThickness As Long = 1, _
                 Optional ByVal SolidUpBody As Boolean = False, _
                 Optional ByVal TailThickness As Long = 1, _
                 Optional ByVal Thickness As Long = 2, _
-                Optional ByVal UpColor As Long = vbBlack, _
+                Optional ByVal UpColor As Long = &H808080, _
                 Optional ByVal Width As Single = 0.6) As BarStyle
 Dim lStyle As BarStyle
 Set lStyle = New BarStyle

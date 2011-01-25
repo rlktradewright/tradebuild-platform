@@ -106,7 +106,7 @@ End Sub
 
 Public Property Get hDC() As Long
 Const ProcName As String = "hDC"
-Dim failpoint As String
+
 On Error GoTo Err
 
 hDC = mSurface.hDC
@@ -119,7 +119,7 @@ End Property
 
 Friend Property Get Height() As Double
 Const ProcName As String = "Height"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Height = mSurface.Height
@@ -132,7 +132,7 @@ End Property
 
 Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "MouseIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.MouseIcon = Value
@@ -145,7 +145,7 @@ End Property
 
 Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
 Const ProcName As String = "MousePointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.MousePointer = Value
@@ -158,7 +158,7 @@ End Property
 
 Public Property Get MousePointer() As VBRUN.MousePointerConstants
 Const ProcName As String = "MousePointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 MousePointer = mSurface.MousePointer
@@ -171,7 +171,7 @@ End Property
 
 Friend Property Let RegionType(ByVal Value As RegionTypes)
 Const ProcName As String = "RegionType"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRegionType = Value
@@ -184,7 +184,7 @@ End Property
 
 Friend Property Let Surface(ByVal Value As PictureBox)
 Const ProcName As String = "Surface"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSurface = Value
@@ -198,7 +198,7 @@ End Property
 
 Friend Property Get Surface() As PictureBox
 Const ProcName As String = "Surface"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Surface = mSurface
@@ -215,7 +215,7 @@ End Property
 
 Friend Property Get Width() As Double
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Width = mSurface.Width
@@ -236,7 +236,7 @@ Dim lRegionHandle As Long
 Dim res As Long
 
 Const ProcName As String = "AddToClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lRegionHandle = CreateRectRgn(clipArea.Left, _
@@ -261,7 +261,7 @@ End Sub
 
 Friend Sub Clear()
 Const ProcName As String = "Clear"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.Cls
@@ -274,7 +274,7 @@ End Sub
 
 Public Sub ClearClippingRegion()
 Const ProcName As String = "ClearClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 SelectClipRgn mSurface.hDC, 0
@@ -289,7 +289,7 @@ Public Sub DrawCircle( _
                 ByVal centre As Point, _
                 ByVal radius As Double)
 Const ProcName As String = "DrawCircle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyPenSettings
@@ -309,7 +309,7 @@ Public Sub DrawLine( _
                 ByVal x2 As Single, _
                 ByVal y2 As Single)
 Const ProcName As String = "DrawLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyPenSettings
@@ -325,7 +325,7 @@ End Sub
 Public Sub DrawPoint( _
                 ByVal p As Point)
 Const ProcName As String = "DrawPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyPenSettings
@@ -341,7 +341,7 @@ End Sub
 Public Sub DrawPolygon( _
                 ByRef points() As GDI_POINT)
 Const ProcName As String = "DrawPolygon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyPenSettings
@@ -362,7 +362,7 @@ Public Sub DrawRectangle( _
                 ByVal y2Logical As Double)
 Const ProcName As String = "DrawRectangle"
 Dim lTRect As TRectangle
-Dim failpoint As String
+
 On Error GoTo Err
 
 lTRect.Left = x1Logical
@@ -384,7 +384,7 @@ Public Sub DrawRectangleFromPoints( _
                 ByVal p2 As Point)
 Const ProcName As String = "DrawRectangleFromPoints"
 Dim lTRect As TRectangle
-Dim failpoint As String
+
 On Error GoTo Err
 
 lTRect.Left = p1.XLogical(mViewport.Region)
@@ -404,7 +404,7 @@ End Sub
 Public Sub DrawRectangleFromRect( _
                 ByRef pRect As GDI_RECT)
 Const ProcName As String = "DrawRectangleFromRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 applyPenSettings
@@ -421,7 +421,7 @@ End Sub
 Public Sub DrawRectangleFromTRectangle( _
                 ByRef pRect As TRectangle)
 Const ProcName As String = "DrawRectangleFromTRectangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not pRect.isValid Then
@@ -456,7 +456,7 @@ Dim res As Long
 Dim dtp As DRAWTEXTPARAMS
 
 Const ProcName As String = "DrawText"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setfont
@@ -527,7 +527,7 @@ Dim sizeHeight As Long
 Dim sizeWidth As Long
 
 Const ProcName As String = "GetTextSize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setfont
@@ -584,7 +584,7 @@ Dim lRegionHandle As Long
 Dim res As Long
 
 Const ProcName As String = "IntersectClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lRegionHandle = CreateRectRgn(clipArea.Left, _
@@ -611,7 +611,7 @@ Public Sub RestoreClippingRegion()
 Dim res As Long
 
 Const ProcName As String = "RestoreClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSavedClippingRegionHandle = NoClipRegion Then
@@ -631,7 +631,7 @@ End Sub
 Public Sub SaveClippingRegion()
 
 Const ProcName As String = "SaveClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Dim res As Long
@@ -665,7 +665,7 @@ Public Sub SetBrushAttributes( _
                 ByVal Color As Long, _
                 ByVal Style As FillStyles)
 Const ProcName As String = "SetBrushAttributes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBrushColor = Color
@@ -683,7 +683,7 @@ Dim lRegionHandle As Long
 Dim res As Long
 
 Const ProcName As String = "SetClippingRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lRegionHandle = CreateRectRgn(clipArea.Left, _
@@ -708,7 +708,7 @@ End Sub
 
 Friend Sub SetScale(ByRef pBoundary As TRectangle)
 Const ProcName As String = "SetScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSurface Is Nothing Then Exit Sub
@@ -734,7 +734,7 @@ Public Sub SetPenAttributes( _
                 ByVal Style As LineStyles, _
                 ByVal mode As DrawModes)
 Const ProcName As String = "SetPenAttributes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPenColor = Color
@@ -753,7 +753,7 @@ Public Sub SetTextAttributes( _
                 ByVal Font As StdFont, _
                 ByVal transparent As Boolean)
 Const ProcName As String = "SetTextAttributes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTextColor = Color
@@ -768,7 +768,7 @@ End Sub
 
 Public Function TextHeight(ByVal Value As String) As Double
 Const ProcName As String = "TextHeight"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setfont
@@ -782,7 +782,7 @@ End Function
 
 Public Function TextWidth(ByVal Value As String) As Double
 Const ProcName As String = "TextWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setfont
@@ -797,7 +797,7 @@ End Function
 Friend Sub ZOrder( _
                 ByVal Position As Integer)
 Const ProcName As String = "ZOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.ZOrder Position
@@ -814,7 +814,7 @@ End Sub
 
 Private Sub applyFillSettings()
 Const ProcName As String = "applyFillSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.FillColor = mBrushColor
@@ -828,7 +828,7 @@ End Sub
 
 Private Sub applyPenSettings()
 Const ProcName As String = "applyPenSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mSurface.ForeColor = mPenColor
@@ -844,7 +844,7 @@ End Sub
 
 Private Sub setfont()
 Const ProcName As String = "setfont"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mTextFont Is Nothing Then

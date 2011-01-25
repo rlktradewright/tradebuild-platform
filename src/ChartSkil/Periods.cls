@@ -85,7 +85,7 @@ End Property
 Public Function Add( _
                 ByVal Timestamp As Date) As Period
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then
@@ -107,7 +107,7 @@ Dim duplicateNumber As Long
 Dim lPeriod As Period
 
 Const ProcName As String = "AddPeriod"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set lPeriod = New Period
@@ -136,7 +136,7 @@ End Function
 
 Public Function Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -159,7 +159,7 @@ Public Function Item( _
                 ByVal index As Variant) As Period
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -184,7 +184,7 @@ Friend Function ItemDup( _
                 ByVal index As Date, _
                 ByVal duplicateNumber As Long) As Period
 Const ProcName As String = "ItemDup"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -205,7 +205,7 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set NewEnum = mPeriods.Enumerator
@@ -219,7 +219,7 @@ End Function
 Friend Sub Remove( _
                 ByVal index As Variant)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -244,7 +244,7 @@ Friend Sub RemoveDup( _
                 ByVal index As Date, _
                 ByVal duplicateNumber As Long)
 Const ProcName As String = "RemoveDup"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -273,7 +273,7 @@ Private Function generateKey( _
                 ByVal Timestamp As Date, _
                 ByVal duplicateNumber As Long) As String
 Const ProcName As String = "generateKey"
-Dim failpoint As String
+
 On Error GoTo Err
 
 generateKey = Format(Timestamp, "yyyymmddhhnnss") & "." & duplicateNumber

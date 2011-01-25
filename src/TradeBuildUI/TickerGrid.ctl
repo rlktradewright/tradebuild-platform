@@ -449,7 +449,7 @@ End Sub
 Private Sub PriceChangeListener_Change(ev As PriceChangeEventData)
 Const ProcName As String = "PriceChangeListener_Change"
 Dim lTicker As Ticker
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = ev.Source
@@ -492,7 +492,7 @@ Private Sub QuoteListener_ask(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_ask"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.Ask)
@@ -509,7 +509,7 @@ Private Sub QuoteListener_bid(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_bid"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.Bid)
@@ -526,7 +526,7 @@ Private Sub QuoteListener_high(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_high"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.HighPrice)
@@ -542,7 +542,7 @@ Private Sub QuoteListener_Low(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_Low"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.LowPrice)
@@ -558,7 +558,7 @@ Private Sub QuoteListener_openInterest(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_openInterest"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displaySize ev, mColumnMap(TickerGridColumns.OpenInterest)
@@ -574,7 +574,7 @@ Private Sub QuoteListener_previousClose(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_previousClose"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.ClosePrice)
@@ -590,7 +590,7 @@ Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEventData)
 Const ProcName As String = "QuoteListener_sessionOpen"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.OpenPrice)
@@ -606,7 +606,7 @@ Private Sub QuoteListener_trade(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_trade"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displayPrice ev, mColumnMap(TickerGridColumns.Trade)
@@ -623,7 +623,7 @@ Private Sub QuoteListener_volume(ev As QuoteEventData)
 Const ProcName As String = "QuoteListener_volume"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 displaySize ev, mColumnMap(TickerGridColumns.Volume)
@@ -645,7 +645,7 @@ Private Sub TickerGrid_ColMoved( _
 Const ProcName As String = "TickerGrid_ColMoved"
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If fromCol < toCol Then
@@ -670,7 +670,7 @@ End Sub
 
 Private Sub TickerGrid_ColMoving(ByVal fromCol As Long, ByVal toCol As Long, Cancel As Boolean)
 Const ProcName As String = "TickerGrid_ColMoving"
-Dim failpoint As Long
+
 On Error GoTo Err
 
     RaiseEvent ColMoving(fromCol, toCol, Cancel)
@@ -687,7 +687,7 @@ Dim row As Long
 Dim rowSel As Long
 Dim col As Long
 Dim colSel As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 row = TickerGrid.row
@@ -727,7 +727,7 @@ End Sub
 
 Private Sub TickerGrid_DblClick()
 Const ProcName As String = "TickerGrid_DblClick"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent DblClick
@@ -740,7 +740,7 @@ End Sub
 
 Private Sub TickerGrid_KeyDown(KeyCode As Integer, Shift As Integer)
 Const ProcName As String = "TickerGrid_KeyDown"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent KeyDown(KeyCode, Shift)
@@ -753,7 +753,7 @@ End Sub
 
 Private Sub TickerGrid_KeyPress(KeyAscii As Integer)
 Const ProcName As String = "TickerGrid_KeyPress"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent KeyPress(KeyAscii)
@@ -766,7 +766,7 @@ End Sub
 
 Private Sub TickerGrid_KeyUp(KeyCode As Integer, Shift As Integer)
 Const ProcName As String = "TickerGrid_KeyUp"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent KeyUp(KeyCode, Shift)
@@ -783,7 +783,7 @@ Private Sub TickerGrid_MouseDown( _
                 X As Single, _
                 Y As Single)
 Const ProcName As String = "TickerGrid_MouseDown"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mShiftDown = (Shift And KeyDownShift)
@@ -799,7 +799,7 @@ End Sub
 
 Private Sub TickerGrid_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Const ProcName As String = "TickerGrid_MouseMove"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent MouseMove(Button, Shift, X, Y)
@@ -816,7 +816,7 @@ Private Sub TickerGrid_MouseUp( _
                 X As Single, _
                 Y As Single)
 Const ProcName As String = "TickerGrid_MouseUp"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mShiftDown = (Shift And KeyDownShift)
@@ -837,7 +837,7 @@ Const ProcName As String = "TickerGrid_RowMoved"
 Dim i As Long
 Dim lTicker As Ticker
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = mTickerTable(TickerGrid.rowdata(toRow)).theTicker
@@ -867,7 +867,7 @@ Private Sub TickerGrid_RowMoving( _
                 ByVal toRow As Long, _
                 Cancel As Boolean)
 Const ProcName As String = "TickerGrid_RowMoving"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If toRow > mNextGridRowIndex Then
@@ -898,7 +898,7 @@ End Sub
 
 Private Sub mSelectedTickers_SelectionChanged()
 Const ProcName As String = "mSelectedTickers_SelectionChanged"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 RaiseEvent SelectionChanged
@@ -920,7 +920,7 @@ Dim index As Long
 Dim lContract As Contract
     
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = ev.Source
@@ -1245,12 +1245,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let Redraw(ByVal value As Boolean)
+Public Property Let Redraw(ByVal Value As Boolean)
 
 Const ProcName As String = "Redraw"
 On Error GoTo Err
 
-TickerGrid.Redraw = value
+TickerGrid.Redraw = Value
 
 Exit Property
 
@@ -1258,12 +1258,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PositiveChangeBackColor(ByVal value As OLE_COLOR)
+Public Property Let PositiveChangeBackColor(ByVal Value As OLE_COLOR)
 
 Const ProcName As String = "PositiveChangeBackColor"
 On Error GoTo Err
 
-mPositiveChangeBackColor = value
+mPositiveChangeBackColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPositiveChangeBackColor, mPositiveChangeBackColor
 If Not mTickers Is Nothing Then mTickers.RefreshPriceChange Me
 PropertyChanged "PositiveChangeBackColor"
@@ -1289,12 +1289,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let PositiveChangeForeColor(ByVal value As OLE_COLOR)
+Public Property Let PositiveChangeForeColor(ByVal Value As OLE_COLOR)
 
 Const ProcName As String = "PositiveChangeForeColor"
 On Error GoTo Err
 
-mPositiveChangeForeColor = value
+mPositiveChangeForeColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPositiveChangeForeColor, mPositiveChangeForeColor
 If Not mTickers Is Nothing Then mTickers.RefreshPriceChange Me
 PropertyChanged "PositiveChangeForeColor"
@@ -1320,12 +1320,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let NegativeChangeBackColor(ByVal value As OLE_COLOR)
+Public Property Let NegativeChangeBackColor(ByVal Value As OLE_COLOR)
 
 Const ProcName As String = "NegativeChangeBackColor"
 On Error GoTo Err
 
-mNegativeChangeBackColor = value
+mNegativeChangeBackColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingNegativeChangeBackColor, mNegativeChangeBackColor
 If Not mTickers Is Nothing Then mTickers.RefreshPriceChange Me
 PropertyChanged "NegativeChangeBackColor"
@@ -1351,12 +1351,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let NegativeChangeForeColor(ByVal value As OLE_COLOR)
+Public Property Let NegativeChangeForeColor(ByVal Value As OLE_COLOR)
 
 Const ProcName As String = "NegativeChangeForeColor"
 On Error GoTo Err
 
-mNegativeChangeForeColor = value
+mNegativeChangeForeColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingNegativeChangeForeColor, mNegativeChangeForeColor
 If Not mTickers Is Nothing Then mTickers.RefreshPriceChange Me
 PropertyChanged "NegativeChangeForeColor"
@@ -1382,12 +1382,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let IncreasedValueColor(ByVal value As OLE_COLOR)
+Public Property Let IncreasedValueColor(ByVal Value As OLE_COLOR)
 
 Const ProcName As String = "IncreasedValueColor"
 On Error GoTo Err
 
-mIncreasedValueColor = value
+mIncreasedValueColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingIncreasedValueColor, mIncreasedValueColor
 If Not mTickers Is Nothing Then mTickers.RefreshQuotes Me
 PropertyChanged "IncreasedValueColor"
@@ -1413,12 +1413,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let HighlightPriceChanges(ByVal value As Boolean)
+Public Property Let HighlightPriceChanges(ByVal Value As Boolean)
 
 Const ProcName As String = "HighlightPriceChanges"
 On Error GoTo Err
 
-mHighlightPriceChanges = value
+mHighlightPriceChanges = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingHighlightPriceChanges, mHighlightPriceChanges
 If Not mTickers Is Nothing Then mTickers.RefreshPriceChange Me
 PropertyChanged "HighlightPriceChanges"
@@ -1604,12 +1604,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let FontFixed(ByVal value As StdFont)
+Public Property Let FontFixed(ByVal Value As StdFont)
 
 Const ProcName As String = "FontFixed"
 On Error GoTo Err
 
-Set TickerGrid.FontFixed = value
+Set TickerGrid.FontFixed = Value
 
 Exit Property
 
@@ -1617,12 +1617,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Set FontFixed(ByVal value As StdFont)
+Public Property Set FontFixed(ByVal Value As StdFont)
 
 Const ProcName As String = "FontFixed"
 On Error GoTo Err
 
-TickerGrid.FontFixed = value
+TickerGrid.FontFixed = Value
 
 Exit Property
 
@@ -1646,12 +1646,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Set Font(ByVal value As StdFont)
+Public Property Set Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 On Error GoTo Err
 
-Set TickerGrid.Font = value
-calcAverageCharacterWidths value
+Set TickerGrid.Font = Value
+calcAverageCharacterWidths Value
 setColumnWidths
 
 Exit Property
@@ -1660,12 +1660,12 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let Font(ByVal value As StdFont)
+Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
 On Error GoTo Err
 
-Set TickerGrid.Font = value
-calcAverageCharacterWidths value
+Set TickerGrid.Font = Value
+calcAverageCharacterWidths Value
 setColumnWidths
 
 Exit Property
@@ -1674,11 +1674,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let DecreasedValueColor(ByVal value As OLE_COLOR)
+Public Property Let DecreasedValueColor(ByVal Value As OLE_COLOR)
 Const ProcName As String = "DecreasedValueColor"
 On Error GoTo Err
 
-mDecreasedValueColor = value
+mDecreasedValueColor = Value
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingDecreasedValueColor, mDecreasedValueColor
 If Not mTickers Is Nothing Then mTickers.RefreshQuotes Me
 PropertyChanged "DecreasedValueColor"
@@ -1872,7 +1872,7 @@ Const ProcName As String = "deselectSelectedTickers"
 Dim index As Long
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 For i = 1 To mNextGridRowIndex - 1
@@ -1893,7 +1893,7 @@ End Sub
 Public Sub deselectTicker( _
                 ByVal index As Long)
 Const ProcName As String = "deselectTicker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 deselectATicker index
@@ -1934,7 +1934,7 @@ End Sub
 
 Public Function GetColFromX(ByVal X As Long) As Long
 Const ProcName As String = "GetColFromX"
-Dim failpoint As Long
+
 On Error GoTo Err
 
     GetColFromX = TickerGrid.GetColFromX(X)
@@ -1947,7 +1947,7 @@ End Function
 
 Public Function GetRowFromY(ByVal Y As Long) As Long
 Const ProcName As String = "GetRowFromY"
-Dim failpoint As Long
+
 On Error GoTo Err
 
     GetRowFromY = TickerGrid.GetRowFromY(Y)
@@ -1960,7 +1960,7 @@ End Function
 
 Public Sub InvertCellColors()
 Const ProcName As String = "InvertCellColors"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.InvertCellColors
@@ -1990,7 +1990,7 @@ Dim optRight As OptionRights
 
 Dim lTicker As Ticker
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -2074,7 +2074,7 @@ End Sub
 Public Sub MonitorWorkspace( _
                 ByVal pWorkspace As Workspace)
 Const ProcName As String = "MonitorWorkspace"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mTickers Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -2098,7 +2098,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mConfig.Remove
@@ -2112,7 +2112,7 @@ End Sub
 Public Sub selectAllTickers()
 Const ProcName As String = "selectAllTickers"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mSelectedTickers.BeginChange
@@ -2130,7 +2130,7 @@ End Sub
 Public Sub selectTicker( _
                 ByVal row As Long)
 Const ProcName As String = "selectTicker"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 selectATicker row
@@ -2143,7 +2143,7 @@ End Sub
 
 Public Sub setCellAlignment(ByVal row As Long, ByVal col As Long, pAlign As TWControls10.AlignmentSettings)
 Const ProcName As String = "setCellAlignment"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.setCellAlignment row, col, pAlign
@@ -2158,7 +2158,7 @@ Public Sub stopAllTickers()
 Const ProcName As String = "stopAllTickers"
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.Redraw = False
@@ -2181,7 +2181,7 @@ Public Sub stopSelectedTickers()
 Const ProcName As String = "stopSelectedTickers"
 Dim lTicker As Ticker
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.Redraw = False
@@ -2208,7 +2208,7 @@ Const ProcName As String = "addTickerToConfig"
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -2240,7 +2240,7 @@ End Sub
 Private Sub calcAverageCharacterWidths( _
                 ByVal afont As StdFont)
 Const ProcName As String = "calcAverageCharacterWidths"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 mLetterWidth = getAverageCharacterWidth("ABCDEFGH IJKLMNOP QRST UVWX YZ", afont)
@@ -2256,7 +2256,7 @@ Private Sub deselectATicker( _
                 ByVal row As Long)
 Const ProcName As String = "deselectATicker"
 Dim index As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 index = TickerGrid.rowdata(row)
@@ -2276,7 +2276,7 @@ Private Sub displayPrice( _
                 ByVal col As Long)
 Const ProcName As String = "displayPrice"
 Dim lTicker As Ticker
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = ev.Source
@@ -2317,7 +2317,7 @@ Private Sub displaySize( _
                 ByVal col As Long)
 Const ProcName As String = "displaySize"
 Dim lTicker As Ticker
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = ev.Source
@@ -2353,7 +2353,7 @@ Private Function getAverageCharacterWidth( _
                 ByVal widthString As String, _
                 ByVal pFont As StdFont) As Long
 Const ProcName As String = "getAverageCharacterWidth"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set FontPicture.Font = pFont
@@ -2368,7 +2368,7 @@ End Function
 Private Function getTickerGridRow( _
                 ByVal pTicker As Ticker) As Long
 Const ProcName As String = "getTickerGridRow"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 getTickerGridRow = mTickerTable(getTickerIndex(pTicker)).tickerGridRow
@@ -2384,7 +2384,7 @@ Private Function getTickerIndex( _
 Const ProcName As String = "getTickerIndex"
 ' allow for the fact that the first tickertable entry is not used - it is the
 ' terminator of the selected entries chain
-Dim failpoint As Long
+
 On Error GoTo Err
 
 getTickerIndex = pTicker.Handle + 1
@@ -2404,7 +2404,7 @@ Private Sub highlightRow(ByVal rowNumber As Long)
 Const ProcName As String = "highlightRow"
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If rowNumber < 0 Then Exit Sub
@@ -2448,7 +2448,7 @@ End Sub
 Private Function isRowSelected( _
                 ByVal row As Long)
 Const ProcName As String = "isRowSelected"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 isRowSelected = isTickerSelected(TickerGrid.rowdata(row))
@@ -2462,7 +2462,7 @@ End Function
 Private Function isTickerSelected( _
                 ByVal index As Long)
 Const ProcName As String = "isTickerSelected"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 isTickerSelected = mSelectedTickers.Contains(mTickerTable(index).theTicker)
@@ -2478,7 +2478,7 @@ Const ProcName As String = "loadColumnMap"
 Dim ar() As String
 Dim i As Long
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
@@ -2508,7 +2508,7 @@ Const ProcName As String = "moveRowDownInConfig"
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -2534,7 +2534,7 @@ Const ProcName As String = "moveRowUpInConfig"
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -2562,7 +2562,7 @@ Dim i As Long
 Dim rowdata As Long
 Dim lTicker As Ticker
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 gridRowIndex = mTickerTable(index).tickerGridRow
@@ -2595,7 +2595,7 @@ Const ProcName As String = "removeTickerFromConfig"
 Dim tickersConfigSection As ConfigurationSection
 Dim tickerConfigSection As ConfigurationSection
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -2619,7 +2619,7 @@ Private Sub selectATicker( _
                 ByVal row As Long)
 Const ProcName As String = "selectATicker"
 Dim index As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 index = TickerGrid.rowdata(row)
@@ -2640,7 +2640,7 @@ Private Sub setColumnWidth( _
                 ByVal widthChars As Long, _
                 ByVal isLetters As Boolean)
 Const ProcName As String = "setColumnWidth"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.colWidth(mColumnMap(col)) = IIf(isLetters, mLetterWidth, mDigitWidth) * widthChars
@@ -2653,7 +2653,7 @@ End Sub
 
 Private Sub setColumnWidths()
 Const ProcName As String = "setColumnWidths"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.Redraw = False
@@ -2694,7 +2694,7 @@ Private Sub setupColumnMap( _
                     ByVal maxIndex As Long)
 Const ProcName As String = "setupColumnMap"
 Dim i As Long
-Dim failpoint As Long
+
 On Error GoTo Err
 
 ReDim mColumnMap(maxIndex) As Long
@@ -2711,7 +2711,7 @@ End Sub
 Private Sub setupDefaultTickerGridColumns()
 Const ProcName As String = "setupDefaultTickerGridColumns"
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 gLogger.Log "Setting up default ticker grid columns", ProcName, ModuleName, LogLevelDetail
@@ -2759,7 +2759,7 @@ End Sub
 Private Sub setupDefaultTickerGridHeaders()
 Const ProcName As String = "setupDefaultTickerGridHeaders"
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridColumns.Selector)) = ""
@@ -2796,7 +2796,7 @@ End Sub
 
 Private Sub setupSummaryTickerGridColumns()
 Const ProcName As String = "setupSummaryTickerGridColumns"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With TickerGrid
@@ -2842,7 +2842,7 @@ Private Sub setupSummaryTickerGridHeaders()
 Const ProcName As String = "setupSummaryTickerGridHeaders"
 
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 TickerGrid.TextMatrix(0, mColumnMap(TickerGridSummaryColumns.Selector)) = ""
@@ -2872,7 +2872,7 @@ Private Sub setupTickerGridColumn( _
                 ByVal align As TWControls10.AlignmentSettings)
 Const ProcName As String = "setupTickerGridColumn"
     
-Dim failpoint As Long
+
 On Error GoTo Err
 
 With TickerGrid
@@ -2901,7 +2901,7 @@ Private Sub stopTicker( _
 Const ProcName As String = "stopTicker"
 Dim lTicker As Ticker
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 Set lTicker = mTickerTable(index).theTicker
@@ -2923,7 +2923,7 @@ Const ProcName As String = "storeColumnMap"
 Dim i As Long
 Dim s As String
 
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
@@ -2943,7 +2943,7 @@ End Sub
 Private Sub toggleRowSelection( _
                 ByVal row As Long)
 Const ProcName As String = "toggleRowSelection"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 If isRowSelected(row) Then

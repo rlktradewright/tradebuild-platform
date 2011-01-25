@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#181.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#185.1#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -27,6 +27,7 @@ Begin VB.Form ChartForm
       Width           =   12120
       _ExtentX        =   21378
       _ExtentY        =   11298
+      HorizontalMouseScrollingAllowed=   0   'False
       ChartBackColor  =   6566450
    End
    Begin VB.PictureBox BasePicture 
@@ -874,17 +875,20 @@ mMACDSignalSeries.Style = lDataPointStyle
 mMACDSignalSeries.IncludeInAutoscale = True
 
 ' Create a region to display the volume bars
-Set mVolumeRegion = Chart1.Regions.Add(15, , mDataRegionStyle, mYAxisRegionStyle)
+Dim lVolumeRegionStyle As ChartRegionStyle
+Set lVolumeRegionStyle = mDataRegionStyle.Clone
+lVolumeRegionStyle.IntegerYScale = True      ' constrain the Y scale to only display integer
+                                        ' labels
+lVolumeRegionStyle.MinimumHeight = 10        ' don't let the Y scale drop below 10
+lVolumeRegionStyle.GridlineSpacingY = 0.8    ' the horizontal grid lines should be about
+                                        ' 8 millimeters apart
+
+Set mVolumeRegion = Chart1.Regions.Add(15, , lVolumeRegionStyle, mYAxisRegionStyle)
                                         ' use 15 percent of the space for this region
 mVolumeRegion.Title.Text = "Volume"
 mVolumeRegion.Title.Color = vbBlue
 mVolumeRegion.PerformanceTextVisible = True
                                         ' show the performance info just for interest
-mVolumeRegion.IntegerYScale = True      ' constrain the Y scale to only display integer
-                                        ' labels
-mVolumeRegion.MinimumHeight = 10        ' don't let the Y scale drop below 10
-mVolumeRegion.GridlineSpacingY = 0.8    ' the horizontal grid lines should be about
-                                        ' 8 millimeters apart
 
 ' Set up a datapoint series for the volume bars
 Set lDataPointStyle = New DataPointStyle
@@ -1336,7 +1340,7 @@ On Error GoTo Err
 
 Chart1.Autoscrolling = True            ' requests that the chart should automatically scroll
                                     ' forward one period each time a new period is added
-Chart1.TwipsPerBar = 150            ' specifies the space between bars - there are
+Chart1.TwipsPerPeriod = 150            ' specifies the space between bars - there are
                                     ' 1440 twips per inch or 567 per centimetre
 Chart1.HorizontalScrollBarVisible = True
                                     ' show a horizontal scrollbar for navigating back
@@ -1390,7 +1394,7 @@ mDataRegionStyle.YCursorTextStyle.Font.Size = 10
 ' now set the style for the X axis
 GradientFillColors(0) = RGB(230, 236, 207)
 GradientFillColors(1) = RGB(222, 236, 215)
-Chart1.XAxisRegion.Style.BackGradientFillColors = GradientFillColors
+Chart1.XAxisRegion.BackGradientFillColors = GradientFillColors
 Chart1.XAxisRegion.GridTextStyle.Font.Name = "Lucida Console"
 Chart1.XAxisRegion.GridTextStyle.Font.Size = 7
 
@@ -1399,6 +1403,7 @@ Set mYAxisRegionStyle = New ChartRegionStyle
 GradientFillColors(0) = RGB(234, 246, 254)
 GradientFillColors(1) = RGB(226, 246, 255)
 mYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+mYAxisRegionStyle.HasGrid = False
 
 ' set the style for the X-axis cursor label
 Chart1.XCursorTextStyle.BoxFillColor = vbYellow

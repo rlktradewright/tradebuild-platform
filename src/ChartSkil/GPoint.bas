@@ -84,7 +84,7 @@ Public Function gNewDimension( _
                 ByVal pLength As Double, _
                 Optional ByVal pCoordSystem As CoordinateSystems = CoordsDistance) As Dimension
 Const ProcName As String = "gNewDimension"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set gNewDimension = New Dimension
@@ -102,7 +102,7 @@ Public Function gNewPoint( _
                 Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical, _
                 Optional ByVal Offset As Size) As Point
 Const ProcName As String = "gNewPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set gNewPoint = New Point
@@ -120,7 +120,7 @@ Public Function gNewSize( _
                 Optional ByVal coordSystemX As CoordinateSystems = CoordsDistance, _
                 Optional ByVal coordSystemY As CoordinateSystems = CoordsDistance) As Size
 Const ProcName As String = "gNewSize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set gNewSize = New Size
@@ -137,7 +137,7 @@ Public Function gTransformCoordX( _
                 ByVal pToCoordSys As CoordinateSystems, _
                 ByVal pViewport As Viewport) As Double
 Const ProcName As String = "gTransformCoordX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pFromCoordSys = pToCoordSys Then
@@ -192,7 +192,7 @@ Public Function gTransformCoordY( _
                 ByVal pToCoordSys As CoordinateSystems, _
                 ByVal pViewport As Viewport) As Double
 Const ProcName As String = "gTransformCoordY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pFromCoordSys = pToCoordSys Then

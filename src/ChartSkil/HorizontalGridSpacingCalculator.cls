@@ -66,6 +66,7 @@ Private mYScaleGridSpacing                        As Double
 '@================================================================================
 
 Friend Property Let GridlineSpacingY(ByVal Value As Double)
+If Value = 0 Then Stop
 mGridlineSpacingY = Value
 End Property
 
@@ -90,8 +91,8 @@ Dim logSpacing As Double
 Dim exp As Long
 Dim mantissa As Double
 
-Const ProcName As String = "calcGridSpacings"
-Dim failpoint As String
+Const ProcName As String = "Calculate"
+
 On Error GoTo Err
 
 numGridDivisions = pHeightCm / mGridlineSpacingY

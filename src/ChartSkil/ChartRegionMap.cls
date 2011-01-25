@@ -124,7 +124,7 @@ End Property
 
 Friend Property Get Item(ByVal handle As Long) As ChartRegion
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mRegions(handle).Region
@@ -141,7 +141,7 @@ End Property
 
 Friend Function Append(ByVal Region As ChartRegion) As Long
 Const ProcName As String = "Append"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Append = allocateEntry
@@ -159,7 +159,7 @@ End Function
 
 Friend Function IsFirst(ByVal handle As Long)
 Const ProcName As String = "IsFirst"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsFirst = (nextEntryIndex(mFirstIndex) = handle)
@@ -174,7 +174,7 @@ Friend Sub MoveDown(ByVal handle As Long)
 Dim newLocation As Long
 
 Const ProcName As String = "MoveDown"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If nextEntryIndex(handle) = mLastIndex Then Exit Sub
@@ -196,7 +196,7 @@ Friend Sub MoveUp(ByVal handle As Long)
 Dim newLocation As Long
 
 Const ProcName As String = "MoveUp"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If previousEntryIndex(previousEntryIndex(handle)) = mFirstIndex Then Exit Sub
@@ -222,7 +222,7 @@ End Function
 
 Friend Sub Remove(ByVal handle As Long)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 releaseEntry handle
@@ -241,7 +241,7 @@ End Sub
 
 Private Function allocateEntry() As Long
 Const ProcName As String = "allocateEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRegionsIndex = mRegionsIndex + 1
@@ -260,7 +260,7 @@ End Sub
 
 Private Sub deleteEntry(ByVal index As Long)
 Const ProcName As String = "deleteEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
 nextEntryIndex(previousEntryIndex(index)) = nextEntryIndex(index)
@@ -276,7 +276,7 @@ End Sub
 
 Private Function getEnumerator() As Enumerator
 Const ProcName As String = "getEnumerator"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set getEnumerator = CreateEnumerator(Me)
@@ -291,7 +291,7 @@ Private Sub insertEntryBefore( _
                 ByVal newIndex As Long, _
                 ByVal index As Long)
 Const ProcName As String = "insertEntryBefore"
-Dim failpoint As String
+
 On Error GoTo Err
 
 previousEntryIndex(newIndex) = previousEntryIndex(index)
@@ -308,7 +308,7 @@ End Sub
 
 Private Property Let nextEntryIndex(ByVal index As Long, ByVal Value As Long)
 Const ProcName As String = "nextEntryIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRegions(index).next = Value
@@ -321,7 +321,7 @@ End Property
 
 Private Property Get nextEntryIndex(ByVal index As Long) As Long
 Const ProcName As String = "nextEntryIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 nextEntryIndex = mRegions(index).next
@@ -334,7 +334,7 @@ End Property
 
 Private Property Let previousEntryIndex(ByVal index As Long, ByVal Value As Long)
 Const ProcName As String = "previousEntryIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRegions(index).prev = Value
@@ -347,7 +347,7 @@ End Property
 
 Private Property Get previousEntryIndex(ByVal index As Long) As Long
 Const ProcName As String = "previousEntryIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 previousEntryIndex = mRegions(index).prev
@@ -360,7 +360,7 @@ End Property
 
 Private Sub releaseEntry(ByVal handle As Long)
 Const ProcName As String = "releaseEntry"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mRegions(handle).Region = Nothing

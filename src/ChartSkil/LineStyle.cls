@@ -152,7 +152,7 @@ End Property
 
 Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -183,7 +183,7 @@ End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -214,7 +214,7 @@ End Property
 
 Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowEndFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowEndFillStyle, LinePropertyArrowEndFillStyle, Value
@@ -240,7 +240,7 @@ End Property
 
 Public Property Let ArrowEndLength(ByVal Value As Long)
 Const ProcName As String = "ArrowEndLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowEndLength, LinePropertyArrowEndLength, Value
@@ -266,7 +266,7 @@ End Property
 
 Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowEndStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowEndStyle, LinePropertyArrowEndStyle, Value
@@ -292,7 +292,7 @@ End Property
 
 Public Property Let ArrowEndWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowEndWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowEndWidth, LinePropertyArrowEndWidth, Value
@@ -318,7 +318,7 @@ End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -349,7 +349,7 @@ End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -380,7 +380,7 @@ End Property
 
 Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowStartFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowStartfillStyle, LinePropertyArrowStartFillStyle, Value
@@ -406,7 +406,7 @@ End Property
 
 Public Property Let ArrowStartLength(ByVal Value As Long)
 Const ProcName As String = "ArrowStartLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowStartLength, LinePropertyArrowStartLength, Value
@@ -432,7 +432,7 @@ End Property
 
 Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowStartStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowStartStyle, LinePropertyArrowStartStyle, Value
@@ -458,7 +458,7 @@ End Property
 
 Public Property Let ArrowStartWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowStartWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mArrowStartWidth, LinePropertyArrowStartWidth, Value
@@ -484,7 +484,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -517,7 +517,7 @@ Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -573,7 +573,7 @@ End Property
 
 Public Property Let ExtendAfter(ByVal Value As Boolean)
 Const ProcName As String = "ExtendAfter"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mExtendAfter, LinePropertyExtendAfter, Value
@@ -599,7 +599,7 @@ End Property
 
 Public Property Let ExtendBefore(ByVal Value As Boolean)
 Const ProcName As String = "ExtendBefore"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mExtendBefore, LinePropertyExtendBefore, Value
@@ -625,7 +625,7 @@ End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mExtended, LinePropertyExtended, Value
@@ -651,7 +651,7 @@ End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mFixedX, LinePropertyFixedX, Value
@@ -677,7 +677,7 @@ End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mFixedY, LinePropertyFixedY, Value
@@ -703,7 +703,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, LinePropertyIncludeInAutoscale, Value
@@ -729,7 +729,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value < LayerMin Or Value > LayerMax Then _
@@ -760,7 +760,7 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mLineStyle, LinePropertyLineStyle, Value
@@ -857,7 +857,7 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mThickness, LinePropertyThickness, Value
@@ -888,7 +888,7 @@ End Property
 Public Sub ClearProperty( _
                 ByVal pPropFlag As LinePropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
@@ -903,7 +903,7 @@ End Sub
 
 Public Function clone() As LineStyle
 Const ProcName As String = "clone"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set clone = New LineStyle
@@ -949,7 +949,7 @@ Public Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -997,7 +997,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -1034,7 +1034,7 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -1195,7 +1195,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As LinePropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gSetFlag(mPropertyFlags, flag)

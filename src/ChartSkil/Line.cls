@@ -189,7 +189,7 @@ Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Dim viewportChanges As ViewportComparisonCodes
 
 Const ProcName As String = "IGraphicObject_boundingRectangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 viewportChanges = mViewport.CompareTo(mGaugeX, mGaugeY, mViewportBoundary)
@@ -225,7 +225,7 @@ End Property
 
 Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
 Const ProcName As String = "IGraphicObject_BoundingRectangleInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_BoundingRectangleInViewport = mBoundingRectInViewport
@@ -241,7 +241,7 @@ Dim periodrect As TRectangle
 Dim rects() As TRectangle
 
 Const ProcName As String = "IGraphicObject_BoundingRectanglesAt"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBlank Then Exit Property
@@ -355,7 +355,7 @@ Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
 'IGraphicObject_capabilities = GraphicObjectCapabilities.ComplexBounding Or _
 '                            GraphicObjectCapabilities.PartialRedraw
 Const ProcName As String = "IGraphicObject_capabilities"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
@@ -381,7 +381,7 @@ Dim j As Long
 Dim areasToRedraw() As TRectangle
 
 Const ProcName As String = "IGraphicObject_draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim areasToRedraw(UBound(areas)) As TRectangle
@@ -435,7 +435,7 @@ Dim lineY As Double
 Dim hitTestRect As TRectangle
 
 Const ProcName As String = "IGraphicObject_HitTest"
-Dim failpoint As String
+
 On Error GoTo Err
 
 hitTestRect = mBoundingRectInViewport
@@ -506,7 +506,7 @@ End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
 Const ProcName As String = "IGraphicObject_SeriesID"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_SeriesID = mSeries.Id
@@ -535,7 +535,7 @@ End Property
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mLocalStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -605,7 +605,7 @@ End Sub
 
 Public Property Get ArrowEndColor() As Long
 Const ProcName As String = "ArrowEndColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndColor = mSeries.ArrowEndColor
@@ -620,7 +620,7 @@ End Property
 
 Public Property Let ArrowEndColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndColor = Value And IsPropertySet(LinePropertyArrowEndColor) Then Exit Property
@@ -636,7 +636,7 @@ End Property
 
 Public Property Get ArrowEndFillColor() As Long
 Const ProcName As String = "ArrowEndFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndFillColor = mSeries.ArrowEndFillColor
@@ -651,7 +651,7 @@ End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowEndFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndFillColor = Value And IsPropertySet(LinePropertyArrowEndFillColor) Then Exit Property
@@ -667,7 +667,7 @@ End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
 Const ProcName As String = "ArrowEndFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndFillStyle = mSeries.ArrowEndFillStyle
@@ -682,7 +682,7 @@ End Property
 
 Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowEndFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndFillStyle = Value And IsPropertySet(LinePropertyArrowEndFillStyle) Then Exit Property
@@ -698,7 +698,7 @@ End Property
 
 Public Property Get ArrowEndLength() As Long
 Const ProcName As String = "ArrowEndLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndLength = mSeries.ArrowEndLength
@@ -713,7 +713,7 @@ End Property
 
 Public Property Let ArrowEndLength(ByVal Value As Long)
 Const ProcName As String = "ArrowEndLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndLength = Value And IsPropertySet(LinePropertyArrowEndLength) Then Exit Property
@@ -729,7 +729,7 @@ End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
 Const ProcName As String = "ArrowEndStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndStyle = mSeries.ArrowEndStyle
@@ -744,7 +744,7 @@ End Property
 
 Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowEndStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndStyle = Value And IsPropertySet(LinePropertyArrowEndStyle) Then Exit Property
@@ -760,7 +760,7 @@ End Property
 
 Public Property Get ArrowEndWidth() As Long
 Const ProcName As String = "ArrowEndWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowEndWidth = mSeries.ArrowEndWidth
@@ -775,7 +775,7 @@ End Property
 
 Public Property Let ArrowEndWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowEndWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowEndWidth = Value And IsPropertySet(LinePropertyArrowEndWidth) Then Exit Property
@@ -791,7 +791,7 @@ End Property
 
 Public Property Get ArrowStartColor() As Long
 Const ProcName As String = "ArrowStartColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartColor = mSeries.ArrowStartColor
@@ -806,7 +806,7 @@ End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartColor = Value And IsPropertySet(LinePropertyArrowStartColor) Then Exit Property
@@ -822,7 +822,7 @@ End Property
 
 Public Property Get ArrowStartFillColor() As Long
 Const ProcName As String = "ArrowStartFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartFillColor = mSeries.ArrowStartFillColor
@@ -837,7 +837,7 @@ End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
 Const ProcName As String = "ArrowStartFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartFillColor = Value And IsPropertySet(LinePropertyArrowStartFillColor) Then Exit Property
@@ -853,7 +853,7 @@ End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
 Const ProcName As String = "ArrowStartFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartFillStyle = mSeries.ArrowStartFillStyle
@@ -868,7 +868,7 @@ End Property
 
 Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "ArrowStartFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartfillStyle = Value And IsPropertySet(LinePropertyArrowStartFillStyle) Then Exit Property
@@ -884,7 +884,7 @@ End Property
 
 Public Property Get ArrowStartLength() As Long
 Const ProcName As String = "ArrowStartLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartLength = mSeries.ArrowStartLength
@@ -899,7 +899,7 @@ End Property
 
 Public Property Let ArrowStartLength(ByVal Value As Long)
 Const ProcName As String = "ArrowStartLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartLength = Value And IsPropertySet(LinePropertyArrowStartLength) Then Exit Property
@@ -915,7 +915,7 @@ End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
 Const ProcName As String = "ArrowStartStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartStyle = mSeries.ArrowStartStyle
@@ -930,7 +930,7 @@ End Property
 
 Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
 Const ProcName As String = "ArrowStartStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartStyle = Value And IsPropertySet(LinePropertyArrowStartStyle) Then Exit Property
@@ -946,7 +946,7 @@ End Property
 
 Public Property Get ArrowStartWidth() As Long
 Const ProcName As String = "ArrowStartWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ArrowStartWidth = mSeries.ArrowStartWidth
@@ -961,7 +961,7 @@ End Property
 
 Public Property Let ArrowStartWidth(ByVal Value As Long)
 Const ProcName As String = "ArrowStartWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mArrowStartWidth = Value And IsPropertySet(LinePropertyArrowStartWidth) Then Exit Property
@@ -977,7 +977,7 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Color = mSeries.Color
@@ -992,7 +992,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mColor = Value And IsPropertySet(LinePropertyColor) Then Exit Property
@@ -1012,7 +1012,7 @@ End Property
 
 Public Property Get ExtendAfter() As Boolean
 Const ProcName As String = "ExtendAfter"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ExtendAfter = mSeries.ExtendAfter
@@ -1027,7 +1027,7 @@ End Property
 
 Public Property Let ExtendAfter(ByVal Value As Boolean)
 Const ProcName As String = "ExtendAfter"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mExtendAfter = Value And IsPropertySet(LinePropertyExtendAfter) Then Exit Property
@@ -1043,7 +1043,7 @@ End Property
 
 Public Property Get ExtendBefore() As Boolean
 Const ProcName As String = "ExtendBefore"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ExtendBefore = mSeries.ExtendBefore
@@ -1058,7 +1058,7 @@ End Property
 
 Public Property Let ExtendBefore(ByVal Value As Boolean)
 Const ProcName As String = "ExtendBefore"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mExtendBefore = Value And IsPropertySet(LinePropertyExtendBefore) Then Exit Property
@@ -1074,7 +1074,7 @@ End Property
 
 Public Property Get Extended() As Boolean
 Const ProcName As String = "Extended"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Extended = mSeries.Extended
@@ -1089,7 +1089,7 @@ End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mExtended = Value And IsPropertySet(LinePropertyExtended) Then Exit Property
@@ -1105,7 +1105,7 @@ End Property
 
 Public Property Get FixedX() As Boolean
 Const ProcName As String = "FixedX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FixedX = mSeries.FixedX
@@ -1120,7 +1120,7 @@ End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFixedX = Value And IsPropertySet(LinePropertyFixedX) Then Exit Property
@@ -1136,7 +1136,7 @@ End Property
 
 Public Property Get FixedY() As Boolean
 Const ProcName As String = "FixedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FixedY = mSeries.FixedY
@@ -1151,7 +1151,7 @@ End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFixedY = Value And IsPropertySet(LinePropertyFixedY) Then Exit Property
@@ -1175,7 +1175,7 @@ End Property
 
 Public Property Let Hidden(ByVal Value As Boolean)
 Const ProcName As String = "Hidden"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mHidden = Value Then Exit Property
@@ -1190,7 +1190,7 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
@@ -1205,7 +1205,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIncludeInAutoscale = Value And IsPropertySet(LinePropertyIncludeInAutoscale) Then Exit Property
@@ -1241,7 +1241,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mLayer = Value And IsPropertySet(LinePropertyLayer) Then Exit Property
@@ -1257,12 +1257,12 @@ End Property
 
 Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Layer = mSeries.Layer
-If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(TextPropertyLayer) Then Layer = mLocalStyle.Layer
-If IsPropertySet(TextPropertyLayer) Then Layer = mLayer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyLayer) Then Layer = mLocalStyle.Layer
+If IsPropertySet(LinePropertyLayer) Then Layer = mLayer
 
 Exit Property
 
@@ -1272,7 +1272,7 @@ End Property
 
 Public Property Get LineStyle() As LineStyles
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LineStyle = mSeries.LineStyle
@@ -1287,7 +1287,7 @@ End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
 Const ProcName As String = "LineStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mLineStyle = Value And IsPropertySet(LinePropertyLineStyle) Then Exit Property
@@ -1309,7 +1309,7 @@ Public Property Let LocalStyle( _
                 ByVal Value As LineStyle)
 
 Const ProcName As String = "LocalStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mLocalStyle = Value
@@ -1337,7 +1337,7 @@ End Property
 
 Public Property Let Offset1(ByVal Value As Size)
 Const ProcName As String = "Offset1"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -1372,7 +1372,7 @@ End Property
 
 Public Property Let Offset2(ByVal Value As Size)
 Const ProcName As String = "Offset2"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -1459,7 +1459,7 @@ End Property
 
 Public Property Get Thickness() As Long
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Thickness = mSeries.Thickness
@@ -1474,7 +1474,7 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mThickness = Value And IsPropertySet(LinePropertyThickness) Then Exit Property
@@ -1502,7 +1502,7 @@ End Property
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -1522,7 +1522,7 @@ Friend Sub Initialise( _
                 ByVal pLocalStyle As LineStyle)
                 
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSeries = pSeries
@@ -1590,7 +1590,7 @@ Private Sub adjustRectForLineThickness( _
 Dim lRect As GDI_RECT
 Dim t As Long
 Const ProcName As String = "adjustRectForLineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lRect = mViewport.ConvertTRectangleToRect(pTRect)
@@ -1613,7 +1613,7 @@ End Sub
 
 Private Sub calcBoundingRectInViewport()
 Const ProcName As String = "calcBoundingRectInviewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundingRectInViewport = calcBoundingRectForXInterval(RectGetXInterval(mViewport.Boundary))
@@ -1627,7 +1627,7 @@ End Sub
 Private Function calcBoundingRectForXInterval( _
                 ByRef pXInterval As TInterval) As TRectangle
 Const ProcName As String = "calcBoundingRectForXInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBlank Then Exit Function
@@ -1651,7 +1651,7 @@ End Function
 Private Function calcBoundingRectInXIntervalForLine( _
                 ByRef pXInterval As TInterval) As TRectangle
 Const ProcName As String = "calcBoundingRectInXIntervalForLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 calcBoundingRectInXIntervalForLine.isValid = True
@@ -1674,7 +1674,7 @@ End Function
 Private Sub calcConstants()
 
 Const ProcName As String = "calcConstants"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBlank Then Exit Sub
@@ -1721,7 +1721,7 @@ Private Sub calcCurrentBoundingRect()
 Dim lTInt As TInterval
 
 Const ProcName As String = "calcCurrentBoundingRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lTInt.startValue = MinusInfinityDouble
@@ -1741,7 +1741,7 @@ Dim hyp As Double
 Dim halfAngle As Double
 
 Const ProcName As String = "calcEndArrowConstants"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ArrowEndStyle = ArrowNone Then Exit Sub
@@ -1795,7 +1795,7 @@ Dim hyp As Double
 Dim halfAngle As Double
 
 Const ProcName As String = "calcStartArrowConstants"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ArrowStartStyle = ArrowNone Then Exit Sub
@@ -1848,7 +1848,7 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As LinePropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1880,7 +1880,7 @@ Dim includeStartArrow As Boolean
 Dim includeEndArrow As Boolean
 
 Const ProcName As String = "Draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBlank Or mHidden Then Exit Sub
@@ -1903,13 +1903,9 @@ Else
     End If
 End If
 
-failpoint = 2000
-
 If ArrowEndStyle <> ArrowNone And includeEndArrow Then
     drawArrowEnd Area
 End If
-
-failpoint = 2100
 
 If ArrowStartStyle <> ArrowNone And includeStartArrow Then
     drawArrowStart Area
@@ -1925,7 +1921,7 @@ Private Sub drawArrowEnd(ByRef Area As TRectangle)
 Dim vertices(2) As Point
 
 Const ProcName As String = "drawArrowEnd"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not RectOverlaps(mEndArrowRect, Area) Then Exit Sub
@@ -1982,7 +1978,7 @@ Private Sub drawArrowStart(ByRef Area As TRectangle)
 Dim vertices(2) As Point
 
 Const ProcName As String = "drawArrowStart"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not RectOverlaps(mStartArrowRect, Area) Then Exit Sub
@@ -2041,7 +2037,7 @@ Dim x2 As Double
 Dim vertices(3) As Point
 
 Const ProcName As String = "drawGeometricLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDrawingAttributes
@@ -2106,7 +2102,7 @@ Dim x1 As Double
 Dim x2 As Double
 
 Const ProcName As String = "DrawLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDrawingAttributes
@@ -2128,7 +2124,7 @@ Dim y1 As Double
 Dim y2 As Double
 
 Const ProcName As String = "drawVerticalLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), mX1) Then Exit Sub
@@ -2166,7 +2162,7 @@ End Sub
 
 Private Sub getCoordinatesLogical1()
 Const ProcName As String = "getCoordinatesLogical1"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPoint1 Is Nothing Then Exit Sub
@@ -2185,7 +2181,7 @@ End Sub
 
 Private Sub getCoordinatesLogical2()
 Const ProcName As String = "getCoordinatesLogical2"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPoint2 Is Nothing Then Exit Sub
@@ -2207,7 +2203,7 @@ Private Function getDomainInViewport( _
 Dim yRange As TInterval
 
 Const ProcName As String = "getDomainInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 getDomainInViewport.isValid = False
@@ -2230,7 +2226,7 @@ End Function
 
 Private Function getEndX() As Double
 Const ProcName As String = "getEndX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ExtendAfter Then
@@ -2255,7 +2251,7 @@ End Function
 
 Private Function getHorizontalTInterval() As TInterval
 Const ProcName As String = "getHorizontalTInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With getHorizontalTInterval
@@ -2294,7 +2290,7 @@ End Function
 
 Private Function getStartX() As Double
 Const ProcName As String = "getStartX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ExtendBefore Then
@@ -2319,7 +2315,7 @@ End Function
 
 Private Function getTruncatedViewportBoundary() As TRectangle
 Const ProcName As String = "getTruncatedViewportBoundary"
-Dim failpoint As String
+
 On Error GoTo Err
 
 getTruncatedViewportBoundary = mViewport.Boundary
@@ -2333,7 +2329,7 @@ End Function
 
 Private Function getVerticalTInterval() As TInterval
 Const ProcName As String = "getVerticalTInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With getVerticalTInterval
@@ -2371,7 +2367,7 @@ End Function
 
 Private Function getXIntervalInViewport() As TInterval
 Const ProcName As String = "getXIntervalInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 getXIntervalInViewport = IntIntersection(RectGetXInterval(mTruncatedViewportBoundary), _
@@ -2385,7 +2381,7 @@ End Function
 
 Private Function getYIntervalInViewport() As TInterval
 Const ProcName As String = "getYIntervalInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 getYIntervalInViewport = IntIntersection(RectGetYInterval(mTruncatedViewportBoundary), _
@@ -2409,7 +2405,7 @@ Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "initiateRedraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mHandle = 0 Then
@@ -2444,7 +2440,7 @@ End Sub
 Private Function InverseMapPoint( _
                 ByVal Y As Double) As Double
 Const ProcName As String = "InverseMapPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -2462,7 +2458,7 @@ End Function
 Private Function inverseMapRangeInterval( _
                 ByRef yRange As TInterval) As TInterval
 Const ProcName As String = "inverseMapRangeInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -2485,7 +2481,7 @@ End Function
 Private Function IsPropertySet( _
                 ByVal flag As LinePropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -2499,7 +2495,7 @@ End Function
 Private Function mapDomainInterval( _
                 ByRef xDomain As TInterval) As TInterval
 Const ProcName As String = "mapDomainInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -2519,7 +2515,7 @@ End Function
 Private Function mapPoint( _
                 ByVal X As Double) As Double
 Const ProcName As String = "mapPoint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -2554,7 +2550,7 @@ End Function
 
 Private Sub setDrawingAttributes()
 Const ProcName As String = "setDrawingAttributes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Thickness = 1 Then
@@ -2577,7 +2573,7 @@ End Sub
 
 Private Sub setDirection()
 Const ProcName As String = "setDirection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mX1 = mX2 Then
@@ -2620,7 +2616,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As LinePropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
@@ -2634,7 +2630,7 @@ End Sub
 Private Sub undraw()
 
 Const ProcName As String = "undraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mVisible Then Exit Sub

@@ -740,7 +740,7 @@ If index = mCurrentIndex Then mCurrentIndex = 0
 If nxtIndex <> 0 Then
     SelectChart nxtIndex
 Else
-    If Not mConfig Is Nothing Then mConfig.RemoveSetting (ConfigSettingCurrentChart)
+    If Not mConfig Is Nothing Then mConfig.RemoveSetting ConfigSettingCurrentChart
 End If
 
 fireChange MultiChartRemove
@@ -830,6 +830,8 @@ Set lTab = addTab(Nothing)
 lChart.LoadFromConfig chartSect, True
 
 lTab.caption = lChart.PeriodLength.ToShortString
+
+fireChange MultiChartAdd
 
 Exit Sub
 

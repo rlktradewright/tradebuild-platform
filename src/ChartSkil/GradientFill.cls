@@ -95,7 +95,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim mColors(0) As Long
@@ -116,7 +116,7 @@ Public Property Let Colors(ByRef Value() As Long)
 Dim numColors As Long
 
 Const ProcName As String = "Colors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -161,7 +161,7 @@ End Property
 Public Sub Fill( _
                 ByVal hDC As Long)
 Const ProcName As String = "Fill"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mRecalcRequired Then calculateGradientFillParameters
@@ -194,7 +194,7 @@ End Sub
 
 Private Sub calculateGradientFillParameters()
 Const ProcName As String = "calculateGradientFillParameters"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UBound(mColors)
@@ -264,7 +264,7 @@ Private Function calculateMidColor() As Long
 Dim sumColors As Currency
 Dim i As Long
 Const ProcName As String = "calculateMidColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To UBound(mColors)
@@ -283,7 +283,7 @@ Private Sub setMeshRect( _
                 ByVal upperLeft As Long, _
                 ByVal lowerRight As Long)
 Const ProcName As String = "setMeshRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMeshRect(index).lowerRight = lowerRight
@@ -301,7 +301,7 @@ Private Sub setMeshTriangle( _
                 ByVal vertex2 As Long, _
                 ByVal vertex3 As Long)
 Const ProcName As String = "setMeshTriangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMeshTriangle(index).vertex1 = vertex1
@@ -321,7 +321,7 @@ Private Sub setVertex( _
                 ByVal colorIndex As Long, _
                 Optional ByVal Color As Long = -1)
 Const ProcName As String = "setVertex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mVertices(index).X = X

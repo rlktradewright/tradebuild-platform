@@ -50,7 +50,6 @@ Private mYGridLines                                 As LineSeries
 Private mHidden                                     As Boolean
 
 Private mRegionRef                                  As WeakReference
-Private mYAxisRegionRef                             As WeakReference
 
 Private mPriceFormatter                             As IPriceFormatter
 
@@ -76,7 +75,7 @@ End Property
 
 Friend Property Let Hidden(ByVal Value As Boolean)
 Const ProcName As String = "Hidden"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mHidden = Value
@@ -104,7 +103,7 @@ End Property
 Friend Property Let TextStyle( _
                 ByVal Value As TextStyle)
 Const ProcName As String = "TextStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mYGridTexts Is Nothing Then mYGridTexts.Style = Value
@@ -117,13 +116,13 @@ End Property
 
 Friend Property Let YAxisRegion(ByVal Value As ChartRegion)
 Const ProcName As String = "YAxisRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then Exit Property
 
-Set mYAxisRegionRef = CreateWeakReference(Value)
-Set mYGridTexts = yAxisRegionObj.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
+Set mYGridTexts = Value.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
+mYGridTexts.Style = Value.YAxisTextStyle
 mYGridTexts.Align = AlignBoxCentreLeft
 
 Exit Property
@@ -138,7 +137,7 @@ End Property
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As String
+
 On Error GoTo Err
 
 removeLines
@@ -156,7 +155,7 @@ Friend Function Generate( _
                 ByVal pTop As Double, _
                 ByVal pGridlineSpacing As Double)
 Const ProcName As String = "Generate"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setHorizontalGridLines pBottom, pTop, pGridlineSpacing
@@ -171,7 +170,7 @@ End Function
 Friend Sub Initialise( _
                 ByVal pRegion As ChartRegion)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mRegionRef = CreateWeakReference(pRegion)
@@ -208,7 +207,7 @@ End Function
 Private Sub removeLines()
 Dim ln As ChartSkil26.Line
 Const ProcName As String = "removeLines"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each ln In mYGridLines
@@ -230,9 +229,10 @@ Dim i As Long
 Dim aLine As ChartSkil26.Line
 
 Const ProcName As String = "setHorizontalGridLines"
-Dim failpoint As String
+
 On Error GoTo Err
 
+If Not regionObj.HasGrid Then Exit Sub
 If mHidden Then Exit Sub
 
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
@@ -268,7 +268,7 @@ Dim i As Long
 Dim aText As Text
 
 Const ProcName As String = "setHorizontalGridTexts"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mYGridTexts Is Nothing Then Exit Sub
@@ -295,10 +295,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
-
-Private Function yAxisRegionObj() As ChartRegion
-Set yAxisRegionObj = mYAxisRegionRef.Target
-End Function
 
 
 

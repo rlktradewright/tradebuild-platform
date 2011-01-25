@@ -88,7 +88,7 @@ Dim et As ElapsedTimer
 Dim i As Long
 
 Const ProcName As String = "DeferredAction_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
 #If trace Then
@@ -106,34 +106,15 @@ Select Case mDeferredPaintAction
 Case DeferredPaintRepaintNone
 
 Case DeferredPaintRepaintChangedAreas
-
-    failpoint = 50
-    
     regionObj.RepaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
-
 Case DeferredPaintRepaintRegion
-    
-    failpoint = 300
-    
     regionObj.RepaintRegion
 Case DeferredPaintChangeGaugeandRepaint
-    
-    failpoint = 400
-    
     regionObj.ChangeGaugeAndRepaint
-    
 Case DeferredPaintScaleAndRepaint
-    
-    failpoint = 1000
-    
     regionObj.ScaleAndRepaint
-    
 Case DeferredPaintCalculateAndRepaint
-    
-    failpoint = 1200
-    
     regionObj.CalculateAndRepaint
-    
 End Select
 
 
@@ -166,7 +147,7 @@ End Sub
 'Friend Sub AddAreaToUndraw( _
 '                ByRef areaToUndraw As TRectangle)
 'Const ProcName As String = "AddAreaToUndraw"
-'Dim failpoint As String
+'
 'On Error GoTo Err
 '
 'Dim i As Long
@@ -199,7 +180,7 @@ Dim i As Long
 Dim handled As Boolean
 
 Const ProcName As String = "AddareaToRedraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 0 To mAreasToRedrawIndex
@@ -241,7 +222,7 @@ End Sub
 'Dim currRedrawArea As TRectangle
 '
 'Const ProcName As String = "AddChangedObject"
-'Dim failpoint As String
+'
 'On Error GoTo Err
 '
 'For i = 0 To mRedrawObjectsIndex
@@ -275,7 +256,7 @@ End Sub
 
 Friend Sub CalculateAndRepaint()
 Const ProcName As String = "CalculateAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintCalculateAndRepaint
@@ -288,7 +269,7 @@ End Sub
 
 Friend Sub ChangeGaugeAndRepaint()
 Const ProcName As String = "ChangeGaugeAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintChangeGaugeandRepaint
@@ -302,7 +283,7 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pRegion As ChartRegion)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mRegionRef = CreateWeakReference(pRegion)
@@ -316,7 +297,7 @@ End Sub
 
 Friend Sub RepaintRegion()
 Const ProcName As String = "RepaintRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintRepaintRegion
@@ -329,7 +310,7 @@ End Sub
 
 Friend Sub ScaleAndRepaint()
 Const ProcName As String = "ScaleAndRepaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 doDeferredPaint DeferredPaintScaleAndRepaint
@@ -346,7 +327,7 @@ End Sub
 
 Private Sub doDeferredPaint(ByVal action As DeferredPaintActions)
 Const ProcName As String = "DeferredPaint"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If action = DeferredPaintRepaintNone Then
@@ -396,7 +377,7 @@ End Sub
 
 Private Function regionObj() As ChartRegion
 Const ProcName As String = "regionObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set regionObj = mRegionRef.Target

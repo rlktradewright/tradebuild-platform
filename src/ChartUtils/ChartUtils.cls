@@ -87,18 +87,6 @@ Public Property Get ChartRegionNameUnderlying() As String
 ChartRegionNameUnderlying = RegionNameUnderlying
 End Property
 
-Public Property Get ChartStylesManager() As ChartStylesManager
-Const ProcName As String = "ChartStylesManager"
-On Error GoTo Err
-
-Set ChartStylesManager = gChartStylesManager
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================

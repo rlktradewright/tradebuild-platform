@@ -147,7 +147,7 @@ End Property
 
 Friend Property Let Chart(ByVal Value As Chart)
 Const ProcName As String = "Chart"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mChartRef = CreateWeakReference(Value)
@@ -162,18 +162,16 @@ Public Property Get Count() As Long
 Count = mNumRegionsInUse
 End Property
 
-Public Property Let DefaultDataRegionStyle( _
+Friend Property Let DefaultDataRegionStyle( _
                 ByVal Value As ChartRegionStyle)
-Set mDefaultDataRegionStyle = Value
-End Property
-
-Public Property Get DefaultDataRegionStyle() As ChartRegionStyle
+Dim lregion As ChartRegion
 Const ProcName As String = "DefaultDataRegionStyle"
-Dim failpoint As String
 On Error GoTo Err
 
-If mDefaultDataRegionStyle Is Nothing Then Set mDefaultDataRegionStyle = gDefaultChartRegionStyle.clone
-Set DefaultDataRegionStyle = mDefaultDataRegionStyle
+Set mDefaultDataRegionStyle = Value
+For Each lregion In Me
+    lregion.BaseStyle = mDefaultDataRegionStyle
+Next
 
 Exit Property
 
@@ -181,14 +179,21 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let DefaultYAxisRegionStyle( _
+Friend Property Let DefaultYAxisRegionStyle( _
                 ByVal Value As ChartRegionStyle)
-Set mDefaultYAxisRegionStyle = Value
-End Property
+Dim lregion As ChartRegion
+Const ProcName As String = "DefaultYAxisRegionStyle"
+On Error GoTo Err
 
-Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
-If mDefaultYAxisRegionStyle Is Nothing Then Set mDefaultYAxisRegionStyle = DefaultDataRegionStyle.clone
-Set DefaultYAxisRegionStyle = mDefaultYAxisRegionStyle
+Set mDefaultYAxisRegionStyle = Value
+For Each lregion In Me
+    lregion.YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 ''
@@ -206,7 +211,7 @@ Public Property Get Item(ByVal Name As String) As ChartRegion
 Attribute Item.VB_UserMemId = 0
 Attribute Item.VB_MemberFlags = "400"
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = findRegion(Name)
@@ -235,8 +240,8 @@ Public Function Add( _
                 Optional ByVal Name As String) As ChartRegion
 
 Dim YAxisRegion As ChartRegion
-Dim availableheight As Long
-Dim lRegion As ChartRegion
+Dim Availableheight As Long
+Dim lregion As ChartRegion
 
 
 '
@@ -245,13 +250,10 @@ Dim lRegion As ChartRegion
 '
 
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
-availableheight = chartObj.availableheight
-
-If Style Is Nothing Then Set Style = DefaultDataRegionStyle
-If yAxisStyle Is Nothing Then Set yAxisStyle = DefaultYAxisRegionStyle
+Availableheight = chartObj.Availableheight
 
 If Name <> "" Then
     If Contains(Name) Then
@@ -265,16 +267,17 @@ End If
 
 mRegionsIndex = mRegionsIndex + 1
 
-Set lRegion = New ChartRegion
-lRegion.handle = mRegionsIndex
+Set lregion = New ChartRegion
+lregion.handle = mRegionsIndex
 
-lRegion.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(lRegion.handle), RegionTypeData
+lregion.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(lregion.handle), RegionTypeData
 
-lRegion.MinimumPercentHeight = MinimumPercentHeight
-lRegion.PercentHeight = PercentHeight
-lRegion.Style = Style
+lregion.MinimumPercentHeight = MinimumPercentHeight
+lregion.PercentHeight = PercentHeight
+lregion.Style = Style
+lregion.BaseStyle = mDefaultDataRegionStyle
 
-Set mRegions(mRegionsIndex).Region = lRegion
+Set mRegions(mRegionsIndex).Region = lregion
 If PercentHeight <> 100 Then
     mRegions(mRegionsIndex).PercentHeight = mRegionHeightReductionFactor * PercentHeight
 Else
@@ -289,10 +292,11 @@ End If
 Set YAxisRegion = New ChartRegion
 YAxisRegion.handle = mRegionsIndex
 
-YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(lRegion.handle), RegionTypeYAxis
+YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(lregion.handle), RegionTypeYAxis
 
 YAxisRegion.Style = yAxisStyle
-lRegion.YAxisRegion = YAxisRegion
+YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
+lregion.YAxisRegion = YAxisRegion
 
 Set mRegions(mRegionsIndex).Region = YAxisRegion
 
@@ -300,10 +304,10 @@ mNumRegionsInUse = mNumRegionsInUse + 1
 
 If ResizeY(False) Then
     changed
-    fireChange CollItemAdded, lRegion
+    fireChange CollItemAdded, lregion
 Else
     ' can't fit this all in! So remove the added region,
-    Set lRegion = Nothing
+    Set lregion = Nothing
     Set mRegions(mRegionsIndex).Region = Nothing
     mRegions(mRegionsIndex).PercentHeight = 0
     mRegions(mRegionsIndex).useAvailableSpace = False
@@ -312,7 +316,7 @@ Else
     Exit Function
 End If
 
-Set Add = lRegion
+Set Add = lregion
 
 Exit Function
 
@@ -321,14 +325,14 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Function
 
 Public Function Contains(ByVal Name As String) As Boolean
-Dim lRegion As ChartRegion
+Dim lregion As ChartRegion
 
 Const ProcName As String = "Contains"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set lRegion = findRegion(Name)
-If Not lRegion Is Nothing Then Contains = True
+Set lregion = findRegion(Name)
+If Not lregion Is Nothing Then Contains = True
 
 Exit Function
 
@@ -343,7 +347,7 @@ End Sub
 
 Friend Function ItemFromHandle(ByVal pHandle As Long) As ChartRegion
 Const ProcName As String = "ItemFromHandle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ItemFromHandle = mRegions(pHandle).Region
@@ -365,7 +369,7 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set NewEnum = getEnumerator
@@ -379,7 +383,7 @@ End Function
 Public Sub Remove( _
                 ByVal pRegion As ChartRegion)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pRegion.IsXAxisRegion Or pRegion.IsYAxisRegion Then
@@ -416,14 +420,14 @@ Friend Function ResizeRegion( _
 Dim handle As Long
 Dim newHeight As Long
 Dim prevPercentHeight As Double
-Dim availableheight As Long
+Dim Availableheight As Long
 
 Const ProcName As String = "ResizeRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handle = pRegion.handle
-availableheight = chartObj.availableheight
+Availableheight = chartObj.Availableheight
 
 newHeight = pRegion.ActualHeight + vertChange
 If newHeight < 0 Then newHeight = 0
@@ -433,7 +437,7 @@ If newHeight < 0 Then newHeight = 0
 ' for the region to be resized.
 
 prevPercentHeight = mRegions(handle).PercentHeight
-mRegions(handle).PercentHeight = 100 * newHeight / availableheight
+mRegions(handle).PercentHeight = 100 * newHeight / Availableheight
 If mRegions(handle).useAvailableSpace Then
     ' this is a 'use available space' region that's being resized. Now change
     ' it to use a specific percentage
@@ -467,17 +471,15 @@ Dim numAvailableSpaceRegions As Long
 Dim totalMinimumPercents As Double
 Dim nonFixedAvailableSpacePercent As Double
 Dim availableSpacePercent As Double
-Dim availableheight As Long
+Dim Availableheight As Long
 
 Const ProcName As String = "ResizeY"
-Dim failpoint As String
-On Error GoTo Err
 
-failpoint = 100
+On Error GoTo Err
 
 availableSpacePercent = 100
 nonFixedAvailableSpacePercent = 100
-availableheight = chartObj.availableheight
+Availableheight = chartObj.Availableheight
 
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
@@ -498,9 +500,6 @@ If availableSpacePercent < 0 And userResizing Then
     ResizeY = False
     Exit Function
 End If
-
-
-failpoint = 200
 
 mRegionHeightReductionFactor = 1
 Do While availableSpacePercent < 0 And mRegionHeightReductionFactor >= 0.0625
@@ -541,9 +540,6 @@ Do While availableSpacePercent < 0 And mRegionHeightReductionFactor >= 0.0625
     End If
 Loop
 
-
-failpoint = 300
-
 If numAvailableSpaceRegions = 0 Then
     ' we must adjust the percentages on the other regions so they
     ' total 100.
@@ -555,20 +551,14 @@ If numAvailableSpaceRegions = 0 Then
 End If
 
 ' first set Heights for fixed Height regions
-
-failpoint = 400
-
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         If Not mRegions(i).useAvailableSpace Then
-            mRegions(i).Region.ActualHeight = mRegions(i).PercentHeight * availableheight / 100
+            mRegions(i).Region.ActualHeight = mRegions(i).PercentHeight * Availableheight / 100
             Debug.Assert mRegions(i).Region.ActualHeight >= 0
         End If
     End If
 Next
-
-
-failpoint = 500
 
 ' now set Heights for 'available space' regions with a minimum Height
 ' that needs to be respected
@@ -579,7 +569,7 @@ For i = 1 To mRegionsIndex Step 2
             mRegions(i).Region.ActualHeight = 0
             If aRegion.MinimumPercentHeight <> 0 Then
                 If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.MinimumPercentHeight Then
-                    mRegions(i).Region.ActualHeight = aRegion.MinimumPercentHeight * availableheight / 100
+                    mRegions(i).Region.ActualHeight = aRegion.MinimumPercentHeight * Availableheight / 100
                     Debug.Assert mRegions(i).Region.ActualHeight >= 0
                     nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.MinimumPercentHeight
                     numAvailableSpaceRegions = numAvailableSpaceRegions - 1
@@ -589,23 +579,17 @@ For i = 1 To mRegionsIndex Step 2
     End If
 Next
 
-
-failpoint = 600
-
 ' finally set Heights for all other 'available space' regions
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         If mRegions(i).useAvailableSpace And _
             mRegions(i).Region.ActualHeight = 0 _
         Then
-            mRegions(i).Region.ActualHeight = (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) * availableheight / 100
+            mRegions(i).Region.ActualHeight = (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) * Availableheight / 100
             Debug.Assert mRegions(i).Region.ActualHeight >= 0
         End If
     End If
 Next
-
-
-failpoint = 700
 
 ResizeY = True
 
@@ -625,7 +609,7 @@ End Sub
 
 Private Function chartObj() As Chart
 Const ProcName As String = "chartObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set chartObj = mChartRef.Target
@@ -641,7 +625,7 @@ Private Sub fireChange( _
                 ByVal affectedItem As Variant)
 Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -657,7 +641,7 @@ End Sub
 
 Private Function getEnumerator() As Enumerator
 Const ProcName As String = "getEnumerator"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set getEnumerator = CreateEnumerator(Me)
@@ -671,10 +655,10 @@ End Function
 Private Function findRegion( _
                 ByVal Name As String) As ChartRegion
 Dim en As Enumerator
-Dim lRegion As ChartRegion
+Dim lregion As ChartRegion
 
 Const ProcName As String = "findRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Name = UCase$(Name)
@@ -682,9 +666,9 @@ Name = UCase$(Name)
 Set en = getEnumerator
 
 Do While en.MoveNext
-    Set lRegion = en.Current
-    If UCase$(lRegion.Name) = Name Then
-        Set findRegion = lRegion
+    Set lregion = en.Current
+    If UCase$(lregion.Name) = Name Then
+        Set findRegion = lregion
         Exit Do
     End If
 Loop

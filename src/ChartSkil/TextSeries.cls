@@ -163,7 +163,7 @@ End Property
 
 Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
 Const ProcName As String = "IGraphicObjectSeries_item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set IGraphicObjectSeries_item = mTexts.Item(index)
@@ -180,7 +180,7 @@ End Property
 
 Private Sub IGraphicObjectSeries_Remove(ByVal index As Long)
 Const ProcName As String = "IGraphicObjectSeries_Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTexts.Remove index
@@ -195,7 +195,7 @@ Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
 Dim lText As ChartSkil26.Text
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 On Error Resume Next
@@ -211,7 +211,7 @@ End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
 Const ProcName As String = "IGraphicObjectSeries_Selected"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If RHS <> mIsSelected Then
@@ -248,7 +248,7 @@ End Sub
 
 Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -328,7 +328,7 @@ End Sub
 
 Public Property Get Align() As TextAlignModes
 Const ProcName As String = "Align"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Align = mBaseStyle.Align
@@ -343,7 +343,7 @@ End Property
 
 Public Property Let Align(ByVal Value As TextAlignModes)
 Const ProcName As String = "Align"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mAlign, TextPropertyAlign, Value
@@ -357,7 +357,7 @@ End Property
 
 Public Property Get Angle() As Double
 Const ProcName As String = "Angle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Angle = mBaseStyle.Angle
@@ -372,7 +372,7 @@ End Property
 
 Public Property Let Angle(ByVal Value As Double)
 Const ProcName As String = "Angle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDoubleProperty mAngle, TextPropertyAngle, Value
@@ -386,7 +386,7 @@ End Property
 
 Public Property Get Box() As Boolean
 Const ProcName As String = "Box"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Box = mBaseStyle.Box
@@ -401,7 +401,7 @@ End Property
 
 Public Property Let Box(ByVal Value As Boolean)
 Const ProcName As String = "Box"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mBox, TextPropertyBox, Value
@@ -415,7 +415,7 @@ End Property
 
 Public Property Get BoxColor() As Long
 Const ProcName As String = "BoxColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxColor = mBaseStyle.BoxColor
@@ -430,7 +430,7 @@ End Property
 
 Public Property Let BoxColor(ByVal Value As Long)
 Const ProcName As String = "BoxColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mBoxColor, TextPropertyBoxColor, Value
@@ -444,7 +444,7 @@ End Property
 
 Public Property Get BoxFillColor() As Long
 Const ProcName As String = "BoxFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxFillColor = mBaseStyle.BoxFillColor
@@ -459,7 +459,7 @@ End Property
 
 Public Property Let BoxFillColor(ByVal Value As Long)
 Const ProcName As String = "BoxFillColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mBoxFillColor, TextPropertyBoxFillColor, Value
@@ -473,7 +473,7 @@ End Property
 
 Public Property Get BoxFillStyle() As FillStyles
 Const ProcName As String = "BoxFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxFillStyle = mBaseStyle.BoxFillStyle
@@ -488,7 +488,7 @@ End Property
 
 Public Property Let BoxFillStyle(ByVal Value As FillStyles)
 Const ProcName As String = "BoxFillStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mBoxFillStyle, TextPropertyBoxFillStyle, Value
@@ -502,7 +502,7 @@ End Property
 
 Public Property Get BoxFillWithBackgroundColor() As Boolean
 Const ProcName As String = "BoxFillWithBackgroundColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxFillWithBackgroundColor = mBaseStyle.BoxFillWithBackgroundColor
@@ -517,7 +517,7 @@ End Property
 
 Public Property Let BoxFillWithBackgroundColor(ByVal Value As Boolean)
 Const ProcName As String = "BoxFillWithBackgroundColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mBoxFillWithBackgroundColor, TextPropertyBoxFillWithBackgroundColor, Value
@@ -531,7 +531,7 @@ End Property
 
 Public Property Get BoxStyle() As LineStyles
 Const ProcName As String = "BoxStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxStyle = mBaseStyle.BoxStyle
@@ -546,7 +546,7 @@ End Property
 
 Public Property Let BoxStyle(ByVal Value As LineStyles)
 Const ProcName As String = "BoxStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mBoxStyle, TextPropertyBoxStyle, Value
@@ -560,7 +560,7 @@ End Property
 
 Public Property Get BoxThickness() As Long
 Const ProcName As String = "BoxThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BoxThickness = mBaseStyle.BoxThickness
@@ -575,7 +575,7 @@ End Property
 
 Public Property Let BoxThickness(ByVal Value As Long)
 Const ProcName As String = "BoxThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mBoxThickness, TextPropertyBoxThickness, Value
@@ -589,7 +589,7 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Color = mBaseStyle.Color
@@ -604,7 +604,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mColor, TextPropertyColor, Value
@@ -618,7 +618,7 @@ End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Count = mTexts.Count
@@ -631,7 +631,7 @@ End Property
 
 Public Property Let Ellipsis(ByVal Value As EllipsisModes)
 Const ProcName As String = "Ellipsis"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mEllipsis, TextPropertyEllipsis, Value
@@ -645,7 +645,7 @@ End Property
 
 Public Property Get Ellipsis() As EllipsisModes
 Const ProcName As String = "Ellipsis"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Ellipsis = mBaseStyle.Ellipsis
@@ -660,7 +660,7 @@ End Property
 
 Public Property Let ExpandTabs(ByVal Value As Boolean)
 Const ProcName As String = "ExpandTabs"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mExpandTabs, TextPropertyExpandTabs, Value
@@ -674,7 +674,7 @@ End Property
 
 Public Property Get ExpandTabs() As Boolean
 Const ProcName As String = "ExpandTabs"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ExpandTabs = mBaseStyle.ExpandTabs
@@ -689,7 +689,7 @@ End Property
 
 Public Property Get Extended() As Boolean
 Const ProcName As String = "Extended"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Extended = mBaseStyle.Extended
@@ -704,7 +704,7 @@ End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
 Const ProcName As String = "Extended"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mExtended, TextPropertyExtended, Value
@@ -718,7 +718,7 @@ End Property
 
 Public Property Get FixedX() As Boolean
 Const ProcName As String = "FixedX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FixedX = mBaseStyle.FixedX
@@ -733,7 +733,7 @@ End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
 Const ProcName As String = "FixedX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mFixedX, TextPropertyFixedX, Value
@@ -747,7 +747,7 @@ End Property
 
 Public Property Get FixedY() As Boolean
 Const ProcName As String = "FixedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 FixedY = mBaseStyle.FixedY
@@ -762,7 +762,7 @@ End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
 Const ProcName As String = "FixedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mFixedY, TextPropertyFixedY, Value
@@ -776,7 +776,7 @@ End Property
 
 Public Property Get Font() As StdFont
 Const ProcName As String = "Font"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Font = mBaseStyle.Font
@@ -791,7 +791,7 @@ End Property
 
 Public Property Let Font(ByVal Value As StdFont)
 Const ProcName As String = "Font"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFont Is Value And IsPropertySet(TextPropertyFont) Then Exit Property
@@ -816,7 +816,7 @@ End Property
 
 Public Property Get HideIfBlank() As Boolean
 Const ProcName As String = "HideIfBlank"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HideIfBlank = mBaseStyle.HideIfBlank
@@ -831,7 +831,7 @@ End Property
 
 Public Property Let HideIfBlank(ByVal Value As Boolean)
 Const ProcName As String = "HideIfBlank"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mHideIfBlank, TextPropertyHideIfBlank, Value
@@ -845,7 +845,7 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
@@ -860,7 +860,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, TextPropertyIncludeInAutoscale, Value
@@ -874,7 +874,7 @@ End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
 Const ProcName As String = "IsSelectable"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mIsSelectable = Value
@@ -896,7 +896,7 @@ End Property
 
 Public Property Let Justification(ByVal Value As TextJustifyModes)
 Const ProcName As String = "Justification"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mJustification, TextPropertyJustification, Value
@@ -916,7 +916,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mLayer, TextPropertyLayer, Value
@@ -944,7 +944,7 @@ End Property
 
 Public Property Let LeftMargin(ByVal Value As Dimension)
 Const ProcName As String = "LeftMargin"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDimensionProperty mLeftMargin, TextPropertyLeftMargin, Value
@@ -972,7 +972,7 @@ End Property
 
 Public Property Let MultiLine(ByVal Value As Boolean)
 Const ProcName As String = "MultiLine"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mMultiLine, TextPropertyMultiLine, Value
@@ -986,7 +986,7 @@ End Property
 
 Public Property Get MultiLine() As Boolean
 Const ProcName As String = "MultiLine"
-Dim failpoint As String
+
 
 On Error GoTo Err
 
@@ -1002,7 +1002,7 @@ End Property
 
 Public Property Let Offset(ByVal Value As Size)
 Const ProcName As String = "Offset"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSizeProperty mOffset, TextPropertyOffset, Value
@@ -1016,7 +1016,7 @@ End Property
 
 Public Property Get Offset() As Size
 Const ProcName As String = "Offset"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Offset = mBaseStyle.Offset
@@ -1031,7 +1031,7 @@ End Property
 
 Public Property Get PaddingX() As Double
 Const ProcName As String = "PaddingX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PaddingX = mBaseStyle.PaddingX
@@ -1046,7 +1046,7 @@ End Property
 
 Public Property Let PaddingX(ByVal Value As Double)
 Const ProcName As String = "PaddingX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDoubleProperty mPaddingX, TextPropertyPaddingX, Value
@@ -1060,7 +1060,7 @@ End Property
 
 Public Property Get PaddingY() As Double
 Const ProcName As String = "PaddingY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 PaddingY = mBaseStyle.PaddingY
@@ -1075,7 +1075,7 @@ End Property
 
 Public Property Let PaddingY(ByVal Value As Double)
 Const ProcName As String = "PaddingY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDoubleProperty mPaddingY, TextPropertyPaddingY, Value
@@ -1089,7 +1089,7 @@ End Property
 
 Public Property Let RightMargin(ByVal Value As Dimension)
 Const ProcName As String = "RightMargin"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setDimensionProperty mRightMargin, TextPropertyRightMargin, Value
@@ -1117,7 +1117,7 @@ End Property
 
 Public Property Get Size() As Size
 Const ProcName As String = "Size"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Size = mBaseStyle.Size
@@ -1132,7 +1132,7 @@ End Property
 
 Public Property Let Size(ByVal Value As Size)
 Const ProcName As String = "Size"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSizeProperty mSize, TextPropertySize, Value
@@ -1154,7 +1154,7 @@ End Property
 
 Public Property Let Style(ByVal Value As TextStyle)
 Const ProcName As String = "Style"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -1176,7 +1176,7 @@ End Property
 
 Public Property Let TabWidth(ByVal Value As Long)
 Const ProcName As String = "TabWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mTabWidth, TextPropertyTabWidth, Value
@@ -1190,7 +1190,7 @@ End Property
 
 Public Property Get TabWidth() As Long
 Const ProcName As String = "TabWidth"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TabWidth = mBaseStyle.TabWidth
@@ -1205,7 +1205,7 @@ End Property
 
 Public Property Let WordWrap(ByVal Value As Boolean)
 Const ProcName As String = "WordWrap"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mWordWrap, TextPropertyWordWrap, Value
@@ -1219,7 +1219,7 @@ End Property
 
 Public Property Get WordWrap() As Boolean
 Const ProcName As String = "WordWrap"
-Dim failpoint As String
+
 On Error GoTo Err
 
 WordWrap = mBaseStyle.WordWrap
@@ -1242,7 +1242,7 @@ Public Function Add( _
 Const ProcName As String = "Add"
 Dim lText As Text
 
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1267,7 +1267,7 @@ End Function
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -1287,7 +1287,7 @@ End Sub
 Public Function Item(ByVal index As Variant) As Text
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mTexts(index)
@@ -1321,7 +1321,7 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As TextPropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1337,7 +1337,7 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -1353,7 +1353,7 @@ End Sub
 Private Function IsPropertySet( _
                 ByVal flag As TextPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -1367,7 +1367,7 @@ End Function
 Private Sub RepaintRegion( _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "RepaintRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTexts.Count <> 0 Then
@@ -1505,7 +1505,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As TextPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)

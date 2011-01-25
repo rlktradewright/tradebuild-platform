@@ -124,7 +124,7 @@ End Sub
 
 Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Const ProcName As String = "IGraphicObject_boundingRectangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBarSemiWidth
@@ -139,7 +139,7 @@ End Property
 
 Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
 Const ProcName As String = "IGraphicObject_BoundingRectangleInViewport"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_BoundingRectangleInViewport = IGraphicObject_boundingRectangle
@@ -160,7 +160,7 @@ End Property
 
 Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
 Const ProcName As String = "IGraphicObject_capabilities"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
@@ -184,7 +184,7 @@ Private Sub IGraphicObject_draw( _
 Dim i As Long
 
 Const ProcName As String = "IGraphicObject_draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 'For i = 0 To UBound(areas)
@@ -218,7 +218,7 @@ End Property
 
 Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
 Const ProcName As String = "IGraphicObject_HitTest"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
@@ -275,7 +275,7 @@ End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
 Const ProcName As String = "IGraphicObject_SeriesID"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IGraphicObject_SeriesID = mSeries.Id
@@ -317,7 +317,7 @@ End Property
 
 Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
 Const ProcName As String = "mLocalStyle_PropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case UCase$(ev.PropertyName)
@@ -361,7 +361,7 @@ End Sub
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -386,7 +386,7 @@ End Property
 
 Public Property Get Color() As Long
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Color = mSeries.Color
@@ -409,7 +409,7 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mDisplayMode = Value And IsPropertySet(BarPropertyDisplayMode) Then Exit Property
@@ -425,7 +425,7 @@ End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DisplayMode = mSeries.DisplayMode
@@ -444,7 +444,7 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -469,7 +469,7 @@ End Property
 
 Public Property Get DownColor() As Long
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DownColor = mSeries.DownColor
@@ -493,7 +493,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mIncludeInAutoscale = Value And IsPropertySet(BarPropertyIncludeInAutoscale) Then Exit Property
@@ -509,7 +509,7 @@ End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IncludeInAutoscale = mSeries.IncludeInAutoscale
@@ -545,7 +545,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mLayer = Value And IsPropertySet(BarPropertyLayer) Then Exit Property
@@ -561,7 +561,7 @@ End Property
 
 Public Property Get Layer() As LayerNumbers
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Layer = mSeries.Layer
@@ -581,7 +581,7 @@ End Property
 Public Property Let LocalStyle( _
                 ByVal Value As BarStyle)
 Const ProcName As String = "LocalStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mLocalStyleNoEvents = Value
@@ -606,7 +606,7 @@ End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mOutlineThickness = Value And IsPropertySet(BarPropertyOutlineThickness) Then Exit Property
@@ -622,7 +622,7 @@ End Property
 
 Public Property Get OutlineThickness() As Long
 Const ProcName As String = "OutlineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 OutlineThickness = mSeries.OutlineThickness
@@ -637,7 +637,7 @@ End Property
 
 Public Property Get PreviousBar() As Bar
 Const ProcName As String = "PreviousBar"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mPrevBarRef Is Nothing Then Exit Property
@@ -651,7 +651,7 @@ End Property
 
 Friend Property Let PreviousBar(ByVal Value As Bar)
 Const ProcName As String = "PreviousBar"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mPrevBarRef = CreateWeakReference(Value)
@@ -664,7 +664,7 @@ End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mSolidUpBody = Value And IsPropertySet(BarPropertySolidUpBody) Then Exit Property
@@ -680,7 +680,7 @@ End Property
 
 Public Property Get SolidUpBody() As Boolean
 Const ProcName As String = "SolidUpBody"
-Dim failpoint As String
+
 On Error GoTo Err
 
 SolidUpBody = mSeries.SolidUpBody
@@ -695,7 +695,7 @@ End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTailThickness = Value And IsPropertySet(BarPropertyTailThickness) Then Exit Property
@@ -711,7 +711,7 @@ End Property
 
 Public Property Get TailThickness() As Long
 Const ProcName As String = "TailThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TailThickness = mSeries.TailThickness
@@ -726,7 +726,7 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mThickness = Value And IsPropertySet(BarPropertyThickness) Then Exit Property
@@ -742,7 +742,7 @@ End Property
 
 Public Property Get Thickness() As Long
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Thickness = mSeries.Thickness
@@ -761,7 +761,7 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -786,7 +786,7 @@ End Property
 
 Public Property Get UpColor() As Long
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 UpColor = mSeries.UpColor
@@ -805,7 +805,7 @@ End Property
 
 Public Property Let Width(ByVal Value As Single)
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mWidth = Value And IsPropertySet(BarPropertyWidth) Then Exit Property
@@ -821,7 +821,7 @@ End Property
 
 Public Property Get Width() As Single
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Width = mSeries.Width
@@ -836,7 +836,7 @@ End Property
 
 Friend Property Let X(ByVal Value As Double)
 Const ProcName As String = "X"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mX = Value
@@ -858,7 +858,7 @@ End Property
 
 Public Sub ClearOverrides()
 Const ProcName As String = "ClearOverrides"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = 0
@@ -878,7 +878,7 @@ Friend Sub Initialise( _
                 ByVal pViewport As Viewport, _
                 ByVal pLocalStyle As BarStyle)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSeries = pSeries
@@ -902,7 +902,7 @@ Public Sub ResetStyle()
 ' reset the Style to the initial Style (ie the Style for the bar series) with no
 ' local modifications
 Const ProcName As String = "ResetStyle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mLocalStyle = Nothing
@@ -930,7 +930,7 @@ Dim clearRect As TRectangle
 Dim boundsChanged As Boolean
 
 Const ProcName As String = "Tick"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Price = mClose Then Exit Sub
@@ -1001,7 +1001,7 @@ Dim lRect As GDI_RECT
 Dim prevBar As Bar
 
 Const ProcName As String = "calcBoundingRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBlank Then
@@ -1045,7 +1045,7 @@ End Sub
 Private Sub ClearProperty( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
@@ -1058,7 +1058,7 @@ End Sub
 
 Private Sub Draw()
 Const ProcName As String = "Draw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 drawBar IIf(UpBar, UpColor, DownColor), _
@@ -1078,7 +1078,7 @@ Dim ThicknessScaleX As Double
 Dim ThicknessScaleY As Double
 
 Const ProcName As String = "drawBar"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mVisible Then Exit Sub
@@ -1189,7 +1189,7 @@ Dim lOutlineThickness As Long
 Dim wholeBody As Boolean
 
 Const ProcName As String = "drawBody"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If UpBar Then
@@ -1381,7 +1381,7 @@ End Sub
 Private Sub drawTail(ByVal Bottom As Double, ByVal Top As Double, ByVal Color As Long)
 Dim tailThicknessScaleX As Double
 Const ProcName As String = "drawTail"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCanvas.SetPenAttributes Color, _
@@ -1408,7 +1408,7 @@ Private Sub initiatePartialRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "initiatePartialRedraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If undrawCurrentImage Then undraw areaToUndraw
@@ -1428,7 +1428,7 @@ Private Sub initiateRedraw( _
                 ByVal undrawCurrentImage As Boolean, _
                 ByVal recalcBoundaries As Boolean)
 Const ProcName As String = "initiateRedraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 initiatePartialRedraw mBoundingRect, undrawCurrentImage, recalcBoundaries
@@ -1442,7 +1442,7 @@ End Sub
 Private Function IsPropertySet( _
                 ByVal flag As BarPropertyFlags) As Boolean
 Const ProcName As String = "IsPropertySet"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
@@ -1455,7 +1455,7 @@ End Function
 
 Private Function prevBarObj() As Bar
 Const ProcName As String = "prevBarObj"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set prevBarObj = mPrevBarRef.Target
@@ -1480,7 +1480,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
@@ -1493,7 +1493,7 @@ End Sub
 
 Private Sub undraw(ByRef Area As TRectangle)
 Const ProcName As String = "undraw"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mVisible Then Exit Sub

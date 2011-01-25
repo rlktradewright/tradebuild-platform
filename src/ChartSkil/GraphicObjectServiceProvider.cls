@@ -65,7 +65,7 @@ End Property
 Friend Sub AddGraphicObject( _
                 ByVal graphObj As IGraphicObject)
 Const ProcName As String = "AddGraphicObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_AddGraphicObject graphObj
@@ -83,7 +83,7 @@ End Sub
 Friend Sub ObjectChanged(ByVal handle As Long, _
                 ByRef areaToRedraw As TRectangle)
 Const ProcName As String = "ObjectChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_ObjectChanged handle, areaToRedraw
@@ -97,7 +97,7 @@ End Sub
 Friend Sub ObjectUndrawn(ByVal handle As Long, _
                 ByRef undrawnArea As TRectangle)
 Const ProcName As String = "ObjectUndrawn"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_ObjectUndrawn handle, undrawnArea
@@ -111,7 +111,7 @@ End Sub
 Friend Sub PaintRegion( _
                 ByVal recalculate As Boolean)
 Const ProcName As String = "PaintRegion"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_PaintRegion recalculate
@@ -125,7 +125,7 @@ End Sub
 Friend Sub RecalcBoundary( _
                 ByVal SeriesID As Long)
 Const ProcName As String = "RecalcBoundary"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_RecalcBoundary SeriesID
@@ -139,7 +139,7 @@ End Sub
 Friend Sub RemoveObject( _
                 ByVal handle As Long)
 Const ProcName As String = "RemoveObject"
-Dim failpoint As String
+
 On Error GoTo Err
 
 regionObj.GOSP_RemoveObject handle

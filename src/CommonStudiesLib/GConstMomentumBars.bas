@@ -161,7 +161,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "Bar volume"
     valueDef.DefaultRegion = StudyValueDefaultRegionCustom
     valueDef.ValueMode = ValueModeNone
-    valueDef.ValueStyle = gCreateDataPointStyle(DisplayMode:=DataPointDisplayModeHistogram)
+    valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H808080, DisplayMode:=DataPointDisplayModeHistogram)
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)

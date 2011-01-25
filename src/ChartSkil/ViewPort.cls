@@ -100,7 +100,7 @@ End Property
 
 Public Property Get BackColor() As Long
 Const ProcName As String = "BackColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BackColor = mGradientFill.Color
@@ -113,7 +113,7 @@ End Property
 
 Friend Property Let Bottom(ByVal Value As Double)
 Const ProcName As String = "Bottom"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Bottom = Value
@@ -131,7 +131,7 @@ End Property
 
 Public Property Get Bottom() As Double
 Const ProcName As String = "Bottom"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Bottom = mBoundary.Bottom
@@ -148,7 +148,7 @@ End Property
 
 Friend Property Let Canvas(ByRef Value As Canvas)
 Const ProcName As String = "Canvas"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mCanvas = Value
@@ -175,7 +175,7 @@ End Property
 
 Public Property Get GradientFillColors() As Long()
 Const ProcName As String = "GradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GradientFillColors = mGradientFill.Colors
@@ -189,7 +189,7 @@ End Property
 Friend Property Let GradientFillColors(ByRef Value() As Long)
 Dim ar() As Long
 Const ProcName As String = "GradientFillColors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ar = Value
@@ -203,7 +203,7 @@ End Property
 
 Friend Property Let Height(ByVal Value As Double)
 Const ProcName As String = "Height"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Bottom = mBoundary.Top - Value
@@ -219,7 +219,7 @@ End Property
 
 Public Property Get Height() As Double
 Const ProcName As String = "Height"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBoundary.Top = PlusInfinityDouble Or mBoundary.Bottom = PlusInfinityDouble Then
@@ -238,7 +238,7 @@ End Property
 
 Public Property Get HeightCm() As Double
 Const ProcName As String = "HeightCm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HeightCm = mCanvas.Height / TwipsPerCm
@@ -251,7 +251,7 @@ End Property
 
 Friend Property Let Left(ByVal Value As Double)
 Const ProcName As String = "Left"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Left = Value
@@ -268,7 +268,7 @@ End Property
 
 Public Property Get Left() As Double
 Const ProcName As String = "Left"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Left = mBoundary.Left
@@ -281,7 +281,7 @@ End Property
 
 Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
 Const ProcName As String = "MouseIcon"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCanvas.MouseIcon = Value
@@ -294,7 +294,7 @@ End Property
 
 Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
 Const ProcName As String = "MousePointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCanvas.MousePointer = Value
@@ -307,7 +307,7 @@ End Property
 
 Public Property Get MousePointer() As VBRUN.MousePointerConstants
 Const ProcName As String = "MousePointer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 MousePointer = mCanvas.MousePointer
@@ -332,7 +332,7 @@ End Property
 
 Friend Property Let Right(ByVal Value As Double)
 Const ProcName As String = "Right"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Right = Value
@@ -349,7 +349,7 @@ End Property
 
 Public Property Get Right() As Double
 Const ProcName As String = "Right"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Right = mBoundary.Right
@@ -362,7 +362,7 @@ End Property
 
 Friend Property Let Top(ByVal Value As Double)
 Const ProcName As String = "Top"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Top = Value
@@ -383,7 +383,7 @@ End Property
 
 Public Property Get Width() As Double
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mBoundary.Right = PlusInfinityDouble Or mBoundary.Left = PlusInfinityDouble Then
@@ -402,7 +402,7 @@ End Property
 
 Friend Property Let Width(ByVal Value As Double)
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mBoundary.Left = mBoundary.Right - Value
@@ -418,7 +418,7 @@ End Property
 
 Public Property Get WidthCm() As Double
 Const ProcName As String = "WidthCm"
-Dim failpoint As String
+
 On Error GoTo Err
 
 WidthCm = mCanvas.Width / TwipsPerCm
@@ -435,7 +435,7 @@ End Property
 
 Friend Sub Clear()
 Const ProcName As String = "Clear"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCanvas.Clear
@@ -451,7 +451,7 @@ Friend Function CompareTo( _
                 ByVal GaugeY As Double, _
                 ByRef pRect As TRectangle) As ViewportComparisonCodes
 Const ProcName As String = "CompareTo"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not pRect.isValid Or Not mBoundary.isValid Then
@@ -483,7 +483,7 @@ End Function
 
 Public Function ConvertCoordsLogicalToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertCoordsLogicalToPixelsX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ConvertCoordsLogicalToPixelsX = ConvertLogicalToPixelsX(Value - mBoundary.Left)
@@ -496,7 +496,7 @@ End Function
 
 Public Function ConvertCoordsLogicalToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertCoordsLogicalToPixelsY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ConvertCoordsLogicalToPixelsY = ConvertLogicalToPixelsY(mBoundary.Top - Value)
@@ -510,7 +510,7 @@ End Function
 
 Public Function ConvertCounterDistanceToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -529,7 +529,7 @@ End Function
 
 Public Function ConvertCounterDistanceToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -548,7 +548,7 @@ End Function
 
 Public Function ConvertCounterDistanceToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToLogicalX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -567,7 +567,7 @@ End Function
 
 Public Function ConvertCounterDistanceToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToLogicalY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -586,7 +586,7 @@ End Function
 
 Public Function ConvertCounterDistanceToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToRelativeX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -605,7 +605,7 @@ End Function
 
 Public Function ConvertCounterDistanceToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertCounterDistanceToRelativeY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -624,7 +624,7 @@ End Function
 
 Public Function ConvertDistanceToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToCounterDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -643,7 +643,7 @@ End Function
 
 Public Function ConvertDistanceToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToCounterDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -662,7 +662,7 @@ End Function
 
 Public Function ConvertDistanceToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToLogicalX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -681,7 +681,7 @@ End Function
 
 Public Function ConvertDistanceToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToLogicalY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -700,7 +700,7 @@ End Function
 
 Public Function ConvertDistanceToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertDistanceToPixelsX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -719,7 +719,7 @@ End Function
 
 Public Function ConvertDistanceToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertDistanceToPixelsY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -738,7 +738,7 @@ End Function
 
 Public Function ConvertDistanceToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToRelativeX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -757,7 +757,7 @@ End Function
 
 Public Function ConvertDistanceToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertDistanceToRelativeY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -775,7 +775,7 @@ End Function
 
 Public Function ConvertLogicalToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToCounterDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -794,7 +794,7 @@ End Function
 
 Public Function ConvertLogicalToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToCounterDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -813,7 +813,7 @@ End Function
 
 Public Function ConvertLogicalToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -832,7 +832,7 @@ End Function
 
 Public Function ConvertLogicalToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -851,7 +851,7 @@ End Function
 
 Public Function ConvertLogicalToPixelsX(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertLogicalToPixelsX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -865,12 +865,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
     End Function
 
 Public Function ConvertLogicalToPixelsY(ByVal Value As Double) As Long
 Const ProcName As String = "ConvertLogicalToPixelsY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -888,7 +888,7 @@ End Function
 
 Public Function ConvertLogicalToRelativeX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToRelativeX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -907,7 +907,7 @@ End Function
 
 Public Function ConvertLogicalToRelativeY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertLogicalToRelativeY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -926,7 +926,7 @@ End Function
 
 Public Function ConvertPixelsToDistanceX(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityLong Then
@@ -945,7 +945,7 @@ End Function
 
 Public Function ConvertPixelsToDistanceY(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityLong Then
@@ -964,7 +964,7 @@ End Function
 
 Public Function ConvertPixelsToLogicalX(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToLogicalX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityLong Then
@@ -984,7 +984,7 @@ End Function
 
 Public Function ConvertPixelsToLogicalY(ByVal Value As Long) As Double
 Const ProcName As String = "ConvertPixelsToLogicalY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityLong Then
@@ -1006,7 +1006,7 @@ Public Function ConvertPointsToWin32Points( _
                 ByRef points() As Point) As GDI_POINT()
 Dim GDI_POINTs() As GDI_POINT
 Const ProcName As String = "ConvertPointsToWin32Points"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim GDI_POINTs(UBound(points)) As GDI_POINT
@@ -1029,7 +1029,7 @@ Public Function ConvertRectToTRectangle( _
                 ByRef pRect As GDI_RECT) As TRectangle
 Dim lTRect As TRectangle
 Const ProcName As String = "ConvertRectToTRectangle"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pRect.Left = MinusInfinityLong Then
@@ -1069,7 +1069,7 @@ End Function
 
 Public Function ConvertRelativeToCounterDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToCounterDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1088,7 +1088,7 @@ End Function
 
 Public Function ConvertRelativeToCounterDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToCounterDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1107,7 +1107,7 @@ End Function
 
 Public Function ConvertRelativeToDistanceX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToDistanceX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1125,7 +1125,7 @@ End Function
 
 Public Function ConvertRelativeToDistanceY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToDistanceY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1144,7 +1144,7 @@ End Function
 
 Public Function ConvertRelativeToLogicalX(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToLogicalX"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1164,7 +1164,7 @@ End Function
 
 Public Function ConvertRelativeToLogicalY(ByVal Value As Double) As Double
 Const ProcName As String = "ConvertRelativeToLogicalY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value = PlusInfinityDouble Then
@@ -1187,7 +1187,7 @@ Public Function ConvertTRectangleToRect( _
 Dim lRect As GDI_RECT
 
 Const ProcName As String = "ConvertTRectangleToRect"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pTRect.Left = MinusInfinityDouble Then
@@ -1224,7 +1224,7 @@ End Function
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gLogger.Log "Viewport finished", ProcName, ModuleName, LogLevelHighDetail
@@ -1240,7 +1240,7 @@ End Sub
 Friend Sub NotifyResizedY()
 ' notifies that the physical Height of the Surface has changed.
 Const ProcName As String = "NotifyResizedY"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mBoundary.isValid Then Exit Sub
@@ -1254,7 +1254,7 @@ End Sub
 
 Public Sub PaintBackground()
 Const ProcName As String = "PaintBackground"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mGradientFill.Fill mCanvas.hDC
@@ -1294,7 +1294,7 @@ End Sub
 Friend Sub ZOrder( _
                 ByVal Position As Integer)
 Const ProcName As String = "ZOrder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCanvas.ZOrder Position
@@ -1308,7 +1308,7 @@ End Sub
 Public Sub UndrawArea( _
                 ByRef undrawnArea As TRectangle)
 Const ProcName As String = "UndrawArea"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Canvas.SetClippingRegion ConvertTRectangleToRect(undrawnArea)
@@ -1331,7 +1331,7 @@ Dim midPoint As Double
 Dim range As Double
 
 Const ProcName As String = "checkValidDimensions"
-Dim failpoint As String
+
 On Error GoTo Err
 
 RectValidate mBoundary
@@ -1359,7 +1359,7 @@ End Sub
 Private Sub setGradientFillArea()
 Dim lRect As GDI_RECT
 Const ProcName As String = "setGradientFillArea"
-Dim failpoint As String
+
 On Error GoTo Err
 
 lRect.Right = mCanvas.Width / Screen.TwipsPerPixelX
@@ -1374,7 +1374,7 @@ End Sub
 
 Private Sub SetScale()
 Const ProcName As String = "SetScale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mCanvas Is Nothing Then mCanvas.SetScale mBoundary

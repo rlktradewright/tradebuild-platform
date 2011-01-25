@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#254.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#255.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -361,7 +361,22 @@ Case MultiChartSelectionChanged
     End If
     Set mCurrentTool = Nothing
 Case MultiChartAdd
-
+    Dim lTitle As Text
+    Set lTitle = MultiChart1.BaseChartController(MultiChart1.Count).XAxisRegion.title
+    lTitle.Box = False
+    lTitle.position = NewPoint(0.1, 0.1, CoordsDistance, CoordsCounterDistance)
+    lTitle.FixedX = True
+    lTitle.FixedY = True
+    lTitle.Align = TextAlignModes.AlignTopLeft
+    lTitle.IncludeInAutoscale = False
+    lTitle.PaddingX = 0#
+    lTitle.Color = &H808080
+    lTitle.Layer = LayerBackground + 1
+    lTitle.Text = "Copyright TradeWright Software Systems " & Year(Now)
+    Dim lFont As New StdFont
+    lFont.name = "Arial"
+    lFont.Size = 7
+    lTitle.Font = lFont
 Case MultiChartRemove
     gUnsyncStudyPicker
 Case MultiChartChangeTypes.MultiChartPeriodLengthChanged

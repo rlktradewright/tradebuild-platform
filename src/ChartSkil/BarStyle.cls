@@ -129,7 +129,7 @@ End Property
 
 Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -161,7 +161,7 @@ End Property
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value Is Nothing Then
@@ -204,7 +204,7 @@ End Property
 
 Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
 Const ProcName As String = "DisplayMode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mDisplayMode, BarPropertyDisplayMode, Value
@@ -230,7 +230,7 @@ End Property
 
 Public Property Let DownColor(ByVal Value As Long)
 Const ProcName As String = "DownColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) And Value <> -1 Then _
@@ -261,7 +261,7 @@ End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
 Const ProcName As String = "IncludeInAutoscale"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mIncludeInAutoscale, BarPropertyIncludeInAutoscale, Value
@@ -287,7 +287,7 @@ End Property
 
 Public Property Let Layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Value < LayerMin Or Value > LayerMax Then _
@@ -337,7 +337,7 @@ End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
 Const ProcName As String = "OutlineThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mOutlineThickness, BarPropertyOutlineThickness, Value
@@ -363,7 +363,7 @@ End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
 Const ProcName As String = "SolidUpBody"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setBooleanProperty mSolidUpBody, BarPropertySolidUpBody, Value
@@ -389,7 +389,7 @@ End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
 Const ProcName As String = "TailThickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mTailThickness, BarPropertyTailThickness, Value
@@ -415,7 +415,7 @@ End Property
 
 Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setLongProperty mThickness, BarPropertyThickness, Value
@@ -441,7 +441,7 @@ End Property
 
 Public Property Let UpColor(ByVal Value As Long)
 Const ProcName As String = "UpColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not gIsValidColor(Value) Then _
@@ -472,7 +472,7 @@ End Property
 
 Public Property Let Width(ByVal Value As Single)
 Const ProcName As String = "Width"
-Dim failpoint As String
+
 On Error GoTo Err
 
 setSingleProperty mWidth, BarPropertyWidth, Value
@@ -503,7 +503,7 @@ End Property
 Public Sub ClearProperty( _
                 ByVal pPropFlag As BarPropertyFlags)
 Const ProcName As String = "ClearProperty"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
@@ -518,7 +518,7 @@ End Sub
 
 Public Function clone() As BarStyle
 Const ProcName As String = "Clone"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set clone = New BarStyle
@@ -550,7 +550,7 @@ End Function
 Public Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -585,7 +585,7 @@ End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -622,7 +622,7 @@ Private Sub firePropertyChanged( _
 Dim ev As PropertyChangedEventData
 
 Const ProcName As String = "firePropertyChanged"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
@@ -733,7 +733,7 @@ End Sub
 Private Sub setPropertyFlag( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "setPropertyFlag"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mPropertyFlags = gSetFlag(mPropertyFlags, flag)

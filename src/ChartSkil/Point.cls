@@ -105,7 +105,7 @@ End Function
 
 Public Function Equals(ByVal aPoint As Point) As Boolean
 Const ProcName As String = "Equals"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If aPoint Is Nothing Then Exit Function
@@ -143,7 +143,7 @@ End Sub
 Public Function XLogical( _
                 ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "XLogical"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case Me.CoordinateSystemX
@@ -168,7 +168,7 @@ End Function
 Public Property Get yLogical( _
                 ByVal pRegion As ChartRegion) As Double
 Const ProcName As String = "YLogical"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case Me.CoordinateSystemY

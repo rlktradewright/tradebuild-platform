@@ -44,8 +44,6 @@ Private Const ModuleName                            As String = "ChartStylesMana
 
 Private Const ConfigSectionChartStyle               As String = "ChartStyle"
 
-Private Const DefaultStyleName                      As String = "Platform Default"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -61,8 +59,16 @@ Private mConfig                                     As ConfigurationSection
 '@================================================================================
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
 Set mChartStyles = CreateSortedDictionary
 Set mDefaultStyle = addDefaultStyle
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -94,14 +100,14 @@ End Property
 '@================================================================================
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
 Dim lStyle As ChartStyle
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 
 If mConfig Is Nothing Then Exit Property
 
@@ -125,21 +131,25 @@ End Property
 
 Public Function Add( _
                 ByVal pName As String, _
-                Optional ByVal pTwipsPerPeriod As Long = 120, _
-                Optional ByVal pMinimumTicksHeight As Long = 10, _
+                ByVal pBasedOn As ChartStyle, _
                 Optional ByVal pDefaultRegionStyle As ChartRegionStyle, _
-                Optional ByVal pVolumeRegionStyle As ChartRegionStyle, _
                 Optional ByVal pXAxisRegionStyle As ChartRegionStyle, _
                 Optional ByVal pDefaultYAxisRegionStyle As ChartRegionStyle, _
-                Optional ByVal pBarsStyle As BarStyle, _
-                Optional ByVal pVolumeStyle As DataPointStyle) As ChartStyle
+                Optional ByVal pCrosshairLineStyle As LineStyle, _
+                Optional ByVal pXCursorTextStyle As TextStyle, _
+                Optional ByVal pTemporary As Boolean = False) As ChartStyle
 Const ProcName As String = "Add"
 On Error GoTo Err
 
+If pBasedOn Is Nothing Then Set pBasedOn = DefaultStyle
+
 Set Add = New ChartStyle
-Add.Initialise pName, pTwipsPerPeriod, pMinimumTicksHeight, pDefaultRegionStyle, pVolumeRegionStyle, pXAxisRegionStyle, pDefaultYAxisRegionStyle, pBarsStyle, pVolumeStyle
-addChartStyle Add
-addToConfig Add
+Add.Initialise pName, pBasedOn, pDefaultRegionStyle, pXAxisRegionStyle, pDefaultYAxisRegionStyle, pCrosshairLineStyle, pXCursorTextStyle
+
+If Not pTemporary Then
+    addChartStyle Add
+    addToConfig Add
+End If
 
 Exit Function
 
@@ -160,11 +170,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Public Function count() As Long
+Public Function Count() As Long
 Const ProcName As String = "Count"
 On Error GoTo Err
 
-count = mChartStyles.count
+Count = mChartStyles.Count
 
 Exit Function
 
@@ -194,6 +204,7 @@ Dim cs As ConfigurationSection
 Dim lStyle As ChartStyle
 
 mChartStyles.Remove DefaultStyleName
+Set mDefaultStyle = Nothing
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
@@ -204,7 +215,11 @@ For Each cs In mConfig
     addChartStyle lStyle
 Next
 
-If Not Contains(DefaultStyleName) Then addDefaultStyle
+If Contains(DefaultStyleName) Then
+    Set mDefaultStyle = Item(DefaultStyleName)
+Else
+    Set mDefaultStyle = addDefaultStyle
+End If
 
 Exit Sub
 
@@ -259,7 +274,8 @@ Private Function addDefaultStyle() As ChartStyle
 Const ProcName As String = "addDefaultStyle"
 On Error GoTo Err
 
-Set addDefaultStyle = Add(DefaultStyleName)
+Set addDefaultStyle = addChartStyle(gDefaultChartStyle)
+addToConfig addDefaultStyle
 
 Exit Function
 
