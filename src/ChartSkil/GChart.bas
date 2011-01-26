@@ -28,23 +28,24 @@ Option Explicit
 
 Private Const ModuleName                            As String = "GChart"
 
-Public Const ConfigSettingAutoscrolling                As String = "&Autoscrolling"
-Public Const ConfigSettingBasedOn                      As String = "&BasedOn"
-Public Const ConfigSettingChartBackColor               As String = "&ChartBackColor"
+Public Const ConfigSettingAutoscrolling                 As String = "&Autoscrolling"
+Public Const ConfigSettingBasedOn                       As String = "&BasedOn"
+Public Const ConfigSettingChartBackColor                As String = "&ChartBackColor"
 Public Const ConfigSettingHorizontalMouseScrollingAllowed    As String = "&HorizontalMouseScrollingAllowed"
-Public Const ConfigSettingHorizontalScrollBarVisible   As String = "&HorizontalScrollBarVisible"
-Public Const ConfigSettingTwipsPerPeriod               As String = "&TwipsPerPeriod"
+Public Const ConfigSettingHorizontalScrollBarVisible    As String = "&HorizontalScrollBarVisible"
+Public Const ConfigSettingStyle                         As String = "&Style"
+Public Const ConfigSettingTwipsPerPeriod                As String = "&TwipsPerPeriod"
 Public Const ConfigSettingVerticalMouseScrollingAllowed    As String = "&MouseScrollingAllowed"
-Public Const ConfigSettingXAxisVisible                 As String = "&XAxisVisible"
-Public Const ConfigSettingYAxisVisible                 As String = "&YAxisVisible"
-Public Const ConfigSettingYAxisWidthCm                 As String = "&yAxisWidthCm"
+Public Const ConfigSettingXAxisVisible                  As String = "&XAxisVisible"
+Public Const ConfigSettingYAxisVisible                  As String = "&YAxisVisible"
+Public Const ConfigSettingYAxisWidthCm                  As String = "&yAxisWidthCm"
 
 
-Public Const ConfigSectionCrosshairLineStyle           As String = "CrosshairLineStyle"
-Public Const ConfigSectionDefaultRegionStyle           As String = "DefaultRegionStyle"
-Public Const ConfigSectionDefaultYAxisRegionStyle      As String = "DefaultYAxisRegionStyle"
-Public Const ConfigSectionXAxisRegionStyle             As String = "XAxisRegionStyle"
-Public Const ConfigSectionXCursorTextStyle             As String = "XCursorTextStyle"
+Public Const ConfigSectionCrosshairLineStyle            As String = "CrosshairLineStyle"
+Public Const ConfigSectionDefaultRegionStyle            As String = "DefaultRegionStyle"
+Public Const ConfigSectionDefaultYAxisRegionStyle       As String = "DefaultYAxisRegionStyle"
+Public Const ConfigSectionXAxisRegionStyle              As String = "XAxisRegionStyle"
+Public Const ConfigSectionXCursorTextStyle              As String = "XCursorTextStyle"
 
 Public Const DefaultStyleName                       As String = "Platform Default"
 

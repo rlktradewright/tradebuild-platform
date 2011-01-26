@@ -63,11 +63,6 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Enums
 '================================================================================
 
-Public Enum LayerNumberRange
-    MinLayer = 0
-    MaxLayer = 255
-End Enum
-
 Public Enum RegionTypes
     RegionTypeData
     RegionTypeXAxis

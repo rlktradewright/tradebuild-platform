@@ -339,6 +339,9 @@ Else
     BarFormattersCombo.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).Selected = True
 End If
 
+BarFormattersCombo.SelStart = 0
+BarFormattersCombo.SelLength = 0
+
 BarFormattersCombo.Refresh
 
 Exit Sub

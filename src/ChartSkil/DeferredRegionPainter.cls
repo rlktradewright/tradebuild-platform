@@ -214,46 +214,6 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 
 End Sub
 
-'Friend Sub AddChangedObject( _
-'                ByVal graphObj As IGraphicObject, _
-'                ByRef areaToRedraw As TRectangle)
-'Dim i As Long
-'Dim handled As Boolean
-'Dim currRedrawArea As TRectangle
-'
-'Const ProcName As String = "AddChangedObject"
-'
-'On Error GoTo Err
-'
-'For i = 0 To mRedrawObjectsIndex
-'    If mRedrawObjects(i).graphObj Is graphObj Then
-'        currRedrawArea = mRedrawObjects(i).areaToRedraw
-'        mRedrawObjects(i).areaToRedraw = RectUnion(areaToRedraw, mRedrawObjects(i).areaToRedraw)
-'        If mRedrawObjects(i).areaToRedraw.isValid Then
-'            handled = True
-'        Else
-'            mRedrawObjects(i).areaToRedraw = currRedrawArea
-'        End If
-'    End If
-'Next
-'
-'If Not handled Then
-'    mRedrawObjectsIndex = mRedrawObjectsIndex + 1
-'    If mRedrawObjectsIndex > UBound(mRedrawObjects) Then
-'        ReDim Preserve mRedrawObjects(2 * (UBound(mRedrawObjects) + 1) - 1) As RedrawObjectsTableEntry
-'    End If
-'    Set mRedrawObjects(mRedrawObjectsIndex).graphObj = graphObj
-'    mRedrawObjects(mRedrawObjectsIndex).areaToRedraw = areaToRedraw
-'End If
-'
-'doDeferredPaint DeferredPaintRepaintChangedAreas
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-'End Sub
-
 Friend Sub CalculateAndRepaint()
 Const ProcName As String = "CalculateAndRepaint"
 

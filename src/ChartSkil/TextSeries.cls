@@ -289,7 +289,7 @@ Case "INCLUDEINAUTOSCALE"
 Case "JUSTIFICATION"
     RepaintRegion False
 Case "LAYER"
-    RepaintRegion False
+    RepaintRegion True
 Case "LEFTMARGIN"
     RepaintRegion True
 Case "MULTILINE"
@@ -920,7 +920,7 @@ Const ProcName As String = "Layer"
 On Error GoTo Err
 
 setLongProperty mLayer, TextPropertyLayer, Value
-RepaintRegion False
+RepaintRegion True
 
 Exit Property
 

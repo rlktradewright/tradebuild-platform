@@ -78,9 +78,9 @@ Begin VB.UserControl Chart
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   420
+      Height          =   450
       Left            =   0
-      ScaleHeight     =   420
+      ScaleHeight     =   450
       ScaleWidth      =   9390
       TabIndex        =   1
       Top             =   6960
@@ -968,8 +968,6 @@ If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.BackColor = Chart
 
 HScroll.Visible = HorizontalScrollBarVisible
 
-mRegions.ResizeY mUserResizingRegions
-
 XAxisPicture.Visible = XAxisVisible
 
 Dim lregion As ChartRegion
@@ -1612,7 +1610,9 @@ Const ProcName As String = "Style"
 On Error GoTo Err
 
 Set mStyle = Value
+If mStyle Is Nothing Then Set mStyle = gChartStylesManager.DefaultStyle
 mEPhost.Style = mStyle.ExtendedPropertyHost
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingStyle, mStyle.Name
 
 Exit Property
 
@@ -2115,6 +2115,12 @@ On Error GoTo Err
 
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
+
+If mConfig.GetSetting(ConfigSettingStyle, "") = "" Then
+    Style = gChartStylesManager.DefaultStyle
+Else
+    Style = gChartStylesManager(mConfig.GetSetting(ConfigSettingStyle))
+End If
 
 If mConfig.GetSetting(ConfigSettingAutoscrolling) <> "" Then Autoscrolling = mConfig.GetSetting(ConfigSettingAutoscrolling, "True")
 If mConfig.GetSetting(ConfigSettingChartBackColor) <> "" Then ChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(vbWhite))

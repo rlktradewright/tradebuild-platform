@@ -2811,6 +2811,11 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub getErrorMsg(ByVal version As Long)
+Const ProcName As String = "getErrorMsg"
+
+On Error GoTo Err
+
+Static sLostConnectionToIb As Boolean
 Dim id As Long
 Dim errorCode As Long
 Dim errorMsg As String
@@ -2819,10 +2824,6 @@ Dim index As Long
 Dim mapEntry As OrderIdMapEntry
 
 Dim failpoint As String
-Const ProcName As String = "getErrorMsg"
-
-On Error GoTo Err
-
 failpoint = "100"
 
 id = getLong("Id")
@@ -2894,6 +2895,8 @@ Case 165
 
     logMessage "Connected to IB Historical Market Data Service - " & errorMsg, pProcName:="getErrorMsg"
 Case 200    ' security definition not known
+    If sLostConnectionToIb Then Exit Sub
+    
     Select Case getIdType(id)
     Case IdTypeNone, IdTypeContractData
         ' this must relate to a RequestContract
@@ -3032,6 +3035,8 @@ Case 1100, 2110
     failpoint = "1300"
 
     ' connectivity between TWS and IB has been lost
+    
+    sLostConnectionToIb = True
     RaiseEvent ConnectionToIBClosed
     logMessage "Connection to IB has been lost", pProcName:="getErrorMsg"
     
@@ -3040,6 +3045,7 @@ Case 1101
     ' lost, so need to reestablish market data and market depth requests
     failpoint = "1400"
 
+    sLostConnectionToIb = False
     
     reEstablishMarketData False
     resetMarketDepth True
@@ -3062,6 +3068,8 @@ Case 1102
     ' Now need to reassociate order ids with tws
     failpoint = "1500"
 
+    sLostConnectionToIb = False
+    
     RequestOpenOrders
     
     ' Now make sure we're aware of any executions that occurred during

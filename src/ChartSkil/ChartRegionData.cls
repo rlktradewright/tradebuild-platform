@@ -47,7 +47,6 @@ End Type
 Private Type GraphicObjectTableEntry
     graphObj            As IGraphicObject
     PeriodNumber        As Long
-    Layer               As Byte
     Redraw              As Byte
     prevPeriodIndex     As Long
     nextPeriodIndex     As Long
@@ -97,7 +96,7 @@ Private mFirstInScopeIndex As Long
 Private mLastInScopeIndex As Long
 
 Private mVisibleCycle As Long
-Private mVisibleTable(MinLayer To MaxLayer) As VisibleTableEntry
+Private mVisibleTable(LayerMin To LayerMax) As VisibleTableEntry
 
 Private mFirstExtendedIndex As Long
 Private mLastExtendedIndex As Long
@@ -123,7 +122,7 @@ mLastExtendedIndex = allocateGraphicObjectTableEntry
 mGraphicObjects(mFirstExtendedIndex).nextExtendedIndex = mLastExtendedIndex
 mGraphicObjects(mLastExtendedIndex).prevExtendedIndex = mFirstExtendedIndex
 
-For i = MinLayer To MaxLayer
+For i = LayerMin To LayerMax
     mVisibleTable(i).firstIndex = allocateGraphicObjectTableEntry
     mVisibleTable(i).lastindex = allocateGraphicObjectTableEntry
 Next
@@ -244,10 +243,7 @@ End If
 
 graphObj.handle = handle
 
-With mGraphicObjects(handle)
-    Set .graphObj = graphObj
-    .Layer = graphObj.Layer
-End With
+Set mGraphicObjects(handle).graphObj = graphObj
 
 If graphObj.ExtendedObject Then
     addEntryToExtendedList handle
@@ -547,13 +543,13 @@ Const ProcName As String = "GetNextSelectableObjectOrSeriesAtPoint"
 On Error GoTo Err
 
 If currObject Is Nothing Then
-    startLayer = MaxLayer
+    startLayer = LayerMax
 Else
     startLayer = currObject.Layer
 End If
 
-For i = MinLayer To MaxLayer
-    currLayer = (startLayer - i + MaxLayer + 1) Mod (MaxLayer + 1)
+For i = LayerMinVisible To LayerMax
+    currLayer = (startLayer - i + LayerMax + 1) Mod (LayerMax + 1)
     index = mGraphicObjects(mVisibleTable(currLayer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(currLayer).lastindex
         With mGraphicObjects(index)
@@ -607,7 +603,7 @@ If Layer = -1 Then
         lNextLayer = lNextLayer + 1
     End If
 Else
-    If Layer < MinLayer Or Layer > MaxLayer Then
+    If Layer < LayerMin Or Layer > LayerMax Then
         GetNextUserLayer = GetNextUserLayer(-1)
     Else
         GetNextUserLayer = Layer
@@ -652,7 +648,7 @@ On Error GoTo Err
 
 ' mark objects that overlap the redraw area
 
-For Layer = MinLayer To MaxLayer
+For Layer = LayerMinVisible To LayerMax
     index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
@@ -689,7 +685,7 @@ Const ProcName As String = "PaintAllVisibleObjects"
 
 On Error GoTo Err
 
-For i = MinLayer To MaxLayer
+For i = LayerMinVisible To LayerMax
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
@@ -721,7 +717,7 @@ Const ProcName As String = "PaintMarkedObjects"
 
 On Error GoTo Err
 
-For i = MinLayer To MaxLayer
+For i = LayerMinVisible To LayerMax
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
@@ -752,7 +748,7 @@ Const ProcName As String = "RecalcBoundaryForObjectsInSeries"
 
 On Error GoTo Err
 
-For i = MinLayer To MaxLayer
+For i = LayerMinVisible To LayerMax
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
@@ -787,7 +783,7 @@ On Error GoTo Err
 
 Dim rects(0) As TRectangle
 
-For Layer = startLayer To MaxLayer
+For Layer = startLayer To LayerMax
     index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(Layer).lastindex
         With mGraphicObjects(index)
@@ -864,13 +860,7 @@ If Not graphObj.BoundingRectangle.isValid Then
     removeEntryFromVisibleList handle
 End If
 
-With mGraphicObjects(handle)
-    
-    ' get the new properties for the changed object
-    
-    If .Layer <> graphObj.Layer Then removeEntryFromVisibleList handle
-    .Layer = graphObj.Layer
-End With
+removeEntryFromVisibleList handle
 
 If graphObj.ExtendedObject Then
     removeEntryFromPeriodList handle
@@ -886,11 +876,7 @@ End If
 
 If graphicObjectIsInScope(handle) Then
     addEntryToInScopeList handle
-    If graphicObjectIsVisible(handle) Then
-        addEntryToVisibleList handle
-    Else
-        removeEntryFromVisibleList handle
-    End If
+    If graphicObjectIsVisible(handle) Then addEntryToVisibleList handle
 Else
     removeEntryFromInScopeList handle
     UpdateGraphicObject = False
@@ -1002,7 +988,7 @@ With mGraphicObjects(index)
     If .visibleCycle <> mVisibleCycle Then
         .graphObj.Visible = True
         .visibleCycle = mVisibleCycle
-        lastindex = mVisibleTable(.Layer).lastindex
+        lastindex = mVisibleTable(.graphObj.Layer).lastindex
         .nextVisibleIndex = lastindex
         .prevVisibleIndex = mGraphicObjects(lastindex).prevVisibleIndex
         mGraphicObjects(.prevVisibleIndex).nextVisibleIndex = index
@@ -1169,7 +1155,7 @@ Const ProcName As String = "clearVisibleObjectList"
 
 On Error GoTo Err
 
-For i = MinLayer To MaxLayer
+For i = LayerMin To LayerMax
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
@@ -1457,7 +1443,7 @@ On Error GoTo Err
 
 mVisibleCycle = mVisibleCycle + 1
 
-For i = MinLayer To MaxLayer
+For i = LayerMin To LayerMax
     mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex = mVisibleTable(i).lastindex
     mGraphicObjects(mVisibleTable(i).lastindex).prevVisibleIndex = mVisibleTable(i).firstIndex
 Next

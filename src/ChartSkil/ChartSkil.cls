@@ -133,19 +133,18 @@ Public Enum FillStyles
 End Enum
 
 Public Enum LayerNumbers
-    LayerMin = LayerNumberRange.MinLayer
-    LayerBackground = LayerNumberRange.MinLayer
-    LayerGrid = LayerNumberRange.MinLayer + 5
-    LayerGridText = LayerGrid + 3
-    LayerLowestUser = LayerNumberRange.MinLayer + 10
-'    LayerDefaultBars
-'    LayerDefaultDataPoints
-'    LayerDefaultLines
-'    LayerDefaultTexts
-    LayerHighestUser = LayerNumberRange.MaxLayer - 10
-    LayerTitle = LayerNumberRange.MaxLayer - 5
-    LayerPointer = LayerNumberRange.MaxLayer - 2
-    LayerMax = LayerNumberRange.MaxLayer
+    LayerMin = 0
+    LayerMax = 255
+    
+    LayerInvisible = LayerMin
+    LayerMinVisible = LayerInvisible + 1
+    LayerBackground = LayerMinVisible
+    LayerGrid = LayerMinVisible + 5
+    LayerGridText = LayerGrid + 5
+    LayerLowestUser = LayerGridText + 10
+    LayerHighestUser = LayerMax - 10
+    LayerTitle = LayerMax - 5
+    LayerPointer = LayerMax - 2
 End Enum
 
 Public Enum LinePropertyFlags

@@ -658,7 +658,6 @@ mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 
 TimeframeSelector1.Initialise
-'TimeframeSelector1.selectTimeframe mSpec.Timeframe
 
 storeSettings
 

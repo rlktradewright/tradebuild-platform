@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#255.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#256.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -60,6 +60,7 @@ Begin VB.Form fChart
       Width           =   12525
       _ExtentX        =   22093
       _ExtentY        =   688
+      BandCount       =   4
       BackColor       =   -2147483638
       _CBWidth        =   12525
       _CBHeight       =   390
@@ -72,27 +73,42 @@ Begin VB.Form fChart
       UseCoolbarColors1=   0   'False
       NewRow1         =   0   'False
       Child2          =   "BarFormatterPicker"
-      MinWidth2       =   1800
+      MinWidth2       =   900
       MinHeight2      =   330
-      Width2          =   1800
+      Width2          =   1500
       NewRow2         =   0   'False
-      Child3          =   "ChartNavToolbar1"
-      MinWidth3       =   6465
+      Child3          =   "ChartStylePicker"
       MinHeight3      =   330
-      Width3          =   6465
+      Width3          =   1500
       NewRow3         =   0   'False
+      Child4          =   "ChartNavToolbar1"
+      MinWidth4       =   6465
+      MinHeight4      =   330
+      Width4          =   6465
+      NewRow4         =   0   'False
+      Begin TradeBuildUI26.ChartStylePicker ChartStylePicker 
+         Height          =   330
+         Left            =   3630
+         TabIndex        =   5
+         ToolTipText     =   "Change the chart style"
+         Top             =   30
+         Width           =   1305
+         _ExtentX        =   2302
+         _ExtentY        =   582
+      End
       Begin TradeBuildUI26.BarFormatterPicker BarFormatterPicker 
          Height          =   330
          Left            =   2100
          TabIndex        =   4
+         ToolTipText     =   "Change the bar formatting"
          Top             =   30
-         Width           =   1800
-         _ExtentX        =   3175
+         Width           =   1305
+         _ExtentX        =   2302
          _ExtentY        =   582
       End
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   4125
+         Left            =   5160
          TabIndex        =   2
          Top             =   30
          Width           =   6465
@@ -257,9 +273,8 @@ On Error GoTo Err
 MultiChart1.Finish
 If mIsHistorical Then
     Dim lTicker As Ticker
-    Set lTicker = mTicker
+    If Not mTicker Is Nothing Then mTicker.StopTicker
     Set mTicker = Nothing
-    lTicker.StopTicker
 End If
 gUnsyncStudyPicker
 
@@ -335,7 +350,14 @@ End Sub
 
 Private Sub CoolBar1_HeightChanged(ByVal NewHeight As Single)
 Const ProcName As String = "CoolBar1_HeightChanged"
+On Error GoTo Err
+
 Resize
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEventData)
@@ -372,7 +394,7 @@ Case MultiChartAdd
     lTitle.PaddingX = 0#
     lTitle.Color = &H808080
     lTitle.Layer = LayerBackground + 1
-    lTitle.Text = "Copyright TradeWright Software Systems " & Year(Now)
+    lTitle.Text = "© " & Year(Now) & " Copyright TradeWright Software Systems"
     Dim lFont As New StdFont
     lFont.name = "Arial"
     lFont.Size = 7
@@ -609,6 +631,7 @@ End If
 
 ChartNavToolbar1.initialise , MultiChart1
 BarFormatterPicker.initialise , MultiChart1
+ChartStylePicker.initialise , MultiChart1
 
 Set mTicker = MultiChart1.Ticker
 If Not mIsHistorical Then getInitialTickerValues
@@ -649,6 +672,7 @@ MultiChart1.Add pPeriodLength
 
 ChartNavToolbar1.initialise , MultiChart1
 BarFormatterPicker.initialise , MultiChart1
+ChartStylePicker.initialise , MultiChart1
 
 setCaption
 

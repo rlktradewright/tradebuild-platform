@@ -269,7 +269,7 @@ Case "FIXEDY"
 Case "INCLUDEINAUTOSCALE"
     RepaintRegion True
 Case "LAYER"
-    RepaintRegion False
+    RepaintRegion True
 Case "LINESTYLE"
     RepaintRegion False
 Case "OFFSET1"
@@ -906,7 +906,7 @@ Const ProcName As String = "Layer"
 On Error GoTo Err
 
 setLongProperty mLayer, LinePropertyLayer, Value
-RepaintRegion False
+RepaintRegion True
 
 Exit Property
 

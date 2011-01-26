@@ -182,10 +182,10 @@ Private WithEvents mGridLineStyle                   As LineStyle
 Attribute mGridLineStyle.VB_VarHelpID = -1
 Private WithEvents mGridTextStyle                   As TextStyle
 Attribute mGridTextStyle.VB_VarHelpID = -1
-Private WithEvents mSessionEndGridLineStyle         As LineStyle
-Attribute mSessionEndGridLineStyle.VB_VarHelpID = -1
-Private WithEvents mSessionStartGridLineStyle       As LineStyle
-Attribute mSessionStartGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionEndGridlineStyle         As LineStyle
+Attribute mSessionEndGridlineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionStartGridlineStyle       As LineStyle
+Attribute mSessionStartGridlineStyle.VB_VarHelpID = -1
 Private WithEvents mYAxisTextStyle                  As TextStyle
 Attribute mYAxisTextStyle.VB_VarHelpID = -1
 Private WithEvents mYCursorTextStyle                As TextStyle
@@ -198,6 +198,9 @@ Private mPaintingInProgress                         As Boolean
 Private mPriceFormatter                             As IPriceFormatter
 
 Private mHorizontalGridSpacer                       As HorizontalGridSpacer
+
+Private mSessStartGridlineStyle                     As LineStyle
+Private mSessEndGridlineStyle                       As LineStyle
 
 '================================================================================
 ' Class Event Handlers
@@ -1289,7 +1292,7 @@ Const ProcName As String = "SessionEndGridLineStyle"
 On Error GoTo Err
 
 If IsPropertySet(SessionEndGridLineStyleIsSet) Then
-    Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+    Set SessionEndGridLineStyle = mSessionEndGridlineStyle
 ElseIf Not mStyle Is Nothing Then
     Set SessionEndGridLineStyle = mStyle.SessionEndGridLineStyle
 Else
@@ -1307,9 +1310,9 @@ Const ProcName As String = "SessionEndGridLineStyle"
 
 On Error GoTo Err
 
-If mSessionEndGridLineStyle Is Value And IsPropertySet(SessionEndGridLineStyleIsSet) Then Exit Property
-Set mSessionEndGridLineStyle = Value
-If mSessionEndGridLineStyle Is Nothing Then
+If mSessionEndGridlineStyle Is Value And IsPropertySet(SessionEndGridLineStyleIsSet) Then Exit Property
+Set mSessionEndGridlineStyle = Value
+If mSessionEndGridlineStyle Is Nothing Then
     ClearProperty SessionEndGridLineStyleIsSet
 Else
     setPropertyFlag SessionEndGridLineStyleIsSet
@@ -1328,7 +1331,7 @@ Const ProcName As String = "SessionStartGridLineStyle"
 On Error GoTo Err
 
 If IsPropertySet(SessionStartGridLineStyleIsSet) Then
-    Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+    Set SessionStartGridLineStyle = mSessionStartGridlineStyle
 ElseIf Not mStyle Is Nothing Then
     Set SessionStartGridLineStyle = mStyle.SessionStartGridLineStyle
 Else
@@ -1346,9 +1349,9 @@ Const ProcName As String = "SessionStartGridLineStyle"
 
 On Error GoTo Err
 
-If mSessionStartGridLineStyle Is Value And IsPropertySet(SessionStartGridLineStyleIsSet) Then Exit Property
-Set mSessionStartGridLineStyle = Value
-If mSessionStartGridLineStyle Is Nothing Then
+If mSessionStartGridlineStyle Is Value And IsPropertySet(SessionStartGridLineStyleIsSet) Then Exit Property
+Set mSessionStartGridlineStyle = Value
+If mSessionStartGridlineStyle Is Nothing Then
     ClearProperty SessionStartGridLineStyleIsSet
 Else
     setPropertyFlag SessionStartGridLineStyleIsSet
@@ -1691,7 +1694,7 @@ Const ProcName As String = "AddPeriod"
 On Error GoTo Err
 
 mData.AddPeriod pPeriodNumber, pTimestamp
-If CDbl(pTimestamp) <> 0 Then setVerticalGridLine pTimestamp, pPeriodNumber, False
+If CDbl(pTimestamp) <> 0 Then setVerticalGridLineAndText pTimestamp, pPeriodNumber, False
 
 Exit Sub
 
@@ -1707,7 +1710,7 @@ Const ProcName As String = "AddSessionEndGridline"
 
 On Error GoTo Err
 
-addStyledVerticalGridline pPeriodNumber, pTimestamp, SessionEndGridLineStyle
+addStyledVerticalGridline pPeriodNumber, pTimestamp, mSessEndGridlineStyle
 
 Exit Sub
 
@@ -1722,7 +1725,7 @@ Const ProcName As String = "AddSessionStartGridline"
 
 On Error GoTo Err
 
-addStyledVerticalGridline pPeriodNumber, pTimestamp, SessionStartGridLineStyle
+addStyledVerticalGridline pPeriodNumber, pTimestamp, mSessStartGridlineStyle
 
 Exit Sub
 
@@ -2276,7 +2279,7 @@ With mViewport
     periodrect.isValid = True
 End With
     
-mData.RedrawArea periodrect, LayerNumbers.LayerMin
+mData.RedrawArea periodrect, LayerNumbers.LayerMinVisible
 
 Exit Sub
 
@@ -2443,7 +2446,7 @@ On Error GoTo Err
 ' redraw objects in the undrawn area, preserving layering
 If mIsDrawingEnabled And undrawnArea.isValid Then
     mViewport.UndrawArea undrawnArea
-    RedrawArea undrawnArea, MinLayer, objToExclude
+    RedrawArea undrawnArea, LayerMinVisible, objToExclude
     
 End If
 
@@ -2468,7 +2471,7 @@ On Error GoTo Err
 
 Dim lLine As ChartSkil26.Line
 
-Set lLine = setVerticalGridLine(pTimestamp, pPeriodNumber, True)
+Set lLine = setVerticalGridLineAndText(pTimestamp, pPeriodNumber, True)
 If Not lLine Is Nothing Then lLine.LocalStyle = pStyle
 
 Exit Sub
@@ -2490,8 +2493,6 @@ Set vGridText = mXGridTexts.Item(pLabels.Key)
 On Error GoTo Err
 If vGridText Is Nothing Then
     Set vGridText = mXGridTexts.Add(pLabels.Key)
-    vGridText.FixedX = False
-    vGridText.FixedY = True
     vGridText.Position = gNewPoint(pLabels.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
@@ -2504,8 +2505,6 @@ Set vGridTextCoarse = mXGridTextsCoarse.Item(pLabels.CoarseKey)
 On Error GoTo Err
 If vGridTextCoarse Is Nothing Then
     Set vGridTextCoarse = mXGridTextsCoarse.Add(pLabels.CoarseKey)
-    vGridTextCoarse.FixedX = False
-    vGridTextCoarse.FixedY = True
     vGridTextCoarse.Position = gNewPoint(pLabels.PeriodNumber - 0.5, _
                                 0#, _
                                 CoordsLogical, _
@@ -2833,7 +2832,7 @@ On Error GoTo Err
 
 drawAreas(0) = RectIntersection(mViewport.Boundary, areaToRedraw)
 
-graphObj.Draw drawAreas
+If graphObj.Layer <> LayerInvisible Then graphObj.Draw drawAreas
 
 Exit Sub
 
@@ -3232,6 +3231,8 @@ setHasGrid
 setHasGridText
 setGridTextStyle
 setGridlineSpacingY
+setSessionEndGridLineStyle
+setSessionStartGridLineStyle
 If Not IsXAxisRegion And Not IsYAxisRegion Then
     setAutoscaling
     setIntegerYScale
@@ -3452,10 +3453,10 @@ On Error GoTo Err
 
 If HasGrid Then
     mHorizontalGrid.GridLineStyle = GridLineStyle
-    Set mXGridLines = Me.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid)
     mXGridLines.Style = GridLineStyle
+    mXGridLines.Layer = LayerGrid
 Else
-    Set mXGridLines = Nothing
+    mXGridLines.Layer = LayerInvisible
 End If
 doRepaint
 
@@ -3472,37 +3473,13 @@ Const ProcName As String = "setHasGridText"
 On Error GoTo Err
 
 If HasGridText Then
-    Set mXGridTexts = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText + 1)
+    mXGridTexts.Layer = LayerGridText + 1
+    mXGridTextsCoarse.Layer = LayerGridText
     mXGridTexts.Style = GridTextStyle
-    ' override the Style for the following, but don't change the Style itself
-    
-    mXGridTexts.Align = AlignBoxBottomCentre
-    'If Not IsXAxisRegion Then
-        mXGridTexts.Box = True
-        mXGridTexts.BoxThickness = 0
-        mXGridTexts.BoxFillWithBackgroundColor = True
-        mXGridTexts.BoxStyle = LineInvisible
-        mXGridTexts.PaddingY = 0
-        mXGridTexts.PaddingX = 4
-    'End If
-    mXGridTexts.Extended = True
-
-    Set mXGridTextsCoarse = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
     mXGridTextsCoarse.Style = GridTextStyle
-    
-    ' override the Style for the following, but don't change the Style itself
-    mXGridTextsCoarse.Align = AlignBoxTopCentre
-    'If Not IsXAxisRegion Then
-        mXGridTextsCoarse.Box = True
-        mXGridTextsCoarse.BoxThickness = 0
-        mXGridTexts.BoxFillWithBackgroundColor = True
-        mXGridTextsCoarse.BoxStyle = LineInvisible
-        mXGridTextsCoarse.PaddingY = 0
-    'End If
-    mXGridTextsCoarse.Extended = True
 Else
-    Set mXGridTexts = Nothing
-    Set mXGridTextsCoarse = Nothing
+    mXGridTexts.Layer = LayerInvisible
+    mXGridTextsCoarse.Layer = LayerInvisible
 End If
 doRepaint
 
@@ -3622,7 +3599,7 @@ Const ProcName As String = "setSessionEndGridLineStyle"
 
 On Error GoTo Err
 
-setHasGrid
+SessionEndGridLineStyle.SyncTo mSessEndGridlineStyle
 
 Exit Sub
 
@@ -3635,7 +3612,7 @@ Const ProcName As String = "setSessionStartGridLineStyle"
 
 On Error GoTo Err
 
-setHasGrid
+SessionStartGridLineStyle.SyncTo mSessStartGridlineStyle
 
 Exit Sub
 
@@ -3698,10 +3675,27 @@ On Error GoTo Err
 Set mHorizontalGrid = New HorizontalGrid
 mHorizontalGrid.Initialise Me
 
+Set mXGridLines = Me.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid)
+
 Set mPriceFormatter = New PriceFormatter
 mHorizontalGrid.PriceFormatter = mPriceFormatter
 
 Set mHorizontalGridSpacer = New HorizontalGridSpacer
+
+Set mXGridTexts = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText + 1)
+mXGridTexts.Align = AlignBoxBottomCentre
+mXGridTexts.FixedX = False
+mXGridTexts.FixedY = True
+mXGridTexts.Extended = True
+
+Set mXGridTextsCoarse = Me.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
+mXGridTextsCoarse.Align = AlignBoxTopCentre
+mXGridTextsCoarse.FixedX = False
+mXGridTextsCoarse.FixedY = True
+mXGridTextsCoarse.Extended = True
+
+Set mSessEndGridlineStyle = gDefaultLineStyle.clone
+Set mSessStartGridlineStyle = gDefaultLineStyle.clone
 
 Exit Sub
 
@@ -3709,10 +3703,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Function setVerticalGridLine(ByVal pTimestamp As Date, _
+Private Function setVerticalGridLineAndText(ByVal pTimestamp As Date, _
                             ByVal pPeriodNumber As Long, _
                             ByVal pIgnoreVerticalGridTimePeriod As Boolean) As ChartSkil26.Line
-Const ProcName As String = "setVerticalGridLine"
+Const ProcName As String = "setVerticalGridLineAndText"
 
 On Error GoTo Err
 
@@ -3720,9 +3714,9 @@ Dim lPeriodLabels As PeriodLabels
 
 If CDbl(pTimestamp) = 0 Then Exit Function
 
-If HasGrid Or HasGridText Then lPeriodLabels = getPeriodLabels(pTimestamp, pPeriodNumber, pIgnoreVerticalGridTimePeriod)
-If HasGrid Then Set setVerticalGridLine = addVerticalGridLine(lPeriodLabels)
-If HasGridText Then addVerticalGridText lPeriodLabels
+lPeriodLabels = getPeriodLabels(pTimestamp, pPeriodNumber, pIgnoreVerticalGridTimePeriod)
+Set setVerticalGridLineAndText = addVerticalGridLine(lPeriodLabels)
+addVerticalGridText lPeriodLabels
 
 Exit Function
 

@@ -335,7 +335,7 @@ gSetPermittedServiceProviderRoles
 If Not getConfigFile Then
     LogMessage "Program exiting at user request"
     TerminateTWUtilities
-ElseIf Not getConfig Then
+ElseIf Not getAppInstanceConfig Then
     LogMessage "Program exiting at user request"
     TerminateTWUtilities
 ElseIf Not Configure Then
@@ -411,8 +411,27 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Function getConfig() As Boolean
-Const ProcName As String = "getConfig"
+Private Function createNewConfigFile() As ConfigurationStore
+Const ProcName As String = "createNewConfigFile"
+On Error GoTo Err
+
+LogMessage "Creating a new default configuration file"
+Set createNewConfigFile = GetDefaultConfigurationStore(Command, ConfigFileVersion, True, ConfigFileOptionFirstArg)
+InitialiseConfigFile createNewConfigFile
+AddAppInstanceConfig createNewConfigFile, _
+                    DefaultAppInstanceConfigName, _
+                    ConfigFlagIncludeDefaultBarFormatterLibrary Or _
+                        ConfigFlagIncludeDefaultStudyLibrary Or _
+                        ConfigFlagSetAsDefault
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function getAppInstanceConfig() As Boolean
+Const ProcName As String = "getAppInstanceConfig"
 Dim configName As String
 
 
@@ -421,78 +440,62 @@ On Error GoTo Err
 If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
 
 If configName = "" Then
-    LogMessage "Named config not specified - trying default config", LogLevelDetail
+    LogMessage "Named app instance config not specified - trying default app instance config", LogLevelDetail
     configName = "(Default)"
     Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigStore)
     If gAppInstanceConfig Is Nothing Then
-        LogMessage "No default config defined", LogLevelDetail
+        LogMessage "No default app instance config defined", LogLevelDetail
     Else
-        LogMessage "Using default config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
+        LogMessage "Using default app instance config: " & gAppInstanceConfig.InstanceQualifier, LogLevelDetail
     End If
 Else
-    LogMessage "Getting config with name '" & configName & "'", LogLevelDetail
-    Set gAppInstanceConfig = GetAppInstanceConfig(gConfigStore, configName)
+    LogMessage "Getting app instance config with name '" & configName & "'", LogLevelDetail
+    Set gAppInstanceConfig = ConfigUtils.getAppInstanceConfig(gConfigStore, configName)
     If gAppInstanceConfig Is Nothing Then
-        LogMessage "Config '" & configName & "' not found"
+        LogMessage "App instance config '" & configName & "' not found"
     Else
-        LogMessage "Config '" & configName & "' located", LogLevelDetail
+        LogMessage "App instance config '" & configName & "' located", LogLevelDetail
     End If
 End If
 
 If gAppInstanceConfig Is Nothing Then
-    MsgBox "The required configuration does not exist: " & _
+    MsgBox "The required app instance configuration does not exist: " & _
             configName & "." & vbCrLf & vbCrLf & _
             "The program will close.", _
             vbCritical, _
             "Error"
-    getConfig = False
+    getAppInstanceConfig = False
 Else
-    getConfig = True
+    getAppInstanceConfig = True
 End If
 
 Exit Function
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
 End Function
 
 Private Function getConfigFile() As Boolean
 Const ProcName As String = "getConfigFile"
-Dim userResponse As Long
 
-Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, True, ConfigFileOptionFirstArg)
+On Error Resume Next
+Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
 
-If gConfigStore Is Nothing Then
-    userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
-            "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
-            "The default configuration will connect to TWS running on the " & vbCrLf & _
-            "same computer. It will obtain contract data and historical data " & vbCrLf & _
-            "from TWS." & vbCrLf & vbCrLf & _
-            "You may amend the default configuration by going to the " & vbCrLf & _
-            "Configuration tab when the program starts and using the " & vbCrLf & _
-            "Configuration Editor." & vbCrLf & vbCrLf & _
-            "Click Yes to continue with the default configuration." & vbCrLf & vbCrLf & _
-            "Click No to exit the program", _
-            vbYesNo Or vbQuestion, _
-            "Attention!")
-    If userResponse = vbYes Then
-        LogMessage "Creating a new default configuration file"
-        Set gConfigStore = GetDefaultConfigurationStore(Command, ConfigFileVersion, False, ConfigFileOptionFirstArg)
-        InitialiseConfigFile gConfigStore
-        AddAppInstanceConfig gConfigStore, _
-                            DefaultAppInstanceConfigName, _
-                            ConfigFlagIncludeDefaultBarFormatterLibrary Or _
-                                ConfigFlagIncludeDefaultStudyLibrary Or _
-                                ConfigFlagSetAsDefault
-                            
-        getConfigFile = True
-    End If
+If Err.Number = ErrorCodes.ErrIllegalStateException Then
+    On Error GoTo Err
+    
+    getConfigFile = queryReplaceConfigFile
+ElseIf gConfigStore Is Nothing Then
+    On Error GoTo Err
+    
+    getConfigFile = queryCreateNewConfigFile
 ElseIf IsValidConfigurationFile(gConfigStore) Then
+    On Error GoTo Err
     getConfigFile = True
 Else
-    LogMessage "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
-                "The program will close."
+    On Error GoTo Err
+    
+    getConfigFile = queryReplaceConfigFile
 End If
 
 
@@ -500,9 +503,7 @@ End If
 Exit Function
 
 Err:
-LogMessage "The configuration file format is not correct for this program."
-MsgBox "The configuration file is not the correct format for this program" & vbCrLf & vbCrLf & _
-        "The program will close."
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function inDev() As Boolean
@@ -534,6 +535,69 @@ Exit Sub
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
+
+Private Function queryCreateNewConfigFile() As Boolean
+Const ProcName As String = "queryCreateNewConfigFile"
+On Error GoTo Err
+
+Dim userResponse As Long
+LogMessage "The configuration file format does not exist."
+userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
+        "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
+        "The default configuration will connect to TWS running on the " & vbCrLf & _
+        "same computer. It will obtain contract data and historical data " & vbCrLf & _
+        "from TWS." & vbCrLf & vbCrLf & _
+        "You may amend the default configuration by going to the " & vbCrLf & _
+        "Configuration tab when the program starts and using the " & vbCrLf & _
+        "Configuration Editor." & vbCrLf & vbCrLf & _
+        "Click Yes to continue with the default configuration." & vbCrLf & vbCrLf & _
+        "Click No to exit the program", _
+        vbYesNo Or vbQuestion, _
+        "Attention!")
+If userResponse = vbYes Then
+    Set gConfigStore = createNewConfigFile
+    queryCreateNewConfigFile = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
+
+Private Function queryReplaceConfigFile() As Boolean
+Const ProcName As String = "queryReplaceConfigFile"
+On Error GoTo Err
+
+Dim userResponse As Long
+LogMessage "The configuration file format is not correct for this program."
+userResponse = MsgBox("The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
+        "This may be because you have installed a new version of " & vbCrLf & _
+        "the program, or because the file has been corrupted." & vbCrLf & vbCrLf & _
+        "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
+        "The default configuration will connect to TWS running on the " & vbCrLf & _
+        "same computer. It will obtain contract data and historical data " & vbCrLf & _
+        "from TWS." & vbCrLf & vbCrLf & _
+        "You may amend the default configuration by going to the " & vbCrLf & _
+        "Configuration tab when the program starts and using the " & vbCrLf & _
+        "Configuration Editor." & vbCrLf & vbCrLf & _
+        "Note that the default configuration will overwrite your " & vbCrLf & _
+        "current configuration file and all settings in it will be " & vbCrLf & _
+        "lost." & vbCrLf & vbCrLf & _
+        "Click Yes (recommended) to continue with the default configuration." & vbCrLf & vbCrLf & _
+        "Click No to exit the program", _
+        vbYesNo Or vbQuestion, _
+        "Attention!")
+If userResponse = vbYes Then
+    Set gConfigStore = createNewConfigFile
+    queryReplaceConfigFile = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Function
 
 Private Function showCommandLineOptions() As Boolean
 Const ProcName As String = "showCommandLineOptions"

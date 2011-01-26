@@ -141,6 +141,7 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 removeLines
+removeTexts
 Set mYGridTexts = Nothing
 Set mYGridLines = Nothing
 
@@ -212,6 +213,22 @@ On Error GoTo Err
 
 For Each ln In mYGridLines
     mYGridLines.RemoveObject ln
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub removeTexts()
+Dim tx As Text
+Const ProcName As String = "removeTexts"
+
+On Error GoTo Err
+
+For Each tx In mYGridTexts
+    mYGridTexts.RemoveObject tx
 Next
 
 Exit Sub

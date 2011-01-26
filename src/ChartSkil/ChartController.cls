@@ -625,6 +625,22 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Let Style(ByVal Value As ChartStyle)
+Const ProcName As String = "Style"
+On Error GoTo Err
+
+chartObj.Style = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get Style() As ChartStyle
+Set Style = chartObj.Style
+End Property
+
 Public Property Get TwipsPerPeriod() As Long
 Const ProcName As String = "TwipsPerPeriod"
 

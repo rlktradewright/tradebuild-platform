@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#185.2#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#185.3#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -93,7 +93,6 @@ Private Const ConfigSectionStudies                      As String = "Studies"
 
 Private Const ConfigSettingBarFormatterFactoryName      As String = "&BarFormatterFactoryName"
 Private Const ConfigSettingBarFormatterLibraryName      As String = "&BarFormatterLibraryName"
-Private Const ConfigSettingChartStyle                   As String = "&ChartStyle"
 Private Const ConfigSettingIsHistoricChart              As String = "&IsHistoricChart"
 Private Const ConfigSettingPeriodLength                 As String = "&PeriodLength"
 Private Const ConfigSettingTickerKey                    As String = "&TickerKey"
@@ -164,8 +163,6 @@ Private mLoadedFromConfig                               As Boolean
 Private mDeferStart                                     As Boolean
 
 Private mMinimumTicksHeight                             As Long
-
-Private mTwipsPerPeriodFromConfig                       As Long
 
 ' this is a temporary style that is used initially to apply property bag settings.
 ' This prevents the property bag settings from overriding any style that is later
@@ -1007,21 +1004,13 @@ Set mTicker = TradeBuildAPI.WorkSpaces(mConfig.GetSetting(ConfigSettingWorkspace
 Set mPeriodLength = TimePeriodFromString(mConfig.GetSetting(ConfigSettingPeriodLength))
 Set mChartSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
 
-Dim lStyleName As String
-lStyleName = mConfig.GetSetting(ConfigSettingChartStyle, "")
-If ChartStylesManager.Contains(lStyleName) Then
-    Set mChartStyle = ChartStylesManager.item(lStyleName)
-Else
-    Set mChartStyle = ChartStylesManager.DefaultStyle
-End If
-
 Chart1.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionChartControl)
 
 mIsHistoricChart = CBool(mConfig.GetSetting(ConfigSettingIsHistoricChart, "False"))
 mBarFormatterFactoryName = mConfig.GetSetting(ConfigSettingBarFormatterFactoryName, "")
 mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryName, "")
 
-If Not deferStart Then prepareChart
+If Not mDeferStart Then prepareChart
 
 Exit Sub
 
@@ -1119,8 +1108,6 @@ ReDim inputValueNames(3) As String
 Dim params As New Parameters
 
 Dim studyValueConfig As StudyValueConfiguration
-Dim BarsStyle As BarStyle
-Dim VolumeStyle As DataPointStyle
 
 Dim studyConfig As StudyConfiguration
 
@@ -1151,28 +1138,12 @@ studyValueConfig.Layer = 200
 studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 
-'Set BarsStyle = GetDefaultBarStyle.Clone
-'BarsStyle.DisplayMode = BarDisplayModes.BarDisplayModeCandlestick
-'BarsStyle.OutlineThickness = 1
-'BarsStyle.TailThickness = 1
-'BarsStyle.UpColor = &HA0A0A0
-'BarsStyle.SolidUpBody = False
-'studyValueConfig.BarStyle = BarsStyle
-
 If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash And _
     mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
     Set studyValueConfig = studyConfig.StudyValueConfigurations.Add("Volume")
     studyValueConfig.ChartRegionName = ChartRegionNameVolume
     studyValueConfig.IncludeInChart = True
-'    Set VolumeStyle = GetDefaultDataPointStyle.Clone
-'    'VolumeStyle.UpColor = vbGreen
-'    'VolumeStyle.DownColor = vbRed
-'    VolumeStyle.DisplayMode = DataPointDisplayModeHistogram
-'    VolumeStyle.HistogramBarWidth = 0.5
-'    VolumeStyle.IncludeInAutoscale = True
-'    VolumeStyle.LineThickness = 1
-'    studyValueConfig.DataPointStyle = VolumeStyle
 End If
 
 Set createBarsStudyConfig = studyConfig
@@ -1230,16 +1201,11 @@ If Not notFirstTime Then
     Set mManager = CreateChartManager(mTicker.StudyManager, Chart1.Controller)
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
     
-    Chart1.Style = mChartStyle
-    If mTwipsPerPeriodFromConfig <> 0 Then Chart1.TwipsPerPeriod = mTwipsPerPeriodFromConfig
+    If Not mChartStyle Is Nothing Then Chart1.Style = mChartStyle
     notFirstTime = True
 End If
 
-Set mPriceRegion = Chart1.Regions.Add(100, _
-                                        25, _
-                                        , _
-                                        , _
-                                        ChartRegionNamePrice)
+Set mPriceRegion = Chart1.Regions.Add(100, 25, , , ChartRegionNamePrice)
 setLoadingText
 Chart1.EnableDrawing
 
@@ -1252,8 +1218,6 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub loadchart()
-Dim volRegionStyle As ChartRegionStyle
-
 Const ProcName As String = "loadchart"
 
 On Error GoTo Err
@@ -1279,27 +1243,14 @@ mPriceRegion.Title.Color = vbBlue
 If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash _
     And mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
-    Set volRegionStyle = mChartStyle.DefaultRegionStyle.Clone
-    volRegionStyle.GridlineSpacingY = 0.8
-    volRegionStyle.MinimumHeight = 10
-    volRegionStyle.IntegerYScale = True
-    
     On Error Resume Next
     Set mVolumeRegion = Chart1.Regions.item(ChartRegionNameVolume)
     On Error GoTo Err
     
-    If mVolumeRegion Is Nothing Then
-        Set mVolumeRegion = Chart1.Regions.Add(20 _
-                                                , _
-                                                , _
-                                                volRegionStyle, _
-                                                , _
-                                                ChartRegionNameVolume)
+    If mVolumeRegion Is Nothing Then Set mVolumeRegion = Chart1.Regions.Add(20, , , , ChartRegionNameVolume)
     
-    Else
-        mVolumeRegion.Style = volRegionStyle
-    End If
-    
+    mVolumeRegion.MinimumHeight = 10
+    mVolumeRegion.IntegerYScale = True
     mVolumeRegion.Title.Text = "Volume"
     mVolumeRegion.Title.Color = vbBlue
 End If
@@ -1432,7 +1383,6 @@ If mTicker Is Nothing Then Exit Sub
 mConfig.SetSetting ConfigSettingWorkspace, mTicker.Workspace.name
 mConfig.SetSetting ConfigSettingTickerKey, mTicker.Key
 mConfig.SetSetting ConfigSettingPeriodLength, mPeriodLength.ToString
-mConfig.SetSetting ConfigSettingChartStyle, mChartStyle.name
 mChartSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
 mConfig.SetSetting ConfigSettingIsHistoricChart, CStr(mIsHistoricChart)
 mConfig.SetSetting ConfigSettingBarFormatterFactoryName, mBarFormatterFactoryName

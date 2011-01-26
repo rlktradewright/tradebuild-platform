@@ -250,7 +250,7 @@ Case "DOWNCOLOR"
 Case "INCLUDEINAUTOSCALE"
     RepaintRegion True
 Case "LAYER"
-    RepaintRegion False
+    RepaintRegion True
 Case "OUTLINETHICKNESS"
     RepaintRegion False
 Case "SOLIDUPBODY"
@@ -446,7 +446,7 @@ Const ProcName As String = "Layer"
 On Error GoTo Err
 
 setLongProperty mLayer, BarPropertyLayer, Value
-RepaintRegion False
+RepaintRegion True
 
 Exit Property
 

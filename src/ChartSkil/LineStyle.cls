@@ -901,36 +901,13 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Public Function clone() As LineStyle
+Public Function Clone() As LineStyle
 Const ProcName As String = "clone"
 
 On Error GoTo Err
 
-Set clone = New LineStyle
-If IsPropertySet(LinePropertyArrowEndColor) Then clone.ArrowEndColor = mArrowEndColor
-If IsPropertySet(LinePropertyArrowEndFillColor) Then clone.ArrowEndFillColor = mArrowEndFillColor
-If IsPropertySet(LinePropertyArrowEndFillStyle) Then clone.ArrowEndFillStyle = mArrowEndFillStyle
-If IsPropertySet(LinePropertyArrowEndLength) Then clone.ArrowEndLength = mArrowEndLength
-If IsPropertySet(LinePropertyArrowEndStyle) Then clone.ArrowEndStyle = mArrowEndStyle
-If IsPropertySet(LinePropertyArrowEndWidth) Then clone.ArrowEndWidth = mArrowEndWidth
-If IsPropertySet(LinePropertyArrowStartColor) Then clone.ArrowStartColor = mArrowStartColor
-If IsPropertySet(LinePropertyArrowStartFillColor) Then clone.ArrowStartFillColor = mArrowStartFillColor
-If IsPropertySet(LinePropertyArrowStartFillStyle) Then clone.ArrowStartFillStyle = mArrowStartfillStyle
-If IsPropertySet(LinePropertyArrowStartLength) Then clone.ArrowStartLength = mArrowStartLength
-If IsPropertySet(LinePropertyArrowStartStyle) Then clone.ArrowStartStyle = mArrowStartStyle
-If IsPropertySet(LinePropertyArrowStartWidth) Then clone.ArrowStartWidth = mArrowStartWidth
-If IsPropertySet(LinePropertyColor) Then clone.Color = mColor
-If IsPropertySet(LinePropertyExtendAfter) Then clone.ExtendAfter = mExtendAfter
-If IsPropertySet(LinePropertyExtendBefore) Then clone.ExtendBefore = mExtendBefore
-If IsPropertySet(LinePropertyExtended) Then clone.Extended = mExtended
-If IsPropertySet(LinePropertyFixedX) Then clone.FixedX = mFixedX
-If IsPropertySet(LinePropertyFixedY) Then clone.FixedY = mFixedY
-If IsPropertySet(LinePropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
-If IsPropertySet(LinePropertyLayer) Then clone.Layer = mLayer
-If IsPropertySet(LinePropertyLineStyle) Then clone.LineStyle = mLineStyle
-If IsPropertySet(LinePropertyOffset1) Then clone.Offset1 = mOffset1
-If IsPropertySet(LinePropertyOffset2) Then clone.Offset2 = mOffset2
-If IsPropertySet(LinePropertyThickness) Then clone.Thickness = mThickness
+Set Clone = New LineStyle
+SyncTo Clone
 
 Exit Function
 
@@ -1001,6 +978,42 @@ Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Friend Sub SyncTo(ByVal pDest As LineStyle)
+Const ProcName As String = "SyncTo"
+
+On Error GoTo Err
+
+If IsPropertySet(LinePropertyArrowEndColor) Then pDest.ArrowEndColor = mArrowEndColor Else pDest.ClearProperty LinePropertyArrowEndColor
+If IsPropertySet(LinePropertyArrowEndFillColor) Then pDest.ArrowEndFillColor = mArrowEndFillColor Else pDest.ClearProperty LinePropertyArrowEndFillColor
+If IsPropertySet(LinePropertyArrowEndFillStyle) Then pDest.ArrowEndFillStyle = mArrowEndFillStyle Else pDest.ClearProperty LinePropertyArrowEndFillStyle
+If IsPropertySet(LinePropertyArrowEndLength) Then pDest.ArrowEndLength = mArrowEndLength Else pDest.ClearProperty LinePropertyArrowEndLength
+If IsPropertySet(LinePropertyArrowEndStyle) Then pDest.ArrowEndStyle = mArrowEndStyle Else pDest.ClearProperty LinePropertyArrowEndStyle
+If IsPropertySet(LinePropertyArrowEndWidth) Then pDest.ArrowEndWidth = mArrowEndWidth Else pDest.ClearProperty LinePropertyArrowEndWidth
+If IsPropertySet(LinePropertyArrowStartColor) Then pDest.ArrowStartColor = mArrowStartColor Else pDest.ClearProperty LinePropertyArrowStartColor
+If IsPropertySet(LinePropertyArrowStartFillColor) Then pDest.ArrowStartFillColor = mArrowStartFillColor Else pDest.ClearProperty LinePropertyArrowStartFillColor
+If IsPropertySet(LinePropertyArrowStartFillStyle) Then pDest.ArrowStartFillStyle = mArrowStartfillStyle Else pDest.ClearProperty LinePropertyArrowStartFillStyle
+If IsPropertySet(LinePropertyArrowStartLength) Then pDest.ArrowStartLength = mArrowStartLength Else pDest.ClearProperty LinePropertyArrowStartLength
+If IsPropertySet(LinePropertyArrowStartStyle) Then pDest.ArrowStartStyle = mArrowStartStyle Else pDest.ClearProperty LinePropertyArrowStartStyle
+If IsPropertySet(LinePropertyArrowStartWidth) Then pDest.ArrowStartWidth = mArrowStartWidth Else pDest.ClearProperty LinePropertyArrowStartWidth
+If IsPropertySet(LinePropertyColor) Then pDest.Color = mColor Else pDest.ClearProperty LinePropertyColor
+If IsPropertySet(LinePropertyExtendAfter) Then pDest.ExtendAfter = mExtendAfter Else pDest.ClearProperty LinePropertyExtendAfter
+If IsPropertySet(LinePropertyExtendBefore) Then pDest.ExtendBefore = mExtendBefore Else pDest.ClearProperty LinePropertyExtendBefore
+If IsPropertySet(LinePropertyExtended) Then pDest.Extended = mExtended Else pDest.ClearProperty LinePropertyExtended
+If IsPropertySet(LinePropertyFixedX) Then pDest.FixedX = mFixedX Else pDest.ClearProperty LinePropertyFixedX
+If IsPropertySet(LinePropertyFixedY) Then pDest.FixedY = mFixedY Else pDest.ClearProperty LinePropertyFixedY
+If IsPropertySet(LinePropertyIncludeInAutoscale) Then pDest.IncludeInAutoscale = mIncludeInAutoscale Else pDest.ClearProperty LinePropertyIncludeInAutoscale
+If IsPropertySet(LinePropertyLayer) Then pDest.Layer = mLayer Else pDest.ClearProperty LinePropertyLayer
+If IsPropertySet(LinePropertyLineStyle) Then pDest.LineStyle = mLineStyle Else pDest.ClearProperty LinePropertyLineStyle
+If IsPropertySet(LinePropertyOffset1) Then pDest.Offset1 = mOffset1 Else pDest.ClearProperty LinePropertyOffset1
+If IsPropertySet(LinePropertyOffset2) Then pDest.Offset2 = mOffset2 Else pDest.ClearProperty LinePropertyOffset1
+If IsPropertySet(LinePropertyThickness) Then pDest.Thickness = mThickness Else pDest.ClearProperty LinePropertyThickness
 
 Exit Sub
 

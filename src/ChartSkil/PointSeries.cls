@@ -264,7 +264,7 @@ Case "HISTWIDTH"
 Case "INCLUDEINAUTOSCALE"
     RepaintRegion True
 Case "LAYER"
-    RepaintRegion False
+    RepaintRegion True
 Case "LINESTYLE"
     RepaintRegion False
 Case "LINETHICKNESS"
@@ -496,7 +496,7 @@ Const ProcName As String = "Layer"
 On Error GoTo Err
 
 setLongProperty mLayer, DataPointPropertyLayer, Value
-RepaintRegion False
+RepaintRegion True
 
 Exit Property
 
