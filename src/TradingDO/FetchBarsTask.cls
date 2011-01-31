@@ -139,6 +139,7 @@ If Err.Number = 3265 Then   ' "Item cannot be found in the collection correspond
     If sRetryCount < 5 Then
         sRetryCount = sRetryCount + 1
         mTaskContext.Suspend 10
+        Exit Sub
     End If
 End If
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
