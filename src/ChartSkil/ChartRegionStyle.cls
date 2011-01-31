@@ -91,10 +91,10 @@ Private WithEvents mGridLineStyle As LineStyle
 Attribute mGridLineStyle.VB_VarHelpID = -1
 Private WithEvents mGridTextStyle As TextStyle
 Attribute mGridTextStyle.VB_VarHelpID = -1
-Private WithEvents mSessionEndGridLineStyle As LineStyle
-Attribute mSessionEndGridLineStyle.VB_VarHelpID = -1
-Private WithEvents mSessionStartGridLineStyle As LineStyle
-Attribute mSessionStartGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionEndGridlineStyle As LineStyle
+Attribute mSessionEndGridlineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionStartGridlineStyle As LineStyle
+Attribute mSessionStartGridlineStyle.VB_VarHelpID = -1
 Private WithEvents mYAxisTextStyle As TextStyle
 Attribute mYAxisTextStyle.VB_VarHelpID = -1
 Private WithEvents mYCursorTextStyle As TextStyle
@@ -354,8 +354,8 @@ mConfig.SetSetting ConfigSettingStyleType, mStyleType
 
 mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
 mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
-mSessionEndGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
-mSessionStartGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
+mSessionEndGridlineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+mSessionStartGridlineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
 mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
 mConfig.SetSetting ConfigSettingHasGrid, mHasGrid
@@ -547,7 +547,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Public Property Get SessionEndGridLineStyle() As LineStyle
-Set SessionEndGridLineStyle = mSessionEndGridLineStyle
+Set SessionEndGridLineStyle = mSessionEndGridlineStyle
 End Property
 
 Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
@@ -555,7 +555,7 @@ Const ProcName As String = "SessionEndGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionEndGridLineStyle = Value
+Set mSessionEndGridlineStyle = Value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
 firePropertyChanged "SessionEndGridLineStyle"
 
@@ -566,7 +566,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Public Property Get SessionStartGridLineStyle() As LineStyle
-Set SessionStartGridLineStyle = mSessionStartGridLineStyle
+Set SessionStartGridLineStyle = mSessionStartGridlineStyle
 End Property
 
 Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
@@ -574,7 +574,7 @@ Const ProcName As String = "SessionStartGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionStartGridLineStyle = Value
+Set mSessionStartGridlineStyle = Value
 If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 firePropertyChanged "SessionStartGridLineStyle"
 
@@ -661,8 +661,8 @@ clone.MinimumHeight = mMinimumHeight
 clone.HasGrid = mHasGrid
 clone.HasGridText = mHasGridText
 clone.CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
-clone.SessionEndGridLineStyle = mSessionEndGridLineStyle
-clone.SessionStartGridLineStyle = mSessionStartGridLineStyle
+clone.SessionEndGridLineStyle = mSessionEndGridlineStyle
+clone.SessionStartGridLineStyle = mSessionStartGridlineStyle
 clone.YAxisTextStyle = mYAxisTextStyle
 clone.YCursorTextStyle = mYCursorTextStyle
 clone.YScaleQuantum = mYScaleQuantum
@@ -776,8 +776,8 @@ On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionEndGridlineStyle)
 If Not cs Is Nothing Then
-    Set mSessionEndGridLineStyle = New LineStyle
-    mSessionEndGridLineStyle.LoadFromConfig cs
+    Set mSessionEndGridlineStyle = New LineStyle
+    mSessionEndGridlineStyle.LoadFromConfig cs
 End If
 
 Exit Sub
@@ -794,8 +794,8 @@ On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 If Not cs Is Nothing Then
-    Set mSessionStartGridLineStyle = New LineStyle
-    mSessionStartGridLineStyle.LoadFromConfig cs
+    Set mSessionStartGridlineStyle = New LineStyle
+    mSessionStartGridlineStyle.LoadFromConfig cs
 End If
 
 Exit Sub
@@ -883,7 +883,7 @@ Const ProcName As String = "setInitialGridLineStyle"
 On Error GoTo Err
 
 Set mGridLineStyle = New LineStyle
-mGridLineStyle.Color = &HC0C0C0
+mGridLineStyle.Color = &HD0D0D0
 
 Exit Sub
 
@@ -924,9 +924,9 @@ Const ProcName As String = "setInitialSessionEndGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionEndGridLineStyle = New LineStyle
-mSessionEndGridLineStyle.Color = &HC0C0C0
-mSessionEndGridLineStyle.LineStyle = LineDash
+Set mSessionEndGridlineStyle = New LineStyle
+mSessionEndGridlineStyle.Color = &HD0D0D0
+mSessionEndGridlineStyle.LineStyle = LineDash
 
 Exit Sub
 
@@ -939,9 +939,9 @@ Const ProcName As String = "setInitialSessionStartGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionStartGridLineStyle = New LineStyle
-mSessionStartGridLineStyle.Color = &HC0C0C0
-mSessionStartGridLineStyle.Thickness = 3
+Set mSessionStartGridlineStyle = New LineStyle
+mSessionStartGridlineStyle.Color = &HD0D0D0
+mSessionStartGridlineStyle.Thickness = 3
 
 Exit Sub
 

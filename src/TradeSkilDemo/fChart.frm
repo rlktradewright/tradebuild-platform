@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#256.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#256.4#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -65,21 +65,20 @@ Begin VB.Form fChart
       _CBWidth        =   12525
       _CBHeight       =   390
       _Version        =   "6.7.9816"
-      BandBackColor1  =   -2147483628
       Child1          =   "ChartToolsToolbar"
-      MinWidth1       =   1710
+      MinWidth1       =   1890
       MinHeight1      =   330
-      Width1          =   1710
-      UseCoolbarColors1=   0   'False
+      Width1          =   1890
       NewRow1         =   0   'False
       Child2          =   "BarFormatterPicker"
-      MinWidth2       =   900
+      MinWidth2       =   1185
       MinHeight2      =   330
-      Width2          =   1500
+      Width2          =   1185
       NewRow2         =   0   'False
       Child3          =   "ChartStylePicker"
+      MinWidth3       =   1185
       MinHeight3      =   330
-      Width3          =   1500
+      Width3          =   1185
       NewRow3         =   0   'False
       Child4          =   "ChartNavToolbar1"
       MinWidth4       =   6465
@@ -88,27 +87,47 @@ Begin VB.Form fChart
       NewRow4         =   0   'False
       Begin TradeBuildUI26.ChartStylePicker ChartStylePicker 
          Height          =   330
-         Left            =   3630
+         Left            =   3690
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
          Top             =   30
-         Width           =   1305
-         _ExtentX        =   2302
+         Width           =   1185
+         _ExtentX        =   2090
          _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ListWidth       =   3000
       End
       Begin TradeBuildUI26.BarFormatterPicker BarFormatterPicker 
          Height          =   330
-         Left            =   2100
+         Left            =   2280
          TabIndex        =   4
          ToolTipText     =   "Change the bar formatting"
          Top             =   30
-         Width           =   1305
-         _ExtentX        =   2302
+         Width           =   1185
+         _ExtentX        =   2090
          _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ListWidth       =   3000
       End
       Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   5160
+         Left            =   5100
          TabIndex        =   2
          Top             =   30
          Width           =   6465
@@ -120,11 +139,12 @@ Begin VB.Form fChart
          Left            =   165
          TabIndex        =   1
          Top             =   30
-         Width           =   1710
-         _ExtentX        =   3016
+         Width           =   1890
+         _ExtentX        =   3334
          _ExtentY        =   582
          ButtonWidth     =   609
          ButtonHeight    =   582
+         Wrappable       =   0   'False
          Appearance      =   1
          Style           =   1
          ImageList       =   "ImageList1"
@@ -612,6 +632,14 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Get IsHistorical() As Boolean
+IsHistorical = mIsHistorical
+End Property
+
+Public Property Let Style(ByVal value As ChartStyle)
+MultiChart1.Style = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -699,7 +727,7 @@ Set ls = New LineStyle
 ls.Extended = True
 ls.IncludeInAutoscale = False
 
-ls.Color = vbBlack
+ls.Color = &H808080
 Set lineSpecs(0).Style = ls.Clone
 lineSpecs(0).Percentage = 0
 

@@ -82,6 +82,7 @@ If mLine Is Nothing Then
     If mLayer = -1 Then mLayer = mLineSeries.Layer  ' get the layer allocated
     mLineSeries.Extended = True
     mLineSeries.IncludeInAutoscale = False
+    mLineSeries.Color = &H808080
     
     Set mLine = mLineSeries.Add(, mLineStyle)
     mLine.IsSelectable = True

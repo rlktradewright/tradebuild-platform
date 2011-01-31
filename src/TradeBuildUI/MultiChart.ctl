@@ -462,6 +462,34 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Let Style(ByVal pStyle As ChartStyle)
+Const ProcName As String = "Style"
+On Error GoTo Err
+
+Dim i As Long
+Dim lChart As TradeBuildChart
+
+Set mStyle = pStyle
+
+If Not mConfig Is Nothing Then
+    If mStyle Is Nothing Then
+        mConfig.SetSetting ConfigSettingChartStyle, ""
+    Else
+        mConfig.SetSetting ConfigSettingChartStyle, mStyle.name
+    End If
+End If
+
+For i = 1 To TBChart.UBound
+    Set lChart = TBChart(i).object
+    lChart.BaseChartController.Style = mStyle
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 Public Property Get State( _
                 Optional ByVal index As Long = -1) As ChartStates
 Const ProcName As String = "State"

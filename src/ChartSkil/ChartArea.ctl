@@ -10,6 +10,22 @@ Begin VB.UserControl Chart
    KeyPreview      =   -1  'True
    ScaleHeight     =   7575
    ScaleWidth      =   10665
+   Begin VB.PictureBox YRegionDividerPicture 
+      Appearance      =   0  'Flat
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H00C0C0C0&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H80000008&
+      Height          =   45
+      Index           =   0
+      Left            =   4680
+      ScaleHeight     =   45
+      ScaleWidth      =   3855
+      TabIndex        =   7
+      Top             =   5040
+      Visible         =   0   'False
+      Width           =   3855
+   End
    Begin VB.PictureBox SelectorPicture 
       AutoSize        =   -1  'True
       Height          =   540
@@ -26,7 +42,7 @@ Begin VB.UserControl Chart
       AutoSize        =   -1  'True
       Height          =   540
       Left            =   2280
-      Picture         =   "ChartArea.ctx":0152
+      Picture         =   "ChartArea.ctx":08CA
       ScaleHeight     =   480
       ScaleWidth      =   480
       TabIndex        =   5
@@ -43,13 +59,15 @@ Begin VB.UserControl Chart
    End
    Begin VB.PictureBox RegionDividerPicture 
       Appearance      =   0  'Flat
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H80000005&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   70
+      Height          =   45
       Index           =   0
       Left            =   0
       MousePointer    =   7  'Size N S
-      ScaleHeight     =   75
+      ScaleHeight     =   45
       ScaleWidth      =   9375
       TabIndex        =   2
       Top             =   6240
@@ -95,7 +113,7 @@ Begin VB.UserControl Chart
       Height          =   615
       Index           =   0
       Left            =   0
-      MouseIcon       =   "ChartArea.ctx":0594
+      MouseIcon       =   "ChartArea.ctx":0D0C
       MousePointer    =   99  'Custom
       ScaleHeight     =   615
       ScaleWidth      =   8415
@@ -2867,6 +2885,13 @@ Load RegionDividerPicture(index)
 RegionDividerPicture(index).Tag = mapHandle
 RegionDividerPicture(index).ZOrder 0
 RegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
+pRegion.Divider = RegionDividerPicture(index)
+
+Load YRegionDividerPicture(index)
+YRegionDividerPicture(index).Tag = mapHandle
+YRegionDividerPicture(index).ZOrder 0
+YRegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
+pRegion.YAxisRegion.Divider = YRegionDividerPicture(index)
 
 YAxisPicture(index).Tag = pRegion.YAxisRegion.handle
 YAxisPicture(index).Align = vbAlignNone
@@ -3031,11 +3056,14 @@ For Each Region In mRegionMap
         YAxisPicture(Region.handle).Left = UserControl.Width - IIf(YAxisVisible, YAxisPicture(Region.handle).Width, 0)
         ChartRegionPicture(Region.handle).Width = YAxisPicture(Region.handle).Left
     End If
-    RegionDividerPicture(Region.handle).Width = UserControl.Width
+    RegionDividerPicture(Region.handle).Width = YAxisPicture(Region.handle).Left
+    YRegionDividerPicture(Region.handle).Width = YAxisPicture(Region.handle).Width
+    YRegionDividerPicture(Region.handle).Left = YAxisPicture(Region.handle).Left
 Next
 
 For Each Region In mRegionMap
     Region.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
+    Region.PaintDivider
 Next
 
 If Not mXAxisRegion Is Nothing Then
@@ -3112,11 +3140,14 @@ Const ProcName As String = "setRegionDividerLocation"
 On Error GoTo Err
 
 RegionDividerPicture(pRegion.handle).Top = currTop
+YRegionDividerPicture(pRegion.handle).Top = currTop
 If mRegionMap.IsFirst(CLng(RegionDividerPicture(pRegion.handle).Tag)) Then
     RegionDividerPicture(pRegion.handle).Visible = False
+    YRegionDividerPicture(pRegion.handle).Visible = False
     setRegionDividerLocation = 0
 Else
     RegionDividerPicture(pRegion.handle).Visible = True
+    YRegionDividerPicture(pRegion.handle).Visible = True
     setRegionDividerLocation = RegionDividerPicture(pRegion.handle).Height
 End If
 
@@ -3243,6 +3274,7 @@ On Error GoTo Err
 mRegionMap.Remove CLng(ChartRegionPicture(Region.handle).Tag)
 Unload ChartRegionPicture(Region.handle)
 Unload RegionDividerPicture(Region.handle)
+Unload YRegionDividerPicture(Region.handle)
 Unload YAxisPicture(Region.handle)
 Exit Sub
 

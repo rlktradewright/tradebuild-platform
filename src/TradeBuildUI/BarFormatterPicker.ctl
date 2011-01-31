@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.1#0"; "TWControls10.ocx"
 Begin VB.UserControl BarFormatterPicker 
    BackStyle       =   0  'Transparent
    ClientHeight    =   345
@@ -8,7 +8,7 @@ Begin VB.UserControl BarFormatterPicker
    ClientWidth     =   3645
    ScaleHeight     =   345
    ScaleWidth      =   3645
-   Begin TWControls10.TWImageCombo BarFormattersCombo 
+   Begin TWControls10.TWImageCombo Combo1 
       Height          =   330
       Left            =   0
       TabIndex        =   0
@@ -82,9 +82,49 @@ Attribute mMultiChart.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+
+Const ProcName As String = "UserControl_ReadProperties"
+On Error GoTo Err
+
+Combo1.backColor = PropBag.ReadProperty("BackColor", &H80000005)
+Combo1.CausesValidation = PropBag.ReadProperty("CausesValidation", True)
+Combo1.Enabled = PropBag.ReadProperty("Enabled", True)
+Set Combo1.Font = PropBag.ReadProperty("Font", Ambient.Font)
+Combo1.foreColor = PropBag.ReadProperty("ForeColor", &H80000008)
+Combo1.ListWidth = PropBag.ReadProperty("ListWidth", 0)
+Combo1.Locked = PropBag.ReadProperty("Locked", False)
+Combo1.ToolTipText = PropBag.ReadProperty("ToolTipText", "")
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
 Private Sub UserControl_Resize()
-BarFormattersCombo.Move 0, 0, UserControl.Width
-UserControl.Height = BarFormattersCombo.Height
+Combo1.Move 0, 0, UserControl.Width
+UserControl.Height = Combo1.Height
+End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+
+Const ProcName As String = "UserControl_WriteProperties"
+On Error GoTo Err
+
+Call PropBag.WriteProperty("BackColor", Combo1.backColor, &H80000005)
+Call PropBag.WriteProperty("CausesValidation", Combo1.CausesValidation, True)
+Call PropBag.WriteProperty("Enabled", Combo1.Enabled, True)
+Call PropBag.WriteProperty("Font", Combo1.Font, Ambient.Font)
+Call PropBag.WriteProperty("ForeColor", Combo1.foreColor, &H80000008)
+Call PropBag.WriteProperty("ListWidth", Combo1.ListWidth, 0)
+Call PropBag.WriteProperty("Locked", Combo1.Locked, False)
+Call PropBag.WriteProperty("ToolTipText", Combo1.ToolTipText, "")
+    
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -95,22 +135,22 @@ End Sub
 ' Control Event Handlers
 '@================================================================================
 
-Private Sub BarFormattersCombo_Click()
+Private Sub Combo1_Click()
 Dim lEntry As BarFormatterFactoryListEntry
 Dim lBaseStudyConfig As StudyConfiguration
 Dim lBarsValueConfig As StudyValueConfiguration
 
-Const ProcName As String = "BarFormattersCombo_Click"
+Const ProcName As String = "Combo1_Click"
 On Error GoTo Err
 
 Set lBaseStudyConfig = mChartManager.BaseStudyConfiguration
 Set lBarsValueConfig = lBaseStudyConfig.StudyValueConfigurations("Bar")
 
-If BarFormattersCombo.SelectedItem.index = 1 Then
+If Combo1.SelectedItem.index = 1 Then
     lBarsValueConfig.BarFormatterFactoryName = ""
     lBarsValueConfig.BarFormatterLibraryName = ""
 Else
-    lEntry = mBarFormatters(BarFormattersCombo.SelectedItem.index - 2)
+    lEntry = mBarFormatters(Combo1.SelectedItem.index - 2)
     lBarsValueConfig.BarFormatterFactoryName = lEntry.name
     lBarsValueConfig.BarFormatterLibraryName = lEntry.LibraryName
 End If
@@ -131,7 +171,7 @@ Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As Cha
 Const ProcName As String = "mChartManager_BaseStudyConfigurationChanged"
 On Error GoTo Err
 
-selectItem
+SelectItem
 
 Exit Sub
 
@@ -185,7 +225,7 @@ Case ChartStateInitialised
 
 Case ChartStateLoaded
     setChartManager
-    selectItem
+    SelectItem
 End Select
 
 Exit Sub
@@ -197,6 +237,56 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get backColor() As OLE_COLOR
+Const ProcName As String = "BackColor"
+On Error GoTo Err
+
+    backColor = Combo1.backColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let backColor(ByVal New_BackColor As OLE_COLOR)
+Const ProcName As String = "BackColor"
+On Error GoTo Err
+
+    Combo1.backColor() = New_BackColor
+    PropertyChanged "BackColor"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get CausesValidation() As Boolean
+Const ProcName As String = "CausesValidation"
+On Error GoTo Err
+
+    CausesValidation = Combo1.CausesValidation
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let CausesValidation(ByVal New_CausesValidation As Boolean)
+Const ProcName As String = "CausesValidation"
+On Error GoTo Err
+
+    Combo1.CausesValidation() = New_CausesValidation
+    PropertyChanged "CausesValidation"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
@@ -210,8 +300,125 @@ Dim failpoint As String
 On Error GoTo Err
 
 UserControl.Enabled = value
-BarFormattersCombo.Enabled = value
+Combo1.Enabled = value
 PropertyChanged "Enabled"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get Font() As Font
+Const ProcName As String = "Font"
+On Error GoTo Err
+
+    Set Font = Combo1.Font
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Set Font(ByVal New_Font As Font)
+Const ProcName As String = "Font"
+On Error GoTo Err
+
+    Set Combo1.Font = New_Font
+    PropertyChanged "Font"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get foreColor() As OLE_COLOR
+Const ProcName As String = "ForeColor"
+On Error GoTo Err
+
+    foreColor = Combo1.foreColor
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let foreColor(ByVal New_ForeColor As OLE_COLOR)
+Const ProcName As String = "ForeColor"
+On Error GoTo Err
+
+    Combo1.foreColor() = New_ForeColor
+    PropertyChanged "ForeColor"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get Locked() As Boolean
+Const ProcName As String = "Locked"
+On Error GoTo Err
+
+    Locked = Combo1.Locked
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let Locked(ByVal New_Locked As Boolean)
+Const ProcName As String = "Locked"
+On Error GoTo Err
+
+    Combo1.Locked() = New_Locked
+    PropertyChanged "Locked"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let ListWidth(ByVal value As Long)
+Const ProcName As String = "ListWidth"
+On Error GoTo Err
+
+Combo1.ListWidth = value
+PropertyChanged "ListWidth"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get ListWidth() As Long
+ListWidth = Combo1.ListWidth
+End Property
+
+Public Property Get ToolTipText() As String
+Const ProcName As String = "ToolTipText"
+On Error GoTo Err
+
+    ToolTipText = Combo1.ToolTipText
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Let ToolTipText(ByVal New_ToolTipText As String)
+Const ProcName As String = "ToolTipText"
+On Error GoTo Err
+
+    Combo1.ToolTipText() = New_ToolTipText
+    PropertyChanged "ToolTipText"
 
 Exit Property
 
@@ -252,6 +459,18 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
+Public Sub SelectBarFormatter(ByVal pBarFormatterName As String)
+Const ProcName As String = "SelectBarFormatter"
+On Error GoTo Err
+
+Combo1.ComboItems.item(pBarFormatterName).Selected = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -264,7 +483,7 @@ On Error GoTo Err
 Set mTradeBuildChart = pChart
 If mTradeBuildChart.State = ChartStateLoaded Then
     setChartManager
-    selectItem
+    SelectItem
 End If
 
 Exit Sub
@@ -302,9 +521,9 @@ Dim lMaxIndex As Long
 Const ProcName As String = "loadCombo"
 On Error GoTo Err
 
-BarFormattersCombo.ComboItems.Clear
+Combo1.ComboItems.Clear
 
-BarFormattersCombo.ComboItems.Add , NoBarFormatter, NoBarFormatter
+Combo1.ComboItems.Add , NoBarFormatter, NoBarFormatter
 
 
 mBarFormatters = GetAvailableBarFormatterFactories
@@ -316,7 +535,7 @@ On Error GoTo Err
 
 For i = 0 To lMaxIndex
     lItemKey = itemKey(mBarFormatters(i).name, mBarFormatters(i).LibraryName)
-    BarFormattersCombo.ComboItems.Add , lItemKey, lItemKey
+    Combo1.ComboItems.Add , lItemKey, lItemKey
 Next
 
 Exit Sub
@@ -325,7 +544,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub selectItem()
+Private Sub SelectItem()
 Dim lBarsValueConfig As StudyValueConfiguration
 
 Const ProcName As String = "selectItem"
@@ -334,15 +553,15 @@ On Error GoTo Err
 Set lBarsValueConfig = mChartManager.BaseStudyConfiguration.StudyValueConfigurations("Bar")
 
 If lBarsValueConfig.BarFormatterFactoryName = "" Then
-    BarFormattersCombo.ComboItems.item(NoBarFormatter).Selected = True
+    Combo1.ComboItems.item(NoBarFormatter).Selected = True
 Else
-    BarFormattersCombo.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).Selected = True
+    Combo1.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).Selected = True
 End If
 
-BarFormattersCombo.SelStart = 0
-BarFormattersCombo.SelLength = 0
+Combo1.SelStart = 0
+Combo1.SelLength = 0
 
-BarFormattersCombo.Refresh
+Combo1.Refresh
 
 Exit Sub
 

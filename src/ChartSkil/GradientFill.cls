@@ -142,7 +142,8 @@ End If
 
 mColors = Value
 
-calculateGradientFillParameters
+'calculateGradientFillParameters
+mRecalcRequired = True
 
 Exit Property
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.1#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSelector 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -119,6 +119,8 @@ Private mShiftDown                                  As Boolean
 Private mAltDown                                    As Boolean
 
 Private mSelectedRows                               As Collection
+
+Private mCount                                      As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -326,9 +328,13 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get Count() As Long
+Count = mCount
+End Property
+
 Public Property Let IncludeHistoricalContracts( _
-                ByVal value As Boolean)
-mIncludeHistoricalContracts = value
+                ByVal Value As Boolean)
+mIncludeHistoricalContracts = Value
 End Property
 
 Public Property Get IncludeHistoricalContracts() As Boolean
@@ -965,6 +971,8 @@ Select Case contractSpec.secType
     'Case SecTypeCombo
 
 End Select
+
+mCount = mCount + 1
 
 Exit Sub
 

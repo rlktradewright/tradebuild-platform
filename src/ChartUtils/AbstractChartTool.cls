@@ -147,7 +147,7 @@ If mRegion Is Nothing Then
     mSelectionHandleSeries.DisplayMode = DataPointDisplayModePoint
     mSelectionHandleSeries.PointStyle = PointSquare
     mSelectionHandleSeries.LineThickness = 5
-    mSelectionHandleSeries.Color = vbBlack
+    mSelectionHandleSeries.Color = &H808080
     
     Set mSelectionHandles = New Collection
     

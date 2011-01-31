@@ -43,8 +43,10 @@ Public Const ConfigSettingWidth                     As String = ".Width"
 Public Const ConfigSettingWindowstate               As String = ".Windowstate"
 
 Public Const ConfigSettingCurrentChartStyle         As String = "&CurrentChartStyle"
+Public Const ConfigSettingCurrentHistChartStyle     As String = "&CurrentHistChartStyle"
 
 Public Const ConfigSettingAppCurrentChartStyle      As String = ConfigSectionApplication & ConfigSettingCurrentChartStyle
+Public Const ConfigSettingAppCurrentHistChartStyle  As String = ConfigSectionApplication & ConfigSettingCurrentHistChartStyle
 
 Public Const ConfigSettingConfigEditorLeft          As String = ConfigSectionConfigEditor & ConfigSettingLeft
 Public Const ConfigSettingConfigEditorTop           As String = ConfigSectionConfigEditor & ConfigSettingTop

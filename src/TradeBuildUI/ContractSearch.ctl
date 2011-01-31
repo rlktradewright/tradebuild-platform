@@ -224,6 +224,7 @@ ContractSpecBuilder1.Visible = True
 ContractSelector1.Visible = False
 ContractSpecBuilder1.SetFocus
 ClearButton.Visible = False
+MessageLabel.caption = ""
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
@@ -277,8 +278,8 @@ End Sub
 '@================================================================================
 
 Public Property Let ActionButtonCaption( _
-                ByVal value As String)
-ActionButton.caption = value
+                ByVal Value As String)
+ActionButton.caption = Value
 End Property
 
 Public Property Get ActionButtonCaption() As String
@@ -286,12 +287,12 @@ ActionButtonCaption = ActionButton.caption
 End Property
 
 Public Property Let IncludeHistoricalContracts( _
-                ByVal value As Boolean)
+                ByVal Value As Boolean)
 Const ProcName As String = "IncludeHistoricalContracts"
 Dim failpoint As String
 On Error GoTo Err
 
-ContractSelector1.IncludeHistoricalContracts = value
+ContractSelector1.IncludeHistoricalContracts = Value
 
 Exit Property
 
@@ -348,8 +349,8 @@ If mContracts.Count = 0 Then
 ElseIf mContracts.Count = 1 Then
     RaiseEvent Action
 Else
-    MessageLabel.caption = mContracts.Count & IIf(mContracts.Count = 1, " contract found", " contracts found")
     ContractSelector1.Initialise mContracts
+    MessageLabel.caption = ContractSelector1.Count & IIf(ContractSelector1.Count = 1, " contract", " contracts")
     ContractSelector1.Visible = True
     ContractSpecBuilder1.Visible = False
     ContractSelector1.SetFocus

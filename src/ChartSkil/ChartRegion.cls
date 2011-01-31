@@ -202,6 +202,9 @@ Private mHorizontalGridSpacer                       As HorizontalGridSpacer
 Private mSessStartGridlineStyle                     As LineStyle
 Private mSessEndGridlineStyle                       As LineStyle
 
+Private mDivider                                    As PictureBox
+Private mDividerGradientFill                        As GradientFill
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -221,6 +224,9 @@ mDeferredPainter.Initialise Me
 
 Set mGraphObjServiceProvider = New GraphObjServiceProvider
 mGraphObjServiceProvider.Region = Me
+
+Set mDividerGradientFill = New GradientFill
+mDividerGradientFill.Color = &HD0D0D0
 
 End Sub
 
@@ -759,6 +765,22 @@ Exit Property
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
+
+Friend Property Let Divider(ByVal Value As PictureBox)
+Const ProcName As String = "Divider"
+On Error GoTo Err
+
+Set mDivider = Value
+
+setDividerColors
+PaintDivider
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
 
 Public Property Get GridlineSpacingY() As Double
 Const ProcName As String = "GridlineSpacingY"
@@ -2045,6 +2067,22 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
+Friend Sub PaintDivider()
+Const ProcName As String = "PaintDivider"
+On Error GoTo Err
+
+If mDivider Is Nothing Then Exit Sub
+
+setDividerGradientFillArea
+mDividerGradientFill.Fill mDivider.hDC
+mDivider.Refresh
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
 Friend Sub RepaintAreas( _
                 ByRef pAreas() As TRectangle, _
                 ByVal pCount As Long)
@@ -2413,6 +2451,43 @@ On Error GoTo Err
 setViewportVerticalBounds lowValue, highValue
 
 doCalculateAndRepaint
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Private Sub setViewportVerticalBounds( _
+                ByRef Bottom As Double, _
+                ByRef Top As Double)
+    
+Const ProcName As String = "setViewportVerticalBounds"
+
+On Error GoTo Err
+
+If Bottom > Top Then Exit Sub
+    
+With mViewport
+    If MinimumHeight <> 0 Then
+        If Top - Bottom < MinimumHeight Then
+            Top = (Top + Bottom) / 2 + MinimumHeight / 2
+            Bottom = Top - MinimumHeight
+        End If
+    ElseIf Bottom = Top Then
+        Top = Top * 1.001
+        Bottom = Top * 0.998
+    End If
+    .Top = Top
+    .Bottom = Bottom
+    If Not mYAxisRegion Is Nothing Then
+        mYAxisRegion.Top = .Top
+        mYAxisRegion.Bottom = .Bottom
+    End If
+    ' return possibly adjusted values
+    Top = .Top
+    Bottom = .Bottom
+End With
 
 Exit Sub
 
@@ -3362,42 +3437,28 @@ On Error GoTo Err
 mViewport.GradientFillColors = BackGradientFillColors
 doRepaint
 
+setDividerColors
+PaintDivider
+
 Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub setViewportVerticalBounds( _
-                ByRef Bottom As Double, _
-                ByRef Top As Double)
-    
-Const ProcName As String = "setViewportVerticalBounds"
+Private Sub setDividerColors()
+If Not mDivider Is Nothing Then mDividerGradientFill.Colors = BackGradientFillColors
+End Sub
 
+Private Sub setDividerGradientFillArea()
+Dim lRect As GDI_RECT
+
+Const ProcName As String = "setDividerGradientFillArea"
 On Error GoTo Err
 
-If Bottom > Top Then Exit Sub
-    
-With mViewport
-    If MinimumHeight <> 0 Then
-        If Top - Bottom < MinimumHeight Then
-            Top = (Top + Bottom) / 2 + MinimumHeight / 2
-            Bottom = Top - MinimumHeight
-        End If
-    ElseIf Bottom = Top Then
-        Top = Top * 1.001
-        Bottom = Top * 0.998
-    End If
-    .Top = Top
-    .Bottom = Bottom
-    If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.Top = .Top
-        mYAxisRegion.Bottom = .Bottom
-    End If
-    ' return possibly adjusted values
-    Top = .Top
-    Bottom = .Bottom
-End With
+lRect.Right = mDivider.Width / Screen.TwipsPerPixelX
+lRect.Bottom = mDivider.Height / Screen.TwipsPerPixelY
+mDividerGradientFill.Area = lRect
 
 Exit Sub
 
