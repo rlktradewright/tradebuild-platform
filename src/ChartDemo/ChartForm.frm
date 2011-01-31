@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#185.1#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#186.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -559,7 +559,7 @@ On Error GoTo Err
 Set ls = New LineStyle
 ls.ExtendAfter = True
 
-Set tool = CreateLineTool(Chart1.Controller, ls, LayerBackground)
+Set tool = CreateLineTool(Chart1.Controller, ls, LayerHighestUser)
 Set mCurrentTool = tool
 Chart1.SetFocus
 
