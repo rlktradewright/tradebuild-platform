@@ -768,7 +768,7 @@ ls.Extended = True
 ls.ExtendAfter = True
 ls.IncludeInAutoscale = False
 
-Set mCurrentTool = CreateLineTool(mChartController, ls, LayerBackground)
+Set mCurrentTool = CreateLineTool(mChartController, ls, LayerNumbers.LayerHighestUser)
 MultiChart1.SetFocus
 
 Exit Sub
