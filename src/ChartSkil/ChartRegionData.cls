@@ -532,15 +532,16 @@ Friend Function GetNextSelectableObjectOrSeriesAtPoint( _
                 ByVal currObject As IGraphicObject, _
                 ByVal X As Single, _
                 ByVal Y As Single) As IGraphicObject
+Const ProcName As String = "GetNextSelectableObjectOrSeriesAtPoint"
+
+On Error GoTo Err
+
+Const NumberOfLayers As Long = LayerNumbers.LayerMax - LayerNumbers.LayerMinVisible - 1
 Dim startLayer As Long
 Dim currLayer As Long
 Dim i As Long
 Dim index As Long
 Dim currObjStillSelectable As Boolean
-
-Const ProcName As String = "GetNextSelectableObjectOrSeriesAtPoint"
-
-On Error GoTo Err
 
 If currObject Is Nothing Then
     startLayer = LayerMax
@@ -548,8 +549,9 @@ Else
     startLayer = currObject.Layer
 End If
 
-For i = LayerMinVisible To LayerMax
-    currLayer = (startLayer - i + LayerMax + 1) Mod (LayerMax + 1)
+For i = 1 To LayerMax - LayerMinVisible + 1
+    currLayer = startLayer - i
+    If currLayer < LayerMinVisible Then currLayer = currLayer + NumberOfLayers
     index = mGraphicObjects(mVisibleTable(currLayer).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(currLayer).lastindex
         With mGraphicObjects(index)
