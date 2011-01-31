@@ -549,7 +549,7 @@ Else
     startLayer = currObject.Layer
 End If
 
-For i = 1 To LayerMax - LayerMinVisible + 1
+For i = 1 To NumberOfLayers
     currLayer = startLayer - i
     If currLayer < LayerMinVisible Then currLayer = currLayer + NumberOfLayers
     index = mGraphicObjects(mVisibleTable(currLayer).firstIndex).nextVisibleIndex
