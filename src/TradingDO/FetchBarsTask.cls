@@ -130,6 +130,17 @@ End If
 Exit Sub
 
 Err:
+
+If Err.Number = 3265 Then   ' "Item cannot be found in the collection corresponding to the requested name or ordinal"
+    ' this sometimes happens with the first async operation for a long time - retry it
+    ' up to 5 times
+    Static sRetryCount As Long
+    
+    If sRetryCount < 5 Then
+        sRetryCount = sRetryCount + 1
+        mTaskContext.Suspend 10
+    End If
+End If
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
