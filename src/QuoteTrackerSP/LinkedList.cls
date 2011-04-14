@@ -49,7 +49,7 @@ Private Const ModuleName                As String = "LinkedList"
 '================================================================================
 
 Private Type ListEntry
-    next                    As Long
+    Next                    As Long
     prev                    As Long
     key                     As Variant
     item                    As Variant
@@ -77,7 +77,7 @@ Private Sub Class_Initialize()
 ReDim mEntries(2) As ListEntry
 mFirst = 0
 mLast = 1
-mEntries(mFirst).next = 1
+mEntries(mFirst).Next = 1
 mEntries(mLast).prev = 0
 mEntries(mLast).key = Null
 mNextFreeIndex = 2
@@ -95,11 +95,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Get capacity() As Long
-Const ProcName As String = "capacity"
+Friend Property Get Capacity() As Long
+Const ProcName As String = "Capacity"
 On Error GoTo Err
 
-capacity = UBound(mEntries) - 1 ' allow 2 for first and last entries
+Capacity = UBound(mEntries) - 1 ' allow 2 for first and last entries
 
 Exit Property
 
@@ -107,8 +107,8 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Friend Property Let capacityIncrement(ByVal value As Long)
-Const ProcName As String = "capacityIncrement"
+Friend Property Let CapacityIncrement(ByVal value As Long)
+Const ProcName As String = "CapacityIncrement"
 On Error GoTo Err
 
 mCapacityIncrement = value
@@ -119,8 +119,8 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Friend Property Let initialCapacity(ByVal value As Long)
-Const ProcName As String = "initialCapacity"
+Friend Property Let InitialCapacity(ByVal value As Long)
+Const ProcName As String = "InitialCapacity"
 On Error GoTo Err
 
 ReDim Preserve mEntries(value + 1) As ListEntry ' allow 2 for first and last entries
@@ -132,11 +132,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Friend Property Get size() As Long
-Const ProcName As String = "size"
+Friend Property Get Size() As Long
+Const ProcName As String = "Size"
 On Error GoTo Err
 
-size = mSize
+Size = mSize
 
 Exit Property
 
@@ -171,13 +171,13 @@ add = mNextFreeIndex
 
 If mSize = 0 Then
     ' no entries yet
-    mEntries(add).next = mLast
+    mEntries(add).Next = mLast
     mEntries(add).prev = mFirst
-    mEntries(mFirst).next = add
+    mEntries(mFirst).Next = add
     mEntries(mLast).prev = add
 Else
     If hint = mFirst Then
-        currEntry = mEntries(mFirst).next
+        currEntry = mEntries(mFirst).Next
     ElseIf hint = mLast Then
         currEntry = mEntries(mLast).prev
     Else
@@ -189,18 +189,18 @@ Else
             mEntries(currEntry).key > key
             currEntry = mEntries(currEntry).prev
         Loop
-        mEntries(mEntries(currEntry).next).prev = add
-        mEntries(add).next = mEntries(currEntry).next
+        mEntries(mEntries(currEntry).Next).prev = add
+        mEntries(add).Next = mEntries(currEntry).Next
         mEntries(add).prev = currEntry
-        mEntries(currEntry).next = add
+        mEntries(currEntry).Next = add
     Else
         Do While currEntry <> mLast And _
             mEntries(currEntry).key <= key
-            currEntry = mEntries(currEntry).next
+            currEntry = mEntries(currEntry).Next
         Loop
-        mEntries(mEntries(currEntry).prev).next = add
+        mEntries(mEntries(currEntry).prev).Next = add
         mEntries(add).prev = mEntries(currEntry).prev
-        mEntries(add).next = currEntry
+        mEntries(add).Next = currEntry
         mEntries(currEntry).prev = add
     End If
 End If
@@ -208,7 +208,7 @@ End If
 mNextFreeIndex = mNextFreeIndex + 1
 mSize = mSize + 1
 
-'If mEntries(mFirst).next = 1 Then Stop
+'If mEntries(mFirst).Next = 1 Then Stop
 
 Exit Function
 
@@ -223,7 +223,7 @@ On Error GoTo Err
 If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "List is empty"
-firstIndex = mEntries(mFirst).next
+firstIndex = mEntries(mFirst).Next
 
 Exit Function
 
@@ -231,14 +231,14 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Friend Function itemAt(ByVal index As Long) As Variant
+Friend Function itemAt(ByVal Index As Long) As Variant
 Const ProcName As String = "itemAt"
 On Error GoTo Err
 
 If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "List is empty"
-itemAt = mEntries(index).item
+itemAt = mEntries(Index).item
 
 Exit Function
 
@@ -261,15 +261,15 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Friend Function nextIndex(ByVal index As Long) As Long
+Friend Function nextIndex(ByVal Index As Long) As Long
 Const ProcName As String = "nextIndex"
 On Error GoTo Err
 
 If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "List is empty"
-If mEntries(index).next <> mLast Then
-    nextIndex = mEntries(index).next
+If mEntries(Index).Next <> mLast Then
+    nextIndex = mEntries(Index).Next
 Else
     nextIndex = -1
 End If
@@ -280,15 +280,15 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Friend Function prevIndex(ByVal index As Long) As Long
+Friend Function prevIndex(ByVal Index As Long) As Long
 Const ProcName As String = "prevIndex"
 On Error GoTo Err
 
 If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "List is empty"
-If mEntries(index).prev <> mFirst Then
-    prevIndex = mEntries(index).prev
+If mEntries(Index).prev <> mFirst Then
+    prevIndex = mEntries(Index).prev
 Else
     prevIndex = -1
 End If
@@ -299,19 +299,19 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Friend Function remove(ByVal index As Long) As Variant
-Const ProcName As String = "remove"
+Friend Function Remove(ByVal Index As Long) As Variant
+Const ProcName As String = "Remove"
 On Error GoTo Err
 
-If index = 0 Or index = 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If Index = 0 Or Index = 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
-                        "Can't remove head or tail entries"
+                        "Can't Remove head or tail entries"
 If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         ProjectName & "." & ModuleName & ":" & ProcName, _
                         "List is empty"
-remove = mEntries(index).item
-mEntries(mEntries(index).prev).next = mEntries(index).next
-mEntries(mEntries(index).next).prev = mEntries(index).prev
+Remove = mEntries(Index).item
+mEntries(mEntries(Index).prev).Next = mEntries(Index).Next
+mEntries(mEntries(Index).Next).prev = mEntries(Index).prev
 
 Exit Function
 
