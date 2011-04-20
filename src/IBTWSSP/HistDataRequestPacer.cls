@@ -50,7 +50,7 @@ Private Const MaxConcurrentHistDataRequests         As Long = 5 ' try serialisin
 ' Member variables
 '@================================================================================
 
-Private mTWSAPI                                     As TWSAPI
+Private WithEvents mTWSAPI                          As TWSAPI
 Attribute mTWSAPI.VB_VarHelpID = -1
 
 Private mRequests()                                 As HistoricalDataRequestTableEntry
@@ -64,6 +64,8 @@ Private mTaskContext                                As TaskContext
 
 Private mConcurrentHistDataRequests                 As Long
 
+Private mIsRequestPacingDisabled                    As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -74,8 +76,6 @@ mFirstFreeRequestsEntry = NullIndex
 mFirstPendingRequestsEntry = NullIndex
 mLastPendingRequestsEntry = NullIndex
 mLastPriorityPendingRequestsEntry = NullIndex
-
-StartTask Me, PriorityNormal
 End Sub
 
 '@================================================================================
@@ -125,12 +125,28 @@ Task_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mTWSAPI Event Handlers
 '@================================================================================
+
+Private Sub mTWSAPI_Connected()
+Const ProcName As String = "mTWSAPI_Connected"
+On Error GoTo Err
+
+doSchedule
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get TWSAPI() As TWSAPI
+Set TWSAPI = mTWSAPI
+End Property
 
 '@================================================================================
 ' Methods
@@ -148,7 +164,7 @@ If mRequests(pRequestId).ActualSubmissionTime = 0 Then
     unqueueEntry pRequestId
     releaseEntry pRequestId
 Else
-    mTWSAPI.CancelHistoricalData mRequests(pRequestId).Request
+    mTWSAPI.CancelHistoricalData pRequestId
     
     ' it's possible that TWS has already sent the data but we haven't received it yet,
     ' so we keep this entry for 'long enough' to ensure that any pending data
@@ -179,24 +195,33 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Friend Sub Finish()
-Set mTWSAPI = Nothing
-If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
-End Sub
-
-Friend Function GetRequester(ByVal pIndex As Long) As IHistDataRequester
-Const ProcName As String = "GetRequester"
+Const ProcName As String = "Finish"
 On Error GoTo Err
 
-Set GetRequester = mRequests(pIndex).Request.Requester
+Set mTWSAPI = Nothing
+If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+End Sub
 
-Friend Sub Initialise(ByVal pTWSAPI As TWSAPI)
+Friend Sub Initialise( _
+                ByVal pTWSAPI As TWSAPI, _
+                ByVal pIsRequestPacingDisabled As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mTWSAPI = pTWSAPI
+mIsRequestPacingDisabled = pIsRequestPacingDisabled
+
+StartTask Me, PriorityNormal
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Function RequestHistoricalData( _
@@ -209,7 +234,6 @@ Dim lIndex As Long
 
 lIndex = allocateEntry
 mRequests(lIndex).Request = pRequest
-mRequests(lIndex).Request.Id = lIndex
 
 queueEntry lIndex, pPriority
 
@@ -287,7 +311,7 @@ Do While lDelay = 0 And lIndex <> NullIndex And mConcurrentHistDataRequests < Ma
     If mRequests(lCurrIndex).EarliestSubmissionTime = 0 Then mRequests(lCurrIndex).EarliestSubmissionTime = gGetEarliestSubmissionTime(mRequests(lCurrIndex).Request)
     If mRequests(lCurrIndex).EarliestSubmissionTime < lTimestamp Then
         
-        mTWSAPI.RequestHistoricalData mRequests(lCurrIndex).Request
+        mTWSAPI.RequestHistoricalData lCurrIndex, mRequests(lCurrIndex).Request
         mRequests(lCurrIndex).ActualSubmissionTime = gRecordSubmission(mRequests(lCurrIndex).Request)
         
         mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
@@ -345,12 +369,20 @@ End Sub
 
 Private Function releaseEntry(ByVal pIndex As Long)
 Dim lBlankRequest As HistoricalDataRequest
+Const ProcName As String = "releaseEntry"
+On Error GoTo Err
+
 mRequests(pIndex).Next = mFirstFreeRequestsEntry
 mFirstFreeRequestsEntry = pIndex
 mRequests(pIndex).Cancelling = False
 mRequests(pIndex).ActualSubmissionTime = 0
 mRequests(pIndex).EarliestSubmissionTime = 0
 mRequests(pIndex).Request = lBlankRequest
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub unqueueEntry(ByVal pIndex As Long)
