@@ -1,4 +1,4 @@
-Attribute VB_Name = "GHistDataRequests"
+Attribute VB_Name = "GHistDataRequestPacer"
 Option Explicit
 
 ''
@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "GHistDataRequestPacer"
+Private Const ModuleName                            As String = "GHistDataRequester"
 
 Private Const MaxTwsHistRequestsPerPeriod           As Long = 60
 
