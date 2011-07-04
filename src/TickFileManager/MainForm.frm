@@ -2369,7 +2369,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             True, _
                             "Database Name=" & ContractDatabaseText & _
                             ";Database Type=" & ContractDbTypeCombo & _
-                            ";Server=" & Replace(ContractServerText, "\", "\\") & _
+                            ";Server=" & ContractServerText & _
                             ";User name=" & ContractUsernameText & _
                             ";Password=" & ContractPasswordText, _
                             "Contracts database", _
@@ -2451,7 +2451,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             True, _
                             "Database Name=" & DatabaseInText & _
                             ";Database Type=" & DbInTypeCombo & _
-                            ";Server=" & Replace(DbInServerText, "\", "\\") & _
+                            ";Server=" & DbInServerText & _
                             ";User name=" & UsernameInText & _
                             ";Password=" & PasswordInText, _
                             "Contract database", _
@@ -2505,7 +2505,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & Replace(DbOutServerText, "\", "\\") & _
+                            ";Server=" & DbOutServerText & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText & _
                             ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes"), _
@@ -2535,7 +2535,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & Replace(DbOutServerText, "\", "\\") & _
+                            ";Server=" & DbOutServerText & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText & _
                             ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes") & _
@@ -2566,7 +2566,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & Replace(DbOutServerText, "\", "\\") & _
+                            ";Server=" & DbOutServerText & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText, _
                             "Contract database", _
