@@ -1,9 +1,9 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#243.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#1.0#0"; "TradeBuildUI27.ocx"
 Begin VB.Form MainForm 
-   Caption         =   "TradeBuild Tickfile Manager Version 2.6"
+   Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
    ClientLeft      =   60
    ClientTop       =   345
@@ -49,28 +49,28 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ReplayProgressLabel"
-      Tab(1).Control(1)=   "ReplayContractLabel"
-      Tab(1).Control(2)=   "ReplayProgressBar"
-      Tab(1).Control(3)=   "ConvertButton"
+      Tab(1).Control(0)=   "Frame4"
+      Tab(1).Control(1)=   "SelectTickfilesButton"
+      Tab(1).Control(2)=   "ClearTickfileListButton"
+      Tab(1).Control(3)=   "TickfileList"
+      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(5)=   "TickfileList"
-      Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "ClearTickfileListButton"
-      Tab(1).Control(7)=   "SelectTickfilesButton"
-      Tab(1).Control(8)=   "Frame4"
+      Tab(1).Control(5)=   "ConvertButton"
+      Tab(1).Control(6)=   "ReplayProgressBar"
+      Tab(1).Control(7)=   "ReplayContractLabel"
+      Tab(1).Control(8)=   "ReplayProgressLabel"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label11"
-      Tab(2).Control(1)=   "ContractDetailsText"
-      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(0)=   "ContractSpecBuilder1"
+      Tab(2).Control(1)=   "Frame2"
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "Frame2"
-      Tab(2).Control(4)=   "ContractSpecBuilder1"
+      Tab(2).Control(3)=   "ContractDetailsText"
+      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(4)=   "Label11"
       Tab(2).ControlCount=   5
-      Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
+      Begin TradeBuildUI27.ContractSpecBuilder ContractSpecBuilder1 
          Height          =   2895
          Left            =   -69840
          TabIndex        =   61
@@ -1009,7 +1009,7 @@ Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
-Private WithEvents mTickfileManager As TradeBuild26.TickFileManager
+Private WithEvents mTickfileManager As TradeBuild27.TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
 Private WithEvents mContracts As Contracts
 Attribute mContracts.VB_VarHelpID = -1
@@ -1026,7 +1026,7 @@ Private mOutputPath As String
 
 Private mContract As Contract
 
-Private mSupportedOutputFormats() As TradeBuild26.TickfileFormatSpecifier
+Private mSupportedOutputFormats() As TradeBuild27.TickfileFormatSpecifier
 
 Private mArguments As CommandLineParser
 Private mNoUI As Boolean
@@ -1115,7 +1115,7 @@ End If
 
 Set mTickers = mTradeBuildAPI.Tickers
 
-AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
+AddStudyLibrary "CmnStudiesLib27.StudyLib", True, "Built-in"
 
 setupDbTypeCombos
 
@@ -1543,7 +1543,7 @@ Private Sub mContracts_NoMoreContractDetails()
 Dim tfs As TickfileSpecifier
 Dim i As Long
 Dim j As Long
-Dim lSupportedInputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier
+Dim lSupportedInputTickfileFormats() As TradeBuild27.TickfileFormatSpecifier
 
 Const ProcName As String = "mContracts_NoMoreContractDetails"
 On Error GoTo Err
@@ -1619,7 +1619,7 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_TickfileWriterNotification(ev As TradeBuild26.WriterEventData)
+Private Sub mTicker_TickfileWriterNotification(ev As TradeBuild27.WriterEventData)
 Const ProcName As String = "mTicker_TickfileWriterNotification"
 On Error GoTo Err
 
@@ -1705,7 +1705,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
 Const ProcName As String = "mTickfileManager_TickerAllocated"
 On Error GoTo Err
 
@@ -1778,11 +1778,11 @@ Dim spe As ServiceProviderError
 Const ProcName As String = "mTradeBuildAPI_Notification"
 On Error GoTo Err
 
-If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
+If ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTradeBuildAPI.GetServiceProviderError
-    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.errorCode & ": " & spe.Message
+    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.ErrorCode & ": " & spe.Message
 Else
-    LogMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
+    LogMessage "Notify " & ev.EventCode & ": " & ev.EventMessage
 End If
 
 Exit Sub
@@ -2365,7 +2365,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.ContractInfoSrvcProvider", _
+                            "TBInfoBase27.ContractInfoSrvcProvider", _
                             True, _
                             "Database Name=" & ContractDatabaseText & _
                             ";Database Type=" & ContractDbTypeCombo & _
@@ -2416,11 +2416,11 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.TickfileServiceProvider", _
+                            "TBInfoBase27.TickfileServiceProvider", _
                             True, _
                             "Database Name=" & DatabaseInText & _
                             ";Database Type=" & DbInTypeCombo & _
-                            ";Server=" & Replace(DbInServerText, "\", "\\") & _
+                            ";Server=" & DbInServerText & _
                             ";User name=" & UsernameInText & _
                             ";Password=" & PasswordInText & _
                             ";Access mode=ReadOnly", _
@@ -2447,7 +2447,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.ContractInfoSrvcProvider", _
+                            "TBInfoBase27.ContractInfoSrvcProvider", _
                             True, _
                             "Database Name=" & DatabaseInText & _
                             ";Database Type=" & DbInTypeCombo & _
@@ -2476,7 +2476,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TickfileSP26.TickfileServiceProvider", _
+                            "TickfileSP27.TickfileServiceProvider", _
                             True, _
                             "Access mode=ReadOnly", _
                             "Input tickfiles", _
@@ -2501,7 +2501,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.HistDataServiceProvider", _
+                            "TBInfoBase27.HistDataServiceProvider", _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
@@ -2531,7 +2531,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.TickfileServiceProvider", _
+                            "TBInfoBase27.TickfileServiceProvider", _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
@@ -2562,7 +2562,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase26.ContractInfoSrvcProvider", _
+                            "TBInfoBase27.ContractInfoSrvcProvider", _
                             True, _
                             "Database Name=" & DatabaseOutText & _
                             ";Database Type=" & DbOutTypeCombo & _
@@ -2591,7 +2591,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TickfileSP26.TickfileServiceProvider", _
+                            "TickfileSP27.TickfileServiceProvider", _
                             True, _
                             "Access mode=WriteOnly", _
                             "Output tickfiles", _
@@ -2616,7 +2616,7 @@ On Error GoTo Err
 
 On Error Resume Next
 Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "QTSP26.QTTickfileServiceProvider", _
+                            "QTSP27.QTTickfileServiceProvider", _
                             True, _
                             "Provider Key=QTIB" & _
                             ";Server=" & QTServerText & _
