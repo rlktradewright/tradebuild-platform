@@ -46,8 +46,9 @@ Private Const ModuleName                            As String = "OrderStatusRepo
 ' Member variables
 '@================================================================================
 
-Private mOrderId As String
-Private mStatus As OrderStatuses
+Private mOrderId                                    As String
+Private mBrokerId                                   As String
+Private mStatus                                     As OrderStatuses
 
 '@================================================================================
 ' Class Event Handlers
@@ -56,6 +57,10 @@ Private mStatus As OrderStatuses
 '@================================================================================
 ' IOrderStatusReport Interface Members
 '@================================================================================
+
+Private Property Get IOrderStatusReport_BrokerId() As String
+IOrderStatusReport_BrokerId = mBrokerId
+End Property
 
 Private Property Get IOrderStatusReport_OrderId() As String
 IOrderStatusReport_OrderId = mOrderId
@@ -73,14 +78,28 @@ End Property
 ' Properties
 '@================================================================================
 
+Public Property Get BrokerId() As String
+BrokerId = mBrokerId
+End Property
+
+Public Property Get OrderId() As String
+OrderId = mOrderId
+End Property
+
+Public Property Get Status() As OrderStatuses
+Status = mStatus
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Initialise( _
                 ByVal pOrderId As String, _
+                ByVal pBrokerId As String, _
                 ByVal pStatus As OrderStatuses)
 mOrderId = pOrderId
+mBrokerId = pBrokerId
 mStatus = pStatus
 End Sub
 

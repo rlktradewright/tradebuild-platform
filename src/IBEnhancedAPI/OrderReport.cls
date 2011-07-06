@@ -86,15 +86,7 @@ Set mProviderProperties = New Parameters
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
-'@================================================================================
-
-'@================================================================================
-' XXXX Event Handlers
-'@================================================================================
-
-'@================================================================================
-' Properties
+' IOrderReportIOrderReport Interface Members
 '@================================================================================
 
 Private Property Let IOrderReport_Action(ByVal Value As OrderActions)
@@ -335,6 +327,134 @@ End Property
 
 Private Property Get IOrderReport_TriggerPrice() As Double
 IOrderReport_TriggerPrice = mTriggerPrice
+End Property
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Public Property Get Action() As OrderActions
+Action = mAction
+End Property
+
+Public Property Get AllOrNone() As Boolean
+AllOrNone = mAllOrNone
+End Property
+
+Public Property Get BlockOrder() As Boolean
+BlockOrder = mBlockOrder
+End Property
+
+Public Property Get BrokerId() As String
+BrokerId = mBrokerId
+End Property
+
+Public Property Get DiscretionaryAmount() As Double
+DiscretionaryAmount = mdiscretionaryAmount
+End Property
+
+Public Property Get DisplaySize() As Long
+DisplaySize = mDisplaySize
+End Property
+
+Public Property Get ETradeOnly() As Boolean
+ETradeOnly = mETradeOnly
+End Property
+
+Public Property Get FirmQuoteOnly() As Boolean
+FirmQuoteOnly = mFirmQuoteOnly
+End Property
+
+Public Property Get GoodAfterTime() As Date
+GoodAfterTime = mGoodAfterTime
+End Property
+
+Public Property Get GoodAfterTimeTZ() As String
+GoodAfterTimeTZ = mgoodAfterTimeTZ
+End Property
+
+Public Property Get GoodTillDate() As Date
+GoodTillDate = mGoodTillDate
+End Property
+
+Public Property Get GoodTillDateTZ() As String
+GoodTillDateTZ = mgoodTillDateTZ
+End Property
+
+Public Property Get Hidden() As Boolean
+Hidden = mHidden
+End Property
+
+Public Property Get Id() As String
+Id = mIdentifier
+End Property
+
+Public Property Get IgnoreRegularTradingHours() As Boolean
+IgnoreRegularTradingHours = mignoreRegularTradingHours
+End Property
+
+Public Property Get LimitPrice() As Double
+LimitPrice = mLimitPrice
+End Property
+
+Public Property Get MinimumQuantity() As Long
+MinimumQuantity = mMinimumQuantity
+End Property
+
+Public Property Get NbboPriceCap() As Double
+NbboPriceCap = mNbboPriceCap
+End Property
+
+Public Property Get OrderType() As OrderTypes
+OrderType = mOrderType
+End Property
+
+Public Property Get Origin() As OrderOrigins
+Origin = mOrigin
+End Property
+
+Public Property Get OriginatorRef() As String
+OriginatorRef = mOriginatorRef
+End Property
+
+Public Property Get OverrideConstraints() As Boolean
+OverrideConstraints = mOverrideConstraints
+End Property
+
+Public Property Get ProviderProperties() As Parameters
+Set ProviderProperties = mProviderProperties
+End Property
+
+Public Property Get Quantity() As Long
+Quantity = mQuantity
+End Property
+
+Public Property Get SettlingFirm() As String
+SettlingFirm = mSettlingFirm
+End Property
+
+Public Property Get Status() As OrderStatuses
+Status = mStatus
+End Property
+
+Public Property Get StopTriggerMethod() As StopTriggerMethods
+StopTriggerMethod = mStopTriggerMethod
+End Property
+
+Public Property Get SweepToFill() As Boolean
+SweepToFill = mSweepToFill
+End Property
+
+Public Property Get TimeInForce() As OrderTIFs
+TimeInForce = mTimeInForce
+End Property
+
+Public Property Get TriggerPrice() As Double
+TriggerPrice = mTriggerPrice
 End Property
 
 '@================================================================================
