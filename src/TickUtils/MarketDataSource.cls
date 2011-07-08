@@ -47,7 +47,7 @@ Private Const ModuleName                            As String = "MarketDataSourc
 ' Member variables
 '@================================================================================
 
-Private mMarketDataRequester                        As MarketDataRequester
+Private mMarketDataManager                        As MarketDataManager
 Private mTickerId                                   As Long
 
 Private mContract                                   As Contract
@@ -300,7 +300,7 @@ ElseIf ev.ErrorNumber <> 0 Then
 Else
     Set lContractDetails = ev.result
     setState MarketDataSourceStateRunning
-    mTickerId = mMarketDataRequester.RequestMarketData(lContractDetails, Me, mMarketDataListeners)
+    mTickerId = mMarketDataManager.RequestMarketData(lContractDetails, Me, mMarketDataListeners)
 End If
 
 Exit Sub
@@ -326,7 +326,7 @@ Const ProcName As String = "CurrentAskPrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentAskPrice = mMarketDataRequester.CurrentAskPrice(mTickerId)
+CurrentAskPrice = mMarketDataManager.CurrentAskPrice(mTickerId)
 
 Exit Property
 
@@ -339,7 +339,7 @@ Const ProcName As String = "CurrentAskSize"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentAskSize = mMarketDataRequester.CurrentAskSize(mTickerId)
+CurrentAskSize = mMarketDataManager.CurrentAskSize(mTickerId)
 
 Exit Property
 
@@ -352,7 +352,7 @@ Const ProcName As String = "CurrentBidPrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentBidPrice = mMarketDataRequester.CurrentBidPrice(mTickerId)
+CurrentBidPrice = mMarketDataManager.CurrentBidPrice(mTickerId)
 
 Exit Property
 
@@ -365,7 +365,7 @@ Const ProcName As String = "CurrentBidSize"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentBidSize = mMarketDataRequester.CurrentBidSize(mTickerId)
+CurrentBidSize = mMarketDataManager.CurrentBidSize(mTickerId)
 
 Exit Property
 
@@ -378,7 +378,7 @@ Const ProcName As String = "CurrentOpenInterest"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentOpenInterest = mMarketDataRequester.CurrentOpenInterest(mTickerId)
+CurrentOpenInterest = mMarketDataManager.CurrentOpenInterest(mTickerId)
 
 Exit Property
 
@@ -391,7 +391,7 @@ Const ProcName As String = "CurrentTradePrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentTradePrice = mMarketDataRequester.CurrentTradePrice(mTickerId)
+CurrentTradePrice = mMarketDataManager.CurrentTradePrice(mTickerId)
 
 Exit Property
 
@@ -404,7 +404,7 @@ Const ProcName As String = "CurrentTradeSize"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentTradeSize = mMarketDataRequester.CurrentTradeSize(mTickerId)
+CurrentTradeSize = mMarketDataManager.CurrentTradeSize(mTickerId)
 
 Exit Property
 
@@ -417,7 +417,7 @@ Const ProcName As String = "CurrentVolume"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-CurrentVolume = mMarketDataRequester.CurrentVolume(mTickerId)
+CurrentVolume = mMarketDataManager.CurrentVolume(mTickerId)
 
 Exit Property
 
@@ -434,7 +434,7 @@ Const ProcName As String = "PreviousSessionClosePrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-PreviousSessionClosePrice = mMarketDataRequester.PreviousSessionClosePrice(mTickerId)
+PreviousSessionClosePrice = mMarketDataManager.PreviousSessionClosePrice(mTickerId)
 
 Exit Property
 
@@ -447,7 +447,7 @@ Const ProcName As String = "SessionHighPrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-SessionHighPrice = mMarketDataRequester.SessionHighPrice(mTickerId)
+SessionHighPrice = mMarketDataManager.SessionHighPrice(mTickerId)
 
 Exit Property
 
@@ -460,7 +460,7 @@ Const ProcName As String = "SessionLowPrice"
 On Error GoTo Err
 
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-SessionLowPrice = mMarketDataRequester.SessionLowPrice(mTickerId)
+SessionLowPrice = mMarketDataManager.SessionLowPrice(mTickerId)
 
 Exit Property
 
@@ -482,7 +482,7 @@ End Property
 
 Public Property Get Timestamp() As Date
 If mState <> MarketDataSourceStateRunning Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Not in Running state"
-Timestamp = mMarketDataRequester.Timestamp(mTickerId)
+Timestamp = mMarketDataManager.Timestamp(mTickerId)
 End Property
 
 '@================================================================================
@@ -507,7 +507,7 @@ Const ProcName As String = "AddMarketDataListener"
 On Error GoTo Err
 
 mMarketDataListeners.Add pListener, gGetObjectKey(pListener)
-If mState = MarketDataSourceStateRunning Then mMarketDataRequester.AddMarketDataListener mTickerId, Me, pListener
+If mState = MarketDataSourceStateRunning Then mMarketDataManager.AddMarketDataListener mTickerId, Me, pListener
 
 Exit Sub
 
@@ -516,10 +516,10 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pMarketDataRequester As MarketDataRequester, _
+                ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pContract As Contract, _
                 ByVal pContractRequester As ContractDetailsRequester)
-Set mMarketDataRequester = pMarketDataRequester
+Set mMarketDataManager = pMarketDataManager
 Set mContract = pContract
 Set mContractRequester = pContractRequester
 End Sub
@@ -563,7 +563,7 @@ Public Sub RemoveMarketDataListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveMarketDataListener"
 On Error GoTo Err
 
-If mState = MarketDataSourceStateRunning Then mMarketDataRequester.RemoveMarketDataListener mTickerId, Me, pListener
+If mState = MarketDataSourceStateRunning Then mMarketDataManager.RemoveMarketDataListener mTickerId, Me, pListener
 mMarketDataListeners.Remove gGetObjectKey(pListener)
 
 If mMarketDataListeners.Count = 0 Then setState MarketDataSourceStateStopped
@@ -588,7 +588,7 @@ If mContract.Specifier.SecType = SecTypeCombo Then
     StartTask(lTask, PriorityNormal).AddTaskCompletionListener Me
 Else
     setState MarketDataSourceStateRunning
-    mTickerId = mMarketDataRequester.RequestMarketData(gContractToTwsContractDetails(mContract), Me, mMarketDataListeners)
+    mTickerId = mMarketDataManager.RequestMarketData(gContractToTwsContractDetails(mContract), Me, mMarketDataListeners)
 End If
 
 Exit Sub
@@ -603,7 +603,7 @@ On Error GoTo Err
 
 If mContract.Specifier.SecType = SecTypeCombo Then Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Market depth not supported for Combo contracts"
 
-mTickerId = mMarketDataRequester.RequestMarketDepth(gContractToTwsContractDetails(mContract), Me, mMarketDepthListeners, pNumberOfRows)
+mTickerId = mMarketDataManager.RequestMarketDepth(gContractToTwsContractDetails(mContract), Me, mMarketDepthListeners, pNumberOfRows)
 Exit Sub
 
 Err:
@@ -617,7 +617,7 @@ End Sub
 'If State = MarketDataSourceStateCreated Or State = MarketDataSourceStateStopped Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Market data not started"
 'setState MarketDataSourceStateStopped
 '
-'mMarketDataRequester.RemoveMarketDataListener mTickerId, Me, mGenericTickListener
+'mMarketDataManager.RemoveMarketDataListener mTickerId, Me, mGenericTickListener
 '
 'Exit Sub
 '
@@ -629,7 +629,7 @@ End Sub
 'Const ProcName As String = "StopMarketDepth"
 'On Error GoTo Err
 '
-'mMarketDataRequester.CancelMarketDepth mTickerId, Me, mGenericTickListener
+'mMarketDataManager.CancelMarketDepth mTickerId, Me, mGenericTickListener
 '
 'Exit Sub
 '

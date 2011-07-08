@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "MarketDataRequester"
+Attribute VB_Name = "MarketDataManager"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -21,10 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IMarketDataConsumer
-Implements IMarketDepthConsumer
-Implements ITwsConnectionStateListener
 
 '@================================================================================
 ' Events
@@ -39,35 +35,26 @@ Implements ITwsConnectionStateListener
 '@================================================================================
 
 Private Type TickerTableEntry
-    Incarnation             As Long
-    ContractDetails         As TwsContractDetails
-    TimeZone                As TimeZone
+    Contract                As Contract
     Next                    As Long
     NumberOfRows            As Long
-    DataHasBeenReceived     As Boolean
     Subscriptions           As DataSourceSubscriptions
-    PrevBid                 As Double
-    PrevBidValid            As Boolean
-    PrevBidSize             As Long
-    PrevAsk                 As Double
-    PrevAskValid            As Boolean
-    PrevAskSize             As Long
-    PrevTrade               As Double
-    PrevTradeValid          As Boolean
-    PrevTradeSize           As Long
-    PrevOpen                As Double
-    PrevHigh                As Double
-    PrevLow                 As Double
-    PrevClose               As Double
-    PrevVolume              As Long
-    PrevOpenInterest        As Long
+    PrevBidTick             As GenericTick
+    PrevAskTick             As GenericTick
+    PrevTradeTick           As GenericTick
+    PrevOpenTick            As GenericTick
+    PrevHighTick            As GenericTick
+    PrevLowTick             As GenericTick
+    PrevCloseTick           As GenericTick
+    PrevVolumeTick          As GenericTick
+    PrevOpenInterestTick    As GenericTick
 End Type
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "MarketDataRequester"
+Private Const ModuleName                            As String = "MarketDataManager"
 
 Private Const IncarnationIncrement                  As Long = &H1000&
 
