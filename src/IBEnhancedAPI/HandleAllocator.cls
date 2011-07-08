@@ -34,6 +34,10 @@ Option Explicit
 ' Types
 '@================================================================================
 
+Private Type HandlesEntry
+    Next            As Long
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -44,9 +48,26 @@ Private Const ModuleName                            As String = "HandleAllocator
 ' Member variables
 '@================================================================================
 
+Private mHandles()                                  As HandlesEntry
+Private mHandlesIndex                               As Long
+Private mNextFreeHandlesIndex                       As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+ReDim mHandles(7) As HandlesEntry
+mNextFreeHandlesIndex = NullIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -63,6 +84,22 @@ Private Const ModuleName                            As String = "HandleAllocator
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Function AllocateHandle() As Long
+If mNextFreeHandlesIndex <> NullIndex Then
+    AllocateHandle = mNextFreeHandlesIndex
+    mNextFreeHandlesIndex = mHandles(mNextFreeHandlesIndex).Next
+Else
+    If mHandlesIndex > UBound(mHandles) Then ReDim Preserve mHandles(2 * (UBound(mHandles) + 1) - 1) As HandlesEntry
+    AllocateHandle = mHandlesIndex
+    mHandlesIndex = mHandlesIndex + 1
+End If
+End Function
+
+Friend Sub ReleaseHandle(ByVal pHandle As Long)
+mHandles(pHandle).Next = mNextFreeHandlesIndex
+mNextFreeHandlesIndex = pHandle
+End Sub
 
 '@================================================================================
 ' Helper Functions
