@@ -36,6 +36,7 @@ Option Explicit
 
 Public Type DataSourceSubscription
     DataSource              As MarketDataSource
+    Listener                As IGenericTickListener
     SubscribedToMarketData  As Boolean
     SubscribedToMarketDepth As Boolean
 End Type
@@ -82,14 +83,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub AddMarketDataSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub AddMarketDataSubscription(ByVal pDataSource As MarketDataSource, ByVal pListener As IGenericTickListener)
 Const ProcName As String = "AddMarketDataSubscription"
 On Error GoTo Err
 
 Dim lSubscr As DataSourceSubscription
 Dim lKey As String
 
-lKey = getKey(pDataSource)
+lKey = getKey(pDataSource, pListener)
 
 On Error Resume Next
 lSubscr = mSubscriptions.Item(lKey)
@@ -98,6 +99,7 @@ On Error GoTo Err
 If Not lSubscr.DataSource Is Nothing Then mSubscriptions.Remove lKey
 
 Set lSubscr.DataSource = pDataSource
+Set lSubscr.Listener = pListener
 lSubscr.SubscribedToMarketData = True
 
 mSubscriptions.Add lSubscr, lKey
@@ -109,14 +111,16 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub AddMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub AddMarketDepthSubscription( _
+                ByVal pDataSource As MarketDataSource, _
+                ByVal pListener As IGenericTickListener)
 Const ProcName As String = "AddMarketDepthSubscription"
 On Error GoTo Err
 
 Dim lSubscr As DataSourceSubscription
 Dim lKey As String
 
-lKey = getKey(pDataSource)
+lKey = getKey(pDataSource, pListener)
 
 On Error Resume Next
 lSubscr = mSubscriptions.Item(lKey)
@@ -125,6 +129,7 @@ On Error GoTo Err
 If Not lSubscr.DataSource Is Nothing Then mSubscriptions.Remove lKey
 
 Set lSubscr.DataSource = pDataSource
+Set lSubscr.Listener = pListener
 lSubscr.SubscribedToMarketDepth = True
 
 mSubscriptions.Add lSubscr, lKey
@@ -177,21 +182,27 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Friend Sub FireTick( _
+                ByVal pStreamId As Long, _
                 ByRef pTick As GenericTick)
 Const ProcName As String = "FireTick"
 On Error GoTo Err
 
 Dim lSubscr As DataSourceSubscription
 Dim lVar As Variant
+Dim ev As GenericTickEventData
+
+ev.StreamId = pStreamId
+ev.Tick = pTick
 
 For Each lVar In mSubscriptions
     lSubscr = lVar
+    Set ev.Source = lSubscr.DataSource
     If pTick.TickType = TickTypeMarketDepth Or _
         pTick.TickType = TickTypeMarketDepthReset _
     Then
-        If lSubscr.SubscribedToMarketDepth Then lSubscr.DataSource.NotifyTick pTick
+        If lSubscr.SubscribedToMarketDepth Then lSubscr.Listener.NotifyTick ev
     Else
-        If lSubscr.SubscribedToMarketData Then lSubscr.DataSource.NotifyTick pTick
+        If lSubscr.SubscribedToMarketData Then lSubscr.Listener.NotifyTick ev
     End If
 Next
 
@@ -201,14 +212,16 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub RemoveMarketDataSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub RemoveMarketDataSubscription( _
+                ByVal pDataSource As MarketDataSource, _
+                ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveMarketDataSubscription"
 On Error GoTo Err
 
 Dim lSubscr As DataSourceSubscription
 Dim lKey As String
 
-lKey = getKey(pDataSource)
+lKey = getKey(pDataSource, pListener)
 
 lSubscr = mSubscriptions.Item(lKey)
 
@@ -224,14 +237,39 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Friend Sub RemoveMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub RemoveMarketDataSubscriptions()
+Const ProcName As String = "RemoveMarketDataSubscriptions"
+On Error GoTo Err
+
+Dim lSubscr As DataSourceSubscription
+Dim var As Variant
+Dim lKey As String
+
+For Each var In mSubscriptions
+    lSubscr = var
+    lSubscr.SubscribedToMarketData = False
+    lKey = getKey(lSubscr.DataSource, lSubscr.Listener)
+    mSubscriptions.Remove lKey
+    If lSubscr.SubscribedToMarketDepth Then mSubscriptions.Add lSubscr, lKey
+    mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Friend Sub RemoveMarketDepthSubscription( _
+                ByVal pDataSource As MarketDataSource, _
+                ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveMarketDepthSubscription"
 On Error GoTo Err
 
 Dim lSubscr As DataSourceSubscription
 Dim lKey As String
 
-lKey = getKey(pDataSource)
+lKey = getKey(pDataSource, pListener)
 
 lSubscr = mSubscriptions.Item(lKey)
 
@@ -244,6 +282,30 @@ mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Friend Sub RemoveMarketDepthSubscriptions()
+Const ProcName As String = "RemoveMarketDepthSubscriptions"
+On Error GoTo Err
+
+Dim lSubscr As DataSourceSubscription
+Dim var As Variant
+Dim lKey As String
+
+For Each var In mSubscriptions
+    lSubscr = var
+    lSubscr.SubscribedToMarketDepth = False
+    lKey = getKey(lSubscr.DataSource, lSubscr.Listener)
+    mSubscriptions.Remove lKey
+    If lSubscr.SubscribedToMarketData Then mSubscriptions.Add lSubscr, lKey
+    mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
+Next
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
@@ -251,8 +313,8 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getKey(ByVal pDataSource As MarketDataSource) As String
-getKey = Hex$(ObjPtr(pDataSource))
+Private Function getKey(ByVal pDataSource As MarketDataSource, ByVal pListener As IGenericTickListener) As String
+getKey = gGetObjectKey(pDataSource) & "/" & gGetObjectKey(pListener)
 End Function
 
 
