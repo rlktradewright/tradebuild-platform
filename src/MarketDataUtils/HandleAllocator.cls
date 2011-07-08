@@ -1,4 +1,16 @@
-Attribute VB_Name = "GMarketDataSource"
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "HandleAllocator"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -22,21 +34,40 @@ Option Explicit
 ' Types
 '@================================================================================
 
+Private Type HandlesEntry
+    Next            As Long
+End Type
+
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "GMarketDataSource"
+Private Const ModuleName                            As String = "HandleAllocator"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mHandleAllocator                            As New HandleAllocator
+Private mHandles()                                  As HandlesEntry
+Private mHandlesIndex                               As Long
+Private mNextFreeHandlesIndex                       As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+ReDim mHandles(7) As HandlesEntry
+mNextFreeHandlesIndex = NullIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -54,28 +85,20 @@ Private mHandleAllocator                            As New HandleAllocator
 ' Methods
 '@================================================================================
 
-Public Function gAllocateHandle() As Long
-Const ProcName As String = "gAllocateHandle"
-On Error GoTo Err
-
-gAllocateHandle = mHandleAllocator.AllocateHandle
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Friend Function AllocateHandle() As Long
+If mNextFreeHandlesIndex <> NullIndex Then
+    AllocateHandle = mNextFreeHandlesIndex
+    mNextFreeHandlesIndex = mHandles(mNextFreeHandlesIndex).Next
+Else
+    If mHandlesIndex > UBound(mHandles) Then ReDim Preserve mHandles(2 * (UBound(mHandles) + 1) - 1) As HandlesEntry
+    AllocateHandle = mHandlesIndex
+    mHandlesIndex = mHandlesIndex + 1
+End If
 End Function
 
-Public Sub gReleaseHandle(ByVal pHandle As Long)
-Const ProcName As String = "gReleaseHandle"
-On Error GoTo Err
-
-mHandleAllocator.ReleaseHandle pHandle
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Friend Sub ReleaseHandle(ByVal pHandle As Long)
+mHandles(pHandle).Next = mNextFreeHandlesIndex
+mNextFreeHandlesIndex = pHandle
 End Sub
 
 '@================================================================================
