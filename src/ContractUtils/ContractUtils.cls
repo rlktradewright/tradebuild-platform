@@ -75,7 +75,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "GlobalClass"
+Private Const ModuleName                    As String = "ContractUtils"
 
 '@================================================================================
 ' Member variables
@@ -255,6 +255,15 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function CreateComboLeg( _
+                ByVal pContractSpec As ContractSpecifier, _
+                ByVal pIsBuyLeg As Boolean, _
+                ByVal pRatio As Long) As ComboLeg
+Set CreateComboLeg = New ComboLeg
+CreateComboLeg.Initialise pContractSpec, pIsBuyLeg, pRatio
+End Function
+
+
 Public Function CreateContractBuilder( _
                 ByVal Specifier As ContractSpecifier) As ContractBuilder
 Const ProcName As String = "CreateContractBuilder"
@@ -415,6 +424,22 @@ Exit Function
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Function
+
+Public Function IsValidPrice( _
+                ByVal pPrice As Double, _
+                ByVal pPrevValidPrice As Double, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double) As Boolean
+Const ProcName As String = "IsValidPrice"
+On Error GoTo Err
+
+IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, pSecType, pTickSize)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function IsValidSecType( _

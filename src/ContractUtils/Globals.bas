@@ -29,7 +29,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                As String = "ContractUtils26"
+Public Const ProjectName                                As String = "ContractUtils27"
 Private Const ModuleName                                As String = "Globals"
 
 Public Const ConfigSectionContractSpecifier             As String = "Specifier"
@@ -102,24 +102,18 @@ Dim failpoint As String
 On Error GoTo Err
 
 If LocalSymbol = "" And Symbol = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Symbol must be supplied if LocalSymbol is not supplied"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Symbol must be supplied if LocalSymbol is not supplied"
 End If
 
 If Exchange <> "" And _
     Not gIsValidExchangeCode(Exchange) _
 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "'" & Exchange & "' is not a valid Exchange code"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Exchange & "' is not a valid Exchange code"
 End If
 
 If Expiry <> "" Then
     If Not gIsValidExpiry(Expiry) Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "'" & Expiry & "' is not a valid Expiry format"
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Expiry & "' is not a valid Expiry format"
     End If
 End If
 
@@ -129,29 +123,21 @@ Case SecTypeStock
 Case SecTypeFuture
 Case SecTypeOption, SecTypeFuturesOption
     If Strike < 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Strike must be > 0"
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Strike must be > 0"
     End If
     Select Case Right
     Case OptCall
     Case OptPut
     Case OptNone
     Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "'" & Right & "' is not a valid option Right"
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Right & "' is not a valid option Right"
     End Select
 Case SecTypeCash
 Case SecTypeCombo
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Sectype 'combo' is not permissible"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Sectype 'combo' is not permissible"
 Case SecTypeIndex
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "'" & SecType & "' is not a valid secType"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & SecType & "' is not a valid secType"
 End Select
 
 Set gCreateContractSpecifier = New ContractSpecifier
@@ -182,9 +168,7 @@ On Error GoTo Err
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
 index = getCurrencyIndex(code)
 If index < 0 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid currency code"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid currency code"
 End If
 
 gGetCurrencyDescriptor = mCurrencyDescs(index)
@@ -335,6 +319,53 @@ If Len(value) = 6 Then
 End If
 
 gIsValidExpiry = False
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+End Function
+
+Public Function gIsValidPrice( _
+                ByVal pPrice As Double, _
+                ByVal pPrevValidPrice As Double, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double) As Boolean
+Const ProcName As String = "gIsValidPrice"
+Dim failpoint As String
+On Error GoTo Err
+
+If pTickSize = 0 Then
+    gIsValidPrice = True
+    Exit Function
+End If
+
+If pPrevValidPrice = 0 Or pPrevValidPrice = MaxDouble Then
+    If Abs(pPrice) / pTickSize > &H3FFFFF Then Exit Function ' note that Z index has ticksize 0.01
+                                                            ' so we need to allow plenty of room
+                                                            ' &H3FFFFF = 4194303
+    If pSecType = SecTypeIndex Then
+        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
+        ' positive, zero and negative values
+    Else
+        If pPrice <= 0 Then Exit Function
+        If pPrice / pTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
+    End If
+Else
+    If Abs(pPrevValidPrice - pPrice) / pTickSize > 32767 Then Exit Function
+    If pSecType = SecTypeIndex Then
+        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
+        ' positive and negative values - moreover the value can change dramatically from one
+        ' tick to the next
+    Else
+        If pPrice <= 0 Then Exit Function
+        If pPrice / pTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
+        If pPrice < (2 * pPrevValidPrice) / 3 Or pPrice > (3 * pPrevValidPrice) / 2 Then Exit Function
+    End If
+    
+End If
+
+gIsValidPrice = True
 
 Exit Function
 
@@ -569,6 +600,7 @@ addExchangeCode "BOX"
 addExchangeCode "BRUT"
 addExchangeCode "BTRADE"
 addExchangeCode "BVME"
+addExchangeCode "BYX"
 
 addExchangeCode "CAES"
 addExchangeCode "CBOE"
@@ -634,6 +666,7 @@ addExchangeCode "OSE.JPN"
 addExchangeCode "PHLX"
 addExchangeCode "PINK"
 addExchangeCode "PSE"
+addExchangeCode "PSX"
 
 addExchangeCode "RDBK"
 

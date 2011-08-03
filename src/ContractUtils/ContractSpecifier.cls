@@ -101,9 +101,7 @@ On Error GoTo Err
 
 If value = "" Then Exit Property
 If Not gIsValidExpiry(value) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid Expiry"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid Expiry"
 End If
 
 mExpiry = value

@@ -85,13 +85,13 @@ End Property
 Public Function AddLeg( _
                 ByVal ContractSpec As ContractSpecifier, _
                 ByVal IsBuyLeg As Boolean, _
-                ByVal ratio As Long, _
+                ByVal Ratio As Long, _
                 Optional ByVal Key As String) As ComboLeg
 Const ProcName As String = "AddLeg"
 Dim failpoint As String
 On Error GoTo Err
 
-Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, ratio, Key)
+Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, Ratio, Key)
 
 Exit Function
 

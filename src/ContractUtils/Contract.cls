@@ -88,13 +88,13 @@ End Sub
 ' Comparable Interface Members
 '@================================================================================
 
-Private Function Comparable_compareTo( _
-                ByVal obj As TWUtilities30.Comparable) As Long
+Private Function Comparable_CompareTo( _
+                ByVal obj As Comparable) As Long
 Dim i As Long
 Dim other As Contract
 Dim otherSpec As ContractSpecifier
 
-Const ProcName As String = "Comparable_compareTo"
+Const ProcName As String = "Comparable_CompareTo"
 Dim failpoint As String
 On Error GoTo Err
 
@@ -106,23 +106,23 @@ For i = 0 To UBound(mSortKeys)
     Case ContractSortKeyNone
         Exit Function
     Case ContractSortKeyLocalSymbol
-        Comparable_compareTo = StrComp(mSpecifier.LocalSymbol, otherSpec.LocalSymbol, vbTextCompare)
+        Comparable_CompareTo = StrComp(mSpecifier.LocalSymbol, otherSpec.LocalSymbol, vbTextCompare)
     Case ContractSortKeySymbol
-        Comparable_compareTo = StrComp(mSpecifier.Symbol, otherSpec.Symbol, vbTextCompare)
+        Comparable_CompareTo = StrComp(mSpecifier.Symbol, otherSpec.Symbol, vbTextCompare)
     Case ContractSortKeySecType
-        Comparable_compareTo = StrComp(gSecTypeToShortString(mSpecifier.SecType), gSecTypeToShortString(otherSpec.SecType), vbTextCompare)
+        Comparable_CompareTo = StrComp(gSecTypeToShortString(mSpecifier.SecType), gSecTypeToShortString(otherSpec.SecType), vbTextCompare)
     Case ContractSortKeyExchange
-        Comparable_compareTo = StrComp(mSpecifier.Exchange, otherSpec.Exchange, vbTextCompare)
+        Comparable_CompareTo = StrComp(mSpecifier.Exchange, otherSpec.Exchange, vbTextCompare)
     Case ContractSortKeyExpiry
-        Comparable_compareTo = StrComp(mSpecifier.Expiry, otherSpec.Expiry, vbTextCompare)
+        Comparable_CompareTo = StrComp(mSpecifier.Expiry, otherSpec.Expiry, vbTextCompare)
     Case ContractSortKeyCurrency
-        Comparable_compareTo = StrComp(mSpecifier.CurrencyCode, otherSpec.CurrencyCode, vbTextCompare)
+        Comparable_CompareTo = StrComp(mSpecifier.CurrencyCode, otherSpec.CurrencyCode, vbTextCompare)
     Case ContractSortKeyRight
-        Comparable_compareTo = StrComp(gOptionRightToString(mSpecifier.Right), gOptionRightToString(otherSpec.Right), vbTextCompare)
+        Comparable_CompareTo = StrComp(gOptionRightToString(mSpecifier.Right), gOptionRightToString(otherSpec.Right), vbTextCompare)
     Case ContractSortKeyStrike
-        Comparable_compareTo = Sgn(mSpecifier.Strike - otherSpec.Strike)
+        Comparable_CompareTo = Sgn(mSpecifier.Strike - otherSpec.Strike)
     End Select
-    If Comparable_compareTo <> 0 Then Exit Function
+    If Comparable_CompareTo <> 0 Then Exit Function
 Next
 
 Exit Function
@@ -405,9 +405,7 @@ On Error GoTo Err
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
 If XMLdoc.parseError.errorCode <> 0 Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Contract XML cannot be parsed"
+    Err.Raise ErrorCodes.ErrIllegalStateException, , "Contract XML cannot be parsed"
 End If
 
 Set contractEl = XMLdoc.selectSingleNode("contract")
@@ -472,7 +470,7 @@ With specifierObj
         End With
         comboLegObj.Initialise comboSpecifierObj, _
                                 CBool(comboLegEl.getAttribute("isbuyleg")), _
-                                CLng(comboLegEl.getAttribute("ratio"))
+                                CLng(comboLegEl.getAttribute("Ratio"))
     Next
 
 End With
@@ -484,38 +482,13 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Public Function IsValidPrice( _
-                ByVal price As Double, _
-                ByVal prevValidPrice As Double) As Boolean
+                ByVal pPrice As Double, _
+                ByVal pPrevValidPrice As Double) As Boolean
 Const ProcName As String = "IsValidPrice"
 Dim failpoint As String
 On Error GoTo Err
 
-If prevValidPrice = 0 Or prevValidPrice = MaxDouble Then
-    If Abs(price) / mTickSize > &H1FFFFF Then Exit Function ' note that Z index has ticksize 0.01
-                                                            ' so we need to allow plenty of room
-                                                            ' &H1FFFFF = 2097151
-    If mSpecifier.SecType = SecTypeIndex Then
-        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
-        ' positive, zero and negative values
-    Else
-        If price <= 0 Then Exit Function
-        If price / mTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
-    End If
-Else
-    If Abs(prevValidPrice - price) / mTickSize > 32767 Then Exit Function
-    If mSpecifier.SecType = SecTypeIndex Then
-        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
-        ' positive and negative values - moreover the value can change dramatically from one
-        ' tick to the next
-    Else
-        If price <= 0 Then Exit Function
-        If price / mTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
-        If price < (2 * prevValidPrice) / 3 Or price > (3 * prevValidPrice) / 2 Then Exit Function
-    End If
-    
-End If
-
-IsValidPrice = True
+IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickSize)
 
 Exit Function
 
@@ -739,7 +712,7 @@ If Not mSpecifier.ComboLegs Is Nothing Then
         Set Specifier = XMLdoc.createElement("specifier")
         ComboLeg.appendChild Specifier
         ComboLeg.setAttribute "isBuyLeg", comboLegObj.IsBuyLeg
-        ComboLeg.setAttribute "ratio", comboLegObj.ratio
+        ComboLeg.setAttribute "Ratio", comboLegObj.Ratio
         Specifier.setAttribute "symbol", mSpecifier.Symbol
         Specifier.setAttribute "sectype", mSpecifier.SecType
         Specifier.setAttribute "expiry", mSpecifier.Expiry

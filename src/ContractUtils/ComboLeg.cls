@@ -76,8 +76,8 @@ Public Property Get IsBuyLeg() As Boolean
 IsBuyLeg = mIsBuyLeg
 End Property
 
-Public Property Get ratio() As Long
-ratio = mRatio
+Public Property Get Ratio() As Long
+Ratio = mRatio
 End Property
 
 '@================================================================================
@@ -85,12 +85,12 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal ContractSpec As ContractSpecifier, _
-                ByVal IsBuyLeg As Boolean, _
-                ByVal ratio As Long)
-Set mContractSpec = ContractSpec
-mIsBuyLeg = IsBuyLeg
-mRatio = ratio
+                ByVal pContractSpec As ContractSpecifier, _
+                ByVal pIsBuyLeg As Boolean, _
+                ByVal pRatio As Long)
+Set mContractSpec = pContractSpec
+mIsBuyLeg = pIsBuyLeg
+mRatio = pRatio
 End Sub
 
 Public Function ToString() As String

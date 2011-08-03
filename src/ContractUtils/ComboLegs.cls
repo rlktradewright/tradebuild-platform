@@ -84,17 +84,13 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pComboLeg As ComboLeg, _
+Public Sub Add(ByVal pComboLeg As ComboLeg, _
                 Optional ByVal Key As String)
 Const ProcName As String = "Add"
 Dim failpoint As String
 On Error GoTo Err
 
-If Key <> "" Then
-    mComboLegs.Add pComboLeg, Key
-Else
-    mComboLegs.Add pComboLeg
-End If
+mComboLegs.Add pComboLeg, Key
 fireChange CollItemAdded, pComboLeg
 
 Exit Sub
@@ -120,7 +116,7 @@ End Sub
 Friend Function AddLeg( _
                 ByVal ContractSpec As ContractSpecifier, _
                 ByVal IsBuyLeg As Boolean, _
-                ByVal ratio As Long, _
+                ByVal Ratio As Long, _
                 ByVal Key As String) As ComboLeg
 
 Const ProcName As String = "AddLeg"
@@ -128,7 +124,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 Set AddLeg = New ComboLeg
-AddLeg.Initialise ContractSpec, IsBuyLeg, ratio
+AddLeg.Initialise ContractSpec, IsBuyLeg, Ratio
 Add AddLeg, Key
 
 Exit Function
