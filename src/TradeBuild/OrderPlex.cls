@@ -24,7 +24,7 @@ Option Explicit
 '@================================================================================
 
 Implements QuoteListener
-Implements TradeBuildSP.IOrderPlex
+Implements IOrderPlex
 
 '@================================================================================
 ' Events
@@ -202,7 +202,7 @@ Private mDirty As Boolean
 
 Private mOrders As Collection
 
-Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+Private mOrderSubmitter As IOrderSubmitter
 
 Private mPreventUnprotectedPosition As Boolean
 
@@ -265,11 +265,11 @@ End Sub
 ' IOrderPlex Interface Members
 '@================================================================================
 
-Private Property Get IOrderPlex_closeoutOrder() As TradeBuildSP.IOrder
+Private Property Get IOrderPlex_closeoutOrder() As IOrder
 Set IOrderPlex_closeoutOrder = mCloseoutOrder
 End Property
 
-Private Property Get IOrderPlex_EntryOrder() As TradeBuildSP.IOrder
+Private Property Get IOrderPlex_EntryOrder() As IOrder
 Set IOrderPlex_EntryOrder = mEntryOrder
 End Property
 
@@ -290,7 +290,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Private Property Get IOrderPlex_Order(ByVal index As Long) As TradeBuildSP.IOrder
+Private Property Get IOrderPlex_Order(ByVal index As Long) As IOrder
 Const ProcName As String = "IOrderPlex_Order"
 
 On Error GoTo Err
@@ -303,17 +303,17 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Private Property Get IOrderPlex_State() As TradeBuildSP.OrderPlexStateCodes
+Private Property Get IOrderPlex_State() As OrderPlexStateCodes
 Const ProcName As String = "IOrderPlex_State"
 IOrderPlex_State = State
 End Property
 
-Private Property Get IOrderPlex_Stoporder() As TradeBuildSP.IOrder
+Private Property Get IOrderPlex_Stoporder() As IOrder
 Const ProcName As String = "IOrderPlex_Stoporder"
 Set IOrderPlex_Stoporder = mStopOrder
 End Property
 
-Private Property Get IOrderPlex_targetOrder() As TradeBuildSP.IOrder
+Private Property Get IOrderPlex_targetOrder() As IOrder
 Const ProcName As String = "IOrderPlex_targetOrder"
 Set IOrderPlex_targetOrder = mTargetOrder
 End Property
@@ -1686,7 +1686,7 @@ Set mOrderContext = value
 End Property
 
 Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuildSP.IOrderSubmitter)
+                ByVal value As IOrderSubmitter)
 Const ProcName As String = "orderSubmitter"
 Set mOrderSubmitter = value
 End Property
