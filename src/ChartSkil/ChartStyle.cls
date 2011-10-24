@@ -49,7 +49,7 @@ Private Const ModuleName                                As String = "ChartStyle"
 
 Private mName                                           As String
 
-Private mEPhost                                         As ExtendedPropertyHost
+Private WithEvents mEPhost                              As ExtendedPropertyHost
 
 Private mBasedOn                                        As ChartStyle
 
@@ -69,8 +69,41 @@ End Sub
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mEPhost Event Handlers
 '@================================================================================
+
+Private Sub mEPhost_ExtendedPropertyChanged(pEv As ExtendedPropertyChangedEventData)
+Dim extProp As ExtendedProperty
+Const ProcName As String = "mEPhost_ExtendedPropertyChanged"
+On Error GoTo Err
+
+Set extProp = pEv.ExtendedProperty
+If Not isLocalValueSet(extProp) Then
+    Select Case extProp.PropertyName
+    Case AutoscrollingProperty, _
+            ChartBackColorProperty, _
+            HorizontalMouseScrollingAllowedProperty, _
+            HorizontalScrollBarVisibleProperty, _
+            TwipsPerPeriodProperty, _
+            VerticalMouseScrollingAllowedProperty, _
+            XAxisVisibleProperty, _
+            YAxisVisibleProperty, _
+            YAxisWidthCmProperty
+        If Not mConfig Is Nothing Then mConfig.RemoveSetting "&" & extProp.PropertyName
+    Case CrosshairLineStyleProperty, _
+            DefaultRegionStyleProperty, _
+            DefaultYAxisRegionStyleProperty, _
+            XAxisRegionStyleProperty, _
+            XCursorTextStyleProperty
+        If Not mConfig Is Nothing Then mConfig.RemoveConfigurationSection extProp.PropertyName
+    End Select
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -99,6 +132,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get AutoscrollingProperty() As ExtendedProperty
+Set AutoscrollingProperty = gAutoscrollingProperty
 End Property
 
 Friend Property Let BasedOn(ByVal Value As ChartStyle)
@@ -146,6 +183,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get ChartBackColorProperty() As ExtendedProperty
+Set ChartBackColorProperty = gChartBackColorProperty
 End Property
 
 Friend Property Let ConfigurationSection( _
@@ -218,6 +259,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get CrosshairLineStyleProperty() As ExtendedProperty
+Set CrosshairLineStyleProperty = gCrosshairLineStyleProperty
+End Property
+
 Friend Property Let DefaultRegionStyle(ByVal Value As ChartRegionStyle)
 Const ProcName As String = "DefaultRegionStyle"
 
@@ -247,6 +292,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get DefaultRegionStyleProperty() As ExtendedProperty
+Set DefaultRegionStyleProperty = gDefaultRegionStyleProperty
 End Property
 
 Friend Property Let DefaultYAxisRegionStyle(ByVal Value As ChartRegionStyle)
@@ -280,7 +329,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Friend Property Get ExtendedPropertyHost() As ExtendedPropertyHost
+Public Property Get DefaultYAxisRegionStyleProperty() As ExtendedProperty
+Set DefaultYAxisRegionStyleProperty = gDefaultYAxisRegionStyleProperty
+End Property
+
+Public Property Get ExtendedPropertyHost() As ExtendedPropertyHost
 Set ExtendedPropertyHost = mEPhost
 End Property
 
@@ -309,6 +362,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get HorizontalMouseScrollingAllowedProperty() As ExtendedProperty
+Set HorizontalMouseScrollingAllowedProperty = gHorizontalMouseScrollingAllowedProperty
+End Property
+
 Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
 On Error GoTo Err
@@ -332,6 +389,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get HorizontalScrollBarVisibleProperty() As ExtendedProperty
+Set HorizontalScrollBarVisibleProperty = gHorizontalScrollBarVisibleProperty
 End Property
 
 Public Property Get Name() As String
@@ -363,6 +424,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get TwipsPerPeriodProperty() As ExtendedProperty
+Set TwipsPerPeriodProperty = gTwipsPerPeriodProperty
+End Property
+
 Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
@@ -388,6 +453,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get VerticalMouseScrollingAllowedProperty() As ExtendedProperty
+Set VerticalMouseScrollingAllowedProperty = gVerticalMouseScrollingAllowedProperty
+End Property
+
 Public Property Let XAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "XAxisVisible"
 On Error GoTo Err
@@ -411,6 +480,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get XAxisVisibleProperty() As ExtendedProperty
+Set XAxisVisibleProperty = gXAxisVisibleProperty
 End Property
 
 Friend Property Let XAxisRegionStyle(ByVal Value As ChartRegionStyle)
@@ -444,6 +517,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get XAxisRegionStyleProperty() As ExtendedProperty
+Set XAxisRegionStyleProperty = gXAxisRegionStyleProperty
+End Property
+
 Friend Property Let XCursorTextStyle(ByVal Value As TextStyle)
 Const ProcName As String = "XCursorTextStyle"
 
@@ -475,6 +552,10 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
+Public Property Get XCursorTextStyleProperty() As ExtendedProperty
+Set XCursorTextStyleProperty = gXCursorTextStyleProperty
+End Property
+
 Public Property Let YAxisVisible(ByVal Value As Boolean)
 Const ProcName As String = "YAxisVisible"
 On Error GoTo Err
@@ -498,6 +579,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get YAxisVisibleProperty() As ExtendedProperty
+Set YAxisVisibleProperty = gYAxisVisibleProperty
 End Property
 
 Public Property Let YAxisWidthCm(ByVal Value As Single)
@@ -524,6 +609,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Property
+
+Public Property Get YAxisWidthCmProperty() As ExtendedProperty
+Set YAxisWidthCmProperty = gYAxisWidthCmProperty
 End Property
 
 '@================================================================================
