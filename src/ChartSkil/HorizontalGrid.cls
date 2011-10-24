@@ -206,7 +206,7 @@ Set regionObj = mRegionRef.Target
 End Function
 
 Private Sub removeLines()
-Dim ln As ChartSkil26.Line
+Dim ln As Line
 Const ProcName As String = "removeLines"
 
 On Error GoTo Err
@@ -243,7 +243,7 @@ Private Sub setHorizontalGridLines( _
                 ByVal pGridlineSpacing As Double)
 Dim Y As Double
 Dim i As Long
-Dim aLine As ChartSkil26.Line
+Dim aLine As Line
 
 Const ProcName As String = "setHorizontalGridLines"
 

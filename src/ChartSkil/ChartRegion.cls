@@ -2535,7 +2535,7 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Friend Sub addStyledVerticalGridline( _
+Private Sub addStyledVerticalGridline( _
                 ByVal pPeriodNumber As Long, _
                 ByVal pTimestamp As Date, _
                 ByVal pStyle As LineStyle)
@@ -2544,7 +2544,7 @@ Const ProcName As String = "addStyledVerticalGridline"
 
 On Error GoTo Err
 
-Dim lLine As ChartSkil26.Line
+Dim lLine As Line
 
 Set lLine = setVerticalGridLineAndText(pTimestamp, pPeriodNumber, True)
 If Not lLine Is Nothing Then lLine.LocalStyle = pStyle
@@ -2594,12 +2594,13 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 
 End Sub
 
-Private Function addVerticalGridLine(ByRef pLabels As PeriodLabels) As ChartSkil26.Line
-Dim vGridLine As ChartSkil26.Line
-
+Private Function addVerticalGridLine(ByRef pLabels As PeriodLabels) As Line
 Const ProcName As String = "addVerticalGridLine"
-
 On Error GoTo Err
+
+Dim vGridLine As Line
+
+If pLabels.Key = "" Then Exit Function
 
 On Error Resume Next
 Set vGridLine = mXGridLines.Item(pLabels.Key)
@@ -3766,7 +3767,7 @@ End Sub
 
 Private Function setVerticalGridLineAndText(ByVal pTimestamp As Date, _
                             ByVal pPeriodNumber As Long, _
-                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As ChartSkil26.Line
+                            ByVal pIgnoreVerticalGridTimePeriod As Boolean) As Line
 Const ProcName As String = "setVerticalGridLineAndText"
 
 On Error GoTo Err

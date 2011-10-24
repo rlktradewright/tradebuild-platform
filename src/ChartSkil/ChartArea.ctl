@@ -1443,7 +1443,7 @@ Set mPeriodLength = Value
 mPeriodLengthSet = True
 
 If Not mVerticalGridTimePeriodSet Then calcVerticalGridParams
-setRegionPeriodAndVerticalGridParameters
+setRegionVerticalGridTimePeriod
 
 Exit Property
 
@@ -1701,7 +1701,7 @@ End Select
 Set mVerticalGridTimePeriod = Value
 mVerticalGridTimePeriodSet = True
 
-setRegionPeriodAndVerticalGridParameters
+setRegionVerticalGridTimePeriod
 
 Exit Property
 
@@ -3157,9 +3157,9 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Sub setRegionPeriodAndVerticalGridParameters()
+Private Sub setRegionVerticalGridTimePeriod()
 Dim Region As ChartRegion
-Const ProcName As String = "setRegionPeriodAndVerticalGridParameters"
+Const ProcName As String = "setRegionVerticalGridTimePeriod"
 
 On Error GoTo Err
 

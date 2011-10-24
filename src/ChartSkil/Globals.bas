@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                As String = "ChartSkil26"
+Public Const ProjectName                As String = "ChartSkil27"
 Public Const ModuleName                 As String = "Globals"
 
 Public Const Pi As Double = 3.14159265358979

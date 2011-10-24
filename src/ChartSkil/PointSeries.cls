@@ -201,7 +201,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim dp As ChartSkil26.DataPoint
+Dim dp As DataPoint
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -696,14 +696,13 @@ Public Function Add( _
                 ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As DataPointStyle) As DataPoint
+Const ProcName As String = "Add"
+On Error GoTo Err
+
 Static duplicateCount As Long       ' counts the number of successive adds with
                                     ' the same Timestamp
 Static prevTimestamp As Date
 Dim dp As DataPoint
-
-Const ProcName As String = "Add"
-
-On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             ProjectName & "." & ModuleName & ":" & ProcName, _
@@ -719,6 +718,7 @@ End If
 
 Set dp = New DataPoint
 If CDbl(Timestamp) <> 0 Then dp.X = chartObj.GetXFromTimestamp(Timestamp, False, duplicateCount)
+
 If Key = "" Then
     Key = GenerateGUIDString
 End If
@@ -772,7 +772,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil26.DataPoint)
+Public Sub RemoveObject(ByVal Value As DataPoint)
 On Error GoTo Err
 mDataPoints.Remove Value.Key
 mGOSP.RemoveObject Value.handle

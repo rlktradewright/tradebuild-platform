@@ -187,7 +187,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lBar As ChartSkil26.Bar
+Dim lBar As Bar
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -699,29 +699,39 @@ Public Function Add( _
                 ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As BarStyle) As Bar
-
 Const ProcName As String = "Add"
-Dim lBar As Bar
-
-
 On Error GoTo Err
+
+Static duplicateCount As Long       ' counts the number of successive adds with
+                                    ' the same Timestamp
+Static prevTimestamp As Date
+Dim lBar As Bar
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             ProjectName & "." & ModuleName & ":" & ProcName, _
                             "Bar series is finished"
 
+If Not mPrevBarRef Is Nothing Then
+    If Timestamp = prevTimestamp Then
+        duplicateCount = duplicateCount + 1
+    Else
+        duplicateCount = 0
+    End If
+End If
+
 Set lBar = New Bar
+If CDbl(Timestamp) <> 0 Then lBar.X = chartObj.GetXFromTimestamp(Timestamp, False, duplicateCount)
 
 If Key = "" Then
     Key = GenerateGUIDString
 End If
 lBar.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
-lBar.X = chartObj.GetXFromTimestamp(Timestamp, False)
-
 If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
+
 mBars.Add lBar, Key
 Set mPrevBarRef = CreateWeakReference(lBar)
+prevTimestamp = Timestamp
 mGOSP.AddGraphicObject lBar
 
 Set Add = lBar
@@ -764,7 +774,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil26.Bar)
+Public Sub RemoveObject(ByVal Value As Bar)
 On Error GoTo Err
 mBars.Remove Value.Key
 mGOSP.RemoveObject Value.handle

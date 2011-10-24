@@ -187,7 +187,7 @@ mLines.Remove index
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lLine As ChartSkil26.Line
+Dim lLine As Line
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -1078,10 +1078,10 @@ End Property
 
 Public Function Add( _
                 Optional ByVal Key As String, _
-                Optional ByVal LocalStyle As LineStyle) As ChartSkil26.Line
+                Optional ByVal LocalStyle As LineStyle) As Line
 Const ProcName As String = "Add"
 
-Dim lLine As ChartSkil26.Line
+Dim lLine As Line
 
 
 On Error GoTo Err
@@ -1092,7 +1092,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Set lLine = New ChartSkil26.Line
+Set lLine = New Line
 lLine.Initialise Me, Key, mGOSP, mViewport, LocalStyle
 
 mGOSP.AddGraphicObject lLine
@@ -1124,7 +1124,7 @@ mFinished = True
 Set mViewport = Nothing
 End Sub
 
-Public Function Item(ByVal index As Variant) As ChartSkil26.Line
+Public Function Item(ByVal index As Variant) As Line
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 
@@ -1152,7 +1152,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil26.Line)
+Public Sub RemoveObject(ByVal Value As Line)
 On Error GoTo Err
 mLines.Remove Value.Key
 mGOSP.RemoveObject Value.handle

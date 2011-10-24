@@ -192,7 +192,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lText As ChartSkil26.Text
+Dim lText As Text
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -1304,7 +1304,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mTexts.[_NewEnum]
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil26.Text)
+Public Sub RemoveObject(ByVal Value As Text)
 On Error GoTo Err
 mTexts.Remove Value.Key
 mGOSP.RemoveObject Value.handle

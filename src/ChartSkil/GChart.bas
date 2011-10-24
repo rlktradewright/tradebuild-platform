@@ -122,10 +122,11 @@ lxAxisRegionStyle.HasGridText = True
 Set lDefaultYAxisRegionStyle = lDefaultRegionStyle.clone
 lDefaultYAxisRegionStyle.HasGrid = False
     
-Set lCrosshairsLineStyle = New LineStyle
+Set lCrosshairsLineStyle = gDefaultLineStyle.clone
 lCrosshairsLineStyle.Color = vbRed
+lCrosshairsLineStyle.Layer = LayerPointer
 
-Set lXCursorTextStyle = New TextStyle
+Set lXCursorTextStyle = gDefaultStyle.clone
 lXCursorTextStyle.Align = AlignBoxTopCentre
 lXCursorTextStyle.HideIfBlank = True
 lXCursorTextStyle.Color = vbBlack
@@ -134,13 +135,6 @@ lXCursorTextStyle.BoxFillColor = vbWhite
 lXCursorTextStyle.BoxStyle = LineSolid
 lXCursorTextStyle.BoxColor = vbBlack
 lXCursorTextStyle.BoxThickness = 1
-Dim afont As StdFont
-Set afont = New StdFont
-afont.Name = "Arial"
-afont.Size = 8
-afont.Underline = False
-afont.Bold = False
-lXCursorTextStyle.Font = afont
 
 Set gDefaultChartStyle = New ChartStyle
     
