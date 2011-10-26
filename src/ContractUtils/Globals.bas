@@ -78,12 +78,6 @@ Private mMaxCurrencyDescsIndex As Long
 ' Properties
 '@================================================================================
 
-Public Property Get gREgExp() As RegExp
-Static lRegExp As RegExp
-If lRegExp Is Nothing Then Set lRegExp = New RegExp
-Set gREgExp = lRegExp
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================

@@ -251,13 +251,8 @@ minTickString = Format(mTickSize, "0.##############")
 
 mNumberOfDecimals = Len(minTickString) - 2
 
-mPriceParser.NumberOfDecimals = mNumberOfDecimals
-
-If mNumberOfDecimals = 0 Then
-    mPriceFormatter.PriceFormatString = "0"
-Else
-    mPriceFormatter.PriceFormatString = "0." & String(mNumberOfDecimals, "0")
-End If
+mPriceParser.TickSize = mTickSize
+mPriceFormatter.TickSize = mTickSize
 
 Exit Property
 
