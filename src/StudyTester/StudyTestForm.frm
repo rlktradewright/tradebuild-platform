@@ -2,11 +2,11 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#202.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#181.0#0"; "ChartSkil2-6.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#1.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#1.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "TradeBuild Study Test Harness v2.6"
+   Caption         =   "TradeBuild Study Test Harness v2.7"
    ClientHeight    =   10365
    ClientLeft      =   5070
    ClientTop       =   3540
@@ -113,7 +113,7 @@ Begin VB.Form StudyTestForm
          Top             =   480
          Width           =   4935
       End
-      Begin ChartSkil26.ChartToolbar ChartToolbar1 
+      Begin ChartSkil27.ChartToolbar ChartToolbar1 
          Height          =   330
          Left            =   -74880
          TabIndex        =   18
@@ -122,7 +122,7 @@ Begin VB.Form StudyTestForm
          _ExtentX        =   11404
          _ExtentY        =   582
       End
-      Begin ChartSkil26.Chart Chart1 
+      Begin ChartSkil27.Chart Chart1 
          Height          =   8415
          Left            =   -74880
          TabIndex        =   17
@@ -132,7 +132,7 @@ Begin VB.Form StudyTestForm
          _ExtentY        =   14843
          ChartBackColor  =   6566450
       End
-      Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
+      Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
          Height          =   5655
          Left            =   -74760
          TabIndex        =   16
@@ -309,7 +309,7 @@ Implements LogListener
 
 Private Const ModuleName                As String = "StudyTestForm"
 
-Private Const BuiltInStudyLib           As String = "CmnStudiesLib26.StudyLib"
+Private Const BuiltInStudyLib           As String = "CmnStudiesLib27.StudyLib"
 
 Private Const PriceRegionName As String = "$price"
 Private Const VolumeRegionName As String = "$volume"
@@ -575,7 +575,7 @@ Const ProcName As String = "TestButton_Click"
 Dim failPoint As String
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils26.Bar
+Dim lBar As TimeframeUtils27.Bar
 Dim studyToTest As Study
 Dim testStudyConfig As StudyConfiguration
 Dim addTestStudyToSource As Boolean
@@ -866,7 +866,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Function getVolume(ByVal pBar As TimeframeUtils26.Bar, ByVal pQuarter As Long) As Long
+Private Function getVolume(ByVal pBar As TimeframeUtils27.Bar, ByVal pQuarter As Long) As Long
 Const ProcName As String = "getVolume"
 On Error GoTo Err
 
@@ -949,7 +949,7 @@ Set lStudyLibrary = CreateObject(pProgId)
 isValidStudyLibrary = Not (lStudyLibrary Is Nothing)
 End Function
 
-Private Sub loadBarToChart(ByVal pBar As TimeframeUtils26.Bar)
+Private Sub loadBarToChart(ByVal pBar As TimeframeUtils27.Bar)
 Const ProcName As String = "loadBarToChart"
 Dim failPoint As String
 On Error GoTo Err
@@ -984,7 +984,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub loadBarToGrid(ByVal pBar As TimeframeUtils26.Bar)
+Private Sub loadBarToGrid(ByVal pBar As TimeframeUtils27.Bar)
 Const ProcName As String = "loadBarToGrid"
 On Error GoTo Err
 
@@ -1012,7 +1012,7 @@ Private Sub loadBarsToGrid()
 Const ProcName As String = "loadBarsToGrid"
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils26.Bar
+Dim lBar As TimeframeUtils27.Bar
 
 mGrid.Redraw = False
 mGrid.SetupDataColumns
@@ -1035,7 +1035,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub LoadData()
-Dim lBar As TimeframeUtils26.Bar
+Dim lBar As TimeframeUtils27.Bar
 
 Const ProcName As String = "LoadData"
 On Error GoTo Err
@@ -1176,7 +1176,7 @@ Set mSourceStudy = mStudyManager.AddSource(IIf(TestDataFilenameText = "", _
 
 mPriceInputHandle = mStudyManager.AddInput(mSourceStudy, _
                         InputValuePrice, _
-                        ChartUtils26.ChartRegionNamePrice, _
+                        ChartUtils27.ChartRegionNamePrice, _
                         InputTypeReal, _
                         True, _
                         MinimumPriceTickText)
@@ -1184,7 +1184,7 @@ mChartManager.SetInputRegion mPriceInputHandle, PriceRegionName
 
 mVolumeInputHandle = mStudyManager.AddInput(mSourceStudy, _
                         InputValueVolume, _
-                        ChartUtils26.ChartRegionNameVolume, _
+                        ChartUtils27.ChartRegionNameVolume, _
                         InputTypeInteger, _
                         False, _
                         1)
@@ -1246,7 +1246,7 @@ Const ProcName As String = "testStudy"
 Dim failPoint As String
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils26.Bar
+Dim lBar As TimeframeUtils27.Bar
 
 logErrorsToForm
 
