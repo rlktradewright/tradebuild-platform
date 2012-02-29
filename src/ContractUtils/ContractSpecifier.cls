@@ -202,7 +202,8 @@ On Error GoTo Err
 
 If pContractSpecifier Is Nothing Then Exit Function
 FuzzyEquals = (Me.SecType = pContractSpecifier.SecType And _
-                Me.Symbol = pContractSpecifier.Symbol)
+                Me.Symbol = pContractSpecifier.Symbol) Or _
+            (Me.LocalSymbol = pContractSpecifier.LocalSymbol)
 
 Exit Function
 

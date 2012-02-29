@@ -518,11 +518,7 @@ Else
     ParsePrice = ParsePriceAsDecimals(pPriceString, pPrice)
 End If
 
-If pPrice <= 0 Then Exit Function
-
-If Abs(pPrice - mTickSize * Int((pPrice + mTickSize / 1000) / mTickSize)) > (mTickSize / 1000) Then Exit Function
-    
-ParsePrice = True
+If Not IsValidPrice(pPrice, 0#) Then ParsePrice = False
 
 Exit Function
 
