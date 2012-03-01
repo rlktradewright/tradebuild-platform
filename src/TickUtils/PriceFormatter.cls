@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "PriceFormatter"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -62,11 +62,29 @@ Private mPriceFormatString As String
 ' Properties
 '@================================================================================
 
-Friend Property Let PriceFormatString( _
-                ByVal value As String)
-mPriceFormatString = value
+Public Property Let TickSize(ByVal value As Double)
+Const ProcName As String = "TickSize"
+On Error GoTo Err
+
+Dim minTickString As String
+Dim lNumberOfDecimals As Long
+
+minTickString = Format(value, "0.##############")
+
+lNumberOfDecimals = Len(minTickString) - 2
+
+If lNumberOfDecimals = 0 Then
+    mPriceFormatString = "0"
+Else
+    mPriceFormatString = "0." & String(lNumberOfDecimals, "0")
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
-                
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -87,7 +105,7 @@ FormatPriceAs32nds = Int(pPrice) & gDefaultThirtySecondsSeparator & Format(numer
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs32ndsAndFractions( _
@@ -119,7 +137,7 @@ FormatPriceAs32ndsAndFractions = priceString & gDefaultThirtySecondsAndFractions
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs64ths( _
@@ -138,7 +156,7 @@ FormatPriceAs64ths = Int(pPrice) & gDefaultSixtyFourthsSeparator & Format(numera
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs64thsAndFractions( _
@@ -166,7 +184,7 @@ FormatPriceAs64thsAndFractions = priceString & gDefaultSixtyFourthsAndFractionsT
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAsDecimals( _
@@ -180,7 +198,7 @@ FormatPriceAsDecimals = Format(pPrice, mPriceFormatString)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
