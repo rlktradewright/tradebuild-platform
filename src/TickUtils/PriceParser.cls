@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "PriceParser"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -62,11 +62,24 @@ Private mParsePriceAsDecimalsPattern As String
 ' Properties
 '@================================================================================
 
-Friend Property Let NumberOfDecimals( _
-                ByVal value As Long)
-mParsePriceAsDecimalsPattern = "^\d+($" & _
-                            "|\.\d{1," & value & "}$)"
+Public Property Let TickSize(ByVal value As Double)
+Const ProcName As String = "TickSize"
+On Error GoTo Err
 
+Dim minTickString As String
+Dim lNumberOfDecimals As Long
+
+minTickString = Format(value, "0.##############")
+
+lNumberOfDecimals = Len(minTickString) - 2
+
+mParsePriceAsDecimalsPattern = "^\d+($" & _
+                            "|\.\d{1," & lNumberOfDecimals & "}$)"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -94,7 +107,7 @@ ParsePriceAs32nds = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function ParsePriceAs32ndsAndFractions( _
@@ -130,7 +143,7 @@ ParsePriceAs32ndsAndFractions = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function ParsePriceAs64ths( _
@@ -146,7 +159,7 @@ If Not getSubmatches(pPriceString, _
                     gParsePriceAs64thsPattern, _
                     lSubmatches) Then Exit Function
 
-If Not gREgExp.Test(pPriceString) Then Exit Function
+If Not gRegExp.Test(pPriceString) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
 
@@ -158,7 +171,7 @@ ParsePriceAs64ths = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function ParsePriceAs64thsAndFractions( _
@@ -190,7 +203,7 @@ ParsePriceAs64thsAndFractions = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Public Function ParsePriceAsDecimals( _
@@ -212,7 +225,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 '@================================================================================
@@ -229,13 +242,13 @@ Const ProcName As String = "IsMatched"
 Dim failpoint As String
 On Error GoTo Err
 
-gREgExp.Pattern = pPattern
-IsMatched = gREgExp.Test(pPriceString)
+gRegExp.Pattern = pPattern
+IsMatched = gRegExp.Test(pPriceString)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function getSubmatches( _
@@ -249,8 +262,8 @@ Const ProcName As String = "getSubmatches"
 Dim failpoint As String
 On Error GoTo Err
 
-gREgExp.Pattern = pPattern
-Set lMatches = gREgExp.Execute(pPriceString)
+gRegExp.Pattern = pPattern
+Set lMatches = gRegExp.Execute(pPriceString)
 
 If lMatches.Count = 0 Then Exit Function
 
@@ -261,7 +274,7 @@ getSubmatches = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function memberOf( _
@@ -282,6 +295,6 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
