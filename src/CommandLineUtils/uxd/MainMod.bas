@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "uxd"
+Public Const ProjectName                    As String = "uxd27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -94,7 +94,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -108,8 +108,8 @@ Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -118,7 +118,7 @@ Do While inString <> gCon.eofString
     Else
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
@@ -148,25 +148,25 @@ notes = Trim$(tokens(2))
 On Error GoTo Err
 
 If name = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": name must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": name must be supplied"
     validInput = False
 End If
 
 If timezone = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": timezone must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": timezone must be supplied"
     validInput = False
 End If
 
 If Not validInput Then Exit Sub
 
 If validInput Then
-    Dim ex As exchange
+    Dim ex As Exchange
     
-    Set ex = gDb.ExchangeFactory.loadByName(name)
+    Set ex = gDb.ExchangeFactory.LoadByName(name)
     If ex Is Nothing Then
-        Set ex = gDb.ExchangeFactory.makeNew
+        Set ex = gDb.ExchangeFactory.MakeNew
     ElseIf Not gUpdate Then
-        gCon.writeErrorLine "Line " & lineNumber & ": " & name & " already exists"
+        gCon.WriteErrorLine "Line " & lineNumber & ": " & name & " already exists"
         Exit Sub
     Else
         update = True
@@ -179,18 +179,18 @@ If validInput Then
     If ex.IsValid Then
         ex.ApplyEdit
         If update Then
-            gCon.writeLineToConsole "Updated: " & name
+            gCon.WriteLineToConsole "Updated: " & name
         Else
-            gCon.writeLineToConsole "Added: " & name
+            gCon.WriteLineToConsole "Added: " & name
         End If
     Else
         Dim lErr As ErrorItem
         For Each lErr In ex.ErrorList
             Select Case lErr.ruleId
             Case BusinessRuleIds.BusRuleExchangeNameValid
-                gCon.writeErrorLine "Line " & lineNumber & " name invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " name invalid"
             Case BusinessRuleIds.BusRuleExchangeTimezoneValid
-                gCon.writeErrorLine "Line " & lineNumber & " timezone invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " timezone invalid"
             End Select
         Next
     End If
@@ -199,7 +199,7 @@ End If
 Exit Sub
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 End Sub
 
 Private Function setupDb( _
@@ -228,12 +228,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDb = False
 End If
     
@@ -249,18 +249,18 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDb = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "uxd -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
-gCon.writeErrorLine "    -U     # update existing records"
-gCon.writeErrorLine "StdIn Formats:"
-gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "name,timezone[,notes]"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "uxd27 -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
+gCon.WriteErrorLine "    -U     # update existing records"
+gCon.WriteErrorLine "StdIn Formats:"
+gCon.WriteErrorLine "#comment"
+gCon.WriteErrorLine "name,timezone[,notes]"
 End Sub
 
 

@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "CmnStudiesLib26"
+Public Const ProjectName                    As String = "CmnStudiesLib27"
 Private Const ModuleName                As String = "Globals"
 
 
@@ -253,7 +253,7 @@ Case UCase$(EmaShortName)
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.initialise GenerateGUIDString, _
+    lStudy.Initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
@@ -267,7 +267,7 @@ Case Else
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.initialise GenerateGUIDString, _
+    lStudy.Initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _

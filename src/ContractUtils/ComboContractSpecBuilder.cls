@@ -56,7 +56,7 @@ Private mComboLegs                          As ComboLegs
 
 Private Sub Class_Initialize()
 Set mContractSpecifier = New ContractSpecifier
-mContractSpecifier.SecType = SecTypeCombo
+mContractSpecifier.zSecType = SecTypeCombo
 
 Set mComboLegs = New ComboLegs
 mContractSpecifier.ComboLegs = mComboLegs
@@ -74,7 +74,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get ContractSpecifier() As ContractSpecifier
+Public Property Get ContractSpecifier() As IContractSpecifier
 Set ContractSpecifier = mContractSpecifier
 End Property
 
@@ -83,25 +83,24 @@ End Property
 '@================================================================================
 
 Public Function AddLeg( _
-                ByVal ContractSpec As ContractSpecifier, _
+                ByVal ContractSpec As IContractSpecifier, _
                 ByVal IsBuyLeg As Boolean, _
-                ByVal Ratio As Long, _
-                Optional ByVal Key As String) As ComboLeg
+                ByVal Ratio As Long) As ComboLeg
 Const ProcName As String = "AddLeg"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, Ratio, Key)
+Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, Ratio)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub RemoveLeg(ByVal index As Variant)
 Const ProcName As String = "RemoveLeg"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mComboLegs.Remove index
@@ -109,7 +108,7 @@ mComboLegs.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

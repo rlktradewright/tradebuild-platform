@@ -68,7 +68,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function CreateBarFormatter(ByVal pBars As TimeframeUtils26.Bars) As BarFormatter
+Public Function CreateBarFormatter(ByVal pBars As TimeframeUtils27.bars) As BarFormatter
 
 End Function
 

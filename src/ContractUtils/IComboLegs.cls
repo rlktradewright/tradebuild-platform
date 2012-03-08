@@ -60,9 +60,22 @@ Private Const ModuleName                            As String = "IComboLegs"
 ' Properties
 '@================================================================================
 
+Public Property Get Count() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub AddCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+End Sub
+
+Public Function Item(ByVal pIndex As Variant) As IComboleg
+End Function
+
+Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
+End Sub
 
 '@================================================================================
 ' Helper Functions

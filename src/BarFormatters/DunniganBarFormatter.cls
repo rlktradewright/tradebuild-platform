@@ -46,7 +46,7 @@ Private Const ModuleName                    As String = "DunniganBarFormatter"
 ' Member variables
 '@================================================================================
 
-Private mBars As TimeframeUtils26.bars
+Private mBars As TimeframeUtils27.bars
  
 '@================================================================================
 ' Class Event Handlers
@@ -57,8 +57,8 @@ Private mBars As TimeframeUtils26.bars
 '@================================================================================
 
 Private Sub BarFormatter_FormatBar( _
-                ByVal sourceBar As TimeframeUtils26.Bar, _
-                ByVal chartBar As ChartSkil26.Bar)
+                ByVal sourceBar As TimeframeUtils27.Bar, _
+                ByVal chartBar As ChartSkil27.Bar)
 Const ProcName As String = "BarFormatter_FormatBar"
 On Error GoTo Err
 
@@ -104,7 +104,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let bars(ByVal value As TimeframeUtils26.bars)
+Friend Property Let bars(ByVal value As TimeframeUtils27.bars)
 Const ProcName As String = "bars"
 On Error GoTo Err
 

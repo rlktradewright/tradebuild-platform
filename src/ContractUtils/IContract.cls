@@ -84,6 +84,9 @@ End Property
 Public Property Get Specifier() As IContractSpecifier
 End Property
 
+Public Property Let SortKeys(ByRef Value() As ContractSortKeyIds)
+End Property
+                
 Public Property Get TickSize() As Double
 End Property
 
@@ -97,18 +100,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function FormatPrice( _
-                ByVal pPrice As Double) As String
-End Function
-
-Public Function IsValidPrice( _
-                ByVal pPrice As Double, _
-                ByVal pPrevValidPrice As Double) As Boolean
-End Function
-
-Public Function ParsePrice( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
+Public Function ToString() As String
 End Function
 
 '@================================================================================

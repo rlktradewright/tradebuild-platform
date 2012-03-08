@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ltz"
+Public Const ProjectName                    As String = "ltz27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -89,7 +89,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -102,7 +102,7 @@ End Sub
 Private Sub process()
 Dim s() As String
 Dim tzf As TimeZoneFactory
-Dim tz As TradingDO26.TimeZone
+Dim tz As TradingDO27.TimeZone
 Dim i As Long
 
 Set tzf = gDb.TimeZoneFactory
@@ -110,14 +110,14 @@ Set tzf = gDb.TimeZoneFactory
 s = GetAvailableTimeZoneNames
 
 For i = 0 To UBound(s)
-    Set tz = tzf.loadByName(s(i))
+    Set tz = tzf.LoadByName(s(i))
     If Not tz Is Nothing Then
-        gCon.writeLine s(i) & " already exists"
+        gCon.WriteLine s(i) & " already exists"
     Else
-        Set tz = tzf.makeNew
+        Set tz = tzf.MakeNew
         tz.Name = s(i)
         tz.ApplyEdit
-        gCon.writeLine s(i) & " added"
+        gCon.WriteLine s(i) & " added"
     End If
 Next
 
@@ -150,12 +150,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDb = False
 End If
     
@@ -171,14 +171,14 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDb = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "ltz -todb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "ltz27 -todb:databaseserver,databasetype,catalog[,username[,password]]"
 End Sub
 
 

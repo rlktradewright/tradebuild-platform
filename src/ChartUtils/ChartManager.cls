@@ -105,7 +105,7 @@ Const ProcName As String = "TaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then
-    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
+    Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.ErrorNumber; "; Message: "; ev.ErrorMessage
 End If
 
 mChartController.EnableDrawing
@@ -618,7 +618,7 @@ Dim lStudy As Study
 Dim Region As ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
 Dim horizRulesLineSeries As LineSeries
-Dim line As ChartSkil26.line
+Dim line As ChartSkil27.line
 Dim InputValueNames() As String
 
 Const ProcName As String = "AddStudy"
@@ -752,7 +752,7 @@ If findRegion Is Nothing Then
         Set findRegion = mChartController.Regions.Item(regionName)
     Else
         Set findRegion = mChartController.Regions.Add(20, , , , regionName)
-        findRegion.GridlineSpacingY = 0.8
+        findRegion.YGridlineSpacing = 0.8
         findRegion.title.Text = title
     End If
     Set re.Region = findRegion
@@ -842,17 +842,16 @@ End Function
 
 Private Function isRegionInUse( _
                 ByVal regionName As String) As Boolean
-Dim re As RegionEntry
-
 Const ProcName As String = "isRegionInUse"
-Dim failpoint As String
 On Error GoTo Err
+
+Dim re As RegionEntry
 
 On Error Resume Next
 re = mRegionEntries(regionName)
 On Error GoTo Err
 
-If re.Region Is Nothing Then Exit Function
+isRegionInUse = Not (re.Region Is Nothing)
 
 Exit Function
 

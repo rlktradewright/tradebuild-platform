@@ -60,21 +60,21 @@ Private mLineSpecs()                        As FibLineSpecifier
 
 Private mLineSeries                         As LineSeries
 
-Private WithEvents mLine1                   As ChartSkil26.Line
+Private WithEvents mLine1                   As ChartSkil27.Line
 Attribute mLine1.VB_VarHelpID = -1
-Private WithEvents mLine2                   As ChartSkil26.Line
+Private WithEvents mLine2                   As ChartSkil27.Line
 Attribute mLine2.VB_VarHelpID = -1
-Private WithEvents mLine3                   As ChartSkil26.Line
+Private WithEvents mLine3                   As ChartSkil27.Line
 Attribute mLine3.VB_VarHelpID = -1
-Private WithEvents mLine4                   As ChartSkil26.Line
+Private WithEvents mLine4                   As ChartSkil27.Line
 Attribute mLine4.VB_VarHelpID = -1
-Private WithEvents mLine5                   As ChartSkil26.Line
+Private WithEvents mLine5                   As ChartSkil27.Line
 Attribute mLine5.VB_VarHelpID = -1
-Private WithEvents mLine6                   As ChartSkil26.Line
+Private WithEvents mLine6                   As ChartSkil27.Line
 Attribute mLine6.VB_VarHelpID = -1
-Private WithEvents mLine7                   As ChartSkil26.Line
+Private WithEvents mLine7                   As ChartSkil27.Line
 Attribute mLine7.VB_VarHelpID = -1
-Private WithEvents mLine8                   As ChartSkil26.Line
+Private WithEvents mLine8                   As ChartSkil27.Line
 Attribute mLine8.VB_VarHelpID = -1
 
 Private mTextSeries                         As TextSeries
@@ -85,8 +85,8 @@ Private mControlPoint2                      As Point
 Private mLineStyle                          As LineStyle
 Private mTextStyle                          As TextStyle
 
-Private mStartPoint1                        As ChartSkil26.Point
-Private mStartPoint2                        As ChartSkil26.Point
+Private mStartPoint1                        As ChartSkil27.Point
+Private mStartPoint2                        As ChartSkil27.Point
 
 Private mLayer                              As LayerNumbers
 
@@ -146,11 +146,11 @@ If mLineSeries Is Nothing Then
     If UBound(mLineSpecs) >= 7 Then Set mLine8 = addRetracementLine(7, X, Y)
     
 Else
-    Dim ln As ChartSkil26.Line
+    Dim ln As ChartSkil27.Line
     For Each ln In mLineSeries
         ln.Layer = mLayer
     Next
-    Dim txt As ChartSkil26.Text
+    Dim txt As ChartSkil27.Text
     For Each txt In mTextSeries
         txt.Layer = mLayer
     Next
@@ -192,7 +192,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IChartTool_Delete()
-Dim ln As ChartSkil26.Line
+Dim ln As ChartSkil27.Line
 Const ProcName As String = "IChartTool_Delete"
 On Error GoTo Err
 
@@ -200,7 +200,7 @@ For Each ln In mLineSeries
     mRegion.RemoveGraphicObject ln
 Next
 mRegion.RemoveGraphicObjectSeries mLineSeries
-Dim txt As ChartSkil26.Text
+Dim txt As ChartSkil27.Text
 For Each txt In mTextSeries
     mRegion.RemoveGraphicObject txt
 Next
@@ -239,7 +239,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
-Dim ln As ChartSkil26.Line
+Dim ln As ChartSkil27.Line
 
 Const ProcName As String = "IChartTool_Move"
 On Error GoTo Err
@@ -251,7 +251,7 @@ For Each ln In mLineSeries
     ln.Point1 = NewPoint(ln.Point1.X + X - mPrevX, ln.Point1.Y + Y - mPrevY)
     ln.Point2 = NewPoint(ln.Point2.X + X - mPrevX, ln.Point2.Y + Y - mPrevY)
 Next
-Dim txt As ChartSkil26.Text
+Dim txt As ChartSkil27.Text
 Dim i As Long
 For i = 1 To mTextSeries.Count
     Set txt = mTextSeries(i)
@@ -299,7 +299,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
+Private Property Let IChartTool_Region(ByVal RHS As ChartSkil27.ChartRegion)
 Dim i As Long
 Const ProcName As String = "IChartTool_Region"
 On Error GoTo Err
@@ -318,7 +318,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
-Dim ln As ChartSkil26.Line
+Dim ln As ChartSkil27.Line
 Dim txt As Text
 Dim i As Long
 Dim retr As Double
@@ -375,7 +375,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IChartTool_Undo()
-Dim ln As ChartSkil26.Line
+Dim ln As ChartSkil27.Line
 Dim txt As Text
 Dim i As Long
 Dim retr As Double
@@ -542,8 +542,8 @@ Private Function addRetracementLine( _
                 ByVal index As Long, _
                 ByVal X As Double, _
                 ByVal Y As Double)
-Dim ln As ChartSkil26.Line
-Dim txt As ChartSkil26.Text
+Dim ln As ChartSkil27.Line
+Dim txt As ChartSkil27.Text
 
 Const ProcName As String = "addRetracementLine"
 On Error GoTo Err
@@ -591,8 +591,8 @@ End Sub
 
 Private Sub drawLines()
 Dim i As Long
-Dim ln As ChartSkil26.Line
-Dim txt As ChartSkil26.Text
+Dim ln As ChartSkil27.Line
+Dim txt As ChartSkil27.Text
 Dim retr As Double
 
 Const ProcName As String = "drawLines"
@@ -674,11 +674,11 @@ On Error GoTo Err
 Set mStartPoint1 = mControlPoint1
 Set mStartPoint2 = mControlPoint2
 
-Dim ln As ChartSkil26.Line
+Dim ln As ChartSkil27.Line
 For Each ln In mLineSeries
     ln.Layer = LayerNumbers.LayerMax
 Next
-Dim txt As ChartSkil26.Text
+Dim txt As ChartSkil27.Text
 For Each txt In mTextSeries
     txt.Layer = LayerNumbers.LayerMax
 Next

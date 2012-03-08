@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gbd"
+
 Private Const ModuleName                    As String = "StreamBasedProcessor"
 
 '@================================================================================
@@ -59,10 +59,18 @@ Attribute mTimeframe.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub mTimeframe_BarsLoaded()
+Const ProcName As String = "mTimeframe_BarsLoaded"
+On Error GoTo Err
+
 gProcessor.Finish
 Set gProcessor = Nothing
 gCon.WriteLineToConsole "Completed"
 Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -84,6 +92,9 @@ Friend Sub startData( _
                 
 Dim lTicker As Ticker
 
+Const ProcName As String = "startData"
+On Error GoTo Err
+
 Set mSelfRef = Me
 
 Set lTicker = TradeBuildAPI.Tickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
@@ -97,6 +108,11 @@ Set mTimeframe = lTicker.Timeframes.AddHistorical(GetTimePeriod(barLength, barUn
                                         toDate, _
                                         Not sessionOnly)
 gProcessor.Timeframe = mTimeframe
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

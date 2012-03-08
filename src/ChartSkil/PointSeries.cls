@@ -247,7 +247,7 @@ End Property
 ' mStyle Event Handlers
 '================================================================================
 
-Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
 
 On Error GoTo Err

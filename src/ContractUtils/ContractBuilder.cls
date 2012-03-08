@@ -65,45 +65,45 @@ Private mContract                           As Contract
 ' Properties
 '@================================================================================
 
-Public Property Get Contract() As Contract
+Public Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
-Public Property Let DaysBeforeExpiryToSwitch(ByVal value As Long)
-mContract.DaysBeforeExpiryToSwitch = value
+Public Property Let DaysBeforeExpiryToSwitch(ByVal Value As Long)
+mContract.DaysBeforeExpiryToSwitch = Value
 End Property
 
-Public Property Let Description(ByVal value As String)
-mContract.Description = value
+Public Property Let Description(ByVal Value As String)
+mContract.Description = Value
 End Property
 
-Public Property Let ExpiryDate(ByVal value As Date)
-mContract.ExpiryDate = value
+Public Property Let ExpiryDate(ByVal Value As Date)
+mContract.ExpiryDate = Value
 End Property
 
-Public Property Let Multiplier(ByVal value As Double)
-mContract.Multiplier = value
+Public Property Let Multiplier(ByVal Value As Double)
+mContract.Multiplier = Value
 End Property
 
-Public Property Let ProviderIDs(ByVal value As Parameters)
-mContract.ProviderIDs = value
+Public Property Let ProviderIDs(ByVal Value As Parameters)
+mContract.ProviderIDs = Value
 End Property
 
-Public Property Let SessionStartTime(ByVal value As Date)
-mContract.SessionStartTime = TimeValue(value)
+Public Property Let SessionStartTime(ByVal Value As Date)
+mContract.SessionStartTime = TimeValue(Value)
 End Property
 
-Public Property Let SessionEndTime(ByVal value As Date)
-mContract.SessionEndTime = TimeValue(value)
+Public Property Let SessionEndTime(ByVal Value As Date)
+mContract.SessionEndTime = TimeValue(Value)
 End Property
 
-Public Property Let TickSize(ByVal value As Double)
-mContract.TickSize = value
+Public Property Let TickSize(ByVal Value As Double)
+mContract.TickSize = Value
 End Property
 
-Public Property Let Timezone( _
-                ByVal value As Timezone)
-mContract.Timezone = value
+Public Property Let TimezoneName( _
+                ByVal Value As String)
+mContract.TimezoneName = Value
 End Property
 
 '@================================================================================
@@ -111,9 +111,9 @@ End Property
 '@================================================================================
 
 Friend Sub BuildFrom( _
-                ByVal pContract As Contract)
+                ByVal pContract As IContract)
 Const ProcName As String = "BuildFrom"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With mContract
@@ -121,36 +121,36 @@ With mContract
     .Description = pContract.Description
     .ExpiryDate = pContract.ExpiryDate
     .Multiplier = pContract.Multiplier
-    .ProviderIDs = pContract.ProviderIDs
+    '.ProviderIDs = pContract.ProviderIDs
     .SessionEndTime = pContract.SessionEndTime
     .SessionStartTime = pContract.SessionStartTime
     .Specifier = pContract.Specifier
     .TickSize = pContract.TickSize
-    .Timezone = pContract.Timezone
+    .TimezoneName = pContract.TimezoneName
 End With
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Friend Sub Initialise( _
-                ByVal Specifier As ContractSpecifier)
+                ByVal Specifier As IContractSpecifier)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mContract = New Contract
 mContract.Specifier = Specifier
-mContract.Timezone = GetTimeZone("")
+mContract.TimezoneName = ""
 mContract.DaysBeforeExpiryToSwitch = 1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
@@ -176,8 +176,8 @@ With config
     mContract.Multiplier = .GetSetting(ConfigSettingMultiplier, "1")
     mContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
     mContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
-    mContract.TickSize = .GetSetting(ConfigSettingSessionTickSize, "0.01")
-    mContract.Timezone = GetTimeZone(.GetSetting(ConfigSettingSessionTimezone, ""))
+    mContract.TickSize = .GetSetting(ConfigSettingTickSize, "0.01")
+    mContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, "")
 End With
 
 Exit Sub

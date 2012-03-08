@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "Contract"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -31,6 +31,9 @@ Option Explicit
 '@================================================================================
 
 Implements Comparable
+Implements IContract
+Implements JSONable
+Implements Stringable
 
 '@================================================================================
 ' Events
@@ -41,10 +44,6 @@ Implements Comparable
 '@================================================================================
 
 Private Const ModuleName                As String = "Contract"
-
-Private Const OneThirtySecond           As Double = 0.03125
-Private Const OneSixtyFourth            As Double = 0.015625
-Private Const OneHundredTwentyEighth    As Double = 0.0078125
 
 '@================================================================================
 ' Enums
@@ -58,7 +57,7 @@ Private Const OneHundredTwentyEighth    As Double = 0.0078125
 ' Member variables
 '@================================================================================
 
-Private mSpecifier As ContractSpecifier
+Private mSpecifier As IContractSpecifier
 Private mTickSize As Double
 Private mMultiplier As Double
 Private mNumberOfDecimals As Long
@@ -68,67 +67,101 @@ Private mSessionEndTime As Date
 Private mExpiryDate As Date
 Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs As Parameters
-Private mTimeZone As Timezone
+Private mTimezoneName As String
 
 Private mSortKeys() As ContractSortKeyIds
-
-Private mPriceFormatter As PriceFormatter
-Private mPriceParser As PriceParser
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mPriceFormatter = New PriceFormatter
-Set mPriceParser = New PriceParser
-End Sub
 
 '@================================================================================
 ' Comparable Interface Members
 '@================================================================================
 
 Private Function Comparable_CompareTo( _
-                ByVal obj As Comparable) As Long
-Dim i As Long
-Dim other As Contract
-Dim otherSpec As ContractSpecifier
-
+                ByVal pObj As Comparable) As Long
 Const ProcName As String = "Comparable_CompareTo"
-Dim failpoint As String
 On Error GoTo Err
 
-Set other = obj
-Set otherSpec = other.Specifier
-
-For i = 0 To UBound(mSortKeys)
-    Select Case mSortKeys(i)
-    Case ContractSortKeyNone
-        Exit Function
-    Case ContractSortKeyLocalSymbol
-        Comparable_CompareTo = StrComp(mSpecifier.LocalSymbol, otherSpec.LocalSymbol, vbTextCompare)
-    Case ContractSortKeySymbol
-        Comparable_CompareTo = StrComp(mSpecifier.Symbol, otherSpec.Symbol, vbTextCompare)
-    Case ContractSortKeySecType
-        Comparable_CompareTo = StrComp(gSecTypeToShortString(mSpecifier.SecType), gSecTypeToShortString(otherSpec.SecType), vbTextCompare)
-    Case ContractSortKeyExchange
-        Comparable_CompareTo = StrComp(mSpecifier.Exchange, otherSpec.Exchange, vbTextCompare)
-    Case ContractSortKeyExpiry
-        Comparable_CompareTo = StrComp(mSpecifier.Expiry, otherSpec.Expiry, vbTextCompare)
-    Case ContractSortKeyCurrency
-        Comparable_CompareTo = StrComp(mSpecifier.CurrencyCode, otherSpec.CurrencyCode, vbTextCompare)
-    Case ContractSortKeyRight
-        Comparable_CompareTo = StrComp(gOptionRightToString(mSpecifier.Right), gOptionRightToString(otherSpec.Right), vbTextCompare)
-    Case ContractSortKeyStrike
-        Comparable_CompareTo = Sgn(mSpecifier.Strike - otherSpec.Strike)
-    End Select
-    If Comparable_CompareTo <> 0 Then Exit Function
-Next
+Comparable_CompareTo = gContractsCompare(Me, pObj, mSortKeys)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+'@================================================================================
+' IContract Interface Members
+'@================================================================================
+
+Private Property Get IContract_DaysBeforeExpiryToSwitch() As Long
+IContract_DaysBeforeExpiryToSwitch = DaysBeforeExpiryToSwitch
+End Property
+
+Private Property Get IContract_Description() As String
+IContract_Description = Description
+End Property
+
+Private Property Get IContract_ExpiryDate() As Date
+IContract_ExpiryDate = ExpiryDate
+End Property
+
+Private Property Get IContract_Multiplier() As Double
+IContract_Multiplier = Multiplier
+End Property
+
+Private Property Get IContract_NumberOfDecimals() As Long
+IContract_NumberOfDecimals = NumberOfDecimals
+End Property
+
+Private Property Get IContract_SessionEndTime() As Date
+IContract_SessionEndTime = SessionEndTime
+End Property
+
+Private Property Get IContract_SessionStartTime() As Date
+IContract_SessionStartTime = SessionStartTime
+End Property
+
+Private Property Let IContract_SortKeys(Value() As ContractSortKeyIds)
+SortKeys = Value
+End Property
+
+Private Property Get IContract_Specifier() As IContractSpecifier
+Set IContract_Specifier = Specifier
+End Property
+
+Private Property Get IContract_TickSize() As Double
+IContract_TickSize = TickSize
+End Property
+
+Private Property Get IContract_TickValue() As Double
+IContract_TickValue = TickValue
+End Property
+
+Private Property Get IContract_TimezoneName() As String
+IContract_TimezoneName = TimezoneName
+End Property
+
+Private Function IContract_ToString() As String
+IContract_ToString = ToString
+End Function
+
+'@================================================================================
+' JSONable Interface Members
+'@================================================================================
+
+Private Function JSONable_ToJSON() As String
+JSONable_ToJSON = ToJSON
+End Function
+
+'@================================================================================
+' Stringable Interface Members
+'@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
 End Function
 
 '@================================================================================
@@ -139,12 +172,12 @@ Public Property Get DaysBeforeExpiryToSwitch() As Long
 DaysBeforeExpiryToSwitch = mDaysBeforeExpiryToSwitch
 End Property
 
-Friend Property Let DaysBeforeExpiryToSwitch(ByVal value As Long)
-mDaysBeforeExpiryToSwitch = value
+Public Property Let DaysBeforeExpiryToSwitch(ByVal Value As Long)
+mDaysBeforeExpiryToSwitch = Value
 End Property
 
-Friend Property Let Description(ByVal value As String)
-mDescription = value
+Public Property Let Description(ByVal Value As String)
+mDescription = Value
 End Property
 
 Public Property Get Description() As String
@@ -155,13 +188,13 @@ Public Property Get ExpiryDate() As Date
 ExpiryDate = mExpiryDate
 End Property
 
-Friend Property Let ExpiryDate(ByVal value As Date)
-mExpiryDate = value
+Public Property Let ExpiryDate(ByVal Value As Date)
+mExpiryDate = Value
 End Property
 
 Public Property Get Key() As String
 Const ProcName As String = "Key"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Key = Specifier.Key
@@ -169,15 +202,15 @@ Key = Specifier.Key
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Multiplier() As Double
 Multiplier = mMultiplier
 End Property
 
-Friend Property Let Multiplier(ByVal value As Double)
-mMultiplier = value
+Public Property Let Multiplier(ByVal Value As Double)
+mMultiplier = Value
 End Property
 
 Public Property Get NumberOfDecimals() As Long
@@ -186,7 +219,7 @@ End Property
 
 Public Property Get ProviderID(ByVal providerKey As String) As String
 Const ProcName As String = "ProviderID"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
@@ -194,70 +227,67 @@ ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let ProviderIDs(ByVal value As Parameters)
-Set mProviderIDs = value
+Public Property Let ProviderIDs(ByVal Value As Parameters)
+Set mProviderIDs = Value
 End Property
 
-Friend Property Get ProviderIDs() As Parameters
+Public Property Get ProviderIDs() As Parameters
 Set ProviderIDs = mProviderIDs
 End Property
 
-Friend Property Let SessionStartTime(ByVal value As Date)
-mSessionStartTime = TimeValue(value)
+Public Property Let SessionStartTime(ByVal Value As Date)
+mSessionStartTime = TimeValue(Value)
 End Property
 
 Public Property Get SessionStartTime() As Date
 SessionStartTime = mSessionStartTime
 End Property
 
-Friend Property Let SessionEndTime(ByVal value As Date)
-mSessionEndTime = TimeValue(value)
+Public Property Let SessionEndTime(ByVal Value As Date)
+mSessionEndTime = TimeValue(Value)
 End Property
 
 Public Property Get SessionEndTime() As Date
 SessionEndTime = mSessionEndTime
 End Property
 
-Friend Property Let SortKeys( _
-                ByRef value() As ContractSortKeyIds)
-mSortKeys = value
+Public Property Let SortKeys( _
+                ByRef Value() As ContractSortKeyIds)
+mSortKeys = Value
 End Property
                 
-Public Property Get Specifier() As ContractSpecifier
+Public Property Get Specifier() As IContractSpecifier
 Set Specifier = mSpecifier
 End Property
 
-Friend Property Let Specifier(ByVal value As ContractSpecifier)
-Set mSpecifier = value
+Public Property Let Specifier(ByVal Value As IContractSpecifier)
+Set mSpecifier = Value
 End Property
 
 Public Property Get TickSize() As Double
 TickSize = mTickSize
 End Property
 
-Friend Property Let TickSize(ByVal value As Double)
+Public Property Let TickSize(ByVal Value As Double)
 Dim minTickString As String
 
 Const ProcName As String = "TickSize"
-Dim failpoint As String
+
 On Error GoTo Err
 
-mTickSize = value
+mTickSize = Value
 
 minTickString = Format(mTickSize, "0.##############")
 
 mNumberOfDecimals = Len(minTickString) - 2
 
-mPriceParser.TickSize = mTickSize
-mPriceFormatter.TickSize = mTickSize
-
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -265,121 +295,18 @@ Public Property Get TickValue() As Double
 TickValue = mTickSize * mMultiplier
 End Property
 
-Public Property Get Timezone() As Timezone
-Set Timezone = mTimeZone
+Public Property Get TimezoneName() As String
+TimezoneName = mTimezoneName
 End Property
 
-Friend Property Let Timezone( _
-                ByVal value As Timezone)
-Set mTimeZone = value
+Public Property Let TimezoneName( _
+                ByVal Value As String)
+mTimezoneName = Value
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function FormatPrice( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPrice"
-Dim failpoint As String
-On Error GoTo Err
-
-' see http://www.cmegroup.com/trading/interest-rates/files/TreasuryFuturesPriceRoundingConventions_Mar_24_Final.pdf
-' for details of price presentation, especially sections (2) and (7)
-
-If mTickSize = OneThirtySecond Then
-    FormatPrice = FormatPriceAs32nds(pPrice)
-ElseIf mTickSize = OneSixtyFourth Then
-    If mSpecifier.SecType = SecTypeFuture Then
-        FormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
-    Else
-        FormatPrice = FormatPriceAs64ths(pPrice)
-    End If
-ElseIf mTickSize = OneHundredTwentyEighth Then
-    If mSpecifier.SecType = SecTypeFuture Then
-        FormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
-    Else
-        FormatPrice = FormatPriceAs64thsAndFractions(pPrice)
-    End If
-Else
-    FormatPrice = FormatPriceAsDecimals(pPrice)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function FormatPriceAs32nds( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPriceAs32nds"
-Dim failpoint As String
-On Error GoTo Err
-
-FormatPriceAs32nds = mPriceFormatter.FormatPriceAs32nds(pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function FormatPriceAs32ndsAndFractions( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPriceAs32ndsAndFractions"
-Dim failpoint As String
-On Error GoTo Err
-
-FormatPriceAs32ndsAndFractions = mPriceFormatter.FormatPriceAs32ndsAndFractions(pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function FormatPriceAs64ths( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPriceAs64ths"
-Dim failpoint As String
-On Error GoTo Err
-
-FormatPriceAs64ths = mPriceFormatter.FormatPriceAs64ths(pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function FormatPriceAs64thsAndFractions( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPriceAs64thsAndFractions"
-Dim failpoint As String
-On Error GoTo Err
-
-FormatPriceAs64thsAndFractions = mPriceFormatter.FormatPriceAs64thsAndFractions(pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function FormatPriceAsDecimals( _
-                ByVal pPrice As Double) As String
-Const ProcName As String = "FormatPriceAsDecimals"
-Dim failpoint As String
-On Error GoTo Err
-
-FormatPriceAsDecimals = mPriceFormatter.FormatPriceAsDecimals(pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
 
 Friend Sub FromXML(ByVal contractXML As String)
 Dim XMLdoc As DOMDocument30
@@ -394,7 +321,7 @@ Dim comboSpecifierEl As IXMLDOMElement
 Dim comboSpecifierObj As ContractSpecifier
 
 Const ProcName As String = "FromXML"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set XMLdoc = New DOMDocument30
@@ -427,24 +354,24 @@ Else
     mNumberOfDecimals = contractEl.getAttribute("numberofdecimals")
 End If
 If IsNull(contractEl.getAttribute("timezonename")) Then
-    Set mTimeZone = GetTimeZone()
+    mTimezoneName = ""
 Else
-    Set mTimeZone = GetTimeZone(CStr(contractEl.getAttribute("timezonename")))
+    mTimezoneName = contractEl.getAttribute("timezonename")
 End If
 
 Set specifierEl = contractEl.selectSingleNode("specifier")
 Set specifierObj = New ContractSpecifier
 Me.Specifier = specifierObj
 With specifierObj
-    .CurrencyCode = specifierEl.getAttribute("currencycode")
-    .Exchange = specifierEl.getAttribute("exchange")
-    .Expiry = specifierEl.getAttribute("expiry")
-    .LocalSymbol = specifierEl.getAttribute("localsymbol")
-    .Right = specifierEl.getAttribute("right")
-    .SecType = specifierEl.getAttribute("sectype")
-    .Strike = specifierEl.getAttribute("strike")
-    .Symbol = specifierEl.getAttribute("symbol")
-
+    .Initialise specifierEl.getAttribute("localsymbol"), _
+                specifierEl.getAttribute("symbol"), _
+                specifierEl.getAttribute("exchange"), _
+                specifierEl.getAttribute("sectype"), _
+                specifierEl.getAttribute("currencycode"), _
+                specifierEl.getAttribute("expiry"), _
+                specifierEl.getAttribute("strike"), _
+                specifierEl.getAttribute("right")
+    
     Set comboLegsEl = specifierEl.selectSingleNode("combolegs")
     Set nodeList = comboLegsEl.selectNodes("comboleg")
     If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
@@ -453,16 +380,14 @@ With specifierObj
         .ComboLegs.Add comboLegObj
         Set comboSpecifierEl = comboLegEl.selectSingleNode("specifier")
         Set comboSpecifierObj = New ContractSpecifier
-        With comboSpecifierObj
-            .CurrencyCode = comboSpecifierEl.getAttribute("currencycode")
-            .Exchange = comboSpecifierEl.getAttribute("exchange")
-            .Expiry = comboSpecifierEl.getAttribute("expiry")
-            .LocalSymbol = comboSpecifierEl.getAttribute("localsymbol")
-            .Right = comboSpecifierEl.getAttribute("right")
-            .SecType = comboSpecifierEl.getAttribute("sectype")
-            .Strike = comboSpecifierEl.getAttribute("strike")
-            .Symbol = comboSpecifierEl.getAttribute("symbol")
-        End With
+        comboSpecifierObj.Initialise comboSpecifierEl.getAttribute("localsymbol"), _
+                                    comboSpecifierEl.getAttribute("symbol"), _
+                                    comboSpecifierEl.getAttribute("exchange"), _
+                                    comboSpecifierEl.getAttribute("sectype"), _
+                                    comboSpecifierEl.getAttribute("currencycode"), _
+                                    comboSpecifierEl.getAttribute("expiry"), _
+                                    comboSpecifierEl.getAttribute("strike"), _
+                                    comboSpecifierEl.getAttribute("right")
         comboLegObj.Initialise comboSpecifierObj, _
                                 CBool(comboLegEl.getAttribute("isbuyleg")), _
                                 CLng(comboLegEl.getAttribute("Ratio"))
@@ -473,14 +398,14 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsValidPrice( _
                 ByVal pPrice As Double, _
                 ByVal pPrevValidPrice As Double) As Boolean
 Const ProcName As String = "IsValidPrice"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickSize)
@@ -488,118 +413,7 @@ IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickS
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePrice( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "ParsePrice"
-Dim failpoint As String
-On Error GoTo Err
-
-pPriceString = Trim$(pPriceString)
-
-If mTickSize = OneThirtySecond Then
-    ParsePrice = ParsePriceAs32nds(pPriceString, pPrice)
-ElseIf mTickSize = OneSixtyFourth Then
-    If mSpecifier.SecType = SecTypeFuture Then
-        ParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
-    Else
-        ParsePrice = ParsePriceAs64ths(pPriceString, pPrice)
-    End If
-ElseIf mTickSize = OneHundredTwentyEighth Then
-    If mSpecifier.SecType = SecTypeFuture Then
-        ParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
-    Else
-        ParsePrice = ParsePriceAs64thsAndFractions(pPriceString, pPrice)
-    End If
-Else
-    ParsePrice = ParsePriceAsDecimals(pPriceString, pPrice)
-End If
-
-If Not IsValidPrice(pPrice, 0#) Then ParsePrice = False
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePriceAs32nds( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "ParsePriceAs32nds"
-Dim failpoint As String
-On Error GoTo Err
-
-ParsePriceAs32nds = mPriceParser.ParsePriceAs32nds(pPriceString, pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePriceAs32ndsAndFractions( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "ParsePriceAs32ndsAndFractions"
-Dim failpoint As String
-On Error GoTo Err
-
-ParsePriceAs32ndsAndFractions = mPriceParser.ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePriceAs64ths( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "ParsePriceAs64ths"
-Dim failpoint As String
-On Error GoTo Err
-
-ParsePriceAs64ths = mPriceParser.ParsePriceAs64ths(pPriceString, pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePriceAs64thsAndFractions( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "ParsePriceAs64ths"
-Dim failpoint As String
-On Error GoTo Err
-
-ParsePriceAs64thsAndFractions = mPriceParser.ParsePriceAs64thsAndFractions(pPriceString, pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Function
-
-Public Function ParsePriceAsDecimals( _
-                ByVal pPriceString As String, _
-                ByRef pPrice As Double) As Boolean
-
-Const ProcName As String = "ParsePriceAsDecimals"
-Dim failpoint As String
-On Error GoTo Err
-
-ParsePriceAsDecimals = mPriceParser.ParsePriceAsDecimals(pPriceString, pPrice)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub SaveToConfig( _
@@ -625,8 +439,8 @@ With config
     .SetSetting ConfigSettingMultiplier, mMultiplier
     .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(mSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(mSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingSessionTickSize, mTickSize
-    .SetSetting ConfigSettingSessionTimezone, mTimeZone.StandardName
+    .SetSetting ConfigSettingTickSize, mTickSize
+    .SetSetting ConfigSettingTimezoneName, mTimezoneName
 End With
 
 
@@ -636,26 +450,71 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Public Function ToString() As String
-Dim i As Long
-
-Const ProcName As String = "ToString"
-Dim failpoint As String
+Friend Function ToJSON() As String
+Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
 On Error GoTo Err
 
-ToString = "Specifier=(" & mSpecifier.ToString & "); " & _
-            "Description=" & mDescription & "; " & _
-            "Expiry date=" & mExpiryDate & "; " & _
-            "Tick size=" & mTickSize & "; " & _
-            "Multiplier=" & mMultiplier & "; " & _
-            "Session start=" & FormatDateTime(mSessionStartTime, vbShortTime) & "; " & _
-            "Session end=" & FormatDateTime(mSessionEndTime, vbShortTime) & "; " & _
-            "Timezone=" & mTimeZone.StandardName
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "Specifier"
+jb.EncodeValue mSpecifier
+
+jb.EncodeName "DaysBeforeExpiryToSwitch"
+jb.EncodeValue mDaysBeforeExpiryToSwitch
+
+jb.EncodeName "Description"
+jb.EncodeValue mDescription
+
+jb.EncodeName "ExpiryDate"
+jb.EncodeValue mExpiryDate
+
+jb.EncodeName "Multiplier"
+jb.EncodeValue mMultiplier
+
+jb.EncodeName "ProviderIDs"
+jb.EncodeValue mProviderIDs
+
+jb.EncodeName "SessionEndTime"
+jb.EncodeValue mSessionEndTime
+
+jb.EncodeName "SessionStartTime"
+jb.EncodeValue mSessionStartTime
+
+jb.EncodeName "TickSize"
+jb.EncodeValue mTickSize
+
+jb.EncodeName "TimezoneName"
+jb.EncodeValue mTimezoneName
+
+jb.EndObject
+
+ToJSON = jb.JSONString
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function ToString() As String
+Dim i As Long
+
+Const ProcName As String = "ToString"
+
+On Error GoTo Err
+
+ToString = gContractToString(Me)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToXML() As String
@@ -667,7 +526,7 @@ Dim ComboLeg As IXMLDOMElement
 Dim comboLegObj As ComboLeg
 
 Const ProcName As String = "ToXML"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set XMLdoc = New DOMDocument30
@@ -680,7 +539,7 @@ Contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
 Contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
 Contract.setAttribute "Description", mDescription
 Contract.setAttribute "numberofdecimals", mNumberOfDecimals
-Contract.setAttribute "timezonename", mTimeZone.StandardName
+Contract.setAttribute "timezonename", mTimezoneName
 
 Set Specifier = XMLdoc.createElement("specifier")
 Contract.appendChild Specifier
@@ -719,7 +578,7 @@ ToXML = XMLdoc.xml
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 

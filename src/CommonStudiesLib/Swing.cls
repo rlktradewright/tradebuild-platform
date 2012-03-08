@@ -156,8 +156,6 @@ If IsEmpty(ev.sVal.value) Then Exit Sub
 currValue = ev.sVal.value
 If inputValueHasNotChanged(currValue) Then Exit Sub
 
-updateCurrentLineEnds ev
-
 If mSwingHighCache.Count >= 1 Then prevSwingHigh = mSwingHighCache.GetValue(0)
 If mSwingLowCache.Count >= 1 Then prevSwingLow = mSwingLowCache.GetValue(0)
 
@@ -303,6 +301,8 @@ If mStudyFoundation.IsNewBar Then
     calcTrendDirection
 
 End If
+
+updateCurrentLineEnds ev
 
 If currValue < mCurrentBarLow Then mCurrentBarLow = currValue
 If currValue > mCurrentBarHigh Then mCurrentBarHigh = currValue
@@ -812,24 +812,43 @@ End Function
 Private Sub initialiseSwingHighPoint( _
                 ByRef pSwingPoint As SwingPoint, _
                 ByRef pSValue As SValue)
+Const ProcName As String = "initialiseSwingHighPoint"
+On Error GoTo Err
+
 setSwingPointFromSValue pSwingPoint, pSValue
 pSwingPoint.value = DummyHigh
 pSwingPoint.SwingType = SwingUnknown
 pSwingPoint.Implied = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub initialiseSwingLowPoint( _
                 ByRef pSwingPoint As SwingPoint, _
                 ByRef pSValue As SValue)
+Const ProcName As String = "initialiseSwingLowPoint"
+On Error GoTo Err
+
 setSwingPointFromSValue pSwingPoint, pSValue
 pSwingPoint.value = DummyLow
 pSwingPoint.SwingType = SwingUnknown
 pSwingPoint.Implied = False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function inputValueHasNotChanged(ByVal pValue As Double) As Boolean
 Static sGotfirst As Boolean
 Static sPrevVal As Double
+
+Const ProcName As String = "inputValueHasNotChanged"
+On Error GoTo Err
 
 If mStudyFoundation.IsNewBar Then
 ElseIf Not sGotfirst Then
@@ -838,6 +857,11 @@ Else
 End If
 sGotfirst = True
 sPrevVal = pValue
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub notifySwingHighLine()
@@ -969,13 +993,24 @@ End Sub
 Private Sub setSwingPointFromSValue( _
                 ByRef pPoint As SwingPoint, _
                 ByRef pSValue As SValue)
+Const ProcName As String = "setSwingPointFromSValue"
+On Error GoTo Err
+
 pPoint.barNumber = pSValue.barNumber
 pPoint.barStartTime = pSValue.barStartTime
 pPoint.timestamp = pSValue.timestamp
 pPoint.value = pSValue.value
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub shiftBarHighsAndLows(ev As StudyValueEventData)
+Const ProcName As String = "shiftBarHighsAndLows"
+On Error GoTo Err
+
 mPrevPrevBarLow = mPrevBarLow
 mPrevBarLow = mCurrentBarLow
 mCurrentBarLow = ev.sVal.value
@@ -985,10 +1020,18 @@ mCurrentBarHigh = ev.sVal.value
 
 mHighAfterLowPointExcl = mHighAfterLowPoint
 mLowAfterHighPointExcl = mLowAfterHighPoint
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub updateCurrentLineEnds(ev As StudyValueEventData)
 Dim lStudyPoint As StudyPoint
+Const ProcName As String = "updateCurrentLineEnds"
+On Error GoTo Err
+
 Set lStudyPoint = CreateStudyPoint(ev.sVal.timestamp, ev.sVal.value)
 If Not mSwingLineBuilder Is Nothing Then
     mSwingLineBuilder.Point2 = lStudyPoint
@@ -1002,11 +1045,19 @@ If Not mSwingLowLineBuilder Is Nothing Then
     mSwingLowLineBuilder.Point2 = lStudyPoint
     notifySwingLowLine
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub updateSwingHighType( _
                 ByRef pPrevSwingHigh As SwingPoint, _
                 ByRef pNewSwingHigh As SwingPoint)
+Const ProcName As String = "updateSwingHighType"
+On Error GoTo Err
+
 If Not IsEmpty(pPrevSwingHigh.value) Then
     If pNewSwingHigh.value >= pPrevSwingHigh.value Then
         pPrevSwingHigh.SwingType = SwingMinorHigh
@@ -1019,11 +1070,19 @@ If Not IsEmpty(pPrevSwingHigh.value) Then
         pNewSwingHigh.SwingType = SwingMinorHigh
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub updateSwingLowType( _
                 ByRef pPrevSwingLow As SwingPoint, _
                 ByRef pNewSwingLow As SwingPoint)
+Const ProcName As String = "updateSwingLowType"
+On Error GoTo Err
+
 If Not IsEmpty(pPrevSwingLow.value) Then
     If pNewSwingLow.value <= pPrevSwingLow.value Then
         pPrevSwingLow.SwingType = SwingMinorLow
@@ -1036,6 +1095,11 @@ If Not IsEmpty(pPrevSwingLow.value) Then
         pNewSwingLow.SwingType = SwingMinorLow
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -1156,7 +1220,7 @@ Const ProcName As String = "Study_initialise"
 On Error GoTo Err
 
 Set mStudyFoundation = New StudyFoundation
-mStudyFoundation.initialise Me, _
+mStudyFoundation.Initialise Me, _
                             id, _
                             Parameters, _
                             numberOfValuesToCache, _

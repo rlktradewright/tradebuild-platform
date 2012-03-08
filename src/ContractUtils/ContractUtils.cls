@@ -45,6 +45,11 @@ Public Enum ContractSortKeyIds
     ContractSortKeyStrike
 End Enum
 
+Public Enum ContractStoreCapabilities
+    ContractStoreCanStore = 1
+    ContractStoreCanQuery = 2
+End Enum
+
 Public Enum OptionRights
     OptNone = 0
     OptCall
@@ -101,8 +106,49 @@ Private Const ModuleName                    As String = "ContractUtils"
 ' Methods
 '@================================================================================
 
+Public Function ContractsCompare( _
+                ByVal pContract1 As IContract, _
+                ByVal pContract2 As IContract, _
+                ByRef pSortKeys() As ContractSortKeyIds) As Long
+Const ProcName As String = "ContractsCompare"
+On Error GoTo Err
+
+ContractsCompare = gContractsCompare(pContract1, pContract2, pSortKeys)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function ContractSpecsEqual( _
+                ByVal pContractSpec1 As IContract, _
+                ByVal pContractSpec2 As IContract) As Boolean
+Const ProcName As String = "ContractSpecsEqual"
+On Error GoTo Err
+
+ContractSpecsEqual = gContractSpecsEqual(pContractSpec1, pContractSpec2)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function ContractToString(ByVal pContract As IContract) As String
+Const ProcName As String = "ContractToString"
+On Error GoTo Err
+
+ContractToString = gContractToString(pContract)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateComboLeg( _
-                ByVal pContractSpec As ContractSpecifier, _
+                ByVal pContractSpec As IContractSpecifier, _
                 ByVal pIsBuyLeg As Boolean, _
                 ByVal pRatio As Long) As ComboLeg
 Set CreateComboLeg = New ComboLeg
@@ -111,9 +157,9 @@ End Function
 
 
 Public Function CreateContractBuilder( _
-                ByVal Specifier As ContractSpecifier) As ContractBuilder
+                ByVal Specifier As IContractSpecifier) As ContractBuilder
 Const ProcName As String = "CreateContractBuilder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateContractBuilder = New ContractBuilder
@@ -122,13 +168,13 @@ CreateContractBuilder.Initialise Specifier
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractBuilderFromContract( _
-                ByVal pContract As Contract) As ContractBuilder
+                ByVal pContract As IContract) As ContractBuilder
 Const ProcName As String = "CreateContractBuilderFromContract"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateContractBuilderFromContract = New ContractBuilder
@@ -138,13 +184,13 @@ CreateContractBuilderFromContract.BuildFrom pContract
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractsBuilder( _
-                ByVal Specifier As ContractSpecifier) As ContractsBuilder
+                ByVal Specifier As IContractSpecifier) As ContractsBuilder
 Const ProcName As String = "CreateContractsBuilder"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateContractsBuilder = New ContractsBuilder
@@ -153,7 +199,7 @@ CreateContractsBuilder.Initialise Specifier
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractSpecifier( _
@@ -164,9 +210,9 @@ Public Function CreateContractSpecifier( _
                 Optional ByVal CurrencyCode As String, _
                 Optional ByVal Expiry As String, _
                 Optional ByVal Strike As Double, _
-                Optional ByVal Right As OptionRights = OptNone) As ContractSpecifier
+                Optional ByVal Right As OptionRights = OptNone) As IContractSpecifier
 Const ProcName As String = "CreateContractSpecifier"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right)
@@ -174,28 +220,40 @@ Set CreateContractSpecifier = gCreateContractSpecifier(LocalSymbol, Symbol, Exch
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractFromXML( _
-                ByVal xmlString As String) As Contract
+                ByVal xmlString As String) As IContract
 Const ProcName As String = "CreateContractFromXML"
-Dim failpoint As String
 On Error GoTo Err
 
-Set CreateContractFromXML = New Contract
-CreateContractFromXML.FromXML xmlString
+Dim lContract As New Contract
+lContract.FromXML xmlString
+Set CreateContractFromXML = lContract
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetContractSpecKey(ByVal pContractSpec As IContractSpecifier) As String
+Const ProcName As String = "GetContractSpecKey"
+On Error GoTo Err
+
+GetContractSpecKey = gGetContractSpecKey(pContractSpec)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetCurrencyDescriptor( _
                 ByVal CurrencyCode As String) As CurrencyDescriptor
 Const ProcName As String = "GetCurrencyDescriptor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetCurrencyDescriptor = gGetCurrencyDescriptor(CurrencyCode)
@@ -203,12 +261,12 @@ GetCurrencyDescriptor = gGetCurrencyDescriptor(CurrencyCode)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetCurrencyDescriptors() As CurrencyDescriptor()
 Const ProcName As String = "GetCurrencyDescriptors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetCurrencyDescriptors = gGetCurrencyDescriptors
@@ -216,12 +274,12 @@ GetCurrencyDescriptors = gGetCurrencyDescriptors
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetExchangeCodes() As String()
 Const ProcName As String = "GetExchangeCodes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetExchangeCodes = gGetExchangeCodes
@@ -229,12 +287,30 @@ GetExchangeCodes = gGetExchangeCodes
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function FormatPrice( _
+                ByVal pPrice As Double, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double) As String
+Const ProcName As String = "FormatPrice"
+On Error GoTo Err
+
+' see http://www.cmegroup.com/trading/interest-rates/files/TreasuryFuturesPriceRoundingConventions_Mar_24_Final.pdf
+' for details of price presentation, especially sections (2) and (7)
+
+FormatPrice = gFormatPrice(pPrice, pSecType, pTickSize)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
 Const ProcName As String = "IsValidCurrencyCode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsValidCurrencyCode = gIsValidCurrencyCode(CurrencyCode)
@@ -242,12 +318,12 @@ IsValidCurrencyCode = gIsValidCurrencyCode(CurrencyCode)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidExchangeCode(ByVal ExchangeCode As String) As Boolean
 Const ProcName As String = "IsValidExchangeCode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 IsValidExchangeCode = gIsValidExchangeCode(ExchangeCode)
@@ -255,21 +331,21 @@ IsValidExchangeCode = gIsValidExchangeCode(ExchangeCode)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidExpiry( _
-                ByVal value As String) As Boolean
+                ByVal Value As String) As Boolean
 Const ProcName As String = "IsValidExpiry"
-Dim failpoint As String
+
 On Error GoTo Err
 
-IsValidExpiry = gIsValidExpiry(value)
+IsValidExpiry = gIsValidExpiry(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidPrice( _
@@ -289,87 +365,103 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Function
 
 Public Function IsValidSecType( _
-                ByVal value As Long) As Boolean
+                ByVal Value As Long) As Boolean
 Const ProcName As String = "IsValidSecType"
-Dim failpoint As String
+
 On Error GoTo Err
 
-IsValidSecType = gIsValidSecType(value)
+IsValidSecType = gIsValidSecType(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OptionRightFromString( _
-                ByVal value As String) As OptionRights
+                ByVal Value As String) As OptionRights
 Const ProcName As String = "OptionRightFromString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-OptionRightFromString = gOptionRightFromString(value)
+OptionRightFromString = gOptionRightFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OptionRightToString( _
-                ByVal value As OptionRights) As String
+                ByVal Value As OptionRights) As String
 Const ProcName As String = "OptionRightToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-OptionRightToString = gOptionRightToString(value)
+OptionRightToString = gOptionRightToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function ParsePrice( _
+                ByVal pPriceString As String, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double, _
+                ByRef pPrice As Double) As Boolean
+Const ProcName As String = "ParsePrice"
+On Error GoTo Err
+
+ParsePrice = gParsePrice(pPriceString, pSecType, pTickSize, pPrice)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SecTypeFromString( _
-                ByVal value As String) As SecurityTypes
+                ByVal Value As String) As SecurityTypes
 Const ProcName As String = "SecTypeFromString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-SecTypeFromString = gSecTypeFromString(value)
+SecTypeFromString = gSecTypeFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SecTypeToShortString( _
-                ByVal value As SecurityTypes) As String
+                ByVal Value As SecurityTypes) As String
 Const ProcName As String = "SecTypeToShortString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-SecTypeToShortString = gSecTypeToShortString(value)
+SecTypeToShortString = gSecTypeToShortString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SecTypeToString( _
-                ByVal value As SecurityTypes) As String
+                ByVal Value As SecurityTypes) As String
 Const ProcName As String = "SecTypeToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-SecTypeToString = gSecTypeToString(value)
+SecTypeToString = gSecTypeToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

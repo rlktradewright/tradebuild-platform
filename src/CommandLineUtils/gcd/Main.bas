@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gcd"
+Public Const ProjectName                    As String = "gcd27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -94,7 +94,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description & " (" & Err.Source & ")"
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description & " (" & Err.Source & ")"
 TradeBuildAPI.ServiceProviders.RemoveAll
 TerminateTWUtilities
 
@@ -109,8 +109,8 @@ Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -121,14 +121,14 @@ Do While inString <> gCon.eofString
         If Len(inString) >= Len(EchoCommand) And _
             UCase$(Left$(inString, Len(EchoCommand))) = EchoCommand _
         Then
-            gCon.writeLine Trim$(Right$(inString, Len(inString) - Len(EchoCommand)))
+            gCon.WriteLine Trim$(Right$(inString, Len(inString) - Len(EchoCommand)))
         Else
-            gCon.writeErrorLine "Invalid command '" & Split(inString, " ")(0)
+            gCon.WriteErrorLine "Invalid command '" & Split(inString, " ")(0)
         End If
     Else
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
@@ -173,7 +173,7 @@ nametemplate = parser.Arg(8)
 
 sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
-    gCon.writeErrorLine "Line " & lineNumber & ": Invalid sectype '" & sectypeStr & "'"
+    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid sectype '" & sectypeStr & "'"
     validInput = False
 End If
 
@@ -182,16 +182,16 @@ If expiry <> "" Then
         expiry = Format(CDate(expiry), "yyyymmdd")
     ElseIf Len(expiry) = 6 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Right$(expiry, 2) & "/01") Then
-            gCon.writeErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
             validInput = False
         End If
     ElseIf Len(expiry) = 8 Then
         If Not IsDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2)) Then
-            gCon.writeErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
+            gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
             validInput = False
         End If
     Else
-        gCon.writeErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid expiry '" & expiry & "'"
         validInput = False
     End If
 End If
@@ -200,14 +200,14 @@ If strikeStr <> "" Then
     If IsNumeric(strikeStr) Then
         strike = CDbl(strikeStr)
     Else
-        gCon.writeErrorLine "Line " & lineNumber & ": Invalid strike '" & strikeStr & "'"
+        gCon.WriteErrorLine "Line " & lineNumber & ": Invalid strike '" & strikeStr & "'"
         validInput = False
     End If
 End If
 
 optRight = OptionRightFromString(optRightStr)
 If optRightStr <> "" And optRight = OptNone Then
-    gCon.writeErrorLine "Line " & lineNumber & ": Invalid right '" & optRightStr & "'"
+    gCon.WriteErrorLine "Line " & lineNumber & ": Invalid right '" & optRightStr & "'"
     validInput = False
 End If
 
@@ -228,7 +228,7 @@ End If
 Exit Sub
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 End Sub
 
 Private Function setupDbServiceProvider( _
@@ -258,17 +258,17 @@ On Error GoTo 0
 
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDbServiceProvider = False
 End If
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 If setupDbServiceProvider Then
     TradeBuildAPI.ServiceProviders.Add _
-                        ProgId:="TBInfoBase26.ContractInfoSrvcProvider", _
+                        ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
                         Enabled:=True, _
                         ParamString:="Database Name=" & database & _
                                     ";Database Type=" & dbtypeStr & _
@@ -282,7 +282,7 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDbServiceProvider = False
 
 End Function
@@ -311,21 +311,21 @@ On Error GoTo 0
 
 If port <> "" Then
     If Not IsInteger(port, 0) Then
-        gCon.writeErrorLine "Error: port must be a positive integer"
+        gCon.WriteErrorLine "Error: port must be a positive integer"
         setupTwsServiceProvider = False
     End If
 End If
     
 If clientId <> "" Then
     If Not IsInteger(clientId) Then
-        gCon.writeErrorLine "Error: clientId must be an integer"
+        gCon.WriteErrorLine "Error: clientId must be an integer"
         setupTwsServiceProvider = False
     End If
 End If
     
 If setupTwsServiceProvider Then
     TradeBuildAPI.ServiceProviders.Add _
-                        ProgId:="IBTWSSP26.ContractInfoServiceProvider", _
+                        ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Server=" & server & _
                                     ";Port=" & port & _
@@ -337,19 +337,19 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupTwsServiceProvider = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "gcd -fromdb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
-gCon.writeErrorLine "    OR"
-gCon.writeErrorLine "    -fromtws:[<twsserver>}[,[<port>][,[<clientid>]]]"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "StdIn Format:"
-gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "$echo text"
-gCon.writeErrorLine "sectype,exchange,shortname,symbol,currency,expiry,strike,right"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "gcd -fromdb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
+gCon.WriteErrorLine "    OR"
+gCon.WriteErrorLine "    -fromtws:[<twsserver>}[,[<port>][,[<clientid>]]]"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "StdIn Format:"
+gCon.WriteErrorLine "#comment"
+gCon.WriteErrorLine "$echo text"
+gCon.WriteErrorLine "sectype,exchange,shortname,symbol,currency,expiry,strike,right"
 End Sub

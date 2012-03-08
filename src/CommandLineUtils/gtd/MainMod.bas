@@ -371,7 +371,7 @@ If setupServiceProviders Then
     Dim sp As Object
     On Error Resume Next
     Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                    ProgId:="TBInfoBase26.ContractInfoSrvcProvider", _
+                    ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
                     Enabled:=True, _
                     ParamString:="Database Name=" & database & _
                                 ";Database Type=" & dbtypeStr & _
@@ -384,7 +384,7 @@ If setupServiceProviders Then
         setupServiceProviders = False
     End If
     Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                    ProgId:="TBInfoBase26.TickfileServiceProvider", _
+                    ProgId:="TBInfoBase27.TickfileServiceProvider", _
                     Enabled:=True, _
                     ParamString:="Database Name=" & database & _
                                 ";Database Type=" & dbtypeStr & _
@@ -408,7 +408,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "gtd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "gtd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
 gCon.WriteErrorLine "    -speed:n"
 gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"

@@ -65,7 +65,7 @@ End Sub
 
 Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 
-gHandleFatalError
+gHandleFatalError ev
 
 ' Tell TWUtilities that we've now handled this unhandled error. Not actually
 ' needed here because gHandleFatalError never returns anyway

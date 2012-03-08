@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#186.0#0"; "ChartSkil2-6.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#1.0#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
-   Caption         =   "ChartSkil Demo Version 2.5"
+   Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8355
    ClientLeft      =   1935
    ClientTop       =   3930
@@ -9,7 +9,7 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12120
-   Begin ChartSkil26.ChartToolbar ChartToolbar1 
+   Begin ChartSkil27.ChartToolbar ChartToolbar1 
       Align           =   1  'Align Top
       Height          =   330
       Left            =   0
@@ -19,7 +19,7 @@ Begin VB.Form ChartForm
       _ExtentX        =   11404
       _ExtentY        =   582
    End
-   Begin ChartSkil26.Chart Chart1 
+   Begin ChartSkil27.Chart Chart1 
       Height          =   6405
       Left            =   0
       TabIndex        =   17
@@ -305,7 +305,7 @@ Private mMACDRegion As ChartRegion          ' the region of the chart that displ
                                             ' the MACD
 
 Private mBarSeries As BarSeries             ' used to create all the bars
-Private mBar As ChartSkil26.Bar             ' an individual bar
+Private mBar As ChartSkil27.Bar             ' an individual bar
 Private mBarTime                            ' the bar start time for mBar
 
 Private mBarLabelSeries As TextSeries       ' used to create the text
@@ -351,9 +351,9 @@ Private mCumVolume As Long                  ' the cumulative volume
 
 Private mSwingLineSeries As LineSeries      ' used to define properties for the swing
                                             ' lines
-Private mSwingLine As ChartSkil26.Line        ' the current swing line
-Private mPrevSwingLine As ChartSkil26.Line    ' the previous swing line
-Private mNewSwingLine As ChartSkil26.Line     ' potential new swing line
+Private mSwingLine As ChartSkil27.Line        ' the current swing line
+Private mPrevSwingLine As ChartSkil27.Line    ' the previous swing line
+Private mNewSwingLine As ChartSkil27.Line     ' potential new swing line
 Private mSwingAmountTicks As Double         ' the minimum price movement in ticks to
                                             ' establish a new swing
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
@@ -374,7 +374,7 @@ Private mTickCountText As Text              ' a text obect that will display the
 Private mElapsedTimer As ElapsedTimer       ' used to measure how long it takes to
                                             ' complete some chart operations
                                             
-Private mPriceLine As ChartSkil26.Line                  ' indicates the current price in the Y axis
+Private mPriceLine As ChartSkil27.Line                  ' indicates the current price in the Y axis
 Private mPriceText As Text                  ' displays the current price in the Y axis
 
 Private mCurrentTool As Object
@@ -592,7 +592,7 @@ Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
 Dim startText As Text
-Dim extendedLine As ChartSkil26.Line
+Dim extendedLine As ChartSkil27.Line
 Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle

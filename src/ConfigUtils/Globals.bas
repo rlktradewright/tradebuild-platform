@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "ConfigUtils26"
+Public Const ProjectName                            As String = "ConfigUtils27"
 Private Const ModuleName                            As String = "Globals"
 
 '@================================================================================
@@ -80,7 +80,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 '@================================================================================

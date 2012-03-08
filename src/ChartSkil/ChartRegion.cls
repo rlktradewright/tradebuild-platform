@@ -363,7 +363,7 @@ End Sub
 ' mBaseStyle Event Handlers
 '================================================================================
 
-Private Sub mBaseStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mBaseStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mBaseStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -397,7 +397,7 @@ End Sub
 ' mGridLineStyle Event Handlers
 '================================================================================
 
-Private Sub mGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mGridLineStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -414,7 +414,7 @@ End Sub
 ' mGridTextStyle Event Handlers
 '================================================================================
 
-Private Sub mGridTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mGridTextStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mGridTextStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -431,7 +431,7 @@ End Sub
 ' mSessionEndGridLineStyle Event Handlers
 '================================================================================
 
-Private Sub mSessionEndGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mSessionEndGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mSessionEndGridLineStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -448,7 +448,7 @@ End Sub
 ' mSessionStartGridLineStyle Event Handlers
 '================================================================================
 
-Private Sub mSessionStartGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mSessionStartGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mSessionStartGridLineStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -465,7 +465,7 @@ End Sub
 ' mStyle Event Handlers
 '================================================================================
 
-Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -482,7 +482,7 @@ End Sub
 ' mYAxisTextStyle Event Handlers
 '================================================================================
 
-Private Sub mYAxisTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mYAxisTextStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mYAxisTextStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -499,7 +499,7 @@ End Sub
 ' mYCursorTextStyle Event Handlers
 '================================================================================
 
-Private Sub mYCursorTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mYCursorTextStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mYCursorTextStyle_PropertyChanged"
 
 On Error GoTo Err
@@ -3098,7 +3098,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
-Private Sub handleStylePropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub handleStylePropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "handleStylePropertyChanged"
 
 On Error GoTo Err

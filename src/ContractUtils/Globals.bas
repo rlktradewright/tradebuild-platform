@@ -49,8 +49,12 @@ Public Const ConfigSettingExpiryDate                    As String = "&ExpiryDate
 Public Const ConfigSettingMultiplier                    As String = "&Multiplier"
 Public Const ConfigSettingSessionEndTime                As String = "&SessionEndTime"
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
-Public Const ConfigSettingSessionTickSize               As String = "&TickSize"
-Public Const ConfigSettingSessionTimezone               As String = "&Timezone"
+Public Const ConfigSettingTickSize                      As String = "&TickSize"
+Public Const ConfigSettingTimezoneName                  As String = "&Timezone"
+
+Private Const OneThirtySecond                           As Double = 0.03125
+Private Const OneSixtyFourth                            As Double = 0.015625
+Private Const OneHundredTwentyEighth                    As Double = 0.0078125
 
 '@================================================================================
 ' Member variables
@@ -82,6 +86,89 @@ Private mMaxCurrencyDescsIndex As Long
 ' Methods
 '@================================================================================
 
+Public Function gContractsCompare( _
+                ByVal pContract1 As IContract, _
+                ByVal pContract2 As IContract, _
+                ByRef pSortKeys() As ContractSortKeyIds) As Long
+Const ProcName As String = "gContractsCompare"
+On Error GoTo Err
+
+Dim i As Long
+Dim lContractSpec1 As IContractSpecifier
+Dim lContractSpec2 As IContractSpecifier
+
+Set lContractSpec1 = pContract1.Specifier
+Set lContractSpec2 = pContract2.Specifier
+
+For i = 0 To UBound(pSortKeys)
+    Select Case pSortKeys(i)
+    Case ContractSortKeyNone
+        Exit Function
+    Case ContractSortKeyLocalSymbol
+        gContractsCompare = StrComp(lContractSpec1.LocalSymbol, lContractSpec2.LocalSymbol, vbTextCompare)
+    Case ContractSortKeySymbol
+        gContractsCompare = StrComp(lContractSpec1.Symbol, lContractSpec2.Symbol, vbTextCompare)
+    Case ContractSortKeySecType
+        gContractsCompare = StrComp(gSecTypeToShortString(lContractSpec1.SecType), gSecTypeToShortString(lContractSpec2.SecType), vbTextCompare)
+    Case ContractSortKeyExchange
+        gContractsCompare = StrComp(lContractSpec1.Exchange, lContractSpec2.Exchange, vbTextCompare)
+    Case ContractSortKeyExpiry
+        gContractsCompare = StrComp(lContractSpec1.Expiry, lContractSpec2.Expiry, vbTextCompare)
+    Case ContractSortKeyCurrency
+        gContractsCompare = StrComp(lContractSpec1.CurrencyCode, lContractSpec2.CurrencyCode, vbTextCompare)
+    Case ContractSortKeyRight
+        gContractsCompare = StrComp(gOptionRightToString(lContractSpec1.Right), gOptionRightToString(lContractSpec2.Right), vbTextCompare)
+    Case ContractSortKeyStrike
+        gContractsCompare = Sgn(lContractSpec1.Strike - lContractSpec2.Strike)
+    End Select
+    If gContractsCompare <> 0 Then Exit Function
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gContractSpecsEqual( _
+                ByVal pContractSpec1 As IContract, _
+                ByVal pContractSpec2 As IContract) As Boolean
+Const ProcName As String = "gContractSpecsEqual"
+On Error GoTo Err
+
+If pContractSpec1 Is Nothing Then Exit Function
+If pContractSpec2 Is Nothing Then Exit Function
+If pContractSpec1 Is pContractSpec2 Then
+    gContractSpecsEqual = True
+Else
+    gContractSpecsEqual = (gGetContractSpecKey(pContractSpec1) = gGetContractSpecKey(pContractSpec2))
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gContractToString(ByVal pContract As IContract) As String
+Const ProcName As String = "gContractToString"
+On Error GoTo Err
+
+gContractToString = "Specifier=(" & pContract.Specifier.ToString & "); " & _
+            "Description=" & pContract.Description & "; " & _
+            "Expiry date=" & pContract.ExpiryDate & "; " & _
+            "Tick size=" & pContract.TickSize & "; " & _
+            "Multiplier=" & pContract.Multiplier & "; " & _
+            "Session start=" & FormatDateTime(pContract.SessionStartTime, vbShortTime) & "; " & _
+            "Session end=" & FormatDateTime(pContract.SessionEndTime, vbShortTime) & "; " & _
+            "TimezoneName=" & pContract.TimezoneName
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gCreateContractSpecifier( _
                 Optional ByVal LocalSymbol As String, _
                 Optional ByVal Symbol As String, _
@@ -92,71 +179,76 @@ Public Function gCreateContractSpecifier( _
                 Optional ByVal Strike As Double, _
                 Optional ByVal Right As OptionRights = OptNone) As ContractSpecifier
 Const ProcName As String = "gCreateContractSpecifier"
-Dim failpoint As String
 On Error GoTo Err
 
-If LocalSymbol = "" And Symbol = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Symbol must be supplied if LocalSymbol is not supplied"
-End If
-
-If Exchange <> "" And _
-    Not gIsValidExchangeCode(Exchange) _
-Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Exchange & "' is not a valid Exchange code"
-End If
-
-If Expiry <> "" Then
-    If Not gIsValidExpiry(Expiry) Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Expiry & "' is not a valid Expiry format"
-    End If
-End If
-
-Select Case SecType
-Case 0  ' ie not supplied
-Case SecTypeStock
-Case SecTypeFuture
-Case SecTypeOption, SecTypeFuturesOption
-    If Strike < 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Strike must be > 0"
-    End If
-    Select Case Right
-    Case OptCall
-    Case OptPut
-    Case OptNone
-    Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Right & "' is not a valid option Right"
-    End Select
-Case SecTypeCash
-Case SecTypeCombo
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Sectype 'combo' is not permissible"
-Case SecTypeIndex
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & SecType & "' is not a valid secType"
-End Select
-
 Set gCreateContractSpecifier = New ContractSpecifier
-With gCreateContractSpecifier
-    .LocalSymbol = LocalSymbol
-    .Symbol = Symbol
-    .Exchange = Exchange
-    .SecType = SecType
-    .CurrencyCode = CurrencyCode
-    .Expiry = Expiry
-    .Strike = Strike
-    .Right = Right
-End With
+gCreateContractSpecifier.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gFormatPrice( _
+                ByVal pPrice As Double, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double) As String
+Const ProcName As String = "gFormatPrice"
+On Error GoTo Err
+
+' see http://www.cmegroup.com/trading/interest-rates/files/TreasuryFuturesPriceRoundingConventions_Mar_24_Final.pdf
+' for details of price presentation, especially sections (2) and (7)
+
+If pTickSize = OneThirtySecond Then
+    gFormatPrice = FormatPriceAs32nds(pPrice)
+ElseIf pTickSize = OneSixtyFourth Then
+    If pSecType = SecTypeFuture Then
+        gFormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
+    Else
+        gFormatPrice = FormatPriceAs64ths(pPrice)
+    End If
+ElseIf pTickSize = OneHundredTwentyEighth Then
+    If pSecType = SecTypeFuture Then
+        gFormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
+    Else
+        gFormatPrice = FormatPriceAs64thsAndFractions(pPrice)
+    End If
+Else
+    gFormatPrice = FormatPriceAsDecimals(pPrice, pTickSize)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gGetContractSpecKey(ByVal pSpec As IContractSpecifier) As String
+Const ProcName As String = "gGetContractSpecKey"
+
+On Error GoTo Err
+
+gGetContractSpecKey = pSpec.LocalSymbol & "|" & _
+    CStr(pSpec.SecType) & "|" & _
+    pSpec.Symbol & "|" & _
+    Left$(pSpec.Expiry, 6) & "|" & _
+    pSpec.Strike & "|" & _
+    CStr(pSpec.Right) & "|" & _
+    pSpec.Exchange & "|" & _
+    pSpec.CurrencyCode
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetCurrencyDescriptor( _
                 ByVal code As String) As CurrencyDescriptor
 Dim index As Long
 Const ProcName As String = "gGetCurrencyDescriptor"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
@@ -170,12 +262,12 @@ gGetCurrencyDescriptor = mCurrencyDescs(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetCurrencyDescriptors() As CurrencyDescriptor()
 Const ProcName As String = "gGetCurrencyDescriptors"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
@@ -184,12 +276,12 @@ gGetCurrencyDescriptors = mCurrencyDescs
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetExchangeCodes() As String()
 Const ProcName As String = "gGetExchangeCodes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
@@ -198,7 +290,7 @@ gGetExchangeCodes = mExchangeCodes
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _
@@ -233,7 +325,7 @@ End Sub
 
 Public Function gIsValidCurrencyCode(ByVal code As String) As Boolean
 Const ProcName As String = "gIsValidCurrencyCode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gIsValidCurrencyCode = (getCurrencyIndex(code) >= 0)
@@ -241,7 +333,7 @@ gIsValidCurrencyCode = (getCurrencyIndex(code) >= 0)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidExchangeCode(ByVal code As String) As Boolean
@@ -250,7 +342,7 @@ Dim top As Long
 Dim middle As Long
 
 Const ProcName As String = "gIsValidExchangeCode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
@@ -277,22 +369,22 @@ If code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidExpiry( _
-                ByVal value As String) As Boolean
+                ByVal Value As String) As Boolean
 Dim d As Date
 
 Const ProcName As String = "gIsValidExpiry"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If IsDate(value) Then
-    d = CDate(value)
-ElseIf Len(value) = 8 Then
+If IsDate(Value) Then
+    d = CDate(Value)
+ElseIf Len(Value) = 8 Then
     Dim datestring As String
-    datestring = Left$(value, 4) & "/" & Mid$(value, 5, 2) & "/" & Right$(value, 2)
+    datestring = Left$(Value, 4) & "/" & Mid$(Value, 5, 2) & "/" & Right$(Value, 2)
     If IsDate(datestring) Then d = CDate(datestring)
 End If
 
@@ -303,9 +395,9 @@ If d <> 0 Then
     End If
 End If
 
-If Len(value) = 6 Then
-    If IsInteger(value, (Year(Now) - 20) * 100 + 1, (Year(Now) + 10) * 100 + 12) Then
-        If Right$(value, 2) <= 12 Then
+If Len(Value) = 6 Then
+    If IsInteger(Value, (Year(Now) - 20) * 100 + 1, (Year(Now) + 10) * 100 + 12) Then
+        If Right$(Value, 2) <= 12 Then
             gIsValidExpiry = True
             Exit Function
         End If
@@ -317,7 +409,7 @@ gIsValidExpiry = False
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidPrice( _
@@ -326,7 +418,7 @@ Public Function gIsValidPrice( _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double) As Boolean
 Const ProcName As String = "gIsValidPrice"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If pTickSize = 0 Then
@@ -364,13 +456,13 @@ gIsValidPrice = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gIsValidSecType( _
-                ByVal value As Long) As Boolean
+                ByVal Value As Long) As Boolean
 gIsValidSecType = True
-Select Case value
+Select Case Value
 Case SecTypeStock
 Case SecTypeFuture
 Case SecTypeOption
@@ -383,8 +475,8 @@ Case Else
 End Select
 End Function
 
-Public Function gOptionRightFromString(ByVal value As String) As OptionRights
-Select Case UCase$(value)
+Public Function gOptionRightFromString(ByVal Value As String) As OptionRights
+Select Case UCase$(Value)
 Case ""
     gOptionRightFromString = OptNone
 Case "CALL", "C"
@@ -394,8 +486,8 @@ Case "PUT", "P"
 End Select
 End Function
 
-Public Function gOptionRightToString(ByVal value As OptionRights) As String
-Select Case value
+Public Function gOptionRightToString(ByVal Value As OptionRights) As String
+Select Case Value
 Case OptNone
     gOptionRightToString = ""
 Case OptCall
@@ -405,8 +497,43 @@ Case OptPut
 End Select
 End Function
 
-Public Function gSecTypeFromString(ByVal value As String) As SecurityTypes
-Select Case UCase$(value)
+Public Function gParsePrice( _
+                ByVal pPriceString As String, _
+                ByVal pSecType As SecurityTypes, _
+                ByVal pTickSize As Double, _
+                ByRef pPrice As Double) As Boolean
+Const ProcName As String = "gParsePrice"
+
+On Error GoTo Err
+
+pPriceString = Trim$(pPriceString)
+
+If pTickSize = OneThirtySecond Then
+    gParsePrice = ParsePriceAs32nds(pPriceString, pPrice)
+ElseIf pTickSize = OneSixtyFourth Then
+    If pSecType = SecTypeFuture Then
+        gParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
+    Else
+        gParsePrice = ParsePriceAs64ths(pPriceString, pPrice)
+    End If
+ElseIf pTickSize = OneHundredTwentyEighth Then
+    If pSecType = SecTypeFuture Then
+        gParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
+    Else
+        gParsePrice = ParsePriceAs64thsAndFractions(pPriceString, pPrice)
+    End If
+Else
+    gParsePrice = ParsePriceAsDecimals(pPriceString, pTickSize, pPrice)
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gSecTypeFromString(ByVal Value As String) As SecurityTypes
+Select Case UCase$(Value)
 Case "STOCK", "STK"
     gSecTypeFromString = SecTypeStock
 Case "FUTURE", "FUT"
@@ -424,8 +551,8 @@ Case "INDEX", "IND"
 End Select
 End Function
 
-Public Function gSecTypeToString(ByVal value As SecurityTypes) As String
-Select Case value
+Public Function gSecTypeToString(ByVal Value As SecurityTypes) As String
+Select Case Value
 Case SecTypeStock
     gSecTypeToString = "Stock"
 Case SecTypeFuture
@@ -443,8 +570,8 @@ Case SecTypeIndex
 End Select
 End Function
 
-Public Function gSecTypeToShortString(ByVal value As SecurityTypes) As String
-Select Case value
+Public Function gSecTypeToShortString(ByVal Value As SecurityTypes) As String
+Select Case Value
 Case SecTypeStock
     gSecTypeToShortString = "STK"
 Case SecTypeFuture
@@ -500,7 +627,7 @@ End Function
 
 Private Sub addExchangeCode(ByVal code As String)
 Const ProcName As String = "addExchangeCode"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMaxExchangeCodesIndex = mMaxExchangeCodesIndex + 1
@@ -512,14 +639,14 @@ mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addCurrencyDesc( _
                 ByVal code As String, _
                 ByVal Description As String)
 Const ProcName As String = "addCurrencyDesc"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
@@ -532,7 +659,7 @@ mCurrencyDescs(mMaxCurrencyDescsIndex).Description = UCase$(Description)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getCurrencyIndex(ByVal code As String) As Long
@@ -541,7 +668,7 @@ Dim top As Long
 Dim middle As Long
 
 Const ProcName As String = "getCurrencyIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
@@ -570,12 +697,12 @@ If code = mCurrencyDescs(middle).code Then getCurrencyIndex = middle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setupExchangeCodes()
 Const ProcName As String = "setupExchangeCodes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim mExchangeCodes(31) As String
@@ -687,13 +814,13 @@ ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupCurrencyDescs()
 Const ProcName As String = "setupCurrencyDescs"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ReDim mCurrencyDescs(127) As CurrencyDescriptor
@@ -877,6 +1004,6 @@ ReDim Preserve mCurrencyDescs(mMaxCurrencyDescsIndex) As CurrencyDescriptor
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub

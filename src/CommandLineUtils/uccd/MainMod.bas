@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "uccd"
+Public Const ProjectName                    As String = "uccd27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -40,7 +40,7 @@ Private Const ExchangeCommand               As String = "$EXCHANGE"
 Public gCon As Console
 
 Public gDb As TradingDB
-Public gExchange As exchange
+Public gExchange As Exchange
 
 ' if set, existing records are to be updated
 Public gUpdate As Boolean
@@ -87,9 +87,9 @@ Else
             If clp.Arg(0) = "" Then
                 process
             Else
-                Set gExchange = gDb.ExchangeFactory.loadByName(clp.Arg(0))
+                Set gExchange = gDb.ExchangeFactory.LoadByName(clp.Arg(0))
                 If gExchange Is Nothing Then
-                    gCon.writeErrorLine clp.Arg(0) & " is not a valid exchange"
+                    gCon.WriteErrorLine clp.Arg(0) & " is not a valid exchange"
                 Else
                     process
                 End If
@@ -105,7 +105,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -119,8 +119,8 @@ Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -134,20 +134,20 @@ Do While inString <> gCon.eofString
             Dim ex As String
             
             ex = Trim$(Right$(inString, Len(inString) - Len(ExchangeCommand)))
-            gCon.writeLineToConsole "Using exchange " & ex
-            Set gExchange = gDb.ExchangeFactory.loadByName(ex)
+            gCon.WriteLineToConsole "Using exchange " & ex
+            Set gExchange = gDb.ExchangeFactory.LoadByName(ex)
             If gExchange Is Nothing Then
-                gCon.writeErrorLine ex & " is not a valid exchange"
+                gCon.WriteErrorLine ex & " is not a valid exchange"
             End If
         End If
     Else
         If gExchange Is Nothing Then
-            gCon.writeErrorLine "No exchange defined"
+            gCon.WriteErrorLine "No exchange defined"
             Exit Do
         End If
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
@@ -188,37 +188,37 @@ sessionEndStr = clp.Arg(7)
 notes = clp.Arg(8)
 
 If name = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": name must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": name must be supplied"
     validInput = False
 End If
 
 If sectypeStr = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": sec type must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": sec type must be supplied"
     validInput = False
 End If
 
 If currencyCode = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": currency must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": currency must be supplied"
     validInput = False
 End If
 
 If tickSizeStr = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": ticksize must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": ticksize must be supplied"
     validInput = False
 End If
 
 If tickValueStr = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": tickvalue must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": tickvalue must be supplied"
     validInput = False
 End If
 
 If sessionStartStr = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": session start must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": session start must be supplied"
     validInput = False
 End If
 
 If sessionEndStr = "" Then
-    gCon.writeErrorLine "Line " & lineNumber & ": session end must be supplied"
+    gCon.WriteErrorLine "Line " & lineNumber & ": session end must be supplied"
     validInput = False
 End If
 
@@ -228,54 +228,54 @@ If validInput Then
     Dim instrClassName As String
     
     instrClassName = gExchange.name & "/""" & name & """"
-    Set lInstrCl = gDb.InstrumentClassFactory.loadByName(instrClassName)
+    Set lInstrCl = gDb.InstrumentClassFactory.LoadByName(instrClassName)
     If lInstrCl Is Nothing Then
-        Set lInstrCl = gDb.InstrumentClassFactory.makeNew
+        Set lInstrCl = gDb.InstrumentClassFactory.MakeNew
     ElseIf Not gUpdate Then
-        gCon.writeErrorLine "Line " & lineNumber & ": Already exists: " & instrClassName
+        gCon.WriteErrorLine "Line " & lineNumber & ": Already exists: " & instrClassName
         Exit Sub
     Else
         update = True
     End If
     
-    lInstrCl.exchange = gExchange
+    lInstrCl.Exchange = gExchange
     lInstrCl.name = name
-    lInstrCl.secTypeString = sectypeStr
+    lInstrCl.SecTypeString = sectypeStr
     lInstrCl.currencyCode = currencyCode
-    lInstrCl.tickSizeString = tickSizeStr
-    lInstrCl.tickValueString = tickValueStr
-    lInstrCl.daysBeforeExpiryToSwitchString = switchday
-    lInstrCl.sessionStartTimeString = sessionStartStr
-    lInstrCl.sessionEndTimeString = sessionEndStr
+    lInstrCl.TickSizeString = tickSizeStr
+    lInstrCl.TickValueString = tickValueStr
+    lInstrCl.DaysBeforeExpiryToSwitchString = switchday
+    lInstrCl.SessionStartTimeString = sessionStartStr
+    lInstrCl.SessionEndTimeString = sessionEndStr
     lInstrCl.notes = notes
     
     If lInstrCl.IsValid Then
         lInstrCl.ApplyEdit
         If update Then
-            gCon.writeLineToConsole "Updated: " & instrClassName
+            gCon.WriteLineToConsole "Updated: " & instrClassName
         Else
-            gCon.writeLineToConsole "Added: " & instrClassName
+            gCon.WriteLineToConsole "Added: " & instrClassName
         End If
     Else
         Dim lErr As ErrorItem
         For Each lErr In lInstrCl.ErrorList
             Select Case lErr.ruleId
             Case BusinessRuleIds.BusRuleInstrumentClassNameValid
-                gCon.writeErrorLine "Line " & lineNumber & " name invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " name invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassCurrencyCodeValid
-                gCon.writeErrorLine "Line " & lineNumber & " currency invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " currency invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassDaysBeforeExpiryValid
-                gCon.writeErrorLine "Line " & lineNumber & " switchday invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " switchday invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassSecTypeValid
-                gCon.writeErrorLine "Line " & lineNumber & " sectype invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " sectype invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassSessionEndTimeValid
-                gCon.writeErrorLine "Line " & lineNumber & " sessionend invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " sessionend invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassSessionEndTimeValid
-                gCon.writeErrorLine "Line " & lineNumber & " sessionstart invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " sessionstart invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassTickSizeValid
-                gCon.writeErrorLine "Line " & lineNumber & " ticksize invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " ticksize invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassTickValueValid
-                gCon.writeErrorLine "Line " & lineNumber & " tickvalue invalid"
+                gCon.WriteErrorLine "Line " & lineNumber & " tickvalue invalid"
             End Select
         Next
     End If
@@ -284,7 +284,7 @@ End If
 Exit Sub
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 End Sub
 
 Private Function setupDb( _
@@ -313,12 +313,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDb = False
 End If
     
@@ -334,20 +334,20 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDb = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "ucd [exchange]"
-gCon.writeErrorLine "    -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
-gCon.writeErrorLine "    -U     # update existing records"
-gCon.writeErrorLine "StdIn Formats:"
-gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "$class exchange"
-gCon.writeErrorLine "name,sectype,currency,ticksize,tickvalue,[switchday],sessionstarttime,sessionendtime[,notes]"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "uccd27 [exchange]"
+gCon.WriteErrorLine "    -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
+gCon.WriteErrorLine "    -U     # update existing records"
+gCon.WriteErrorLine "StdIn Formats:"
+gCon.WriteErrorLine "#comment"
+gCon.WriteErrorLine "$class exchange"
+gCon.WriteErrorLine "name,sectype,currency,ticksize,tickvalue,[switchday],sessionstarttime,sessionendtime[,notes]"
 End Sub
 
 

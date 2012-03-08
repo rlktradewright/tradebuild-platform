@@ -533,7 +533,7 @@ End Property
 ' mLocalStyle Event Handlers
 '================================================================================
 
-Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mLocalStyle_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mLocalStyle_PropertyChanged"
 
 On Error GoTo Err

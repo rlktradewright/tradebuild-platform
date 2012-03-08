@@ -41,7 +41,7 @@ Implements LogListener
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gbd"
+
 Private Const ModuleName                    As String = "Processor"
 
 '@================================================================================
@@ -83,10 +83,16 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEventData)
+Const ProcName As String = "CollectionChangeListener_Change"
+On Error GoTo Err
 
 outputBar
 Set mBar = ev.affectedItem
 
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -99,8 +105,16 @@ End Sub
 
 Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
 Static formatter As LogFormatter
+Const ProcName As String = "LogListener_Notify"
+On Error GoTo Err
+
 If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter
 gCon.WriteLineToConsole formatter.FormatRecord(Logrec)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -108,11 +122,22 @@ End Sub
 '@================================================================================
 
 Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
+Const ProcName As String = "mTB_Error"
+On Error GoTo Err
+
 gCon.WriteErrorLine "Error " & ev.errorCode & _
                         ": " & ev.ErrorMessage
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
+Const ProcName As String = "mTB_Notification"
+On Error GoTo Err
+
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Dim spe As ServiceProviderError
     Set spe = mTB.GetServiceProviderError
@@ -122,6 +147,11 @@ If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
 Else
     gCon.WriteLineToConsole ev.eventMessage
 End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -135,8 +165,16 @@ End Property
 
 Friend Property Let Timeframe( _
                 ByVal value As Timeframe)
+Const ProcName As String = "Timeframe"
+On Error GoTo Err
+
 Set mBars = value.TradeStudy.Bars
 mBars.AddCollectionChangeListener Me
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 '@================================================================================
@@ -144,14 +182,30 @@ End Property
 '@================================================================================
 
 Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
 outputBar
 mBars.RemoveCollectionChangeListener Me
 GetLogger("").RemoveLogListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Friend Sub StopData()
+Const ProcName As String = "StopData"
+On Error GoTo Err
+
 If Not mTicker Is Nothing Then mTicker.StopTicker
 If Not mBars Is Nothing Then mBars.RemoveCollectionChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 
@@ -161,6 +215,9 @@ End Sub
 
 Private Sub outputBar()
 Dim sv As SValue
+
+Const ProcName As String = "outputBar"
+On Error GoTo Err
 
 If mBar Is Nothing Then Exit Sub
 
@@ -179,5 +236,10 @@ gCon.WriteString ","
 gCon.WriteString mBar.TickVolume
 gCon.WriteString ","
 gCon.WriteLine mBar.OpenInterest
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 

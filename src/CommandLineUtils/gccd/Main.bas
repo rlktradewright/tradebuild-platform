@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gccd"
+Private Const ProjectName                   As String = "gccd27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -90,7 +90,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description & " (" & Err.Source & ")"
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description & " (" & Err.Source & ")"
 TerminateTWUtilities
 
     
@@ -104,8 +104,8 @@ Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -116,36 +116,36 @@ Do While inString <> gCon.eofString
         If Len(inString) >= Len(EchoCommand) And _
             UCase$(Left$(inString, Len(EchoCommand))) = EchoCommand _
         Then
-            gCon.writeLine Trim$(Right$(inString, Len(inString) - Len(EchoCommand)))
+            gCon.WriteLine Trim$(Right$(inString, Len(inString) - Len(EchoCommand)))
         Else
-            gCon.writeErrorLine "Invalid command '" & Split(inString, " ")(0)
+            gCon.WriteErrorLine "Invalid command '" & Split(inString, " ")(0)
         End If
     Else
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
 Private Sub processContractClass( _
             ByVal cc As InstrumentClass)
-gCon.writeString cc.name
-gCon.writeString ","
-gCon.writeString cc.secTypeString
-gCon.writeString ","
-gCon.writeString cc.currencyCode
-gCon.writeString ","
-gCon.writeString cc.tickSize
-gCon.writeString ","
-gCon.writeString cc.tickValue
-gCon.writeString ","
-If cc.daysBeforeExpiryToSwitch <> 0 Then gCon.writeString cc.daysBeforeExpiryToSwitch
-gCon.writeString ","
-gCon.writeString cc.sessionStartTime
-gCon.writeString ","
-gCon.writeString cc.sessionEndTime
-gCon.writeString ","
-gCon.writeLine cc.notes
+gCon.WriteString cc.name
+gCon.WriteString ","
+gCon.WriteString cc.SecTypeString
+gCon.WriteString ","
+gCon.WriteString cc.CurrencyCode
+gCon.WriteString ","
+gCon.WriteString cc.TickSize
+gCon.WriteString ","
+gCon.WriteString cc.TickValue
+gCon.WriteString ","
+If cc.DaysBeforeExpiryToSwitch <> 0 Then gCon.WriteString cc.DaysBeforeExpiryToSwitch
+gCon.WriteString ","
+gCon.WriteString cc.SessionStartTime
+gCon.WriteString ","
+gCon.WriteString cc.SessionEndTime
+gCon.WriteString ","
+gCon.WriteLine cc.Notes
 End Sub
 
 Private Sub processInput( _
@@ -175,24 +175,24 @@ On Error GoTo Err
 If name = "*" Then
     If exchange <> "" And exchange <> "*" Then
         scb.addTerm "Exchange", CondOpEqual, exchange
-        Set summs = gDb.InstrumentClassFactory.query(scb.conditionString, fieldnames)
+        Set summs = gDb.InstrumentClassFactory.Query(scb.conditionString, fieldnames)
         If summs.Count <> 0 Then
-            gCon.writeLine "$exchange " & exchange
+            gCon.WriteLine "$exchange " & exchange
             For Each summ In summs
-                processContractClass gDb.InstrumentClassFactory.loadByID(summ.id)
+                processContractClass gDb.InstrumentClassFactory.LoadByID(summ.Id)
             Next
         End If
     Else
         Dim exSumms As DataObjectSummaries
         Dim exSumm As DataObjectSummary
-        Set exSumms = gDb.ExchangeFactory.query("", fieldnames)
+        Set exSumms = gDb.ExchangeFactory.Query("", fieldnames)
         For Each exSumm In exSumms
             scb.Clear
-            scb.addTerm "Exchange", CondOpEqual, exSumm.fieldValue("name")
-            Set summs = gDb.InstrumentClassFactory.query(scb.conditionString, fieldnames)
-            gCon.writeLine "$exchange " & exSumm.fieldValue("name")
+            scb.addTerm "Exchange", CondOpEqual, exSumm.FieldValue("name")
+            Set summs = gDb.InstrumentClassFactory.Query(scb.conditionString, fieldnames)
+            gCon.WriteLine "$exchange " & exSumm.FieldValue("name")
             For Each summ In summs
-                processContractClass gDb.InstrumentClassFactory.loadByID(summ.id)
+                processContractClass gDb.InstrumentClassFactory.LoadByID(summ.Id)
             Next
         Next
     End If
@@ -200,19 +200,19 @@ Else
     If exchange <> "" And exchange <> "*" Then
         scb.addTerm "name", CondOpEqual, name
         scb.addTerm "Exchange", CondOpEqual, exchange, LogicalOpAND
-        Set summs = gDb.InstrumentClassFactory.query(scb.conditionString, fieldnames)
+        Set summs = gDb.InstrumentClassFactory.Query(scb.conditionString, fieldnames)
         If summs.Count <> 0 Then
-            gCon.writeLine "$exchange " & exchange
+            gCon.WriteLine "$exchange " & exchange
             For Each summ In summs
-                processContractClass gDb.InstrumentClassFactory.loadByID(summ.id)
+                processContractClass gDb.InstrumentClassFactory.LoadByID(summ.Id)
             Next
         End If
     Else
         scb.addTerm "name", CondOpEqual, name
-        Set summs = gDb.InstrumentClassFactory.query(scb.conditionString, fieldnames)
+        Set summs = gDb.InstrumentClassFactory.Query(scb.conditionString, fieldnames)
         For Each summ In summs
-            gCon.writeLine "$exchange " & summ.fieldValue("exchange")
-            processContractClass gDb.InstrumentClassFactory.loadByID(summ.id)
+            gCon.WriteLine "$exchange " & summ.FieldValue("exchange")
+            processContractClass gDb.InstrumentClassFactory.LoadByID(summ.Id)
         Next
     End If
 End If
@@ -220,7 +220,7 @@ End If
 Exit Sub
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 End Sub
 
 Private Function setupDb( _
@@ -249,12 +249,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDb = False
 End If
     
@@ -270,17 +270,17 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDb = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "gccd -fromdb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "StdIn Format:"
-gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "$echo text"
-gCon.writeErrorLine "[* | name][,[exchange]]"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "gccd27 -fromdb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "StdIn Format:"
+gCon.WriteErrorLine "#comment"
+gCon.WriteErrorLine "$echo text"
+gCon.WriteErrorLine "[* | name][,[exchange]]"
 End Sub

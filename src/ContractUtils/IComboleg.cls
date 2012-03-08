@@ -60,9 +60,21 @@ Private Const ModuleName                            As String = "IComboleg"
 ' Properties
 '@================================================================================
 
+Public Property Get ContractSpec() As IContractSpecifier
+End Property
+
+Public Property Get IsBuyLeg() As Boolean
+End Property
+
+Public Property Get Ratio() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function ToString() As String
+End Function
 
 '@================================================================================
 ' Helper Functions

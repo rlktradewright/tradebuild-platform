@@ -479,7 +479,7 @@ End Sub
 ' mBarSeries Event Handlers
 '================================================================================
 
-Private Sub mBarSeries_PropertyChanged(ev As TWUtilities30.PropertyChangedEventData)
+Private Sub mBarSeries_PropertyChanged(ev As PropertyChangedEventData)
 Const ProcName As String = "mBarSeries_PropertyChanged"
 
 On Error GoTo Err

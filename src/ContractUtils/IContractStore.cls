@@ -64,6 +64,16 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Methods
 '@================================================================================
 
+Public Function RequestContracts( _
+                ByVal pContractSpec As IContractSpecifier) As TaskController
+End Function
+
+Public Function StoreContract(ByVal pContract As Contract) As TaskController
+End Function
+
+Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

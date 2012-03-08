@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gbd"
+
 Private Const ModuleName                    As String = "FileBasedProcessor"
 
 '@================================================================================
@@ -66,22 +66,33 @@ Attribute mTimer.VB_VarHelpID = -1
 ' mTickfileManager Event Handlers
 '@================================================================================
 
-Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, ByVal tickfileName As String, ByVal TickfileSizeBytes As Long, ByVal pContract As ContractUtils26.Contract, continueMode As TradeBuild26.ReplayContinueModes)
+Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, ByVal tickfileName As String, ByVal TickfileSizeBytes As Long, ByVal pContract As ContractUtils27.Contract, continueMode As TradeBuild27.ReplayContinueModes)
 continueMode = ReplayContinue
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
+Const ProcName As String = "mTickfileManager_ReplayCompleted"
+On Error GoTo Err
+
 gProcessor.Finish
 Set gProcessor = Nothing
 gCon.WriteLineToConsole "Completed"
 Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub mTickfileManager_ReplayProgress(ByVal tickfileTimestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
 gCon.WriteLineToConsole "Processing tickfile: events processed=" & eventsPlayed & "; percent complete=" & Format(percentComplete, "0.0")
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
+Const ProcName As String = "mTickfileManager_TickerAllocated"
+On Error GoTo Err
+
 gProcessor.Ticker = pTicker
 
 Dim lTimeframe As Timeframe
@@ -92,6 +103,11 @@ Set lTimeframe = pTicker.Timeframes.AddHistorical(GetTimePeriod(mBarLength, mBar
                                         0, _
                                         Not mSessionOnly)
 gProcessor.Timeframe = lTimeframe
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================
@@ -113,6 +129,9 @@ Friend Sub startData( _
                 
 Dim tfs As New TickfileSpecifier
 
+Const ProcName As String = "startData"
+On Error GoTo Err
+
 Set mSelfRef = Me
 
 mNumber = number
@@ -130,6 +149,11 @@ mTickfileManager.ReplaySpeed = 0
 mTickfileManager.StartReplay
 
 Set mTimer = CreateBaseIntervalTimer(1000, , 1000)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

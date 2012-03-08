@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gxd"
+Public Const ProjectName                    As String = "gxd27"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -89,7 +89,7 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.writeErrorLine Err.Description
+If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
 TerminateTWUtilities
 
     
@@ -103,8 +103,8 @@ Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.readLine(":"))
-Do While inString <> gCon.eofString
+inString = Trim$(gCon.ReadLine(":"))
+Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
         ' ignore blank lines
@@ -113,13 +113,13 @@ Do While inString <> gCon.eofString
     Else
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.readLine(":"))
+    inString = Trim$(gCon.ReadLine(":"))
 Loop
 End Sub
 
 Private Sub processexchange( _
                 ByVal ex As Exchange)
-gCon.writeLine ex.Name & "," & ex.TimeZoneName & ",""" & ex.notes & """"
+gCon.WriteLine ex.Name & "," & ex.TimeZoneName & ",""" & ex.Notes & """"
 End Sub
 
 Private Sub processInput( _
@@ -140,15 +140,15 @@ On Error GoTo Err
 Set exF = gDb.ExchangeFactory
 
 If inString = "*" Then
-    Set summs = exF.query("", fieldnames)
+    Set summs = exF.Query("", fieldnames)
     For Each summ In summs
-        Set ex = exF.loadByID(summ.id)
+        Set ex = exF.LoadByID(summ.Id)
         processexchange ex
     Next
 Else
-    Set ex = exF.loadByName(inString)
+    Set ex = exF.LoadByName(inString)
     If ex Is Nothing Then
-        gCon.writeErrorLine "Line " & lineNumber & ": invalid exchange name '" & inString & "'"
+        gCon.WriteErrorLine "Line " & lineNumber & ": invalid exchange name '" & inString & "'"
     Else
         processexchange ex
     End If
@@ -157,7 +157,7 @@ End If
 Exit Sub
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 End Sub
 
 Private Function setupDb( _
@@ -186,12 +186,12 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.readLineFromConsole("Password:", "*")
+    password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
-    gCon.writeErrorLine "Error: invalid dbtype"
+    gCon.WriteErrorLine "Error: invalid dbtype"
     setupDb = False
 End If
     
@@ -207,18 +207,18 @@ End If
 Exit Function
 
 Err:
-gCon.writeErrorLine Err.Description
+gCon.WriteErrorLine Err.Description
 setupDb = False
 
 End Function
 
 Private Sub showUsage()
-gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "gxd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.writeErrorLine ""
-gCon.writeErrorLine "StdIn Format:"
-gCon.writeErrorLine "*"
-gCon.writeErrorLine "exchange"
+gCon.WriteErrorLine "Usage:"
+gCon.WriteErrorLine "gxd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine ""
+gCon.WriteErrorLine "StdIn Format:"
+gCon.WriteErrorLine "*"
+gCon.WriteErrorLine "exchange"
 End Sub
 
 

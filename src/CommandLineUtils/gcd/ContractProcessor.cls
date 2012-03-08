@@ -40,7 +40,6 @@ Implements LogListener
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gcd"
 Private Const ModuleName                    As String = "ContractProcessor"
 
 Private Const OutputSep                     As String = ","

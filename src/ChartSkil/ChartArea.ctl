@@ -978,7 +978,7 @@ End Sub
 ' mEPhost Event Handlers
 '================================================================================
 
-Private Sub mEPhost_Change(pEv As TWUtilities30.ChangeEventData)
+Private Sub mEPhost_Change(pEv As ChangeEventData)
 Const ProcName As String = "mEPhost_Change"
 On Error GoTo Err
 
@@ -1008,7 +1008,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
-Private Sub mEPhost_ExtendedPropertyChanged(pEv As ExtProps30.ExtendedPropertyChangedEventData)
+Private Sub mEPhost_ExtendedPropertyChanged(pEv As ExtendedPropertyChangedEventData)
 Const ProcName As String = "mEPhost_ExtendedPropertyChanged"
 On Error GoTo Err
 
@@ -1052,7 +1052,7 @@ End Sub
 ' mRegions Event Handlers
 '================================================================================
 
-Private Sub mRegions_CollectionChanged(ev As TWUtilities30.CollectionChangeEventData)
+Private Sub mRegions_CollectionChanged(ev As CollectionChangeEventData)
 Dim rgn As ChartRegion
 
 Const ProcName As String = "mRegions_CollectionChanged"

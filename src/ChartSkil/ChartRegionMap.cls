@@ -80,7 +80,7 @@ End Sub
 ' Enumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As TWUtilities30.Enumerator
+Private Property Get Enumerable_Enumerator() As Enumerator
 Set Enumerable_Enumerator = getEnumerator
 End Property
 

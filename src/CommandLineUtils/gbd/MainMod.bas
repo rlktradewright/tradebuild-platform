@@ -32,7 +32,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "gbd"
+Public Const ProjectName                    As String = "gbd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -58,6 +58,8 @@ Private Const SwitchLogToConsole            As String = "logtoconsole"
 ' Member variables
 '@================================================================================
 
+Private mIsInDev                                    As Boolean
+
 Public gCon As Console
 
 Private mSwitch As Switches
@@ -79,6 +81,8 @@ Public gProcessor As Processor
 
 Public gLogToConsole As Boolean
 
+Private mFatalErrorHandler                          As FatalErrorHandler
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -99,12 +103,79 @@ Public gLogToConsole As Boolean
 ' Methods
 '@================================================================================
 
+Public Sub gHandleFatalError(ev As ErrorEventData)
+On Error Resume Next    ' ignore any further errors that might arise
+
+gCon.WriteErrorString "Error "
+gCon.WriteErrorString CStr(ev.errorCode)
+gCon.WriteErrorString ": "
+gCon.WriteErrorLine ev.ErrorMessage
+gCon.WriteErrorLine "At:"
+gCon.WriteErrorLine ev.ErrorSource
+
+' kill off any timers
+TerminateTWUtilities
+
+' At this point, we don't know what state things are in, so it's not feasible to return to
+' the caller. All we can do is terminate abruptly.
+'
+' Note that normally one would use the End statement to terminate a VB6 program abruptly. But
+' the TWUtilities component interferes with the End statement's processing and may prevent
+' proper shutdown, so we use the TWUtilities component's EndProcess method instead.
+'
+' However if we are running in the development environment, then we call End because the
+' EndProcess method kills the entire development environment as well which can have undesirable
+' side effects if other components are also loaded.
+
+If mIsInDev Then
+    End
+Else
+    EndProcess
+End If
+
+End Sub
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
 Public Sub Main()
 Dim clp As CommandLineParser
 
 On Error GoTo Err
 
+Debug.Print "Running in development environment: " & CStr(inDev)
+
 InitialiseTWUtilities
+
+Set mFatalErrorHandler = New FatalErrorHandler
+
 'EnableTracing "tradebuild"
 'EnableTracing "tickfilesp"
 
@@ -142,20 +213,31 @@ TerminateTWUtilities
 Exit Sub
 
 Err:
-If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description
-TerminateTWUtilities
+If Not gCon Is Nothing Then
+    gCon.WriteErrorLine Err.Description
+    gCon.WriteErrorLine "At:"
+    gCon.WriteErrorLine Err.Source
+End If
 
-    
+TerminateTWUtilities
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Function inDev() As Boolean
+mIsInDev = True
+inDev = True
+End Function
+
 Private Sub process()
 Dim inString As String
 Dim command As String
 Dim params As String
+
+Const ProcName As String = "process"
+On Error GoTo Err
 
 inString = Trim$(gCon.ReadLine(":"))
 Do While inString <> gCon.EofString
@@ -195,6 +277,11 @@ Do While inString <> gCon.EofString
     End If
     inString = Trim$(gCon.ReadLine(":"))
 Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processContractCommand( _
@@ -214,6 +301,7 @@ Dim strike As Double
 Dim optRightStr As String
 Dim optRight As OptionRights
 
+Const ProcName As String = "processContractCommand"
 On Error GoTo Err
 
 If Not gProcessor Is Nothing Then
@@ -294,20 +382,33 @@ If validParams Then
                                             optRight)
 End If
 
+'Exit Sub
+'
+'Err:
+'Set mContractSpec = Nothing
+'gCon.WriteErrorLine "Error: " & Err.Description
+
 Exit Sub
 
 Err:
-Set mContractSpec = Nothing
-gCon.WriteErrorLine "Error: " & Err.Description
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processFromCommand( _
                 ByVal params As String)
+Const ProcName As String = "processFromCommand"
+On Error GoTo Err
+
 If IsDate(params) Then
     mFrom = CDate(params)
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid from date '" & params & "'"
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processNonSessCommand()
@@ -316,12 +417,20 @@ End Sub
 
 Private Sub processNumberCommand( _
                 ByVal params As String)
+Const ProcName As String = "processNumberCommand"
+On Error GoTo Err
+
 If Not IsInteger(params, 1) And params <> "-1" Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid number '" & params & "'" & ": must be an integer > 0"
 Else
     mNumber = CLng(params)
     If mSwitch = FromFile Then gCon.WriteLineToConsole "number command is ignored for tickfile input"
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processSessCommand()
@@ -329,6 +438,9 @@ mSessionOnly = True
 End Sub
 
 Private Sub processStartCommand()
+Const ProcName As String = "processStartCommand"
+On Error GoTo Err
+
 If mSwitch <> FromFile And mContractSpec Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - no contract specified"
 ElseIf mSwitch <> FromFile And mFrom = 0 And mNumber = 0 Then
@@ -350,20 +462,36 @@ Else
         fbp.startData mTickfileName, mFrom, mTo, mNumber, mBarLength, mBarUnits, mSessionOnly
     End Select
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processStopCommand()
+Const ProcName As String = "processStopCommand"
+On Error GoTo Err
+
 If gProcessor Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot stop - not started"
 Else
     gProcessor.StopData
     Set gProcessor = Nothing
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub processTimeframeCommand( _
                 ByVal params As String)
 Dim clp As CommandLineParser
+
+Const ProcName As String = "processTimeframeCommand"
+On Error GoTo Err
 
 Set clp = CreateCommandLineParser(params, " ")
 
@@ -390,25 +518,46 @@ If Trim$(clp.Arg(1)) <> "" Then
     End If
 End If
 
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+
 End Sub
 
 Private Sub processToCommand( _
                 ByVal params As String)
+Const ProcName As String = "processToCommand"
+On Error GoTo Err
+
 If IsDate(params) Then
     mTo = CDate(params)
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid to date '" & params & "'"
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function setupCommonStudiesLib() As Boolean
 Dim sl As Object
-Set sl = AddStudyLibrary("CmnStudiesLib26.StudyLib", True, "Built-in")
+Const ProcName As String = "setupCommonStudiesLib"
+On Error GoTo Err
+
+Set sl = AddStudyLibrary("CmnStudiesLib27.StudyLib", True, "Built-in")
 If sl Is Nothing Then
     gCon.WriteErrorLine "Common studies library is not installed"
 Else
     setupCommonStudiesLib = True
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function setupDbServiceProviders( _
@@ -421,6 +570,9 @@ Dim database As String
 Dim username As String
 Dim password As String
 Dim sp As Object
+
+Const ProcName As String = "setupDbServiceProviders"
+On Error GoTo Err
 
 Set clp = CreateCommandLineParser(switchValue, ",")
 
@@ -446,7 +598,7 @@ setupDbServiceProviders = True
     
 On Error Resume Next
 Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                ProgId:="TBInfoBase26.ContractInfoSrvcProvider", _
+                ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
                 Enabled:=True, _
                 ParamString:="Database Name=" & database & _
                             ";Database Type=" & dbtypeStr & _
@@ -460,7 +612,7 @@ If sp Is Nothing Then
 End If
 
 Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                ProgId:="TBInfoBase26.HistDataServiceProvider", _
+                ProgId:="TBInfoBase27.HistDataServiceProvider", _
                 Enabled:=True, _
                 ParamString:="Database Name=" & database & _
                             ";Database Type=" & dbtypeStr & _
@@ -473,11 +625,19 @@ If sp Is Nothing Then
     setupDbServiceProviders = False
 End If
 
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+
 End Function
 
 Private Function setupFileServiceProviders( _
                 ByVal switchValue As String) As Boolean
 Dim sp As Object
+
+Const ProcName As String = "setupFileServiceProviders"
+On Error GoTo Err
 
 setupFileServiceProviders = True
 
@@ -485,7 +645,7 @@ mTickfileName = switchValue
     
 On Error Resume Next
 Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                ProgId:="TickfileSP26.TickfileServiceProvider", _
+                ProgId:="TickfileSP27.TickfileServiceProvider", _
                 Enabled:=True, _
                 ParamString:="Access mode=ReadOnly", _
                 Description:="Historical tick data input from files")
@@ -493,6 +653,11 @@ If sp Is Nothing Then
     gCon.WriteErrorLine "Required tickfile service provider is not installed"
     setupFileServiceProviders = False
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 
 End Function
 
@@ -503,6 +668,7 @@ Dim server As String
 Dim port As String
 Dim clientId As String
 
+Const ProcName As String = "setupTwsServiceProviders"
 On Error GoTo Err
 
 Set clp = CreateCommandLineParser(switchValue, ",")
@@ -534,7 +700,7 @@ End If
     
 If setupTwsServiceProviders Then
     TradeBuildAPI.ServiceProviders.Add _
-                        ProgId:="IBTWSSP26.ContractInfoServiceProvider", _
+                        ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Server=" & server & _
                                     ";Port=" & port & _
@@ -545,7 +711,7 @@ End If
 
 If setupTwsServiceProviders Then
     TradeBuildAPI.ServiceProviders.Add _
-                        ProgId:="IBTWSSP26.HistDataServiceProvider", _
+                        ProgId:="IBTWSSP27.HistDataServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Server=" & server & _
                                     ";Port=" & port & _
@@ -557,14 +723,13 @@ End If
 Exit Function
 
 Err:
-gCon.WriteErrorLine Err.Description
-setupTwsServiceProviders = False
-
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Function setupServiceProviders( _
                 ByVal switchValue As String) As Boolean
 Dim failpoint As Long
+Const ProcName As String = "setupServiceProviders"
 On Error GoTo Err
 
 setupServiceProviders = True
@@ -583,9 +748,7 @@ If Not setupCommonStudiesLib Then setupServiceProviders = False
 Exit Function
 
 Err:
-gCon.WriteErrorLine Err.Description
-setupServiceProviders = False
-
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Function
 
 Private Sub showContractHelp()
@@ -623,7 +786,7 @@ End Sub
 
 Private Sub showUsage()
 gCon.WriteLineToConsole "Usage:"
-gCon.WriteLineToConsole "gbd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteLineToConsole "gbd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
 gCon.WriteLineToConsole "    OR"
 gCon.WriteLineToConsole "    -fromfile:tickfilepath"
 gCon.WriteLineToConsole "    OR"
@@ -641,6 +804,8 @@ gCon.WriteLineToConsole "    timestamp ::= yyyy-mm-dd hh:mm:ss.nnn"
 gCon.WriteLineToConsole ""
 gCon.WriteLineToConsole ""
 End Sub
+
+
 
 
 

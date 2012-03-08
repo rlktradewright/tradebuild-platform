@@ -52,13 +52,13 @@ Private mAbstractTool                       As AbstractChartTool
 Private mRegion                             As ChartRegion
 
 Private mLineSeries                         As LineSeries
-Private WithEvents mLine                    As ChartSkil26.Line
+Private WithEvents mLine                    As ChartSkil27.Line
 Attribute mLine.VB_VarHelpID = -1
 
 Private mLineStyle                          As LineStyle
 
-Private mStartPoint1                        As ChartSkil26.Point
-Private mStartPoint2                        As ChartSkil26.Point
+Private mStartPoint1                        As ChartSkil27.Point
+Private mStartPoint2                        As ChartSkil27.Point
 
 Private mLayer                              As LayerNumbers
 
@@ -200,7 +200,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 
 End Sub
 
-Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
+Private Property Let IChartTool_Region(ByVal RHS As ChartSkil27.ChartRegion)
 Const ProcName As String = "IChartTool_Region"
 On Error GoTo Err
 

@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                As String = "BarFormatters26"
+Public Const ProjectName                                As String = "BarFormatters27"
 Private Const ModuleName                                As String = "Globals"
 
 Public Const NameDunnigan                               As String = "Dunnigan"
@@ -35,9 +35,9 @@ Public Const AttributeNameEnabled                       As String = "Enabled"
 Public Const AttributeNameBarFormatterLibraryBuiltIn    As String = "BuiltIn"
 Public Const AttributeNameBarFormatterLibraryProgId     As String = "ProgId"
 
-Public Const BarFormatterLibrariesRenderer              As String = "BarFormattersUI26.BarFormatterLibConfigurer"
+Public Const BarFormatterLibrariesRenderer              As String = "BarFormattersUI27.BarFormatterLibConfigurer"
 
-Public Const BuiltInBarFormatterLibProgId               As String = "BarFormatters26.BarFormattersLib"
+Public Const BuiltInBarFormatterLibProgId               As String = "BarFormatters27.BarFormattersLib"
 Public Const BuiltInBarFormatterLibName                 As String = "BuiltIn"
 
 Public Const ConfigNameBarFormatterLibraries            As String = "BarFormatterLibraries"

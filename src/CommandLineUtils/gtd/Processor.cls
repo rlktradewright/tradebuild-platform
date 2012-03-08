@@ -75,39 +75,39 @@ End Sub
 ' QuoteListener Interface Members
 '@================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_ask(ev As TradeBuild27.QuoteEventData)
 outputPriceAndSize ev, "A"
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_bid(ev As TradeBuild27.QuoteEventData)
 outputPriceAndSize ev, "B"
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_high(ev As TradeBuild27.QuoteEventData)
 outputPrice ev, "H"
 End Sub
 
-Private Sub QuoteListener_low(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_low(ev As TradeBuild27.QuoteEventData)
 outputPrice ev, "L"
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_openInterest(ev As TradeBuild27.QuoteEventData)
 outputSize ev, "I"
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_previousClose(ev As TradeBuild27.QuoteEventData)
 outputPrice ev, "C"
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild27.QuoteEventData)
 outputPrice ev, "O"
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_trade(ev As TradeBuild27.QuoteEventData)
 outputPriceAndSize ev, "T"
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild26.QuoteEventData)
+Private Sub QuoteListener_volume(ev As TradeBuild27.QuoteEventData)
 outputSize ev, "V"
 End Sub
 
@@ -157,7 +157,7 @@ mTicker.RemoveQuoteListener Me
 Set gProcessor = Nothing
 End Sub
 
-Private Sub mTFManager_TickerAllocated(ByVal pTicker As TradeBuild26.Ticker)
+Private Sub mTFManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
 Set mTicker = pTicker
 mTicker.AddQuoteListener Me
 End Sub

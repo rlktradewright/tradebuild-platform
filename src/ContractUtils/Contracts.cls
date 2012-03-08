@@ -30,6 +30,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IContracts
+Implements Stringable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -37,15 +40,15 @@ Option Explicit
 Event CollectionChanged( _
                 ev As CollectionChangeEventData)
 
-Event ContractSpecifierInvalid(ByVal reason As String)
-
-Event NoMoreContractDetails()
-
-Event Notification( _
-                ByRef ev As NotificationEventData)
-Event TryLater( _
-                ByVal reason As String, _
-                ByVal serviceProviderName As String)
+'Event ContractSpecifierInvalid(ByVal reason As String)
+'
+'Event NoMoreContractDetails()
+'
+'Event Notification( _
+'                ByRef ev As NotificationEventData)
+'Event TryLater( _
+'                ByVal reason As String, _
+'                ByVal serviceProviderName As String)
 
 '@================================================================================
 ' Constants
@@ -67,7 +70,7 @@ Private Const ModuleName                As String = "Contracts"
 
 Private mContracts As EnumerableCollection
 
-Private mContractSpecifier As ContractSpecifier
+Private mContractSpecifier As IContractSpecifier
 
 Private mChangeListeners As Collection
 
@@ -85,6 +88,58 @@ mSortKeys(0) = ContractSortKeyNone
 End Sub
 
 '@================================================================================
+' IContracts Interface Members
+'@================================================================================
+
+Private Sub IContracts_AddCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+AddCollectionChangeListener pListener
+End Sub
+
+Private Property Get IContracts_ContractSpecifier() As IContractSpecifier
+Set IContracts_ContractSpecifier = ContractSpecifier
+End Property
+
+Private Property Get IContracts_Count() As Long
+IContracts_Count = Count
+End Property
+
+Private Property Get IContracts_Enumerator() As Enumerator
+Set IContracts_Enumerator = Enumerator
+End Property
+
+Private Function IContracts_Item(ByVal pIndex As Variant) As IContract
+Set IContracts_Item = Item(pIndex)
+End Function
+
+Private Sub IContracts_RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+RemoveCollectionChangeListener pListener
+End Sub
+
+Private Sub IContracts_Sort()
+Sort
+End Sub
+
+Private Property Let IContracts_SortKeys(Value() As ContractSortKeyIds)
+SortKeys = Value
+End Property
+
+Private Property Get IContracts_SortKeys() As ContractSortKeyIds()
+IContracts_SortKeys = SortKeys
+End Property
+
+Private Function IContracts_ToString() As String
+IContracts_ToString = ToString
+End Function
+
+'@================================================================================
+' Stringable Interface Members
+'@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
+End Function
+
+'@================================================================================
 ' xxxx Event Handlers
 '@================================================================================
 
@@ -92,13 +147,13 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get ContractSpecifier() As ContractSpecifier
+Public Property Get ContractSpecifier() As IContractSpecifier
 Set ContractSpecifier = mContractSpecifier
 End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Count = mContracts.Count
@@ -106,7 +161,7 @@ Count = mContracts.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enumerator() As Enumerator
@@ -114,18 +169,18 @@ Set Enumerator = mContracts.Enumerator
 End Property
 
 Public Property Let SortKeys( _
-                ByRef value() As ContractSortKeyIds)
-Dim lContract As Contract
+                ByRef Value() As ContractSortKeyIds)
+Dim lContract As IContract
 
 Const ProcName As String = "SortKeys"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If UBound(value) < 0 Then
+If UBound(Value) < 0 Then
     ReDim mSortKeys(0) As ContractSortKeyIds
     mSortKeys(0) = ContractSortKeyNone
 Else
-    mSortKeys = value
+    mSortKeys = Value
 End If
 
 For Each lContract In mContracts
@@ -135,7 +190,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Public Property Get SortKeys() As ContractSortKeyIds()
@@ -146,12 +201,12 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pContract As Contract)
+Friend Sub Add(ByVal pContract As IContract)
 ' we no longer use the following statement because some IB contracts have identical
 ' specifiers and differ only in the tick size, eg for symb=ES, sectyp=STK, exchg=SMART, curr=EUR
 'mContracts.Add pContract, pContract.Specifier.Key
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
 pContract.SortKeys = mSortKeys
@@ -161,36 +216,36 @@ fireChange CollItemAdded, pContract
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal Value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
-mChangeListeners.Add value
+mChangeListeners.Add Value
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ContractSpecifierInvalid(ByVal reason As String)
-RaiseEvent ContractSpecifierInvalid(reason)
-End Sub
+'Friend Sub ContractSpecifierInvalid(ByVal reason As String)
+'RaiseEvent ContractSpecifierInvalid(reason)
+'End Sub
 
 Friend Sub Initialise( _
-                ByVal ContractSpec As ContractSpecifier)
+                ByVal ContractSpec As IContractSpecifier)
 Set mContractSpecifier = ContractSpec
 End Sub
 
-Public Function Item(ByVal index As Variant) As Contract
+Public Function Item(ByVal index As Variant) As IContract
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mContracts(index)
@@ -198,12 +253,12 @@ Set Item = mContracts(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub LoadComplete()
-RaiseEvent NoMoreContractDetails
-End Sub
+'Friend Sub LoadComplete()
+'RaiseEvent NoMoreContractDetails
+'End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
@@ -211,16 +266,15 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mContracts.Enumerator
 End Function
 
-Friend Sub Notify( _
-                ByRef ev As NotificationEventData)
-RaiseEvent Notification(ev)
-End Sub
-
+'Friend Sub Notify( _
+'                ByRef ev As NotificationEventData)
+'RaiseEvent Notification(ev)
+'End Sub
 
 Friend Sub Remove(ByVal index As Variant)
-Dim lContract As Contract
+Dim lContract As IContract
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set lContract = mContracts(index)
@@ -230,38 +284,38 @@ fireChange CollItemRemoved, lContract
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal Value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
+    If mChangeListeners.Item(i) Is Value Then mChangeListeners.Remove i
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ServiceProviderCantHandle( _
-                ByVal reason As String, _
-                ByVal serviceProviderName As String)
-RaiseEvent TryLater(reason, serviceProviderName)
-End Sub
+'Friend Sub ServiceProviderCantHandle( _
+'                ByVal reason As String, _
+'                ByVal serviceProviderName As String)
+'RaiseEvent TryLater(reason, serviceProviderName)
+'End Sub
 
 Public Sub Sort()
 Dim i As Long
 Dim ar() As Object
 
 Const ProcName As String = "Sort"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mContracts.Count = 0 Then Exit Sub
@@ -283,13 +337,13 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String
-Dim lContract As Contract
+Dim lContract As IContract
 Const ProcName As String = "ToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lContract In mContracts
@@ -299,7 +353,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -308,17 +362,17 @@ End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Contract)
+                ByVal affectedObject As IContract)
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
+Set ev.AffectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev
@@ -328,7 +382,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

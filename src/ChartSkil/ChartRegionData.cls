@@ -171,7 +171,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 

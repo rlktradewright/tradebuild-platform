@@ -30,6 +30,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IComboLegs
+Implements JSONable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -69,6 +72,34 @@ Set mChangeListeners = New Collection
 End Sub
 
 '@================================================================================
+' IComboLegs Interface Members
+'@================================================================================
+
+Private Sub IComboLegs_AddCollectionChangeListener(ByVal Value As CollectionChangeListener)
+AddCollectionChangeListener Value
+End Sub
+
+Private Property Get IComboLegs_Count() As Long
+IComboLegs_Count = Count
+End Property
+
+Private Function IComboLegs_Item(ByVal pIndex As Variant) As IComboleg
+Set IComboLegs_Item = Item(pIndex)
+End Function
+
+Private Sub IComboLegs_RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
+RemoveCollectionChangeListener Value
+End Sub
+
+'@================================================================================
+' JSONable Interface Members
+'@================================================================================
+
+Private Function JSONable_ToJSON() As String
+JSONable_ToJSON = ToJSON
+End Function
+
+'@================================================================================
 ' xxxx Event Handlers
 '@================================================================================
 
@@ -80,73 +111,117 @@ Public Property Get Count() As Long
 Count = mComboLegs.Count
 End Property
 
+''
+' This property is only provided for use by the system. Applications should use the <code>Add</code>
+' method.
+'
+' @param Value
+'
+'@/
+'
+Public Property Let Items(ByRef Value() As Variant)
+Attribute Items.VB_MemberFlags = "40"
+Dim var As Variant
+Const ProcName As String = "Items"
+On Error GoTo Err
+
+For Each var In Value
+    Add var
+Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub Add(ByVal pComboLeg As ComboLeg, _
-                Optional ByVal Key As String)
+Public Sub Add(ByVal pComboLeg As ComboLeg)
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
-mComboLegs.Add pComboLeg, Key
+mComboLegs.Add pComboLeg
 fireChange CollItemAdded, pComboLeg
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal Value As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
-mChangeListeners.Add value
+mChangeListeners.Add Value
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function AddLeg( _
-                ByVal ContractSpec As ContractSpecifier, _
-                ByVal IsBuyLeg As Boolean, _
-                ByVal Ratio As Long, _
-                ByVal Key As String) As ComboLeg
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pIsBuyLeg As Boolean, _
+                ByVal pRatio As Long) As ComboLeg
 
 Const ProcName As String = "AddLeg"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set AddLeg = New ComboLeg
-AddLeg.Initialise ContractSpec, IsBuyLeg, Ratio
-Add AddLeg, Key
+AddLeg.Initialise pContractSpec, pIsBuyLeg, pRatio
+Add AddLeg
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function Item(ByVal index As Variant) As ComboLeg
+Public Function Item(ByVal pIndex As Long) As ComboLeg
 Attribute Item.VB_UserMemId = 0
-Dim theItem As ComboLeg
 Const ProcName As String = "Item"
-Dim failpoint As String
 On Error GoTo Err
 
-Set theItem = mComboLegs(index)
-Item = theItem
+Set Item = mComboLegs(pIndex)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function ToJSON() As String
+Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
+On Error GoTo Err
+
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "Items"
+jb.EncodeValue mComboLegs
+
+jb.EndObject
+
+ToJSON = jb.JSONString
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -158,7 +233,7 @@ End Function
 Public Sub Remove(ByVal index As Variant)
 Dim lComboLeg As ComboLeg
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set lComboLeg = mComboLegs(index)
@@ -168,23 +243,23 @@ fireChange CollItemRemoved, lComboLeg
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
 Dim i As Long
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
+    If mChangeListeners.Item(i) Is Value Then mChangeListeners.Remove i
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -198,12 +273,12 @@ Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEventData
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
+Set ev.AffectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev
@@ -213,7 +288,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

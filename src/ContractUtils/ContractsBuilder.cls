@@ -73,9 +73,9 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub AddContract(ByVal pContract As Contract)
+Public Sub AddContract(ByVal pContract As IContract)
 Const ProcName As String = "AddContract"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mContracts.Add pContract
@@ -83,26 +83,26 @@ mContracts.Add pContract
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ContractSpecifierInvalid(ByVal reason As String)
-Const ProcName As String = "ContractSpecifierInvalid"
-Dim failpoint As String
-On Error GoTo Err
-
-mContracts.ContractSpecifierInvalid reason
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
+'Public Sub ContractSpecifierInvalid(ByVal reason As String)
+'Const ProcName As String = "ContractSpecifierInvalid"
+'
+'On Error GoTo Err
+'
+'mContracts.ContractSpecifierInvalid reason
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Friend Sub Initialise( _
-                ByVal ContractSpec As ContractSpecifier)
+                ByVal ContractSpec As IContractSpecifier)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mContracts = New Contracts
@@ -111,39 +111,39 @@ mContracts.Initialise ContractSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub LoadComplete()
-Const ProcName As String = "LoadComplete"
-Dim failpoint As String
-On Error GoTo Err
+'Public Sub LoadComplete()
+'Const ProcName As String = "LoadComplete"
+'
+'On Error GoTo Err
+'
+'mContracts.LoadComplete
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
-mContracts.LoadComplete
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub Notify( _
-                ByRef ev As NotificationEventData)
-Const ProcName As String = "Notify"
-Dim failpoint As String
-On Error GoTo Err
-
-mContracts.Notify ev
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
+'Public Sub Notify( _
+'                ByRef ev As NotificationEventData)
+'Const ProcName As String = "Notify"
+'
+'On Error GoTo Err
+'
+'mContracts.Notify ev
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 Public Sub Remove(ByVal index As Variant)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mContracts.Remove index
@@ -151,23 +151,23 @@ mContracts.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub UnableToLoad( _
-                ByVal reason As String, _
-                ByVal serviceProviderName As String)
-Const ProcName As String = "UnableToLoad"
-Dim failpoint As String
-On Error GoTo Err
-
-mContracts.ServiceProviderCantHandle reason, serviceProviderName
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
+'Public Sub UnableToLoad( _
+'                ByVal reason As String, _
+'                ByVal serviceProviderName As String)
+'Const ProcName As String = "UnableToLoad"
+'
+'On Error GoTo Err
+'
+'mContracts.ServiceProviderCantHandle reason, serviceProviderName
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 '@================================================================================
 ' Helper Functions

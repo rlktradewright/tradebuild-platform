@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "ChartDemo26"
+Public Const ProjectName                            As String = "ChartDemo27"
 Private Const ModuleName                            As String = "MainModule"
 
 Private Const AppName As String = "ChartDemo"

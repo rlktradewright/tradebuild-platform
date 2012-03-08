@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "ContractSpecifier"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -29,6 +29,10 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements IContractSpecifier
+Implements JSONable
+Implements Stringable
 
 '@================================================================================
 ' Events
@@ -60,56 +64,128 @@ Private mRight        As OptionRights
 Private mExchange     As String
 Private mCurrency     As String
 Private mLocalSymbol  As String
-Private mComboLegs    As ComboLegs
+Private mComboLegs    As IComboLegs
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
+' IContractSpecifier Interface Members
+'@================================================================================
+
+Private Property Get IContractSpecifier_ComboLegs() As IComboLegs
+Set IContractSpecifier_ComboLegs = ComboLegs
+End Property
+
+Private Property Get IContractSpecifier_CurrencyCode() As String
+IContractSpecifier_CurrencyCode = CurrencyCode
+End Property
+
+Private Function IContractSpecifier_Equals(ByVal pContractSpec As IContractSpecifier) As Boolean
+IContractSpecifier_Equals = Equals(pContractSpec)
+End Function
+
+Private Property Get IContractSpecifier_Exchange() As String
+IContractSpecifier_Exchange = Exchange
+End Property
+
+Private Property Get IContractSpecifier_Expiry() As String
+IContractSpecifier_Expiry = Expiry
+End Property
+
+Private Property Get IContractSpecifier_Key() As String
+IContractSpecifier_Key = Key
+End Property
+
+Private Property Get IContractSpecifier_LocalSymbol() As String
+IContractSpecifier_LocalSymbol = LocalSymbol
+End Property
+
+Private Property Get IContractSpecifier_Right() As OptionRights
+IContractSpecifier_Right = Right
+End Property
+
+Private Property Get IContractSpecifier_SecType() As SecurityTypes
+IContractSpecifier_SecType = SecType
+End Property
+
+Private Property Get IContractSpecifier_Strike() As Double
+IContractSpecifier_Strike = Strike
+End Property
+
+Private Property Get IContractSpecifier_Symbol() As String
+IContractSpecifier_Symbol = Symbol
+End Property
+
+Private Function IContractSpecifier_ToString() As String
+IContractSpecifier_ToString = ToString
+End Function
+
+'@================================================================================
+' JSONable Interface Members
+'@================================================================================
+
+Private Function JSONable_ToJSON() As String
+JSONable_ToJSON = ToJSON
+End Function
+
+'@================================================================================
+' Stringable Interface Members
+'@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
+End Function
+
+'@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Let ComboLegs(ByVal value As ComboLegs)
-Set mComboLegs = value
+Public Property Let ComboLegs(ByVal Value As IComboLegs)
+Attribute ComboLegs.VB_MemberFlags = "40"
+Set mComboLegs = Value
 End Property
 
-Public Property Get ComboLegs() As ComboLegs
+Public Property Get ComboLegs() As IComboLegs
 Set ComboLegs = mComboLegs
 End Property
 
-Friend Property Let CurrencyCode(ByVal value As String)
-mCurrency = UCase$(value)
+Public Property Let zCurrencyCode(ByVal Value As String)
+Attribute zCurrencyCode.VB_MemberFlags = "40"
+mCurrency = UCase$(Value)
 End Property
 
 Public Property Get CurrencyCode() As String
 CurrencyCode = mCurrency
 End Property
 
-Friend Property Let Exchange(ByVal value As String)
-mExchange = UCase$(value)
+Public Property Let zExchange(ByVal Value As String)
+Attribute zExchange.VB_MemberFlags = "40"
+mExchange = UCase$(Value)
 End Property
 
 Public Property Get Exchange() As String
 Exchange = mExchange
 End Property
 
-Friend Property Let Expiry(ByVal value As String)
+Public Property Let zExpiry(ByVal Value As String)
+Attribute zExpiry.VB_MemberFlags = "40"
 Const ProcName As String = "Expiry"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If value = "" Then Exit Property
-If Not gIsValidExpiry(value) Then
+If Value = "" Then Exit Property
+If Not gIsValidExpiry(Value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid Expiry"
 End If
 
-mExpiry = value
+mExpiry = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Expiry() As String
@@ -118,58 +194,56 @@ End Property
 
 Public Property Get Key() As String
 Const ProcName As String = "Key"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Key = mLocalSymbol & "|" & _
-    CStr(mSecType) & "|" & _
-    mSymbol & "|" & _
-    Left$(mExpiry, 6) & "|" & _
-    mStrike & "|" & _
-    CStr(mRight) & "|" & _
-    mExchange & "|" & _
-    mCurrency
+Key = gGetContractSpecKey(Me)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let LocalSymbol(ByVal value As String)
-mLocalSymbol = UCase$(value)
+Public Property Let zLocalSymbol(ByVal Value As String)
+Attribute zLocalSymbol.VB_MemberFlags = "40"
+mLocalSymbol = UCase$(Value)
 End Property
 
 Public Property Get LocalSymbol() As String
 LocalSymbol = mLocalSymbol
 End Property
 
-Friend Property Let Right(ByVal value As OptionRights)
-mRight = value
+Public Property Let zRight(ByVal Value As OptionRights)
+Attribute zRight.VB_MemberFlags = "40"
+mRight = Value
 End Property
 
 Public Property Get Right() As OptionRights
 Right = mRight
 End Property
 
-Friend Property Let SecType(ByVal value As SecurityTypes)
-mSecType = value
+Public Property Let zSecType(ByVal Value As SecurityTypes)
+Attribute zSecType.VB_MemberFlags = "40"
+mSecType = Value
 End Property
 
 Public Property Get SecType() As SecurityTypes
 SecType = mSecType
 End Property
 
-Friend Property Let Strike(ByVal value As Double)
-mStrike = value
+Public Property Let zStrike(ByVal Value As Double)
+Attribute zStrike.VB_MemberFlags = "40"
+mStrike = Value
 End Property
 
 Public Property Get Strike() As Double
 Strike = mStrike
 End Property
 
-Friend Property Let Symbol(ByVal value As String)
-mSymbol = UCase$(value)
+Public Property Let zSymbol(ByVal Value As String)
+Attribute zSymbol.VB_MemberFlags = "40"
+mSymbol = UCase$(Value)
 End Property
 
 Public Property Get Symbol() As String
@@ -180,35 +254,149 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function Equals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
+Public Function Equals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
 Const ProcName As String = "Equals"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If pContractSpecifier Is Nothing Then Exit Function
-If pContractSpecifier Is Me Then Equals = True
-Equals = (Me.Key = pContractSpecifier.Key)
+Equals = gContractSpecsEqual(Me, pContractSpecifier)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function FuzzyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
-Const ProcName As String = "FuzzyEquals"
-Dim failpoint As String
+'Public Function FuzzyEquals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
+'Const ProcName As String = "FuzzyEquals"
+'
+'On Error GoTo Err
+'
+'If pContractSpecifier Is Nothing Then Exit Function
+'FuzzyEquals = (Me.SecType = pContractSpecifier.SecType And _
+'                Me.Symbol = pContractSpecifier.Symbol) Or _
+'            (Me.LocalSymbol = pContractSpecifier.LocalSymbol)
+'
+'Exit Function
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Function
+
+Public Sub Initialise( _
+                Optional ByVal LocalSymbol As String, _
+                Optional ByVal Symbol As String, _
+                Optional ByVal Exchange As String, _
+                Optional ByVal SecType As SecurityTypes = SecTypeNone, _
+                Optional ByVal CurrencyCode As String, _
+                Optional ByVal Expiry As String, _
+                Optional ByVal Strike As Double, _
+                Optional ByVal Right As OptionRights = OptNone)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If pContractSpecifier Is Nothing Then Exit Function
-FuzzyEquals = (Me.SecType = pContractSpecifier.SecType And _
-                Me.Symbol = pContractSpecifier.Symbol) Or _
-            (Me.LocalSymbol = pContractSpecifier.LocalSymbol)
+If LocalSymbol = "" And Symbol = "" Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Symbol must be supplied if LocalSymbol is not supplied"
+End If
+
+If Exchange <> "" And _
+    Not gIsValidExchangeCode(Exchange) _
+Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Exchange & "' is not a valid Exchange code"
+End If
+
+If Expiry <> "" Then
+    If Not gIsValidExpiry(Expiry) Then
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Expiry & "' is not a valid Expiry format"
+    End If
+End If
+
+Select Case SecType
+Case 0  ' ie not supplied
+Case SecTypeStock
+Case SecTypeFuture
+Case SecTypeOption, SecTypeFuturesOption
+    If Strike < 0 Then
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Strike must be > 0"
+    End If
+    Select Case Right
+    Case OptCall
+    Case OptPut
+    Case OptNone
+    Case Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Right & "' is not a valid option Right"
+    End Select
+Case SecTypeCash
+Case SecTypeCombo
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Sectype 'combo' is not permissible"
+Case SecTypeIndex
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & SecType & "' is not a valid secType"
+End Select
+
+mLocalSymbol = LocalSymbol
+mSymbol = Symbol
+mExchange = Exchange
+mSecType = SecType
+mCurrency = CurrencyCode
+mExpiry = Expiry
+mStrike = Strike
+mRight = Right
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Function ToJSON() As String
+Dim jb As JSONBuilder
+Const ProcName As String = "ToJSON"
+On Error GoTo Err
+
+Set jb = New JSONBuilder
+
+jb.BeginObject
+
+jb.EncodeName "$ProgID"
+jb.EncodeValue ProjectName & "." & ModuleName
+
+jb.EncodeName "ComboLegs"
+jb.EncodeValue mComboLegs
+
+jb.EncodeName "zCurrency"
+jb.EncodeValue mCurrency
+
+jb.EncodeName "zExchange"
+jb.EncodeValue mExchange
+
+jb.EncodeName "zExpiry"
+jb.EncodeValue mExpiry
+
+jb.EncodeName "zLocalSymbol"
+jb.EncodeValue mLocalSymbol
+
+jb.EncodeName "zRight"
+jb.EncodeValue mRight
+
+jb.EncodeName "zSecType"
+jb.EncodeValue mSecType
+
+jb.EncodeName "zStrike"
+jb.EncodeValue mStrike
+
+jb.EncodeName "zSymbol"
+jb.EncodeValue mSymbol
+
+jb.EndObject
+
+ToJSON = jb.JSONString
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
@@ -216,7 +404,7 @@ Dim comboLegObj As ComboLeg
 Dim i As Long
 
 Const ProcName As String = "ToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
@@ -243,7 +431,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

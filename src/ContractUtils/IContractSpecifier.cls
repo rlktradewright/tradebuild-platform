@@ -60,9 +60,45 @@ Private Const ModuleName                            As String = "IContractSpecif
 ' Properties
 '@================================================================================
 
+Public Property Get ComboLegs() As IComboLegs
+End Property
+
+Public Property Get CurrencyCode() As String
+End Property
+
+Public Property Get Exchange() As String
+End Property
+
+Public Property Get Expiry() As String
+End Property
+
+Public Property Get Key() As String
+End Property
+
+Public Property Get LocalSymbol() As String
+End Property
+
+Public Property Get Right() As OptionRights
+End Property
+
+Public Property Get SecType() As SecurityTypes
+End Property
+
+Public Property Get Strike() As Double
+End Property
+
+Public Property Get Symbol() As String
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function Equals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
+End Function
+
+Public Function ToString() As String
+End Function
 
 '@================================================================================
 ' Helper Functions
