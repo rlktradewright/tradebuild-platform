@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.1#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#49.0#0"; "TWControls10.ocx"
 Begin VB.UserControl BarFormatterPicker 
    BackStyle       =   0  'Transparent
    ClientHeight    =   345
@@ -87,11 +87,11 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 Const ProcName As String = "UserControl_ReadProperties"
 On Error GoTo Err
 
-Combo1.backColor = PropBag.ReadProperty("BackColor", &H80000005)
+Combo1.BackColor = PropBag.ReadProperty("BackColor", &H80000005)
 Combo1.CausesValidation = PropBag.ReadProperty("CausesValidation", True)
 Combo1.Enabled = PropBag.ReadProperty("Enabled", True)
 Set Combo1.Font = PropBag.ReadProperty("Font", Ambient.Font)
-Combo1.foreColor = PropBag.ReadProperty("ForeColor", &H80000008)
+Combo1.ForeColor = PropBag.ReadProperty("ForeColor", &H80000008)
 Combo1.ListWidth = PropBag.ReadProperty("ListWidth", 0)
 Combo1.Locked = PropBag.ReadProperty("Locked", False)
 Combo1.ToolTipText = PropBag.ReadProperty("ToolTipText", "")
@@ -112,11 +112,11 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 Const ProcName As String = "UserControl_WriteProperties"
 On Error GoTo Err
 
-Call PropBag.WriteProperty("BackColor", Combo1.backColor, &H80000005)
+Call PropBag.WriteProperty("BackColor", Combo1.BackColor, &H80000005)
 Call PropBag.WriteProperty("CausesValidation", Combo1.CausesValidation, True)
 Call PropBag.WriteProperty("Enabled", Combo1.Enabled, True)
 Call PropBag.WriteProperty("Font", Combo1.Font, Ambient.Font)
-Call PropBag.WriteProperty("ForeColor", Combo1.foreColor, &H80000008)
+Call PropBag.WriteProperty("ForeColor", Combo1.ForeColor, &H80000008)
 Call PropBag.WriteProperty("ListWidth", Combo1.ListWidth, 0)
 Call PropBag.WriteProperty("Locked", Combo1.Locked, False)
 Call PropBag.WriteProperty("ToolTipText", Combo1.ToolTipText, "")
@@ -238,11 +238,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get backColor() As OLE_COLOR
+Public Property Get BackColor() As OLE_COLOR
 Const ProcName As String = "BackColor"
 On Error GoTo Err
 
-    backColor = Combo1.backColor
+    BackColor = Combo1.BackColor
 
 Exit Property
 
@@ -250,11 +250,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let backColor(ByVal New_BackColor As OLE_COLOR)
+Public Property Let BackColor(ByVal New_BackColor As OLE_COLOR)
 Const ProcName As String = "BackColor"
 On Error GoTo Err
 
-    Combo1.backColor() = New_BackColor
+    Combo1.BackColor() = New_BackColor
     PropertyChanged "BackColor"
 
 Exit Property
@@ -334,11 +334,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Get foreColor() As OLE_COLOR
+Public Property Get ForeColor() As OLE_COLOR
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-    foreColor = Combo1.foreColor
+    ForeColor = Combo1.ForeColor
 
 Exit Property
 
@@ -346,11 +346,11 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
-Public Property Let foreColor(ByVal New_ForeColor As OLE_COLOR)
+Public Property Let ForeColor(ByVal New_ForeColor As OLE_COLOR)
 Const ProcName As String = "ForeColor"
 On Error GoTo Err
 
-    Combo1.foreColor() = New_ForeColor
+    Combo1.ForeColor() = New_ForeColor
     PropertyChanged "ForeColor"
 
 Exit Property
@@ -444,14 +444,14 @@ Then
             "Either a Chart or a Multichart (but not both) must be supplied"
 End If
 
+loadCombo
+
 If Not pChart Is Nothing Then
     attachToChart pChart
 ElseIf Not pMultiChart Is Nothing Then
     Set mMultiChart = pMultiChart
     attachToCurrentChart
 End If
-
-loadCombo
 
 Exit Sub
 
@@ -553,9 +553,9 @@ On Error GoTo Err
 Set lBarsValueConfig = mChartManager.BaseStudyConfiguration.StudyValueConfigurations("Bar")
 
 If lBarsValueConfig.BarFormatterFactoryName = "" Then
-    Combo1.ComboItems.item(NoBarFormatter).Selected = True
+    SelectBarFormatter NoBarFormatter
 Else
-    Combo1.ComboItems.item(itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)).Selected = True
+    SelectBarFormatter itemKey(lBarsValueConfig.BarFormatterFactoryName, lBarsValueConfig.BarFormatterLibraryName)
 End If
 
 Combo1.SelStart = 0
