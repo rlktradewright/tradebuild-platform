@@ -55,7 +55,7 @@ Private Const ModuleName As String = "HistDataReader"
 ' Member variables
 '@===============================================================================
 
-Private mTradingDB                  As TradingDB
+Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
@@ -247,6 +247,20 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
+'@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_Connected()
+mCommonServiceConsumer.NotifyEvent HDConnectedToDataSource, mConnectionString, mHistDataServiceProvider.handle
+End Sub
+
+Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
+mCommonServiceConsumer.NotifyEvent HDCantConnectDataSource, _
+                mConnectionString & vbCrLf & vbCrLf & _
+                "Error " & errorCode & ": " & errorDesc, _
+                mHistDataServiceProvider.handle
+End Sub
 '@===============================================================================
 ' Properties
 '@===============================================================================
