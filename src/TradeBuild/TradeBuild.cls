@@ -108,7 +108,8 @@ Public Enum ApiNotifyCodes
     ApiNotifyOrderRejected
     ApiNotifyOrderDeferred
     
-    
+    ApiNotifyCantConnectTickfileDataSource
+
 End Enum
 
 Public Enum BulletinTypes
