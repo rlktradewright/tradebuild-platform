@@ -55,7 +55,7 @@ Private Const ModuleName As String = "TickfileReader"
 ' Member variables
 '@===============================================================================
 
-Private mTradingDB                  As TradingDB
+Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
@@ -314,6 +314,21 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 '@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_Connected()
+mCommonServiceConsumer.NotifyEvent TFConnectedToDataSource, mConnectionString, mTickfileServiceProvider.handle
+End Sub
+
+Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
+mCommonServiceConsumer.NotifyEvent TFCantConnectDataSource, _
+                mConnectionString & vbCrLf & vbCrLf & _
+                "Error " & errorCode & ": " & errorDesc, _
+                mTickfileServiceProvider.handle
+End Sub
+
+'@===============================================================================
 ' Properties
 '@===============================================================================
 
@@ -512,8 +527,8 @@ Else
             st = GetSessionTimes(.FromDate, _
                                 mContract.SessionStartTime, _
                                 mContract.SessionEndTime)
-            .FromDate = st.startTime
-            .ToDate = st.endTime
+            .FromDate = st.StartTime
+            .ToDate = st.EndTime
         End If
     
         logMessage pMsg:="Fetching ticks", pProcName:="processContracts", pLogLevel:=LogLevelHighDetail
