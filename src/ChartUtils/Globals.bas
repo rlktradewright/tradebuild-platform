@@ -98,6 +98,7 @@ On Error GoTo Err
 
 If Not studyConfig Is Nothing Then
     Set gGetDefaultStudyConfiguration = studyConfig.Clone
+    gGetDefaultStudyConfiguration.StudyValueHandlers = New StudyValueHandlers
 Else
     'no default Study config currently exists so we'll create one from the Study definition
     Dim sd As StudyDefinition
