@@ -161,7 +161,7 @@ End If
 Dim sc As StudyConfiguration
 Set sc = studyConfig.Clone ' take a defensive copy
 sc.ClearStudyValueHandlers
-sc.ClearStudyConfigs
+'sc.ClearStudyConfigs
 setBaseStudyConfiguration sc
 
 Exit Property
