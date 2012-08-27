@@ -90,7 +90,7 @@ Private mConfig As ConfigurationSection
 
 Private Sub Class_Initialize()
 
-mLayer = LayerNumbers.LayerHighestUser
+'mLayer = LayerNumbers.LayerHighestUser
 End Sub
 
 '@================================================================================
