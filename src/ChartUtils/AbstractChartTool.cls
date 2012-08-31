@@ -448,6 +448,8 @@ On Error GoTo Err
 For Each selHandle In mSelectionHandles
     mRegion.RemoveGraphicObject selHandle.DataPoint
 Next
+Set mSelectionHandles = Nothing
+
 mRegion.RemoveGraphicObjectSeries mSelectionHandleSeries
 Set mSelectableObjects = Nothing
 mChart.SetPointerModeDefault
