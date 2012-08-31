@@ -119,7 +119,7 @@ On Error GoTo Err
 
 If mChart.PointerMode = PointerModeDefault Then
     Deselected
-    mTool.Deselected
+    If Not mTool Is Nothing Then mTool.Deselected
 End If
 
 Exit Sub
@@ -450,7 +450,7 @@ For Each selHandle In mSelectionHandles
 Next
 mRegion.RemoveGraphicObjectSeries mSelectionHandleSeries
 Set mSelectableObjects = Nothing
-mChart.SetPointerModeSelection
+mChart.SetPointerModeDefault
 Set mTool = Nothing
 Set mRegionEV = Nothing
 Set mChartEV = Nothing
@@ -468,10 +468,11 @@ Dim failpoint As String
 On Error GoTo Err
 
 mSelMode = SelectionModeNone
-For Each selHandle In mSelectionHandles
-    mRegion.RemoveGraphicObject selHandle.DataPoint
-Next
-Set mSelectionHandles = New Collection
+If Not mSelectionHandles Is Nothing Then
+    For Each selHandle In mSelectionHandles
+        mRegion.RemoveGraphicObject selHandle.DataPoint
+    Next
+End If
 Set mRegionEV = Nothing
 Set mChartEV = Nothing
 
