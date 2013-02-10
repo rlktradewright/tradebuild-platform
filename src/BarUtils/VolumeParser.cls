@@ -38,7 +38,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "StudyUtils26"
 Private Const ModuleName                    As String = "VolumeParser"
 
 '@================================================================================
@@ -109,7 +108,7 @@ Public Function Notify( _
                 ByVal newTotalVolume As Long) As Long
 
 Const ProcName As String = "Notify"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Debug.Print "VolumeParser(" & mObjId & "): Notify: " & newTotalVolume
@@ -143,7 +142,7 @@ Debug.Print "VolumeParser(" & mObjId & "): Volume increment returned " & Notify
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -151,7 +150,7 @@ Public Sub ChangeSession( _
                 ByVal newSession As Session)
                 
 Const ProcName As String = "ChangeSession"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Debug.Print "VolumeParser(" & mObjId & "): ChangeSession object"
@@ -176,7 +175,7 @@ mVolumeResetPending = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

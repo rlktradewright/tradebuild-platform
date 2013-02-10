@@ -33,7 +33,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TimeframeUtils25"
 Private Const ModuleName As String = "SessionBuilder"
 
 '@================================================================================
@@ -78,57 +77,50 @@ Set Session = mSession
 End Property
                 
 Public Property Let SessionStartTime( _
-                ByVal value As Date)
+                ByVal Value As Date)
 Const ProcName As String = "SessionStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
-End If
+Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 
-mSession.SessionStartTime = value
+mSession.SessionStartTime = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Public Property Let SessionEndTime( _
-                ByVal value As Date)
+                ByVal Value As Date)
 Const ProcName As String = "SessionEndTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
-End If
+Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 
-mSession.SessionEndTime = value
+mSession.SessionEndTime = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TimeZone( _
-                ByVal value As TimeZone)
+                ByVal Value As TimeZone)
 Const ProcName As String = "TimeZone"
-Dim failpoint As String
 On Error GoTo Err
 
-If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
-End If
+Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 
-mSession.TimeZone = value
+mSession.TimeZone = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -142,36 +134,31 @@ End Property
 ' This method succeeds only if the <code>Session</code> object to be linked has
 ' its <code>IsLinkable</code> property set to <code>True</code>.
 '
-' @param objectToLink the <code>Session</code> object which is to be linked to this
+' @param pSessionToLink the <code>Session</code> object which is to be linked to this
 '               <code>SessionBuilder</code> object.
 ' @see SetLinkable, UnLinkSession
 '
 '@/
 Public Sub LinkSession( _
-                ByVal objectToLink As Session)
-                
+                ByVal pSessionToLink As Session)
 Const ProcName As String = "LinkSession"
-Dim failpoint As String
 On Error GoTo Err
 
-If Not objectToLink.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Target session not linkable"
-End If
+Assert pSessionToLink.IsLinkable, "Target session not linkable"
 
-objectToLink.SessionStartTime = mSession.SessionStartTime
-objectToLink.SessionEndTime = mSession.SessionEndTime
-objectToLink.SetSessionCurrentTime mLatestTimeNotified
-mLinkedSessions.Add objectToLink
+pSessionToLink.SessionStartTime = mSession.SessionStartTime
+pSessionToLink.SessionEndTime = mSession.SessionEndTime
+pSessionToLink.SetSessionCurrentTime mLatestTimeNotified
+mLinkedSessions.Add pSessionToLink
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetLinkable()
 Const ProcName As String = "SetLinkable"
-Dim failpoint As String
 On Error GoTo Err
 
 mSession.IsLinkable = True
@@ -179,20 +166,17 @@ mSession.IsLinkable = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function SetSessionCurrentTime( _
                 ByVal Timestamp As Date) As SessionEventData
-Dim sess As Session
-
 Const ProcName As String = "SetSessionCurrentTime"
-Dim failpoint As String
 On Error GoTo Err
 
-If mSession.IsLinkable Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
-End If
+Dim sess As Session
+
+Assert Not mSession.IsLinkable, "Session has been made linkable, so no further modification is alLowed via this SessionBuilder"
 
 SetSessionCurrentTime = mSession.SetSessionCurrentTime(Timestamp)
 
@@ -205,7 +189,7 @@ mLatestTimeNotified = Timestamp
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -219,12 +203,11 @@ End Function
 '@/
 Public Sub UnLinkSession( _
                 ByVal objectToUnlink As Session)
+Const ProcName As String = "UnLinkSession"
+On Error GoTo Err
+
 Dim sess As Session
 Dim i As Long
-
-Const ProcName As String = "UnLinkSession"
-Dim failpoint As String
-On Error GoTo Err
 
 For i = mLinkedSessions.Count To 1 Step -1
     Set sess = mLinkedSessions(i)
@@ -234,7 +217,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -43,12 +43,20 @@ Event Changed( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "Bar"
 
 '@================================================================================
 ' Enums
 '@================================================================================
+
+Private Enum BarChanges
+    BarChangeOpenChanged = 1&
+    BarChangeHighChanged = 2&
+    BarChangeLowChanged = 4&
+    BarChangeCloseChanged = 8&
+    BarChangeVolumeChanged = 16&
+    BarChangeOpenInterestChanged = 32&
+End Enum
 
 '@================================================================================
 ' Types
@@ -58,40 +66,31 @@ Private Const ModuleName                    As String = "Bar"
 ' Member variables
 '@================================================================================
 
-Private mBarChanged As Boolean
+Private mBarChanges As BarChanges
 
 Private mBarNumber As Long
 
 Private mOpen As Double
-Private mOpenChanged As Boolean
 
 Private mHigh As Double
-Private mHighChanged As Boolean
 
 Private mLow As Double
-Private mLowChanged As Boolean
 
 Private mClose As Double
-Private mCloseChanged As Boolean
 
 Private mVolume As Long
-Private mVolumeChanged As Boolean
 
 Private mOpenInterest As Long
-Private mOpenInterestChanged As Boolean
 
 Private mTickVolume As Long
-Private mTickVolumeChanged As Boolean
 
 Private mTimestamp As Date
-Private mBlank As Boolean   ' indicates that there were no Ticks during the Bar
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mBlank = True
 mOpen = MaxDouble
 mLow = MaxDouble
 mHigh = MinDouble
@@ -115,11 +114,11 @@ End Function
 '@================================================================================
 
 Public Property Get BarChanged() As Boolean
-BarChanged = mBarChanged
+BarChanged = (mBarChanges <> 0)
 End Property
 
-Friend Property Let BarNumber(ByVal value As Long)
-mBarNumber = value
+Friend Property Let BarNumber(ByVal Value As Long)
+mBarNumber = Value
 End Property
 
 Public Property Get BarNumber() As Long
@@ -127,11 +126,7 @@ BarNumber = mBarNumber
 End Property
 
 Public Property Get Blank() As Boolean
-Blank = mBlank
-End Property
-
-Friend Property Let Blank(ByVal newvalue As Boolean)
-mBlank = newvalue
+Blank = ((mOpen = MaxDouble) And (mLow = MaxDouble) And (mHigh = MinDouble) And (mClose = MaxDouble))
 End Property
 
 Public Property Get CloseValue() As Double
@@ -139,7 +134,7 @@ CloseValue = mClose
 End Property
 
 Public Property Get CloseChanged() As Boolean
-CloseChanged = mCloseChanged
+CloseChanged = CBool(mBarChanges And BarChangeCloseChanged)
 End Property
 
 Public Property Get Timestamp() As Date
@@ -160,7 +155,7 @@ HighValue = mHigh
 End Property
 
 Public Property Get HighChanged() As Boolean
-HighChanged = mHighChanged
+HighChanged = CBool(mBarChanges And BarChangeHighChanged)
 End Property
 
 Public Property Get HL2() As Double
@@ -189,7 +184,7 @@ LowValue = mLow
 End Property
 
 Public Property Get LowChanged() As Boolean
-LowChanged = mLowChanged
+LowChanged = CBool(mBarChanges And BarChangeLowChanged)
 End Property
 
 Public Property Get OHLC4() As Double
@@ -197,7 +192,7 @@ OHLC4 = (mOpen + mHigh + mLow + mClose) / 4
 End Property
 
 Public Property Get OpenChanged() As Boolean
-OpenChanged = mOpenChanged
+OpenChanged = CBool(mBarChanges And BarChangeOpenChanged)
 End Property
 
 Public Property Get OpenInterest() As Long
@@ -205,7 +200,7 @@ OpenInterest = mOpenInterest
 End Property
 
 Public Property Get OpenInterestChanged() As Long
-OpenInterestChanged = mOpenInterestChanged
+OpenInterestChanged = CBool(mBarChanges And BarChangeOpenInterestChanged)
 End Property
 
 Public Property Get OpenValue() As Double
@@ -221,7 +216,7 @@ Volume = mVolume
 End Property
 
 Public Property Get VolumeChanged() As Long
-VolumeChanged = mVolumeChanged
+VolumeChanged = CBool(mBarChanges And BarChangeVolumeChanged)
 End Property
 
 '@================================================================================
@@ -231,7 +226,7 @@ End Property
 Friend Sub IncrementTickVolume( _
                 ByVal increment As Long)
 Const ProcName As String = "IncrementTickVolume"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTickVolume = mTickVolume + increment
@@ -240,7 +235,7 @@ fireChange BarTickVolumeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
@@ -253,7 +248,7 @@ Public Sub Initialise( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mTimestamp = Timestamp
@@ -265,15 +260,9 @@ mVolume = Volume
 mTickVolume = TickVolume
 mOpenInterest = OpenInterest
 
-mBarChanged = True
-mOpenChanged = True
-mHighChanged = True
-mLowChanged = True
-mCloseChanged = True
-If mVolume <> 0 Then mVolumeChanged = True
-
-If mOpenInterest <> 0 Then mOpenInterestChanged = True
-If mTickVolume <> 0 Then mTickVolumeChanged = True
+mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or CloseChanged)
+If mVolume <> 0 Then mBarChanges = (mBarChanges Or BarChangeVolumeChanged)
+If mOpenInterest <> 0 Then mBarChanges = (mBarChanges Or BarChangeOpenInterestChanged)
 
 fireChange BarPriceChanged Or _
         IIf(mVolume <> 0, BarVolumeChanged, 0) Or _
@@ -283,101 +272,79 @@ fireChange BarPriceChanged Or _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOpenInterest( _
                 ByVal OpenInterest As Long)
 Const ProcName As String = "NotifyOpenInterest"
-Dim failpoint As String
+
 On Error GoTo Err
 
-clean
 ' note that we don't set mBlank to false because the Bar is blank until
-' the first value is notified
+' the first Value is notified
 mOpenInterest = OpenInterest
-mBarChanged = True
-mOpenInterestChanged = True
+mBarChanges = BarChangeOpenInterestChanged
 fireChange BarOpenInterestChanged
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyValue(ByVal value As Double)
+Friend Sub NotifyValue(ByVal Value As Double)
 Const ProcName As String = "NotifyValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
-clean
+mBarChanges = 0
 
-If mBlank Then
-    mBlank = False
-    mOpen = value
-    mBarChanged = True
-    mOpenChanged = True
+If Blank Then
+    mOpen = Value
+    mBarChanges = (mBarChanges Or BarChangeOpenChanged)
 End If
 
-If value > mHigh Then
-    mHigh = value
-    mBarChanged = True
-    mHighChanged = True
+If Value > mHigh Then
+    mHigh = Value
+    mBarChanges = (mBarChanges Or BarChangeHighChanged)
 End If
 
-If value < mLow Then
-    mLow = value
-    mBarChanged = True
-    mLowChanged = True
+If Value < mLow Then
+    mLow = Value
+    mBarChanges = (mBarChanges Or BarChangeLowChanged)
 End If
 
-If value <> mClose Then
-    mClose = value
-    mBarChanged = True
-    mCloseChanged = True
+If Value <> mClose Then
+    mClose = Value
+    mBarChanges = (mBarChanges Or BarChangeCloseChanged)
 End If
 
 mTickVolume = mTickVolume + 1
-If mBarChanged Then fireChange BarPriceChanged
+If mBarChanges Then fireChange BarPriceChanged
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyVolume( _
                 ByVal Volume As Long)
 Const ProcName As String = "NotifyVolume"
-Dim failpoint As String
+
 On Error GoTo Err
 
-clean
 ' note that we don't set mBlank to false because the Bar is blank until
-' the first value is notified
+' the first Value is notified
 mVolume = Volume
-mBarChanged = True
-mVolumeChanged = True
+mBarChanges = BarChangeVolumeChanged
 fireChange BarVolumeChanged
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
-Public Sub ResetChangeIndicators()
-Const ProcName As String = "ResetChangeIndicators"
-Dim failpoint As String
-On Error GoTo Err
-
-clean
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String
@@ -387,6 +354,7 @@ ToString = "Bar{Time:" & FormatTimestamp(mTimestamp, TimestampDateAndTimeISO8601
             ", Low:" & mLow & _
             ", Close:" & mClose & _
             ", Volume:" & mVolume & _
+            ", TickVolume:" & mTickVolume & _
             ", OpenInterest:" & mOpenInterest & "}"
 End Function
 
@@ -394,41 +362,22 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Sub clean()
-Const ProcName As String = "clean"
-Dim failpoint As String
-On Error GoTo Err
-
-mBarChanged = False
-mOpenChanged = False
-mHighChanged = False
-mLowChanged = False
-mCloseChanged = False
-mVolumeChanged = False
-mOpenInterestChanged = False
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
-
 Private Sub fireChange( _
                 ByVal changeType As BarChangeTypes)
 Dim ev As ChangeEventData
 
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set ev.source = Me
+Set ev.Source = Me
 ev.changeType = changeType
 RaiseEvent Changed(ev)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

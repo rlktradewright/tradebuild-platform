@@ -40,7 +40,6 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "AppendValuesTask"
 
 '@================================================================================
@@ -70,14 +69,14 @@ Dim val As SValue
 Dim i As Long
 
 Const ProcName As String = "Task_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mIndex = mIndex + 1
 
 Do While mIndex <= mSourceValues.Count And i < 100
     val = mSourceValues.GetSValue(mIndex)
-    mDestValues.AddValue val.value, val.BarNumber, val.Timestamp, val.BarStartTime
+    mDestValues.AddValue val.Value, val.BarNumber, val.Timestamp, val.BarStartTime
     
     If mProgressModulus <> 0 Then
         If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mSourceValues.Count, Empty
@@ -96,12 +95,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
     
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
-Set mTaskContext = value
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_taskName() As String
@@ -124,7 +123,7 @@ Friend Sub Initialise( _
                 ByVal destValues As ValueCache, _
                 ByVal sourceValues As ValueCache)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mSourceValues = sourceValues
@@ -134,7 +133,7 @@ If mSourceValues.Count / 20 >= 200 Then mProgressModulus = mSourceValues.Count /
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

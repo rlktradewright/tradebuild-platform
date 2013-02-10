@@ -25,6 +25,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Stringable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -41,7 +43,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "BarDataSpecifier"
 
 '@================================================================================
@@ -63,6 +64,14 @@ Private mIncludeBarsOutsideSession As Boolean
 '@================================================================================
 
 '@================================================================================
+' Stringable Interface Members
+'@================================================================================
+
+Private Function Stringable_ToString() As String
+Stringable_ToString = ToString
+End Function
+
+'@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
 
@@ -70,24 +79,24 @@ Private mIncludeBarsOutsideSession As Boolean
 ' Properties
 '@================================================================================
 
-Public Property Let BarTimePeriod(ByVal value As TimePeriod)
-Set mBarTimePeriod = value
+Public Property Let BarTimePeriod(ByVal Value As TimePeriod)
+Set mBarTimePeriod = Value
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
 Set BarTimePeriod = mBarTimePeriod
 End Property
 
-Public Property Let BarType(ByVal value As BarTypes)
-mBartype = value
+Public Property Let BarType(ByVal Value As BarTypes)
+mBartype = Value
 End Property
 
 Public Property Get BarType() As BarTypes
 BarType = mBartype
 End Property
 
-Public Property Let Contract(ByVal value As Contract)
-Set mContract = value
+Public Property Let Contract(ByVal Value As Contract)
+Set mContract = Value
 End Property
 
 Public Property Get Contract() As Contract
@@ -102,32 +111,61 @@ Public Property Get CustomSessionEndTime() As Date
 CustomSessionEndTime = mCustomSessionEndTime
 End Property
 
-Public Property Let FromDate(ByVal value As Date)
-mFromDate = value
+Public Property Let FromDate(ByVal Value As Date)
+Const ProcName As String = "FromDate"
+On Error GoTo Err
+
+If mToDate <> 0 And Value > mToDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "FromDate must be before ToDate"
+mFromDate = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get FromDate() As Date
 FromDate = mFromDate
 End Property
 
-Public Property Let IncludeBarsOutsideSession(ByVal value As Boolean)
-mIncludeBarsOutsideSession = value
+Public Property Let IncludeBarsOutsideSession(ByVal Value As Boolean)
+mIncludeBarsOutsideSession = Value
 End Property
 
 Public Property Get IncludeBarsOutsideSession() As Boolean
 IncludeBarsOutsideSession = mIncludeBarsOutsideSession
 End Property
 
-Public Property Let MaxNumberOfBars(ByVal value As Long)
-mMaxNumberOfBars = value
+Public Property Let MaxNumberOfBars(ByVal Value As Long)
+Const ProcName As String = "MaxNumberOfBars"
+On Error GoTo Err
+
+If Value <= 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be greater than 0"
+                
+mMaxNumberOfBars = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get MaxNumberOfBars() As Long
 MaxNumberOfBars = mMaxNumberOfBars
 End Property
 
-Public Property Let ToDate(ByVal value As Date)
-mToDate = value
+Public Property Let ToDate(ByVal Value As Date)
+Const ProcName As String = "ToDate"
+On Error GoTo Err
+
+If Value < mFromDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "FromDate must be before ToDate"
+                        
+mToDate = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get ToDate() As Date
@@ -137,6 +175,18 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function Clone() As BarDataSpecifier
+Set Clone = New BarDataSpecifier
+Clone.BarTimePeriod = BarTimePeriod
+Clone.BarType = BarType
+Clone.Contract = Contract
+Clone.FromDate = FromDate
+Clone.IncludeBarsOutsideSession = IncludeBarsOutsideSession
+Clone.MaxNumberOfBars = MaxNumberOfBars
+Clone.SetCustomSessionTimes CustomSessionStartTime, CustomSessionEndTime
+Clone.ToDate = ToDate
+End Function
 
 Public Sub SetCustomSessionTimes( _
                 ByVal startTime As Date, _
@@ -150,7 +200,7 @@ End Sub
 
 Public Function ToString() As String
 Const ProcName As String = "ToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ToString = _
@@ -167,7 +217,7 @@ ToString = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

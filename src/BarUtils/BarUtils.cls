@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TimeframeUtils"
+Attribute VB_Name = "BarUtils"
 Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -31,8 +31,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName               As String = "TimeframeUtils26"
-Private Const ModuleName                As String = "GlobalsClass"
+Private Const ModuleName                As String = "BarUtils"
 
 '@================================================================================
 ' Enums
@@ -56,6 +55,7 @@ Public Enum SessionChangeTypes
     SessionChangeNone
     SessionChangeEnd
     SessionChangeStart
+    SessionChangeDateChange
 End Enum
 
 '@================================================================================
@@ -65,12 +65,12 @@ End Enum
 Public Type SessionEventData
     Source              As Object
     Timestamp           As Date
-    ChangeType          As SessionChangeTypes
+    changeType          As SessionChangeTypes
 End Type
 
 Public Type SessionTimes
-    StartTime       As Date
-    EndTime         As Date
+    startTime       As Date
+    endTime         As Date
 End Type
 
 Public Type SValue
@@ -110,7 +110,7 @@ Public Function BarEndTime( _
                 Optional ByVal SessionStartTime As Date, _
                 Optional ByVal SessionEndTime As Date) As Date
 Const ProcName As String = "BarEndTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BarEndTime = gBarEndTime(Timestamp, _
@@ -121,13 +121,13 @@ BarEndTime = gBarEndTime(Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BarLength( _
                 ByVal BarTimePeriod As TimePeriod) As Date
 Const ProcName As String = "BarLength"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
@@ -143,7 +143,7 @@ BarLength = gCalcBarLength(BarTimePeriod)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BarStartTime( _
@@ -151,7 +151,7 @@ Public Function BarStartTime( _
                 ByVal BarTimePeriod As TimePeriod, _
                 Optional ByVal SessionStartTime As Date) As Date
 Const ProcName As String = "BarStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 BarStartTime = gBarStartTime(Timestamp, _
@@ -161,7 +161,7 @@ BarStartTime = gBarStartTime(Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBar( _
@@ -174,7 +174,7 @@ Public Function CreateBar( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long) As Bar
 Const ProcName As String = "CreateBar"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateBar = New Bar
@@ -190,28 +190,28 @@ CreateBar.Initialise Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilder( _
-                ByVal BarTimePeriod As TimePeriod, _
+                ByVal pBarTimePeriod As TimePeriod, _
                 Optional ByVal pSession As Session, _
-                Optional ByVal TickSize As Double, _
-                Optional ByVal numberOfBarsToCache As Long) As BarsBuilder
+                Optional ByVal pTickSize As Double, _
+                Optional ByVal pNumberOfBarsToCache As Long, _
+                Optional ByVal pSave As Boolean = True) As BarsBuilder
 Set CreateBarsBuilder = New BarsBuilder
 If pSession Is Nothing Then
     Dim lSB As New SessionBuilder
     Set pSession = lSB.Session
 End If
-CreateBarsBuilder.Initialise BarTimePeriod, _
-                            pSession, TickSize, numberOfBarsToCache
+CreateBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
 End Function
 
 Public Function CreateValueCache( _
                 ByVal CyclicSize As Long, _
                 ByVal ValueName As String) As ValueCache
 Const ProcName As String = "CreateValueCache"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateValueCache = New ValueCache
@@ -220,13 +220,13 @@ CreateValueCache.Initialise CyclicSize, ValueName
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateVolumeParser( _
                 ByVal pSession As Session) As VolumeParser
 Const ProcName As String = "CreateVolumeParser"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set CreateVolumeParser = New VolumeParser
@@ -235,45 +235,45 @@ CreateVolumeParser.Initialise pSession
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSessionTimes( _
                 ByVal Timestamp As Date, _
-                Optional ByVal StartTime As Date, _
-                Optional ByVal EndTime As Date) As SessionTimes
+                Optional ByVal startTime As Date, _
+                Optional ByVal endTime As Date) As SessionTimes
 Const ProcName As String = "GetSessionTimes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetSessionTimes = gCalcSessionTimes(Timestamp, _
-                            gNormaliseTime(StartTime), _
-                            gNormaliseTime(EndTime))
+                            gNormaliseTime(startTime), _
+                            gNormaliseTime(endTime))
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimes( _
                 ByVal Timestamp As Date, _
                 ByVal offset As Long, _
-                Optional ByVal StartTime As Date, _
-                Optional ByVal EndTime As Date) As SessionTimes
+                Optional ByVal startTime As Date, _
+                Optional ByVal endTime As Date) As SessionTimes
 Const ProcName As String = "GetOffsetSessionTimes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
                             offset, _
-                            gNormaliseTime(StartTime), _
-                            gNormaliseTime(EndTime))
+                            gNormaliseTime(startTime), _
+                            gNormaliseTime(endTime))
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NumberOfBarsInSession( _
@@ -281,7 +281,7 @@ Public Function NumberOfBarsInSession( _
                 ByVal SessionStartTime As Date, _
                 ByVal SessionEndTime As Date) As Long
 Const ProcName As String = "NumberOfBarsInSession"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
@@ -300,7 +300,7 @@ NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OffsetBarStartTime( _
@@ -310,7 +310,7 @@ Public Function OffsetBarStartTime( _
                 Optional ByVal SessionStartTime As Date, _
                 Optional ByVal SessionEndTime As Date) As Date
 Const ProcName As String = "OffsetBarStartTime"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If BarTimePeriod.Units = TimePeriodNone Then
@@ -326,7 +326,7 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

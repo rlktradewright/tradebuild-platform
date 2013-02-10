@@ -33,7 +33,7 @@ Implements Enumerable
 ' collection, and when the collection is cleared.
 '
 ' @remarks
-'   The folLowing members of the <code>CollectionChangeTypes</code> enum may
+'   The following members of the <code>CollectionChangeTypes</code> enum may
 '   occur in the <code>ChangeType</code> field of the
 '   <code>CollectionChangedEvent</code> parameter:
 ' <blockquote>
@@ -58,7 +58,6 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "Bars"
 
 '@================================================================================
@@ -92,7 +91,7 @@ End Sub
 ' Enumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As TWUtilities30.Enumerator
+Private Property Get Enumerable_Enumerator() As Enumerator
 Set Enumerable_Enumerator = CreateEnumerator(Me)
 End Property
 
@@ -158,7 +157,7 @@ End Property
 
 Public Property Get Bar(Optional ByVal ref As Long) As Bar
 Const ProcName As String = "Bar"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Bar = mBarsCache.GetValue(ref)
@@ -166,7 +165,7 @@ Set Bar = mBarsCache.GetValue(ref)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
@@ -179,7 +178,7 @@ End Property
 
 Public Property Get CloseValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "CloseValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 CloseValue = Bar(ref).CloseValue
@@ -187,7 +186,7 @@ CloseValue = Bar(ref).CloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBarNumber() As Long
@@ -196,7 +195,7 @@ End Property
 
 Public Property Get Down(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Down"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Down = Bar(ref).IsDownBar
@@ -204,7 +203,7 @@ Down = Bar(ref).IsDownBar
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 ''
@@ -220,7 +219,7 @@ End Property
 
 Public Property Get Gain(Optional ByVal ref As Long) As Double
 Const ProcName As String = "Gain"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Gain = Bar(ref).Gain
@@ -228,7 +227,7 @@ Gain = Bar(ref).Gain
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HigherHighValue( _
@@ -240,7 +239,7 @@ Dim i As Long
 Dim numHighsFound As Long
 
 Const ProcName As String = "HigherHighValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 valueToCompare = HighValue(ref)
@@ -258,7 +257,7 @@ HigherHighValue = currentHigh
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighestCloseValue(ByVal periods As Long, _
@@ -271,7 +270,7 @@ Static lastValue        As Variant
 Static lastRef          As Long
 
 Const ProcName As String = "HighestCloseValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -303,7 +302,7 @@ lastValue = HighestCloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighestHighValue(ByVal periods As Long, _
@@ -316,7 +315,7 @@ Static lastValue        As Variant
 Static lastRef          As Long
 
 Const ProcName As String = "HighestHighValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -349,12 +348,12 @@ lastValue = HighestHighValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "HighValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 HighValue = Bar(ref).HighValue
@@ -362,12 +361,12 @@ HighValue = Bar(ref).HighValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Inside(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "Inside"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Inside = (HighValue(ref) <= HighValue(ref - 1)) And (LowValue(ref) >= LowValue(ref - 1))
@@ -375,12 +374,12 @@ Inside = (HighValue(ref) <= HighValue(ref - 1)) And (LowValue(ref) >= LowValue(r
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Loss(Optional ByVal ref As Long) As Double
 Const ProcName As String = "Loss"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Loss = Bar(ref).Loss
@@ -388,7 +387,7 @@ Loss = Bar(ref).Loss
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowerLowValue( _
@@ -400,7 +399,7 @@ Dim i As Long
 Dim numLowsFound As Long
 
 Const ProcName As String = "LowerLowValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 valueToCompare = LowValue(ref)
@@ -418,7 +417,7 @@ LowerLowValue = currentLow
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowestCloseValue(ByVal periods As Long, _
@@ -431,7 +430,7 @@ Static lastValue        As Variant
 Static lastRef          As Long
 
 Const ProcName As String = "LowestCloseValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -463,7 +462,7 @@ lastValue = LowestCloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowestLowValue(ByVal periods As Long, _
@@ -476,7 +475,7 @@ Static lastValue        As Variant
 Static lastRef          As Long
 
 Const ProcName As String = "LowestLowValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
@@ -510,12 +509,12 @@ lastValue = LowestLowValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "LowValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LowValue = Bar(ref).LowValue
@@ -523,12 +522,12 @@ LowValue = Bar(ref).LowValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OpenValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "OpenValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 OpenValue = Bar(ref).OpenValue
@@ -536,12 +535,12 @@ OpenValue = Bar(ref).OpenValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Outside(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Outside"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Outside = (HighValue(ref) > HighValue(ref - 1)) And (LowValue(ref) < LowValue(ref - 1))
@@ -549,12 +548,12 @@ Outside = (HighValue(ref) > HighValue(ref - 1)) And (LowValue(ref) < LowValue(re
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickVolume(Optional ByVal ref As Long) As Long
 Const ProcName As String = "TickVolume"
-Dim failpoint As String
+
 On Error GoTo Err
 
 TickVolume = Bar(ref).TickVolume
@@ -562,12 +561,12 @@ TickVolume = Bar(ref).TickVolume
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Up(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Up"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Up = Bar(ref).IsUpBar
@@ -575,7 +574,7 @@ Up = Bar(ref).IsUpBar
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -587,7 +586,7 @@ Friend Sub Add( _
                 ByVal BarNumber As Long, _
                 ByVal Timestamp As Date)
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
 change
@@ -602,7 +601,7 @@ fireChange CollItemAdded, pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AppendBars( _
@@ -612,7 +611,7 @@ Dim i As Long
 Dim max As Long
 
 Const ProcName As String = "AppendBars"
-Dim failpoint As String
+
 On Error GoTo Err
 
 max = IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
@@ -623,7 +622,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function AppendBarsAsync( _
@@ -631,7 +630,7 @@ Friend Function AppendBarsAsync( _
                 ByVal maxNumberToAppend As Long) As TaskController
 Dim abt As New AppendBarsTask
 Const ProcName As String = "AppendBarsAsync"
-Dim failpoint As String
+
 On Error GoTo Err
 
 abt.Initialise Me, pBars, IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
@@ -640,7 +639,7 @@ Set AppendBarsAsync = StartTask(abt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -655,7 +654,7 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mChangeListeners.Add listener, CStr(ObjPtr(listener))
@@ -663,7 +662,7 @@ mChangeListeners.Add listener, CStr(ObjPtr(listener))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -674,7 +673,7 @@ End Sub
 '@/
 Public Function Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Count = mBarsCache.Count
@@ -682,14 +681,14 @@ Count = mBarsCache.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToCache As Long)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mBarTimePeriod = BarTimePeriod
@@ -699,7 +698,7 @@ mBarsCache.Initialise numberOfBarsToCache, "Bar"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -717,7 +716,7 @@ End Function
 Public Sub RemoveCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mChangeListeners.Remove CStr(ObjPtr(listener))
@@ -725,21 +724,21 @@ mChangeListeners.Remove CStr(ObjPtr(listener))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ResetBarChangeIndicators()
-Const ProcName As String = "ResetBarChangeIndicators"
-Dim failpoint As String
-On Error GoTo Err
-
-mCurrentBar.ResetChangeIndicators
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
-End Sub
+'Friend Sub ResetBarChangeIndicators()
+'Const ProcName As String = "ResetBarChangeIndicators"
+'
+'On Error GoTo Err
+'
+'mCurrentBar.ResetChangeIndicators
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -757,12 +756,12 @@ Dim i As Long
 Dim ev As CollectionChangeEventData
 
 Const ProcName As String = "fireChange"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set ev.source = Me
+Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
+Set ev.AffectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.change ev
@@ -773,7 +772,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

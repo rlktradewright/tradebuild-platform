@@ -25,7 +25,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "ValueCache"
 
 '@================================================================================
@@ -79,13 +78,13 @@ End Property
 '@================================================================================
 
 Public Sub AddValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal BarNumber As Long, _
                 ByVal Timestamp As Date, _
                 ByVal BarStartTime As Date)
 
 Const ProcName As String = "AddValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mCyclicSize > 0 Then
@@ -103,7 +102,7 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-gSetVariant mValues(mNewest).value, value
+gSetVariant mValues(mNewest).Value, Value
 mValues(mNewest).BarNumber = BarNumber
 mValues(mNewest).Timestamp = Timestamp
 mValues(mNewest).BarStartTime = BarStartTime
@@ -111,7 +110,7 @@ mValues(mNewest).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AppendValues( _
@@ -120,18 +119,18 @@ Dim i As Long
 Dim val As SValue
 
 Const ProcName As String = "AppendValues"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For i = 1 To pValueCache.Count
     val = pValueCache.GetSValue(i)
-    AddValue val.value, val.BarNumber, val.Timestamp, val.BarStartTime
+    AddValue val.Value, val.BarNumber, val.Timestamp, val.BarStartTime
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AppendValuesAsync( _
@@ -139,7 +138,7 @@ Public Function AppendValuesAsync( _
 Dim avt As New AppendValuesTask
 
 Const ProcName As String = "AppendValuesAsync"
-Dim failpoint As String
+
 On Error GoTo Err
 
 avt.Initialise Me, pValueCache
@@ -149,49 +148,49 @@ Set AppendValuesAsync = StartTask(avt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSValue(Optional ByVal ref As Long) As SValue
 Dim valueEntry As SValue
 
 Const ProcName As String = "GetSValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 valueEntry = mValues(refToIndex(ref))
 GetSValue.BarNumber = valueEntry.BarNumber
 GetSValue.Timestamp = valueEntry.Timestamp
 GetSValue.BarStartTime = valueEntry.BarStartTime
-gSetVariant GetSValue.value, valueEntry.value
+gSetVariant GetSValue.Value, valueEntry.Value
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetValue(Optional ByVal ref As Long) As Variant
 Dim index As Long
 
 Const ProcName As String = "GetValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 index = refToIndex(ref)
-gSetVariant GetValue, mValues(index).value
+gSetVariant GetValue, mValues(index).Value
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
                 ByVal CyclicSize As Long, _
                 ByVal ValueName As String)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If CyclicSize > 0 Then
@@ -208,22 +207,22 @@ mValueName = ValueName
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub UpdateValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 Optional ByVal BarNumber As Long, _
                 Optional ByVal Timestamp As Date, _
                 Optional ByVal BarStartTime As Date, _
                 Optional ByVal ref As Long)
 Dim i As Long
 Const ProcName As String = "UpdateValue"
-Dim failpoint As String
+
 On Error GoTo Err
 
 i = refToIndex(ref)
-gSetVariant mValues(i).value, value
+gSetVariant mValues(i).Value, Value
 If BarNumber > 0 Then mValues(i).BarNumber = BarNumber
 If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
 If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
@@ -231,7 +230,7 @@ If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -240,7 +239,7 @@ End Sub
 
 Private Function refToIndex(ByVal ref As Long) As Long
 Const ProcName As String = "refToIndex"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ref > mNumValues Or _
@@ -270,7 +269,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
