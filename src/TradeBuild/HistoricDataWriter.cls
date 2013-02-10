@@ -58,7 +58,7 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mWriter As TradeBuildSP.IBarDataWriter
+Private mWriter As IBarDataWriter
 Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
@@ -83,7 +83,7 @@ End Sub
 ' mTimer Event Handlers
 '@================================================================================
 
-Private Sub mTimer_TimerExpired()
+Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
 Set mWriter = Nothing
 Set mSelfRef = Nothing
 End Sub
@@ -92,7 +92,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.IBarDataWriter)
+Friend Property Let ServiceProviderWriter(ByVal value As IBarDataWriter)
 Set mWriter = value
 End Property
 
@@ -118,7 +118,7 @@ mTimer.StartTimer
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()
@@ -130,7 +130,7 @@ mServiceProviderWriterReady = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
@@ -154,7 +154,7 @@ Set mPendingWrites = New Collection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub WriteBar( _
@@ -178,7 +178,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
