@@ -40,7 +40,6 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TimeframeUtils26"
 Private Const ModuleName                    As String = "AppendBarsTask"
 
 '@================================================================================
@@ -70,7 +69,7 @@ Private Sub Task_run()
 Dim i As Long
 
 Const ProcName As String = "Task_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Do While mIndex <= mNumberToAppend And i < 100
@@ -95,12 +94,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleUnexpectedError ProcName, ModuleName
     
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
-Set mTaskContext = value
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_taskName() As String
