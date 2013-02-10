@@ -93,17 +93,17 @@ Private mStudyManagerRef            As WeakReference
 Private mAccumulatedVolume          As Long
 
 Private mTradeBars                  As Bars
-Private mTradeBarsStudy             As study
+Private mTradeBarsStudy             As Study
 Private mCurrTradeBar               As Bar
 Private mCurrTradeBarPrevTickvol    As Long
 
 Private mAskBars                    As Bars
-Private mAskBarsStudy               As study
+Private mAskBarsStudy               As Study
 Private mCurrAskBar                 As Bar
 Private mCurrAskBarPrevTickvol      As Long
 
 Private mBidBars                    As Bars
-Private mBidBarsStudy               As study
+Private mBidBarsStudy               As Study
 Private mCurrBidBar                 As Bar
 Private mCurrBidBarPrevTickvol      As Long
 
@@ -135,12 +135,12 @@ Private mHistoricDataLoaded         As Boolean
 Private mWriteBidAndAskBars         As Boolean
 
 Private mBarWriter                  As HistoricDataWriter
-Private mBarReader                  As TradeBuildSP.IBarDataReader
+Private mBarReader                  As IBarDataReader
 
 Private WithEvents mWriteTimer      As IntervalTimer
 Attribute mWriteTimer.VB_VarHelpID = -1
 
-Private mHistoricBar                As TimeframeUtils26.Bar
+Private mHistoricBar                As BarUtils27.Bar
 
 Private mFromTime                   As Date
 Private mToTime                     As Date
@@ -148,6 +148,8 @@ Private mToTime                     As Date
 Private mIsHistorical               As Boolean
 
 Private mTaskContext                As TaskContext
+
+Private mSessionBuilder             As SessionBuilder
 
 '@================================================================================
 ' Class Event Handlers
@@ -167,21 +169,21 @@ End Sub
 ' DeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_run(ByVal data As Variant)
+Private Sub DeferredAction_run(ByVal Data As Variant)
 Dim bar2Write As BarToWrite
 
 Const ProcName As String = "DeferredAction_run"
 
 On Error GoTo Err
 
-bar2Write = data
+bar2Write = Data
 
 WriteBar bar2Write.theBar, bar2Write.barType
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -190,19 +192,19 @@ End Sub
 '@================================================================================
 
 Private Sub IBarDataConsumer_Bar( _
-                ByVal data As Bar, _
+                ByVal Data As Bar, _
                 ByVal barTimePeriod As TimePeriod)
 Const ProcName As String = "IBarDataConsumer_Bar"
 
 On Error GoTo Err
 
-Set mHistoricBar = data
+Set mHistoricBar = Data
 If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -233,11 +235,11 @@ Set mSession = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventCode As StandardSPEventCodes, _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 Dim ev As NotificationEventData
@@ -276,7 +278,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -297,14 +299,14 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' StudyValueListener Interface Members
 '@================================================================================
 
-Private Sub StudyValueListener_notify(ev As StudyUtils26.StudyValueEventData)
+Private Sub StudyValueListener_notify(ev As StudyValueEventData)
 Static currAskBarNumber As Long
 Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
@@ -320,7 +322,7 @@ If ev.source Is mTradeBarsStudy Then
         WriteABar mCurrTradeBar, BarTypeTrade, mCurrTradeBarPrevTickvol
         mCurrTradeBarPrevTickvol = 0
     End If
-    Set mCurrTradeBar = ev.sVal.value
+    Set mCurrTradeBar = ev.sVal.Value
     currTradeBarNumber = ev.sVal.BarNumber
 ElseIf ev.source Is mAskBarsStudy Then
     If ev.sVal.BarNumber = currAskBarNumber Then Exit Sub
@@ -329,7 +331,7 @@ ElseIf ev.source Is mAskBarsStudy Then
         WriteABar mCurrAskBar, BarTypeAsk, mCurrAskBarPrevTickvol
         mCurrAskBarPrevTickvol = 0
     End If
-    Set mCurrAskBar = ev.sVal.value
+    Set mCurrAskBar = ev.sVal.Value
     currAskBarNumber = ev.sVal.BarNumber
 ElseIf ev.source Is mBidBarsStudy Then
     If ev.sVal.BarNumber = currBidBarNumber Then Exit Sub
@@ -338,14 +340,14 @@ ElseIf ev.source Is mBidBarsStudy Then
         WriteABar mCurrBidBar, BarTypeBid, mCurrBidBarPrevTickvol
         mCurrBidBarPrevTickvol = 0
     End If
-    Set mCurrBidBar = ev.sVal.value
+    Set mCurrBidBar = ev.sVal.Value
     currBidBarNumber = ev.sVal.BarNumber
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -363,7 +365,7 @@ Const ProcName As String = "Task_run"
 Dim failpoint As String
 
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 
@@ -377,7 +379,7 @@ If mState = TimeframeStateFinished Then
     mTaskContext.Finish Empty, False
     
     #If trace Then
-        GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.ExitProcedure ProcName, ModuleName
     #End If
     Exit Sub
 End If
@@ -387,7 +389,7 @@ If mBarReader Is Nothing Then
     mTaskContext.suspend -1
     
     #If trace Then
-        GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.ExitProcedure ProcName, ModuleName
     #End If
     Exit Sub
 End If
@@ -402,7 +404,7 @@ If mHistoricBar Is Nothing Then
         mTaskContext.suspend -1
         
         #If trace Then
-            GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+            gTracer.ExitProcedure ProcName, ModuleName
         #End If
         Exit Sub
     End If
@@ -414,16 +416,16 @@ failpoint = "300"
 ProcessHistoricBar
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="Task_run", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 Exit Sub
 
 Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failpoint
+gHandleFatalError ProcName, ModuleName, pFailpoint:=failpoint
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_TaskName() As String
@@ -442,7 +444,7 @@ End Sub
 ' mWriteTimer Event Handlers
 '@================================================================================
 
-Private Sub mWriteTimer_TimerExpired()
+Private Sub mWriteTimer_TimerExpired(ev As TimerExpiredEventData)
 Const ProcName As String = "mWriteTimer_TimerExpired"
 
 On Error GoTo Err
@@ -466,7 +468,7 @@ End If
 Exit Sub
 
 Err:
-GHandleFatalError pProcName:=ProcName, pModuleName:=ModuleName
+gHandleFatalError ProcName, ModuleName
 End Sub
 '@================================================================================
 ' Properties
@@ -497,33 +499,37 @@ Set Contract = mContract
 End Property
 
 ' only gets called if contract was not available when Initialise was called
-Friend Property Let Contract(ByVal value As Contract)
+Friend Property Let Contract(ByVal Value As Contract)
 Const ProcName As String = "Contract"
 
 On Error GoTo Err
 
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 
-Set mContract = value
+Set mContract = Value
 
 mInputStudy.name = getName & " (historical Data)"
 studyMgr.SetInputTicksize mBidInputHandle, mContract.TickSize
 studyMgr.SetInputTicksize mAskInputHandle, mContract.TickSize
 studyMgr.SetInputTicksize mTradeInputHandle, mContract.TickSize
 
+mSessionBuilder.sessionStartTime = mContract.sessionStartTime
+mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+mSessionBuilder.TimeZone = GetTimeZone(mContract.TimezoneName)
+
 startHistDataFetch
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="Contract", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HistoricDataLoaded() As Boolean
@@ -555,8 +561,8 @@ End Property
 '@================================================================================
 
 Public Sub AddStateChangeListener( _
-                ByVal value As StateChangeListener)
-mStateChangeListeners.Add value
+                ByVal Value As StateChangeListener)
+mStateChangeListeners.Add Value
 End Sub
 
 Friend Sub Finish()
@@ -571,7 +577,7 @@ Set mTickerRef = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -579,14 +585,14 @@ Friend Sub Initialise( _
                 ByVal Key As String, _
                 ByVal pTicker As Ticker, _
                 ByVal barTimePeriod As TimePeriod, _
-                ByVal numberOfBarsToFetch As Long, _
-                ByVal fromTime As Date, _
-                ByVal toTime As Date, _
-                ByVal includeBarsOutsideSession As Boolean, _
-                ByVal excludeCurrentbar As Boolean, _
+                ByVal NumberOfBarsToFetch As Long, _
+                ByVal FromTime As Date, _
+                ByVal ToTime As Date, _
+                ByVal IncludeBarsOutsideSession As Boolean, _
+                ByVal ExcludeCurrentbar As Boolean, _
                 ByVal barWriter As HistoricDataWriter, _
-                ByVal saveIntervalSeconds As Long, _
-                ByVal writeBidAndAskBars As Boolean)
+                ByVal SaveIntervalSeconds As Long, _
+                ByVal WriteBidAndAskBars As Boolean)
 
 Const ProcName As String = "Initialise"
 
@@ -599,11 +605,11 @@ Set mStudyManagerRef = CreateWeakReference(pTicker.StudyManager)
 
 Set mBarTimePeriod = barTimePeriod
 
-mWriteBidAndAskBars = writeBidAndAskBars
+mWriteBidAndAskBars = WriteBidAndAskBars
 
-mNumberOfBarsToFetch = numberOfBarsToFetch
-mFromTime = fromTime
-mToTime = toTime
+mNumberOfBarsToFetch = NumberOfBarsToFetch
+mFromTime = FromTime
+mToTime = ToTime
 
 If mNumberOfBarsToFetch = 0 And _
     mFromTime = 0 And _
@@ -620,8 +626,8 @@ Then
     mIsHistorical = True
 End If
 
-mIncludeBarsOutsideSession = includeBarsOutsideSession
-mExcludeCurrentBar = excludeCurrentbar
+mIncludeBarsOutsideSession = IncludeBarsOutsideSession
+mExcludeCurrentBar = ExcludeCurrentbar
 
 If Not barWriter Is Nothing Then
     Set mBarWriter = barWriter
@@ -629,7 +635,7 @@ If Not barWriter Is Nothing Then
     If pTicker.ReplayingTickfile Then
         mSaveIntervalSeconds = 0
     Else
-        mSaveIntervalSeconds = saveIntervalSeconds
+        mSaveIntervalSeconds = SaveIntervalSeconds
     End If
     
     If mSaveIntervalSeconds > 0 Then
@@ -649,15 +655,15 @@ fireStateChange TimeframeStateCreated
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener( _
-                ByVal value As StateChangeListener)
+                ByVal Value As StateChangeListener)
 Dim i As Long
 If mStateChangeListeners Is Nothing Then Exit Sub
 For i = mStateChangeListeners.Count To 1 Step -1
-    If mStateChangeListeners.Item(i) Is value Then mStateChangeListeners.Remove i
+    If mStateChangeListeners.Item(i) Is Value Then mStateChangeListeners.Remove i
 Next
 End Sub
 
@@ -695,7 +701,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -707,13 +713,13 @@ On Error GoTo Err
 If mContract Is Nothing Then
     getName = "????/" & mKey
 Else
-    getName = mContract.specifier.LocalSymbol & "/" & mKey
+    getName = mContract.Specifier.LocalSymbol & "/" & mKey
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireStateChange(ByVal newState As TimeframeStates)
@@ -728,7 +734,7 @@ On Error GoTo Err
 If newState = mState Then Exit Sub
 mState = newState
 
-If GLogLogger.IsLoggable(LogLevelDetail) Then
+If gLogLogger.IsLoggable(LogLevelDetail) Then
     s = "Timeframe (" & getName & ") "
     Select Case newState
     Case TimeframeStateCreated
@@ -740,7 +746,7 @@ If GLogLogger.IsLoggable(LogLevelDetail) Then
     Case TimeframeStateFinished
         s = s & "Finished " & mTradeBars.Count & " bars"
     End Select
-    GLogLogger.Log pMsg:=s, pLogLevel:=LogLevelDetail, pProcName:=ProcName, pModName:=ModuleName
+    gLogLogger.Log pMsg:=s, pLogLevel:=LogLevelDetail, pProcName:=ProcName, pModName:=ModuleName
 End If
 
 Set ev.source = Me
@@ -753,7 +759,7 @@ RaiseEvent StateChange(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessHistoricBar()
@@ -764,13 +770,15 @@ Const ProcName As String = "ProcessHistoricBar"
 On Error GoTo Err
 
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 
 With mHistoricBar
 
     Debug.Print "Historic bar (" & getName & ") " & FormatTimestamp(.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .OpenValue & " " & .HighValue & " " & .LowValue & " " & .CloseValue & " " & .Volume & " " & .TickVolume
+    
+    mSessionBuilder.SetSessionCurrentTime .Timestamp
     studyMgr.NotifyInput mTradeInputHandle, .OpenValue, .Timestamp
     
     If Not firstVolumeSent Then
@@ -819,13 +827,13 @@ End With
 Set mHistoricBar = Nothing
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="ProcessHistoricBar", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBarReader()
@@ -837,7 +845,7 @@ Const ProcName As String = "setupBarReader"
 On Error GoTo Err
 
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 
@@ -850,7 +858,7 @@ If mNumberOfBarsToFetch = 0 Then
     mTaskContext.Finish 0, False
     
     #If trace Then
-        GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.ExitProcedure ProcName, ModuleName
     #End If
     Exit Sub
 End If
@@ -865,14 +873,14 @@ If mBarReader Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
     ev.eventMessage = "Timeframe: Can't create historic Data reader (" & getName & ")"
-    GLogLogger.Log pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:=ProcName, pModName:=ModuleName
+    gLogLogger.Log pMsg:=ev.eventMessage, pLogLevel:=LogLevelWarning, pProcName:=ProcName, pModName:=ModuleName
     gTB.notify ev
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     mTaskContext.Finish 0, False
     
     #If trace Then
-        GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.ExitProcedure ProcName, ModuleName
     #End If
     Exit Sub
 End If
@@ -894,7 +902,7 @@ Else
     End If
 End If
 barSpecifier.MaxNumberOfBars = mNumberOfBarsToFetch
-barSpecifier.includeBarsOutsideSession = mIncludeBarsOutsideSession
+barSpecifier.IncludeBarsOutsideSession = mIncludeBarsOutsideSession
 Debug.Print "Fetching bars:" & vbCrLf & _
             barSpecifier.ToString
 mBarReader.FetchBars barSpecifier
@@ -902,13 +910,13 @@ mBarReader.FetchBars barSpecifier
 ' other bar types ????????????????????????????????????????
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="setupBarReader", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBarStudies()
@@ -947,7 +955,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1006,7 +1014,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1067,7 +1075,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1126,27 +1134,31 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub setupInputStudies()
+Const ProcName As String = "setupInputStudies"
+On Error GoTo Err
+
 Dim sourceName As String
 Dim TickSize As Double
 
-Const ProcName As String = "setupInputStudies"
-
-On Error GoTo Err
+Set mSessionBuilder = New SessionBuilder
 
 If mContract Is Nothing Then
     sourceName = GenerateGUIDString
     TickSize = 0
+    mSessionBuilder.sessionStartTime = mContract.sessionStartTime
+    mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+    mSessionBuilder.TimeZone = GetTimeZone(mContract.TimezoneName)
 Else
     sourceName = getName & " (historical Data)"
     TickSize = mContract.TickSize
 End If
 
-Set mInputStudy = studyMgr.AddSource(sourceName)
+Set mInputStudy = studyMgr.AddSource(sourceName, mSessionBuilder)
 Set mSession = mInputStudy.Session
 mBidInputHandle = studyMgr.AddInput(mInputStudy, _
                         BidInputName, _
@@ -1188,7 +1200,7 @@ mVolumeInputHandle = studyMgr.AddInput(mInputStudy, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub startHistDataFetch()
@@ -1197,7 +1209,7 @@ Const ProcName As String = "startHistDataFetch"
 On Error GoTo Err
 
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 
@@ -1208,25 +1220,24 @@ On Error GoTo Err
 StartTask Me, PriorityNormal, "Timeframe (" & getName & "): start bar fetch"
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="startHistDataFetch", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub StartStudies()
+Const ProcName As String = "StartStudies"
+On Error GoTo Err
+
 Dim lInputStudy As InputStudy
 Dim lStudy As BarStudy
 
-Const ProcName As String = "StartStudies"
-
-On Error GoTo Err
-
 #If trace Then
-    GTracer.EnterProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ModuleName
 #End If
 
 ' for historical timeframes, don't want to switch to the Ticker
@@ -1237,7 +1248,7 @@ Set lInputStudy = tickr.InputStudy
 ' first use the target Input Study's Timestamp to set the current Input Study's
 ' time to ensure the study is aware of any Session boundary that has been notified to
 ' the target
-If lInputStudy.Timestamp > mInputStudy.Timestamp Then mInputStudy.SetSessionCurrentTime lInputStudy.Timestamp
+If lInputStudy.Timestamp > mInputStudy.Timestamp Then mSessionBuilder.SetSessionCurrentTime lInputStudy.Timestamp
 
 ReDim inputValueNames(1) As String
 inputValueNames(0) = TradeInputName
@@ -1264,13 +1275,13 @@ If mWriteBidAndAskBars Then
 End If
 
 #If trace Then
-    GTracer.ExitProcedure pInfo:="", pProcedureName:="StartStudies", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.ExitProcedure ProcName, ModuleName
 #End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function studyMgr() As StudyManager
@@ -1313,7 +1324,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteBar( _
@@ -1328,7 +1339,7 @@ On Error GoTo Err
 
 If mBarWriter Is Nothing Then Exit Sub
 
-Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.LocalSymbol & _
+Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.Specifier.LocalSymbol & _
             " Write " & mBarTimePeriod.ToString & _
             " type " & barType & " bar " & theBar.BarNumber & _
             " (" & FormatDateTime(theBar.Timestamp, vbLongTime) & _
@@ -1342,7 +1353,7 @@ mBarWriter.WriteBar theBar, barType, mBarTimePeriod
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
