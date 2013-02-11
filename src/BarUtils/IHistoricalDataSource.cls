@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IHistoricalDataSource"
+Attribute VB_Name = "IHistDataFactory"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistoricalDataSource"
+Private Const ModuleName                            As String = "IHistDataFactory"
 
 '@================================================================================
 ' Member variables
