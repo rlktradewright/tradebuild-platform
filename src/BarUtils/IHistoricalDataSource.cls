@@ -64,6 +64,14 @@ Private Const ModuleName                            As String = "IHistoricalData
 ' Methods
 '@================================================================================
 
+Public Function FetchBars( _
+                ByVal pBarSpecifier As BarDataSpecifier, _
+                Optional ByVal pCookie As Variant, _
+                Optional ByVal pNotifyProgress As Boolean = False, _
+                Optional ByVal pReturnBarsObject As Boolean = True) As TaskController
+               
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
