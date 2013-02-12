@@ -50,7 +50,7 @@ Private Const ModuleName                As String = "HistoricDataWriter"
 
 Public Type PendingBarWrite
     barType         As BarTypes
-    barTimePeriod   As TimePeriod
+    BarTimePeriod   As TimePeriod
     Bar             As Bar
 End Type
 
@@ -92,8 +92,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let ServiceProviderWriter(ByVal value As IBarDataWriter)
-Set mWriter = value
+Friend Property Let ServiceProviderWriter(ByVal Value As IBarDataWriter)
+Set mWriter = Value
 End Property
 
 Friend Property Get ready() As Boolean
@@ -108,7 +108,7 @@ Friend Sub ReleaseDataStore()
 Const ProcName As String = "ReleaseDataStore"
 On Error GoTo Err
 
-GLogLogger.Log pMsg:="Releasing Data store", pProcName:=ProcName, pModName:=ModuleName
+gLogLogger.Log pMsg:="Releasing Data store", pProcName:=ProcName, pModName:=ModuleName
 mWriter.ReleaseDataStore
 
 Set mSelfRef = Me
@@ -146,7 +146,7 @@ For Each Item In mPendingWrites
     pendingWrite = Item
     WriteBar pendingWrite.Bar, _
             pendingWrite.barType, _
-            pendingWrite.barTimePeriod
+            pendingWrite.BarTimePeriod
 Next
 
 Set mPendingWrites = New Collection
@@ -160,7 +160,7 @@ End Sub
 Friend Sub WriteBar( _
                 ByVal theBar As Bar, _
                 ByVal barType As BarTypes, _
-                ByVal barTimePeriod As TimePeriod)
+                ByVal BarTimePeriod As TimePeriod)
 Dim pendingWrite As PendingBarWrite
 
 Const ProcName As String = "WriteBar"
@@ -168,11 +168,11 @@ On Error GoTo Err
 
 If Not mServiceProviderWriterReady Then
     pendingWrite.barType = barType
-    Set pendingWrite.barTimePeriod = barTimePeriod
+    Set pendingWrite.BarTimePeriod = BarTimePeriod
     Set pendingWrite.Bar = theBar
     mPendingWrites.AddToEnd pendingWrite
 Else
-    mWriter.WriteBar theBar, barType, barTimePeriod
+    mWriter.WriteBar theBar, barType, BarTimePeriod
 End If
 
 Exit Sub
