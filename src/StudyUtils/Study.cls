@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Study"
+Attribute VB_Name = "IStudy"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -59,7 +59,7 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-Public Property Get BaseStudy() As Study
+Public Property Get BaseStudy() As IStudy
 
 End Property
 
@@ -92,7 +92,7 @@ End Property
 '@================================================================================
 
 Public Function AddStudy( _
-                ByVal pStudy As Study, _
+                ByVal pStudy As IStudy, _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
@@ -125,7 +125,7 @@ Public Sub initialise( _
                 ByVal params As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef valueNames() As String, _
-                ByVal underlyingStudy As Study, _
+                ByVal underlyingStudy As IStudy, _
                 ByVal pSession As Session)
 
 End Sub
