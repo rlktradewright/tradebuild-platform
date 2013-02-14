@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyLibrary"
+Attribute VB_Name = "IStudyLibrary"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -64,7 +64,7 @@ Public Property Get Name() As String
 End Property
 
 Public Property Let Name( _
-                ByVal value As String)
+                ByVal Value As String)
 
 End Property
 
@@ -91,7 +91,7 @@ Public Function GetStudyDefinition( _
     
 End Function
     
-Public Sub Initialise( _
+Public Sub initialise( _
                 ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
 
