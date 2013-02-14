@@ -71,7 +71,7 @@ Public Property Get notifyNames() As String()
 
 End Property
 
-Public Property Get sourceStudy() As study
+Public Property Get sourceStudy() As IStudy
 
 End Property
 
