@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "InputStudy"
+Attribute VB_Name = "Source"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -33,7 +33,7 @@ Implements IStudy
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "InputStudy"
+Private Const ModuleName                As String = "Source"
 
 '@================================================================================
 ' Enums
@@ -396,7 +396,7 @@ End Sub
 Friend Sub Initialise( _
                 ByVal Name As String, _
                 ByVal pSession As Session)
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = Name
