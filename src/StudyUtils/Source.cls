@@ -286,11 +286,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStudy_SetInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
+Private Sub IStudy_SetInputTicksize(ByVal InputName As String, ByVal TickSize As Double)
 Const ProcName As String = "study_SetInputTicksize"
 On Error GoTo Err
 
-SetInputTicksize inputName, tickSize
+SetInputTicksize InputName, TickSize
 
 Exit Sub
 
@@ -359,7 +359,7 @@ Friend Sub AddInput( _
                 ByVal Description As String, _
                 ByVal ValueType As StudyInputTypes, _
                 ByVal IsDefault As Boolean, _
-                ByVal tickSize As Double)
+                ByVal TickSize As Double)
 Dim valueDef As StudyValueDefinition
 
     
@@ -385,7 +385,7 @@ Case InputTypeBoolean
     valueDef.ValueType = ValueTypeBoolean
 End Select
     
-mTickSizes.Add tickSize, Name
+mTickSizes.Add TickSize, Name
 
 Exit Sub
 
@@ -438,14 +438,14 @@ End Sub
 
 Friend Sub SetInputTicksize( _
                 ByVal Name As String, _
-                ByVal tickSize As Double)
+                ByVal TickSize As Double)
 Const ProcName As String = "SetInputTicksize"
 On Error GoTo Err
 
 On Error GoTo Err
 
-mTickSizes.Add tickSize, Name
-mStudies.NotifyValueTicksize Name, tickSize
+mTickSizes.Add TickSize, Name
+mStudies.NotifyValueTicksize Name, TickSize
 
 Exit Sub
 
