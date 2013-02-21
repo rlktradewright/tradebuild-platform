@@ -17,6 +17,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Enumerable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -37,7 +39,6 @@ Private Const ModuleName                    As String = "Tickers"
 ' Enums
 '@================================================================================
 
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -55,8 +56,7 @@ Private Const ModuleName                    As String = "Tickers"
 '@/
 Private mTickerHandleTable()        As Boolean
 
-Private mTickers                    As Collection
-Private mChangeListeners            As Collection
+Private WithEvents mTickers         As EnumerableCollection
 
 Private mWorkspaceRef               As WeakReference
 
@@ -66,14 +66,57 @@ Private mWorkspaceRef               As WeakReference
 
 Private Sub Class_Initialize()
 ReDim mTickerHandleTable(3) As Boolean
-Set mTickers = New Collection
-Set mChangeListeners = New Collection
-
+Set mTickers = New EnumerableCollection
 End Sub
 
 '@================================================================================
-' xxxx Interface Members
+' Enumerable Interface Members
 '@================================================================================
+
+Private Property Get Enumerable_Enumerator() As Enumerator
+Const ProcName As String = "Enumerable_Enumerator"
+On Error GoTo Err
+
+Set Enumerable_Enumerator = GetEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
+
+End Function
+
+Private Sub Enumerable_Remove(pCookie As Variant)
+
+End Sub
+
+Private Function Enumerable_Skip(ByVal numToSkip As Long, pCookie As Variant) As Boolean
+
+End Function
+
+Private Property Get Enumerable_UpdateSequence() As Long
+
+End Property
+
+'@================================================================================
+' mTickers Event Handlers
+'@================================================================================
+
+Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mTickers_CollectionChanged"
+On Error GoTo Err
+
+Set ev.source = Me
+RaiseEvent CollectionChanged(ev)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -89,27 +132,12 @@ Count = mTickers.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get Item(ByVal index As Variant) As Ticker
-Attribute Item.VB_UserMemId = 0
-Const ProcName As String = "Item"
-
-On Error GoTo Err
-
-Set Item = mTickers.Item(index)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let WorkSpace( _
                 ByVal pWorkspace As WorkSpace)
 Const ProcName As String = "Workspace"
-
 On Error GoTo Err
 
 Set mWorkspaceRef = CreateWeakReference(pWorkspace)
@@ -117,12 +145,11 @@ Set mWorkspaceRef = CreateWeakReference(pWorkspace)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get WorkSpace() As WorkSpace
 Const ProcName As String = "Workspace"
-
 On Error GoTo Err
 
 Set WorkSpace = mWorkspaceRef.Target
@@ -130,7 +157,7 @@ Set WorkSpace = mWorkspaceRef.Target
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -139,9 +166,9 @@ End Property
 
 Public Function Add( _
                 ByVal pTickerOptions As TickerOptions, _
-                Optional ByVal pKey As String) As Ticker
+                Optional ByVal pKey As String, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As Ticker
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 If pKey = "" Then pKey = GenerateGUIDString
@@ -150,36 +177,32 @@ Add.Initialise AllocateTickerHandle, _
                 Me.WorkSpace, _
                 pKey, _
                 Me, _
-                pTickerOptions
+                pTickerOptions, _
+                pNumberOfMarketDepthRows
 mTickers.Add Add, pKey
-fireChange CollItemAdded, Add
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add value, CStr(ObjPtr(value))
+mTickers.AddCollectionChangeListener pListener
 
-gNotifyExistingCollectionMembers mTickers, value, Me
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function CreateTickFileManager( _
                 ByVal pTickerOptions As Long) As TickFileManager
 Const ProcName As String = "CreateTickFileManager"
-
 On Error GoTo Err
 
 Set CreateTickFileManager = New TickFileManager
@@ -189,7 +212,20 @@ CreateTickFileManager.Tickers = Me
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function Item(ByVal pIndex As Variant) As Ticker
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Set Item = mTickers.Item(pIndex)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadTickersFromContracts( _
@@ -199,11 +235,10 @@ Public Function LoadTickersFromContracts( _
                 Optional ByVal poutputTickfileFormat As String, _
                 Optional ByVal poutputTickfilePath As String, _
                 Optional ByVal interval As Long = 50) As TaskController
-Dim lTickersStarter As New TickersStarter
-
 Const ProcName As String = "LoadTickersFromContracts"
-
 On Error GoTo Err
+
+Dim lTickersStarter As New TickersStarter
 
 lTickersStarter.Initialise Me, _
                             pTickerOptions, _
@@ -217,21 +252,21 @@ Set LoadTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "LoadT
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mTickers.[_NewEnum]
+Set NewEnum = GetEnumerator
 End Function
 
 Public Function RefreshPriceChange( _
                 ByVal listener As PriceChangeListener) As TaskController
-Dim pcrt As New PriceChangeRefreshTask
 Const ProcName As String = "RefreshPriceChange"
-
 On Error GoTo Err
+
+Dim pcrt As New PriceChangeRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
 pcrt.Initialise Me, listener
@@ -240,15 +275,15 @@ Set RefreshPriceChange = StartTask(pcrt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Public Function RefreshQuotes( _
                 ByVal listener As PriceChangeListener) As TaskController
-Dim qrt As New QuotesRefreshTask
 Const ProcName As String = "RefreshQuotes"
-
 On Error GoTo Err
+
+Dim qrt As New QuotesRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
 qrt.Initialise Me, listener
@@ -257,14 +292,11 @@ Set RefreshQuotes = StartTask(qrt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Public Sub Remove(ByVal pTicker As Ticker)
-Dim i As Long
-
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
 If pTicker.State <> TickerStates.TickerStateClosing Then
@@ -272,38 +304,30 @@ If pTicker.State <> TickerStates.TickerStateClosing Then
     Exit Sub
 End If
     
-For i = 1 To mTickers.Count
-    If mTickers.Item(i) Is pTicker Then
-        mTickers.Remove i
-        Exit For
-    End If
-Next
+mTickers.Remove pTicker.Key
 mTickerHandleTable(pTicker.Handle) = False
-fireChange CollItemRemoved, pTicker
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Remove CStr(ObjPtr(value))
+mTickers.RemoveCollectionChangeListener pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StateChange( _
                 ByRef ev As StateChangeEventData)
 Const ProcName As String = "StateChange"
-
 On Error GoTo Err
 
 RaiseEvent StateChange(ev)
@@ -311,7 +335,7 @@ RaiseEvent StateChange(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function StartTickers( _
@@ -321,11 +345,10 @@ Public Function StartTickers( _
                 Optional ByVal poutputTickfileFormat As String, _
                 Optional ByVal poutputTickfilePath As String, _
                 Optional ByVal interval As Long = 50) As TaskController
-Dim lTickersStarter As New TickersStarter
-
 Const ProcName As String = "StartTickers"
-
 On Error GoTo Err
+
+Dim lTickersStarter As New TickersStarter
 
 lTickersStarter.Initialise Me, _
                             pTickerOptions, _
@@ -339,7 +362,7 @@ Set StartTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function StartTickersFromContracts( _
@@ -349,11 +372,10 @@ Public Function StartTickersFromContracts( _
                 Optional ByVal poutputTickfileFormat As String, _
                 Optional ByVal poutputTickfilePath As String, _
                 Optional ByVal interval As Long = 50) As TaskController
-Dim lTickersStarter As New TickersStarter
-
 Const ProcName As String = "StartTickersFromContracts"
-
 On Error GoTo Err
+
+Dim lTickersStarter As New TickersStarter
 
 lTickersStarter.Initialise Me, _
                             pTickerOptions, _
@@ -367,7 +389,7 @@ Set StartTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "Star
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -375,11 +397,10 @@ End Function
 '@================================================================================
 
 Private Function AllocateTickerHandle() As Long
-Dim i As Long
-
 Const ProcName As String = "AllocateTickerHandle"
-
 On Error GoTo Err
+
+Dim i As Long
 
 AllocateTickerHandle = -1
 
@@ -400,31 +421,20 @@ mTickerHandleTable(AllocateTickerHandle) = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Sub fireChange( _
-                ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Ticker)
-Dim listener As CollectionChangeListener
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
-
+Private Function GetEnumerator() As Enumerator
+Const ProcName As String = "GetEnumerator"
 On Error GoTo Err
 
-Set ev.source = Me
-ev.changeType = changeType
-Set ev.affectedItem = affectedObject
-For Each listener In mChangeListeners
-    listener.Change ev
-Next
-RaiseEvent CollectionChanged(ev)
+GetEnumerator = mTickers.Enumerator
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 
