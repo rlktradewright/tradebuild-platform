@@ -8,7 +8,7 @@ Begin VB.UserControl MultiChart
    ClientWidth     =   9480
    ScaleHeight     =   7140
    ScaleWidth      =   9480
-   Begin TradeBuildUI26.TradeBuildChart TBChart 
+   Begin TradeBuildUI27.TradeBuildChart TBChart 
       Align           =   1  'Align Top
       Height          =   4095
       Index           =   0
@@ -19,7 +19,7 @@ Begin VB.UserControl MultiChart
       Width           =   9480
       _ExtentX        =   16722
       _ExtentY        =   7223
-      ChartBackColor  =   6566450
+      ChartBackColor  =   0
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
@@ -65,7 +65,7 @@ Begin VB.UserControl MultiChart
             ImageIndex      =   2
          EndProperty
       EndProperty
-      Begin TradeBuildUI26.TimeframeSelector TimeframeSelector1 
+      Begin TradeBuildUI27.TimeframeSelector TimeframeSelector1 
          Height          =   330
          Left            =   0
          TabIndex        =   3
@@ -268,10 +268,11 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities30.StateChangeEventData)
-
 Const ProcName As String = "TBChart_StateChange"
 Dim failpoint As Long
 On Error GoTo Err
+
+index = getIndexFromChartControlIndex(index)
 
 If index = mCurrentIndex And ev.State = ChartStates.ChartStateLoaded Then
     ControlToolbar.Buttons("change").Enabled = True
