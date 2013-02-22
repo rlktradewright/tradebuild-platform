@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl MultiChart 
    Alignable       =   -1  'True
    ClientHeight    =   7140
@@ -271,6 +271,8 @@ Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities30.StateChang
 Const ProcName As String = "TBChart_StateChange"
 Dim failpoint As Long
 On Error GoTo Err
+
+index = getIndexFromChartControlIndex(index)
 
 index = getIndexFromChartControlIndex(index)
 
@@ -641,6 +643,20 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+End Sub
+
+Public Sub FocusChart()
+Const ProcName As String = "FocusChart"
+On Error GoTo Err
+
+Dim index As Long
+index = checkIndex(-1)
+TBChart(getChartControlIndexFromIndex(index)).SetFocus
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
