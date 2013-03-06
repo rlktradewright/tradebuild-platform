@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#208.0#0"; "ChartSkil2-6.ocx"
-Begin VB.UserControl TradeBuildChart 
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#37.0#0"; "ChartSkil27.ocx"
+Begin VB.UserControl StyledChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
    ClientLeft      =   0
@@ -10,10 +10,21 @@ Begin VB.UserControl TradeBuildChart
    ScaleHeight     =   5475
    ScaleWidth      =   7740
    ToolboxBitmap   =   "TradeBuildChart.ctx":0000
+   Begin ChartSkil27.Chart Chart1 
+      Align           =   1  'Align Top
+      Height          =   1695
+      Left            =   0
+      TabIndex        =   1
+      Top             =   0
+      Width           =   7740
+      _ExtentX        =   13653
+      _ExtentY        =   2990
+      ChartBackColor  =   16777215
+   End
    Begin MSComctlLib.ProgressBar LoadingProgressBar 
       Height          =   255
       Left            =   1080
-      TabIndex        =   1
+      TabIndex        =   0
       Top             =   2280
       Visible         =   0   'False
       Width           =   5175
@@ -23,19 +34,8 @@ Begin VB.UserControl TradeBuildChart
       Appearance      =   0
       Scrolling       =   1
    End
-   Begin ChartSkil26.Chart Chart1 
-      Align           =   1  'Align Top
-      Height          =   4935
-      Left            =   0
-      TabIndex        =   0
-      Top             =   0
-      Width           =   7740
-      _ExtentX        =   13653
-      _ExtentY        =   8705
-      ChartBackColor  =   6566450
-   End
 End
-Attribute VB_Name = "TradeBuildChart"
+Attribute VB_Name = "StyledChart"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -59,15 +59,20 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements StateChangeListener
+
 '@================================================================================
 ' Events
 '@================================================================================
 
 Event KeyDown(KeyCode As Integer, Shift As Integer)
+Attribute KeyDown.VB_UserMemId = -602
 
 Event KeyPress(KeyAscii As Integer)
+Attribute KeyPress.VB_UserMemId = -603
 
 Event KeyUp(KeyCode As Integer, Shift As Integer)
+Attribute KeyUp.VB_UserMemId = -604
 
 Event StateChange(ev As StateChangeEventData)
 
@@ -85,7 +90,7 @@ Event PeriodLengthChange()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                                As String = "TradeBuildChart"
+Private Const ModuleName                                As String = "StyledChart"
 
 Private Const ConfigSectionChartControl                 As String = "ChartControl"
 Private Const ConfigSectionChartSpecifier               As String = "ChartSpecifier"
@@ -95,8 +100,7 @@ Private Const ConfigSettingBarFormatterFactoryName      As String = "&BarFormatt
 Private Const ConfigSettingBarFormatterLibraryName      As String = "&BarFormatterLibraryName"
 Private Const ConfigSettingIsHistoricChart              As String = "&IsHistoricChart"
 Private Const ConfigSettingPeriodLength                 As String = "&PeriodLength"
-Private Const ConfigSettingTickerKey                    As String = "&TickerKey"
-Private Const ConfigSettingWorkspace                    As String = "&Workspace"
+Private Const ConfigSettingDataSourceKey                    As String = "&DataSourceKey"
 
 Private Const PropNameHorizontalMouseScrollingAllowed   As String = "HorizontalMouseScrollingAllowed"
 Private Const PropNameVerticalMouseScrollingAllowed     As String = "VerticalMouseScrollingAllowed"
@@ -126,8 +130,8 @@ Private Const PropDfltYAxisWidthCm                      As Single = 1.5
 
 Private mManager                                        As ChartManager
 
-Private WithEvents mTicker                              As Ticker
-Attribute mTicker.VB_VarHelpID = -1
+Private mDataSource                                     As IMarketDataSource
+
 Private mTimeframes                                     As Timeframes
 Private WithEvents mTimeframe                           As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
@@ -201,7 +205,6 @@ mInitialStyle.YAxisWidthCm = PropDfltYAxisWidthCm
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-
 On Error Resume Next
 
 mInitialStyle.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
@@ -249,6 +252,32 @@ PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDflt
 End Sub
 
 '@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Then
+    ' this means that the DataSource object has retrieved the contract info, so we can
+    ' now start the chart
+
+    Set mcontract = mDataSource.Contract
+
+    If mDeferStart Then Exit Sub
+
+    setupStudies
+    loadchart
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' Chart1 Event Handlers
 '@================================================================================
 
@@ -265,39 +294,11 @@ RaiseEvent KeyUp(KeyCode, Shift)
 End Sub
 
 '@================================================================================
-' mTicker Event Handlers
-'@================================================================================
-
-Private Sub mTicker_StateChange(ev As StateChangeEventData)
-Const ProcName As String = "mTicker_StateChange"
-
-On Error GoTo Err
-
-If ev.State = TickerStates.TickerStateReady Then
-    ' this means that the Ticker object has retrieved the contract info, so we can
-    ' now start the chart
-    
-    Set mcontract = mTicker.Contract
-    
-    If mDeferStart Then Exit Sub
-
-    setupStudies
-    loadchart
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
 ' mTimeframe Event Handlers
 '@================================================================================
 
 Private Sub mTimeframe_BarsLoaded()
 Const ProcName As String = "mTimeframe_BarsLoaded"
-
 On Error GoTo Err
 
 LoadingProgressBar.Visible = False
@@ -314,7 +315,6 @@ End Sub
 
 Private Sub mTimeframe_BarLoadProgress(ByVal barsRetrieved As Long, ByVal percentComplete As Single)
 Const ProcName As String = "mTimeframe_BarLoadProgress"
-
 On Error GoTo Err
 
 If Not LoadingProgressBar.Visible Then
@@ -322,7 +322,7 @@ If Not LoadingProgressBar.Visible Then
     LoadingProgressBar.Width = UserControl.Width
     LoadingProgressBar.Left = 0
     LoadingProgressBar.Visible = True
-    
+
     mLoadingText.Text = "Loading historical data"
     setState ChartStateLoading
     Chart1.EnableDrawing
@@ -343,7 +343,6 @@ End Sub
 Public Property Let Autoscrolling( _
                 ByVal value As Boolean)
 Const ProcName As String = "Autoscrolling"
-
 On Error GoTo Err
 
 Chart1.Autoscrolling = value
@@ -351,12 +350,11 @@ Chart1.Autoscrolling = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Autoscrolling() As Boolean
 Const ProcName As String = "Autoscrolling"
-
 On Error GoTo Err
 
 Autoscrolling = Chart1.Autoscrolling
@@ -364,12 +362,11 @@ Autoscrolling = Chart1.Autoscrolling
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BaseChartController() As ChartController
 Const ProcName As String = "BaseChartController"
-
 On Error GoTo Err
 
 Set BaseChartController = Chart1.Controller
@@ -377,12 +374,11 @@ Set BaseChartController = Chart1.Controller
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
 Const ProcName As String = "ChartBackColor"
-
 On Error GoTo Err
 
 ChartBackColor = Chart1.ChartBackColor
@@ -390,12 +386,11 @@ ChartBackColor = Chart1.ChartBackColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 Const ProcName As String = "ChartBackColor"
-
 On Error GoTo Err
 
 Chart1.ChartBackColor = val
@@ -403,12 +398,11 @@ Chart1.ChartBackColor = val
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartManager() As ChartManager
 Const ProcName As String = "ChartManager"
-
 On Error GoTo Err
 
 Set ChartManager = mManager
@@ -416,16 +410,18 @@ Set ChartManager = mManager
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
+If mConfig Is value Then Exit Property
+If Not mConfig Is Nothing Then mConfig.Remove
+If value Is Nothing Then Exit Property
+
 Set mConfig = value
 storeSettings
 
@@ -435,13 +431,12 @@ If Not mManager Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfi
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
 Const ProcName As String = "Enabled"
-
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -449,13 +444,12 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-
 On Error GoTo Err
 
 UserControl.Enabled = value
@@ -464,13 +458,12 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalMouseScrollingAllowed( _
                 ByVal value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-
 On Error GoTo Err
 
 Chart1.HorizontalMouseScrollingAllowed = value
@@ -478,12 +471,11 @@ Chart1.HorizontalMouseScrollingAllowed = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-
 On Error GoTo Err
 
 HorizontalMouseScrollingAllowed = Chart1.HorizontalMouseScrollingAllowed
@@ -491,12 +483,11 @@ HorizontalMouseScrollingAllowed = Chart1.HorizontalMouseScrollingAllowed
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
 Const ProcName As String = "HorizontalScrollBarVisible"
-
 On Error GoTo Err
 
 HorizontalScrollBarVisible = Chart1.HorizontalScrollBarVisible
@@ -504,12 +495,11 @@ HorizontalScrollBarVisible = Chart1.HorizontalScrollBarVisible
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
 Const ProcName As String = "HorizontalScrollBarVisible"
-
 On Error GoTo Err
 
 Chart1.HorizontalScrollBarVisible = val
@@ -517,13 +507,11 @@ Chart1.HorizontalScrollBarVisible = val
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InitialNumberOfBars() As Long
-Attribute InitialNumberOfBars.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Const ProcName As String = "InitialNumberOfBars"
-
 On Error GoTo Err
 
 InitialNumberOfBars = mChartSpec.InitialNumberOfBars
@@ -531,12 +519,11 @@ InitialNumberOfBars = mChartSpec.InitialNumberOfBars
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LoadingText() As Text
 Const ProcName As String = "LoadingText"
-
 On Error GoTo Err
 
 Set LoadingText = mLoadingText
@@ -544,12 +531,11 @@ Set LoadingText = mLoadingText
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let MinimumTicksHeight(ByVal value As Double)
 Const ProcName As String = "MinimumTicksHeight"
-
 On Error GoTo Err
 
 mMinimumTicksHeight = value
@@ -557,13 +543,11 @@ mMinimumTicksHeight = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MinimumTicksHeight() As Double
-Attribute MinimumTicksHeight.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Const ProcName As String = "MinimumTicksHeight"
-
 On Error GoTo Err
 
 MinimumTicksHeight = mMinimumTicksHeight
@@ -571,12 +555,11 @@ MinimumTicksHeight = mMinimumTicksHeight
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerCrosshairsColor() As OLE_COLOR
 Const ProcName As String = "PointerCrosshairsColor"
-
 On Error GoTo Err
 
 PointerCrosshairsColor = Chart1.PointerCrosshairsColor
@@ -584,12 +567,11 @@ PointerCrosshairsColor = Chart1.PointerCrosshairsColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PointerCrosshairsColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerCrosshairsColor"
-
 On Error GoTo Err
 
 Chart1.PointerCrosshairsColor = value
@@ -597,12 +579,11 @@ Chart1.PointerCrosshairsColor = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
 Const ProcName As String = "PointerDiscColor"
-
 On Error GoTo Err
 
 PointerDiscColor = Chart1.PointerDiscColor
@@ -610,12 +591,11 @@ PointerDiscColor = Chart1.PointerDiscColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
 Const ProcName As String = "PointerDiscColor"
-
 On Error GoTo Err
 
 Chart1.PointerDiscColor = value
@@ -623,12 +603,11 @@ Chart1.PointerDiscColor = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
 Const ProcName As String = "PointerStyle"
-
 On Error GoTo Err
 
 PointerStyle = Chart1.PointerStyle
@@ -636,12 +615,11 @@ PointerStyle = Chart1.PointerStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PointerStyle(ByVal value As PointerStyles)
 Const ProcName As String = "PointerStyle"
-
 On Error GoTo Err
 
 Chart1.PointerStyle = value
@@ -649,12 +627,11 @@ Chart1.PointerStyle = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PriceRegion() As ChartRegion
 Const ProcName As String = "PriceRegion"
-
 On Error GoTo Err
 
 Set PriceRegion = mPriceRegion
@@ -662,12 +639,11 @@ Set PriceRegion = mPriceRegion
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get RegionNames() As String()
 Const ProcName As String = "RegionNames"
-
 On Error GoTo Err
 
 RegionNames = mManager.RegionNames
@@ -675,12 +651,11 @@ RegionNames = mManager.RegionNames
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get State() As ChartStates
 Const ProcName As String = "State"
-
 On Error GoTo Err
 
 State = mState
@@ -688,25 +663,23 @@ State = mState
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Ticker() As Ticker
-Const ProcName As String = "Ticker"
-
+Public Property Get DataSource() As IMarketDataSource
+Const ProcName As String = "DataSource"
 On Error GoTo Err
 
-Set Ticker = mTicker
+Set DataSource = mDataSource
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeframeCaption() As String
 Const ProcName As String = "TimeframeCaption"
-
 On Error GoTo Err
 
 TimeframeCaption = mPeriodLength.ToString
@@ -714,12 +687,11 @@ TimeframeCaption = mPeriodLength.ToString
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeframeShortCaption() As String
 Const ProcName As String = "TimeframeShortCaption"
-
 On Error GoTo Err
 
 TimeframeShortCaption = mPeriodLength.ToShortString
@@ -727,12 +699,11 @@ TimeframeShortCaption = mPeriodLength.ToShortString
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Timeframe() As Timeframe
 Const ProcName As String = "Timeframe"
-
 On Error GoTo Err
 
 Set Timeframe = mTimeframe
@@ -740,12 +711,11 @@ Set Timeframe = mTimeframe
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PeriodLength() As TimePeriod
 Const ProcName As String = "TimePeriod"
-
 On Error GoTo Err
 
 Set PeriodLength = mPeriodLength
@@ -753,12 +723,11 @@ Set PeriodLength = mPeriodLength
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get TradeBarSeries() As BarSeries
 Const ProcName As String = "TradeBarSeries"
-
 On Error GoTo Err
 
 Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
@@ -766,12 +735,11 @@ Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TwipsPerPeriod() As Long
 Const ProcName As String = "TwipsPerPeriod"
-
 On Error GoTo Err
 
 TwipsPerPeriod = Chart1.TwipsPerPeriod
@@ -779,12 +747,11 @@ TwipsPerPeriod = Chart1.TwipsPerPeriod
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TwipsPerPeriod(ByVal value As Long)
 Const ProcName As String = "TwipsPerPeriod"
-
 On Error GoTo Err
 
 Chart1.TwipsPerPeriod = value
@@ -792,13 +759,11 @@ Chart1.TwipsPerPeriod = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let UpdatePerTick(ByVal value As Boolean)
-Attribute UpdatePerTick.VB_ProcData.VB_Invoke_PropertyPut = ";Behavior"
 Const ProcName As String = "UpdatePerTick"
-
 On Error GoTo Err
 
 mUpdatePerTick = value
@@ -806,13 +771,12 @@ mUpdatePerTick = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let VerticalMouseScrollingAllowed( _
                 ByVal value As Boolean)
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-
 On Error GoTo Err
 
 Chart1.VerticalMouseScrollingAllowed = value
@@ -820,12 +784,11 @@ Chart1.VerticalMouseScrollingAllowed = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
 Const ProcName As String = "VerticalMouseScrollingAllowed"
-
 On Error GoTo Err
 
 VerticalMouseScrollingAllowed = Chart1.VerticalMouseScrollingAllowed
@@ -833,12 +796,11 @@ VerticalMouseScrollingAllowed = Chart1.VerticalMouseScrollingAllowed
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VolumeRegion() As ChartRegion
 Const ProcName As String = "VolumeRegion"
-
 On Error GoTo Err
 
 Set VolumeRegion = mVolumeRegion
@@ -846,12 +808,11 @@ Set VolumeRegion = mVolumeRegion
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YAxisWidthCm() As Single
 Const ProcName As String = "YAxisWidthCm"
-
 On Error GoTo Err
 
 YAxisWidthCm = Chart1.YAxisWidthCm
@@ -859,12 +820,11 @@ YAxisWidthCm = Chart1.YAxisWidthCm
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let YAxisWidthCm(ByVal value As Single)
 Const ProcName As String = "YAxisWidthCm"
-
 On Error GoTo Err
 
 Chart1.YAxisWidthCm = value
@@ -872,7 +832,7 @@ Chart1.YAxisWidthCm = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -885,9 +845,7 @@ On Error GoTo Err
 
 Dim baseStudyConfig As StudyConfiguration
 
-If State <> ChartStateLoaded Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                                            "Can't change timeframe until chart is loaded"
+Assert State = ChartStateLoaded, "Can't change timeframe until chart is loaded"
 
 gLogger.Log "Changing timeframe to", ProcName, ModuleName, , pNewPeriodLength.ToString
 
@@ -909,7 +867,7 @@ createTimeframe
 baseStudyConfig.Study = mTimeframe.TradeStudy
 baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterFactoryName = mBarFormatterFactoryName
 baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterLibraryName = mBarFormatterLibraryName
-Dim lStudy As Study
+Dim lStudy As IStudy
 Set lStudy = mTimeframe.TradeStudy
 baseStudyConfig.Parameters = lStudy.Parameters
 
@@ -924,12 +882,11 @@ RaiseEvent PeriodLengthChange
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DisableDrawing()
 Const ProcName As String = "DisableDrawing"
-
 On Error GoTo Err
 
 Chart1.DisableDrawing
@@ -937,12 +894,11 @@ Chart1.DisableDrawing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub EnableDrawing()
 Const ProcName As String = "EnableDrawing"
-
 On Error GoTo Err
 
 Chart1.EnableDrawing
@@ -950,12 +906,11 @@ Chart1.EnableDrawing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
 ' update the number of bars in case this chart is reloaded from the config
@@ -985,24 +940,24 @@ mLoadedFromConfig = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection, _
-                ByVal deferStart As Boolean)
-Dim cs As ConfigurationSection
-
+                ByVal deferStart As Boolean, _
+                ByVal pMarketDataManager As MarketDataManager)
 Const ProcName As String = "LoadFromConfig"
-
 On Error GoTo Err
+
+Dim cs As ConfigurationSection
 
 Set mConfig = config
 mLoadedFromConfig = True
 
 mDeferStart = deferStart
 
-Set mTicker = TradeBuildAPI.WorkSpaces(mConfig.GetSetting(ConfigSettingWorkspace)).Tickers(mConfig.GetSetting(ConfigSettingTickerKey))
+Set mDataSource = pMarketDataManager.GetMarketDataSource(mConfig.GetSetting(ConfigSettingDataSourceKey))
 Set mPeriodLength = TimePeriodFromString(mConfig.GetSetting(ConfigSettingPeriodLength))
 Set mChartSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
 
@@ -1017,12 +972,11 @@ If Not mDeferStart Then prepareChart
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -1031,12 +985,11 @@ Set mConfig = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ScrollToTime(ByVal pTime As Date)
 Const ProcName As String = "ScrollToTime"
-
 On Error GoTo Err
 
 mManager.ScrollToTime pTime
@@ -1044,22 +997,23 @@ mManager.ScrollToTime pTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowChart( _
-                ByVal pTicker As Ticker, _
-                ByVal pTimeframe As TimePeriod, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
                 ByVal pChartStyle As ChartStyle, _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String)
 Const ProcName As String = "ShowChart"
-
 On Error GoTo Err
 
-Set mTicker = pTicker
-Set mPeriodLength = pTimeframe
+Set mDataSource = pDataSource
+Set mTimeframes = pTimeframes
+Set mPeriodLength = pTimePeriod
 Set mChartSpec = pChartSpec
 Set mChartStyle = pChartStyle
 mBarFormatterFactoryName = pBarFormatterFactoryName
@@ -1072,18 +1026,14 @@ prepareChart
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Start()
 Const ProcName As String = "Start"
 On Error GoTo Err
 
-If Not (mLoadedFromConfig And mState = ChartStates.ChartStateBlank) Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
-End If
+Assert mLoadedFromConfig And mState = ChartStates.ChartStateBlank, "Start method only permitted for charts loaded from configuration and with state ChartStateBlank"
 
 mDeferStart = False
 prepareChart
@@ -1091,7 +1041,7 @@ prepareChart
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1099,14 +1049,13 @@ End Sub
 '@================================================================================
 
 Private Function createBarsStudyConfig() As StudyConfiguration
-Dim lStudy As Study
-Dim studyDef As StudyDefinition
-
 Const ProcName As String = "createBarsStudyConfig"
-
 On Error GoTo Err
 
-ReDim inputValueNames(3) As String
+Dim lStudy As IStudy
+Dim studyDef As StudyDefinition
+
+ReDim InputValueNames(3) As String
 Dim params As New Parameters
 
 Dim studyValueConfig As StudyValueConfiguration
@@ -1115,7 +1064,7 @@ Dim studyConfig As StudyConfiguration
 
 Set studyConfig = New StudyConfiguration
 
-studyConfig.UnderlyingStudy = mTicker.InputStudy
+studyConfig.UnderlyingStudy = mTimeframes.StudyInputHandler
 
 Set lStudy = mTimeframe.TradeStudy
 studyConfig.Study = lStudy
@@ -1123,12 +1072,13 @@ Set studyDef = lStudy.StudyDefinition
 
 studyConfig.ChartRegionName = ChartRegionNamePrice
 
-inputValueNames(0) = mTicker.InputNameTrade
-inputValueNames(1) = mTicker.InputNameVolume
-inputValueNames(2) = mTicker.InputNameTickVolume
-inputValueNames(3) = mTicker.InputNameOpenInterest
-studyConfig.inputValueNames = inputValueNames
-studyConfig.name = studyDef.name
+InputValueNames(0) = InputNameTrade
+InputValueNames(1) = InputNameVolume
+InputValueNames(2) = InputNameTickVolume
+InputValueNames(3) = InputNameOpenInterest
+
+studyConfig.InputValueNames = InputValueNames
+studyConfig.Name = studyDef.Name
 params.SetParameterValue "Bar length", mPeriodLength.Length
 params.SetParameterValue "Time units", TimePeriodUnitsToString(mPeriodLength.Units)
 studyConfig.Parameters = params
@@ -1153,7 +1103,7 @@ Set createBarsStudyConfig = studyConfig
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createPriceFormatter() As PriceFormatter
@@ -1167,8 +1117,6 @@ On Error GoTo Err
 
 gLogger.Log "Creating timeframe", ProcName, ModuleName
 
-Set mTimeframes = mTicker.Timeframes
-
 If mChartSpec.toTime <> CDate(0) Then
     Set mTimeframe = mTimeframes.AddHistorical(mPeriodLength, _
                                 "", _
@@ -1181,13 +1129,13 @@ Else
                                 "", _
                                 mChartSpec.InitialNumberOfBars, _
                                 mChartSpec.IncludeBarsOutsideSession, _
-                                IIf(mTicker.ReplayingTickfile, True, False))
+                                IIf(mDataSource.IsTickReplay, True, False))
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1202,13 +1150,13 @@ gLogger.Log "Initialising chart", ProcName, ModuleName
 Chart1.DisableDrawing
 
 If Not notFirstTime Then
-    Set mManager = CreateChartManager(mTicker.StudyManager, Chart1.Controller)
+    Set mManager = CreateChartManager(mTimeframes.StudyManager, Chart1.Controller)
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
-    
+
     If mChartStyle Is Nothing Then
         gLogger.Log "No chart style is defined", ProcName, ModuleName
     Else
-        gLogger.Log "Setting chart style to", ProcName, ModuleName, , mChartStyle.name
+        gLogger.Log "Setting chart style to", ProcName, ModuleName, , mChartStyle.Name
     End If
 
     If Not mChartStyle Is Nothing Then Chart1.Style = mChartStyle
@@ -1224,7 +1172,7 @@ setState ChartStates.ChartStateCreated
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub loadchart()
@@ -1240,14 +1188,14 @@ Chart1.PeriodLength = mPeriodLength
 Chart1.SessionStartTime = mcontract.SessionStartTime
 Chart1.SessionEndTime = mcontract.SessionEndTime
 
-mPriceRegion.YScaleQuantum = mcontract.tickSize
-If mMinimumTicksHeight * mcontract.tickSize <> 0 Then
-    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mcontract.tickSize
+mPriceRegion.YScaleQuantum = mcontract.TickSize
+If mMinimumTicksHeight * mcontract.TickSize <> 0 Then
+    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mcontract.TickSize
 End If
 mPriceRegion.PriceFormatter = createPriceFormatter
 
-mPriceRegion.Title.Text = mcontract.Specifier.localSymbol & _
-                " (" & mcontract.Specifier.exchange & ") " & _
+mPriceRegion.Title.Text = mcontract.Specifier.LocalSymbol & _
+                " (" & mcontract.Specifier.Exchange & ") " & _
                 TimeframeCaption
 mPriceRegion.Title.Color = vbBlue
 
@@ -1257,9 +1205,9 @@ Then
     On Error Resume Next
     Set mVolumeRegion = Chart1.Regions.item(ChartRegionNameVolume)
     On Error GoTo Err
-    
+
     If mVolumeRegion Is Nothing Then Set mVolumeRegion = Chart1.Regions.Add(20, , , , ChartRegionNameVolume)
-    
+
     mVolumeRegion.MinimumHeight = 10
     mVolumeRegion.IntegerYScale = True
     mVolumeRegion.Title.Text = "Volume"
@@ -1281,13 +1229,12 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub loadStudiesFromConfig()
 Const ProcName As String = "loadStudiesFromConfig"
-
 On Error GoTo Err
 
 mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.TradeStudy
@@ -1295,40 +1242,38 @@ mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), m
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub prepareChart()
-
 Const ProcName As String = "prepareChart"
-
 On Error GoTo Err
 
 createTimeframe
 initialiseChart
 
-If mTicker.State = TickerStates.TickerStateReady Or _
-    mTicker.State = TickerStates.TickerStateRunning _
+If mDataSource.State = MarketDataSourceStates.MarketDataSourceStateReady Or _
+    mDataSource.State = MarketDataSourceStates.MarketDataSourceStateRunning _
 Then
-    Set mcontract = mTicker.Contract
+    Set mcontract = mDataSource.Contract
 
     setupStudies
     loadchart
+Else
+    mDataSource.AddStateChangeListener Me
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLoadingText()
 Const ProcName As String = "setLoadingText"
-
 On Error GoTo Err
 
-Set mLoadingText = mPriceRegion.AddText(, ChartSkil26.LayerNumbers.LayerHighestUser)
+Set mLoadingText = mPriceRegion.AddText(, ChartSkil27.LayerNumbers.LayerHighestUser)
 Dim Font As New stdole.StdFont
 Font.Size = 18
 mLoadingText.Font = Font
@@ -1344,14 +1289,14 @@ mLoadingText.FixedY = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal value As ChartStates)
-Dim stateEv As StateChangeEventData
 Const ProcName As String = "setState"
-
 On Error GoTo Err
+
+Dim stateEv As StateChangeEventData
 
 mState = value
 stateEv.State = mState
@@ -1361,7 +1306,7 @@ RaiseEvent StateChange(stateEv)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupStudies()
@@ -1379,22 +1324,20 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub storeSettings()
-Dim cs As ConfigurationSection
-
 Const ProcName As String = "storeSettings"
-
 On Error GoTo Err
 
-If mConfig Is Nothing Then Exit Sub
-    
-If mTicker Is Nothing Then Exit Sub
+Dim cs As ConfigurationSection
 
-mConfig.SetSetting ConfigSettingWorkspace, mTicker.Workspace.name
-mConfig.SetSetting ConfigSettingTickerKey, mTicker.Key
+If mConfig Is Nothing Then Exit Sub
+
+If mDataSource Is Nothing Then Exit Sub
+
+mConfig.SetSetting ConfigSettingDataSourceKey, mDataSource.Key
 mConfig.SetSetting ConfigSettingPeriodLength, mPeriodLength.ToString
 mChartSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
 mConfig.SetSetting ConfigSettingIsHistoricChart, CStr(mIsHistoricChart)
@@ -1404,7 +1347,5 @@ mConfig.SetSetting ConfigSettingBarFormatterLibraryName, mBarFormatterLibraryNam
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-
