@@ -33,7 +33,7 @@ Option Explicit
 Implements DeferredAction
 Implements IBarDataConsumer
 Implements IBarDataInputServiceConsumer
-Implements StudyValueListener
+Implements IStudyValueListener
 Implements Task
 
 '@================================================================================
@@ -93,17 +93,17 @@ Private mStudyManagerRef            As WeakReference
 Private mAccumulatedVolume          As Long
 
 Private mTradeBars                  As Bars
-Private mTradeBarsStudy             As Study
+Private mTradeBarsStudy             As IStudy
 Private mCurrTradeBar               As Bar
 Private mCurrTradeBarPrevTickvol    As Long
 
 Private mAskBars                    As Bars
-Private mAskBarsStudy               As Study
+Private mAskBarsStudy               As IStudy
 Private mCurrAskBar                 As Bar
 Private mCurrAskBarPrevTickvol      As Long
 
 Private mBidBars                    As Bars
-Private mBidBarsStudy               As Study
+Private mBidBarsStudy               As IStudy
 Private mCurrBidBar                 As Bar
 Private mCurrBidBarPrevTickvol      As Long
 
@@ -303,15 +303,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' StudyValueListener Interface Members
+' IStudyValueListener Interface Members
 '@================================================================================
 
-Private Sub StudyValueListener_notify(ev As StudyValueEventData)
+Private Sub IStudyValueListener_notify(ev As StudyValueEventData)
 Static currAskBarNumber As Long
 Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
 
-Const ProcName As String = "StudyValueListener_notify"
+Const ProcName As String = "IStudyValueListener_notify"
 
 On Error GoTo Err
 
@@ -478,7 +478,7 @@ Public Property Get AskBars() As Bars
 Set AskBars = mAskBars
 End Property
 
-Public Property Get AskStudy() As BarStudy
+Public Property Get AskStudy() As IBarStudy
 Set AskStudy = mAskBarsStudy
 End Property
 
@@ -490,7 +490,7 @@ Public Property Get BidBars() As Bars
 Set BidBars = mBidBars
 End Property
 
-Public Property Get BidStudy() As BarStudy
+Public Property Get BidStudy() As IBarStudy
 Set BidStudy = mBidBarsStudy
 End Property
 
@@ -552,7 +552,7 @@ Public Property Get TradeBars() As Bars
 Set TradeBars = mTradeBars
 End Property
 
-Public Property Get TradeStudy() As BarStudy
+Public Property Get TradeStudy() As IBarStudy
 Set TradeStudy = mTradeBarsStudy
 End Property
 
@@ -961,7 +961,7 @@ End Sub
 
 Private Sub setupConstantMomentumBarsStudies()
 Dim params As New Parameters
-Dim barsStudy As BarStudy
+Dim barsStudy As IBarStudy
 
 Const ProcName As String = "setupConstantMomentumBarsStudies"
 
@@ -1020,7 +1020,7 @@ End Sub
 
 Private Sub setupConstantTimeBarsStudies()
 Dim params As New Parameters
-Dim barsStudy As BarStudy
+Dim barsStudy As IBarStudy
 
 Const ProcName As String = "setupConstantTimeBarsStudies"
 
@@ -1081,7 +1081,7 @@ End Sub
 
 Private Sub setupConstantVolumeBarsStudies()
 Dim params As New Parameters
-Dim barsStudy As BarStudy
+Dim barsStudy As IBarStudy
 
 Const ProcName As String = "setupConstantVolumeBarsStudies"
 
@@ -1234,7 +1234,7 @@ Const ProcName As String = "StartStudies"
 On Error GoTo Err
 
 Dim lInputStudy As InputStudy
-Dim lStudy As BarStudy
+Dim lStudy As IBarStudy
 
 #If trace Then
     gTracer.EnterProcedure ProcName, ModuleName
