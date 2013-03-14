@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IOrderRecoveryAgent
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,36 @@ Private Const ModuleName                            As String = "OrderRecoveryAg
 ' Member variables
 '@================================================================================
 
+Private mOrderSubmissionSP                          As IOrderSubmissionSrvcProvider
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mOrderSubmissionSP = gTB.ServiceProviders.GetServiceProvider(LiveOrderSubmission)
+Assert Not mOrderSubmissionSP Is Nothing, , "No live order submission service provider is configured"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
-' XXXX Interface Members
+' IOrderRecoveryAgent Interface Members
 '@================================================================================
+
+Private Sub IOrderRecoveryAgent_FinishOrderRecovery()
+mOrderSubmissionSP.FinishOrderRecovery
+End Sub
+
+Private Sub IOrderRecoveryAgent_StartOrderRecovery(ByVal pListener As IOrderRecoveryListener, ByVal pStartFrom As Date)
+mOrderSubmissionSP.StartOrderRecovery pListener, pStartFrom
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers
