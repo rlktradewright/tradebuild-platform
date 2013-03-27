@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "SequentialControllerTask"
+Attribute VB_Name = "SequentialClrTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -48,7 +48,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "SequentialControllerTask"
+Private Const ModuleName                            As String = "SequentialClrTask"
 
 '@================================================================================
 ' Member variables
@@ -58,13 +58,6 @@ Private mTaskContext                                As TaskContext
 
 Private mTickfileManager                            As TickFileManager
 Private mTickfileSpecifiers                         As TickFileSpecifiers
-
-Private mTickfileStore                              As ITickfileStore
-
-Private mDataConsumer                               As IGenericTickListener
-
-Private mPrimaryContractStore                       As IContractStore
-Private mSecondaryContractStore                     As IContractStore
 
 Private mEn                                         As Enumerator
 
@@ -165,22 +158,13 @@ End Property
 '@================================================================================
 Friend Sub Initialise( _
                 ByVal pTickfileManager As TickFileManager, _
-                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
-                ByVal pDataConsumer As IGenericTickListener, _
-                ByVal pTickfileStore As ITickfileStore, _
-                ByVal pPrimaryContractStore As IContractStore, _
-                ByVal pSecondaryContractStore As IContractStore)
+                ByVal pTickfileSpecifiers As TickFileSpecifiers)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mTickfileManager = pTickfileManager
 Set mTickfileSpecifiers = pTickfileSpecifiers
 Set mEn = mTickfileSpecifiers.Enumerator
-
-Set mDataConsumer = pDataConsumer
-Set mTickfileStore = pTickfileStore
-Set mPrimaryContractStore = pPrimaryContractStore
-Set mSecondaryContractStore = pSecondaryContractStore
 
 Exit Sub
 
