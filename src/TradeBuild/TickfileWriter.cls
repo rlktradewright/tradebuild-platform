@@ -52,7 +52,7 @@ Private Const ModuleName                As String = "TickfileWriter"
 ' Member variables
 '@================================================================================
 
-Private mWriter                         As TradeBuildSP.ITickfileWriter
+Private mWriter                         As ITickfileWriter
 Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
@@ -70,7 +70,7 @@ Set mPendingWrites = New Collection
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild26.TickfileWriter - object terminated"
+Debug.Print "TradeBuild27.TickfileWriter - object terminated"
 End Sub
 
 '@================================================================================
@@ -90,10 +90,10 @@ NumberOfPendingWrites = mPendingWrites.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileWriter)
+Friend Property Let ServiceProviderWriter(ByVal value As ITickfileWriter)
 Const ProcName As String = "ServiceProviderWriter"
 On Error GoTo Err
 
@@ -102,7 +102,7 @@ Set mWriter = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ready() As Boolean
@@ -114,7 +114,7 @@ ready = mServiceProviderWriterReady
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -126,13 +126,13 @@ Const ProcName As String = "CloseOutputFile"
 On Error GoTo Err
 
 GLogLogger.Log pMsg:="Closing output tickfile", pProcName:=ProcName, pModName:=ModuleName
-Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
+Debug.Print "TradeBuild27.TickfileWriter - closing output tickfile"
 mWriter.CloseOutputFile
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ServiceProviderWriterNotReady()
@@ -144,7 +144,7 @@ mServiceProviderWriterReady = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ServiceProviderWriterReady()
@@ -172,7 +172,7 @@ Set mPendingWrites = New Collection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
@@ -191,7 +191,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub WriteTick( _
@@ -208,7 +208,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
