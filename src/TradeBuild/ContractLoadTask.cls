@@ -22,8 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IContractInfoServiceConsumer
 Implements Task
+Implements TaskCompletionListener
 
 '@================================================================================
 ' Events
@@ -48,18 +48,20 @@ Private Const ModuleName                    As String = "ContractLoadTask"
 ' Member variables
 '@================================================================================
 
-Private mContractsBuilder                   As ContractsBuilder
-Private mContracts                          As Contracts
+Private mContractSpec                       As IContractSpecifier
+Private mContracts                          As IContracts
 Attribute mContracts.VB_VarHelpID = -1
 
 Private mTaskContext                        As TaskContext
+
+Private mUsedSecondarySP                    As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' DeferredAction Interface Members
+' Task Interface Members
 '@================================================================================
 
 Private Sub Task_Cancel()
@@ -70,37 +72,43 @@ Private Sub Task_run()
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
-GLogLogger.Log pMsg:="Loading contracts", pMsgQualifier:=mContractsBuilder.Contracts.ContractSpecifier.ToString, pProcName:=ProcName, pModName:=ModuleName
-If Not gTB.ServiceProviders.LoadContracts(Me, mContractsBuilder) Then
-    mTaskContext.notify ApiNotifyCodes.ApiNotifyTryLater, _
+gLogLogger.Log pMsg:="Loading contracts", pMsgQualifier:=mContractSpec.ToString, pProcName:=ProcName, pModName:=ModuleName
+
+Dim lContractInfoSP As IContractInfoServiceProvider
+
+Set lContractInfoSP = gTB.ServiceProviders.GetServiceProvider(ContractInfo)
+If lContractInfoSP Is Nothing Then
+    Set lContractInfoSP = gTB.ServiceProviders.GetServiceProvider(SecondaryContractInfo)
+    If Not lContractInfoSP Is Nothing Then mUsedSecondarySP = True
+End If
+If lContractInfoSP Is Nothing Then
+    mTaskContext.Notify ApiNotifyCodes.ApiNotifyTryLater, _
                         "No contract info service provider has been configured"
     mTaskContext.Finish mContracts, False
-Else
-    mTaskContext.suspend -1
 End If
+
+Dim lContractStore As IContractStore
+Set lContractStore = lContractInfoSP.GetContractStore
+lContractStore.FetchContractDetails(mContractSpec).AddTaskCompletionListener Me
+mTaskContext.suspend -1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Dim contractSpec As ContractSpecifier
-
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
 Const ProcName As String = "Task_TaskContext"
 On Error GoTo Err
 
-Set mTaskContext = RHS
-Set contractSpec = mTaskContext.Data
-
-Set mContractsBuilder = CreateContractsBuilder(contractSpec)
-Set mContracts = mContractsBuilder.Contracts
+Set mTaskContext = Value
+Set mContractSpec = mTaskContext.Data
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get Task_TaskName() As String
@@ -112,56 +120,37 @@ Task_TaskName = mTaskContext.name
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' IContractInfoServiceConsumer Interface Members
+' TaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub IContractInfoServiceConsumer_LoadComplete( _
-                            ByVal Handle As Long)
-Const ProcName As String = "IContractInfoServiceConsumer_LoadComplete"
+Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "TaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
-If mContracts.Count = 0 Then
-    ' try the secondary contract service provider if any
-    If Not gTB.ServiceProviders.loadContractsFromSecondarySP(Handle, Me, mContractsBuilder) Then
-        mTaskContext.Finish mContracts, False
-    End If
+If ev.errorNumber <> 0 Then
+    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.source
+ElseIf ev.Cancelled Then
+    mTaskContext.Finish Nothing, True
 Else
-    GLogLogger.Log pMsg:="Loaded " & mContracts.Count & " contracts", pMsgQualifier:=mContractsBuilder.Contracts.ContractSpecifier.ToString, pProcName:=ProcName, pModName:=ModuleName
+    Set mContracts = ev.Result
+
+    If mContracts.Count = 0 And Not mUsedSecondarySP Then
+            
+        If trySecondaryContractSP Then Exit Sub
+    End If
+    
+    gLogLogger.Log "Loaded " & mContracts.Count & " contracts: " & mContractSpec.ToString, ProcName, ModuleName
     mTaskContext.Finish mContracts, False
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Private Sub IContractInfoServiceConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
-                ByVal eventMessage As String, _
-                ByVal serviceProviderHandle As Long)
-
-Const ProcName As String = "IContractInfoServiceConsumer_NotifyEvent"
-On Error GoTo Err
-
-Select Case eventCode
-Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
-    mTaskContext.notify ApiNotifyCodes.ApiNotifyInvalidRequest, _
-                        eventMessage
-    mTaskContext.Finish mContracts, False
-Case Else
-    gTB.ServiceProviders.CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -176,4 +165,25 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function trySecondaryContractSP() As Boolean
+Const ProcName As String = "trySecondaryContractSP"
+On Error GoTo Err
+
+Dim lContractInfoSP As IContractInfoServiceProvider
+Set lContractInfoSP = gTB.ServiceProviders.GetServiceProvider(SecondaryContractInfo)
+mUsedSecondarySP = True
+If contractInfoSP Is Nothing Then
+    trySecondaryContractSP = False
+Else
+    Dim lContractStore As IContractStore
+    Set lContractStore = lContractInfoSP.GetContractStore
+    lContractStore.FetchContractDetails(mContractSpec).AddTaskCompletionListener Me
+    trySecondaryContractSP = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
