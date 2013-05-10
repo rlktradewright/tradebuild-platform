@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IOrderSubmitterFactory
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,40 @@ Private Const ModuleName                            As String = "OrderSubmitterF
 ' Member variables
 '@================================================================================
 
+Private mOrderSubmissionSP                          As IOrderSubmissionSrvcProvider
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mOrderSubmissionSP = gTB.ServiceProviders.GetServiceProvider(LiveOrderSubmission)
+Assert Not mOrderSubmissionSP Is Nothing, , "No live order submission service provider is configured"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
-' XXXX Interface Members
+' IOrderSubmitterFactory Interface Members
 '@================================================================================
+
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter(ByVal pOrderSubmissionListener As IOrderSubmissionListener) As IOrderSubmitter
+Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
+On Error GoTo Err
+
+Set IOrderSubmitterFactory_CreateOrderSubmitter = mOrderSubmissionSP.CreateOrderSubmitter(pOrderSubmissionListener)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
