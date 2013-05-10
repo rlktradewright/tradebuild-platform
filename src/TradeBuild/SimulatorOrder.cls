@@ -51,7 +51,7 @@ Private mOrder As Order
 ''
 ' Index into the simulator's MarketTable relevant to this <code>order</code>
 '@/
-Private mMarketIndex    As Long
+Private mMarketId    As Long
 
 ''
 ' Indicates that the <code>order</code> is now active at the exchange
@@ -69,6 +69,8 @@ Private mParentId       As String
 '@/
 Private mOcaGroup       As String
 
+Private mClientId       As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -85,40 +87,48 @@ Private mOcaGroup       As String
 ' Properties
 '@================================================================================
 
-Friend Property Let AtExchange(ByVal value As Boolean)
-mAtExchange = value
+Friend Property Let AtExchange(ByVal Value As Boolean)
+mAtExchange = Value
 End Property
 
 Friend Property Get AtExchange() As Boolean
 AtExchange = mAtExchange
 End Property
 
-Friend Property Let MarketIndex(ByVal value As Long)
-mMarketIndex = value
+Friend Property Let ClientId(ByVal Value As Long)
+mClientId = Value
 End Property
 
-Friend Property Get MarketIndex() As Long
-MarketIndex = mMarketIndex
+Friend Property Get ClientId() As Long
+ClientId = mClientId
 End Property
 
-Friend Property Let OcaGroup(ByVal value As String)
-mOcaGroup = value
+Friend Property Let MarketId(ByVal Value As Long)
+mMarketId = Value
+End Property
+
+Friend Property Get MarketId() As Long
+MarketId = mMarketId
+End Property
+
+Friend Property Let OcaGroup(ByVal Value As String)
+mOcaGroup = Value
 End Property
 
 Friend Property Get OcaGroup() As String
 OcaGroup = mOcaGroup
 End Property
 
-Friend Property Let Order(ByVal value As Order)
-Set mOrder = value
+Friend Property Let Order(ByVal Value As Order)
+Set mOrder = Value
 End Property
 
 Friend Property Get Order() As Order
 Set Order = mOrder
 End Property
 
-Friend Property Let ParentId(ByVal value As String)
-mParentId = value
+Friend Property Let ParentId(ByVal Value As String)
+mParentId = Value
 End Property
 
 Friend Property Get ParentId() As String
