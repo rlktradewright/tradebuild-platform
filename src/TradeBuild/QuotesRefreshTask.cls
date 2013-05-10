@@ -49,7 +49,7 @@ Private Const ModuleName                            As String = "QuotesRefreshTa
 Private mTaskContext                                As TaskContext
 Private mTickers                                    As Tickers
 Private mIndex                                      As Long
-Private mListener                                   As QuoteListener
+Private mListener                                   As IQuoteListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -68,7 +68,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -92,12 +92,12 @@ mTickers.Item(mIndex).RefreshQuotes mListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_TaskName() As String
@@ -109,7 +109,7 @@ Task_TaskName = mTaskContext.name
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -126,7 +126,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pTickers As Tickers, _
-                ByVal listener As QuoteListener)
+                ByVal listener As IQuoteListener)
 Set mTickers = pTickers
 Set mListener = listener
 End Sub
