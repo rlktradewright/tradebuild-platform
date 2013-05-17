@@ -64,6 +64,22 @@ Private Const ModuleName                            As String = "IBarWriter"
 ' Methods
 '@================================================================================
 
+Public Sub Finish()
+End Sub
+
+Public Sub WriteBar( _
+                ByVal pBar As Bar, _
+                ByVal pBarType As BarTypes)
+End Sub
+
+Public Function WriteBarAsync( _
+                ByVal pBar As Bar, _
+                ByVal pBarType As BarTypes, _
+                ByVal pCookie As Variant, _
+                ByVal pTaskName As String) As TaskController
+End Function
+
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

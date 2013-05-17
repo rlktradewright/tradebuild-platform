@@ -60,16 +60,30 @@ Private Const ModuleName                            As String = "IHistDataFactor
 ' Properties
 '@================================================================================
 
+Public Property Get TimePeriodValidator() As ITimePeriodValidator
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Public Function CreateBarWriter( _
+                ByVal pContract As Contract, _
+                ByVal pTimePeriod As TimePeriod) As TaskController
+End Function
+
 Public Function FetchBars( _
                 ByVal pBarSpecifier As BarDataSpecifier, _
+                ByVal pListener As IBarListener, _
                 Optional ByVal pCookie As Variant, _
                 Optional ByVal pNotifyProgress As Boolean = False, _
                 Optional ByVal pReturnBarsObject As Boolean = True) As TaskController
-               
+End Function
+
+Public Function SupportsWrite() As Boolean
+End Function
+
+Public Function SupportsAsyncWrite() As Boolean
 End Function
 
 '@================================================================================

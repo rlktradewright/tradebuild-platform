@@ -64,6 +64,12 @@ Private Const ModuleName                            As String = "IBarListener"
 ' Methods
 '@================================================================================
 
+Public Sub NoMoreBars(ev As BarEventData)
+End Sub
+
+Public Sub NotifyBar(ev As BarEventData)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
