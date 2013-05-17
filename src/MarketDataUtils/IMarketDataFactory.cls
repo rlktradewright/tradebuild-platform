@@ -60,9 +60,24 @@ Private Const ModuleName                            As String = "IMarketDataFact
 ' Properties
 '@================================================================================
 
+Public Property Get MaxStreamId() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub CancelMarketData(ByVal pStreamId As Long)
+End Sub
+
+Public Sub CancelMarketDepth(ByVal pStreamId As Long)
+End Sub
+
+Public Sub RequestMarketData(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
+End Sub
+
+Public Sub RequestMarketDepth(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
+End Sub
 
 '@================================================================================
 ' Helper Functions
