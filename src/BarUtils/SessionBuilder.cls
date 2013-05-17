@@ -57,6 +57,7 @@ Private mLatestTimeNotified As Date
 
 Private Sub Class_Initialize()
 Set mSession = New Session
+mSession.Initialise Me
 Set mLinkedSessions = New Collection
 End Sub
 

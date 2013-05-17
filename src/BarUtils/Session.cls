@@ -92,14 +92,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let SessionBuilder(ByVal Value As SessionBuilder)
-Set mBuilderRef = CreateWeakReference(Value)
-End Property
-
-Friend Property Get SessionBuilder() As SessionBuilder
-Set SessionBuilder = mBuilderRef.Target
-End Property
-
 Public Property Get CurrentSessionEndTime() As Date
 CurrentSessionEndTime = mCurrentSessionTimes.endTime
 End Property
@@ -115,6 +107,10 @@ End Property
                 
 Public Property Get IsLinkable() As Boolean
 IsLinkable = mIsLinkable
+End Property
+
+Friend Property Get SessionBuilder() As SessionBuilder
+Set SessionBuilder = mBuilderRef.Target
 End Property
 
 Public Property Get SessionCurrentTime() As Date
@@ -248,6 +244,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Sub Initialise(ByVal pSessionBuilder As SessionBuilder)
+Set mBuilderRef = CreateWeakReference(pSessionBuilder)
+End Sub
+
 Public Function IsTimeInFirstSessionForWeek(ByVal pTimestamp As Date) As Boolean
 Dim lSessionTimes As SessionTimes
 lSessionTimes = GetSessionTimes(pTimestamp)
@@ -355,6 +355,8 @@ Dim ev As SessionEventData
 Set ev.Source = Me
 ev.changeType = SessionChangeNone
 
+mClock.SetTime pTimestamp
+
 If Int(pTimestamp) > Int(mPrevTimeNotified) Then
     ev.changeType = SessionChangeDateChange
     ev.Timestamp = Int(pTimestamp)
@@ -369,8 +371,6 @@ If Not sInitialised Then
     ev.Timestamp = mCurrentSessionTimes.startTime
     RaiseEvent SessionStarted(ev)
 End If
-
-mClock.SetTime pTimestamp
 
 If pTimestamp >= mCurrentSessionTimes.endTime And Not sSessionEndNotified Then
     sSessionEndNotified = True
