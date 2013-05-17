@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-' Copyright 2008 Richard L King
+' Copyright 2008-2011 Richard L King
 '
 ' This file is part of TradeBuild Tick Utilities Package.
 '
@@ -56,7 +56,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickUtils26"
+
 Private Const ModuleName                    As String = "TickDataDecoder"
 
 '@================================================================================
@@ -89,11 +89,11 @@ Private Const ModuleName                    As String = "TickDataDecoder"
 '   <code>True</code> if a tick is available. <code>False</code> if no
 '   more ticks are available.
 '
-' @param tick
+' @param pTick
 '   The tick is returned here.
 '@/
-Public Function getNextTick( _
-                ByRef tick As GenericTick) As Boolean
+Public Function GetNextTick( _
+                ByRef pTick As GenericTick) As Boolean
 End Function
 
 '@================================================================================
