@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IContractFuture
+Implements IFuture
 
 '@================================================================================
 ' Events
@@ -49,28 +49,31 @@ Private Const ModuleName                            As String = "ContractsFuture
 Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
 
-Private mContract                                   As IContract
+Private mContracts                                  As IContracts
 Private mIsCancelled                                As Boolean
 Private mIsCompleted                                As Boolean
 Private mIsFaulted                                  As Boolean
-Private mErrorNumber                                  As Long
+Private mErrorNumber                                As Long
 Private mErrorMessage                               As String
+Private mErrorSource                                As String
+
+Private mListeners                                  As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IContractFuture Interface Members
+' IContractsFuture Interface Members
 '@================================================================================
 
-Private Property Get IContractFuture_Contract() As IContract
-Const ProcName As String = "IContractFuture_Contract"
+Private Property Get IFuture_Contracts() As IContracts
+Const ProcName As String = "IFuture_Contract"
 On Error GoTo Err
 
-Assert mTaskController.TaskState = TaskStates.TaskStateCompleted, "Contract fetch task has not yet completed"
+Assert mTaskController.TaskState = TaskStates.TaskStateCompleted, "Contracts fetch task has not yet completed"
 
-Set IContractFuture_Contract = mContract
+Set IFuture_Contracts = mContracts
 
 Exit Property
 
@@ -78,32 +81,44 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IContractFuture_ErrorCode() As Long
-IContractFuture_ErrorCode = mErrorNumber
+Private Property Get IFuture_Cookie() As Variant
+Const ProcName As String = "IFuture_Cookie"
+On Error GoTo Err
+
+gSetVariant IFuture_Cookie, mTaskController.Cookie
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IContractFuture_ErrorMessage() As String
-IContractFuture_ErrorMessage = mErrorMessage
+Private Property Get IFuture_ErrorMessage() As String
+IFuture_ErrorMessage = mErrorMessage
 End Property
 
-Private Property Get IContractFuture_ErrorNumber() As Long
-IContractFuture_ErrorNumber = mErrorNumber
+Private Property Get IFuture_ErrorNumber() As Long
+IFuture_ErrorNumber = mErrorNumber
 End Property
 
-Private Property Get IContractFuture_IsCancelled() As Boolean
-IContractFuture_IsCancelled = mIsCancelled
+Private Property Get IFuture_ErrorSource() As String
+IFuture_ErrorSource = mErrorSource
 End Property
 
-Private Property Get IContractFuture_IsCompleted() As Boolean
-IContractFuture_IsCompleted = mIsCompleted
+Private Property Get IFuture_IsCancelled() As Boolean
+IFuture_IsCancelled = mIsCancelled
 End Property
 
-Private Property Get IContractFuture_IsFaulted() As Boolean
-IContractFuture_IsFaulted = mIsFaulted
+Private Property Get IFuture_IsCompleted() As Boolean
+IFuture_IsCompleted = mIsCompleted
 End Property
 
-Private Property Get IContractFuture_TaskController() As TaskController
-Set IContractFuture_TaskController = mTaskController
+Private Property Get IFuture_IsFaulted() As Boolean
+IFuture_IsFaulted = mIsFaulted
+End Property
+
+Private Property Get IFuture_TaskController() As TaskController
+Set IFuture_TaskController = mTaskController
 End Property
 
 '@================================================================================
@@ -118,24 +133,12 @@ If ev.ErrorNumber <> 0 Then
     mIsFaulted = True
     mErrorNumber = ev.ErrorNumber
     mErrorMessage = ev.ErrorMessage
+    mErrorSource = ev.ErrorSource
 ElseIf ev.Cancelled Then
     mIsCancelled = True
 Else
-    Dim lContracts As IContracts
-    Set lContracts = ev.Result
-    
-    If lContracts.Count = 0 Then
-        mIsFaulted = True
-        mErrorNumber = ErrorCodes.ErrIllegalArgumentException
-        mErrorMessage = "No such contract"
-    ElseIf lContracts.Count > 1 Then
-        mIsFaulted = True
-        mErrorNumber = ErrorCodes.ErrIllegalArgumentException
-        mErrorMessage = "Contract not uniquely specified"
-    Else
-        mIsCompleted = True
-        Set mContract = lContracts.Item(1)
-    End If
+    mIsCompleted = True
+    Set mContracts = ev.Result
 End If
 
 Exit Sub

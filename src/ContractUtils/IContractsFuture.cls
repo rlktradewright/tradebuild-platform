@@ -60,6 +60,33 @@ Private Const ModuleName                            As String = "IContractsFutur
 ' Properties
 '@================================================================================
 
+Public Property Get Contracts() As IContracts
+End Property
+
+Public Property Get Cookie() As Variant
+End Property
+
+Public Property Get ErrorNumber() As Long
+End Property
+
+Public Property Get ErrorMessage() As String
+End Property
+
+Public Property Get ErrorSource() As String
+End Property
+
+Public Property Get IsCancelled() As Boolean
+End Property
+
+Public Property Get IsCompleted() As Boolean
+End Property
+
+Public Property Get IsFaulted() As Boolean
+End Property
+
+Public Property Get TaskController() As TaskController
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
