@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements StateChangeListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,6 +46,8 @@ Private Const ModuleName                            As String = "DataSourceState
 ' Member variables
 '@================================================================================
 
+Private mStudyBase                                  As TickDataStudyBase
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -51,6 +55,25 @@ Private Const ModuleName                            As String = "DataSourceState
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+Dim lState As MarketDataSourceStates
+lState = ev.State
+If lState = MarketDataSourceStateReady Then
+    Dim lDataSource As IMarketDataSource
+    Set lDataSource = ev.Source
+    mStudyBase.ReInitialise lDataSource.Contract, lDataSource.Session
+    lDataSource.RemoveStateChangeListener Me
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -64,6 +87,10 @@ Private Const ModuleName                            As String = "DataSourceState
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise(ByVal pStudyBase As TickDataStudyBase)
+Set mStudyBase = pStudyBase
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -71,5 +98,4 @@ Private Const ModuleName                            As String = "DataSourceState
 
 
 
-Option Explicit
 
