@@ -63,7 +63,7 @@ gAllocateHandle = mHandleAllocator.AllocateHandle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gReleaseHandle(ByVal pHandle As Long)
@@ -75,7 +75,7 @@ mHandleAllocator.ReleaseHandle pHandle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

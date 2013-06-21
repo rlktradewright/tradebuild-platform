@@ -30,6 +30,14 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum MarketDataErrorCodes
+    MarketDataErrCancelled = vbObjectError + 1536
+    MarketDataErrContractNotUnique
+    MarketDataErrNoContract
+    MarketDataErrContractFetchError
+    MarketDataErrContractExpired
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -63,6 +71,63 @@ Private Const ModuleName                            As String = "MarketDataUtils
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function CreateRealtimeDataManager( _
+                ByVal pMarketDataFactory As IMarketDataFactory, _
+                Optional ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
+                Optional ByVal pConfig As ConfigurationSection) As IMarketDataManager
+Const ProcName As String = "CreateRealtimeDataManager"
+On Error GoTo Err
+
+Dim rtm As New RealTimeDataManager
+rtm.Initialise pMarketDataFactory, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pConfig
+Set CreateRealtimeDataManager = rtm
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTickDataManager( _
+                ByVal pTickfileStore As ITickfileStore, _
+                Optional ByVal pMerge As Boolean = False, _
+                Optional ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As IMarketDataManager
+Const ProcName As String = "CreateTickDataManager"
+On Error GoTo Err
+
+Dim lTickDataManager As New TickfileDataManager
+lTickDataManager.Initialise pTickfileStore, pMerge, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
+
+Set CreateTickDataManager = lTickDataManager
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetFormattedPriceFromQuoteEvent(ByRef ev As QuoteEventData) As String
+Dim lDataSource As IMarketDataSource
+Const ProcName As String = "GetFormattedPriceFromQuoteEvent"
+On Error GoTo Err
+
+Set lDataSource = ev.Source
+GetFormattedPriceFromQuoteEvent = FormatPrice(ev.Quote.Price, lDataSource.Contract.Specifier.SecType, lDataSource.Contract.TickSize)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions

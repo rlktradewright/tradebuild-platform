@@ -68,7 +68,6 @@ Private Type MarketDepthTableEntry
     Incarnation             As Long
     ContractDetails         As TwsContractDetails
     TimeZone                As TimeZone
-    Next                    As Long
     DataListener            As IGenericTickListener
     ErrorListener           As IMarketDataErrorListener
     NumberOfRows            As Long
@@ -79,7 +78,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "MarketDataRequester"
+Private Const ModuleName                            As String = "MarketDataFactory"
 
 Private Const IncarnationIncrement                  As Long = &H1000&
 
@@ -97,8 +96,6 @@ Private mLastFreeTickerTableIndex                   As Long
 
 Private mMarketDepthTable()                         As MarketDepthTableEntry
 
-Private mTickerMap                                  As ContractTickerMap
-
 Private mContractRequester                          As ContractDetailsRequester
 
 '@================================================================================
@@ -109,7 +106,9 @@ Private Sub Class_Initialize()
 ReDim mTickerTable(3) As TickerTableEntry
 mFirstFreeTickerTableIndex = NullIndex
 mLastFreeTickerTableIndex = NullIndex
-Set mTickerMap = New ContractTickerMap
+
+ReDim mMarketDepthTable(3) As MarketDepthTableEntry
+
 End Sub
 
 '@================================================================================
@@ -123,7 +122,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -151,7 +150,7 @@ releaseTickerTableEntry lIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickPrice( _
@@ -184,21 +183,21 @@ With mTickerTable(lIndex)
         .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .ContractDetails)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
-        If lTick.Size = 0 Then lTick.Size = .PrevBidSize
+        If lTick.Size = 0 And .PrevBidSize <> 0 Then lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .ContractDetails)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
-        If lTick.Size = 0 Then lTick.Size = .PrevAskSize
+        If lTick.Size = 0 And .PrevAskSize <> 0 Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
         If lTick.Size <> 0 Then .PrevAskSize = lTick.Size
     Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .ContractDetails)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
-        If lTick.Size = 0 Then lTick.Size = .PrevTradeSize
+        If lTick.Size = 0 And .PrevTradeSize <> 0 Then lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
     Case TwsTickTypes.TwsTickHigh
@@ -221,12 +220,12 @@ With mTickerTable(lIndex)
         
 End With
 
-fireTick lIndex, lTick
+FireTick lIndex, lTick
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
@@ -314,12 +313,12 @@ With mTickerTable(lIndex)
 
 End With
 
-fireTick lIndex, lTick
+FireTick lIndex, lTick
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As String)
@@ -339,7 +338,7 @@ CancelMarketData pStreamId
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataFactory_CancelMarketDepth(ByVal pStreamId As Long)
@@ -351,14 +350,22 @@ CancelMarketDepth pStreamId
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IMarketDataFactory_CreateMarketDataStream(ByVal pContract As ContractUtils27.IContract, ByVal pDataListener As TickUtils27.IGenericTickListener, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long) As TickUtils27.ITickStream
+
+End Function
+
+Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContract As ContractUtils27.IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As TickUtils27.IGenericTickListener, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long) As TickUtils27.ITickStream
+
+End Function
 
 Private Property Get IMarketDataFactory_MaxStreamId() As Long
 IMarketDataFactory_MaxStreamId = IncarnationIncrement
 End Property
 
-Private Sub IMarketDataFactory_RequestMarketData(ByVal pStreamId As Long, ByVal pContract As Contract, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
+Private Sub IMarketDataFactory_RequestMarketData(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
 Const ProcName As String = "IMarketDataFactory_RequestMarketData"
 On Error GoTo Err
 
@@ -367,10 +374,10 @@ RequestMarketData pStreamId, pContract, pDataListener, pErrorListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IMarketDataFactory_RequestMarketDepth(ByVal pStreamId As Long, ByVal pContract As Contract, ByVal pNumberOfRows As Long, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
+Private Sub IMarketDataFactory_RequestMarketDepth(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
 Const ProcName As String = "IMarketDataFactory_RequestMarketDepth"
 On Error GoTo Err
 
@@ -379,7 +386,7 @@ RequestMarketDepth pStreamId, pContract, pNumberOfRows, pDataListener, pErrorLis
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -392,7 +399,7 @@ On Error GoTo Err
 
 Dim lIndex As Long
 
-If tickerHasBeenStopped(pMarketDepthId) Then Exit Sub
+If tickerMarketDepthHasBeenStopped(pMarketDepthId) Then Exit Sub
 
 lIndex = getIndexFromMarketDepthId(pMarketDepthId)
 Select Case pErrorCode
@@ -410,11 +417,11 @@ releaseMarketDepthTableEntry lIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDepthConsumer_NotifyMarketDepth( _
-                ByVal pTickerId As Long, _
+                ByVal pMarketDepthId As Long, _
                 ByVal pPosition As Long, _
                 ByVal pMarketMaker As String, _
                 ByVal pOperation As TwsDOMOperations, _
@@ -427,15 +434,16 @@ On Error GoTo Err
 Dim lTick As GenericTick
 Dim lIndex As Long
 
-If tickerHasBeenStopped(pTickerId) Then Exit Sub
+If tickerMarketDepthHasBeenStopped(pMarketDepthId) Then Exit Sub
 
-lIndex = getIndexFromTickerId(pTickerId)
+lIndex = getIndexFromMarketDepthId(pMarketDepthId)
 
 lTick.TickType = TickTypeMarketDepth
 lTick.MarketMaker = pMarketMaker
 lTick.Operation = pOperation
 lTick.Position = pPosition
 lTick.Price = pPrice
+lTick.Side = pSide
 lTick.Size = pSize
 
 With mTickerTable(lIndex)
@@ -446,12 +454,12 @@ With mTickerTable(lIndex)
     
 End With
 
-fireTick lIndex, lTick
+FireTick lIndex, lTick
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDepthConsumer_ResetMarketDepth(ByVal pReEstablish As Boolean)
@@ -461,7 +469,7 @@ On Error GoTo Err
 ResetMarketDepth pReEstablish
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -490,7 +498,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -515,8 +523,8 @@ Dim lStreamId As Long
 If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
 Else
-    Set lContractDetails = ev.result
-    lStreamId = ev.cookie
+    Set lContractDetails = ev.Result
+    lStreamId = ev.Cookie
     Set mTickerTable(lStreamId).ContractDetails = lContractDetails
     Set mTickerTable(lStreamId).TimeZone = getTheTimezone(lContractDetails.TimeZoneId)
     reqMarketData lStreamId
@@ -525,7 +533,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -536,42 +544,42 @@ Public Property Get CurrentAskPrice(ByVal pTickerId As Long) As Double
 Const ProcName As String = "CurrentAskPrice"
 On Error GoTo Err
 
-If tickerHasBeenStopped(pTickerId) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Ticker has been stopped"
+Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
 CurrentAskPrice = mTickerTable(getIndexFromTickerId(pTickerId)).PrevAsk
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentAskSize(ByVal pTickerId As Long) As Long
 Const ProcName As String = "CurrentAskSize"
 On Error GoTo Err
 
-If tickerHasBeenStopped(pTickerId) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Ticker has been stopped"
+Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
 CurrentAskSize = mTickerTable(getIndexFromTickerId(pTickerId)).PrevAskSize
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBidPrice(ByVal pTickerId As Long) As Double
 Const ProcName As String = "CurrentBidPrice"
 On Error GoTo Err
 
-If tickerHasBeenStopped(pTickerId) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Ticker has been stopped"
+Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
 CurrentBidPrice = mTickerTable(getIndexFromTickerId(pTickerId)).PrevBid
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBidSize(ByVal pTickerId As Long) As Long
@@ -629,7 +637,7 @@ releaseTickerTableEntry pStreamId
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelMarketDepth( _
@@ -638,12 +646,12 @@ Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 cancelMarketDepthEx pStreamId
-releaseMarketDataTableEntry pStreamId
+releaseMarketDepthTableEntry pStreamId
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -686,10 +694,10 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub RequestMarketData( _
+Public Sub RequestMarketData( _
                 ByVal pStreamId As Long, _
                 ByVal pContract As Contract, _
                 ByVal pDataListener As IGenericTickListener, _
@@ -700,9 +708,9 @@ On Error GoTo Err
 Dim lTask As ComboContractConversionTask
 Dim lContractDetails As TwsContractDetails
 
-initialiseTickerTableEntry pStreamId, pContract, pDataListener, pErrorListener
+initialiseTickerTableEntry pStreamId, pDataListener, pErrorListener
 
-If mContract.Specifier.SecType = SecTypeCombo Then
+If pContract.Specifier.Sectype = SecTypeCombo Then
     Set lTask = New ComboContractConversionTask
     lTask.Initialise mContractRequester, pContract.Specifier
     StartTask(lTask, PriorityNormal, , pStreamId).AddTaskCompletionListener Me
@@ -716,10 +724,10 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub RequestMarketDepth( _
+Public Sub RequestMarketDepth( _
                 ByVal pStreamId As Long, _
                 ByVal pContract As Contract, _
                 ByVal pNumberOfRows As Long, _
@@ -730,19 +738,20 @@ On Error GoTo Err
 
 Dim lContractDetails As TwsContractDetails
 
-If mContract.Specifier.SecType = SecTypeCombo Then Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Market depth not supported for Combo contracts"
+Assert pContract.Specifier.Sectype <> SecTypeCombo, "Market depth not supported for Combo contracts", ErrorCodes.ErrUnsupportedOperationException
 
-initialiseMarketDepthTableEntry pStreamId, pContract, pDataListener, pErrorListener
+initialiseMarketDepthTableEntry pStreamId, pDataListener, pErrorListener
 Set lContractDetails = gContractToTwsContractDetails(pContract)
 Set mMarketDepthTable(pStreamId).ContractDetails = lContractDetails
 Set mMarketDepthTable(pStreamId).TimeZone = getTheTimezone(lContractDetails.TimeZoneId)
+mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 reqMarketDepth pStreamId
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -758,7 +767,7 @@ If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.CancelMarketData getT
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub cancelMarketDepthEx(ByVal pIndex As Long)
@@ -770,7 +779,7 @@ If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.CancelMarketDepth get
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearPrevPrices( _
@@ -796,10 +805,10 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fireTick( _
+Private Sub FireTick( _
                 ByVal pStreamId As Long, _
                 ByRef pTick As GenericTick)
 Const ProcName As String = "fireTick"
@@ -822,7 +831,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getIndexFromTickerId(ByVal pTickerId As Long) As Long
@@ -842,7 +851,7 @@ Set getTheTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(pTimeZon
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getMarketDepthIdFromIndex(ByVal pIndex As Long) As Long
@@ -865,14 +874,13 @@ Do While pIndex > UBound(mMarketDepthTable)
 Loop
 
 With mMarketDepthTable(pIndex)
-mTickerTable(pIndex).Next = NullIndex
     Set .DataListener = pDataListener
     Set .ErrorListener = pErrorListener
 End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseTickerTableEntry( _
@@ -887,7 +895,6 @@ Do While pIndex > UBound(mTickerTable)
 Loop
 
 With mTickerTable(pIndex)
-mTickerTable(pIndex).Next = NullIndex
     Set .DataListener = pDataListener
     Set .ErrorListener = pErrorListener
 End With
@@ -895,7 +902,7 @@ clearPrevPrices pIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub releaseMarketDepthTableEntry(ByVal pIndex As Long)
@@ -913,7 +920,7 @@ clearPrevPrices pIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub releaseTickerTableEntry(ByVal pIndex As Long)
@@ -931,7 +938,7 @@ clearPrevPrices pIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reqMarketData( _
@@ -939,12 +946,12 @@ Private Sub reqMarketData( _
 Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mTickerTable(pIndex).ContractDetails, "", False
+If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mTickerTable(pIndex).ContractDetails.Summary, "", False
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reqMarketDepth( _
@@ -952,12 +959,12 @@ Private Sub reqMarketDepth( _
 Const ProcName As String = "reqMarketDepth"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails, mMarketDepthTable(pIndex).NumberOfRows
+If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ResetMarketDepth(ByVal pReEstablish As Boolean)
@@ -976,7 +983,7 @@ For i = 0 To UBound(mMarketDepthTable)
         If Not .ContractDetails Is Nothing Then
             lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .TimeZone)
             If pReEstablish Then mTwsAPI.RequestMarketDepth i, .ContractDetails.Summary, .NumberOfRows
-            fireTick i, lTick
+            FireTick i, lTick
         End If
     End With
 Next
@@ -984,7 +991,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function tickerHasBeenStopped(ByVal pTickerId As Long) As Boolean
@@ -998,7 +1005,21 @@ tickerHasBeenStopped = (pTickerId <> getTickerIdFromIndex(lIndex))
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function tickerMarketDepthHasBeenStopped(ByVal pMarketDepthId As Long) As Boolean
+Dim lIndex As Long
+Const ProcName As String = "tickerMarketDepthHasBeenStopped"
+On Error GoTo Err
+
+lIndex = getIndexFromMarketDepthId(pMarketDepthId)
+tickerMarketDepthHasBeenStopped = (pMarketDepthId <> getMarketDepthIdFromIndex(lIndex))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function validPrice( _
@@ -1010,8 +1031,8 @@ Const ProcName As String = "validPrice"
 
 On Error GoTo Err
 
-If (pPrevPrice <> MaxDouble Or (pPrice <> 0 And pPrice <> -1)) And _
-    IsValidPrice(pPrice, pPrevPrice, pContractDetails.Summary.SecType, pContractDetails.MinTick) _
+If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -100#)) And _
+    IsValidPrice(pPrice, pPrevPrice, pContractDetails.Summary.Sectype, pContractDetails.MinTick) _
 Then
     validPrice = True
 Else
@@ -1025,7 +1046,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function updateIncarnation(ByVal pIndex As Long, ByVal pIncarnation As Long) As Long

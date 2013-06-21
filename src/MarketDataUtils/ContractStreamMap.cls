@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ContractTickerMap"
+Attribute VB_Name = "ContractStreamMap"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,20 +38,20 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ContractTickerMap"
+Private Const ModuleName                            As String = "ContractStreamMap"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTickerIndexes                              As EnumerableCollection
+Private mStreamIndexes                              As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mTickerIndexes = New EnumerableCollection
+Set mStreamIndexes = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -71,72 +71,73 @@ End Sub
 '@================================================================================
 
 Friend Sub Add( _
-                ByVal pContract As TwsContract, _
-                ByVal pTickerId As Long)
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pStreamId As Long)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-mTickerIndexes.Add pTickerId, pContract.ToString
+mStreamIndexes.Add pStreamId, getKey(pContractSpec)
 
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Contains( _
-                ByVal pContract As TwsContract) As Boolean
-Const ProcName As String = "Remove"
+                ByVal pContractSpec As IContractSpecifier) As Boolean
+Const ProcName As String = "Contains"
 On Error GoTo Err
 
-Contains = mTickerIndexes.Contains(pContract.ToString)
+Contains = mStreamIndexes.Contains(getKey(pContractSpec))
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item( _
-                ByVal pContract As TwsContract) As Long
-Attribute Item.VB_UserMemId = 0
+                ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Item = mTickerIndexes.Item(pContract.ToString)
+Item = mStreamIndexes.Item(getKey(pContractSpec))
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mTickerIndexes.[NewEnum]
+Set NewEnum = mStreamIndexes.[NewEnum]
 End Function
 
 
 Friend Sub Remove( _
-                ByVal pContract As TwsContract)
+                ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mTickerIndexes.Remove pContract.ToString
+mStreamIndexes.Remove getKey(pContractSpec)
 
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-
+Private Function getKey(ByVal pContractSpec As IContractSpecifier) As String
+getKey = pContractSpec.ToString
+End Function
 
 

@@ -60,9 +60,31 @@ Private Const ModuleName                            As String = "IMarketDataMana
 ' Properties
 '@================================================================================
 
+Public Property Get PrimaryContractStore() As IContractStore
+End Property
+
+'Public Property Get DataSources() As EnumerableCollection
+'End Property
+
+Public Property Get SecondaryContractStore() As IContractStore
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function CreateMarketDataSource( _
+                Optional ByVal pContract As IContract, _
+                Optional ByVal pContractSpec As IContractSpecifier, _
+                Optional ByVal pKey As String, _
+                Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+End Function
+
+Public Sub Finish()
+End Sub
+
+Public Function GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
+End Function
 
 '@================================================================================
 ' Helper Functions
