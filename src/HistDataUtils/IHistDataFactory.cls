@@ -30,6 +30,15 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum HistDataStoreCapabilities
+    HistDataStoreCapabilityNone = 0
+    HistDataStoreCapabilityWriteTradeBars = 1
+    HistDataStoreCapabilityWriteBidAndAskBars = 2
+    HistDataStoreCapabilityFetchTradeBars = 4
+    HistDataStoreCapabilityFetchBidAndAskBars = 8
+    HistDataStoreCapabilityWriteAsync = 16
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -38,7 +47,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistDataFactory"
+Private Const ModuleName                            As String = "IHistDataStore"
 
 '@================================================================================
 ' Member variables
@@ -60,21 +69,39 @@ Private Const ModuleName                            As String = "IHistDataFactor
 ' Properties
 '@================================================================================
 
+Public Property Get Capabilities() As HistDataStoreCapabilities
+End Property
+
+Public Property Get TimePeriodValidator() As ITimePeriodValidator
+End Property
+
+Public Property Get WriterTimeframes() As TimePeriod()
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Public Function CreateBarWriterFuture( _
+                ByVal pContractFuture As IFuture) As IFuture
+End Function
+
 Public Function FetchBars( _
-                ByVal pBarSpecifier As BarDataSpecifier, _
-                Optional ByVal pCookie As Variant, _
+                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pListener As IBarListener, _
+                Optional ByVal pcookie As Variant, _
                 Optional ByVal pNotifyProgress As Boolean = False, _
                 Optional ByVal pReturnBarsObject As Boolean = True) As TaskController
-               
+End Function
+
+Public Function Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
 
