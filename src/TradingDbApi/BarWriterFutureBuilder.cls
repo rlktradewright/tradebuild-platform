@@ -44,9 +44,16 @@ Private Const ModuleName                            As String = "BarWriterFuture
 ' Member variables
 '@================================================================================
 
+Private WithEvents mFutureBuilder                   As FutureBuilder
+Attribute mFutureBuilder.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureBuilder = New FutureBuilder
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -59,6 +66,10 @@ Private Const ModuleName                            As String = "BarWriterFuture
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Future() As IFuture
+Set Future = mFutureBuilder.Future
+End Property
 
 '@================================================================================
 ' Methods
