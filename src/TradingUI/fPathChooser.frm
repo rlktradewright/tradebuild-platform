@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#51.0#0"; "TWControls10.ocx"
 Begin VB.Form fPathChooser 
    Caption         =   "Choose folder"
    ClientHeight    =   2775
@@ -101,12 +101,12 @@ End Sub
 Private Sub Form_Resize()
 Dim butleft As Long
 Const ProcName As String = "Form_Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
-butleft = Me.ScaleWidth - OkButton.Width - 8 * Screen.TwipsPerPixelX
+butleft = Me.ScaleWidth - OKButton.Width - 8 * Screen.TwipsPerPixelX
 If butleft >= 2160 Then
-    OkButton.Left = butleft
+    OKButton.Left = butleft
     CancelButton.Left = butleft
     NewFolderButton.Left = butleft
     PathChooser1.Width = butleft - 8 * Screen.TwipsPerPixelX - PathChooser1.Left
@@ -133,7 +133,6 @@ End Sub
 
 Private Sub CancelButton_Click()
 Const ProcName As String = "CancelButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 Me.Hide
@@ -147,7 +146,6 @@ End Sub
 
 Private Sub NewFolderButton_Click()
 Const ProcName As String = "NewFolderButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 PathChooser1.NewFolder
@@ -160,7 +158,6 @@ End Sub
 
 Private Sub OKButton_Click()
 Const ProcName As String = "OKButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 mCancelled = False
@@ -186,7 +183,6 @@ End Property
 
 Public Property Let path(ByVal newvalue As String)
 Const ProcName As String = "path"
-Dim failpoint As String
 On Error GoTo Err
 
 PathChooser1.path = newvalue
@@ -194,12 +190,11 @@ PathChooser1.path = newvalue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get path() As String
 Const ProcName As String = "path"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mCancelled Then path = PathChooser1.path
@@ -207,7 +202,7 @@ If Not mCancelled Then path = PathChooser1.path
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
