@@ -60,9 +60,23 @@ Private Const ModuleName                            As String = "IHistDataOutput
 ' Properties
 '@================================================================================
 
+Public Property Get TimePeriodValidator() As ITimePeriodValidator
+End Property
+
+Public Property Get WriterTimeframes() As TimePeriod()
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Function CreateBarWriter( _
+                ByVal pOutputMonitor As IBarOutputMonitor, _
+                ByVal pContractFuture As IFuture) As IBarWriter
+End Function
+
+Public Sub Finish()
+End Sub
 
 '@================================================================================
 ' Helper Functions
