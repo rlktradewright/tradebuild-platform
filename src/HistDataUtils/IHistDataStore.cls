@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IHistDataFactory"
+Attribute VB_Name = "IHistoricalDataStore"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -47,7 +47,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistDataStore"
+Private Const ModuleName                            As String = "IHistoricalDataStore"
 
 '@================================================================================
 ' Member variables
@@ -82,17 +82,19 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function CreateBarWriterFuture( _
-                ByVal pContractFuture As IFuture) As IFuture
+Public Function CreateBarWriter( _
+                ByVal pOutputMonitor As IBarOutputMonitor, _
+                ByVal pContractFuture As IFuture) As IBarWriter
 End Function
 
 Public Function FetchBars( _
                 ByVal pBarDataSpecifierFuture As IFuture, _
-                ByVal pListener As IBarListener, _
-                Optional ByVal pcookie As Variant, _
-                Optional ByVal pNotifyProgress As Boolean = False, _
-                Optional ByVal pReturnBarsObject As Boolean = True) As TaskController
+                Optional ByVal pListener As IBarListener, _
+                Optional ByVal pcookie As Variant) As IFuture
 End Function
+
+Public Sub Finish()
+End Sub
 
 Public Function Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
 End Function
