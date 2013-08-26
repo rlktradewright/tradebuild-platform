@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ClockFuture"
+Attribute VB_Name = "ClockFutureBuilder"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,8 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IFuture
 
 '@================================================================================
 ' Events
@@ -40,65 +38,21 @@ Implements IFuture
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ClockFuture"
+Private Const ModuleName                            As String = "ClockFutureBuilder"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mClock                                      As Clock
+Private mFutureBuilder                              As New FutureBuilder
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IFuture Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Sub IFuture_AddStateChangeListener(ByVal pListener As StateChangeListener)
-
-End Sub
-
-Private Sub IFuture_Cancel()
-
-End Sub
-
-Private Property Get IFuture_ErrorMessage() As String
-
-End Property
-
-Private Property Get IFuture_ErrorNumber() As Long
-
-End Property
-
-Private Property Get IFuture_ErrorSource() As String
-
-End Property
-
-Private Property Get IFuture_IsAvailable() As Boolean
-IFuture_IsAvailable = True
-End Property
-
-Private Property Get IFuture_IsCancelled() As Boolean
-
-End Property
-
-Private Property Get IFuture_IsFaulted() As Boolean
-
-End Property
-
-Private Property Get IFuture_IsPending() As Boolean
-
-End Property
-
-Private Sub IFuture_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
-
-End Sub
-
-Private Property Get IFuture_Value() As Object
-Set IFuture_Value = mClock
-End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -108,12 +62,25 @@ End Property
 ' Properties
 '@================================================================================
 
+Friend Property Get Future() As IFuture
+Set Future = mFutureBuilder.Future
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Initialise(ByVal pClock As Clock)
-Set mClock = pClock
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mFutureBuilder.Value = pClock
+mFutureBuilder.Complete
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
