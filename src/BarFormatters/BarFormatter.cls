@@ -64,7 +64,7 @@ Private Const ModuleName                    As String = "BarFormatter"
 ' Methods
 '@================================================================================
 
-Sub FormatBar(ByVal sourceBar As TimeframeUtils27.Bar, ByVal chartBar As ChartSkil27.Bar)
+Sub FormatBar(ByVal sourceBar As BarUtils27.Bar, ByVal chartBar As ChartSkil27.Bar)
 
 End Sub
 

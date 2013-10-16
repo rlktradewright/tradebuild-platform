@@ -60,7 +60,7 @@ Private Const ModuleName                            As String = "BarFormatterLib
 ' Properties
 '@================================================================================
 
-Public Property Let Name(ByVal Value As String)
+Public Property Let Name(ByVal value As String)
 
 End Property
 
@@ -72,7 +72,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function CreateFactory(ByVal pName As String) As BarFormatterFactory
+Public Function CreateFactory(ByVal pName As String) As IBarFormatterFactory
 
 End Function
 
