@@ -122,7 +122,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -136,10 +136,10 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
@@ -196,7 +196,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     
     If pError.Number = 3712 Then
         ' this error is "Operation has been cancelled by the user"
-        ' This occurs occasionally when running async, but I've no idea why
+        ' This should no longer happen, but we'll make the check just in case
         logMessage taskName & ": Error 3712 returned from ADO: operation cancelled by user: retrying", pProcName:=ProcName
         connectToDB
         If Not mAsynchronous Then DoWriteTickData
@@ -213,12 +213,12 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         mConnection.Close
     End If
     If mAsynchronous Then
-        mTaskContext.Error pError.Number, ProjectName & "." & ModuleName & ":" & ProcName & vbCrLf & errorMsg
+        mTaskContext.Error pError.Number, errorMsg, ProjectName & "." & ModuleName & ":" & ProcName
     Else
         RaiseEvent Error(pError.Number, errorMsg)
     End If
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": tick data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
@@ -298,7 +298,7 @@ mShortName = ShortName
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub WriteData( _
@@ -308,15 +308,9 @@ Friend Sub WriteData( _
                         ByVal TickSize As Double, _
                         ByRef Data() As Byte)
 Const ProcName As String = "WriteData"
-
-
 On Error GoTo Err
 
-If Not mCmd Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Object has already been used"
-End If
+Assert mCmd Is Nothing, "Object has already been used"
 
 mAsynchronous = False
 
@@ -326,6 +320,8 @@ mBasePrice = BasePrice
 mTickSize = TickSize
 mData = Data
 
+If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+
 connectToDB
 DoWriteTickData
 If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
@@ -333,7 +329,7 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function WriteDataAsync( _
@@ -343,15 +339,9 @@ Friend Function WriteDataAsync( _
                         ByVal TickSize As Double, _
                         ByRef Data() As Byte) As TaskController
 Const ProcName As String = "WriteDataAsync"
-
-
 On Error GoTo Err
 
-If Not mCmd Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Object has already been used"
-End If
+Assert mCmd Is Nothing, "Object has already been used"
 
 mAsynchronous = True
 
@@ -360,6 +350,8 @@ mPeriodStartTime = PeriodStartTime
 mBasePrice = BasePrice
 mTickSize = TickSize
 mData = Data
+
+If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
 
 ' we pass the periodstarttime as the cookie for use by the
 ' TickWriter object when the task completes
@@ -371,7 +363,7 @@ Set WriteDataAsync = StartTask(Me, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -381,8 +373,6 @@ End Function
 
 Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
-
-
 On Error GoTo Err
 
 Debug.Print "TickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
@@ -392,22 +382,19 @@ mConnector.connect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub DoWriteTickData()
 Const ProcName As String = "DoWriteTickData"
-
-
-Dim param As ADODB.Parameter
-
-
 On Error GoTo Err
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
 mCmd.CommandText = "WriteTickData"
+
+Dim param As ADODB.Parameter
 
 ' @InstrumentID
 Set param = mCmd.CreateParameter(, _
@@ -462,13 +449,11 @@ Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Execute()
 Const ProcName As String = "Execute"
-
-
 On Error GoTo Err
 
 Set mCmd.ActiveConnection = mConnection
@@ -485,7 +470,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -494,13 +479,15 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Function taskName() As String
 Const ProcName As String = "taskName"
 Static lTaskName
-If lTaskName = "" Then lTaskName = "TickDataWriter/" & mShortName & "(" & gGetSequenceNumber & ")"
+If lTaskName = "" Then lTaskName = "TickDataWriter/" & mShortName & "-" & _
+                                FormatTimestamp(mPeriodStartTime, TimestampNoMillisecs) & _
+                                "(" & gGetSequenceNumber & ")"
 taskName = lTaskName
 End Function
 
