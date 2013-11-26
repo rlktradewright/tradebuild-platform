@@ -56,7 +56,7 @@ Private mMaxAskPricesIndex                          As Long
 Private mBidPrices()                                As PriceTableEntry
 Private mMaxBidPricesIndex                          As Long
 
-Private mSubscriptions                              As DataSourceSubscriptions
+Private mDataSources                              As DataSources
 
 Private mPrevTradePrice                             As Double
 
@@ -82,10 +82,10 @@ Private mPrevTradePrice                             As Double
 
 Friend Sub Initialise( _
                 ByVal pNumberOfMarketDepthRows As Long, _
-                ByVal pSubscriptions As DataSourceSubscriptions)
+                ByVal pDataSources As DataSources)
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 initialisePriceTables mNumberOfMarketDepthRows
-Set mSubscriptions = pSubscriptions
+Set mDataSources = pDataSources
 End Sub
 
 Friend Sub NotifyCurrentDOM( _
@@ -163,7 +163,7 @@ On Error GoTo Err
 
 initialisePriceTables mNumberOfMarketDepthRows
 mPrevTradePrice = 0
-mSubscriptions.DOMReset
+mDataSources.DOMReset
 
 Exit Sub
 
@@ -179,12 +179,12 @@ On Error GoTo Err
 
 AssertArgument pTick.TickType = TickTypeTrade, "Incorrect tick type"
 
-If mPrevTradePrice <> 0 And pTick.Price <> mPrevTradePrice Then
-    mSubscriptions.DOMSetCell DOMSides.DOMTrade, mPrevTradePrice, 0
+If pTick.Price <> mPrevTradePrice Then
+    mDataSources.DOMSetCell DOMSides.DOMTrade, mPrevTradePrice, 0
 End If
 
 If pTick.Size <> 0 Then
-    mSubscriptions.DOMSetCell DOMSides.DOMTrade, pTick.Price, pTick.Size
+    mDataSources.DOMSetCell DOMSides.DOMTrade, pTick.Price, pTick.Size
 End If
 
 mPrevTradePrice = pTick.Price
@@ -357,7 +357,7 @@ Case DOMOperations.DOMInsert
     Next
     pPrices(pPosition).Price = pPrice
     pPrices(pPosition).Size = pSize
-    mSubscriptions.DOMSetCell pSide, pPrice, pSize
+    mDataSources.DOMSetCell pSide, pPrice, pSize
 Case DOMOperations.DOMUpdate
     If pPrice <> pPrices(pPosition).Price And pPrices(pPosition).Price <> 0 Then
         ' if need be we must blank the pSize display for the pPrice currently
@@ -366,19 +366,19 @@ Case DOMOperations.DOMUpdate
         ' only blank the pSize if the adjacent slot(s) are for a different pPrice.
         If pPosition = 0 Then
             If pPrices(1).Price <> pPrices(0).Price Then
-                mSubscriptions.DOMSetCell pSide, pPrices(0).Price, 0
+                mDataSources.DOMSetCell pSide, pPrices(0).Price, 0
             End If
         Else
             If pPrices(pPosition + 1).Price <> pPrices(pPosition).Price And _
                 pPrices(pPosition - 1).Price <> pPrices(pPosition).Price _
             Then
-                mSubscriptions.DOMSetCell pSide, pPrices(pPosition).Price, 0
+                mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, 0
             End If
         End If
     End If
     pPrices(pPosition).Price = pPrice
     pPrices(pPosition).Size = pSize
-    mSubscriptions.DOMSetCell pSide, pPrice, pSize
+    mDataSources.DOMSetCell pSide, pPrice, pSize
 Case DOMOperations.DOMDelete
 '    If (pPosition = 0 And pSide = DOMSides.DOMBid And pPrices(pPosition).Price = currentBid) _
 '        Or _
@@ -395,7 +395,7 @@ Case DOMOperations.DOMDelete
             ' we getting a delete before a pPrice has been inserted in this pPosition,
             ' so just ignore it
         Else
-            mSubscriptions.DOMSetCell pSide, pPrices(pPosition).Price, 0
+            mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, 0
         End If
 '    End If
     

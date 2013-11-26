@@ -45,13 +45,15 @@ Private Const ModuleName                            As String = "MarketDataStrea
 '@================================================================================
 
 Private mMarketDataManagerRef                       As WeakReference
+
+Private mContractFuture                             As IFuture
 Private mContract                                   As IContract
-Private mContractSpecifier                          As IContractSpecifier
+
 Private mStreamId                                   As Long
 
 Private mNumberOfMarketDepthRows                    As Long
 
-Private mSubscriptions                              As DataSourceSubscriptions
+Private mDataSources                                As DataSources
 
 Private mBidTick                                    As GenericTick
 Private mRecentBidPriceChange                       As ValueChanges
@@ -93,16 +95,26 @@ Private mVolumeAdjuster                             As VolumeAdjuster
 
 Private mDOMManager                                 As DOMManager
 
-Private mSessionBuilder                             As SessionBuilder
+Private mSessionBuilder                             As New SessionBuilder
+
+Private mSessionFutureBuilder                       As FutureBuilder
+Private mSessionFuture                              As IFuture
+
 Private mClock                                      As Clock
+
+Private mNumberOfMarketDataSubscriptions            As Long
+Private mNumberOfMarketDepthSubscriptions           As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mSubscriptions = New DataSourceSubscriptions
-mSubscriptions.Initialise Me
+Set mDataSources = New DataSources
+mDataSources.Initialise Me
+
+Set mSessionFutureBuilder = New FutureBuilder
+Set mSessionFuture = mSessionFutureBuilder.Future
 End Sub
 
 '@================================================================================
@@ -117,73 +129,28 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get Clock()
+Friend Property Get Clock() As Clock
 Set Clock = mClock
 End Property
 
-Friend Property Let Contract(ByVal Value As IContract)
-Const ProcName As String = "Contract"
-On Error GoTo Err
-
-If Value Is Nothing Then Exit Property
-
-Set mContract = Value
-Set mContractSpecifier = mContract.Specifier
-
-Set mSessionBuilder = New SessionBuilder
-mSessionBuilder.SessionEndTime = mContract.SessionEndTime
-mSessionBuilder.SessionStartTime = mContract.SessionStartTime
-Dim tz As TimeZone
-Set tz = GetTimeZone(IIf(mUseExchangeTimeZone, mContract.TimezoneName, ""))
-mSessionBuilder.TimeZone = tz
-mSessionBuilder.SetSessionCurrentTime ConvertDateUTCToTZ(GetTimestampUTC, tz)
-
-Set mVolumeAdjuster = New VolumeAdjuster
-mVolumeAdjuster.Initialise Session, mNoVolumeAdjustments, mNoImpliedTrades
-
-Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimezoneName, ""))
-
-mSubscriptions.NotifyContract mContract
-
-requestMarketData
-requestMarketDepth
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Friend Property Get Contract() As IContract
-Set Contract = mContract
-End Property
-
-Friend Property Get ContractSpecifier() As IContractSpecifier
-Set ContractSpecifier = mContractSpecifier
+Friend Property Get ContractFuture() As IFuture
+Set ContractFuture = mContractFuture
 End Property
 
 Friend Property Get DOMManager() As DOMManager
 Set DOMManager = mDOMManager
 End Property
 
-Friend Property Get NumberOfMarketDataSubscriptions() As Long
-NumberOfMarketDataSubscriptions = mSubscriptions.NumberOfMarketDataSubscriptions
-End Property
-
 Friend Property Get NumberOfMarketDepthRows() As Long
 NumberOfMarketDepthRows = mNumberOfMarketDepthRows
-End Property
-
-Friend Property Get NumberOfMarketDepthSubscriptions() As Long
-NumberOfMarketDepthSubscriptions = mSubscriptions.NumberOfMarketDepthSubscriptions
 End Property
 
 Friend Property Get Options() As MarketDataSourceOptions
 Options = mOptions
 End Property
 
-Friend Property Get Session() As Session
-Set Session = mSessionBuilder.Session
+Friend Property Get SessionFuture() As IFuture
+Set SessionFuture = mSessionFuture
 End Property
 
 Friend Property Get StreamId() As Long
@@ -198,11 +165,11 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub AddDataSource(ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "AddDataSource"
+Friend Sub AddMarketDataSource(ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "AddMarketDataSource"
 On Error GoTo Err
 
-mSubscriptions.AddDataSource pDataSource
+mDataSources.Add pDataSource
 
 Exit Sub
 
@@ -214,8 +181,8 @@ Friend Sub AddMarketDataSubscription(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "AddMarketDataSubscription"
 On Error GoTo Err
 
-mSubscriptions.AddMarketDataSubscription pDataSource
-requestMarketData
+mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions + 1
+RequestMarketData
 
 Exit Sub
 
@@ -227,7 +194,7 @@ Friend Sub AddMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "AddMarketDepthSubscription"
 On Error GoTo Err
 
-mSubscriptions.AddMarketDepthSubscription pDataSource
+mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions + 1
 requestMarketDepth
 
 Exit Sub
@@ -401,11 +368,14 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
-                ByVal pContract As IContract, _
-                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pStreamId As Long, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pNumberOfMarketDepthRows As Long)
+                ByVal pNumberOfMarketDepthRows As Long, _
+                ByVal pClock As Clock)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
 Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
 mStreamId = pStreamId
 mOptions = pOptions
@@ -415,28 +385,46 @@ mNoImpliedTrades = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoImp
 mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoVolumeAdjustments
 mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone
 
-Contract = pContract
-Set mContractSpecifier = pContractSpec
+Set mContractFuture = pContractFuture
+Set mContract = mContractFuture.Value
+
+Set mClock = pClock
+
+mSessionBuilder.TimeZone = GetTimeZone(IIf(pOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, ""))
+mSessionBuilder.CompleteSessionCreation
+
+mSessionFutureBuilder.Value = mSessionBuilder.SessionFuture.Value
+mSessionFutureBuilder.Complete
+
+Set mVolumeAdjuster = New VolumeAdjuster
+mVolumeAdjuster.Initialise mSessionBuilder.SessionFuture.Value, mNoVolumeAdjustments, mNoImpliedTrades
+
+mSessionBuilder.SetSessionCurrentTime mClock.Timestamp
 
 If mNumberOfMarketDepthRows <> 0 Then
     Set mDOMManager = New DOMManager
-    mDOMManager.Initialise mNumberOfMarketDepthRows, mSubscriptions
+    mDOMManager.Initialise mNumberOfMarketDepthRows, mDataSources
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "NotifyCurrentMarketDataTickValues"
 On Error GoTo Err
 
-fireTick pListener, mBidTick, pDataSource
-fireTick pListener, mAskTick, pDataSource
-fireTick pListener, mTradeTick, pDataSource
-fireTick pListener, mVolumeTick, pDataSource
-fireTick pListener, mHighTick, pDataSource
-fireTick pListener, mLowTick, pDataSource
-fireTick pListener, mOpenTick, pDataSource
-fireTick pListener, mCloseTick, pDataSource
-fireTick pListener, mOpenInterestTick, pDataSource
+FireTick pListener, mBidTick, pDataSource
+FireTick pListener, mAskTick, pDataSource
+FireTick pListener, mTradeTick, pDataSource
+FireTick pListener, mVolumeTick, pDataSource
+FireTick pListener, mHighTick, pDataSource
+FireTick pListener, mLowTick, pDataSource
+FireTick pListener, mOpenTick, pDataSource
+FireTick pListener, mCloseTick, pDataSource
+FireTick pListener, mOpenInterestTick, pDataSource
 
 Exit Sub
 
@@ -491,20 +479,19 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-mSubscriptions.NotifyError pErrorCode, pErrorMsg
+mDataSources.NotifyError pErrorCode, pErrorMsg
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
 
 Friend Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
 Const ProcName As String = "NotifyMarketDataError"
 On Error GoTo Err
 
-mSubscriptions.NotifyMarketDataError pErrorCode, pErrorMessage
+mDataSources.NotifyMarketDataError pErrorCode, pErrorMessage
 
 Exit Sub
 
@@ -512,11 +499,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub NotifyMarketDepthError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Friend Sub NotifyMarketDepthError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
 Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
-mSubscriptions.NotifyMarketDepthError pErrorCode, pErrorMessage
+mDataSources.NotifyMarketDepthError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyStreamFinished()
+Const ProcName As String = "NotifyStreamFinished"
+On Error GoTo Err
+
+mDataSources.NotifyStreamFinished
 
 Exit Sub
 
@@ -540,63 +539,65 @@ Case TickTypeBid
     mBidTick = ev.Tick
     If mBidTick.Price <> mPrevBidTick.Price Then mRecentBidPriceChange = gCalcValueChange(mBidTick.Price, mPrevBidTick.Price)
     If mBidTick.Size <> mPrevBidTick.Size Then mRecentBidSizeChange = gCalcValueChange(mBidTick.Size, mPrevBidTick.Size)
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeAsk
     mPrevAskTick = mAskTick
     mAskTick = ev.Tick
     If mAskTick.Price <> mPrevAskTick.Price Then mRecentAskPriceChange = gCalcValueChange(mAskTick.Price, mPrevAskTick.Price)
     If mAskTick.Size <> mPrevAskTick.Size Then mRecentAskSizeChange = gCalcValueChange(mAskTick.Size, mPrevAskTick.Size)
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeClosePrice
     mPrevCloseTick = mCloseTick
     mCloseTick = ev.Tick
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeHighPrice
     mPrevHighTick = mHighTick
     mHighTick = ev.Tick
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeLowPrice
     mPrevLowTick = mLowTick
     mLowTick = ev.Tick
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeMarketDepth
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessMarketDepth ev.Tick
 Case TickTypeMarketDepthReset
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessMarketDepthReset
 Case TickTypeTrade
     mPrevTradeTick = mTradeTick
     mTradeTick = ev.Tick
     If mTradeTick.Price <> mPrevTradeTick.Price Then mRecentTradePriceChange = gCalcValueChange(mTradeTick.Price, mPrevTradeTick.Price)
     If mTradeTick.Size <> mPrevTradeTick.Size Then mRecentTradeSizeChange = gCalcValueChange(mTradeTick.Size, mPrevTradeTick.Size)
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
     mDOMManager.ProcessTrade ev.Tick
     Dim lVolumeTick As GenericTick
     lVolumeTick = mVolumeAdjuster.GetVolumeTickForTrade(ev.Tick)
-    If lVolumeTick.TickType = TickTypeVolume Then mSubscriptions.NotifyTick lVolumeTick
+    If lVolumeTick.TickType = TickTypeVolume Then mDataSources.NotifyTick lVolumeTick
 Case TickTypeVolume
     mPrevVolumeTick = mVolumeTick
     mVolumeTick = ev.Tick
     Dim lAdjustedTick As GenericTick
     Dim lImpliedTick As GenericTick
-    If mVolumeAdjuster.ProcessVolumeTick(ev.Tick, lAdjustedTick, lImpliedTick) Then
-        mSubscriptions.NotifyTick ev.Tick
+    If mNoVolumeAdjustments Then
+        mDataSources.NotifyTick ev.Tick
+    ElseIf mVolumeAdjuster.ProcessVolumeTick(ev.Tick, lAdjustedTick, lImpliedTick) Then
+        mDataSources.NotifyTick ev.Tick
     Else
         If lImpliedTick.TickType = TickTypeTrade Then
-            mSubscriptions.NotifyTick lImpliedTick
+            mDataSources.NotifyTick lImpliedTick
             mDOMManager.ProcessTrade lImpliedTick
         End If
-        If lAdjustedTick.TickType = TickTypeVolume Then mSubscriptions.NotifyTick lAdjustedTick
+        If lAdjustedTick.TickType = TickTypeVolume Then mDataSources.NotifyTick lAdjustedTick
     End If
 Case TickTypeOpenInterest
     mPrevOpenInterestTick = mOpenInterestTick
     mOpenInterestTick = ev.Tick
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case TickTypeOpenPrice
     mPrevOpenTick = mOpenTick
     mOpenTick = ev.Tick
-    mSubscriptions.NotifyTick ev.Tick
+    mDataSources.NotifyTick ev.Tick
 Case Else
     AssertArgument False, "Invalid tick type"
 End Select
@@ -611,10 +612,14 @@ Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "RemoveMarketDataSource"
 On Error GoTo Err
 
-mSubscriptions.RemoveDataSource pDataSource
+mDataSources.Remove pDataSource
+If pDataSource.SubscribedToMarketData Then mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
+If pDataSource.SubscribedToMarketDepth Then mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
 cancelMarketData
 cancelMarketDepth
-If mSubscriptions.NumberOfSubscribers = 0 Then getDataManager.ReleaseStream Me
+
+If mDataSources.NumberOfSubscribers = 0 Then getDataManager.ReleaseStream Me
+
 getDataManager.RemoveMarketDataSource pDataSource
 
 Exit Sub
@@ -627,7 +632,7 @@ Friend Sub RemoveMarketDataSubscription(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "RemoveMarketDataSubscription"
 On Error GoTo Err
 
-mSubscriptions.RemoveMarketDataSubscription pDataSource
+mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions + 1
 cancelMarketData
 
 Exit Sub
@@ -640,7 +645,7 @@ Friend Sub RemoveMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
 Const ProcName As String = "RemoveMarketDepthSubscription"
 On Error GoTo Err
 
-mSubscriptions.RemoveMarketDepthSubscription pDataSource
+mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
 cancelMarketDepth
 
 Exit Sub
@@ -659,7 +664,7 @@ On Error GoTo Err
 
 If mContract Is Nothing Then Exit Sub
 
-If mSubscriptions.NumberOfMarketDataSubscriptions = 0 Then getDataManager.cancelMarketData Me
+If mNumberOfMarketDataSubscriptions = 0 Then getDataManager.cancelMarketData Me
 
 Exit Sub
 
@@ -673,7 +678,7 @@ On Error GoTo Err
 
 If mContract Is Nothing Then Exit Sub
 
-If mSubscriptions.NumberOfMarketDepthSubscriptions = 0 Then
+If mNumberOfMarketDepthSubscriptions = 0 Then
     getDataManager.cancelMarketDepth Me
     mDOMManager.Reset
 End If
@@ -684,7 +689,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fireTick(ByVal pListener As IGenericTickListener, ByRef pTick As GenericTick, ByVal pSource As Object)
+Private Sub FireTick(ByVal pListener As IGenericTickListener, ByRef pTick As GenericTick, ByVal pSource As Object)
 Const ProcName As String = "fireTick"
 On Error GoTo Err
 
@@ -704,13 +709,11 @@ Private Function getDataManager() As MarketDataManager
 Set getDataManager = mMarketDataManagerRef.Target
 End Function
 
-Private Sub requestMarketData()
-Const ProcName As String = "requestMarketData"
+Private Sub RequestMarketData()
+Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
-If mContract Is Nothing Then Exit Sub
-
-If mSubscriptions.NumberOfMarketDataSubscriptions = 1 Then getDataManager.requestMarketData Me
+If mNumberOfMarketDataSubscriptions = 1 Then getDataManager.RequestMarketData Me
 
 Exit Sub
 
@@ -722,9 +725,7 @@ Private Sub requestMarketDepth()
 Const ProcName As String = "requestMarketDepth"
 On Error GoTo Err
 
-If mContract Is Nothing Then Exit Sub
-
-If mSubscriptions.NumberOfMarketDepthSubscriptions = 1 Then getDataManager.requestMarketDepth Me, mNumberOfMarketDepthRows
+If mNumberOfMarketDepthSubscriptions = 1 Then getDataManager.requestMarketDepth Me, mNumberOfMarketDepthRows
 
 Exit Sub
 

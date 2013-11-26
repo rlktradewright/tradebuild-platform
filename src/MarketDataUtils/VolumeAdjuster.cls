@@ -101,6 +101,12 @@ GetVolumeTickForTrade.Timestamp = pTradeTick.Timestamp
 Exit Function
 
 Err:
+If Err.Number = VBErrorCodes.VbErrOverflow Then
+    Dim errSource As String
+    errSource = Err.Source
+    gLogger.Log "Overflow: mAccumulatedVolume=" & mAccumulatedVolume & "; tick=" & GenericTickToString(pTradeTick), ProcName, ModuleName
+    Err.Raise VBErrorCodes.VbErrOverflow, errSource, "Overflow"
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -149,7 +155,7 @@ If isInvalidSize(pTick.Size) Then Exit Function
 Dim lExpectedSize As Long
 lExpectedSize = mAccumulatedVolume - mVolumeCorrectionIncrement
 
-If pTick.Side = lExpectedSize Then
+If pTick.Size = lExpectedSize Then
     ' nothing to do, because the volume will have been notified when processing
     ' the preceding Trade tick
     ProcessVolumeTick = False

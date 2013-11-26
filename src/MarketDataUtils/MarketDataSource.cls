@@ -49,18 +49,18 @@ Private Const ConfigSettingIsMarketDepthRequested   As String = "&IsMarketDepthR
 ' Member variables
 '@================================================================================
 
+Private mMarketDataManagerRef                       As WeakReference
 Private mDataStreamRef                              As WeakReference
 
-Private mContract                                   As IContract
-Private mContractSpecifier                          As IContractSpecifier
+Private mContractFuture                             As IFuture
 
-Private mGenericTickListeners                       As EnumerableCollection
-Private mMarketDepthListeners                       As EnumerableCollection
-Private mPriceChangeListeners                       As EnumerableCollection
-Private mQuoteListeners                             As EnumerableCollection
-Private mRawMarketDepthListeners                    As EnumerableCollection
-Private mStateChangeListeners                       As EnumerableCollection
-Private mErrorListeners                             As EnumerableCollection
+Private mGenericTickListeners                       As Listeners
+Private mMarketDepthListeners                       As Listeners
+Private mPriceChangeListeners                       As Listeners
+Private mQuoteListeners                             As Listeners
+Private mRawMarketDepthListeners                    As Listeners
+Private mStateChangeListeners                       As Listeners
+Private mErrorListeners                             As Listeners
 
 Private mTag                                        As Variant
 
@@ -70,15 +70,26 @@ Private mHandle                                     As Long
 
 Private mKey                                        As String
 
-Private mSession                                    As Session
-Attribute mSession.VB_VarHelpID = -1
+Private mSessionFutureBuilder                       As New FutureBuilder
+Attribute mSessionFutureBuilder.VB_VarHelpID = -1
 
 Private mIsMarketDataRequested                      As Boolean
 Private mIsMarketDepthRequested                     As Boolean
 
-Private mClock                                      As Clock
+Private mSubscribedToMarketData                     As Boolean
+Private mSubscribedToMarketDepth                    As Boolean
+
+Private mClockFutureBuilder                         As New FutureBuilder
 
 Private mConfig                                     As ConfigurationSection
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mStreamIndexToUse                           As Long
+Private mUseExistingDataStream                      As Boolean
+
+Private mStreamId                                   As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -89,14 +100,15 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 mHandle = gAllocateHandle
-Set mErrorListeners = New EnumerableCollection
-Set mGenericTickListeners = New EnumerableCollection
-Set mMarketDepthListeners = New EnumerableCollection
-Set mRawMarketDepthListeners = New EnumerableCollection
-Set mPriceChangeListeners = New EnumerableCollection
-Set mQuoteListeners = New EnumerableCollection
-Set mStateChangeListeners = New EnumerableCollection
+Set mErrorListeners = New Listeners
+Set mGenericTickListeners = New Listeners
+Set mMarketDepthListeners = New Listeners
+Set mRawMarketDepthListeners = New Listeners
+Set mPriceChangeListeners = New Listeners
+Set mQuoteListeners = New Listeners
+Set mStateChangeListeners = New Listeners
 
+Set mFutureWaiter = New FutureWaiter
 Exit Sub
 
 Err:
@@ -135,7 +147,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IMarketDataSource_AddMarketDepthListener(ByVal pListener As TickUtils27.IMarketDepthListener)
+Private Sub IMarketDataSource_AddMarketDepthListener(ByVal pListener As IMarketDepthListener)
 Const ProcName As String = "IMarketDataSource_AddMarketDepthListener"
 On Error GoTo Err
 
@@ -195,19 +207,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IMarketDataSource_Clock() As Clock
-Set IMarketDataSource_Clock = Clock
+Private Property Get IMarketDataSource_ClockFuture() As IFuture
+Set IMarketDataSource_ClockFuture = ClockFuture
 End Property
 
-Private Property Get IMarketDataSource_Contract() As IContract
-Set IMarketDataSource_Contract = mContract
+Private Property Get IMarketDataSource_ContractFuture() As IFuture
+Set IMarketDataSource_ContractFuture = ContractFuture
 End Property
 
-Private Property Get IMarketDataSource_ContractSpecifier() As IContractSpecifier
-Set IMarketDataSource_ContractSpecifier = ContractSpecifier
-End Property
-
-Private Function IMarketDataSource_ConvertTickToQuote(pTick As GenericTick) As TickUtils27.Quote
+Private Function IMarketDataSource_ConvertTickToQuote(pTick As GenericTick) As Quote
 Const ProcName As String = "IMarketDataSource_ConvertTickToQuote"
 On Error GoTo Err
 
@@ -459,8 +467,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IMarketDataSource_Session() As Session
-Set IMarketDataSource_Session = Session
+Private Property Get IMarketDataSource_SessionFuture() As IFuture
+Set IMarketDataSource_SessionFuture = SessionFuture
 End Property
 
 Private Sub IMarketDataSource_StartMarketData()
@@ -507,44 +515,30 @@ End Property
 ' XXXX Event Handlers
 '@================================================================================
 
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is IContract Then processContractAvailable
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get Clock() As Clock
-Set Clock = mClock
+Public Property Get ClockFuture() As IFuture
+Set ClockFuture = mClockFutureBuilder.Future
 End Property
 
-Friend Property Let Contract(ByVal Value As IContract)
-Const ProcName As String = "Contract"
-On Error GoTo Err
-
-Set mContract = Value
-If Not mContract Is Nothing Then
-    Set mContractSpecifier = mContract.Specifier
-    Set mSession = getDataStream.Session
-    Set mClock = getDataStream.Clock
-    
-    setState MarketDataSourceStateReady
-    
-    If mIsMarketDataRequested Or mIsMarketDepthRequested Then setState MarketDataSourceStateRunning
-    If mIsMarketDataRequested Then Refresh
-End If
-
-storeSettings
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get Contract() As IContract
-Set Contract = mContract
-End Property
-
-Public Property Get ContractSpecifier() As IContractSpecifier
-Set ContractSpecifier = mContractSpecifier
+Public Property Get ContractFuture() As IFuture
+Set ContractFuture = mContractFuture
 End Property
 
 Public Property Get CurrentTick(ByVal pTickType As TickTypes) As GenericTick
@@ -576,16 +570,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get ErrorListeners() As EnumerableCollection
-Set ErrorListeners = mErrorListeners
-End Property
-
-Friend Property Get GenericTickListeners() As EnumerableCollection
-Set GenericTickListeners = mGenericTickListeners
-End Property
-
 Public Property Get Handle() As Long
 Handle = mHandle
+End Property
+
+Friend Property Get HasQuoteListeners()
+HasQuoteListeners = (mQuoteListeners.Count <> 0)
+End Property
+
+Friend Property Get HasPriceChangeListeners()
+HasPriceChangeListeners = (mPriceChangeListeners.Count <> 0)
 End Property
 
 Public Property Get IsMarketDataRequested() As Boolean
@@ -602,11 +596,6 @@ End Property
 
 Public Property Get Key() As String
 Key = mKey
-End Property
-
-Friend Property Get MarketDepthListeners() As EnumerableCollection
-checkNotFinished
-Set MarketDepthListeners = mMarketDepthListeners
 End Property
 
 Private Property Get NumberOfMarketDepthRows() As Long
@@ -630,20 +619,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get PriceChangeListeners() As EnumerableCollection
-Set PriceChangeListeners = mPriceChangeListeners
-End Property
-
-Friend Property Get QuoteListeners() As EnumerableCollection
-Set QuoteListeners = mQuoteListeners
-End Property
-
-Friend Property Get RawMarketDepthListeners() As EnumerableCollection
-Set RawMarketDepthListeners = mRawMarketDepthListeners
-End Property
-
-Public Property Get Session() As Session
-Set Session = mSession
+Public Property Get SessionFuture() As IFuture
+Set SessionFuture = mSessionFutureBuilder.Future
 End Property
 
 Public Property Get State() As MarketDataSourceStates
@@ -654,12 +631,20 @@ Friend Property Get StreamId() As Long
 Const ProcName As String = "StreamId"
 On Error GoTo Err
 
-StreamId = getDataStream.StreamId
+StreamId = mStreamId
 
 Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get SubscribedToMarketData() As Boolean
+SubscribedToMarketData = mSubscribedToMarketData
+End Property
+
+Friend Property Get SubscribedToMarketDepth() As Boolean
+SubscribedToMarketDepth = mSubscribedToMarketDepth
 End Property
 
 Public Property Let Tag(ByVal Value As Variant)
@@ -715,7 +700,6 @@ mErrorListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -729,7 +713,6 @@ mGenericTickListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -743,7 +726,6 @@ mMarketDepthListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -757,7 +739,6 @@ mPriceChangeListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -771,7 +752,6 @@ mQuoteListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -785,7 +765,6 @@ mRawMarketDepthListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -799,7 +778,6 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -838,22 +816,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise( _
-                ByVal pKey As String, _
-                ByVal pDataStream As MarketDataStream, _
-                ByVal pConfig As ConfigurationSection)
-Const ProcName As String = "Initialise"
+Friend Sub FireError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "FireError"
 On Error GoTo Err
 
-mKey = pKey
-Set mDataStreamRef = CreateWeakReference(pDataStream)
+Dim ev As ErrorEventData
+Set ev.Source = Me
+ev.ErrorCode = pErrorCode
+ev.ErrorMessage = pErrorMessage
 
-setState MarketDataSourceStateCreated
-
-Contract = pDataStream.Contract
-Set mContractSpecifier = pDataStream.ContractSpecifier
-
-Set mConfig = pConfig
+Dim lListener As ErrorListener
+For Each lListener In mErrorListeners.CurrentListeners
+    lListener.Notify ev
+Next
 
 Exit Sub
 
@@ -861,6 +836,214 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub FirePriceChange(ByRef pPriceChange As PriceChange)
+Const ProcName As String = "FirePriceChange"
+On Error GoTo Err
+
+If Not mSubscribedToMarketData Then Exit Sub
+
+Dim ev As PriceChangeEventData
+Set ev.Source = Me
+ev.PriceChange = pPriceChange
+
+Dim lListener As IPriceChangeListener
+For Each lListener In mPriceChangeListeners.CurrentListeners
+    lListener.Change ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireQuote(ByRef pQuote As Quote, ByVal pTickType As TickTypes)
+Const ProcName As String = "FireQuote"
+On Error GoTo Err
+
+If Not mSubscribedToMarketData Then Exit Sub
+
+Dim ev As QuoteEventData
+Set ev.Source = Me
+ev.Quote = pQuote
+
+Dim lListener As IQuoteListener
+For Each lListener In mQuoteListeners.CurrentListeners
+    Select Case pTickType
+    Case TickTypeBid
+        lListener.Bid ev
+    Case TickTypeAsk
+        lListener.Ask ev
+    Case TickTypeClosePrice
+        lListener.PreviousClose ev
+    Case TickTypeHighPrice
+        lListener.High ev
+    Case TickTypeLowPrice
+        lListener.Low ev
+    Case TickTypeMarketDepth
+    Case TickTypeMarketDepthReset
+    Case TickTypeTrade
+        lListener.Trade ev
+    Case TickTypeVolume
+        lListener.Volume ev
+    Case TickTypeOpenInterest
+        lListener.OpenInterest ev
+    Case TickTypeOpenPrice
+        lListener.SessionOpen ev
+    End Select
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireRawMarketDepth( _
+                ByRef pTick As GenericTick)
+Const ProcName As String = "FireRawMarketDepth"
+On Error GoTo Err
+
+If Not mSubscribedToMarketDepth Then Exit Sub
+
+Dim ev As RawMarketDepthEventData
+Set ev.Source = Me
+
+If pTick.TickType = TickTypeMarketDepth Then
+    ev.MarketMaker = pTick.MarketMaker
+    ev.Operation = pTick.Operation
+    ev.Position = pTick.Position
+    ev.Price = pTick.Price
+    ev.Side = pTick.Side
+    ev.Size = pTick.Size
+End If
+
+Dim lListener As IRawMarketDepthListener
+For Each lListener In mRawMarketDepthListeners.CurrentListeners
+    If pTick.TickType = TickTypeMarketDepth Then
+        lListener.UpdateMarketDepth ev
+    Else
+        lListener.ResetMarketDepth ev
+    End If
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireResetMarketDepth()
+Const ProcName As String = "FireResetMarketDepth"
+On Error GoTo Err
+
+If Not mSubscribedToMarketDepth Then Exit Sub
+
+Dim evRaw As RawMarketDepthEventData
+Set evRaw.Source = Me
+
+Dim lRawListener As IRawMarketDepthListener
+For Each lRawListener In mRawMarketDepthListeners.CurrentListeners
+    lRawListener.ResetMarketDepth evRaw
+Next
+
+Dim ev As MarketDepthEventData
+Set ev.Source = Me
+
+Dim lListener As IMarketDepthListener
+For Each lListener In mMarketDepthListeners.CurrentListeners
+    lListener.ResetMarketDepth ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireSetMarketDepthCell( _
+                ByVal pSide As DOMSides, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "FireSetMarketDepthCell"
+On Error GoTo Err
+
+If Not mSubscribedToMarketDepth Then Exit Sub
+
+Dim ev As MarketDepthEventData
+Set ev.Source = Me
+ev.Price = pPrice
+ev.Type = pSide
+ev.Size = pSize
+
+Dim lListener As IMarketDepthListener
+For Each lListener In mMarketDepthListeners.CurrentListeners
+    lListener.SetMarketDepthCell ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FireTick(ByRef pTick As GenericTick)
+Const ProcName As String = "FireTick"
+On Error GoTo Err
+
+If Not mSubscribedToMarketData Then Exit Sub
+
+Dim ev As GenericTickEventData
+Set ev.Source = Me
+ev.StreamId = mStreamId
+ev.Tick = pTick
+
+Dim lListener As IGenericTickListener
+For Each lListener In mGenericTickListeners.CurrentListeners
+    lListener.NotifyTick ev
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pMarketDataManager As MarketDataManager, _
+                ByVal pKey As String, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pOptions As MarketDataSourceOptions, _
+                ByVal pStreamIndexToUse As Long, _
+                ByVal pUseExistingDataStream As Boolean, _
+                ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
+
+mKey = pKey
+
+Set mContractFuture = pContractFuture
+
+mStreamIndexToUse = pStreamIndexToUse
+mUseExistingDataStream = pUseExistingDataStream
+
+Set mConfig = pConfig
+
+setState MarketDataSourceStateCreated
+
+If pContractFuture.IsAvailable Then
+    processContractAvailable
+Else
+    mFutureWaiter.Add mContractFuture
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 Public Sub NotifyCurrentDOM( _
                 ByVal pListener As IMarketDepthListener)
 Const ProcName As String = "NotifyCurrentDOM"
@@ -921,15 +1104,15 @@ On Error GoTo Err
 
 checkNotFinished
 
-If mContract Is Nothing Then Exit Sub
+If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
 
 Dim lTickListener As IGenericTickListener
-For Each lTickListener In mGenericTickListeners
+For Each lTickListener In mGenericTickListeners.CurrentListeners
     getDataStream.NotifyCurrentMarketDataTickValues lTickListener, Me
 Next
 
 Dim lQuoteListener As IQuoteListener
-For Each lQuoteListener In mQuoteListeners
+For Each lQuoteListener In mQuoteListeners.CurrentListeners
     getDataStream.NotifyCurrentMarketDataQuoteValues lQuoteListener, Me
 Next
 
@@ -937,7 +1120,7 @@ Dim lPricechangeListener As IPriceChangeListener
 Dim ev As PriceChangeEventData
 Set ev.Source = Me
 ev.PriceChange = getDataStream.GetPriceChange
-For Each lPricechangeListener In mPriceChangeListeners
+For Each lPricechangeListener In mPriceChangeListeners.CurrentListeners
     lPricechangeListener.Change ev
 Next
 
@@ -1000,7 +1183,6 @@ mErrorListeners.Remove pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1016,7 +1198,6 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1032,7 +1213,6 @@ unsubscribeIfNoMarketDepthListeners
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1048,7 +1228,6 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1064,7 +1243,6 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1080,7 +1258,6 @@ unsubscribeIfNoMarketDepthListeners
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1094,7 +1271,6 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -1111,7 +1287,7 @@ Set ev.Source = Me
 ev.ErrorCode = pErrorCode
 ev.ErrorMessage = pErrorMessage
 
-For Each lListener In mErrorListeners
+For Each lListener In mErrorListeners.CurrentListeners
     lListener.Notify ev
 Next
 
@@ -1129,12 +1305,9 @@ On Error GoTo Err
 
 checkNotFinished
 Assert Not mIsMarketDataRequested, "Market data already started"
-
-getDataStream.AddMarketDataSubscription Me
-
-If Not mContract Is Nothing Then setState MarketDataSourceStateRunning
 mIsMarketDataRequested = True
-
+If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
+subscribeToMarketData
 storeSettings
 
 Refresh
@@ -1151,12 +1324,9 @@ On Error GoTo Err
 
 checkNotFinished
 Assert Not mIsMarketDepthRequested, "Market depth already started"
-
-getDataStream.AddMarketDepthSubscription Me
-
-If Not mContract Is Nothing Then setState MarketDataSourceStateRunning
 mIsMarketDepthRequested = True
-
+If Not (State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning) Then Exit Sub
+subscribeToMarketDepth
 storeSettings
 
 Exit Sub
@@ -1173,6 +1343,7 @@ checkNotFinished
 If Not mIsMarketDataRequested Then Exit Sub
 
 getDataStream.RemoveMarketDataSubscription Me
+mSubscribedToMarketData = False
 mIsMarketDataRequested = False
 
 If Not mIsMarketDepthRequested Then setState MarketDataSourceStateStopped
@@ -1193,6 +1364,7 @@ checkNotFinished
 If Not mIsMarketDepthRequested Then Exit Sub
 
 getDataStream.RemoveMarketDepthSubscription Me
+mSubscribedToMarketDepth = False
 mIsMarketDepthRequested = False
 
 If Not mIsMarketDataRequested Then setState MarketDataSourceStateStopped
@@ -1223,7 +1395,7 @@ Dim ev As StateChangeEventData
 Set ev.Source = Me
 ev.State = pState
 
-For Each lListener In mStateChangeListeners
+For Each lListener In mStateChangeListeners.CurrentListeners
     lListener.Change ev
 Next
 
@@ -1236,6 +1408,50 @@ End Sub
 Private Function getDataStream() As MarketDataStream
 Set getDataStream = mDataStreamRef.Target
 End Function
+
+Private Function getMarketDataManager() As MarketDataManager
+Set getMarketDataManager = mMarketDataManagerRef.Target
+End Function
+
+Private Sub processContractAvailable()
+Const ProcName As String = "processContractAvailable"
+On Error GoTo Err
+
+Set mDataStreamRef = CreateWeakReference(getMarketDataManager.GetMarketDataStream(mContractFuture, mStreamIndexToUse, mUseExistingDataStream))
+getDataStream.AddMarketDataSource Me
+
+mStreamId = getDataStream.StreamId
+
+mClockFutureBuilder.Value = getDataStream.Clock
+mClockFutureBuilder.Complete
+
+mSessionFutureBuilder.Value = getDataStream.SessionFuture.Value
+mSessionFutureBuilder.Complete
+
+SetReady
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub SetReady()
+Const ProcName As String = "SetReady"
+On Error GoTo Err
+
+setState MarketDataSourceStateReady
+
+If mIsMarketDataRequested Then subscribeToMarketData
+If mIsMarketDepthRequested Then subscribeToMarketDepth
+
+storeSettings
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub setState(ByVal pState As MarketDataSourceStates)
 Const ProcName As String = "setState"
@@ -1256,9 +1472,39 @@ On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
-If Not mContract Is Nothing Then SaveContractToConfig mContract, mConfig.AddConfigurationSection(ConfigSectionContract)
+If State = MarketDataSourceStateReady Or State = MarketDataSourceStateRunning Then SaveContractToConfig mContractFuture.Value, mConfig.AddConfigurationSection(ConfigSectionContract)
 mConfig.SetSetting ConfigSettingIsMarketDataRequested, mIsMarketDataRequested
 mConfig.SetSetting ConfigSettingIsMarketDepthRequested, mIsMarketDepthRequested
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub subscribeToMarketData()
+Const ProcName As String = "subscribeToMarketData"
+On Error GoTo Err
+
+mSubscribedToMarketData = True
+getDataStream.AddMarketDataSubscription Me
+setState MarketDataSourceStateRunning
+
+Refresh
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub subscribeToMarketDepth()
+Const ProcName As String = "subscribeToMarketDepth"
+On Error GoTo Err
+
+mSubscribedToMarketDepth = True
+getDataStream.AddMarketDepthSubscription Me
+setState MarketDataSourceStateRunning
 
 Exit Sub
 

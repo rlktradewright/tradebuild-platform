@@ -74,17 +74,14 @@ Private Const ModuleName                            As String = "MarketDataUtils
 
 Public Function CreateRealtimeDataManager( _
                 ByVal pMarketDataFactory As IMarketDataFactory, _
-                Optional ByVal pPrimaryContractStore As IContractStore, _
-                Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
-                Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
-                Optional ByVal pConfig As ConfigurationSection) As IMarketDataManager
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As IMarketDataManager
 Const ProcName As String = "CreateRealtimeDataManager"
 On Error GoTo Err
 
 Dim rtm As New RealTimeDataManager
-rtm.Initialise pMarketDataFactory, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pConfig
+rtm.Initialise pMarketDataFactory, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
 Set CreateRealtimeDataManager = rtm
 
 Exit Function
@@ -95,17 +92,20 @@ End Function
 
 Public Function CreateTickDataManager( _
                 ByVal pTickfileStore As ITickfileStore, _
-                Optional ByVal pMerge As Boolean = False, _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
                 Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
-                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As IMarketDataManager
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
+                Optional ByVal pReplaySpeed As Long = 1, _
+                Optional ByVal pReplayProgressEventInterval As Long = 1000, _
+                Optional ByVal pTimestampAdjustmentStart As Double, _
+                Optional ByVal pTimestampAdjustmentEnd As Double) As IMarketDataManager
 Const ProcName As String = "CreateTickDataManager"
 On Error GoTo Err
 
 Dim lTickDataManager As New TickfileDataManager
-lTickDataManager.Initialise pTickfileStore, pMerge, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
+lTickDataManager.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
 
 Set CreateTickDataManager = lTickDataManager
 
@@ -121,7 +121,9 @@ Const ProcName As String = "GetFormattedPriceFromQuoteEvent"
 On Error GoTo Err
 
 Set lDataSource = ev.Source
-GetFormattedPriceFromQuoteEvent = FormatPrice(ev.Quote.Price, lDataSource.Contract.Specifier.SecType, lDataSource.Contract.TickSize)
+Dim lContract As IContract
+Set lContract = lDataSource.ContractFuture.Value
+GetFormattedPriceFromQuoteEvent = FormatPrice(ev.Quote.Price, lContract.Specifier.SecType, lContract.TickSize)
 
 Exit Function
 

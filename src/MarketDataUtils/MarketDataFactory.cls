@@ -26,7 +26,7 @@ Implements IMarketDataConsumer
 Implements IMarketDepthConsumer
 Implements IMarketDataFactory
 Implements ITwsConnectionStateListener
-Implements TaskCompletionListener
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -41,10 +41,12 @@ Implements TaskCompletionListener
 '@================================================================================
 
 Private Type TickerTableEntry
+    Next                    As Long
+    InUse                   As Boolean
+    TickStreamBuilder       As TickStreamBuilder
     Incarnation             As Long
     ContractDetails         As TwsContractDetails
     TimeZone                As TimeZone
-    DataListener            As IGenericTickListener
     ErrorListener           As IMarketDataErrorListener
     DataHasBeenReceived     As Boolean
     PrevBid                 As Double
@@ -62,17 +64,19 @@ Private Type TickerTableEntry
     PrevClose               As Double
     PrevVolume              As Long
     PrevOpenInterest        As Long
+    NumberOfRows            As Long
 End Type
 
-Private Type MarketDepthTableEntry
-    Incarnation             As Long
-    ContractDetails         As TwsContractDetails
-    TimeZone                As TimeZone
-    DataListener            As IGenericTickListener
-    ErrorListener           As IMarketDataErrorListener
-    NumberOfRows            As Long
-    DataHasBeenReceived     As Boolean
-End Type
+'Private Type MarketDepthTableEntry
+'    InUse                   As Boolean
+'    TickStreamBuilder       As TickStreamBuilder
+'    Incarnation             As Long
+'    ContractDetails         As TwsContractDetails
+'    TimeZone                As TimeZone
+'    ErrorListener           As IMarketDataErrorListener
+'    NumberOfRows            As Long
+'    DataHasBeenReceived     As Boolean
+'End Type
 
 '@================================================================================
 ' Constants
@@ -82,6 +86,8 @@ Private Const ModuleName                            As String = "MarketDataFacto
 
 Private Const IncarnationIncrement                  As Long = &H1000&
 
+Private Const MarketDepthIdOffset                   As Long = &H40000000
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -89,26 +95,35 @@ Private Const IncarnationIncrement                  As Long = &H1000&
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 
-Private mTickerTable()                              As TickerTableEntry
-Private mNextTickerTableIndex                       As Long
-Private mFirstFreeTickerTableIndex                  As Long
-Private mLastFreeTickerTableIndex                   As Long
+Private mMarketDataTable()                          As TickerTableEntry
+Private mMarketDataTableFirstFreeIndex              As Long
+Private mMarketDataTableNextIndex                   As Long
+Private mMarketDataTableMaxUsedIndex                As Long
 
-Private mMarketDepthTable()                         As MarketDepthTableEntry
+Private mMarketDepthTable()                         As TickerTableEntry
+Private mMarketDepthTableFirstFreeIndex             As Long
+Private mMarketDepthTableNextIndex                  As Long
+Private mMarketDepthTableMaxUsedIndex               As Long
 
 Private mContractRequester                          As ContractDetailsRequester
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mTickerTable(3) As TickerTableEntry
-mFirstFreeTickerTableIndex = NullIndex
-mLastFreeTickerTableIndex = NullIndex
+ReDim mMarketDataTable(3) As TickerTableEntry
+mMarketDataTableFirstFreeIndex = NullIndex
+mMarketDataTableMaxUsedIndex = NullIndex
 
-ReDim mMarketDepthTable(3) As MarketDepthTableEntry
+ReDim mMarketDepthTable(3) As TickerTableEntry
+mMarketDepthTableFirstFreeIndex = NullIndex
+mMarketDepthTableMaxUsedIndex = NullIndex
 
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
@@ -141,11 +156,11 @@ Case 200    ' security definition not known
     ' for this ticker. Occasionally Tws will send a 200 spuriously
     ' while the data stream is running
     
-    If mTickerTable(lIndex).DataHasBeenReceived Then Exit Sub
+    If mMarketDataTable(lIndex).DataHasBeenReceived Then Exit Sub
 End Select
 
-mTickerTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
-releaseTickerTableEntry lIndex
+mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex
 
 Exit Sub
 
@@ -172,7 +187,7 @@ lIndex = getIndexFromTickerId(pTickerId)
 lTick.Price = pPrice
 lTick.Size = pSize
 
-With mTickerTable(lIndex)
+With mMarketDataTable(lIndex)
 
     .DataHasBeenReceived = True
 
@@ -253,7 +268,7 @@ Dim lIndex As Long
 If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
 lIndex = getIndexFromTickerId(pTickerId)
-With mTickerTable(lIndex)
+With mMarketDataTable(lIndex)
     
     .DataHasBeenReceived = True
     
@@ -329,65 +344,33 @@ End Sub
 ' IMarketDataFactory Interface Members
 '@================================================================================
 
-Private Sub IMarketDataFactory_CancelMarketData(ByVal pStreamId As Long)
-Const ProcName As String = "IMarketDataFactory_CancelMarketData"
+Private Function IMarketDataFactory_CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
+Const ProcName As String = "IMarketDataFactory_CreateMarketDataStream"
 On Error GoTo Err
 
-CancelMarketData pStreamId
+Set IMarketDataFactory_CreateMarketDataStream = CreateMarketDataStream(pContractFuture, pErrorListener, pStreamId)
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IMarketDataFactory_CancelMarketDepth(ByVal pStreamId As Long)
-Const ProcName As String = "IMarketDataFactory_CancelMarketDepth"
-On Error GoTo Err
-
-CancelMarketDepth pStreamId
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function IMarketDataFactory_CreateMarketDataStream(ByVal pContract As ContractUtils27.IContract, ByVal pDataListener As TickUtils27.IGenericTickListener, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long) As TickUtils27.ITickStream
-
 End Function
 
-Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContract As ContractUtils27.IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As TickUtils27.IGenericTickListener, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long) As TickUtils27.ITickStream
+Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Const ProcName As String = "IMarketDataFactory_CreateMarketDepthStream"
+On Error GoTo Err
 
+Set IMarketDataFactory_CreateMarketDepthStream = CreateMarketDepthStream(pContractFuture, pNumberOfRows, pErrorListener, pStreamId)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataFactory_MaxStreamId() As Long
 IMarketDataFactory_MaxStreamId = IncarnationIncrement
 End Property
-
-Private Sub IMarketDataFactory_RequestMarketData(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "IMarketDataFactory_RequestMarketData"
-On Error GoTo Err
-
-RequestMarketData pStreamId, pContract, pDataListener, pErrorListener
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IMarketDataFactory_RequestMarketDepth(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "IMarketDataFactory_RequestMarketDepth"
-On Error GoTo Err
-
-RequestMarketDepth pStreamId, pContract, pNumberOfRows, pDataListener, pErrorListener
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' IMarketDepthConsumer Interface Members
@@ -412,7 +395,7 @@ Case 317
 End Select
 
 mMarketDepthTable(lIndex).ErrorListener.NotifyMarketDepthError lIndex, pErrorCode, pErrorMsg
-releaseMarketDepthTableEntry lIndex
+releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lIndex
 
 Exit Sub
 
@@ -446,7 +429,7 @@ lTick.Price = pPrice
 lTick.Side = pSide
 lTick.Size = pSize
 
-With mTickerTable(lIndex)
+With mMarketDataTable(lIndex)
 
     .DataHasBeenReceived = True
 
@@ -510,30 +493,69 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' StateChangeListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_TaskCompleted"
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-Dim lContractDetails As TwsContractDetails
-Dim lStreamId As Long
+If ev.State = TickStreamStates.TickStreamStateFinished Then
+    Dim lBuilder As TickStreamBuilder
+    Set lBuilder = ev.Source
 
-If ev.Cancelled Then
-ElseIf ev.ErrorNumber <> 0 Then
-Else
-    Set lContractDetails = ev.Result
-    lStreamId = ev.Cookie
-    Set mTickerTable(lStreamId).ContractDetails = lContractDetails
-    Set mTickerTable(lStreamId).TimeZone = getTheTimezone(lContractDetails.TimeZoneId)
-    reqMarketData lStreamId
+    Dim lIndex As Long
+    lIndex = lBuilder.TickStream.StreamId
+    
+    If lIndex <= mMarketDataTableMaxUsedIndex Then
+        If mMarketDataTable(lIndex).TickStreamBuilder Is lBuilder Then
+            CancelMarketData lIndex
+            Exit Sub
+        End If
+    End If
+
+    If lIndex <= mMarketDepthTableMaxUsedIndex Then
+        If mMarketDepthTable(lIndex).TickStreamBuilder Is lBuilder Then
+            CancelMarketDepth lIndex
+            Exit Sub
+        End If
+    End If
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_FutureWaitComplete"
+On Error GoTo Err
+
+Dim lTwsContractFuture As IFuture
+Set lTwsContractFuture = ev.Future
+
+If lTwsContractFuture.IsAvailable Then
+    Dim lStreamId As Long
+    lStreamId = ev.ContinuationData
+    
+    If lStreamId < MarketDepthIdOffset Then
+        setContractForMarketData lStreamId, lTwsContractFuture.Value
+        reqMarketData lStreamId
+    Else
+        setContractForMarketDepth lStreamId - MarketDepthIdOffset, lTwsContractFuture.Value
+        reqMarketDepth lStreamId - MarketDepthIdOffset
+    End If
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -546,7 +568,7 @@ On Error GoTo Err
 
 Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
-CurrentAskPrice = mTickerTable(getIndexFromTickerId(pTickerId)).PrevAsk
+CurrentAskPrice = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevAsk
 
 Exit Property
 
@@ -560,7 +582,7 @@ On Error GoTo Err
 
 Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
-CurrentAskSize = mTickerTable(getIndexFromTickerId(pTickerId)).PrevAskSize
+CurrentAskSize = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevAskSize
 
 Exit Property
 
@@ -574,7 +596,7 @@ On Error GoTo Err
 
 Assert Not tickerHasBeenStopped(pTickerId), "Ticker has been stopped"
 
-CurrentBidPrice = mTickerTable(getIndexFromTickerId(pTickerId)).PrevBid
+CurrentBidPrice = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevBid
 
 Exit Property
 
@@ -583,23 +605,23 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBidSize(ByVal pTickerId As Long) As Long
-CurrentBidSize = mTickerTable(pTickerId).PrevBidSize
+CurrentBidSize = mMarketDataTable(pTickerId).PrevBidSize
 End Property
 
 Public Property Get CurrentOpenInterest(ByVal pTickerId As Long) As Long
-CurrentOpenInterest = mTickerTable(pTickerId).PrevOpenInterest
+CurrentOpenInterest = mMarketDataTable(pTickerId).PrevOpenInterest
 End Property
 
 Public Property Get CurrentTradePrice(ByVal pTickerId As Long) As Double
-CurrentTradePrice = mTickerTable(pTickerId).PrevTrade
+CurrentTradePrice = mMarketDataTable(pTickerId).PrevTrade
 End Property
 
 Public Property Get CurrentTradeSize(ByVal pTickerId As Long) As Long
-CurrentTradeSize = mTickerTable(pTickerId).PrevTradeSize
+CurrentTradeSize = mMarketDataTable(pTickerId).PrevTradeSize
 End Property
 
 Public Property Get CurrentVolume(ByVal pTickerId As Long) As Long
-CurrentVolume = mTickerTable(pTickerId).PrevVolume
+CurrentVolume = mMarketDataTable(pTickerId).PrevVolume
 End Property
 
 Public Property Get MaxTickerId() As Long
@@ -607,19 +629,19 @@ MaxTickerId = IncarnationIncrement
 End Property
 
 Public Property Get PreviousSessionClosePrice(ByVal pTickerId As Long) As Double
-PreviousSessionClosePrice = mTickerTable(pTickerId).PrevClose
+PreviousSessionClosePrice = mMarketDataTable(pTickerId).PrevClose
 End Property
 
 Public Property Get SessionHighPrice(ByVal pTickerId As Long) As Double
-SessionHighPrice = mTickerTable(pTickerId).PrevHigh
+SessionHighPrice = mMarketDataTable(pTickerId).PrevHigh
 End Property
 
 Public Property Get SessionLowPrice(ByVal pTickerId As Long) As Double
-SessionLowPrice = mTickerTable(pTickerId).PrevLow
+SessionLowPrice = mMarketDataTable(pTickerId).PrevLow
 End Property
 
 Public Property Get Timestamp(ByVal pTickerId As Long) As Date
-Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, mTickerTable(pTickerId).TimeZone)
+Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, mMarketDataTable(pTickerId).TimeZone)
 End Property
 
 '@================================================================================
@@ -632,7 +654,7 @@ Const ProcName As String = "CancelMarketData"
 On Error GoTo Err
 
 cancelMarketDataEx pStreamId
-releaseTickerTableEntry pStreamId
+releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, pStreamId
 
 Exit Sub
 
@@ -646,13 +668,48 @@ Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 cancelMarketDepthEx pStreamId
-releaseMarketDepthTableEntry pStreamId
+releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, pStreamId
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Const ProcName As String = "CreateMarketDataStream"
+On Error GoTo Err
+
+AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
+
+pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, mMarketDataTableMaxUsedIndex, pStreamId, pErrorListener)
+
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture), pStreamId
+Set CreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Const ProcName As String = "CreateMarketDepthStream"
+On Error GoTo Err
+
+AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
+
+pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, mMarketDepthTableMaxUsedIndex, pStreamId, pErrorListener)
+mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
+
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture), pStreamId + MarketDepthIdOffset
+Set CreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
@@ -663,16 +720,14 @@ End Sub
 
 Friend Sub ReEstablishMarketData(ByVal pNewConnection As Boolean)
 Const ProcName As String = "ReEstablishMarketData"
-Dim i As Long
-Dim var As Variant
-
 On Error GoTo Err
 
 gLog "Re-establishing market data: newConnection = " & CStr(pNewConnection), ModuleName, ProcName
 
-For i = 0 To UBound(mTickerTable)
-    With mTickerTable(i)
-        If Not .ContractDetails Is Nothing Then
+Dim i As Long
+For i = 0 To UBound(mMarketDataTable)
+    With mMarketDataTable(i)
+        If .InUse Then
             If Not pNewConnection Then cancelMarketDataEx i
             .Incarnation = updateIncarnation(i, .Incarnation)
             reqMarketData i
@@ -683,70 +738,13 @@ Next
 
 For i = 0 To UBound(mMarketDepthTable)
     With mMarketDepthTable(i)
-        If Not .ContractDetails Is Nothing Then
+        If .InUse Then
             If Not pNewConnection Then cancelMarketDepthEx i
             .Incarnation = updateIncarnation(i, .Incarnation)
             reqMarketDepth i
         End If
     End With
 Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub RequestMarketData( _
-                ByVal pStreamId As Long, _
-                ByVal pContract As Contract, _
-                ByVal pDataListener As IGenericTickListener, _
-                ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "RequestMarketData"
-On Error GoTo Err
-
-Dim lTask As ComboContractConversionTask
-Dim lContractDetails As TwsContractDetails
-
-initialiseTickerTableEntry pStreamId, pDataListener, pErrorListener
-
-If pContract.Specifier.Sectype = SecTypeCombo Then
-    Set lTask = New ComboContractConversionTask
-    lTask.Initialise mContractRequester, pContract.Specifier
-    StartTask(lTask, PriorityNormal, , pStreamId).AddTaskCompletionListener Me
-Else
-    Set lContractDetails = gContractToTwsContractDetails(pContract)
-    Set mTickerTable(pStreamId).ContractDetails = lContractDetails
-    Set mTickerTable(pStreamId).TimeZone = getTheTimezone(lContractDetails.TimeZoneId)
-    reqMarketData pStreamId
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Public Sub RequestMarketDepth( _
-                ByVal pStreamId As Long, _
-                ByVal pContract As Contract, _
-                ByVal pNumberOfRows As Long, _
-                ByVal pDataListener As IGenericTickListener, _
-                ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "RequestMarketDepth"
-On Error GoTo Err
-
-Dim lContractDetails As TwsContractDetails
-
-Assert pContract.Specifier.Sectype <> SecTypeCombo, "Market depth not supported for Combo contracts", ErrorCodes.ErrUnsupportedOperationException
-
-initialiseMarketDepthTableEntry pStreamId, pDataListener, pErrorListener
-Set lContractDetails = gContractToTwsContractDetails(pContract)
-Set mMarketDepthTable(pStreamId).ContractDetails = lContractDetails
-Set mMarketDepthTable(pStreamId).TimeZone = getTheTimezone(lContractDetails.TimeZoneId)
-mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
-
-reqMarketDepth pStreamId
 
 Exit Sub
 
@@ -787,7 +785,7 @@ Private Sub clearPrevPrices( _
 Const ProcName As String = "clearPrevPrices"
 On Error GoTo Err
 
-With mTickerTable(pIndex)
+With mMarketDataTable(pIndex)
     .PrevAsk = MaxDouble
     .PrevAskSize = MaxLong
     .PrevBid = MaxDouble
@@ -814,18 +812,12 @@ Private Sub FireTick( _
 Const ProcName As String = "fireTick"
 On Error GoTo Err
 
-Dim ev As GenericTickEventData
-
-ev.StreamId = pStreamId
-ev.Tick = pTick
-
-Set ev.Source = Me
 If pTick.TickType = TickTypeMarketDepth Or _
     pTick.TickType = TickTypeMarketDepthReset _
 Then
-    mMarketDepthTable(pStreamId).DataListener.NotifyTick ev
+    mMarketDepthTable(pStreamId).TickStreamBuilder.NotifyTick pTick
 Else
-    mTickerTable(pStreamId).DataListener.NotifyTick ev
+    mMarketDataTable(pStreamId).TickStreamBuilder.NotifyTick pTick
 End If
 
 Exit Sub
@@ -859,79 +851,72 @@ getMarketDepthIdFromIndex = pIndex + mMarketDepthTable(pIndex).Incarnation
 End Function
 
 Private Function getTickerIdFromIndex(ByVal pIndex As Long) As Long
-getTickerIdFromIndex = pIndex + mTickerTable(pIndex).Incarnation
+getTickerIdFromIndex = pIndex + mMarketDataTable(pIndex).Incarnation
 End Function
 
-Private Sub initialiseMarketDepthTableEntry( _
+Private Function getTableEntry( _
+                ByRef pTable() As TickerTableEntry, _
+                ByRef pNextIndex As Long, _
+                ByRef pFirstFreeIndex As Long, _
+                ByRef pMaxUsedIndex As Long, _
                 ByVal pIndex As Long, _
-                ByVal pDataListener As IGenericTickListener, _
-                ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "initialiseMarketDepthTableEntry"
+                ByVal pErrorListener As IMarketDataErrorListener) As Long
+Const ProcName As String = "getTableEntry"
 On Error GoTo Err
 
-Do While pIndex > UBound(mMarketDepthTable)
-    ReDim Preserve mMarketDepthTable(2 * (UBound(mMarketDepthTable) + 1) - 1) As MarketDepthTableEntry
-Loop
+Dim lIndex As Long
+lIndex = pIndex
 
-With mMarketDepthTable(pIndex)
-    Set .DataListener = pDataListener
+If lIndex = -1 Then
+    If pFirstFreeIndex <> NullIndex Then
+        lIndex = pFirstFreeIndex
+        pFirstFreeIndex = pTable(pFirstFreeIndex).Next
+    Else
+        Do
+            If pNextIndex > UBound(pTable) Then ReDim Preserve pTable(2 * (UBound(pTable) + 1) - 1) As TickerTableEntry
+            lIndex = pNextIndex
+            pNextIndex = pNextIndex + 1
+        Loop Until Not pTable(lIndex).InUse And pTable(lIndex).Next <> 0
+    End If
+Else
+    If lIndex <= UBound(pTable) Then AssertArgument Not pTable(lIndex).InUse, "Index already in use"
+    
+    Do While lIndex > UBound(pTable)
+        ReDim Preserve pTable(2 * (UBound(pTable) + 1) - 1) As TickerTableEntry
+    Loop
+End If
+
+If lIndex > pMaxUsedIndex Then pMaxUsedIndex = lIndex
+    
+With pTable(lIndex)
+    .InUse = True
     Set .ErrorListener = pErrorListener
+    Set .TickStreamBuilder = CreateTickStreamBuilder(lIndex)
+    .TickStreamBuilder.AddStateChangeListener Me
 End With
-Exit Sub
+
+clearPrevPrices lIndex
+
+getTableEntry = lIndex
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
-Private Sub initialiseTickerTableEntry( _
-                ByVal pIndex As Long, _
-                ByVal pDataListener As IGenericTickListener, _
-                ByVal pErrorListener As IMarketDataErrorListener)
-Const ProcName As String = "initialiseTickerTableEntry"
+Private Sub releaseTableEntry(ByRef pTable() As TickerTableEntry, ByRef pFirstFreeTableIndex As Long, ByVal pIndex As Long)
+Const ProcName As String = "releaseTableEntry"
 On Error GoTo Err
 
-Do While pIndex > UBound(mTickerTable)
-    ReDim Preserve mTickerTable(2 * (UBound(mTickerTable) + 1) - 1) As TickerTableEntry
-Loop
-
-With mTickerTable(pIndex)
-    Set .DataListener = pDataListener
-    Set .ErrorListener = pErrorListener
-End With
-clearPrevPrices pIndex
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub releaseMarketDepthTableEntry(ByVal pIndex As Long)
-Const ProcName As String = "releaseMarketDepthTableEntry"
-
-On Error GoTo Err
-
-With mMarketDepthTable(pIndex)
+With pTable(pIndex)
+    .InUse = False
     .Incarnation = updateIncarnation(pIndex, .Incarnation)
     Set .ContractDetails = Nothing
     .DataHasBeenReceived = False
-End With
-clearPrevPrices pIndex
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub releaseTickerTableEntry(ByVal pIndex As Long)
-Const ProcName As String = "releaseTickerTableEntry"
-
-On Error GoTo Err
-
-With mTickerTable(pIndex)
-    .Incarnation = updateIncarnation(pIndex, .Incarnation)
-    Set .ContractDetails = Nothing
-    .DataHasBeenReceived = False
+    Set .TickStreamBuilder = Nothing
+    .Next = pFirstFreeTableIndex
+    pFirstFreeTableIndex = pIndex
 End With
 clearPrevPrices pIndex
 
@@ -946,7 +931,7 @@ Private Sub reqMarketData( _
 Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mTickerTable(pIndex).ContractDetails.Summary, "", False
+If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
 
 Exit Sub
 
@@ -980,13 +965,45 @@ lTick.TickType = TickTypeMarketDepthReset
 
 For i = 0 To UBound(mMarketDepthTable)
     With mMarketDepthTable(i)
-        If Not .ContractDetails Is Nothing Then
+        If .InUse Then
             lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .TimeZone)
             If pReEstablish Then mTwsAPI.RequestMarketDepth i, .ContractDetails.Summary, .NumberOfRows
             FireTick i, lTick
         End If
     End With
 Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setContractForMarketData( _
+                ByVal pStreamId As Long, _
+                ByVal pContractDetails As TwsContractDetails)
+Const ProcName As String = "setContractForMarketData"
+On Error GoTo Err
+
+Set mMarketDataTable(pStreamId).ContractDetails = pContractDetails
+Set mMarketDataTable(pStreamId).TimeZone = getTheTimezone(pContractDetails.TimeZoneId)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setContractForMarketDepth( _
+                ByVal pStreamId As Long, _
+                ByVal pContractDetails As TwsContractDetails)
+Const ProcName As String = "setContractForMarketDepth"
+On Error GoTo Err
+
+Assert pContractDetails.Summary.Sectype <> TwsSecTypeCombo, "Market depth not supported for Combo contracts", ErrorCodes.ErrUnsupportedOperationException
+
+Set mMarketDepthTable(pStreamId).ContractDetails = pContractDetails
+Set mMarketDepthTable(pStreamId).TimeZone = getTheTimezone(pContractDetails.TimeZoneId)
 
 Exit Sub
 

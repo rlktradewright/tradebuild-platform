@@ -22,7 +22,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TaskCompletionListener
+Implements IGenericTickListener
+Implements IMarketDataErrorListener
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -37,6 +39,7 @@ Implements TaskCompletionListener
 '@================================================================================
 
 Private Type StreamTableEntry
+    InUse                   As Boolean
     Next                    As Long
     MarketDataStream        As MarketDataStream
     TickStream              As ITickStream
@@ -51,16 +54,12 @@ Private Const ModuleName                            As String = "MarketDataManag
 
 Private Const ConfigSectionMarketDataSource         As String = "MarketDataSource"
 
-Private Const ConfigSettingKey                      As String = "&Key"
-
 '@================================================================================
 ' Member variables
 '@================================================================================
 
 Private mFactory                                    As IMarketDataFactory
 Attribute mFactory.VB_VarHelpID = -1
-'Private mPrimaryContractStore                       As IContractStore
-'Private mSecondaryContractStore                     As IContractStore
 
 Private mStreamTable()                              As StreamTableEntry
 Private mNextStreamTableIndex                       As Long
@@ -88,32 +87,62 @@ Set mStreamMap = New ContractStreamMap
 End Sub
 
 '@================================================================================
-' TaskCompletionListener Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
-Const ProcName As String = "TaskCompletionListener_TaskCompleted"
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-Dim lIndex As Long
-lIndex = ev.Cookie
+mStreamTable(ev.StreamId).MarketDataStream.NotifyTick ev
 
-If ev.Cancelled Then
-    mStreamTable(lIndex).MarketDataStream.NotifyError MarketDataErrorCodes.MarketDataErrCancelled, "The contract fetch operation was cancelled"
-ElseIf ev.ErrorNumber <> 0 Then
-    mStreamTable(lIndex).MarketDataStream.NotifyError MarketDataErrorCodes.MarketDataErrContractFetchError, ev.ErrorMessage
-Else
-    Dim lContracts As IContracts
-    Set lContracts = ev.Result
-    
-    If lContracts.Count = 0 Then
-        mStreamTable(lIndex).MarketDataStream.NotifyError MarketDataErrorCodes.MarketDataErrNoContract, "No such contract exists"
-    ElseIf lContracts.Count > 1 Then
-        mStreamTable(lIndex).MarketDataStream.NotifyError MarketDataErrorCodes.MarketDataErrContractNotUnique, "Contract not uniquely specified"
-    Else
-        SetContract lIndex, lContracts(1)
-    End If
-End If
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' IMarketDataErrorListener Interface Members
+'@================================================================================
+
+Private Sub IMarketDataErrorListener_NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDataError"
+On Error GoTo Err
+
+mStreamTable(pStreamId).MarketDataStream.NotifyMarketDataError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDepthError"
+On Error GoTo Err
+
+mStreamTable(pStreamId).MarketDataStream.NotifyMarketDepthError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
+
+Dim lStream As TickStream
+Set lStream = ev.Source
+mStreamTable(lStream.StreamId).MarketDataStream.NotifyStreamFinished
 
 Exit Sub
 
@@ -125,7 +154,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get DataSources() As EnumerableCollection
+Friend Property Get DataSources() As EnumerableCollection
 Set DataSources = mDataSources
 End Property
 
@@ -141,7 +170,10 @@ Dim lIndex As Long
 
 lIndex = pDataStream.StreamId
 
-If Not mStreamTable(lIndex).TickStream Is Nothing Then mStreamTable(lIndex).TickStream.Finish
+If Not mStreamTable(lIndex).TickStream Is Nothing Then
+    mStreamTable(lIndex).TickStream.Finish
+    Set mStreamTable(lIndex).TickStream = Nothing
+End If
 
 Exit Sub
 
@@ -158,7 +190,10 @@ Dim lIndex As Long
 
 lIndex = pDataStream.StreamId
 
-If Not mStreamTable(lIndex).DepthStream Is Nothing Then mStreamTable(lIndex).DepthStream.Finish
+If Not mStreamTable(lIndex).DepthStream Is Nothing Then
+    mStreamTable(lIndex).DepthStream.Finish
+    Set mStreamTable(lIndex).DepthStream = Nothing
+End If
 
 Exit Sub
 
@@ -168,48 +203,24 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function CreateMarketDataSource( _
-                ByVal pContract As IContract, _
-                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pKey As String, _
                 ByVal pStateChangeListener As StateChangeListener, _
-                Optional ByVal pIndexToUse As Long = -1, _
+                ByVal pIsRecoverable As Boolean, _
+                Optional ByVal pIndexToUse As Long = NullIndex, _
                 Optional ByVal pUseExistingDataStream As Boolean) As IMarketDataSource
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
-AssertArgument Not (pContract Is Nothing And pContractSpec Is Nothing), "Either pContract or pContract spec must be supplied"
-AssertArgument pContract Is Nothing Xor pContractSpec Is Nothing, "Either pContract or pContract spec must be supplied"
-
-Dim lContractSpec As IContractSpecifier
-If Not pContract Is Nothing Then
-    Set lContractSpec = pContract.Specifier
-Else
-    Set lContractSpec = pContractSpec
-End If
-
-gLogger.Log "Creating market data source for", ProcName, ModuleName, , lContractSpec.ToString
-
-Dim lIndex As Long
-lIndex = getDataStreamIndex(lContractSpec, pIndexToUse, pUseExistingDataStream)
-If lIndex = -1 Then Exit Function
-
-Dim lDataStream As MarketDataStream
-Set lDataStream = mStreamTable(lIndex).MarketDataStream
-If lDataStream Is Nothing Then
-    Set lDataStream = New MarketDataStream
-    Set mStreamTable(lIndex).MarketDataStream = lDataStream
-    lDataStream.Initialise Me, pContract, lContractSpec, lIndex, mOptions, mNumberOfMarketDepthRows
-ElseIf Not lDataStream.Contract Is Nothing Then
-ElseIf Not pContract Is Nothing Then
-    lDataStream.Contract = pContract
-End If
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
 
 If pKey = "" Then pKey = GenerateGUIDString
 Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
-lDataSource.Initialise pKey, lDataStream, getConfigSection(pContract, mOptions, pKey, mNumberOfMarketDepthRows)
 
-lDataStream.AddDataSource lDataSource
+Dim lConfig As ConfigurationSection
+If pIsRecoverable Then Set lConfig = getConfigSection(pKey)
+lDataSource.Initialise Me, pKey, pContractFuture, mOptions, pIndexToUse, pUseExistingDataStream, lConfig
 
 mDataSources.Add lDataSource, pKey
 
@@ -253,20 +264,59 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Friend Function GetMarketDataStream( _
+                ByVal pContractFuture As IFuture, _
+                Optional ByVal pIndexToUse As Long = -1, _
+                Optional ByVal pUseExistingDataStream As Boolean, _
+                Optional ByVal pSimulatedClock As Clock) As MarketDataStream
+Const ProcName As String = "GetMarketDataStream"
+On Error GoTo Err
+
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
+AssertArgument pContractFuture.IsAvailable, "pContractFuture must be IsAvailable"
+
+Dim lIndex As Long
+Dim lContract As IContract
+Set lContract = pContractFuture.Value
+lIndex = getDataStreamIndex(lContract.Specifier, pIndexToUse, pUseExistingDataStream)
+If lIndex = -1 Then Exit Function
+
+Dim lDataStream As MarketDataStream
+Set lDataStream = mStreamTable(lIndex).MarketDataStream
+If lDataStream Is Nothing Then
+    Set lDataStream = New MarketDataStream
+    Set mStreamTable(lIndex).MarketDataStream = lDataStream
+    
+    Dim lClock As Clock
+    If Not pSimulatedClock Is Nothing Then
+        Set lClock = pSimulatedClock
+    ElseIf mOptions And MarketDataSourceOptUseExchangeTimeZone Then
+        Set lClock = GetClock(lContract.TimezoneName)
+    Else
+        Set lClock = GetClock("")
+    End If
+
+    lDataStream.Initialise Me, pContractFuture, lIndex, mOptions, mNumberOfMarketDepthRows, lClock
+End If
+
+Set GetMarketDataStream = lDataStream
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub Initialise( _
                 ByVal pFactory As IMarketDataFactory, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pNumberOfMarketDepthRows As Long, _
-                ByVal pConfig As ConfigurationSection)
+                ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mFactory = pFactory
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
-
-Set mConfig = pConfig
-If Not mConfig Is Nothing Then LoadFromConfig mConfig
 
 Exit Sub
 
@@ -278,67 +328,26 @@ Friend Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Dim lCs As ConfigurationSection
-Dim lDataSource As IMarketDataSource
+Assert Not pConfig Is Nothing, "pConfig Is Nothing"
 
+gLogger.Log "Loading market data sources from config", ProcName, ModuleName
+
+Set mConfig = pConfig
+
+Dim lCs As ConfigurationSection
 For Each lCs In mConfig
+    gLogger.Log "Loading market data source: " & lCs.InstanceQualifier, ProcName, ModuleName
     Dim lContractConfig As ConfigurationSection
     Set lContractConfig = lCs.GetConfigurationSection(ConfigSectionContract)
     If Not lContractConfig Is Nothing Then
-        CreateMarketDataSource LoadContractFromConfig(lContractConfig), _
+        CreateMarketDataSource CreateFuture(LoadContractFromConfig(lContractConfig)), _
+                                lCs.InstanceQualifier, _
                                 Nothing, _
-                                lCs.GetSetting(ConfigSettingKey), _
-                                Nothing
+                                True
     End If
 Next
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "NotifyError"
-On Error GoTo Err
-
-mStreamTable(pStreamId).MarketDataStream.NotifyError pErrorCode, pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "NotifyMarketDataError"
-On Error GoTo Err
-
-mStreamTable(pStreamId).MarketDataStream.NotifyMarketDataError pErrorCode, pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "NotifyMarketDepthError"
-On Error GoTo Err
-
-mStreamTable(pStreamId).MarketDataStream.NotifyMarketDataError pErrorCode, pErrorMessage
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyTick(ev As GenericTickEventData)
-Const ProcName As String = "NotifyTick"
-On Error GoTo Err
-
-mStreamTable(ev.StreamId).MarketDataStream.NotifyTick ev
+gLogger.Log "Loaded market data sources", ProcName, ModuleName
 
 Exit Sub
 
@@ -351,7 +360,9 @@ Const ProcName As String = "ReleaseStream"
 On Error GoTo Err
 
 releaseStreamTableEntry pDataStream.StreamId
-If Not pDataStream.Contract Is Nothing Then mStreamMap.Remove pDataStream.Contract.Specifier
+Dim lContract As IContract
+Set lContract = pDataStream.ContractFuture.Value
+mStreamMap.Remove lContract.Specifier
 
 Exit Sub
 
@@ -384,12 +395,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub requestMarketData(ByVal pDataStream As MarketDataStream)
+Friend Sub RequestMarketData(ByVal pDataStream As MarketDataStream)
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
 Assert mStreamTable(pDataStream.StreamId).TickStream Is Nothing, "Market data has already been requested"
-Set mStreamTable(pDataStream.StreamId).TickStream = mFactory.CreateMarketDataStream(pDataStream.Contract, Me, Me, pDataStream.StreamId)
+Set mStreamTable(pDataStream.StreamId).TickStream = mFactory.CreateMarketDataStream(pDataStream.ContractFuture, Me, pDataStream.StreamId)
+mStreamTable(pDataStream.StreamId).TickStream.AddGenericTickListener Me
+mStreamTable(pDataStream.StreamId).TickStream.AddStateChangeListener Me
 
 Exit Sub
 
@@ -402,19 +415,8 @@ Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
 
 Assert mStreamTable(pDataStream.StreamId).DepthStream Is Nothing, "Market depth has already been requested"
-Set mStreamTable(pDataStream.StreamId).DepthStream = mFactory.CreateMarketDepthStream(pDataStream.Contract, pNumberOfRows, Me, Me, pDataStream.StreamId)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub SetContract(ByVal pStreamId As Long, pContract As IContract)
-Const ProcName As String = "SetContract"
-On Error GoTo Err
-
-If mStreamTable(pStreamId).MarketDataStream.Contract Is Nothing Then mStreamTable(pStreamId).MarketDataStream.Contract = pContract
+Set mStreamTable(pDataStream.StreamId).DepthStream = mFactory.CreateMarketDepthStream(pDataStream.ContractFuture, pNumberOfRows, Me, pDataStream.StreamId)
+mStreamTable(pDataStream.StreamId).DepthStream.AddGenericTickListener Me
 
 Exit Sub
 
@@ -426,27 +428,28 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function allocateStreamTableEntry() As Long
+Private Function allocateStreamTableEntry(Optional ByVal pIndex As Long = NullIndex) As Long
 Const ProcName As String = "allocateStreamTableEntry"
 On Error GoTo Err
 
-If mNextStreamTableIndex <= UBound(mStreamTable) Then
+If pIndex <> NullIndex Then
+    ensureTableSpace pIndex
+    allocateStreamTableEntry = pIndex
+ElseIf findNextFreeEntryInCurrentSpace Then
     allocateStreamTableEntry = mNextStreamTableIndex
-    mNextStreamTableIndex = mNextStreamTableIndex + 1
 ElseIf mFirstFreeStreamTableIndex <> NullIndex Then
     allocateStreamTableEntry = mFirstFreeStreamTableIndex
     mFirstFreeStreamTableIndex = mStreamTable(mFirstFreeStreamTableIndex).Next
     If mFirstFreeStreamTableIndex = NullIndex Then mLastFreeStreamTableIndex = NullIndex
 Else
-    Dim lNewBound As Long
-    Assert UBound(mStreamTable) < mFactory.MaxStreamId, "Cannot allocate Stream table entry - table is full"
-    lNewBound = 2 * (UBound(mStreamTable) + 1) - 1
-    If lNewBound > mFactory.MaxStreamId Then lNewBound = mFactory.MaxStreamId
-    ReDim Preserve mStreamTable(lNewBound) As StreamTableEntry
+    ensureTableSpace mNextStreamTableIndex
     allocateStreamTableEntry = mNextStreamTableIndex
-    mNextStreamTableIndex = mNextStreamTableIndex + 1
 End If
 
+Assert Not mStreamTable(allocateStreamTableEntry).InUse, "Stream table entry already in use"
+Assert allocateStreamTableEntry <= mFactory.MaxStreamId, "Max stream id exceeded"
+
+mStreamTable(allocateStreamTableEntry).InUse = True
 mStreamTable(allocateStreamTableEntry).Next = NullIndex
 
 Exit Function
@@ -455,22 +458,53 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub ensureTableSpace(ByVal pIndex As Long)
+Const ProcName As String = "ensureTableSpace"
+On Error GoTo Err
+
+Do While pIndex > UBound(mStreamTable)
+    ReDim Preserve mStreamTable(2 * (UBound(mStreamTable) + 1) - 1) As StreamTableEntry
+Loop
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function findNextFreeEntryInCurrentSpace() As Boolean
+Const ProcName As String = "findNextFreeEntryInCurrentSpace"
+On Error GoTo Err
+
+Dim lFound As Boolean
+lFound = False
+
+Do While mNextStreamTableIndex <= UBound(mStreamTable)
+    If Not mStreamTable(mNextStreamTableIndex).InUse Then
+        lFound = True
+        Exit Do
+    End If
+    mNextStreamTableIndex = mNextStreamTableIndex + 1
+Loop
+
+If mNextStreamTableIndex > mFactory.MaxStreamId Then lFound = False
+findNextFreeEntryInCurrentSpace = lFound
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function getConfigSection( _
-                Optional ByVal pContract As IContract, _
-                Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
-                Optional ByVal pKey As String, _
-                Optional ByVal pNumberOfMarketDepthRows As Long) As ConfigurationSection
+                ByVal pKey As String) As ConfigurationSection
 Const ProcName As String = "getConfigSection"
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Function
 
-
 Dim lConfig As ConfigurationSection
 Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(" & pKey & ")")
-
-If Not pContract Is Nothing Then SaveContractToConfig pContract, lConfig.AddConfigurationSection(ConfigSectionContract)
-lConfig.SetSetting ConfigSettingKey, pKey
 
 Set getConfigSection = lConfig
 
@@ -492,10 +526,10 @@ Dim lIndex As Long
 If mStreamMap.Contains(pContractSpec) Then
     lIndex = mStreamMap.Item(pContractSpec)
 ElseIf pIndexToUse >= 0 Then
-    lIndex = pIndexToUse
+    lIndex = allocateStreamTableEntry(pIndexToUse)
     mStreamMap.Add pContractSpec, lIndex
 ElseIf pUseExistingDataStream Then
-    lIndex = -1
+    lIndex = NullIndex
 Else
     lIndex = allocateStreamTableEntry
     mStreamMap.Add pContractSpec, lIndex
@@ -509,22 +543,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub releaseStreamTableEntry(ByVal pindex As Long)
+Private Sub releaseStreamTableEntry(ByVal pIndex As Long)
 Const ProcName As String = "releaseStreamTableEntry"
 
 On Error GoTo Err
 
 If mLastFreeStreamTableIndex <> NullIndex Then
-    mStreamTable(mLastFreeStreamTableIndex).Next = pindex
+    mStreamTable(mLastFreeStreamTableIndex).Next = pIndex
 Else
-    mFirstFreeStreamTableIndex = pindex
+    mFirstFreeStreamTableIndex = pIndex
 End If
-mLastFreeStreamTableIndex = pindex
+mLastFreeStreamTableIndex = pIndex
 
-mStreamTable(pindex).Next = NullIndex
-Set mStreamTable(pindex).MarketDataStream = Nothing
-Set mStreamTable(pindex).TickStream = Nothing
-Set mStreamTable(pindex).DepthStream = Nothing
+mStreamTable(pIndex).Next = NullIndex
+mStreamTable(pIndex).InUse = False
+Set mStreamTable(pIndex).MarketDataStream = Nothing
+Set mStreamTable(pIndex).TickStream = Nothing
+Set mStreamTable(pIndex).DepthStream = Nothing
 
 Exit Sub
 

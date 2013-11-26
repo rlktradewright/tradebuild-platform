@@ -10,7 +10,7 @@ Attribute VB_Name = "ContractStreamMap"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -76,7 +76,7 @@ Friend Sub Add( _
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-mStreamIndexes.Add pStreamId, getKey(pContractSpec)
+mStreamIndexes.Add pStreamId, pContractSpec.Key
 
 Exit Sub
 
@@ -90,7 +90,7 @@ Friend Function Contains( _
 Const ProcName As String = "Contains"
 On Error GoTo Err
 
-Contains = mStreamIndexes.Contains(getKey(pContractSpec))
+Contains = mStreamIndexes.Contains(pContractSpec.Key)
 
 Exit Function
 
@@ -103,7 +103,7 @@ Public Function Item( _
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Item = mStreamIndexes.Item(getKey(pContractSpec))
+Item = mStreamIndexes.Item(pContractSpec.Key)
 
 Exit Function
 
@@ -123,7 +123,7 @@ Friend Sub Remove( _
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mStreamIndexes.Remove getKey(pContractSpec)
+mStreamIndexes.Remove pContractSpec.Key
 
 Exit Sub
 
@@ -135,9 +135,5 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function getKey(ByVal pContractSpec As IContractSpecifier) As String
-getKey = pContractSpec.ToString
-End Function
 
 
