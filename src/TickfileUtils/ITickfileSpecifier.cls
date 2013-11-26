@@ -60,6 +60,42 @@ Private Const ModuleName                            As String = "ITickfileSpecif
 ' Properties
 '@================================================================================
 
+Public Property Let ContractFuture(ByVal RHS As IFuture)
+End Property
+
+Public Property Get ContractFuture() As IFuture
+End Property
+
+Public Property Let EntireSession(ByVal RHS As Boolean)
+End Property
+
+Public Property Get EntireSession() As Boolean
+End Property
+
+Public Property Let Filename(ByVal RHS As String)
+End Property
+
+Public Property Get Filename() As String
+End Property
+
+Public Property Let FromDate(ByVal RHS As Date)
+End Property
+
+Public Property Get FromDate() As Date
+End Property
+
+Public Property Let TickfileFormatID(ByVal RHS As String)
+End Property
+
+Public Property Get TickfileFormatID() As String
+End Property
+
+Public Property Let ToDate(ByVal RHS As Date)
+End Property
+
+Public Property Get ToDate() As Date
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

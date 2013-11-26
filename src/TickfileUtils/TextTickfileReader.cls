@@ -49,7 +49,7 @@ Private Const NUM_RECORD_TABLE_ENTRIES As Long = 16
 ' Enums
 '================================================================================
 
-Public Type RecordTableEntry
+Private Type RecordTableEntry
     Processed As Boolean
     Tick As FileTick
 End Type
@@ -77,8 +77,6 @@ Private mNextFreeRecordIndex                    As Long
 Private mPendingImpliedVolumeTick               As Boolean
 
 Private mCurrentTimestamp                       As Double
-
-Private mRecordsRead                            As Long
 
 Private mTicksReplayed                          As Long
 
@@ -163,26 +161,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get ITickfileReader_FirstTickFileTime() As Date
-Const ProcName As String = "ITickfileReader_FirstTickFileTime"
-On Error GoTo Err
-ITickfileReader_FirstTickFileTime = FirstTickFileTime
-Exit Sub
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 Private Function ITickfileReader_PrepareTickfile(ByVal pTickfileSpec As ITickfileSpecifier) As Boolean
 Const ProcName As String = "ITickfileReader_PrepareTickfile"
 On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
+gLogger.Log "Preparing tickfile " & mTickfileSpec.Filename, ProcName, ModuleName
+
 Set mFileReader = New FileReader
 If Not mFileReader.Initialise(mTickfileSpec) Then
     NotifyEvent mFileReader.EventCode, mFileReader.EventMessage
     ITickfileReader_PrepareTickfile = False
 Else
-    mReplayMonitor.NotifyReady mTickfileSpec, mFileReader.ContractSpecifier
+    mReplayMonitor.NotifyReady Me, mTickfileSpec, mFileReader.ContractSpecifier
     ITickfileReader_PrepareTickfile = True
 End If
 
@@ -262,24 +253,6 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Get FirstTickFileTime() As Date
-Const ProcName As String = "FirstTickFileTime"
-On Error GoTo Err
-
-If mFileReader.TickfileFormat = TickfileTradeBuild And _
-    mFileReader.TickfileVersion = TickFileVersions.TradeBuildV5 _
-Then
-    FirstTickFileTime = mFileReader.FirstTickFileTime
-Else
-    FirstTickFileTime = convertLocalDateToExchangeTimezone(mFileReader.FirstTickFileTime)
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
@@ -315,24 +288,6 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function convertLocalDateToExchangeTimezone(ByVal pTime As Date) As Date
-Const ProcName As String = "convertLocalDateToExchangeTimezone"
-On Error GoTo Err
-
-Static sTimezone As TimeZone
-If sTimezone Is Nothing Then
-    Dim lContract As IContract
-    Set lContract = mTickfileSpec.ContractFuture.Value
-    Set sTimezone = GetTimeZone(lContract.TimezoneName)
-End If
-convertLocalDateToExchangeTimezone = ConvertDateUTCToTZ(ConvertDateLocalToUTC(pTime), sTimezone)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Private Sub findFirstRecord()
 Const ProcName As String = "findFirstRecord"
 On Error GoTo Err
@@ -351,7 +306,7 @@ On Error GoTo Err
 
 fromFilterRecord = True
 If mTickfileSpec.FromDate <> 0 And _
-    mRecordTable(mCurrentRecordIndex).Timestamp < mTickfileSpec.FromDate Then
+    mRecordTable(mCurrentRecordIndex).Tick.Timestamp < mTickfileSpec.FromDate Then
     fromFilterRecord = False
 End If
 
@@ -364,22 +319,6 @@ End Function
 Private Function incrementIndex(ByVal pIndex As Long) As Long
 incrementIndex = (pIndex + 1) Mod NUM_RECORD_TABLE_ENTRIES
 End Function
-
-Private Sub initialiseRecordTableEntry(ByVal index As Long)
-With mRecordTable(index)
-    .Processed = False
-    .MDMarketMaker = ""
-    .MDOperation = 0
-    .MDposition = 0
-    .TickPrice = 0#
-    .MDSide = 0
-    .TickSize = 0
-    .TickPrice = 0#
-    .TickSize = 0
-    .TickType = FileTickTypes.Unknown
-    .Timestamp = 0
-End With
-End Sub
 
 Private Function isImpliedTrade(ByVal recordIndex As Long, _
                                 ByVal prevTrade As Double, _
@@ -401,18 +340,18 @@ On Error GoTo Err
 If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
     mFileReader.TickfileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 
-If mRecordTable(recordIndex).TickType <> _
+If mRecordTable(recordIndex).Tick.TickType <> _
                     FileTickTypes.Last Then Exit Function
                     
-Dim currTradePrice As Double: currTradePrice = mRecordTable(recordIndex).TickPrice
+Dim currTradePrice As Double: currTradePrice = mRecordTable(recordIndex).Tick.TickPrice
 If currTradePrice <> prevTrade Then Exit Function
 
 Dim laIndex As Long: laIndex = recordIndex
 If Not lookAhead(laIndex) Then Exit Function
 
-Dim laTickType As FileTickTypes: laTickType = mRecordTable(laIndex).TickType
-Dim laSize As Double: laSize = mRecordTable(laIndex).TickSize
-Dim currSize As Double: currSize = mRecordTable(recordIndex).TickSize
+Dim laTickType As FileTickTypes: laTickType = mRecordTable(laIndex).Tick.TickType
+Dim laSize As Double: laSize = mRecordTable(laIndex).Tick.TickSize
+Dim currSize As Double: currSize = mRecordTable(recordIndex).Tick.TickSize
 
 Select Case laTickType
 Case FileTickTypes.AskSize
@@ -435,39 +374,33 @@ Private Function lookAhead(ByRef pLookAheadIndex As Long) As Boolean
 Const ProcName As String = "lookAhead"
 On Error GoTo Err
 
-lookAhead = True
-
-If pLookAheadIndex = -1 Then
-    pLookAheadIndex = incrementIndex(mCurrentRecordIndex)
+pLookAheadIndex = incrementIndex(pLookAheadIndex)
+If pLookAheadIndex <> mNextFreeRecordIndex Then
+    lookAhead = True
 Else
-    pLookAheadIndex = incrementIndex(pLookAheadIndex)
+    lookAhead = readRecord(pLookAheadIndex)
 End If
-
-If pLookAheadIndex <> mNextFreeRecordIndex Then Exit Function
-
-lookAhead = readRecord(pLookAheadIndex)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 Private Function lookForTick(ByVal pTickType As TickTypes, ByVal pCurrentTime As Date) As Boolean
 Const ProcName As String = "lookForTick"
 On Error GoTo Err
 
-Dim lookAheadRecord As Long
+Dim lookAheadIndex As Long
 
 If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
     mFileReader.TickfileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 
-lookAheadRecord = -1
+lookAheadIndex = mCurrentRecordIndex
 
-Do While lookAhead(lookAheadRecord)
-    If mRecordTable(lookAheadRecord).TickType = pTickType Then
-        If (mRecordTable(lookAheadRecord).Timestamp - pCurrentTime) < 1.01 / 86400# _
+Do While lookAhead(lookAheadIndex)
+    If mRecordTable(lookAheadIndex).Tick.TickType = pTickType Then
+        If (mRecordTable(lookAheadIndex).Tick.Timestamp - pCurrentTime) < 1.01 / 86400# _
         Then
             lookForTick = True
         End If
@@ -500,236 +433,31 @@ ev.EventMessage = pMessage
 mReplayMonitor.NotifyEvent ev
 End Sub
 
-Private Function parseCrescendoV1Record( _
-                ByRef pDataFields() As String, _
-                ByRef pRecordEntry1 As RecordTableEntry, _
-                ByRef pRecordEntry2 As RecordTableEntry) As Long
-With pRecordEntry1
-    .Timestamp = convertLocalDateToExchangeTimezone(CDate(pDataFields(TickfileFieldsV1.TimestampString)))
-    .TickType = pDataFields(TickfileFieldsV1.TickType)
-    
-    Select Case .TickType
-    Case FileTickTypes.Bid
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-    Case FileTickTypes.BidSize
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
-    Case FileTickTypes.Ask
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-    Case FileTickTypes.AskSize
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
-    Case FileTickTypes.Last
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
-    Case FileTickTypes.LastSize
-        ' shouldn't ever get this
-    Case FileTickTypes.High
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-    Case FileTickTypes.Low
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-    Case FileTickTypes.PrevClose
-        .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-    Case FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
-    Case FileTickTypes.LastSizeCorrection
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
-    End Select
-End With
-
-parseCrescendoV1Record = 1
-End Function
-
-Private Function parseCrescendoV2Record( _
-                ByRef pDataFields() As String, _
-                ByRef pRecordEntry1 As RecordTableEntry, _
-                ByRef pRecordEntry2 As RecordTableEntry) As Long
-With pRecordEntry1
-    .Timestamp = convertLocalDateToExchangeTimezone(CDate(pDataFields(TickfileFieldsV2.Timestamp)))
-    .TickType = pDataFields(TickfileFieldsV2.TickType)
-    
-    Select Case .TickType
-    Case FileTickTypes.Bid
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-        If pDataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
-            .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-        End If
-    Case FileTickTypes.BidSize
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-    Case FileTickTypes.Ask
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-        If pDataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
-            .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-        End If
-    Case FileTickTypes.AskSize
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-    Case FileTickTypes.Last
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-    Case FileTickTypes.LastSize
-        ' shouldn't ever get this
-    Case FileTickTypes.High
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-    Case FileTickTypes.Low
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-    Case FileTickTypes.PrevClose
-        .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-    Case FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-    Case FileTickTypes.LastSizeCorrection
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
-    End Select
-End With
-parseCrescendoV2Record = 1
-End Function
-
-Private Function parseESignalRecord( _
-                ByRef pDataFields() As String, _
-                ByRef pRecordEntry1 As RecordTableEntry, _
-                ByRef pRecordEntry2 As RecordTableEntry) As Long
-parseESignalRecord = 1
-With pRecordEntry1
-    .Timestamp = convertLocalDateToExchangeTimezone( _
-                                            DateSerial("20" & Left$(pDataFields(ESignalTickFileFields.TimestampDate), 2), _
-                                                    Mid$(pDataFields(ESignalTickFileFields.TimestampDate), 3, 2), _
-                                                    Right$(pDataFields(ESignalTickFileFields.TimestampDate), 2)) + _
-                                            TimeSerial(Left$(pDataFields(ESignalTickFileFields.TimestampTime), 2), _
-                                                    Mid$(pDataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
-                                                    Right$(pDataFields(ESignalTickFileFields.TimestampTime), 2)))
-    
-    Dim tickTypeStr As String
-    tickTypeStr = pDataFields(ESignalTickFileFields.TickType)
-    
-    Select Case tickTypeStr
-    Case ESIGNAL_TICK_TRADE
-        .TickType = FileTickTypes.Last
-        .TickPrice = pDataFields(ESignalTickFileFields.LastPrice)
-        .TickSize = pDataFields(ESignalTickFileFields.LastSize)
-    Case ESIGNAL_TICK_QUOTE
-    
-        Static esPrevBid As Double
-        Static esPrevBidSize As Long
-        Static esPrevAsk As Double
-        Static esPrevAskSize As Long
-        
-        If pDataFields(ESignalTickFileFields.BidPrice) <> esPrevBid Or _
-                pDataFields(ESignalTickFileFields.BidSize) <> esPrevBidSize _
-        Then
-            .TickType = FileTickTypes.Bid
-            .TickPrice = pDataFields(ESignalTickFileFields.BidPrice)
-            .TickSize = pDataFields(ESignalTickFileFields.BidSize)
-            If pDataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
-                    pDataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
-            Then
-                parseESignalRecord = 2
-                With pRecordEntry2
-                    .Timestamp = pRecordEntry1.Timestamp
-                    .TickType = FileTickTypes.Ask
-                    .TickPrice = pDataFields(ESignalTickFileFields.AskPrice)
-                    .TickSize = pDataFields(ESignalTickFileFields.AskSize)
-                End With
-            End If
-        Else
-            If pDataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
-                    pDataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
-            Then
-                .TickType = FileTickTypes.Ask
-                .TickPrice = pDataFields(ESignalTickFileFields.AskPrice)
-                .TickSize = pDataFields(ESignalTickFileFields.AskSize)
-            End If
-        End If
-        esPrevBid = pDataFields(ESignalTickFileFields.BidPrice)
-        esPrevBidSize = pDataFields(ESignalTickFileFields.BidSize)
-        esPrevAsk = pDataFields(ESignalTickFileFields.AskPrice)
-        esPrevAskSize = pDataFields(ESignalTickFileFields.AskSize)
-    End Select
-End With
-End Function
-
-Private Function parseTradeBuildRecord( _
-                ByRef pDataFields() As String, _
-                ByRef pRecordEntry1 As RecordTableEntry, _
-                ByRef pRecordEntry2 As RecordTableEntry) As Long
-With pRecordEntry1
-    If mFileReader.TickfileVersion = TickFileVersions.TradeBuildV5 Then
-        .Timestamp = CDate(pDataFields(TickfileFieldsV3.Timestamp))
-    Else
-        ' earlier versions were recorded in local time, so convert to timezone
-        .Timestamp = convertLocalDateToExchangeTimezone(CDate(pDataFields(TickfileFieldsV3.Timestamp)))
-    End If
-    
-    Dim tickTypeStr As String
-    tickTypeStr = pDataFields(TickfileFieldsV3.TickType)
-    
-    Select Case tickTypeStr
-    Case TICK_MARKET_DEPTH_RESET
-        .TickType = FileTickTypes.MarketDepthReset
-    Case TICK_MARKET_DEPTH
-        .TickType = FileTickTypes.MarketDepth
-        .MDposition = pDataFields(TickfileFieldsV3.MDposition)
-        .MDMarketMaker = pDataFields(TickfileFieldsV3.MDMarketMaker)
-        .MDOperation = pDataFields(TickfileFieldsV3.MDOperation)
-        .MDSide = pDataFields(TickfileFieldsV3.MDSide)
-        .TickPrice = pDataFields(TickfileFieldsV3.MDPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.MDSize)
-    Case TICK_BID
-        .TickType = FileTickTypes.Bid
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
-    Case TICK_ASK
-        .TickType = FileTickTypes.Ask
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
-    Case TICK_TRADE
-        .TickType = FileTickTypes.Last
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
-    Case TICK_HIGH
-        .TickType = FileTickTypes.High
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-    Case TICK_LOW
-        .TickType = FileTickTypes.Low
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-    Case TICK_CLOSE
-        .TickType = FileTickTypes.PrevClose
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-    Case TICK_VOLUME
-        .TickType = FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV3.Volume)
-    Case TICK_OPEN_INTEREST
-        .TickType = FileTickTypes.OpenInterest
-        .TickSize = pDataFields(TickfileFieldsV3.OpenInterest)
-    Case TICK_OPEN
-        .TickType = FileTickTypes.SessionOpen
-        .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-    End Select
-End With
-parseTradeBuildRecord = 1
-End Function
-
 Private Sub processDuplicateLast()
 Const ProcName As String = "processDuplicateLast"
 On Error GoTo Err
 
-Dim lookAheadRecord As Long
+Dim lookAheadIndex As Long
 
 If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
     mFileReader.TickfileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
-If mRecordTable(mCurrentRecordIndex).TickType <> _
+If mRecordTable(mCurrentRecordIndex).Tick.TickType <> _
                     FileTickTypes.Last Then Exit Sub
                     
 ' these duplicates only occur when the trade price has changed
-If mRecordTable(mCurrentRecordIndex).TickPrice = mPrevLast Then Exit Sub
+If mRecordTable(mCurrentRecordIndex).Tick.TickPrice = mPrevLast Then Exit Sub
 
-lookAheadRecord = -1
+lookAheadIndex = mCurrentRecordIndex
 
-Do While lookAhead(lookAheadRecord)
-    If mRecordTable(lookAheadRecord).TickType = FileTickTypes.Volume Then Exit Sub
+Do While lookAhead(lookAheadIndex)
+    If mRecordTable(lookAheadIndex).Tick.TickType = FileTickTypes.Volume Then Exit Sub
     
-    If mRecordTable(lookAheadRecord).TickType = FileTickTypes.Last Then
-        If mRecordTable(lookAheadRecord).TickPrice = mRecordTable(mCurrentRecordIndex).TickPrice And _
-            mRecordTable(lookAheadRecord).TickSize = mRecordTable(mCurrentRecordIndex).TickSize And _
-            mRecordTable(lookAheadRecord).Timestamp - mRecordTable(mCurrentRecordIndex).Timestamp < 1.01 / 86400# _
+    If mRecordTable(lookAheadIndex).Tick.TickType = FileTickTypes.Last Then
+        If mRecordTable(lookAheadIndex).Tick.TickPrice = mRecordTable(mCurrentRecordIndex).Tick.TickPrice And _
+            mRecordTable(lookAheadIndex).Tick.TickSize = mRecordTable(mCurrentRecordIndex).Tick.TickSize And _
+            mRecordTable(lookAheadIndex).Tick.Timestamp - mRecordTable(mCurrentRecordIndex).Tick.Timestamp < 1.01 / 86400# _
         Then
-            mRecordTable(lookAheadRecord).Processed = True
+            mRecordTable(lookAheadIndex).Processed = True
         End If
         Exit Sub
     End If
@@ -745,61 +473,60 @@ Private Sub processLastSizeCorrection()
 Const ProcName As String = "processLastSizeCorrection"
 On Error GoTo Err
 
-Dim lookAheadRecord As Long
-Dim lookAheadAnotherRecord As Long
-
 If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
     mFileReader.TickfileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
-If mRecordTable(mCurrentRecordIndex).TickType <> _
+If mRecordTable(mCurrentRecordIndex).Tick.TickType <> _
                     FileTickTypes.Last Then Exit Sub
                     
-lookAheadRecord = -1
+Dim lookAheadIndex As Long
+lookAheadIndex = mCurrentRecordIndex
 
-Do While lookAhead(lookAheadRecord)
+Do While lookAhead(lookAheadIndex)
 
-    Select Case mRecordTable(lookAheadRecord).TickType
+    Select Case mRecordTable(lookAheadIndex).Tick.TickType
     Case FileTickTypes.Last
     
-        If isImpliedTrade(lookAheadRecord, _
-                        mRecordTable(mCurrentRecordIndex).TickPrice, _
-                        mRecordTable(mCurrentRecordIndex).TickSize, _
+        If isImpliedTrade(lookAheadIndex, _
+                        mRecordTable(mCurrentRecordIndex).Tick.TickPrice, _
+                        mRecordTable(mCurrentRecordIndex).Tick.TickSize, _
                         mPrevBid, _
                         mPrevBidSize, _
                         mPrevAsk, _
                         mPrevAskSize) Then Exit Sub
         
-        If mRecordTable(lookAheadRecord).TickPrice = _
-            mRecordTable(mCurrentRecordIndex).TickPrice And _
-            mRecordTable(lookAheadRecord).Timestamp - mRecordTable(mCurrentRecordIndex).Timestamp < 1.01 / 86400# _
+        If mRecordTable(lookAheadIndex).Tick.TickPrice = _
+            mRecordTable(mCurrentRecordIndex).Tick.TickPrice And _
+            mRecordTable(lookAheadIndex).Tick.Timestamp - mRecordTable(mCurrentRecordIndex).Tick.Timestamp < 1.01 / 86400# _
         Then
-            lookAheadAnotherRecord = lookAheadRecord
-            Do While lookAhead(lookAheadAnotherRecord)
-                If mRecordTable(lookAheadAnotherRecord).TickType <> FileTickTypes.High And _
-                    mRecordTable(lookAheadAnotherRecord).TickType <> FileTickTypes.Low And _
-                    mRecordTable(lookAheadAnotherRecord).TickType <> FileTickTypes.Volume _
+            Dim lookAheadAnotherIndex As Long
+            lookAheadAnotherIndex = lookAheadIndex
+            Do While lookAhead(lookAheadAnotherIndex)
+                If mRecordTable(lookAheadAnotherIndex).Tick.TickType <> FileTickTypes.High And _
+                    mRecordTable(lookAheadAnotherIndex).Tick.TickType <> FileTickTypes.Low And _
+                    mRecordTable(lookAheadAnotherIndex).Tick.TickType <> FileTickTypes.Volume _
                 Then
                     Exit Do
                 End If
-                If mRecordTable(lookAheadAnotherRecord).TickType = FileTickTypes.Volume And _
-                    mVolume + mRecordTable(lookAheadRecord).TickSize = mRecordTable(lookAheadAnotherRecord).TickSize _
+                If mRecordTable(lookAheadAnotherIndex).Tick.TickType = FileTickTypes.Volume And _
+                    mVolume + mRecordTable(lookAheadIndex).Tick.TickSize = mRecordTable(lookAheadAnotherIndex).Tick.TickSize _
                 Then
-                    mRecordTable(mCurrentRecordIndex).TickSize = _
-                        mRecordTable(lookAheadRecord).TickSize
-                    mRecordTable(lookAheadRecord).Processed = True
+                    mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+                        mRecordTable(lookAheadIndex).Tick.TickSize
+                    mRecordTable(lookAheadIndex).Processed = True
                     Exit Sub
                 End If
             Loop
-            mRecordTable(mCurrentRecordIndex).TickSize = _
-                mRecordTable(mCurrentRecordIndex).TickSize + _
-                mRecordTable(lookAheadRecord).TickSize
-            mRecordTable(lookAheadRecord).Processed = True
+            mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+                mRecordTable(mCurrentRecordIndex).Tick.TickSize + _
+                mRecordTable(lookAheadIndex).Tick.TickSize
+            mRecordTable(lookAheadIndex).Processed = True
         End If
         Exit Sub
     Case FileTickTypes.LastSizeCorrection
-        mRecordTable(mCurrentRecordIndex).TickSize = _
-            mRecordTable(mCurrentRecordIndex).TickSize + _
-            mRecordTable(lookAheadRecord).TickSize
-        mRecordTable(lookAheadRecord).Processed = True
+        mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+            mRecordTable(mCurrentRecordIndex).Tick.TickSize + _
+            mRecordTable(lookAheadIndex).Tick.TickSize
+        mRecordTable(lookAheadIndex).Processed = True
         Exit Sub
     End Select
     
@@ -809,7 +536,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Function processTickData(ByVal pNotifyTicks As Boolean) As Boolean
@@ -820,7 +546,7 @@ Dim ev As GenericTickEventData
 Set ev.Source = Me
 ev.StreamId = mStreamId
 
-With mRecordTable(mCurrentRecordIndex)
+With mRecordTable(mCurrentRecordIndex).Tick
     mCurrentTimestamp = .Timestamp
     ev.Tick.MarketMaker = .MDMarketMaker
     ev.Tick.Operation = .MDOperation
@@ -905,9 +631,9 @@ With mRecordTable(mCurrentRecordIndex)
     Case FileTickTypes.OpenInterest
         ev.Tick.TickType = TickTypeOpenInterest
     End Select
-    .Processed = True
 End With
-    
+mRecordTable(mCurrentRecordIndex).Processed = True
+
 If pNotifyTicks Then mDataConsumer.NotifyTick ev
 processTickData = True
 
@@ -921,20 +647,20 @@ Private Sub processVolume()
 Const ProcName As String = "processVolume"
 On Error GoTo Err
 
-Dim lookAheadRecord As Long
+Dim lookAheadIndex As Long
 
 If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
     mFileReader.TickfileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
 
-If mRecordTable(mCurrentRecordIndex).TickType <> FileTickTypes.Last Then Exit Sub
+If mRecordTable(mCurrentRecordIndex).Tick.TickType <> FileTickTypes.Last Then Exit Sub
                     
-mVolume = mVolume + mRecordTable(mCurrentRecordIndex).TickSize
+mVolume = mVolume + mRecordTable(mCurrentRecordIndex).Tick.TickSize
 
-lookAheadRecord = -1
+lookAheadIndex = mCurrentRecordIndex
 
-Do While lookAhead(lookAheadRecord)
-    If mRecordTable(lookAheadRecord).TickType = FileTickTypes.Volume Then Exit Sub
-    If mRecordTable(lookAheadRecord).TickType = FileTickTypes.Last Then Exit Do
+Do While lookAhead(lookAheadIndex)
+    If mRecordTable(lookAheadIndex).Tick.TickType = FileTickTypes.Volume Then Exit Sub
+    If mRecordTable(lookAheadIndex).Tick.TickType = FileTickTypes.Last Then Exit Do
 Loop
 mPendingImpliedVolumeTick = True
 
@@ -948,17 +674,16 @@ Private Function readNextFilteredTickRecord() As Boolean
 Const ProcName As String = "readNextFilteredTickRecord"
 On Error GoTo Err
 
-Do While ReadNextTickRecord
+If ReadNextTickRecord Then
     If toFilterRecord Then
         readNextFilteredTickRecord = True
-        Exit Do
-    Else
-        mReplayMonitor.NotifyReplayComplete mTicksReplayed
-        mCurrentTimestamp = 0
-        Exit Do
+        Exit Function
     End If
-    mCurrentRecordIndex = -1
-Loop
+End If
+
+mReplayMonitor.NotifyReplayComplete Me, mTicksReplayed
+mCurrentTimestamp = 0
+readNextFilteredTickRecord = False
 
 Exit Function
 
@@ -970,24 +695,11 @@ Private Function ReadNextTickRecord() As Boolean
 Const ProcName As String = "ReadNextTickRecord"
 On Error GoTo Err
 
-ReadNextTickRecord = True
-
 If mCurrentRecordIndex = -1 Then
-    If mFileReader Is Nothing Then
-        ReadNextTickRecord = False
-        Exit Function
-    End If
-ElseIf mCurrentRecordIndex <> mNextFreeRecordIndex Then
+    ReadNextTickRecord = readRecord(mCurrentRecordIndex)
+Else
     ' this means one or more look-ahead records are waiting to be processed
     ReadNextTickRecord = True
-    Exit Function
-End If
-    
-If Not readRecord(mCurrentRecordIndex) Then
-    mReplayMonitor.NotifyReplayComplete mTicksReplayed
-    mCurrentTimestamp = 0
-    ReadNextTickRecord = False
-    Exit Function
 End If
 
 Exit Function
@@ -1000,9 +712,6 @@ Private Function readRecord(ByRef pReturnedIndex As Long) As Boolean
 Const ProcName As String = "readRecord"
 On Error GoTo Err
 
-Dim lBuffer As String
-Dim lDataFields() As String
-
 ' make sure there's room for the parser to create two records if need be
 If mNextFreeRecordIndex = mCurrentRecordIndex Then Exit Function
 If incrementIndex(mNextFreeRecordIndex) = mCurrentRecordIndex Then Exit Function
@@ -1010,39 +719,15 @@ If incrementIndex(mNextFreeRecordIndex) = mCurrentRecordIndex Then Exit Function
 If Not mFileReader.MoveNext Then
     readRecord = False
     Exit Function
-Else
-    lBuffer = mFileReader.CurrentRecord
 End If
 
-mRecordsRead = mRecordsRead + 1
+mRecordTable(mNextFreeRecordIndex).Processed = False
+mRecordTable(mNextFreeRecordIndex).Tick = mFileReader.CurrentTick
 
-lDataFields = Split(lBuffer, ",", -1, vbTextCompare)
-
-Dim lIndex1 As Long: lIndex1 = mNextFreeRecordIndex
-Dim lIndex2 As Long: lIndex2 = incrementIndex(mNextFreeRecordIndex)
-initialiseRecordTableEntry lIndex1
-initialiseRecordTableEntry lIndex2
-
-pReturnedIndex = lIndex1
-
-Dim lNumRecordsAdded As Long
-Select Case mFileReader.TickfileVersion
-Case TradeBuildV3, TradeBuildV4, TradeBuildV5
-    lNumRecordsAdded = parseTradeBuildRecord(lDataFields, mRecordTable(lIndex1), mRecordTable(lIndex2))
-Case CrescendoV1
-    lNumRecordsAdded = parseCrescendoV1Record(lDataFields, mRecordTable(lIndex1), mRecordTable(lIndex2))
-Case CrescendoV2
-    lNumRecordsAdded = parseCrescendoV2Record(lDataFields, mRecordTable(lIndex1), mRecordTable(lIndex2))
-Case ESignal
-    lNumRecordsAdded = parseESignalRecord(lDataFields, mRecordTable(lIndex1), mRecordTable(lIndex2))
-End Select
-    
-Do While lNumRecordsAdded > 0
-    mNextFreeRecordIndex = incrementIndex(mNextFreeRecordIndex)
-    lNumRecordsAdded = lNumRecordsAdded - 1
-Loop
-    
+pReturnedIndex = mNextFreeRecordIndex
+mNextFreeRecordIndex = incrementIndex(mNextFreeRecordIndex)
 readRecord = True
+
 Exit Function
 
 Err:
@@ -1055,7 +740,7 @@ On Error GoTo Err
 
 toFilterRecord = True
 If mTickfileSpec.ToDate <> 0 And _
-    mRecordTable(mCurrentRecordIndex).Timestamp >= mTickfileSpec.ToDate Then
+    mRecordTable(mCurrentRecordIndex).Tick.Timestamp >= mTickfileSpec.ToDate Then
     toFilterRecord = False
     Exit Function
 End If

@@ -32,6 +32,7 @@ Option Explicit
 
 Implements DeferredAction
 Implements ITickfileWriter
+Implements StateChangeListener
 
 '================================================================================
 ' Events
@@ -55,13 +56,13 @@ Private Const ModuleName                As String = "TextTickfileWriter"
 ' Member variables
 '================================================================================
 
-Private mServiceProviderName As String
 Private mTickfileStore As TickfileStore
 
 Private mOutputMonitor As ITickfileOutputMonitor
 
 Private mTsOut As Scripting.TextStream
 
+Private mContractFuture As IFuture
 Private mContract As IContract
 
 Private mPath As String
@@ -77,12 +78,14 @@ Private mSessionBuilder As SessionBuilder
 Private WithEvents mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
+Private mReady As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-mPath = App.Path & "\TickFiles"
+mPath = ApplicationSettingsFolder & "\TickFiles"
 End Sub
 
 '================================================================================
@@ -90,31 +93,63 @@ End Sub
 '================================================================================
 
 Private Sub DeferredAction_run(ByVal data As Variant)
-mOutputMonitor.NotifyReady
+Const ProcName As String = "DeferredAction_run"
+On Error GoTo Err
+
+setReady
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
 ' ITickfileWriter Interface Members
 '================================================================================
 
-Private Sub ITickfileWriter_CloseOutputFile()
-Const ProcName As String = "ITickfileWriter_CloseOutputFile"
+Private Property Get ITickfileWriter_ContractFuture() As IFuture
+Set ITickfileWriter_ContractFuture = mContractFuture
+End Property
+
+Private Sub ITickfileWriter_Finish()
+Const ProcName As String = "ITickfileWriter_Finish"
 On Error GoTo Err
+
+Assert mReady, "Not ready"
+
 Finish
 mTickfileStore.DataWriterFinished Me
+
 Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Property Get ITickfileWriter_IsReady() As Boolean
+ITickfileWriter_IsReady = mReady
+End Property
+
 Private Sub ITickfileWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+Const ProcName As String = "ITickfileWriter_WriteComment"
+On Error GoTo Err
+
+Assert mReady, "Not ready"
+
 mSessionBuilder.SetSessionCurrentTime pTimestamp
 WriteComment pComment
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickfileWriter_WriteTick(Tick As GenericTick)
 Const ProcName As String = "ITickfileWriter_WriteTick"
 On Error GoTo Err
+
+Assert mReady, "Not ready"
 
 mSessionBuilder.SetSessionCurrentTime Tick.Timestamp
 writeTickfileLine formatTickData(Tick)
@@ -125,15 +160,48 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
+' StateChangeListener Interface Members
+'================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+Dim lState As FutureStates
+lState = ev.State
+
+If lState = FutureStateCompleted Then
+    Set mContract = mContractFuture.Value
+    setupSession
+    setReady
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' mSession Event Handlers
 '================================================================================
 
 Private Sub mSession_SessionEnded(ev As SessionEventData)
+Const ProcName As String = "mSession_SessionEnded"
+On Error GoTo Err
+
 If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
-WriteComment "Session ended at " & FormatTimestamp(mSession.CurrentSessionEndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
+Const ProcName As String = "mSession_SessionStarted"
+On Error GoTo Err
+
 Select Case mTickfileGranularity
 Case TickfileGranularityDay
     If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
@@ -148,7 +216,11 @@ Case TickfileGranularitySession
 Case TickfileGranularityExecution
     If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
 End Select
-WriteComment "Session started at " & FormatTimestamp(mSession.CurrentSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -164,7 +236,8 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 closeTickfile
-'Set mOutputMonitor = Nothing
+mOutputMonitor.NotifyOutputFileClosed Me
+Set mOutputMonitor = Nothing
 
 Exit Sub
 
@@ -175,7 +248,7 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pOutputMonitor As ITickfileOutputMonitor, _
                 ByVal pTickfileStore As TickfileStore, _
-                ByVal pContract As IContract, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pFormat As TickfileFormats, _
                 ByVal pVersion As TickFileVersions, _
                 ByVal pPath As String, _
@@ -186,7 +259,7 @@ On Error GoTo Err
 Set mOutputMonitor = pOutputMonitor
 Set mTickfileStore = pTickfileStore
                 
-Set mContract = pContract
+Set mContractFuture = pContractFuture
 
 mTickfileFormat = pFormat
 mTickFileVersion = pVersion
@@ -198,9 +271,13 @@ End If
 
 mTickfileGranularity = pTickfileGranularity
 
-setupSession
-
-DeferAction Me
+If mContractFuture.IsAvailable Then
+    Set mContract = mContractFuture.Value
+    setupSession
+    DeferAction Me
+Else
+    mContractFuture.AddStateChangeListener Me
+End If
 
 Exit Sub
 
@@ -217,11 +294,10 @@ Const ProcName As String = "closeTickfile"
 On Error GoTo Err
 
 If Not mTsOut Is Nothing Then
-    WriteComment "Tick recording finished"
     mTsOut.Close
     Set mTsOut = Nothing
-    gLogger.Log mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")" & vbCrLf & _
-                "    Closed tickfile: " & mBytesWritten & "bytes written", _
+    gLogger.Log "Closed tickfile (" & mContract.Specifier.LocalSymbol & "): " & vbCrLf & _
+                mBytesWritten & " bytes written", _
                 ProcName, ModuleName
 End If
 
@@ -250,7 +326,7 @@ With mContract.Specifier
             & Format(Timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = CreateWriteableTextFile(tfPath & tfName, False)
     
-    mOutputMonitor.NotifyOutputTickfileCreated tfPath & tfName
+    mOutputMonitor.NotifyOutputFileCreated Me, tfPath & tfName
     gLogger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
     
     writeTickfileLine "tickfile," & _
@@ -301,7 +377,7 @@ tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
 
 Set mTsOut = CreateWriteableTextFile(tfPath & tfName, False)
 
-mOutputMonitor.NotifyOutputTickfileCreated tfPath & tfName
+mOutputMonitor.NotifyOutputFileCreated Me, tfPath & tfName
 gLogger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
 
 If getFileSize(tfPath & tfName) = 0 Then
@@ -434,6 +510,9 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFilenameDatePart(ByVal pTimestamp As Date) As String
+Const ProcName As String = "getFilenameDatePart"
+On Error GoTo Err
+
 Select Case mTickfileGranularity
 Case TickfileGranularityDay
     getFilenameDatePart = "Day-" & Format(pTimestamp, "yyyymmdd")
@@ -444,31 +523,76 @@ Case TickfileGranularitySession
 Case TickfileGranularityExecution
     getFilenameDatePart = "Exec-" & Format(pTimestamp, "yyyymmdd-hhmmss")
 End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFileSize(ByVal pFilename As String) As Long
+Const ProcName As String = "getFileSize"
+On Error GoTo Err
+
 Dim fso As New FileSystemObject
 Dim f As File
 Set f = fso.GetFile(pFilename)
 getFileSize = f.Size
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getSessionDate(ByVal pTimestamp As Date) As Date
+Const ProcName As String = "getSessionDate"
+On Error GoTo Err
+
 Dim lSessionTimes As SessionTimes
+
 lSessionTimes = mSession.GetSessionTimes(pTimestamp)
 If TimeValue(lSessionTimes.StartTime) >= CDate("12:00") Then
     getSessionDate = DateValue(lSessionTimes.StartTime) + 1
 Else
     getSessionDate = DateValue(lSessionTimes.StartTime)
 End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub setReady()
+Const ProcName As String = "setReady"
+On Error GoTo Err
+
+mReady = True
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyReady Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub setupSession()
+Const ProcName As String = "setupSession"
+On Error GoTo Err
+
 Set mSessionBuilder = New SessionBuilder
 
-mSessionBuilder.SessionEndTime = mContract.SessionEndTime
-mSessionBuilder.SessionStartTime = mContract.SessionStartTime
-Set mSession = mSessionBuilder.Session
+mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+mSessionBuilder.sessionStartTime = mContract.sessionStartTime
+mSessionBuilder.CompleteSessionCreation
+
+Set mSession = mSessionBuilder.SessionFuture.Value
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteComment(ByVal pComment As String)

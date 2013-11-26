@@ -60,9 +60,33 @@ Private Const ModuleName                            As String = "ITickfileStore"
 ' Properties
 '@================================================================================
 
+Public Property Get SupportedFormats() As TickfileFormatSpecifier()
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function CreateTickfileReader( _
+                ByVal pDataConsumer As IGenericTickListener, _
+                ByVal pReplayMonitor As ITickfileReplayMonitor, _
+                ByVal pStreamId As Long) As ITickfileReader
+End Function
+
+Public Function CreateTickfileWriter( _
+                ByVal pOutputMonitor As ITickfileOutputMonitor, _
+                ByVal pContractFuture As IFuture, _
+                Optional ByVal pFormatIdentifier As String = "", _
+                Optional ByVal pLocation As String = "") As ITickfileWriter
+End Function
+
+Public Sub Finish()
+End Sub
+
+Public Function Supports( _
+                ByVal pCapabilities As TickfileStoreCapabilities, _
+                Optional ByVal pFormatIdentifier As String) As Boolean
+End Function
 
 '@================================================================================
 ' Helper Functions

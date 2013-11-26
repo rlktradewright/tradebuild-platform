@@ -36,9 +36,7 @@ Implements Task
 Private Enum States
     Inactive
     AwaitingReady
-    Ready
     Playing
-    Paused
 End Enum
 
 '@================================================================================
@@ -60,15 +58,18 @@ Private mTaskContext                                As TaskContext
 Private mTickfileManager                            As TickFileManager
 Private mTickfileSpecifiers                         As TickFileSpecifiers
 
-Private mTickscheduler                              As TickScheduler
+Private mTickScheduler                              As TickScheduler
 
 Private mEn                                         As Enumerator
 
-Private mPlayer                                     As TickfilePlayer
+Private mPlayers                                    As New EnumerableCollection
+Private mNumberOfPlayersAwaitingReady               As Long
 
 Private mState                                      As States
+Private mPaused                                     As Boolean
 
 Private mReplaySpeed                                As Long
+Private mReplayProgressEventInterval                As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -86,16 +87,24 @@ Private Property Get ITickfileControllerTask_CurrentTickfileSpec() As ITickfileS
 Set ITickfileControllerTask_CurrentTickfileSpec = CurrentTickfileSpec
 End Property
 
-Private Sub ITickfileControllerTask_Initialise(ByVal pTickfileManager As TickFileManager, ByVal pTickfileSpecifiers As TickFileSpecifiers, ByVal pReplaySpeed As Long)
-Initialise pTickfileManager, pTickfileSpecifiers, pReplaySpeed
+Private Sub ITickfileControllerTask_Initialise( _
+                ByVal pTickfileManager As TickFileManager, _
+                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
+                ByVal pReplaySpeed As Long, _
+                ByVal pReplayProgressEventInterval As Long)
+Initialise pTickfileManager, pTickfileSpecifiers, pReplaySpeed, pReplayProgressEventInterval
 End Sub
 
-Private Sub ITickfileControllerTask_NotifyReady()
-NotifyReady
+Private Sub ITickfileControllerTask_NotifyReady(ByVal pPlayer As TickfilePlayer)
+NotifyReady pPlayer
 End Sub
 
-Private Sub ITickfileControllerTask_NotifyTickfileCompleted()
-NotifyTickfileCompleted
+Private Sub ITickfileControllerTask_NotifySkip(ByVal pPlayer As TickfilePlayer)
+NotifySkip pPlayer
+End Sub
+
+Private Sub ITickfileControllerTask_NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer)
+NotifyTickfileCompleted pPlayer
 End Sub
 
 Private Sub ITickfileControllerTask_PauseReplay()
@@ -110,10 +119,6 @@ Private Sub ITickfileControllerTask_ResumeReplay()
 ResumeReplay
 End Sub
 
-Private Sub ITickfileControllerTask_Skip()
-Skip
-End Sub
-
 Private Sub ITickfileControllerTask_StopReplay()
 StopReplay
 End Sub
@@ -126,9 +131,7 @@ Private Sub Task_Cancel()
 Const ProcName As String = "Task_Cancel"
 On Error GoTo Err
 
-cancelReplay
-mTaskContext.Finish Empty, True
-
+StopReplay
 Exit Sub
 
 Err:
@@ -140,43 +143,35 @@ Const ProcName As String = "Task_Run"
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
-    cancelReplay
-    mTaskContext.Finish Empty, True
+    StopReplay
     Exit Sub
 End If
 
+If mPaused Then Exit Sub
+
 If mState = Inactive Then
     If Not mEn.MoveNext Then
-        mTaskContext.Finish Empty, False
+        mState = AwaitingReady
         Exit Sub
     End If
     
-    mState = AwaitingReady
-    Set mTickscheduler = New TickScheduler
-    mTickscheduler.Initialise mReplaySpeed
-
-    Set mPlayer = mTickfileManager.SetupTickfilePlayer(mEn.Current, mTickscheduler)
-    If mPlayer Is Nothing Then
-        mState = Inactive
-    ElseIf mState <> Ready Then
+    Dim lPlayer As TickfilePlayer
+    Set lPlayer = mTickfileManager.SetupTickfilePlayer(mEn.Current, mTickScheduler)
+    If Not lPlayer Is Nothing Then mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
+ElseIf mState = AwaitingReady Then
+    If mNumberOfPlayersAwaitingReady = 0 Then
+        mTickScheduler.StartScheduling
+        mState = Playing
+    End If
+    mTaskContext.Suspend -1
+ElseIf mState = Playing Then
+    If mPlayers.Count = 0 Then
+        mTaskContext.Finish Empty, False
+        If Not mTickScheduler Is Nothing Then mTickScheduler.StopScheduling
+        Set mTickScheduler = Nothing
+    Else
         mTaskContext.Suspend -1
     End If
-ElseIf mState = Ready Then
-    Select Case mTickfileManager.QueryPlay(mEn.Current, mPlayer)
-    Case ReplayContinueModes.ReplayCancelAllFiles
-        mPlayer.StopReplay
-        mState = Inactive
-        mTaskContext.Finish Empty, True
-    Case ReplayContinueModes.ReplayCancelThisFile
-        mTickfileManager.NotifySkipTickfile gGetTickfileEventData(mTickfileManager, mEn.Current, mPlayer), 0
-        mState = Inactive
-    Case ReplayContinueModes.ReplayContinue
-        mState = Playing
-        mTickscheduler.AddPlayer mPlayer
-        mTickscheduler.StartScheduling
-        mPlayer.StartReplay
-        mTaskContext.Suspend -1
-    End Select
 End If
 
 Exit Sub
@@ -201,12 +196,12 @@ End Property
 ' Properties
 '@================================================================================
 
-Friend Property Get CurrentTickfileSpec() As ITickfileSpecifier
-Set CurrentTickfileSpec = mEn.Current
+Friend Property Get CurrentPlayer() As TickfilePlayer
+Set CurrentPlayer = Nothing
 End Property
 
-Friend Property Get CurrentPlayer() As TickfilePlayer
-Set CurrentPlayer = mPlayer
+Friend Property Get CurrentTickfileSpec() As ITickfileSpecifier
+Set CurrentTickfileSpec = Nothing
 End Property
 
 Friend Property Let ReplaySpeed(ByVal Value As Long)
@@ -214,8 +209,13 @@ Const ProcName As String = "ReplaySpeed"
 On Error GoTo Err
 
 mReplaySpeed = Value
-If Not mPlayer Is Nothing Then mPlayer.ReplaySpeed = mReplaySpeed
-If Not mTickscheduler Is Nothing Then mTickscheduler.ReplaySpeed = mReplaySpeed
+
+Dim lPlayer As TickfilePlayer
+For Each lPlayer In mPlayers
+    lPlayer.ReplaySpeed = mReplaySpeed
+Next
+
+If Not mTickScheduler Is Nothing Then mTickScheduler.ReplaySpeed = mReplaySpeed
 
 Exit Property
 
@@ -229,7 +229,8 @@ End Property
 Friend Sub Initialise( _
                 ByVal pTickfileManager As TickFileManager, _
                 ByVal pTickfileSpecifiers As TickFileSpecifiers, _
-                ByVal pReplaySpeed As Long)
+                ByVal pReplaySpeed As Long, _
+                ByVal pReplayProgressEventInterval As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -237,6 +238,10 @@ Set mTickfileManager = pTickfileManager
 Set mTickfileSpecifiers = pTickfileSpecifiers
 Set mEn = mTickfileSpecifiers.Enumerator
 mReplaySpeed = pReplaySpeed
+mReplayProgressEventInterval = pReplayProgressEventInterval
+
+Set mTickScheduler = New TickScheduler
+mTickScheduler.Initialise mTickfileManager, mReplaySpeed, mReplayProgressEventInterval, False
 
 Exit Sub
 
@@ -244,12 +249,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyReady()
+Friend Sub NotifyReady(ByVal pPlayer As TickfilePlayer)
 Const ProcName As String = "NotifyReady"
 On Error GoTo Err
 
-mState = Ready
-If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
+mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady - 1
+mPlayers.Add pPlayer
+mTickScheduler.AddPlayer pPlayer
+pPlayer.StartReplay
+If Not mPaused And mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
@@ -257,12 +265,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyTickfileCompleted()
+Friend Sub NotifySkip(ByVal pPlayer As TickfilePlayer)
+Const ProcName As String = "Skip"
+On Error GoTo Err
+
+pPlayer.StopReplay
+If Not mTickScheduler Is Nothing Then mTickScheduler.RemovePlayer pPlayer
+
+mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady - 1
+If Not mPaused And mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer)
 Const ProcName As String = "NotifyTickfileCompleted"
 On Error GoTo Err
 
-Set mPlayer = Nothing
-mState = Inactive
+mPlayers.Remove pPlayer
 mTaskContext.Continue
 
 Exit Sub
@@ -275,8 +298,12 @@ Friend Sub PauseReplay()
 Const ProcName As String = "PauseReplay"
 On Error GoTo Err
 
-mState = Paused
-If Not mPlayer Is Nothing Then mPlayer.PauseReplay
+mPaused = True
+
+Dim lPlayer As TickfilePlayer
+For Each lPlayer In mPlayers
+    lPlayer.PauseReplay
+Next
 If mTaskContext.State = TaskStateRunnable Then mTaskContext.Suspend -1
 
 Exit Sub
@@ -289,28 +316,13 @@ Friend Sub ResumeReplay()
 Const ProcName As String = "ResumeReplay"
 On Error GoTo Err
 
-If Not mPlayer Is Nothing Then
-    mState = Playing
-    mPlayer.ResumeReplay
-Else
-    mState = Inactive
-End If
+mPaused = False
+
+Dim lPlayer As TickfilePlayer
+For Each lPlayer In mPlayers
+    lPlayer.ResumeReplay
+Next
 mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub Skip()
-Const ProcName As String = "Skip"
-On Error GoTo Err
-
-If Not mPlayer Is Nothing Then mPlayer.StopReplay
-Set mPlayer = Nothing
-mState = Inactive
-If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
@@ -322,7 +334,10 @@ Friend Sub StopReplay()
 Const ProcName As String = "StopReplay"
 On Error GoTo Err
 
-If Not mPlayer Is Nothing Then mPlayer.StopReplay
+Dim lPlayer As TickfilePlayer
+For Each lPlayer In mPlayers
+    lPlayer.StopReplay
+Next
 mTaskContext.Finish Empty, True
 
 Exit Sub
@@ -334,10 +349,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub cancelReplay()
-If Not mPlayer Is Nothing Then mPlayer.StopReplay
-End Sub
 
 
 

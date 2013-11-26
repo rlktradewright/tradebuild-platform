@@ -52,7 +52,7 @@ Private Const ModuleName                    As String = "TickfileSpecifier"
 
 Private mTickfileFormatID       As String
 Private mFilename               As String
-Private mContract               As Contract
+Private mContractFuture         As IFuture
 Private mFromDate               As Date
 Private mToDate                 As Date
 Private mEntireSession          As Boolean
@@ -65,12 +65,12 @@ Private mEntireSession          As Boolean
 ' ITickfileSpecifier Interface Members
 '@================================================================================
 
-Private Property Let ITickfileSpecifier_Contract(ByVal RHS As Contract)
-Set mContract = RHS
+Private Property Let ITickfileSpecifier_ContractFuture(ByVal RHS As IFuture)
+Set mContractFuture = RHS
 End Property
 
-Private Property Get ITickfileSpecifier_Contract() As Contract
-Set ITickfileSpecifier_Contract = mContract
+Private Property Get ITickfileSpecifier_ContractFuture() As IFuture
+Set ITickfileSpecifier_ContractFuture = mContractFuture
 End Property
 
 Private Property Let ITickfileSpecifier_EntireSession(ByVal RHS As Boolean)
@@ -121,48 +121,48 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Let Contract(ByVal value As Contract)
-Set mContract = value
+Public Property Let ContractFuture(ByVal Value As IFuture)
+Set mContractFuture = Value
 End Property
 
-Public Property Get Contract() As Contract
-Set Contract = mContract
+Public Property Get ContractFuture() As IFuture
+Set ContractFuture = mContractFuture
 End Property
 
-Public Property Let EntireSession(ByVal value As Boolean)
-mEntireSession = value
+Public Property Let EntireSession(ByVal Value As Boolean)
+mEntireSession = Value
 End Property
 
 Public Property Get EntireSession() As Boolean
 EntireSession = mEntireSession
 End Property
 
-Public Property Let Filename(ByVal value As String)
-mFilename = value
+Public Property Let Filename(ByVal Value As String)
+mFilename = Value
 End Property
 
 Public Property Get Filename() As String
 Filename = mFilename
 End Property
 
-Public Property Let FromDate(ByVal value As Date)
-mFromDate = value
+Public Property Let FromDate(ByVal Value As Date)
+mFromDate = Value
 End Property
 
 Public Property Get FromDate() As Date
 FromDate = mFromDate
 End Property
 
-Public Property Let TickfileFormatID(ByVal value As String)
-mTickfileFormatID = value
+Public Property Let TickfileFormatID(ByVal Value As String)
+mTickfileFormatID = Value
 End Property
 
 Public Property Get TickfileFormatID() As String
 TickfileFormatID = mTickfileFormatID
 End Property
 
-Public Property Let ToDate(ByVal value As Date)
-mToDate = value
+Public Property Let ToDate(ByVal Value As Date)
+mToDate = Value
 End Property
 
 Public Property Get ToDate() As Date

@@ -48,18 +48,13 @@ Private Const ModuleName                    As String = "TickFileSpecifiers"
 ' Member variables
 '@================================================================================
 
-Private mTickfileSpecifiers As Collection
+Private mTickfileSpecifiers                 As New EnumerableCollection
 
-Private mChangeListeners As Collection
+Private mChangeListeners                    As New Listeners
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mTickfileSpecifiers = New Collection
-Set mChangeListeners = New Collection
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -82,7 +77,11 @@ Count = mTickfileSpecifiers.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Set Enumerator = mTickfileSpecifiers.Enumerator
 End Property
 
 '@================================================================================
@@ -95,39 +94,37 @@ On Error GoTo Err
 
 Set Add = tfs
 mTickfileSpecifiers.Add tfs, CStr(ObjPtr(tfs))
-fireChange CollItemAdded, tfs
+fireCollectionChange CollItemAdded, tfs
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
 On Error GoTo Err
 
-mChangeListeners.Add value
-
-gNotifyExistingCollectionMembers mTickfileSpecifiers, value, Me
+mChangeListeners.Add pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Clear()
 Const ProcName As String = "Clear"
 On Error GoTo Err
 
-Set mTickfileSpecifiers = New Collection
+mTickfileSpecifiers.Clear
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item( _
@@ -141,7 +138,7 @@ Set Item = mTickfileSpecifiers(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -150,12 +147,12 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
 On Error GoTo Err
 
-Set NewEnum = mTickfileSpecifiers.[_NewEnum]
+Set NewEnum = mTickfileSpecifiers.Enumerator
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove( _
@@ -173,45 +170,42 @@ Else
     Set tfs = Item(index)
     mTickfileSpecifiers.Remove index
 End If
-fireChange CollItemRemoved, tfs
+fireCollectionChange CollItemRemoved, tfs
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
-Dim i As Long
+Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
-Next
+mChangeListeners.Remove pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub fireChange( _
+Private Sub fireCollectionChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As TickfileSpecifier)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
+Const ProcName As String = "fireCollectionChange"
 On Error GoTo Err
 
-Set ev.source = Me
+Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
-For Each listener In mChangeListeners
+Set ev.AffectedItem = affectedObject
+For Each listener In mChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
@@ -219,7 +213,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

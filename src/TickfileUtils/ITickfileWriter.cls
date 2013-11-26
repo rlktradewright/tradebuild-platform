@@ -60,9 +60,24 @@ Private Const ModuleName                            As String = "ITickfileWriter
 ' Properties
 '@================================================================================
 
+Public Property Get ContractFuture() As IFuture
+End Property
+
+Public Property Get IsReady() As Boolean
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Finish()
+End Sub
+
+Public Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+End Sub
+
+Public Sub WriteTick(ByRef pTick As GenericTick)
+End Sub
 
 '@================================================================================
 ' Helper Functions

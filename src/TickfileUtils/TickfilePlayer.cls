@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickfileReader"
+Attribute VB_Name = "TickfilePlayer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@================================================================================
@@ -30,7 +30,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IStreamingDataConsumer
+Implements IGenericTickListener
+Implements ITickfileReplayMonitor
+Implements Task
 
 '@================================================================================
 ' Events
@@ -40,210 +42,321 @@ Implements TradeBuildSP.IStreamingDataConsumer
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "TickfileReader"
+Private Const ModuleName                As String = "TickfilePlayer"
 
 '@================================================================================
 ' Enums
 '@================================================================================
 
+Private Enum States
+    NeedingTick
+    FetchingTick
+    HandlingTick
+    PendingFireTick
+    Finished
+End Enum
+
+Private Enum TickfileStates
+    TickfileStateNotPlaying = 0
+    TickfileStatePlaying = 1
+    TickfileStatePaused = 2
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
-
-Private mUnProcessed            As Boolean
-Private mTimed                  As Boolean
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mCurrentTick As GenericTick
+Private mTickfileManager                As TickFileManager
+Private mTickfileSpec                   As ITickfileSpecifier
+Private mTickScheduler                  As TickScheduler
 
-Private mReader As TradeBuildSP.ITickfileReader
+Private mState                          As States
 
-Private mDataConsumer As TradeBuildSP.IStreamingDataConsumer
+Private mPrimaryContractStore           As IContractStore
+Private mSecondaryContractStore         As IContractStore
 
-Private mReplaySpeed As Long
+Private mCurrentTick                    As GenericTick
 
-Private mState As TickfileStateCodes
+Private mReader                         As ITickfileReader
 
-Private mBaseTimestampUTC As Double
-Private mFirstTickTime As Double
+Private WithEvents mTickStreamBuilder   As TickStreamBuilder
+Attribute mTickStreamBuilder.VB_VarHelpID = -1
+Private mTickStream                     As TickStream
 
-Private mSkip As Boolean
+Private mTickfileState                  As TickfileStates
 
-Private mTimestampAdjustmentStart As Double
-Private mTimestampAdjustmentEnd As Double
-Private mPercentComplete As Single
+Private mTimestampAdjustmentStart       As Double
+Private mTimestampAdjustmentEnd         As Double
 
-Private mTickReceivedSynchronously As Boolean
+Private mClock                          As Clock
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
-Private mElapsedTimer As ElapsedTimer
+Private mTaskContext                    As TaskContext
+
+Private mEventsPlayed                   As Long
+Private mPercentComplete                As Single
+
+Private mReplaySpeed                    As Long
+
+Private WithEvents mFutureWaiter        As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mContract                       As IContract
+
+Private mFirstTickTimeUTC               As Date
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mState = TickfileStateCodes.TickfileNotPlaying
-End Sub
-
-Private Sub Class_Terminate()
-Debug.Print "TickfileReader terminated"
+mTickfileState = TickfileStates.TickfileStateNotPlaying
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
-' TradeBuildSP.IStreamingDataConsumer Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
 
-Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
-Const ProcName As String = "IStreamingDataConsumer_Tick"
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-mCurrentTick = Tick
-mUnProcessed = True
-mCurrentTick.Timestamp = AdjustTimestamp(mCurrentTick.Timestamp)
-HandleTick
+mEventsPlayed = mEventsPlayed + 1
+
+mCurrentTick = ev.Tick
+mCurrentTick.Timestamp = adjustTimestamp(mCurrentTick.Timestamp)
+
+mState = HandlingTick
+If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mTimer Event Handlers
+' ITickfileReplayMonitor Interface Members
 '@================================================================================
 
-Private Sub mTimer_TimerExpired()
-Const ProcName As String = "mTimer_TimerExpired"
+Private Sub ITickfileReplayMonitor_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "ITickfileReplayMonitor_NotifyEvent"
 On Error GoTo Err
 
-Play
+Set ev.Source = Me
+mTickfileManager.NotifyEvent ev
+
+Select Case ev.EventCode
+Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
+        TickfileEventCodes.TickfileEventFileIsEmpty, _
+        TickfileEventCodes.TickfileEventFileIsInvalid, _
+        TickfileEventCodes.TickfileEventFileFormatNotSupported, _
+        TickfileEventCodes.TickfileEventAmbiguousContractDetails, _
+        TickfileEventCodes.TickfileEventNoContractDetails
+    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+Case TickfileEventCodes.TickfileEventDataSourceNotAvailable
+    mTickfileManager.StopReplay
+End Select
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileReplayMonitor_NotifyReady( _
+                ByVal pSource As Object, _
+                ByVal pTickfileSpec As ITickfileSpecifier, _
+                Optional ByVal pContractSpec As IContractSpecifier)
+Const ProcName As String = "ITickfileReplayMonitor_NotifyReady"
+On Error GoTo Err
+
+Set mTickfileSpec = pTickfileSpec
+If Not mTickfileSpec.ContractFuture Is Nothing Then
+    mFutureWaiter.Add mTickfileSpec.ContractFuture
+ElseIf Not pContractSpec Is Nothing Then
+    
+    'now query the Contract Store(s) to see if we can
+    ' determine the canonical contract for this contract spec
+    mTickfileSpec.ContractFuture = getContractFuture(pContractSpec)
+
+Else
+    ' we have no way to determine what the contract is
+    fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract details found for tickfile"
+    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileReplayMonitor_NotifyReplayComplete(ByVal pSource As Object, ByVal pEventsPlayed As Long)
+Const ProcName As String = "ITickfileReplayMonitor_NotifyReplayComplete"
+On Error GoTo Err
+
+mState = Finished
+mTaskContext.Continue
+mReader.CloseInputFile
+
+Dim lTickStreamBuilder As TickStreamBuilder
+Set lTickStreamBuilder = mTickStreamBuilder
+' ignore state change event
+Set mTickStreamBuilder = Nothing
+
+lTickStreamBuilder.Finish
+mTickfileManager.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mEventsPlayed
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Task Interface Members
+'@================================================================================
+
+Private Sub Task_Cancel()
+End Sub
+
+Private Sub Task_Run()
+Const ProcName As String = "Task_Run"
+On Error GoTo Err
+
+'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Task_Run"
+
+If mTaskContext.CancelPending Then
+    StopReplay
+    Exit Sub
+End If
+
+If mTickfileState = TickfileStates.TickfileStateNotPlaying Or _
+    mTickfileState = TickfileStates.TickfileStatePaused _
+Then
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+If mState = States.HandlingTick Then
+    mState = States.PendingFireTick
+    mTickScheduler.NotifyTick mCurrentTick, Me
+    If Not mState = States.NeedingTick Then mTaskContext.Suspend -1
+ElseIf mState = States.NeedingTick Then
+    If Not mReader.FireNextTick Then
+        mTaskContext.Suspend -1
+        mState = States.FetchingTick
+    End If
+ElseIf mState = FetchingTick Then
+    mTaskContext.Suspend -1
+ElseIf mState = PendingFireTick Then
+    mTaskContext.Suspend -1
+ElseIf mState = Finished Then
+    mTickfileState = TickfileStates.TickfileStateNotPlaying
+    mTickScheduler.NotifyNoMoreTicks Me
+    mTaskContext.Finish Empty, False
+Else
+    Assert True, "Invalid state"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
+End Property
+
+Private Property Get Task_TaskName() As String
+Task_TaskName = mTaskContext.Name
+End Property
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsFaulted Then
+    Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
+ElseIf ev.Future.IsCancelled Then
+    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+Else
+    Set mContract = ev.Future.Value
+    checkReady
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mTickStreamBuilder Event Handlers
+'@================================================================================
+
+Private Sub mTickStreamBuilder_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mTickStreamBuilder_StateChange"
+On Error GoTo Err
+
+If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
+
+mState = Finished
+mTaskContext.Continue
+mReader.CloseInputFile
+mTickfileManager.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mEventsPlayed
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Let Contract(ByVal value As Contract)
-Const ProcName As String = "Contract"
+Friend Property Let FirstTickTimeUTC(ByVal Value As Date)
+Const ProcName As String = "FirstTickTimeUTC"
 On Error GoTo Err
 
-mReader.Contract = value
+mFirstTickTimeUTC = Value
+checkReady
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get Contract() As Contract
-Const ProcName As String = "Contract"
-On Error GoTo Err
-
-Set Contract = mReader.Contract
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Friend Property Get ReplayProgressTicks() As Long
+ReplayProgressTicks = mReader.ReplayProgressTicks
 End Property
 
-Friend Property Get ContractSpecifier() As ContractSpecifier
-Const ProcName As String = "ContractSpecifier"
-On Error GoTo Err
-
-Set ContractSpecifier = mReader.ContractSpecifier
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Friend Property Get ReplayProgressPercent() As Long
+ReplayProgressPercent = mReader.ReplayProgressPercent
 End Property
 
-Friend Property Let dataConsumer(ByVal value As IStreamingDataConsumer)
-Const ProcName As String = "dataConsumer"
-On Error GoTo Err
-
-Set mDataConsumer = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Get firstTickFileTime() As Date
-Const ProcName As String = "firstTickFileTime"
-On Error GoTo Err
-
-firstTickFileTime = mReader.firstTickFileTime
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Let percentComplete(ByVal value As Single)
-Const ProcName As String = "percentComplete"
-On Error GoTo Err
-
-mPercentComplete = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Let ReplayProgressEventFrequency(ByVal value As Long)
-Const ProcName As String = "ReplayProgressEventFrequency"
-On Error GoTo Err
-
-mReader.ReplayProgressEventFrequency = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Get ReplayProgressEventFrequency() As Long
-Const ProcName As String = "ReplayProgressEventFrequency"
-On Error GoTo Err
-
-ReplayProgressEventFrequency = mReader.ReplayProgressEventFrequency
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Let ReplaySpeed(ByVal value As Long)
+Friend Property Let ReplaySpeed(ByVal Value As Long)
 Const ProcName As String = "ReplaySpeed"
 On Error GoTo Err
 
-mReplaySpeed = value
-If mState = TickfileStateCodes.TickfilePlaying Then
-    setBaseTimes
-    Set mTimer = CreateIntervalTimer(1)
-    mTimer.StartTimer
-End If
+mReplaySpeed = Value
+If Not mClock Is Nothing Then mClock.Rate = mReplaySpeed
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ReplaySpeed() As Long
@@ -255,325 +368,259 @@ ReplaySpeed = mReplaySpeed
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let ServiceProviderReader(ByVal value As TradeBuildSP.ITickfileReader)
-Const ProcName As String = "ServiceProviderReader"
-On Error GoTo Err
-
-Set mReader = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get State() As TickfileStateCodes
+Friend Property Get State() As TickfileStates
 Const ProcName As String = "State"
 On Error GoTo Err
 
-State = mState
+State = mTickfileState
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TickfileSizeBytes() As Long
+Friend Property Get TickStream() As TickStream
+Set TickStream = mTickStream
+End Property
+
+Friend Property Get TickfileSizeBytes() As Long
 Const ProcName As String = "TickfileSizeBytes"
 On Error GoTo Err
 
-TickfileSizeBytes = mReader.TickfileSizeBytes
+If mReader Is Nothing Then
+    TickfileSizeBytes = 0
+Else
+    TickfileSizeBytes = mReader.TickfileSizeBytes
+End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let TimestampAdjustmentStart(ByVal value As Double)
-Const ProcName As String = "TimestampAdjustmentStart"
-On Error GoTo Err
-
-mTimestampAdjustmentStart = value / 86400
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Friend Property Get TimeZone() As TimeZone
+Set TimeZone = mClock.TimeZone
 End Property
 
-Friend Property Get TimestampAdjustmentStart() As Double
-Const ProcName As String = "TimestampAdjustmentStart"
-On Error GoTo Err
-
-TimestampAdjustmentStart = mTimestampAdjustmentStart * 86400
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Let TimestampAdjustmentEnd(ByVal value As Double)
-Const ProcName As String = "TimestampAdjustmentEnd"
-On Error GoTo Err
-
-mTimestampAdjustmentEnd = value / 86400
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Get TimestampAdjustmentEnd() As Double
-Const ProcName As String = "TimestampAdjustmentEnd"
-On Error GoTo Err
-
-TimestampAdjustmentEnd = mTimestampAdjustmentEnd * 86400
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Friend Property Get Clock() As Clock
+Set Clock = mClock
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise( _
+                ByVal pTickfileManager As TickFileManager, _
+                ByVal pTickScheduler As TickScheduler, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
+                ByVal pStreamId As Long, _
+                ByVal pReplaySpeed As Long, _
+                ByVal pTimestampAdjustmentStart As Double, _
+                ByVal pTimestampAdjustmentEnd As Double)
+Set mTickfileManager = pTickfileManager
+Set mTickScheduler = pTickScheduler
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+Set mTickStreamBuilder = CreateTickStreamBuilder(pStreamId)
+Set mTickStream = mTickStreamBuilder.TickStream
+ReplaySpeed = pReplaySpeed
+mTimestampAdjustmentStart = pTimestampAdjustmentStart / 86400
+mTimestampAdjustmentEnd = pTimestampAdjustmentEnd / 86400
+End Sub
+
 Friend Sub PauseReplay()
 Const ProcName As String = "PauseReplay"
 On Error GoTo Err
 
-If Not mTimer Is Nothing Then mTimer.StopTimer
-mState = TickfileStateCodes.TickfilePaused
-'gPauseTime
+Assert mTickfileState = TickfileStatePlaying, "Pause when not playing"
+
+mTickfileState = TickfileStates.TickfileStatePaused
+mClock.PauseTime
+mTaskContext.Suspend -1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ReplayTickfile(ByVal tfSpec As TickfileSpecifier)
-Const ProcName As String = "ReplayTickfile"
+Friend Function PrepareTickfile( _
+                ByVal pTickfileReader As ITickfileReader, _
+                ByVal pTickfileSpec As TickfileSpecifier) As Boolean
+Const ProcName As String = "PrepareTickfile"
 On Error GoTo Err
 
-mReader.ReplayTickfile tfSpec
+Set mReader = pTickfileReader
+Set mTickfileSpec = pTickfileSpec
+PrepareTickfile = mReader.PrepareTickfile(mTickfileSpec)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Sub ProcessTick(ByRef pTick As GenericTick)
+Const ProcName As String = "ProcessTick"
+On Error GoTo Err
+
+mClock.SetTime pTick.Timestamp
+
+mTickStreamBuilder.NotifyTick pTick
+mState = States.NeedingTick
+If mTaskContext.State = TaskStateSuspended Then
+    'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Task.Continue"
+    mTaskContext.Continue
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SkipFile()
-Const ProcName As String = "SkipFile"
+Friend Sub ResumeReplay()
+Const ProcName As String = "ResumeReplay"
 On Error GoTo Err
+ 
+Assert mTickfileState = TickfileStatePaused, "Resume without Pause"
 
-mSkip = True
+mTickfileState = TickfileStates.TickfileStatePlaying
+mClock.ResumeTime
+mTaskContext.Continue
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StartReplay()
-
 Const ProcName As String = "StartReplay"
 On Error GoTo Err
 
-If mState = TickfileStateCodes.TickfilePlaying Then Exit Sub
+If mTickfileState = TickfileStates.TickfileStatePlaying Then Exit Sub
 
-mState = TickfileStateCodes.TickfilePlaying
-
-Set mElapsedTimer = New ElapsedTimer
-
-' start replay using the timer to unwind the current stack
-Set mTimer = CreateIntervalTimer(1)
-mTimer.StartTimer
+mTickfileState = TickfileStates.TickfileStatePlaying
+mState = States.NeedingTick
+StartTask Me, PriorityLow
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StopReplay()
 Const ProcName As String = "StopReplay"
 On Error GoTo Err
 
-mUnProcessed = False
-'If mState = TickfileStateCodes.TickfileNotPlaying Then Exit Sub
-If Not mTimer Is Nothing Then mTimer.StopTimer
-mState = TickfileStateCodes.TickfileNotPlaying
-mBaseTimestampUTC = 0
-mReader.CloseInputFile
+mState = Finished
+If Not mTaskContext Is Nothing Then mTaskContext.Continue
+
+If Not mReader Is Nothing Then mReader.CloseInputFile
 Set mReader = Nothing
+
+Dim lTickStreamBuilder As TickStreamBuilder
+Set lTickStreamBuilder = mTickStreamBuilder
+' ignore state change event
+Set mTickStreamBuilder = Nothing
+
+lTickStreamBuilder.Finish
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function AdjustTimestamp(ByVal Timestamp As Date) As Date
-Const ProcName As String = "AdjustTimestamp"
+Private Function adjustTimestamp(ByVal Timestamp As Date) As Date
+Const ProcName As String = "adjustTimestamp"
 On Error GoTo Err
 
-AdjustTimestamp = Timestamp + _
+adjustTimestamp = Timestamp + _
                 mTimestampAdjustmentStart + _
                 (mTimestampAdjustmentEnd - mTimestampAdjustmentStart) * (mPercentComplete / 100)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Sub CloseInputFile()
-Const ProcName As String = "CloseInputFile"
-On Error GoTo Err
+Private Sub fireNotifyEvent(ByVal pEventCode As Long, ByVal pEventMessage As String)
+Dim lEv As NotificationEventData
 
-mReader.CloseInputFile
-Set mReader = Nothing
-mState = TickfileStateCodes.TickfileNotPlaying
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Set lEv.Source = Me
+lEv.EventCode = pEventCode
+lEv.EventMessage = pEventMessage & ": " & _
+                gTickfileSpecifierToString(mTickfileSpec)
+mTickfileManager.NotifyEvent lEv
 End Sub
 
-Private Sub HandleTick()
-Dim delayMillisecs As Long
-
-Const ProcName As String = "HandleTick"
+Private Function getContractFuture(ByVal pContractSpec As IContractSpecifier) As IFuture
+Const ProcName As String = "getContractFuture"
 On Error GoTo Err
 
-mTimed = False
-
-If mBaseTimestampUTC = 0 Then
-    setBaseTimes
-End If
-
-If mReplaySpeed > 0 Then
-    delayMillisecs = CLng(((mCurrentTick.Timestamp - mFirstTickTime) - mReplaySpeed * (GetTimestampUTC - mBaseTimestampUTC)) * 86400# * 1000# / CDbl(mReplaySpeed))
-'    delayMillisecs = CLng((mCurrentTick.Timestamp - mCurrentTimestamp) * 86400# * 1000# / CDbl(mReplaySpeed))
-Else
-    delayMillisecs = -mReplaySpeed
-End If
-
-If delayMillisecs < 5 Then
-    ' process immediately. Note that if the tick was received synchronously, this
-    ' is achieved simply by exiting from this procedure and winding back down into the
-    ' Play routine. For ticks received asynchronously, we use the timer with a very short
-    ' delay: this is to prevent calling back into the Service Provider before it has
-    ' completed the function that raised the tick event.
-    If Not mTickReceivedSynchronously Then
-        mTimed = True
-        Set mTimer = CreateIntervalTimer(1)
-        mTimer.StartTimer
-    End If
-Else
-    mTimed = True
-    Set mTimer = CreateIntervalTimer(delayMillisecs)
-    mTimer.StartTimer
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
-End Sub
-
-Private Sub Play()
-
-Const ProcName As String = "Play"
-On Error GoTo Err
-
-If mUnProcessed Then
-    ProcessTickData
+If mPrimaryContractStore Is Nothing Then
+    fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract store is available"
+    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+    Exit Function
 End If
     
-mTickReceivedSynchronously = True
-mReader.FireNextTick
-mTickReceivedSynchronously = False
+Set getContractFuture = FetchContract(pContractSpec, mPrimaryContractStore, mSecondaryContractStore)
+mFutureWaiter.Add getContractFuture
 
-mElapsedTimer.StartTiming
+Exit Function
 
-Do While mUnProcessed And _
-    Not mTimed And _
-    (mElapsedTimer.ElapsedTimeMicroseconds / 1000) <= MultiTaskingTimeQuantumMillisecs
-    
-    ProcessTickData
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
-    If mState = TickfileStateCodes.TickfileNotPlaying Or _
-        mState = TickfileStateCodes.TickfilePaused _
-    Then
-        Exit Sub
-    End If
-    
-    mTickReceivedSynchronously = True
-    mReader.FireNextTick
-    mTickReceivedSynchronously = False
+Private Sub checkReady()
+Const ProcName As String = "checkReady"
+On Error GoTo Err
 
-Loop
+If mContract Is Nothing Then Exit Sub
 
-If mUnProcessed And _
-    Not mTimed _
-Then
-    Set mTimer = CreateIntervalTimer(1)
-    mTimer.StartTimer
+If mClock Is Nothing Then Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
+
+If mFirstTickTimeUTC = 0 Then
+    mTickfileManager.NotifyReady Me
+    Exit Sub
 End If
 
+mClock.SetTimeUTC mFirstTickTimeUTC
+mTickfileManager.NotifyTickStreamStarted gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mClock
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub ProcessTickData()
-Const ProcName As String = "ProcessTickData"
+Private Sub setupClock()
+Const ProcName As String = "setupClock"
 On Error GoTo Err
 
-mDataConsumer.Tick mCurrentTick
-mUnProcessed = False
+Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setBaseTimes()
-Const ProcName As String = "setBaseTimes"
-On Error GoTo Err
 
-mBaseTimestampUTC = GetTimestampUTC
-' note that we don't bother to get the tick time in UTC - this is because
-' it's not likely that anyone would replay a tickfile that spans a standard
-' time to daylight time transition at normal speed. On the other hand
-' the base Timestamp is in UTC because someone might replay a tickfile
-' during a period that spans such a transition
-mFirstTickTime = mCurrentTick.Timestamp
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub

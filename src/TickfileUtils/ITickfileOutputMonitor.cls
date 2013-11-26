@@ -64,6 +64,21 @@ Private Const ModuleName                            As String = "ITickfileOutput
 ' Methods
 '@================================================================================
 
+Public Sub NotifyEvent(ByRef ev As NotificationEventData)
+End Sub
+
+Public Sub NotifyNotReady(ByVal pSource As Object)
+End Sub
+
+Public Sub NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
+End Sub
+                       
+Public Sub NotifyOutputFileClosed(ByVal pSource As Object)
+End Sub
+                       
+Public Sub NotifyReady(ByVal pSource As Object)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

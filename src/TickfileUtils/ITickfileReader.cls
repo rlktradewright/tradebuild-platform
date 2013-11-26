@@ -60,9 +60,35 @@ Private Const ModuleName                            As String = "ITickfileReader
 ' Properties
 '@================================================================================
 
+'Public Property Get FirstTickFileTime() As Date
+'End Property
+
+Public Property Get ReplayProgressPercent() As Long
+End Property
+
+Public Property Get ReplayProgressTicks() As Long
+End Property
+
+Public Property Get TickfileSizeBytes() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub CloseInputFile()
+End Sub
+
+Public Function FireNextTick() As Boolean
+End Function
+
+Public Function PrepareTickfile(ByVal pTickfileSpec As ITickfileSpecifier) As Boolean
+End Function
+
+Public Function Supports( _
+                ByVal Capabilities As Long, _
+                Optional ByVal FormatIdentifier As String) As Boolean
+End Function
 
 '@================================================================================
 ' Helper Functions

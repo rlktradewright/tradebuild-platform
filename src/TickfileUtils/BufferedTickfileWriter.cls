@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickfileWriter"
+Attribute VB_Name = "BufferedTickfileWriter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@================================================================================
@@ -18,17 +18,13 @@ Option Explicit
 '@================================================================================
 '
 '
-'@================================================================================
-' Amendment history
-'@================================================================================
-'
-'
-'
-'
 
 '@================================================================================
 ' Interfaces
 '@================================================================================
+
+Implements ITickfileOutputMonitor
+Implements ITickfileWriter
 
 '@================================================================================
 ' Events
@@ -38,7 +34,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "TickfileWriter"
+Private Const ModuleName                As String = "BufferedTickfileWriter"
 
 '@================================================================================
 ' Enums
@@ -53,35 +49,211 @@ Private Const ModuleName                As String = "TickfileWriter"
 '@================================================================================
 
 Private mWriter                         As ITickfileWriter
-Private mServiceProviderWriterReady As Boolean
+Private mWriterReady                    As Boolean
 
-Private mPendingWrites As Collection
+Private mReady                          As Boolean
 
-'Private WithEvents mTimer As IntervalTimer
+Private mPendingWrites                  As Collection
 
-'Private mSelfRef As TickfileWriter
+Private mPendingClose                   As Boolean
+
+Private mSessionBuilder                 As SessionBuilder
+Private WithEvents mSession             As Session
+Attribute mSession.VB_VarHelpID = -1
+
+Private mContract                       As IContract
+
+Private WithEvents mFutureWaiter        As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mOutputMonitor                  As ITickfileOutputMonitor
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 Set mPendingWrites = New Collection
 End Sub
 
-Private Sub Class_Terminate()
-Debug.Print "TradeBuild27.TickfileWriter - object terminated"
+'@================================================================================
+' ITickfileOutputMonitor Interface Members
+'@================================================================================
+
+Private Sub ITickfileOutputMonitor_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyEvent"
+On Error GoTo Err
+
+If mOutputMonitor Is Nothing Then Exit Sub
+
+Set ev.Source = Me
+mOutputMonitor.NotifyEvent ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyNotReady(ByVal pSource As Object)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyNotReady"
+On Error GoTo Err
+
+mWriterReady = False
+mReady = False
+
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyNotReady Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyOutputFileClosed(ByVal pSource As Object)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyOutputFileClosed"
+On Error GoTo Err
+
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyOutputFileClosed Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyOutputFileCreated"
+On Error GoTo Err
+
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyOutputFileCreated Me, pFilename
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyReady(ByVal pSource As Object)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyReady"
+On Error GoTo Err
+
+mWriterReady = True
+
+checkReady
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' xxxx Interface Members
+' ITickfileWriter Interface Members
 '@================================================================================
+
+Private Property Get ITickfileWriter_ContractFuture() As IFuture
+Set ITickfileWriter_ContractFuture = ContractFuture
+End Property
+
+Private Sub ITickfileWriter_Finish()
+Const ProcName As String = "ITickfileWriter_Finish"
+On Error GoTo Err
+
+Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Get ITickfileWriter_IsReady() As Boolean
+ITickfileWriter_IsReady = IsReady
+End Property
+
+Private Sub ITickfileWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+Const ProcName As String = "ITickfileWriter_WriteComment"
+On Error GoTo Err
+
+WriteComment pComment, pTimestamp
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileWriter_WriteTick(pTick As GenericTick)
+Const ProcName As String = "ITickfileWriter_WriteTick"
+On Error GoTo Err
+
+WriteTick pTick
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mFutureWaiter Event Handlers
+'================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Set mContract = ev.Future.Value
+setupSession
+checkReady
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' mSession Event Handlers
+'================================================================================
+
+Private Sub mSession_SessionEnded(ev As SessionEventData)
+Const ProcName As String = "mSession_SessionEnded"
+On Error GoTo Err
+
+WriteComment "Session ended at " & FormatTimestamp(mSession.CurrentSessionEndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), mSession.SessionCurrentTime
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mSession_SessionStarted(ev As SessionEventData)
+Const ProcName As String = "mSession_SessionStarted"
+On Error GoTo Err
+
+WriteComment "Session started at " & FormatTimestamp(mSession.CurrentSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), mSession.SessionCurrentTime
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Get NumberOfPendingWrites() As Long
+Public Property Get ContractFuture() As IFuture
+Set ContractFuture = mWriter.ContractFuture
+End Property
+
+Public Property Get NumberOfPendingWrites() As Long
 Const ProcName As String = "NumberOfPendingWrites"
 On Error GoTo Err
 
@@ -93,41 +265,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let ServiceProviderWriter(ByVal value As ITickfileWriter)
-Const ProcName As String = "ServiceProviderWriter"
-On Error GoTo Err
-
-Set mWriter = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Friend Property Get ready() As Boolean
-Const ProcName As String = "ready"
-On Error GoTo Err
-
-ready = mServiceProviderWriterReady
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Property Get IsReady() As Boolean
+IsReady = mReady
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub CloseOutputFile()
-Const ProcName As String = "CloseOutputFile"
+Public Sub Finish()
+Const ProcName As String = "Finish"
 On Error GoTo Err
 
-GLogLogger.Log pMsg:="Closing output tickfile", pProcName:=ProcName, pModName:=ModuleName
-Debug.Print "TradeBuild27.TickfileWriter - closing output tickfile"
-mWriter.CloseOutputFile
+If Not mReady Then
+    mPendingClose = True
+Else
+    WriteComment "Tick recording finished", mSession.SessionCurrentTime
+    gLogger.Log "Closing output tickfile", ProcName, ModuleName
+    mWriter.Finish
+    mPendingClose = False
+    mReady = False
+End If
 
 Exit Sub
 
@@ -135,11 +293,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ServiceProviderWriterNotReady()
-Const ProcName As String = "ServiceProviderWriterNotReady"
+Friend Sub Initialise( _
+                ByVal pOutputMonitor As ITickfileOutputMonitor, _
+                ByVal pWriter As ITickfileWriter, _
+                ByVal pContractFuture As IFuture)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mServiceProviderWriterReady = False
+Set mOutputMonitor = pOutputMonitor
+Set mWriter = pWriter
+mFutureWaiter.Add pContractFuture
 
 Exit Sub
 
@@ -147,44 +310,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ServiceProviderWriterReady()
-Dim lItem As Variant
-Dim lPendingTick As GenericTick
-Dim lComment As TickWriterComment
-
-Const ProcName As String = "ServiceProviderWriterReady"
-On Error GoTo Err
-
-mServiceProviderWriterReady = True
-
-For Each lItem In mPendingWrites
-    If TypeName(lItem) = "TickWriterComment" Then
-        lComment = lItem
-        mWriter.WriteComment lComment.Comment, lComment.Timestamp
-    Else
-        lPendingTick = lItem
-        mWriter.WriteTick lPendingTick
-    End If
-Next
-
-Set mPendingWrites = New Collection
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+Public Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
 Const ProcName As String = "WriteComment"
 On Error GoTo Err
 
-If Not mServiceProviderWriterReady Then
-    Dim lComment As TickWriterComment
+If Not mReady Then
+    Dim lComment As TickWriterPendingComment
     lComment.Comment = pComment
     lComment.Timestamp = pTimestamp
     mPendingWrites.Add lComment
 Else
+    mSessionBuilder.SetSessionCurrentTime pTimestamp
     mWriter.WriteComment pComment, pTimestamp
 End If
 
@@ -194,14 +330,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub WriteTick( _
+Public Sub WriteTick( _
                 pTick As GenericTick)
 Const ProcName As String = "WriteTick"
 On Error GoTo Err
 
-If Not mServiceProviderWriterReady Then
+If Not mReady Then
     mPendingWrites.Add pTick
 Else
+    mSessionBuilder.SetSessionCurrentTime pTick.Timestamp
     mWriter.WriteTick pTick
 End If
 
@@ -215,4 +352,64 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkReady()
+Const ProcName As String = "checkReady"
+On Error GoTo Err
 
+If Not mWriterReady Or mContract Is Nothing Then Exit Sub
+
+mReady = True
+writePendingitems
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyReady Me
+If mPendingClose Then Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setupSession()
+Const ProcName As String = "setupSession"
+On Error GoTo Err
+
+Set mSessionBuilder = New SessionBuilder
+
+mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+mSessionBuilder.sessionStartTime = mContract.sessionStartTime
+mSessionBuilder.CompleteSessionCreation
+
+Set mSession = mSessionBuilder.SessionFuture.Value
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub writePendingitems()
+Const ProcName As String = "writePendingitems"
+On Error GoTo Err
+
+If mPendingWrites.Count = 0 Then Exit Sub
+
+Dim lItem As Variant
+For Each lItem In mPendingWrites
+    If TypeName(lItem) = "TickWriterPendingComment" Then
+        Dim lComment As TickWriterPendingComment
+        lComment = lItem
+        WriteComment lComment.Comment, lComment.Timestamp
+    Else
+        Dim lPendingTick As GenericTick
+        lPendingTick = lItem
+        WriteTick lPendingTick
+    End If
+Next
+
+Set mPendingWrites = New Collection
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub

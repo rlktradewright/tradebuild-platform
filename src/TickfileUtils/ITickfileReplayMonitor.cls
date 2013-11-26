@@ -64,6 +64,21 @@ Private Const ModuleName                            As String = "ITickfileReplay
 ' Methods
 '@================================================================================
 
+Public Sub NotifyEvent( _
+                ByRef ev As NotificationEventData)
+End Sub
+
+Public Sub NotifyReady( _
+                ByVal pSource As Object, _
+                ByVal pTickfileSpec As ITickfileSpecifier, _
+                Optional ByVal pContractSpec As IContractSpecifier)
+End Sub
+
+Public Sub NotifyReplayComplete( _
+                ByVal pSource As Object, _
+                ByVal pEventsPlayed As Long)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
