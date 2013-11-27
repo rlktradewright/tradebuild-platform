@@ -69,41 +69,41 @@ Public Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
-Public Property Let DaysBeforeExpiryToSwitch(ByVal Value As Long)
-mContract.DaysBeforeExpiryToSwitch = Value
+Public Property Let DaysBeforeExpiryToSwitch(ByVal value As Long)
+mContract.DaysBeforeExpiryToSwitch = value
 End Property
 
-Public Property Let Description(ByVal Value As String)
-mContract.Description = Value
+Public Property Let Description(ByVal value As String)
+mContract.Description = value
 End Property
 
-Public Property Let ExpiryDate(ByVal Value As Date)
-mContract.ExpiryDate = Value
+Public Property Let ExpiryDate(ByVal value As Date)
+mContract.ExpiryDate = value
 End Property
 
-Public Property Let Multiplier(ByVal Value As Double)
-mContract.Multiplier = Value
+Public Property Let Multiplier(ByVal value As Double)
+mContract.Multiplier = value
 End Property
 
-Public Property Let ProviderIDs(ByVal Value As Parameters)
-mContract.ProviderIDs = Value
+Public Property Let ProviderIDs(ByVal value As Parameters)
+mContract.ProviderIDs = value
 End Property
 
-Public Property Let SessionStartTime(ByVal Value As Date)
-mContract.SessionStartTime = TimeValue(Value)
+Public Property Let SessionStartTime(ByVal value As Date)
+mContract.SessionStartTime = TimeValue(value)
 End Property
 
-Public Property Let SessionEndTime(ByVal Value As Date)
-mContract.SessionEndTime = TimeValue(Value)
+Public Property Let SessionEndTime(ByVal value As Date)
+mContract.SessionEndTime = TimeValue(value)
 End Property
 
-Public Property Let TickSize(ByVal Value As Double)
-mContract.TickSize = Value
+Public Property Let TickSize(ByVal value As Double)
+mContract.TickSize = value
 End Property
 
 Public Property Let TimezoneName( _
-                ByVal Value As String)
-mContract.TimezoneName = Value
+                ByVal value As String)
+mContract.TimezoneName = value
 End Property
 
 '@================================================================================
@@ -153,37 +153,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection)
+Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
                 
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mContract = New Contract
-With config
-    mContract.Specifier = gCreateContractSpecifier(.GetSetting(ConfigSettingContractSpecLocalSYmbol, ""), _
-                                            .GetSetting(ConfigSettingContractSpecSymbol, ""), _
-                                            .GetSetting(ConfigSettingContractSpecExchange, ""), _
-                                            gSecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, "")), _
-                                            .GetSetting(ConfigSettingContractSpecCurrency, ""), _
-                                            .GetSetting(ConfigSettingContractSpecExpiry, ""), _
-                                            CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
-                                            gOptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
-
-    mContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, "1")
-    mContract.Description = .GetSetting(ConfigSettingDescription, "")
-    mContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, ""))
-    mContract.Multiplier = .GetSetting(ConfigSettingMultiplier, "1")
-    mContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
-    mContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
-    mContract.TickSize = .GetSetting(ConfigSettingTickSize, "0.01")
-    mContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, "")
-End With
+Set mContract = gLoadContractFromConfig(pConfig)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
