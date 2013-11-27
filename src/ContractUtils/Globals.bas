@@ -34,14 +34,14 @@ Private Const ModuleName                                As String = "Globals"
 
 Public Const ConfigSectionContractSpecifier             As String = "Specifier"
 
-Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractSpecifier & "&Currency"
-Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractSpecifier & "&Expiry"
-Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractSpecifier & "&Exchange"
-Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractSpecifier & "&LocalSymbol"
-Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractSpecifier & "&Right"
-Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractSpecifier & "&SecType"
-Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractSpecifier & "&StrikePrice"
-Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractSpecifier & "&Symbol"
+Public Const ConfigSettingContractSpecCurrency          As String = "&Currency"
+Public Const ConfigSettingContractSpecExpiry            As String = "&Expiry"
+Public Const ConfigSettingContractSpecExchange          As String = "&Exchange"
+Public Const ConfigSettingContractSpecLocalSYmbol       As String = "&LocalSymbol"
+Public Const ConfigSettingContractSpecRight             As String = "&Right"
+Public Const ConfigSettingContractSpecSecType           As String = "&SecType"
+Public Const ConfigSettingContractSpecStrikePrice       As String = "&StrikePrice"
+Public Const ConfigSettingContractSpecSymbol            As String = "&Symbol"
 
 Public Const ConfigSettingDaysBeforeExpiryToSwitch      As String = "&DaysBeforeExpiryToSwitch"
 Public Const ConfigSettingDescription                   As String = "&Description"
@@ -51,10 +51,6 @@ Public Const ConfigSettingSessionEndTime                As String = "&SessionEnd
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
 Public Const ConfigSettingTickSize                      As String = "&TickSize"
 Public Const ConfigSettingTimezoneName                  As String = "&Timezone"
-
-Private Const OneThirtySecond                           As Double = 0.03125
-Private Const OneSixtyFourth                            As Double = 0.015625
-Private Const OneHundredTwentyEighth                    As Double = 0.0078125
 
 '@================================================================================
 ' Member variables
@@ -86,42 +82,60 @@ Private mMaxCurrencyDescsIndex As Long
 ' Methods
 '@================================================================================
 
-Public Function gContractsCompare( _
-                ByVal pContract1 As IContract, _
-                ByVal pContract2 As IContract, _
-                ByRef pSortKeys() As ContractSortKeyIds) As Long
-Const ProcName As String = "gContractsCompare"
+Public Function gContractSpecsCompatible( _
+                ByVal pContractSpec1 As IContractSpecifier, _
+                ByVal pContractSpec2 As IContractSpecifier) As Boolean
+Const ProcName As String = "gContractSpecsCompatible"
+On Error GoTo Err
+
+If pContractSpec1.LocalSymbol <> "" And pContractSpec1.LocalSymbol <> pContractSpec2.LocalSymbol Then Exit Function
+If pContractSpec1.Symbol <> "" And pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
+If pContractSpec1.SecType <> SecTypeNone And pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
+If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+If pContractSpec1.Expiry <> "" And pContractSpec1.Expiry <> Left$(pContractSpec2.Expiry, Len(pContractSpec1.Expiry)) Then Exit Function
+If pContractSpec1.Exchange <> "" And pContractSpec1.Exchange <> pContractSpec2.Exchange Then Exit Function
+If pContractSpec1.CurrencyCode <> "" And pContractSpec1.CurrencyCode <> pContractSpec2.CurrencyCode Then Exit Function
+If pContractSpec1.Right <> OptNone And pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
+If pContractSpec1.Strike <> 0# And pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
+
+gContractSpecsCompatible = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gContractSpecsCompare( _
+                ByVal pContractSpec1 As IContractSpecifier, _
+                ByVal pContractSpec2 As IContractSpecifier, _
+                ByRef pSortkeys() As ContractSortKeyIds) As Long
+Const ProcName As String = "gContractSpecsCompare"
 On Error GoTo Err
 
 Dim i As Long
-Dim lContractSpec1 As IContractSpecifier
-Dim lContractSpec2 As IContractSpecifier
-
-Set lContractSpec1 = pContract1.Specifier
-Set lContractSpec2 = pContract2.Specifier
-
-For i = 0 To UBound(pSortKeys)
-    Select Case pSortKeys(i)
+For i = 0 To UBound(pSortkeys)
+    Select Case pSortkeys(i)
     Case ContractSortKeyNone
         Exit Function
     Case ContractSortKeyLocalSymbol
-        gContractsCompare = StrComp(lContractSpec1.LocalSymbol, lContractSpec2.LocalSymbol, vbTextCompare)
+        gContractSpecsCompare = StrComp(pContractSpec1.LocalSymbol, pContractSpec2.LocalSymbol, vbTextCompare)
     Case ContractSortKeySymbol
-        gContractsCompare = StrComp(lContractSpec1.Symbol, lContractSpec2.Symbol, vbTextCompare)
+        gContractSpecsCompare = StrComp(pContractSpec1.Symbol, pContractSpec2.Symbol, vbTextCompare)
     Case ContractSortKeySecType
-        gContractsCompare = StrComp(gSecTypeToShortString(lContractSpec1.SecType), gSecTypeToShortString(lContractSpec2.SecType), vbTextCompare)
+        gContractSpecsCompare = StrComp(gSecTypeToShortString(pContractSpec1.SecType), gSecTypeToShortString(pContractSpec2.SecType), vbTextCompare)
     Case ContractSortKeyExchange
-        gContractsCompare = StrComp(lContractSpec1.Exchange, lContractSpec2.Exchange, vbTextCompare)
+        gContractSpecsCompare = StrComp(pContractSpec1.Exchange, pContractSpec2.Exchange, vbTextCompare)
     Case ContractSortKeyExpiry
-        gContractsCompare = StrComp(lContractSpec1.Expiry, lContractSpec2.Expiry, vbTextCompare)
+        gContractSpecsCompare = StrComp(pContractSpec1.Expiry, pContractSpec2.Expiry, vbTextCompare)
     Case ContractSortKeyCurrency
-        gContractsCompare = StrComp(lContractSpec1.CurrencyCode, lContractSpec2.CurrencyCode, vbTextCompare)
+        gContractSpecsCompare = StrComp(pContractSpec1.CurrencyCode, pContractSpec2.CurrencyCode, vbTextCompare)
     Case ContractSortKeyRight
-        gContractsCompare = StrComp(gOptionRightToString(lContractSpec1.Right), gOptionRightToString(lContractSpec2.Right), vbTextCompare)
+        gContractSpecsCompare = StrComp(gOptionRightToString(pContractSpec1.Right), gOptionRightToString(pContractSpec2.Right), vbTextCompare)
     Case ContractSortKeyStrike
-        gContractsCompare = Sgn(lContractSpec1.Strike - lContractSpec2.Strike)
+        gContractSpecsCompare = Sgn(pContractSpec1.Strike - pContractSpec2.Strike)
     End Select
-    If gContractsCompare <> 0 Then Exit Function
+    If gContractSpecsCompare <> 0 Then Exit Function
 Next
 
 Exit Function
@@ -131,8 +145,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gContractSpecsEqual( _
-                ByVal pContractSpec1 As IContract, _
-                ByVal pContractSpec2 As IContract) As Boolean
+                ByVal pContractSpec1 As IContractSpecifier, _
+                ByVal pContractSpec2 As IContractSpecifier) As Boolean
 Const ProcName As String = "gContractSpecsEqual"
 On Error GoTo Err
 
@@ -169,6 +183,70 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gContractToXML(ByVal pContract As IContract) As String
+Dim XMLdoc As DOMDocument30
+Dim lContractElement As IXMLDOMElement
+Dim Specifier As IXMLDOMElement
+Dim ComboLegs As IXMLDOMElement
+Dim ComboLeg As IXMLDOMElement
+Dim comboLegObj As ComboLeg
+
+Const ProcName As String = "gContractToXML"
+
+On Error GoTo Err
+
+Set XMLdoc = New DOMDocument30
+Set lContractElement = XMLdoc.createElement("contract")
+Set XMLdoc.documentElement = lContractElement
+lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
+lContractElement.setAttribute "minimumtick", pContract.TickSize
+lContractElement.setAttribute "multiplier", pContract.Multiplier
+lContractElement.setAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
+lContractElement.setAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
+lContractElement.setAttribute "Description", pContract.Description
+lContractElement.setAttribute "numberofdecimals", pContract.NumberOfDecimals
+lContractElement.setAttribute "timezonename", pContract.TimezoneName
+
+Set Specifier = XMLdoc.createElement("specifier")
+lContractElement.appendChild Specifier
+Specifier.setAttribute "symbol", pContract.Specifier.Symbol
+Specifier.setAttribute "sectype", pContract.Specifier.SecType
+Specifier.setAttribute "expiry", pContract.Specifier.Expiry
+Specifier.setAttribute "exchange", pContract.Specifier.Exchange
+Specifier.setAttribute "currencycode", pContract.Specifier.CurrencyCode
+Specifier.setAttribute "localsymbol", pContract.Specifier.LocalSymbol
+Specifier.setAttribute "right", pContract.Specifier.Right
+Specifier.setAttribute "strike", pContract.Specifier.Strike
+
+Set ComboLegs = XMLdoc.createElement("combolegs")
+Specifier.appendChild ComboLegs
+If Not pContract.Specifier.ComboLegs Is Nothing Then
+    For Each comboLegObj In pContract.Specifier.ComboLegs
+        Set ComboLeg = XMLdoc.createElement("comboleg")
+        ComboLegs.appendChild ComboLeg
+        
+        Set Specifier = XMLdoc.createElement("specifier")
+        ComboLeg.appendChild Specifier
+        ComboLeg.setAttribute "isBuyLeg", comboLegObj.IsBuyLeg
+        ComboLeg.setAttribute "Ratio", comboLegObj.Ratio
+        Specifier.setAttribute "symbol", pContract.Specifier.Symbol
+        Specifier.setAttribute "sectype", pContract.Specifier.SecType
+        Specifier.setAttribute "expiry", pContract.Specifier.Expiry
+        Specifier.setAttribute "exchange", pContract.Specifier.Exchange
+        Specifier.setAttribute "currencycode", pContract.Specifier.CurrencyCode
+        Specifier.setAttribute "localsymbol", pContract.Specifier.LocalSymbol
+        Specifier.setAttribute "right", pContract.Specifier.Right
+        Specifier.setAttribute "strike", pContract.Specifier.Strike
+    Next
+End If
+gContractToXML = XMLdoc.xml
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gCreateContractSpecifier( _
                 Optional ByVal LocalSymbol As String, _
                 Optional ByVal Symbol As String, _
@@ -183,40 +261,6 @@ On Error GoTo Err
 
 Set gCreateContractSpecifier = New ContractSpecifier
 gCreateContractSpecifier.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Strike, Right
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gFormatPrice( _
-                ByVal pPrice As Double, _
-                ByVal pSecType As SecurityTypes, _
-                ByVal pTickSize As Double) As String
-Const ProcName As String = "gFormatPrice"
-On Error GoTo Err
-
-' see http://www.cmegroup.com/trading/interest-rates/files/TreasuryFuturesPriceRoundingConventions_Mar_24_Final.pdf
-' for details of price presentation, especially sections (2) and (7)
-
-If pTickSize = OneThirtySecond Then
-    gFormatPrice = FormatPriceAs32nds(pPrice)
-ElseIf pTickSize = OneSixtyFourth Then
-    If pSecType = SecTypeFuture Then
-        gFormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
-    Else
-        gFormatPrice = FormatPriceAs64ths(pPrice)
-    End If
-ElseIf pTickSize = OneHundredTwentyEighth Then
-    If pSecType = SecTypeFuture Then
-        gFormatPrice = FormatPriceAs32ndsAndFractions(pPrice)
-    Else
-        gFormatPrice = FormatPriceAs64thsAndFractions(pPrice)
-    End If
-Else
-    gFormatPrice = FormatPriceAsDecimals(pPrice, pTickSize)
-End If
 
 Exit Function
 
@@ -253,9 +297,7 @@ On Error GoTo Err
 
 If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
 index = getCurrencyIndex(code)
-If index < 0 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid currency code"
-End If
+AssertArgument index >= 0, "Invalid currency code"
 
 gGetCurrencyDescriptor = mCurrencyDescs(index)
 
@@ -309,6 +351,57 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
+Public Function gLoadContractFromConfig(ByVal pConfig As ConfigurationSection) As IContract
+Const ProcName As String = "gLoadContractFromConfig"
+On Error GoTo Err
+
+Dim lContract As New Contract
+lContract.Specifier = gLoadContractSpecFromConfig(pConfig.AddConfigurationSection(ConfigSectionContractSpecifier))
+
+With pConfig
+    lContract.DaysBeforeExpiryToSwitch = .GetSetting(ConfigSettingDaysBeforeExpiryToSwitch, "1")
+    lContract.Description = .GetSetting(ConfigSettingDescription, "")
+    lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, ""))
+    lContract.Multiplier = .GetSetting(ConfigSettingMultiplier, "1")
+    lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
+    lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
+    lContract.TickSize = .GetSetting(ConfigSettingTickSize, "0.01")
+    lContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, "")
+End With
+
+Set gLoadContractFromConfig = lContract
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gLoadContractSpecFromConfig(ByVal pConfig As ConfigurationSection) As IContractSpecifier
+Const ProcName As String = "gLoadContractSpecFromConfig"
+On Error GoTo Err
+
+Dim lContractSpec As ContractSpecifier
+With pConfig
+    Set lContractSpec = gCreateContractSpecifier(.GetSetting(ConfigSettingContractSpecLocalSYmbol, ""), _
+                                            .GetSetting(ConfigSettingContractSpecSymbol, ""), _
+                                            .GetSetting(ConfigSettingContractSpecExchange, ""), _
+                                            gSecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, "")), _
+                                            .GetSetting(ConfigSettingContractSpecCurrency, ""), _
+                                            .GetSetting(ConfigSettingContractSpecExpiry, ""), _
+                                            CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
+                                            gOptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
+
+End With
+
+Set gLoadContractSpecFromConfig = lContractSpec
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -323,9 +416,23 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gIsContractExpired(ByVal pContract As IContract) As Boolean
+Const ProcName As String = "gIsContractExpired"
+On Error GoTo Err
+
+Select Case pContract.Specifier.SecType
+Case SecTypeFuture, SecTypeOption, SecTypeFuturesOption
+    If Int(pContract.ExpiryDate) < Int(Now) Then gIsContractExpired = True
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function gIsValidCurrencyCode(ByVal code As String) As Boolean
 Const ProcName As String = "gIsValidCurrencyCode"
-
 On Error GoTo Err
 
 gIsValidCurrencyCode = (getCurrencyIndex(code) >= 0)
@@ -374,11 +481,10 @@ End Function
 
 Public Function gIsValidExpiry( _
                 ByVal Value As String) As Boolean
-Dim d As Date
-
 Const ProcName As String = "gIsValidExpiry"
-
 On Error GoTo Err
+
+Dim d As Date
 
 If IsDate(Value) Then
     d = CDate(Value)
@@ -418,7 +524,6 @@ Public Function gIsValidPrice( _
                 ByVal pSecType As SecurityTypes, _
                 ByVal pTickSize As Double) As Boolean
 Const ProcName As String = "gIsValidPrice"
-
 On Error GoTo Err
 
 If pTickSize = 0 Then
@@ -430,15 +535,23 @@ If pPrevValidPrice = 0 Or pPrevValidPrice = MaxDouble Then
     If Abs(pPrice) / pTickSize > &H3FFFFF Then Exit Function ' note that Z index has ticksize 0.01
                                                             ' so we need to allow plenty of room
                                                             ' &H3FFFFF = 4194303
+    
+    ' A first price of 0 is always considered invalid. Although some indexes can validly
+    ' have zero values, it is unlikely on the very first price notified, and this check
+    ' catches the occasional zero prices sent by IB when, for example, the Z ticker
+    ' is started
+    If pPrice = 0 Then Exit Function
+    
     If pSecType = SecTypeIndex Then
         ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
         ' positive, zero and negative values
     Else
-        If pPrice <= 0 Then Exit Function
+        If pPrice < 0 Then Exit Function
         If pPrice / pTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
     End If
 Else
-    If Abs(pPrevValidPrice - pPrice) / pTickSize > 32767 Then Exit Function
+    'If Abs(pPrevValidPrice - pPrice) / pTickSize > 32767 Then Exit Function
+    
     If pSecType = SecTypeIndex Then
         ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
         ' positive and negative values - moreover the value can change dramatically from one
@@ -446,7 +559,7 @@ Else
     Else
         If pPrice <= 0 Then Exit Function
         If pPrice / pTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
-        If pPrice < (2 * pPrevValidPrice) / 3 Or pPrice > (3 * pPrevValidPrice) / 2 Then Exit Function
+        'If pPrice < (2 * pPrevValidPrice) / 3 Or pPrice > (3 * pPrevValidPrice) / 2 Then Exit Function
     End If
     
 End If
@@ -497,40 +610,63 @@ Case OptPut
 End Select
 End Function
 
-Public Function gParsePrice( _
-                ByVal pPriceString As String, _
-                ByVal pSecType As SecurityTypes, _
-                ByVal pTickSize As Double, _
-                ByRef pPrice As Double) As Boolean
-Const ProcName As String = "gParsePrice"
-
+Public Property Get gRegExp() As RegExp
+Static lRegExp As RegExp
+Const ProcName As String = "gRegExp"
 On Error GoTo Err
 
-pPriceString = Trim$(pPriceString)
+If lRegExp Is Nothing Then Set lRegExp = New RegExp
+Set gRegExp = lRegExp
 
-If pTickSize = OneThirtySecond Then
-    gParsePrice = ParsePriceAs32nds(pPriceString, pPrice)
-ElseIf pTickSize = OneSixtyFourth Then
-    If pSecType = SecTypeFuture Then
-        gParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
-    Else
-        gParsePrice = ParsePriceAs64ths(pPriceString, pPrice)
-    End If
-ElseIf pTickSize = OneHundredTwentyEighth Then
-    If pSecType = SecTypeFuture Then
-        gParsePrice = ParsePriceAs32ndsAndFractions(pPriceString, pPrice)
-    Else
-        gParsePrice = ParsePriceAs64thsAndFractions(pPriceString, pPrice)
-    End If
-Else
-    gParsePrice = ParsePriceAsDecimals(pPriceString, pTickSize, pPrice)
-End If
-
-Exit Function
+Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Property
+
+Public Sub gSaveContractSpecToConfig(ByVal pContractSpec As IContractSpecifier, ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "gSaveContractSpecToConfig"
+On Error GoTo Err
+
+With pConfig
+    .SetSetting ConfigSettingContractSpecLocalSYmbol, pContractSpec.LocalSymbol
+    .SetSetting ConfigSettingContractSpecSymbol, pContractSpec.Symbol
+    .SetSetting ConfigSettingContractSpecExchange, pContractSpec.Exchange
+    .SetSetting ConfigSettingContractSpecSecType, gSecTypeToString(pContractSpec.SecType)
+    .SetSetting ConfigSettingContractSpecCurrency, pContractSpec.CurrencyCode
+    .SetSetting ConfigSettingContractSpecExpiry, pContractSpec.Expiry
+    .SetSetting ConfigSettingContractSpecStrikePrice, pContractSpec.Strike
+    .SetSetting ConfigSettingContractSpecRight, gOptionRightToString(pContractSpec.Right)
+End With
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub gSaveContractToConfig(ByVal pContract As IContract, ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "gSaveContractToConfig"
+On Error GoTo Err
+
+gSaveContractSpecToConfig pContract.Specifier, pConfig.AddConfigurationSection(ConfigSectionContractSpecifier)
+
+With pConfig
+    .SetSetting ConfigSettingDaysBeforeExpiryToSwitch, pContract.DaysBeforeExpiryToSwitch
+    .SetSetting ConfigSettingDescription, pContract.Description
+    .SetSetting ConfigSettingExpiryDate, FormatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingMultiplier, pContract.Multiplier
+    .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(pContract.SessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(pContract.SessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingTickSize, pContract.TickSize
+    .SetSetting ConfigSettingTimezoneName, pContract.TimezoneName
+End With
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Function gSecTypeFromString(ByVal Value As String) As SecurityTypes
 Select Case UCase$(Value)
@@ -620,6 +756,11 @@ Next
 
 gUnEscapeRegexSpecialChar = s
 End Function
+
+Public Sub Main()
+GPriceParser.gInit
+GPriceFormatter.gInit
+End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -725,6 +866,7 @@ addExchangeCode "BYX"
 
 addExchangeCode "CAES"
 addExchangeCode "CBOE"
+addExchangeCode "CBOE2"
 addExchangeCode "CBOT"
 addExchangeCode "CBSX"
 addExchangeCode "CDE"
@@ -773,6 +915,8 @@ addExchangeCode "MONEP"
 addExchangeCode "MXT"
 
 addExchangeCode "NASDAQ"
+addExchangeCode "NASDAQBX"
+addExchangeCode "NASDAQOM"
 addExchangeCode "NQLX"
 addExchangeCode "NSE"
 addExchangeCode "NSX"
