@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "MarketDataStream"
+Attribute VB_Name = "DataSourceBase"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "MarketDataStream"
+Private Const ModuleName                            As String = "DataSourceBase"
 
 '@================================================================================
 ' Member variables
@@ -195,7 +195,7 @@ Const ProcName As String = "AddMarketDepthSubscription"
 On Error GoTo Err
 
 mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions + 1
-requestMarketDepth
+RequestMarketDepth
 
 Exit Sub
 
@@ -721,11 +721,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub requestMarketDepth()
-Const ProcName As String = "requestMarketDepth"
+Private Sub RequestMarketDepth()
+Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
 
-If mNumberOfMarketDepthSubscriptions = 1 Then getDataManager.requestMarketDepth Me, mNumberOfMarketDepthRows
+If mNumberOfMarketDepthSubscriptions = 1 Then getDataManager.RequestMarketDepth Me, mNumberOfMarketDepthRows
 
 Exit Sub
 
