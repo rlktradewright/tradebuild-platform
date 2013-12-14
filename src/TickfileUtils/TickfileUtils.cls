@@ -154,22 +154,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateTickfileManager( _
+Public Function CreateTickfileReplayController( _
+                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
                 Optional ByVal pReplaySpeed As Long = 1, _
                 Optional ByVal pReplayProgressEventInterval As Long = 1000, _
                 Optional ByVal pTimestampAdjustmentStart As Double = 0#, _
-                Optional ByVal pTimestampAdjustmentEnd As Double = 0#) As TickFileManager
-Const ProcName As String = "CreateTickfileManager"
+                Optional ByVal pTimestampAdjustmentEnd As Double = 0#) As ReplayController
+Const ProcName As String = "CreateTickfileReplayController"
 On Error GoTo Err
 
-AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore cannot be Nothing"
+AssertArgument pTickfileSpecifiers.Count > 0, "pTickFileSpecifiers has no members"
 AssertArgument pReplayProgressEventInterval >= 50, "pReplayProgressEventInterval cannot be less than 50"
 
-Set CreateTickfileManager = New TickFileManager
-CreateTickfileManager.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
+Dim clr As New ReplayController
+clr.Intialise pTickfileSpecifiers, pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
+
+Set CreateTickfileReplayController = clr
 
 Exit Function
 

@@ -30,9 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DeferredAction
 Implements ITickfileWriter
-Implements StateChangeListener
 
 '================================================================================
 ' Events
@@ -80,28 +78,16 @@ Attribute mSession.VB_VarHelpID = -1
 
 Private mReady As Boolean
 
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
 mPath = ApplicationSettingsFolder & "\TickFiles"
-End Sub
-
-'================================================================================
-' DeferredAction Interface Members
-'================================================================================
-
-Private Sub DeferredAction_run(ByVal data As Variant)
-Const ProcName As String = "DeferredAction_run"
-On Error GoTo Err
-
-setReady
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '================================================================================
@@ -160,21 +146,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' StateChangeListener Interface Members
+' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-Dim lState As FutureStates
-lState = ev.State
+If Not ev.Future.IsAvailable Then Exit Sub
 
-If lState = FutureStateCompleted Then
-    Set mContract = mContractFuture.Value
-    setupSession
-    setReady
-End If
+Set mContract = ev.Future.Value
+setupSession
+setReady
 
 Exit Sub
 
@@ -271,13 +254,7 @@ End If
 
 mTickfileGranularity = pTickfileGranularity
 
-If mContractFuture.IsAvailable Then
-    Set mContract = mContractFuture.Value
-    setupSession
-    DeferAction Me
-Else
-    mContractFuture.AddStateChangeListener Me
-End If
+mFutureWaiter.Add pContractFuture
 
 Exit Sub
 

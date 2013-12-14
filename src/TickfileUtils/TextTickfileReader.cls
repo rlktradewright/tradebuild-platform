@@ -184,7 +184,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get ITickfileReader_ReplayProgressPercent() As Long
-ITickfileReader_ReplayProgressPercent = (100 * mFileReader.BytesRead) / mFileReader.SizeBytes
+ITickfileReader_ReplayProgressPercent = CInt((100# * CDbl(mFileReader.BytesRead)) / CDbl(mFileReader.SizeBytes))
 End Property
 
 Private Property Get ITickfileReader_ReplayProgressTicks() As Long
@@ -198,7 +198,9 @@ ITickfileReader_Supports = gSupports(Capabilities, FormatIdentifier)
 End Function
 
 Private Property Get ITickfileReader_TickfileSizeBytes() As Long
-ITickfileReader_TickfileSizeBytes = mFileReader.SizeBytes
+Static sSize As Long
+If sSize = 0 Then If Not mFileReader Is Nothing Then ITickfileReader_TickfileSizeBytes = mFileReader.SizeBytes
+ITickfileReader_TickfileSizeBytes = sSize
 End Property
 
 '================================================================================

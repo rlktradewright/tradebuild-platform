@@ -73,9 +73,11 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub AddPlayer(ByVal pPlayer As TickfilePlayer)
+End Sub
+
 Public Sub Initialise( _
-                ByVal pTickfileManager As TickFileManager, _
-                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
+                ByVal pTickfileReplayController As ReplayController, _
                 ByVal pReplaySpeed As Long, _
                 ByVal pReplayProgressEventInterval As Long)
 End Sub
@@ -93,6 +95,9 @@ Public Sub PauseReplay()
 End Sub
 
 Public Sub ResumeReplay()
+End Sub
+
+Public Sub StartReplay()
 End Sub
 
 Public Sub StopReplay()

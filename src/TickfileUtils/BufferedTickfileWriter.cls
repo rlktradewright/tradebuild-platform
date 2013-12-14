@@ -280,7 +280,7 @@ On Error GoTo Err
 If Not mReady Then
     mPendingClose = True
 Else
-    WriteComment "Tick recording finished", mSession.SessionCurrentTime
+    WriteComment "Tick recording finished at " & FormatTimestamp(Now, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), mSession.SessionCurrentTime
     gLogger.Log "Closing output tickfile", ProcName, ModuleName
     mWriter.Finish
     mPendingClose = False
@@ -320,7 +320,6 @@ If Not mReady Then
     lComment.Timestamp = pTimestamp
     mPendingWrites.Add lComment
 Else
-    mSessionBuilder.SetSessionCurrentTime pTimestamp
     mWriter.WriteComment pComment, pTimestamp
 End If
 
@@ -335,9 +334,15 @@ Public Sub WriteTick( _
 Const ProcName As String = "WriteTick"
 On Error GoTo Err
 
+Static sFirstTickReceived As Boolean
+
 If Not mReady Then
     mPendingWrites.Add pTick
 Else
+    If Not sFirstTickReceived Then
+        sFirstTickReceived = True
+        WriteComment "Tick recording started at " & FormatTimestamp(Now, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), pTick.Timestamp
+    End If
     mSessionBuilder.SetSessionCurrentTime pTick.Timestamp
     mWriter.WriteTick pTick
 End If
@@ -400,9 +405,9 @@ For Each lItem In mPendingWrites
         lComment = lItem
         WriteComment lComment.Comment, lComment.Timestamp
     Else
-        Dim lPendingTick As GenericTick
-        lPendingTick = lItem
-        WriteTick lPendingTick
+        Dim lTick As GenericTick
+        lTick = lItem
+        WriteTick lTick
     End If
 Next
 

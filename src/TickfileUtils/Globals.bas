@@ -79,6 +79,12 @@ Public Enum TickfileHeaderFieldsV3
     StartTime
 End Enum
 
+Public Enum TickfileStates
+    TickfileStateNotPlaying = 0
+    TickfileStatePlaying = 1
+    TickfileStatePaused = 2
+End Enum
+
 Public Enum TickFileVersions
     UnknownVersion
     TradeBuildV3
@@ -380,6 +386,12 @@ Case Else
     Version = TickFileVersions.UnknownVersion
 End Select
 End Sub
+
+Public Function gGetNextStreamId() As Long
+Static sNextStreamId As Long
+gGetNextStreamId = sNextStreamId
+sNextStreamId = sNextStreamId + 1
+End Function
 
 Public Function gGetTickfileEventData( _
                 ByVal pSource As Object, _

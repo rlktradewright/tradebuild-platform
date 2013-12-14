@@ -50,7 +50,7 @@ Private Const ModuleName                            As String = "TickScheduler"
 ' Member variables
 '@================================================================================
 
-Private mTickfileManager                            As TickFileManager
+Private mTickfileReplayController                   As ReplayController
 Private mPlayers()                                  As PlayerEntry
 
 Private mNumberOfTicksAwaited                       As Long
@@ -121,7 +121,7 @@ Const ProcName As String = "mTickTimer_TimerExpired"
 On Error GoTo Err
 
 Dim lIndex As Long
-lIndex = CLng(ev.data)
+lIndex = CLng(ev.Data)
 Set mTickTimer = Nothing
 fireTick lIndex
 
@@ -188,11 +188,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pTickfileManager As TickFileManager, _
+                ByVal pTickfileReplayController As ReplayController, _
                 ByVal pReplaySpeed As Long, _
                 ByVal pReplayProgressEventInterval As Long, _
                 ByVal pSingleSource As Boolean)
-Set mTickfileManager = pTickfileManager
+Set mTickfileReplayController = pTickfileReplayController
 mReplaySpeed = pReplaySpeed
 mReplayProgressEventInterval = pReplayProgressEventInterval
 mSingleSource = pSingleSource
@@ -298,6 +298,7 @@ Friend Sub StopScheduling()
 Const ProcName As String = "StopScheduling"
 On Error GoTo Err
 
+mStarted = False
 undispatch
 unProgress
 
@@ -359,7 +360,7 @@ If mTicksPlayed = 0 Then Exit Sub
 Dim lTimestamp As Date
 lTimestamp = mClock.Timestamp
 'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Notify progress: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601)
-mTickfileManager.NotifyProgress lTimestamp, mTicksPlayed, IIf(mSingleSource, mPlayers(0).Player.ReplayProgressPercent, 0)
+mTickfileReplayController.NotifyProgress lTimestamp, mTicksPlayed, IIf(mSingleSource, mPlayers(0).Player.ReplayProgressPercent, 0)
 
 Exit Sub
 

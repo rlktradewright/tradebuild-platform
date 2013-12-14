@@ -64,6 +64,20 @@ Private Const ModuleName                            As String = "ITickfileReplay
 ' Methods
 '@================================================================================
 
+Public Sub NotifyEvent(ev As NotificationEventData)
+End Sub
+
+Public Sub ReplayProgress( _
+                ByVal pTickfileTimestamp As Date, _
+                ByVal pEventsPlayed As Long, _
+                ByVal pPercentComplete As Long)
+End Sub
+
+Public Sub TickfileCompleted( _
+                ByRef ev As TickfileEventData, _
+                ByVal pEventsPlayed As Long)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

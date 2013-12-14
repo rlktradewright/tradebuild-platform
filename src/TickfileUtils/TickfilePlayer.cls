@@ -56,12 +56,6 @@ Private Enum States
     Finished
 End Enum
 
-Private Enum TickfileStates
-    TickfileStateNotPlaying = 0
-    TickfileStatePlaying = 1
-    TickfileStatePaused = 2
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -70,7 +64,7 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private mTickfileManager                As TickFileManager
+Private mTickfileReplayController       As ReplayController
 Private mTickfileSpec                   As ITickfileSpecifier
 Private mTickScheduler                  As TickScheduler
 
@@ -92,7 +86,10 @@ Private mTickfileState                  As TickfileStates
 Private mTimestampAdjustmentStart       As Double
 Private mTimestampAdjustmentEnd         As Double
 
+Private mClockFutureBuilder             As New FutureBuilder
 Private mClock                          As Clock
+
+Private mContractFutureBuilder          As New FutureBuilder
 
 Private mTaskContext                    As TaskContext
 
@@ -130,6 +127,9 @@ mCurrentTick = ev.Tick
 mCurrentTick.Timestamp = adjustTimestamp(mCurrentTick.Timestamp)
 
 mState = HandlingTick
+
+If mTickfileState = TickfileStates.TickfileStatePaused Then Exit Sub
+
 If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 
 Exit Sub
@@ -147,18 +147,16 @@ Const ProcName As String = "ITickfileReplayMonitor_NotifyEvent"
 On Error GoTo Err
 
 Set ev.Source = Me
-mTickfileManager.NotifyEvent ev
+mTickfileReplayController.NotifyEvent ev
 
 Select Case ev.EventCode
 Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
-        TickfileEventCodes.TickfileEventFileIsEmpty, _
         TickfileEventCodes.TickfileEventFileIsInvalid, _
         TickfileEventCodes.TickfileEventFileFormatNotSupported, _
         TickfileEventCodes.TickfileEventAmbiguousContractDetails, _
-        TickfileEventCodes.TickfileEventNoContractDetails
-    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
-Case TickfileEventCodes.TickfileEventDataSourceNotAvailable
-    mTickfileManager.StopReplay
+        TickfileEventCodes.TickfileEventNoContractDetails, _
+        TickfileEventCodes.TickfileEventDataSourceNotAvailable
+    mTickfileReplayController.StopReplay
 End Select
 
 Exit Sub
@@ -186,7 +184,7 @@ ElseIf Not pContractSpec Is Nothing Then
 Else
     ' we have no way to determine what the contract is
     fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract details found for tickfile"
-    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+    mTickfileReplayController.StopReplay
 End If
 
 Exit Sub
@@ -199,6 +197,7 @@ Private Sub ITickfileReplayMonitor_NotifyReplayComplete(ByVal pSource As Object,
 Const ProcName As String = "ITickfileReplayMonitor_NotifyReplayComplete"
 On Error GoTo Err
 
+mTickfileState = TickfileStateNotPlaying
 mState = Finished
 mTaskContext.Continue
 mReader.CloseInputFile
@@ -209,7 +208,7 @@ Set lTickStreamBuilder = mTickStreamBuilder
 Set mTickStreamBuilder = Nothing
 
 lTickStreamBuilder.Finish
-mTickfileManager.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mEventsPlayed
+mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
 Exit Sub
 
@@ -288,9 +287,11 @@ On Error GoTo Err
 If ev.Future.IsFaulted Then
     Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
 ElseIf ev.Future.IsCancelled Then
-    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+    mTickfileReplayController.StopReplay
 Else
     Set mContract = ev.Future.Value
+    mContractFutureBuilder.Value = mContract
+    mContractFutureBuilder.Complete
     checkReady
 End If
 
@@ -313,7 +314,7 @@ If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
 mState = Finished
 mTaskContext.Continue
 mReader.CloseInputFile
-mTickfileManager.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mEventsPlayed
+mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
 Exit Sub
 
@@ -411,12 +412,16 @@ Friend Property Get Clock() As Clock
 Set Clock = mClock
 End Property
 
+Friend Property Get ClockFuture() As IFuture
+Set ClockFuture = mClockFutureBuilder.Future
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pTickfileManager As TickFileManager, _
+                ByVal pTickfileReplayController As ReplayController, _
                 ByVal pTickScheduler As TickScheduler, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
@@ -424,11 +429,11 @@ Friend Sub Initialise( _
                 ByVal pReplaySpeed As Long, _
                 ByVal pTimestampAdjustmentStart As Double, _
                 ByVal pTimestampAdjustmentEnd As Double)
-Set mTickfileManager = pTickfileManager
+Set mTickfileReplayController = pTickfileReplayController
 Set mTickScheduler = pTickScheduler
 Set mPrimaryContractStore = pPrimaryContractStore
 Set mSecondaryContractStore = pSecondaryContractStore
-Set mTickStreamBuilder = CreateTickStreamBuilder(pStreamId)
+Set mTickStreamBuilder = CreateTickStreamBuilder(pStreamId, mContractFutureBuilder.Future, mClockFutureBuilder.Future)
 Set mTickStream = mTickStreamBuilder.TickStream
 ReplaySpeed = pReplaySpeed
 mTimestampAdjustmentStart = pTimestampAdjustmentStart / 86400
@@ -567,7 +572,7 @@ Set lEv.Source = Me
 lEv.EventCode = pEventCode
 lEv.EventMessage = pEventMessage & ": " & _
                 gTickfileSpecifierToString(mTickfileSpec)
-mTickfileManager.NotifyEvent lEv
+mTickfileReplayController.NotifyEvent lEv
 End Sub
 
 Private Function getContractFuture(ByVal pContractSpec As IContractSpecifier) As IFuture
@@ -576,7 +581,7 @@ On Error GoTo Err
 
 If mPrimaryContractStore Is Nothing Then
     fireNotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "No contract store is available"
-    mTickfileManager.NotifySkipTickfile Me, gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), 0
+    mTickfileReplayController.StopReplay
     Exit Function
 End If
     
@@ -598,24 +603,13 @@ If mContract Is Nothing Then Exit Sub
 If mClock Is Nothing Then Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
 
 If mFirstTickTimeUTC = 0 Then
-    mTickfileManager.NotifyReady Me
+    mTickfileReplayController.NotifyReady Me
     Exit Sub
 End If
 
 mClock.SetTimeUTC mFirstTickTimeUTC
-mTickfileManager.NotifyTickStreamStarted gGetTickfileEventData(mTickfileManager, mTickfileSpec, Me), mClock
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub setupClock()
-Const ProcName As String = "setupClock"
-On Error GoTo Err
-
-Set mClock = CreateSimulatedClock(mReplaySpeed, mContract.TimezoneName)
+mClockFutureBuilder.Value = mClock
+mClockFutureBuilder.Complete
 
 Exit Sub
 

@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Task
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -74,16 +76,51 @@ Private mPlayers()                                  As TickfilePlayer
 Private mListeners                                  As New Listeners
 
 Private mNumberOfPlayersAwaitingReady               As Long
+Private mNumberOfPlayersNotCompleted                As Long
 
 Private mTickScheduler                              As TickScheduler
+
+Private mTaskContext                                As TaskContext
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' Task Interface Members
 '@================================================================================
+
+Private Sub Task_Cancel()
+Const ProcName As String = "Task_Cancel"
+On Error GoTo Err
+
+StopReplay
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Task_Run()
+Const ProcName As String = "Task_Run"
+On Error GoTo Err
+
+mTaskContext.Suspend -1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
+End Property
+
+Private Property Get Task_TaskName() As String
+
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -103,11 +140,9 @@ On Error GoTo Err
 
 mReplaySpeed = Value
 
-Dim lPlayer As TickfilePlayer
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    Set lPlayer = mPlayers(i)
-    lPlayer.ReplaySpeed = mReplaySpeed
+    mPlayers(i).ReplaySpeed = mReplaySpeed
 Next
 
 If Not mTickScheduler Is Nothing Then mTickScheduler.ReplaySpeed = mReplaySpeed
@@ -224,6 +259,7 @@ mTickScheduler.Initialise Me, mReplaySpeed, mReplayProgressEventInterval, IIf(mT
 Dim i As Long
 For i = 0 To UBound(mPlayers)
     Set mPlayers(i) = SetupTickfilePlayer(mTickfileSpecifiers(i + 1), mTickScheduler)
+    If Not mPlayers(i) Is Nothing Then mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted + 1
 Next
 
 Exit Sub
@@ -278,6 +314,12 @@ Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer, ByRef ev As 
 Const ProcName As String = "NotifyReplayComplete"
 On Error GoTo Err
 
+mNumberOfPlayersNotCompleted = mNumberOfPlayersNotCompleted - 1
+If mNumberOfPlayersNotCompleted = 0 Then
+    mTickScheduler.StopScheduling
+    mTaskContext.Finish Empty, False
+End If
+
 fireTickfileCompleted ev, pEventsPlayed
 
 Exit Sub
@@ -294,11 +336,11 @@ Assert mReplayInProgress, "Replay has not yet been started"
 
 mPaused = True
 
-Dim lPlayer As TickfilePlayer
+mTickScheduler.PauseReplay
+
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    Set lPlayer = mPlayers(i)
-    lPlayer.PauseReplay
+    If mPlayers(i).State = TickfileStatePlaying Then mPlayers(i).PauseReplay
 Next
 
 Exit Sub
@@ -328,13 +370,12 @@ Assert mPaused, "Replay has not been paused"
 
 mPaused = False
 
-Dim lPlayer As TickfilePlayer
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    Set lPlayer = mPlayers(i)
-    lPlayer.ResumeReplay
+    If mPlayers(i).State = TickfileStatePaused Then mPlayers(i).ResumeReplay
 Next
 
+mTickScheduler.ResumeReplay
 Exit Sub
 
 Err:
@@ -351,6 +392,8 @@ mReplayInProgress = True
 
 If mNumberOfPlayersAwaitingReady = 0 Then mTickScheduler.StartScheduling
 
+Set StartReplay = StartTask(Me, PriorityNormal)
+
 Exit Function
 
 Err:
@@ -364,12 +407,13 @@ On Error GoTo Err
 Assert mReplayInProgress, "Replay has not yet been started"
 mReplayInProgress = False
 
-Dim lPlayer As TickfilePlayer
 Dim i As Long
 For i = 0 To UBound(mPlayers)
-    Set lPlayer = mPlayers(i)
-    lPlayer.StopReplay
+    mPlayers(i).StopReplay
 Next
+
+mTickScheduler.StopScheduling
+mTaskContext.Finish Empty, True
 
 Exit Sub
 

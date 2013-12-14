@@ -93,7 +93,7 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = tfs
-mTickfileSpecifiers.Add tfs, CStr(ObjPtr(tfs))
+mTickfileSpecifiers.Add tfs
 fireCollectionChange CollItemAdded, tfs
 
 Exit Function
@@ -127,6 +127,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Function Clone() As TickFileSpecifiers
+Const ProcName As String = "Clone"
+On Error GoTo Err
+
+Set Clone = New TickFileSpecifiers
+
+Dim lSpec As TickfileSpecifier
+For Each lSpec In mTickfileSpecifiers
+    Clone.Add lSpec
+Next
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function Item( _
                 ByVal index As Variant) As TickfileSpecifier
 Attribute Item.VB_UserMemId = 0
@@ -157,15 +174,15 @@ End Function
 
 Public Sub Remove( _
                 ByVal index As Variant)
-Dim tfs As TickfileSpecifier
-
 Const ProcName As String = "Remove"
 On Error GoTo Err
+
+Dim tfs As TickfileSpecifier
 
 If IsObject(index) Then
     If index Is Nothing Then Exit Sub
     Set tfs = index
-    mTickfileSpecifiers.Remove CStr(ObjPtr(tfs))
+    mTickfileSpecifiers.Remove index
 Else
     Set tfs = Item(index)
     mTickfileSpecifiers.Remove index
