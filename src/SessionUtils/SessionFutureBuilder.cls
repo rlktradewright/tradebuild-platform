@@ -44,30 +44,113 @@ Private Const ModuleName                            As String = "SessionFutureBu
 ' Member variables
 '@================================================================================
 
+Private WithEvents mFutureBuilder                   As FutureBuilder
+Attribute mFutureBuilder.VB_VarHelpID = -1
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-'@================================================================================
-' XXXX Interface Members
-'@================================================================================
+Private Sub Class_Initialize()
+Set mFutureBuilder = New FutureBuilder
+End Sub
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureBuilder Event Handlers
 '@================================================================================
+
+Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mFutureBuilder_Cancelled"
+On Error GoTo Err
+
+mFutureWaiter.Clear
+mFutureBuilder.Cancel
+
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then
+    setupSession ev.Future.Value
+    Set mSelfRef = Nothing
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
+Friend Property Get Future() As IFuture
+Const ProcName As String = "Future"
+On Error GoTo Err
+
+Set Future = mFutureBuilder.Future
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pSessionBuilderFuture As IFuture)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+If pSessionBuilderFuture.IsAvailable Then
+    setupSession pSessionBuilderFuture.Value
+Else
+    Set mSelfRef = Me
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add pSessionBuilderFuture
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Sub setupSession(ByVal pSessionBuilder As SessionBuilder)
+Const ProcName As String = "setupSession"
+On Error GoTo Err
 
+mFutureBuilder.Value = pSessionBuilder.SessionFuture.Value
+mFutureBuilder.Complete
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
