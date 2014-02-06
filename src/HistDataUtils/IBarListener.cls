@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IBarListener"
+Attribute VB_Name = "IBarFetchListener"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IBarListener"
+Private Const ModuleName                            As String = "IBarFetchListener"
 
 '@================================================================================
 ' Member variables
@@ -64,9 +64,22 @@ Private Const ModuleName                            As String = "IBarListener"
 ' Methods
 '@================================================================================
 
+Public Sub FetchCancelled(ByVal pCookie As Variant)
+End Sub
+
+Public Sub FetchCompleted(ByVal pCookie As Variant)
+End Sub
+
+Public Sub FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+End Sub
+
+Public Sub NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
 
 
 
