@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#256.4#0"; "TradeBuildUI2-6.ocx"
-Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#203.0#0"; "TradingUI27.ocx"
 Begin VB.Form fChart 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -11,12 +11,12 @@ Begin VB.Form fChart
    ScaleHeight     =   6780
    ScaleWidth      =   12525
    StartUpPosition =   3  'Windows Default
-   Begin TradeBuildUI26.MultiChart MultiChart1 
+   Begin TradingUI27.MultiChart MultiChart1 
       Align           =   1  'Align Top
       Height          =   5415
       Left            =   0
       TabIndex        =   3
-      Top             =   390
+      Top             =   330
       Width           =   12525
       _ExtentX        =   22093
       _ExtentY        =   9551
@@ -53,17 +53,17 @@ Begin VB.Form fChart
    End
    Begin ComCtl3.CoolBar CoolBar1 
       Align           =   1  'Align Top
-      Height          =   390
+      Height          =   330
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   12525
       _ExtentX        =   22093
-      _ExtentY        =   688
+      _ExtentY        =   582
       BandCount       =   4
       BackColor       =   -2147483638
       _CBWidth        =   12525
-      _CBHeight       =   390
+      _CBHeight       =   330
       _Version        =   "6.7.9816"
       Child1          =   "ChartToolsToolbar"
       MinWidth1       =   1890
@@ -85,12 +85,12 @@ Begin VB.Form fChart
       MinHeight4      =   330
       Width4          =   6465
       NewRow4         =   0   'False
-      Begin TradeBuildUI26.ChartStylePicker ChartStylePicker 
+      Begin TradingUI27.ChartStylePicker ChartStylePicker 
          Height          =   330
-         Left            =   3690
+         Left            =   3795
          TabIndex        =   5
          ToolTipText     =   "Change the chart style"
-         Top             =   30
+         Top             =   0
          Width           =   1185
          _ExtentX        =   2090
          _ExtentY        =   582
@@ -105,12 +105,12 @@ Begin VB.Form fChart
          EndProperty
          ListWidth       =   3000
       End
-      Begin TradeBuildUI26.BarFormatterPicker BarFormatterPicker 
+      Begin TradingUI27.BarFormatterPicker BarFormatterPicker 
          Height          =   330
-         Left            =   2280
+         Left            =   2340
          TabIndex        =   4
          ToolTipText     =   "Change the bar formatting"
-         Top             =   30
+         Top             =   0
          Width           =   1185
          _ExtentX        =   2090
          _ExtentY        =   582
@@ -125,20 +125,20 @@ Begin VB.Form fChart
          EndProperty
          ListWidth       =   3000
       End
-      Begin TradeBuildUI26.ChartNavToolbar ChartNavToolbar1 
+      Begin TradingUI27.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
-         Left            =   5100
+         Left            =   5250
          TabIndex        =   2
-         Top             =   30
+         Top             =   0
          Width           =   6465
          _ExtentX        =   11404
          _ExtentY        =   582
       End
       Begin MSComctlLib.Toolbar ChartToolsToolbar 
          Height          =   330
-         Left            =   165
+         Left            =   180
          TabIndex        =   1
-         Top             =   30
+         Top             =   0
          Width           =   1890
          _ExtentX        =   3334
          _ExtentY        =   582
@@ -200,6 +200,9 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IGenericTickListener
+Implements StateChangeListener
+
 '================================================================================
 ' Events
 '================================================================================
@@ -215,8 +218,6 @@ Private Const ChartToolsCommandSelection        As String = "selection"
 Private Const ChartToolsCommandLines            As String = "lines"
 Private Const ChartToolsCommandFib              As String = "fib"
 
-Private Const ConfigSettingHistorical           As String = "&Historical"
-
 '================================================================================
 ' Enums
 '================================================================================
@@ -229,27 +230,36 @@ Private Const ConfigSettingHistorical           As String = "&Historical"
 ' Member variables
 '================================================================================
 
-Private WithEvents mTicker As Ticker
+Private mTicker                                 As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 
-Private mSymbol As String
+Private mSymbol                                 As String
+Private mSecType                                As SecurityTypes
+Private mTicksize                               As Double
 
-Private mCurrentBid As String
-Private mCurrentAsk As String
-Private mCurrentTrade As String
-Private mCurrentVolume As Long
-Private mCurrentHigh As String
-Private mCurrentLow As String
-Private mPreviousClose As String
+Private mCurrentBid                             As String
+Private mCurrentAsk                             As String
+Private mCurrentTrade                           As String
+Private mCurrentVolume                          As String
+Private mCurrentHigh                            As String
+Private mCurrentLow                             As String
+Private mPreviousClose                          As String
 
-Private mIsHistorical As Boolean
+Private mIsHistorical                           As Boolean
 
-Private WithEvents mChartController As ChartController
+Private WithEvents mChartController             As ChartController
 Attribute mChartController.VB_VarHelpID = -1
 
-Private mCurrentTool As IChartTool
+Private mCurrentTool                            As IChartTool
 
-Private mConfig As ConfigurationSection
+Private mConfig                                 As ConfigurationSection
+
+Private mBarFormatterLibManager                 As BarFormatterLibManager
+
+Private WithEvents mFutureWaiter                As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mTimePeriodValidator                    As ITimePeriodValidator
 
 '================================================================================
 ' Class Event Handlers
@@ -257,7 +267,6 @@ Private mConfig As ConfigurationSection
 
 Private Sub Form_Activate()
 Const ProcName As String = "Form_Activate"
-
 On Error GoTo Err
 
 syncStudyPicker
@@ -266,12 +275,22 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
 
+Private Sub Form_Initialize()
+Const ProcName As String = "Form_Initialize"
+On Error GoTo Err
+
+Set mFutureWaiter = New FutureWaiter
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-
 On Error GoTo Err
 
 Resize
@@ -280,20 +299,20 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 Const ProcName As String = "Form_QueryUnload"
-
-
-
 On Error GoTo Err
+
+If Not mTicker Is Nothing Then
+    mTicker.RemoveGenericTickListener Me
+    mTicker.RemoveStateChangeListener Me
+End If
 
 MultiChart1.Finish
 If mIsHistorical Then
-    Dim lTicker As Ticker
-    If Not mTicker Is Nothing Then mTicker.StopTicker
+    If Not mTicker Is Nothing Then mTicker.Finish
     Set mTicker = Nothing
 End If
 gUnsyncStudyPicker
@@ -314,12 +333,10 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub Form_Resize()
 Const ProcName As String = "Form_Resize"
-
 On Error GoTo Err
 
 Resize
@@ -328,7 +345,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 Private Sub Form_Terminate()
@@ -337,14 +353,71 @@ LogMessage "Chart form terminated", LogLevelDetail
 End Sub
 
 '================================================================================
+' IGenericTickListener Interface Members
+'================================================================================
+
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
+On Error GoTo Err
+
+Select Case ev.Tick.TickType
+Case TickTypeBid
+    mCurrentBid = getFormattedPrice(ev.Tick.Price)
+Case TickTypeAsk
+    mCurrentAsk = getFormattedPrice(ev.Tick.Price)
+Case TickTypeClosePrice
+    mPreviousClose = getFormattedPrice(ev.Tick.Price)
+Case TickTypeHighPrice
+    mCurrentHigh = getFormattedPrice(ev.Tick.Price)
+Case TickTypeLowPrice
+    mCurrentLow = getFormattedPrice(ev.Tick.Price)
+Case TickTypeTrade
+    mCurrentTrade = getFormattedPrice(ev.Tick.Price)
+Case TickTypeVolume
+    mCurrentVolume = CStr(ev.Tick.Size)
+Case Else
+    Exit Sub
+End Select
+
+setCaption
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' StateChangeListener Interface Members
+'================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+If ev.State = MarketDataSourceStates.MarketDataSourceStateRunning Then
+    getInitialTickerValues
+ElseIf ev.State = MarketDataSourceStates.MarketDataSourceStateStopped Then
+    ' the ticker has been stopped before the chart has been closed,
+    ' so remove the chart from the config and close it
+    MultiChart1.Finish
+    mConfig.Remove
+    Set mConfig = Nothing
+    Unload Me
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'================================================================================
 ' Control Event Handlers
 '================================================================================
 
 Private Sub ChartToolsToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
 Const ProcName As String = "ChartToolsToolbar_ButtonClick"
-
-
-
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -380,13 +453,13 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
-Private Sub MultiChart1_Change(ev As TWUtilities30.ChangeEventData)
+Private Sub MultiChart1_Change(ev As ChangeEventData)
 Const ProcName As String = "MultiChart1_Change"
-Dim changeType As MultiChartChangeTypes
-
 On Error GoTo Err
 
+Dim changeType As MultiChartChangeTypes
 changeType = ev.changeType
+
 Select Case changeType
 Case MultiChartSelectionChanged
     If MultiChart1.Count > 0 Then
@@ -406,14 +479,14 @@ Case MultiChartAdd
     Dim lTitle As Text
     Set lTitle = MultiChart1.BaseChartController(MultiChart1.Count).XAxisRegion.title
     lTitle.Box = False
-    lTitle.position = NewPoint(0.1, 0.1, CoordsDistance, CoordsCounterDistance)
+    lTitle.Position = NewPoint(0.1, 0.1, CoordsDistance, CoordsCounterDistance)
     lTitle.FixedX = True
     lTitle.FixedY = True
     lTitle.Align = TextAlignModes.AlignTopLeft
     lTitle.IncludeInAutoscale = False
     lTitle.PaddingX = 0#
     lTitle.Color = &H808080
-    lTitle.Layer = LayerBackground + 1
+    lTitle.layer = LayerBackground + 1
     lTitle.Text = "© " & Year(Now) & " Copyright TradeWright Software Systems"
     Dim lFont As New StdFont
     lFont.name = "Arial"
@@ -437,14 +510,12 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
-Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As TWUtilities30.StateChangeEventData)
+Private Sub MultiChart1_ChartStateChanged(ByVal index As Long, ev As StateChangeEventData)
 Const ProcName As String = "MultiChart1_ChartStateChanged"
-Dim loadingText As Text
-
-
 On Error GoTo Err
 
-Select Case ev.state
+Dim loadingText As Text
+Select Case ev.State
 Case ChartStateBlank
 
 Case ChartStateCreated
@@ -459,7 +530,7 @@ Case ChartStateInitialised
     loadingText.Font.Size = 16
     loadingText.Font.Italic = True
     loadingText.Align = AlignBottomCentre
-    loadingText.position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
+    loadingText.Position = NewPoint(50, 0.2, CoordsRelative, CoordsDistance)
     loadingText.Text = "Fetching historical data"
 Case ChartStateLoading
     Set loadingText = MultiChart1.loadingText(index)
@@ -473,7 +544,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
 End Sub
 
 '================================================================================
@@ -482,7 +552,6 @@ End Sub
 
 Private Sub mChartController_PointerModeChanged()
 Const ProcName As String = "mChartController_PointerModeChanged"
-
 On Error GoTo Err
 
 setSelectionButton
@@ -495,137 +564,25 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '================================================================================
-' mTicker Event Handlers
+' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mTicker_ask(ev As QuoteEventData)
-Const ProcName As String = "mTicker_ask"
-
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-mCurrentAsk = GetFormattedPriceFromQuoteEvent(ev)
+If Not ev.Future.IsAvailable Then Exit Sub
+Dim lContract As IContract
+Set lContract = ev.Future.value
+mSecType = lContract.Specifier.SecType
+mSymbol = lContract.Specifier.LocalSymbol
+mTicksize = lContract.TickSize
 setCaption
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_bid(ev As QuoteEventData)
-Const ProcName As String = "mTicker_bid"
-
-On Error GoTo Err
-
-mCurrentBid = GetFormattedPriceFromQuoteEvent(ev)
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_high(ev As QuoteEventData)
-Const ProcName As String = "mTicker_high"
-
-On Error GoTo Err
-
-mCurrentHigh = GetFormattedPriceFromQuoteEvent(ev)
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_Low(ev As QuoteEventData)
-Const ProcName As String = "mTicker_Low"
-
-On Error GoTo Err
-
-mCurrentLow = GetFormattedPriceFromQuoteEvent(ev)
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_previousClose(ev As QuoteEventData)
-Const ProcName As String = "mTicker_previousClose"
-
-On Error GoTo Err
-
-mPreviousClose = GetFormattedPriceFromQuoteEvent(ev)
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_stateChange( _
-                ByRef ev As TWUtilities30.StateChangeEventData)
-Const ProcName As String = "mTicker_stateChange"
-
-On Error GoTo Err
-
-If ev.state = TickerStates.TickerStateReady Then
-    mSymbol = mTicker.Contract.Specifier.LocalSymbol
-    setCaption
-ElseIf ev.state = TickerStates.TickerStateStopped Then
-    ' the ticker has been stopped before the chart has been closed,
-    ' so remove the chart from the config and close it
-    MultiChart1.Finish
-    mConfig.Remove
-    Set mConfig = Nothing
-    Unload Me
-End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_trade(ev As QuoteEventData)
-Const ProcName As String = "mTicker_trade"
-
-On Error GoTo Err
-
-mCurrentTrade = GetFormattedPriceFromQuoteEvent(ev)
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTicker_volume(ev As QuoteEventData)
-Const ProcName As String = "mTicker_volume"
-
-On Error GoTo Err
-
-mCurrentVolume = ev.Size
-setCaption
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -644,27 +601,66 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub Initialise( _
+                ByVal pTicker As Ticker, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                ByVal pAppInstanceConfig As ConfigurationSection, _
+                ByVal pSpec As ChartSpecifier, _
+                ByVal pStyle As ChartStyle)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mTicker = pTicker
+mTicker.AddStateChangeListener Me
+mTicker.AddGenericTickListener Me
+mFutureWaiter.Add mTicker.ContractFuture
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
+mIsHistorical = (pSpec.toTime <> CDate(0))
+
+MultiChart1.Initialise mTicker.Timeframes, pTimePeriodValidator, pSpec, pStyle, pBarFormatterLibManager, , , mTicker.IsTickReplay
+If Not mTicker.IsTickReplay Then setConfig pAppInstanceConfig
+
+ChartNavToolbar1.Initialise , MultiChart1
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
+ChartStylePicker.Initialise , MultiChart1
+
+getInitialTickerValues
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Function LoadFromConfig( _
+                ByVal pTicker As Ticker, _
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
                 ByVal config As ConfigurationSection) As Boolean
 Const ProcName As String = "LoadFromConfig"
-
 On Error GoTo Err
+
+Set mTicker = pTicker
+mTicker.AddStateChangeListener Me
+mTicker.AddGenericTickListener Me
+mFutureWaiter.Add mTicker.ContractFuture
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
+ChartNavToolbar1.Initialise , MultiChart1
+BarFormatterPicker.Initialise mBarFormatterLibManager, , MultiChart1
+ChartStylePicker.Initialise , MultiChart1
 
 Set mConfig = config
 mIsHistorical = CBool(mConfig.GetSetting(ConfigSettingHistorical, "False"))
-If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionMultiChart)) Then
+If Not MultiChart1.LoadFromConfig(mConfig.GetConfigurationSection(ConfigSectionMultiChart), mTicker.Timeframes, pTimePeriodValidator, pBarFormatterLibManager) Then
     LoadFromConfig = False
     Exit Function
 End If
 
-ChartNavToolbar1.initialise , MultiChart1
-BarFormatterPicker.initialise , MultiChart1
-ChartStylePicker.initialise , MultiChart1
-
-Set mTicker = MultiChart1.Ticker
-If Not mIsHistorical Then getInitialTickerValues
-
-setCaption
 setWindow
 
 LoadFromConfig = True
@@ -673,34 +669,15 @@ Exit Function
 
 Err:
 Set mTicker = Nothing
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub showChart( _
-                ByVal pTicker As Ticker, _
-                ByVal pPeriodLength As TimePeriod, _
-                ByVal pSpec As ChartSpecifier, _
-                ByVal pStyle As ChartStyle)
+Friend Sub ShowChart( _
+                ByVal pPeriodLength As TimePeriod)
 Const ProcName As String = "showChart"
-
-
-
 On Error GoTo Err
 
-mIsHistorical = (pSpec.toTime <> CDate(0))
-
-Set mTicker = pTicker
-
-getInitialTickerValues
-
-MultiChart1.initialise mTicker, pSpec, pStyle
-If Not mTicker.ReplayingTickfile Then setConfig
-
 MultiChart1.Add pPeriodLength
-
-ChartNavToolbar1.initialise , MultiChart1
-BarFormatterPicker.initialise , MultiChart1
-ChartStylePicker.initialise , MultiChart1
 
 setCaption
 
@@ -708,7 +685,7 @@ Exit Sub
 
 Err:
 Set mTicker = Nothing
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -717,17 +694,15 @@ End Sub
 
 Private Sub createFibChartTool()
 Const ProcName As String = "createFibChartTool"
-Dim ls As LineStyle
-Dim lineSpecs(4) As FibLineSpecifier
-
-
 On Error GoTo Err
 
+Dim ls As LineStyle
 Set ls = New LineStyle
 ls.Extended = True
 ls.IncludeInAutoscale = False
-
 ls.Color = &H808080
+
+Dim lineSpecs(4) As FibLineSpecifier
 Set lineSpecs(0).Style = ls.Clone
 lineSpecs(0).Percentage = 0
 
@@ -753,16 +728,14 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createLineChartTool()
 Const ProcName As String = "createLineChartTool"
-Dim ls As LineStyle
-
-
 On Error GoTo Err
 
+Dim ls As LineStyle
 Set ls = New LineStyle
 ls.Extended = True
 ls.ExtendAfter = True
@@ -774,34 +747,35 @@ MultiChart1.SetFocus
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getFormattedPrice(ByVal pPrice As Double) As String
+getFormattedPrice = FormatPrice(pPrice, mSecType, mTicksize)
+End Function
 
 Private Sub getInitialTickerValues()
 Const ProcName As String = "getInitialTickerValues"
-
 On Error GoTo Err
 
-If mTicker.state <> TickerStateRunning Then Exit Sub
+If mTicker.State <> MarketDataSourceStates.MarketDataSourceStateRunning Then Exit Sub
 
-mSymbol = mTicker.Contract.Specifier.LocalSymbol
-mCurrentBid = mTicker.FormatPrice(mTicker.BidPrice)
-mCurrentTrade = mTicker.FormatPrice(mTicker.TradePrice)
-mCurrentAsk = mTicker.FormatPrice(mTicker.AskPrice)
-mCurrentVolume = mTicker.Volume
-mCurrentHigh = mTicker.FormatPrice(mTicker.HighPrice)
-mCurrentLow = mTicker.FormatPrice(mTicker.LowPrice)
-mPreviousClose = mTicker.FormatPrice(mTicker.ClosePrice)
+mCurrentBid = getFormattedPrice(mTicker.CurrentQuote(TickTypeBid).Price)
+mCurrentTrade = getFormattedPrice(mTicker.CurrentQuote(TickTypeTrade).Price)
+mCurrentAsk = getFormattedPrice(mTicker.CurrentQuote(TickTypeAsk).Price)
+mCurrentVolume = CStr(mTicker.CurrentQuote(TickTypeVolume).Size)
+mCurrentHigh = getFormattedPrice(mTicker.CurrentQuote(TickTypeHighPrice).Price)
+mCurrentLow = getFormattedPrice(mTicker.CurrentQuote(TickTypeLowPrice).Price)
+mPreviousClose = getFormattedPrice(mTicker.CurrentQuote(TickTypeClosePrice).Price)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Resize()
 Const ProcName As String = "Resize"
-
 On Error GoTo Err
 
 If Me.WindowState = FormWindowStateConstants.vbMinimized Then Exit Sub
@@ -814,16 +788,14 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setCaption()
 Const ProcName As String = "setCaption"
-Dim s As String
-
-
 On Error GoTo Err
 
+Dim s As String
 If MultiChart1.Count = 0 Then
     s = mSymbol
 Else
@@ -848,15 +820,14 @@ Me.caption = s
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setConfig()
+Private Sub setConfig(ByVal pAppInstanceConfig As ConfigurationSection)
 Const ProcName As String = "setConfig"
-
 On Error GoTo Err
 
-Set mConfig = gAppInstanceConfig.GetConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
+Set mConfig = pAppInstanceConfig.GetConfigurationSection(ConfigSectionCharts).AddConfigurationSection(ConfigSectionChart & "(" & mTicker.Key & ")")
 mConfig.SetSetting ConfigSettingHistorical, CStr(mIsHistorical)
 updateSettings
 MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMultiChart)
@@ -864,12 +835,11 @@ MultiChart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSelectionMode()
 Const ProcName As String = "setSelectionMode"
-
 On Error GoTo Err
 
 If mChartController.PointerMode <> PointerModeSelection Then
@@ -883,12 +853,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSelectionButton()
 Const ProcName As String = "setSelectionButton"
-
 On Error GoTo Err
 
 If mChartController.PointerMode = PointerModeSelection Then
@@ -900,12 +869,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setWindow()
 Const ProcName As String = "setWindow"
-
 On Error GoTo Err
 
 Me.Width = CLng(mConfig.GetSetting(ConfigSettingWidth, Me.Width / Screen.TwipsPerPixelX)) * Screen.TwipsPerPixelX
@@ -925,12 +893,11 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub syncStudyPicker()
 Const ProcName As String = "syncStudyPicker"
-
 On Error GoTo Err
 
 If MultiChart1.Count = 0 Then Exit Sub
@@ -941,12 +908,11 @@ gSyncStudyPicker MultiChart1.ChartManager, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateSettings()
 Const ProcName As String = "updateSettings"
-
 On Error GoTo Err
 
 Select Case Me.WindowState
@@ -965,7 +931,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
