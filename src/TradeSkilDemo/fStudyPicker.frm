@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#193.0#0"; "StudiesUI2-6.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#105.0#0"; "StudiesUI27.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -14,7 +14,7 @@ Begin VB.Form fStudyPicker
    ScaleWidth      =   8700
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI26.StudyPicker StudyPicker1 
+   Begin StudiesUI27.StudyPicker StudyPicker1 
       Height          =   4335
       Left            =   0
       TabIndex        =   0
@@ -82,20 +82,20 @@ Private Const ModuleName                    As String = "fStudyPicker"
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal pChartManager As ChartManager, _
                 ByVal title As String)
 Const ProcName As String = "initialise"
 
 On Error GoTo Err
 
-StudyPicker1.initialise pChartManager
+StudyPicker1.Initialise pChartManager
 Me.caption = title
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
