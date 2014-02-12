@@ -44,11 +44,23 @@ Private Const ModuleName                            As String = "ChartFormContro
 ' Member variables
 '@================================================================================
 
-Private mChartForm                                  As New fChart
+Private mChartForm                                  As fChart
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mChartForm = New fChart
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -62,12 +74,16 @@ Private mChartForm                                  As New fChart
 ' Properties
 '@================================================================================
 
+Friend Property Get chartForm() As fChart
+Set chartForm = mChartForm
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub Initialise( _
-                ByVal pContractFuture As IContract, _
+Friend Sub Initialise( _
+                ByVal pContractFuture As IFuture, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -85,8 +101,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub InitialiseHistoric( _
-                ByVal pContractFuture As IContract, _
+Friend Sub InitialiseHistoric( _
+                ByVal pContractFuture As IFuture, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -104,7 +120,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub InitialiseWithDataSource( _
+Friend Sub InitialiseWithDataSource( _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
@@ -123,7 +139,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub InitialiseWithTicker( _
+Friend Sub InitialiseWithTicker( _
                 ByVal pTicker As Ticker, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -141,8 +157,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function LoadFromConfig( _
-                ByVal pContractFuture As IContract, _
+Friend Function LoadFromConfig( _
+                ByVal pContractFuture As IFuture, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
@@ -158,7 +174,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function LoadFromConfigWithDataSource( _
+Friend Function LoadFromConfigWithDataSource( _
                 ByVal pDataSource As IMarketDataSource, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
@@ -172,13 +188,11 @@ LoadFromConfigWithDataSource = mChartForm.LoadFromConfigWithDataSource(pDataSour
 Exit Function
 
 Err:
-Set mDataSource = Nothing
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function LoadFromConfigWithTicker( _
+Friend Function LoadFromConfigWithTicker( _
                 ByVal pTicker As Ticker, _
-                ByVal pTimeframes As Timeframes, _
                 ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 ByVal pTimePeriodValidator As ITimePeriodValidator, _
                 ByVal pConfig As ConfigurationSection) As Boolean
@@ -193,7 +207,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub ShowChart( _
+Friend Sub ShowChart( _
                 ByVal pPeriodLength As TimePeriod)
 Const ProcName As String = "showChart"
 On Error GoTo Err
@@ -203,7 +217,30 @@ mChartForm.ShowChart pPeriodLength
 Exit Sub
 
 Err:
-Set mDataSource = Nothing
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Show(ByVal pModal As FormShowConstants)
+Const ProcName As String = "Show"
+On Error GoTo Err
+
+mChartForm.Show pModal
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub UnloadChart()
+Const ProcName As String = "UnloadChart"
+On Error GoTo Err
+
+Unload mChartForm
+
+Exit Sub
+
+Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
