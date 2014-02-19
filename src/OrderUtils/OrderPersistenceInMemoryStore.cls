@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "OrderPersistenceInMemoryStore"
+Private Const ModuleName                            As String = "InMemoryStore"
 
 '@================================================================================
 ' Member variables
