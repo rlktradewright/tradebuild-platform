@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#241.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#127.0#0"; "TradingUI27.ocx"
 Begin VB.Form fContractSpec 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Contract specifier"
@@ -58,7 +58,7 @@ Begin VB.Form fContractSpec
       Top             =   120
       Width           =   1215
    End
-   Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
+   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3690
       Left            =   120
       TabIndex        =   1
@@ -107,7 +107,6 @@ Event ContractSpecReady( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "DataCollector26"
 Private Const ModuleName                    As String = "fContractSpec"
 
 '@================================================================================
@@ -194,19 +193,19 @@ Set contractSpec = ContractSpecBuilder1.ContractSpecifier
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 If contractSpec Is Nothing Then
@@ -221,7 +220,7 @@ IncludeMarketDepthCheck.Value = IIf(includeMktDepth, vbChecked, vbUnchecked)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -11,8 +11,8 @@ Begin VB.Form fConfig
    MinButton       =   0   'False
    ScaleHeight     =   4215
    ScaleWidth      =   10230
-   StartUpPosition =   3  'Windows Default
-   Begin DataCollector26.ConfigViewer ConfigViewer1 
+   StartUpPosition =   2  'CenterScreen
+   Begin DataCollector27.ConfigViewer ConfigViewer1 
       Height          =   4095
       Left            =   120
       TabIndex        =   0
@@ -54,7 +54,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "DataCollector26"
 Private Const ModuleName                    As String = "fConfig"
 
 '@================================================================================
@@ -82,7 +81,7 @@ If ConfigViewer1.Dirty Then
             "If you click No, all configuration changes since the last save will be removed from the configuration file", _
             vbYesNo Or vbQuestion, _
             "Attention!") = vbYes Then
-        ConfigViewer1.saveConfigFile
+        ConfigViewer1.SaveConfigFile
     End If
 End If
 
@@ -108,19 +107,19 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Function initialise( _
+Public Function Initialise( _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 setCaption readonly
-ConfigViewer1.initialise pconfigManager, readonly
+ConfigViewer1.Initialise pconfigManager, readonly
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -137,6 +136,6 @@ Me.Caption = App.ProductName & " settings" & IIf(readonly, " (Read only)", "")
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

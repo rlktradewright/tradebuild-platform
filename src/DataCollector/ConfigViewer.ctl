@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#241.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#8.0#0"; "TradeBuildUI27.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   13740
@@ -10,7 +10,7 @@ Begin VB.UserControl ConfigViewer
    DefaultCancel   =   -1  'True
    ScaleHeight     =   13740
    ScaleWidth      =   16680
-   Begin DataCollector26.ContractsConfigurer ContractsConfigurer1 
+   Begin DataCollector27.ContractsConfigurer ContractsConfigurer1 
       Height          =   4005
       Left            =   8520
       TabIndex        =   11
@@ -85,7 +85,7 @@ Begin VB.UserControl ConfigViewer
       Style           =   7
       Appearance      =   0
    End
-   Begin TradeBuildUI26.SPConfigurer SPConfigurer1 
+   Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
       Height          =   3975
       Left            =   120
       TabIndex        =   6
@@ -231,7 +231,6 @@ Event SelectedItemChanged()
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "DataCollector26"
 Private Const ModuleName                    As String = "ConfigViewer"
 
 Private Const ConfigFileVersion             As String = "1.1"
@@ -281,7 +280,7 @@ Private Sub ConfigsTV_AfterLabelEdit( _
 Const ProcName As String = "ConfigsTV_AfterLabelEdit"
 On Error GoTo Err
 
-If Not mConfigManager.renameCurrent(NewString) Then
+If Not mConfigManager.RenameCurrent(NewString) Then
     MsgBox "Configuration name '" & NewString & "' is already in use", vbExclamation, "Error"
     Cancel = True
     Exit Sub
@@ -345,7 +344,7 @@ If IsObject(Node.Tag) Then
     setCurrentConfig Node.Tag, Node
     Set mSelectedAppConfig = Node.Tag
 Else
-    If Not Node.Parent.Tag Is mConfigManager.currentAppConfig Then setCurrentConfig Node.Parent.Tag, Node.Parent
+    If Not Node.Parent.Tag Is mConfigManager.CurrentAppConfig Then setCurrentConfig Node.Parent.Tag, Node.Parent
     
     If Node.Text = ConfigNodeServiceProviders Then
         showServiceProviderConfigDetails
@@ -394,7 +393,7 @@ Private Sub NewConfigButton_Click()
 Const ProcName As String = "NewConfigButton_Click"
 On Error GoTo Err
 
-addConfigNode mConfigManager.addNew
+addConfigNode mConfigManager.AddNew
 
 Exit Sub
 
@@ -406,7 +405,7 @@ Private Sub NewConfigMenu_Click()
 Const ProcName As String = "NewConfigMenu_Click"
 On Error GoTo Err
 
-addConfigNode (mConfigManager.addNew)
+addConfigNode (mConfigManager.AddNew)
 
 Exit Sub
 
@@ -430,7 +429,7 @@ Private Sub SaveConfigButton_Click()
 Const ProcName As String = "SaveConfigButton_Click"
 On Error GoTo Err
 
-saveConfigFile
+SaveConfigFile
 
 Exit Sub
 
@@ -442,7 +441,7 @@ Private Sub SaveConfigMenu_Click()
 Const ProcName As String = "SaveConfigMenu_Click"
 On Error GoTo Err
 
-saveConfigFile
+SaveConfigFile
 
 Exit Sub
 
@@ -454,7 +453,7 @@ Private Sub SetDefaultConfigMenu_Click()
 Const ProcName As String = "SetDefaultConfigMenu_Click"
 On Error GoTo Err
 
-toggleDefaultConfig
+ToggleDefaultConfig
 
 Exit Sub
 
@@ -467,7 +466,7 @@ Const ProcName As String = "WriteBarDataCheck_Click"
 On Error GoTo Err
 
 If mReadOnly Then Exit Sub
-mConfigManager.currentAppConfig.SetSetting ConfigSettingWriteBarData, CStr(WriteBarDataCheck.Value = vbChecked)
+mConfigManager.CurrentAppConfig.SetSetting ConfigSettingWriteBarData, CStr(WriteBarDataCheck.Value = vbChecked)
 
 Exit Sub
 
@@ -480,7 +479,7 @@ Const ProcName As String = "WriteTickDataCheck_Click"
 On Error GoTo Err
 
 If mReadOnly Then Exit Sub
-mConfigManager.currentAppConfig.SetSetting ConfigSettingWriteTickData, CStr(WriteTickDataCheck.Value = vbChecked)
+mConfigManager.CurrentAppConfig.SetSetting ConfigSettingWriteTickData, CStr(WriteTickDataCheck.Value = vbChecked)
 
 Exit Sub
 
@@ -533,7 +532,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Dirty() As Boolean
@@ -545,44 +544,44 @@ Dirty = mConfigManager.Dirty
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get appConfig( _
-                ByVal name As String) As ConfigurationSection
+Public Property Get AppConfig( _
+                ByVal Name As String) As ConfigurationSection
 Const ProcName As String = "appConfig"
 On Error GoTo Err
 
-Set appConfig = mConfigManager.appConfig(name)
+Set AppConfig = mConfigManager.AppConfig(Name)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get firstAppConfig() As ConfigurationSection
+Public Property Get FirstAppConfig() As ConfigurationSection
 Const ProcName As String = "firstAppConfig"
 On Error GoTo Err
 
-Set firstAppConfig = mConfigManager.firstAppConfig
+Set FirstAppConfig = mConfigManager.FirstAppConfig
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get selectedAppConfig() As ConfigurationSection
 Const ProcName As String = "selectedAppConfig"
 On Error GoTo Err
 
-Set selectedAppConfig = mConfigManager.currentAppConfig
+Set selectedAppConfig = mConfigManager.CurrentAppConfig
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -600,7 +599,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub createNewAppConfig( _
@@ -610,7 +609,7 @@ Public Sub createNewAppConfig( _
 Const ProcName As String = "createNewAppConfig"
 On Error GoTo Err
 
-Set mCurrConfigNode = addConfigNode(mConfigManager.addNew)
+Set mCurrConfigNode = addConfigNode(mConfigManager.AddNew)
 mCurrConfigNode.Expanded = True
 ConfigsTV.SelectedItem = mCurrConfigNode
 ConfigsTV_NodeClick ConfigsTV.SelectedItem
@@ -618,26 +617,26 @@ ConfigsTV_NodeClick ConfigsTV.SelectedItem
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function initialise( _
+Public Function Initialise( _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
-Dim appConfig As ConfigurationSection
+Dim AppConfig As ConfigurationSection
 Dim index As Long
 Dim newnode As Node
 
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mReadOnly = readonly
 
 Set mConfigManager = pconfigManager
 
-For Each appConfig In mConfigManager
-    Set newnode = addConfigNode(appConfig)
-    If appConfig Is mConfigManager.defaultAppConfig Then
+For Each AppConfig In mConfigManager
+    Set newnode = addConfigNode(AppConfig)
+    If AppConfig Is mConfigManager.DefaultAppConfig Then
         newnode.Bold = True
         Set mDefaultConfigNode = newnode
     End If
@@ -652,25 +651,25 @@ End If
 If Not ConfigsTV.SelectedItem Is Nothing Then ConfigsTV_NodeClick ConfigsTV.SelectedItem
 
 If mReadOnly Then disableControls
-initialise = True
+Initialise = True
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub saveConfigFile( _
+Public Sub SaveConfigFile( _
                 Optional ByVal filename As String)
 Const ProcName As String = "saveConfigFile"
 On Error GoTo Err
 
-mConfigManager.saveConfigFile filename
+mConfigManager.SaveConfigFile filename
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -678,14 +677,14 @@ End Sub
 '@================================================================================
 
 Private Function addConfigNode( _
-                ByVal appConfig As ConfigurationSection) As Node
-Dim name As String
+                ByVal AppConfig As ConfigurationSection) As Node
+Dim Name As String
 Const ProcName As String = "addConfigNode"
 On Error GoTo Err
 
-name = appConfig.InstanceQualifier
-Set addConfigNode = ConfigsTV.Nodes.Add(, , name, name)
-Set addConfigNode.Tag = appConfig
+Name = AppConfig.InstanceQualifier
+Set addConfigNode = ConfigsTV.Nodes.Add(, , Name, Name)
+Set addConfigNode.Tag = AppConfig
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeServiceProviders
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeParameters
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeContractSpecs
@@ -693,7 +692,7 @@ ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeContractSpecs
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub deleteAppConfig()
@@ -704,7 +703,7 @@ If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         "If you click Yes, all data for this configuration will be removed from the configuration file", _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
-    mConfigManager.deleteCurrent
+    mConfigManager.DeleteCurrent
     ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
     If mCurrConfigNode Is mDefaultConfigNode Then Set mDefaultConfigNode = Nothing
     Set mCurrConfigNode = Nothing
@@ -713,7 +712,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableControls()
@@ -727,7 +726,7 @@ SaveConfigButton.enabled = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub hideConfigControls()
@@ -741,7 +740,7 @@ ContractsConfigurer1.Visible = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setCurrentConfig( _
@@ -750,7 +749,7 @@ Private Sub setCurrentConfig( _
 Const ProcName As String = "setCurrentConfig"
 On Error GoTo Err
 
-mConfigManager.setCurrent cs
+mConfigManager.SetCurrent cs
 Set mCurrConfigNode = lNode
 
 hideConfigControls
@@ -759,7 +758,7 @@ If Not mReadOnly Then DeleteConfigButton.enabled = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showContractSpecsConfigDetails()
@@ -769,7 +768,7 @@ On Error GoTo Err
 
 hideConfigControls
 
-ContractsConfigurer1.initialise mConfigManager.currentAppConfig.GetConfigurationSection(ConfigSectionContracts), _
+ContractsConfigurer1.Initialise mConfigManager.CurrentAppConfig.GetConfigurationSection(ConfigSectionContracts), _
                                 mReadOnly
 
 ContractsConfigurer1.Left = Box1.Left
@@ -779,7 +778,7 @@ ContractsConfigurer1.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showParametersConfigDetails()
@@ -788,8 +787,8 @@ On Error GoTo Err
 
 hideConfigControls
 
-WriteBarDataCheck.Value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
-WriteTickDataCheck.Value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteTickData, "False") = "True", vbChecked, vbUnchecked)
+WriteBarDataCheck.Value = IIf(mConfigManager.CurrentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
+WriteTickDataCheck.Value = IIf(mConfigManager.CurrentAppConfig.GetSetting(ConfigSettingWriteTickData, "False") = "True", vbChecked, vbUnchecked)
 
 ParametersPicture.Left = Box1.Left
 ParametersPicture.Top = Box1.Top
@@ -798,7 +797,7 @@ ParametersPicture.Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showServiceProviderConfigDetails()
@@ -808,37 +807,38 @@ On Error GoTo Err
 hideConfigControls
 SPConfigurer1.Left = Box1.Left
 SPConfigurer1.Top = Box1.Top
-SPConfigurer1.initialise mConfigManager.currentAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
-                                        mReadOnly
+SPConfigurer1.Initialise PermittedSPRoles, _
+                        mConfigManager.CurrentAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
+                        mReadOnly
 SPConfigurer1.Visible = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub toggleDefaultConfig()
+Private Sub ToggleDefaultConfig()
 Const ProcName As String = "toggleDefaultConfig"
 On Error GoTo Err
 
-If mConfigManager.currentAppConfig Is mConfigManager.defaultAppConfig Then
+If mConfigManager.CurrentAppConfig Is mConfigManager.DefaultAppConfig Then
     mDefaultConfigNode.Bold = False
     Set mDefaultConfigNode = Nothing
 Else
-    If Not mConfigManager.defaultAppConfig Is Nothing Then
+    If Not mConfigManager.DefaultAppConfig Is Nothing Then
         mDefaultConfigNode.Bold = False
     End If
     
     Set mDefaultConfigNode = mCurrConfigNode
     mDefaultConfigNode.Bold = True
 End If
-mConfigManager.toggleDefaultConfig
+mConfigManager.ToggleDefaultConfig
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

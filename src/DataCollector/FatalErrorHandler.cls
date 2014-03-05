@@ -63,7 +63,7 @@ End Sub
 ' mUnhandledErrorHandler Event Handlers
 '@================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 gHandleFatalError
 End Sub
 

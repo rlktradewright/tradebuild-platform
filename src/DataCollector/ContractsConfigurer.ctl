@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -92,7 +92,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "DataCollector26"
 Private Const ModuleName                    As String = "ContractsConfigurer"
 
 '@================================================================================
@@ -214,7 +213,7 @@ End Sub
 '@================================================================================
 
 Private Sub mContractSpecForm_ContractSpecReady( _
-                ByVal contractSpec As ContractUtils26.ContractSpecifier, _
+                ByVal contractSpec As ContractUtils27.ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)
@@ -248,12 +247,12 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal contractsConfig As ConfigurationSection, _
                 ByVal readonly As Boolean)
 Dim contractConfig As ConfigurationSection
 
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mReadOnly = readonly
@@ -270,7 +269,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -287,7 +286,7 @@ addConfigurationSection.addConfigurationSection ConfigSectionContractspecifier
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function addListItem( _
@@ -303,7 +302,7 @@ Set addListItem = n
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ConfigurationSectionToContractSpec( _
@@ -343,7 +342,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
                 
 End Function
 
@@ -362,7 +361,7 @@ showContractSpecForm ConfigurationSectionToContractSpec(cs), _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showContractSpecForm( _
@@ -374,13 +373,13 @@ Const ProcName As String = "showContractSpecForm"
 On Error GoTo Err
 
 Set mContractSpecForm = New fContractSpec
-mContractSpecForm.initialise contractSpec, enabled, writeBidAskBars, includeMktDepth
+mContractSpecForm.Initialise contractSpec, enabled, writeBidAskBars, includeMktDepth
 mContractSpecForm.Show vbModal
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateConfigurationSection( _
@@ -409,7 +408,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
                 
 End Sub
 
@@ -432,6 +431,6 @@ pNode.Checked = CBool(contractCS.GetAttribute(AttributeNameEnabled, "False"))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
