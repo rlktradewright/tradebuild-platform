@@ -21,7 +21,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                As String = "TBDataCollector26"
+Public Const ProjectName                                As String = "DataCollector27"
 Public Const AppName                                    As String = "TradeBuild Data Collector"
 
 Private Const ModuleName                                As String = "MainModule"
@@ -51,10 +51,17 @@ Public Const ConfigNodeContractSpecs                    As String = "Contract Sp
 Public Const ConfigNodeServiceProviders                 As String = "Service Providers"
 Public Const ConfigNodeParameters                       As String = "Parameters"
 
-Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & ".WriteBarData"
-Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & ".WriteTickData"
-Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & ".Format"
-Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & ".Path"
+Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & "&WriteBarData"
+Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & "&WriteTickData"
+Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & "&Format"
+Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & "&Path"
+
+Private Const DefaultAppInstanceConfigName              As String = "Default Config"
+
+Public Const PermittedSPRoles                           As Long = ServiceProviderRoles.SPRoleRealtimeData Or _
+                                                                    ServiceProviderRoles.SPRoleContractDataPrimary Or _
+                                                                    ServiceProviderRoles.SPRoleHistoricalDataOutput Or _
+                                                                    ServiceProviderRoles.SPRoleTickfileOutput
 
 
 ' command line switch indicating which configuration to load
@@ -66,6 +73,13 @@ Public Const SwitchSetup                                As String = "setup"
 
 Public Const SwitchConcurrency                          As String = "concurrency"
 Public Const SwitchQuantum                              As String = "quantum"
+
+Public Const TWSClientId                                As Long = -1
+Public Const TWSConnectRetryInterval                    As Long = 10
+Public Const TWSPort                                    As Long = 7496
+Public Const TWSServer                                  As String = ""
+
+Public Const TickfilesPath                              As String = "C:\Data\Tickfiles"
 
 '@================================================================================
 ' Enums
@@ -143,7 +157,7 @@ configFilename = fn
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -153,14 +167,17 @@ End Property
 Public Sub gHandleFatalError()
 On Error Resume Next    ' ignore any further errors that might arise
 
-If Not mNoUI Then
-    MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
-            "Please email the log file located at" & vbCrLf & vbCrLf & _
-            "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
-            "to support@tradewright.com", _
-            vbCritical, _
-            "Fatal error"
-End If
+' we don't do the following since if the program is running unattended we may want to definitely
+' end the program at this point so that it can be restarted. What we really need is an alerter
+' service provider that can provide a notification in some form that a fault has occurred.
+'If Not mNoUI Then
+'    MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+'            "Please email the log file located at" & vbCrLf & vbCrLf & _
+'            "     " & DefaultLogFileName(Command) & vbCrLf & vbCrLf & _
+'            "to support@tradewright.com", _
+'            vbCritical, _
+'            "Fatal error"
+'End If
 
 ' At this point, we don't know what state things are in, so it's not feasible to return to
 ' the caller. All we can do is terminate abruptly. Note that normally one would use the
@@ -184,7 +201,6 @@ End Sub
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pReRaise As Boolean = True, _
@@ -196,12 +212,11 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-HandleUnexpectedError pProcedureName, pProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
                 Optional ByVal pErrorNumber As Long, _
@@ -211,11 +226,10 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Sub Main()
-
 Const ProcName As String = "Main"
 On Error GoTo Err
 
@@ -227,7 +241,9 @@ Set mFatalErrorHandler = New FatalErrorHandler
 
 ApplicationGroupName = "TradeWright"
 ApplicationName = AppTitle
-SetupDefaultLogging Command
+
+LogMessage "Logfile is: " & SetupDefaultLogging(Command)
+LogMessage "Loglevel is: " & LogLevelToString(DefaultLogLevel)
 
 RunTasksAtLowerThreadPriority = False
 
@@ -243,23 +259,23 @@ End If
 
 setTaskParameters
 
-TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
-                                                ServiceProviderRoles.SPPrimaryContractData Or _
-                                                ServiceProviderRoles.SPHistoricalDataInput Or _
-                                                ServiceProviderRoles.SPHistoricalDataOutput Or _
-                                                ServiceProviderRoles.SPTickfileOutput
+mNoUI = getNoUi
 
-If Not getConfig Then
+If getConfigFile Is Nothing Then
+    createConfigFile configFilename, getConfigName
+    If Not getConfig Then
+        TerminateTWUtilities
+        Exit Sub
+    End If
+    showConfig
+ElseIf Not getConfig Then
     TerminateTWUtilities
+    Exit Sub
+ElseIf setup Then
     Exit Sub
 End If
 
-If setup Then Exit Sub
-
-mNoUI = getNoUi
-
 If Not configure Then
-    If Not mNoUI Then showConfig
     TerminateTWUtilities
     Exit Sub
 End If
@@ -281,7 +297,7 @@ If mNoUI Then
     
     If mStartTimeDescriptor = "" Then
         LogMessage "Starting data collection"
-        mDataCollector.startCollection
+        mDataCollector.StartCollection
     End If
     
     Do While Not gStop
@@ -294,14 +310,18 @@ If mNoUI Then
     
 Else
     LogMessage "Creating data collector object"
+    Dim f As New fDataCollectorUI
     Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
                                             mConfig.InstanceQualifier, _
                                             IIf(mNoAutoStart, "", mStartTimeDescriptor), _
                                             mEndTimeDescriptor, _
-                                            mExitTimeDescriptor)
+                                            mExitTimeDescriptor, _
+                                            5, _
+                                            f, _
+                                            f)
     
-    LogMessage "Creating form"
-    showMainForm
+    LogMessage "Showing form"
+    showMainForm f
 End If
 
 
@@ -315,8 +335,6 @@ End Sub
 '@================================================================================
 
 Private Function configure() As Boolean
-Dim f As fConfig
-
 Const ProcName As String = "configure"
 On Error GoTo Err
 
@@ -334,12 +352,45 @@ Err:
 configure = False
 End Function
 
+Public Sub createConfigFile(ByVal pConfigFilename As String, ByVal pConfigName As String)
+Const ProcName As String = "createConfigFile"
+On Error GoTo Err
+
+LogMessage "No configuration file exists - creating skeleton configuration file"
+
+Dim lBaseConfigFile As ConfigStoreProvider
+Set lBaseConfigFile = CreateXMLConfigurationProvider(App.ProductName, ConfigFileVersion)
+
+Dim lConfigStore As ConfigurationStore
+Set lConfigStore = CreateConfigurationStore(lBaseConfigFile, pConfigFilename)
+InitialiseConfigFile lConfigStore
+Dim lAppConfig As ConfigurationSection
+Set lAppConfig = AddAppInstanceConfig(lConfigStore, _
+                    IIf(pConfigName <> "", pConfigName, DefaultAppInstanceConfigName), _
+                    ConfigFlagSetAsDefault, _
+                    PermittedSPRoles, _
+                    pTWSServer:=TWSServer, _
+                    pTWSPort:=TWSPort, _
+                    pTwsClientId:=TWSClientId, _
+                    pTwsConnectionRetryIntervalSecs:=TWSConnectRetryInterval, _
+                    pTickfilesPath:=TickfilesPath)
+lAppConfig.addConfigurationSection ConfigSectionCollectionControl
+lAppConfig.addConfigurationSection ConfigSectionContracts
+
+lConfigStore.Save pConfigFilename
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function getConfig() As Boolean
 Const ProcName As String = "getConfig"
 On Error GoTo Err
 
 Set mConfigManager = New ConfigManager
-If mConfigManager.initialise(configFilename) Then
+If mConfigManager.Initialise(configFilename) Then
     logConfigFileDetails
     getConfig = True
 Else
@@ -351,7 +402,21 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getConfigFile() As ConfigStoreProvider
+Const ProcName As String = "getConfigFile"
+On Error GoTo Err
+
+On Error Resume Next
+Set getConfigFile = LoadConfigProviderFromXMLFile(configFilename)
+On Error GoTo Err
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getConfigName() As String
@@ -365,7 +430,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getConfigToLoad() As ConfigurationSection
@@ -387,7 +452,7 @@ Set getConfigToLoad = configToLoad
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -403,7 +468,7 @@ LogMessage "End at: " & getEndTimeDescriptor
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getExitTimeDescriptor() As String
@@ -418,7 +483,7 @@ LogMessage "Exit at: " & getExitTimeDescriptor
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNamedConfig() As ConfigurationSection
@@ -426,19 +491,19 @@ Const ProcName As String = "getNamedConfig"
 On Error GoTo Err
 
 If getConfigName <> "" Then
-    Set getNamedConfig = mConfigManager.appConfig(getConfigName)
+    Set getNamedConfig = mConfigManager.AppConfig(getConfigName)
     If getNamedConfig Is Nothing Then
         notifyError "The required configuration does not exist: " & getConfigName
         Err.Raise ErrorCodes.ErrIllegalArgumentException
     End If
 Else
-    Set getNamedConfig = mConfigManager.defaultAppConfig
+    Set getNamedConfig = mConfigManager.DefaultAppConfig
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNoAutostart() As Boolean
@@ -453,7 +518,7 @@ LogMessage "Auto start: " & Not getNoAutostart
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNoUi() As Boolean
@@ -468,7 +533,7 @@ LogMessage "Run with UI: " & Not getNoUi
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getStartTimeDescriptor() As String
@@ -483,7 +548,7 @@ LogMessage "Start at: " & getStartTimeDescriptor
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function inDev() As Boolean
@@ -496,7 +561,7 @@ inDev = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logConfigFileDetails()
@@ -508,7 +573,7 @@ LogMessage "Configuration file: " & configFilename
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyError( _
@@ -516,13 +581,13 @@ Private Sub notifyError( _
 Const ProcName As String = "notifyError"
 On Error GoTo Err
 
-LogMessage message, TWUtilities30.LogLevels.LogLevelSevere
+LogMessage message, LogLevels.LogLevelSevere
 If Not mNoUI Then MsgBox message & vbCrLf & vbCrLf & "The program will close.", vbCritical, "Attention!"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTaskParameters()
@@ -555,7 +620,7 @@ LogMessage "Task quantum (millisecs)=" & TaskQuantumMillisecs
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -570,7 +635,7 @@ setup = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showConfig()
@@ -579,13 +644,13 @@ Const ProcName As String = "showConfig"
 On Error GoTo Err
 
 Set f = New fConfig
-f.initialise mConfigManager, False
-f.Show vbModeless
+f.Initialise mConfigManager, False
+f.Show vbModal
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function showHelp() As Boolean
@@ -595,10 +660,10 @@ On Error GoTo Err
 
 If mCLParser.Switch("?") Then
     s = vbCrLf & _
-            "datacollector26 [configfilename]" & vbCrLf & _
+            "datacollector27 [configfilename]" & vbCrLf & _
             "                /setup " & vbCrLf & _
             "   or " & vbCrLf & _
-            "datacollector26 [configfilename] " & vbCrLf & _
+            "datacollector27 [configfilename] " & vbCrLf & _
             "                [/config:configtoload] " & vbCrLf & _
             "                [/log:filename] " & vbCrLf & _
             "                [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
@@ -627,13 +692,13 @@ If mCLParser.Switch("?") Then
             "       All     or A"
     s = s & vbCrLf & _
             "Example 1:" & vbCrLf & _
-            "   datacollector26 /setup" & vbCrLf & _
+            "   datacollector27 /setup" & vbCrLf & _
             "       runs the data collector configurer, which enables you to define " & vbCrLf & _
             "       various configurations for use with different data collector " & vbCrLf & _
             "       instances. The default configuration file is used to store this" & vbCrLf & _
             "       information." & vbCrLf & _
             "Example 2:" & vbCrLf & _
-            "   datacollector26 mysettings.xml /config:""US Futures""" & vbCrLf & _
+            "   datacollector27 mysettings.xml /config:""US Futures""" & vbCrLf & _
             "       runs the data collector in accordance with the configuration" & vbCrLf & _
             "       called ""US Futures"" defined in the mysettings.xml file."
     MsgBox s, , "Usage"
@@ -643,12 +708,11 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub showMainForm()
+Private Sub showMainForm(ByVal pForm As fDataCollectorUI)
 Dim posnValue As String
-Dim f As New fDataCollectorUI
 
 Const ProcName As String = "showMainForm"
 On Error GoTo Err
@@ -675,27 +739,27 @@ If mCLParser.Switch("posn") Then
     
     mPosY = Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))
 Else
-    mPosX = Int(Int(Screen.Width / f.Width) * Rnd)
-    mPosY = Int(Int(Screen.Height / f.Height) * Rnd)
+    mPosX = Int(Int(Screen.Width / pForm.Width) * Rnd)
+    mPosY = Int(Int(Screen.Height / pForm.Height) * Rnd)
 End If
 
 LogMessage "Form position: " & mPosX & "," & mPosY
 
-f.initialise mDataCollector, _
+pForm.Initialise mDataCollector, _
                 mConfigManager, _
                 getConfigName, _
                 getNoAutostart, _
                 CBool(mCLParser.Switch("showMonitor"))
 
-f.Left = mPosX * f.Width
-f.Top = mPosY * f.Height
+pForm.Left = mPosX * pForm.Width
+pForm.Top = mPosY * pForm.Height
 
-f.Visible = True
+pForm.Visible = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
