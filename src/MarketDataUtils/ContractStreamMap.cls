@@ -44,14 +44,14 @@ Private Const ModuleName                            As String = "ContractStreamM
 ' Member variables
 '@================================================================================
 
-Private mStreamIndexes                              As EnumerableCollection
+Private mIndexes                                    As EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mStreamIndexes = New EnumerableCollection
+Set mIndexes = New EnumerableCollection
 End Sub
 
 '@================================================================================
@@ -72,11 +72,11 @@ End Sub
 
 Friend Sub Add( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pStreamId As Long)
+                ByVal pIndex As Long)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-mStreamIndexes.Add pStreamId, pContractSpec.Key
+mIndexes.Add pIndex, pContractSpec.Key
 
 Exit Sub
 
@@ -90,7 +90,7 @@ Friend Function Contains( _
 Const ProcName As String = "Contains"
 On Error GoTo Err
 
-Contains = mStreamIndexes.Contains(pContractSpec.Key)
+Contains = mIndexes.Contains(pContractSpec.Key)
 
 Exit Function
 
@@ -103,7 +103,7 @@ Public Function Item( _
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Item = mStreamIndexes.Item(pContractSpec.Key)
+Item = mIndexes.Item(pContractSpec.Key)
 
 Exit Function
 
@@ -114,7 +114,7 @@ End Function
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mStreamIndexes.[NewEnum]
+Set NewEnum = mIndexes.[NewEnum]
 End Function
 
 
@@ -123,7 +123,7 @@ Friend Sub Remove( _
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mStreamIndexes.Remove pContractSpec.Key
+mIndexes.Remove pContractSpec.Key
 
 Exit Sub
 
