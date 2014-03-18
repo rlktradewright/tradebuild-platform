@@ -1,49 +1,57 @@
-cd typelib
-midl /mktyplib203 chartskiltypes26.idl
-rem pause
-regtlib chartskiltypes26.tlb
-rem pause
-cd ..
-
+vb6 /m SessionUtils\SessionUtils.vbp
+if errorlevel 1 pause
 vb6 /m ContractUtils\ContractUtils.vbp
-rem pause
-vb6 /m TimeframeUtils\TimeframeUtils.vbp
-rem pause
+if errorlevel 1 pause
 vb6 /m TickUtils\TickUtils.vbp
-rem pause
+if errorlevel 1 pause
+vb6 /m BarUtils\BarUtils.vbp
+if errorlevel 1 pause
 vb6 /m StudyUtils\StudyUtils.vbp
-rem pause
+if errorlevel 1 pause
 
-vb6 /m ChartSkil\ChartSkil.vbp
-rem pause
-vb6 /m ChartUtils\ChartUtils.vbp
-rem pause
-vb6 /m StudiesUI\StudiesUI.vbp
-rem pause
-vb6 /m ChartTools\ChartTools.vbp
-rem pause
-vb6 /m BarFormatters\BarFormatters.vbp
-rem pause
-
+vb6 /m TickfileUtils\TickfileUtils.vbp
+if errorlevel 1 pause
+vb6 /m HistDataUtils\HistDataUtils.vbp
+if errorlevel 1 pause
 
 vb6 /m TradingDO\TradingDO.vbp
-rem pause
+if errorlevel 1 pause
+vb6 /m TimeframeUtils\TimeframeUtils.vbp
+if errorlevel 1 pause
+vb6 /m TradingDbApi\TradingDbApi.vbp
+if errorlevel 1 pause
+vb6 /m MarketDataUtils\MarketDataUtils.vbp
+if errorlevel 1 pause
+vb6 /m OrderUtils\OrderUtils.vbp
+if errorlevel 1 pause
+vb6 /m TickerUtils\TickerUtils.vbp
+if errorlevel 1 pause
+
+
+vb6 /m ChartSkil\ChartSkil.vbp
+if errorlevel 1 pause
+vb6 /m BarFormatters\BarFormatters.vbp
+if errorlevel 1 pause
+vb6 /m ChartUtils\ChartUtils.vbp
+if errorlevel 1 pause
+vb6 /m ChartTools\ChartTools.vbp
+if errorlevel 1 pause
+
+
+vb6 /m StudiesUI\StudiesUI.vbp
+if errorlevel 1 pause
+vb6 /m TradingUI\TradingUI.vbp
+if errorlevel 1 pause
 
 vb6 /m CommonStudiesLib\CommonStudiesLib.vbp
-rem pause
+if errorlevel 1 pause
 
-cd typelib
-midl /mktyplib203 tradebuildsp26.idl
-rem pause
-regtlib tradebuildsp26.tlb
-rem pause
-cd ..
 vb6 /m TradeBuild\TradeBuild.vbp
-rem pause
+if errorlevel 1 pause
 vb6 /m ConfigUtils\ConfigUtils.vbp
-rem pause
+if errorlevel 1 pause
 vb6 /m TradeBuildUI\TradeBuildUI.vbp
-rem pause
+if errorlevel 1 pause
 
 vb6 /m TBDataCollector\TBDataCollector.vbp
-rem pause
+if errorlevel 1 pause
