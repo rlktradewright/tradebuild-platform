@@ -144,7 +144,7 @@ Private Sub setupSession(ByVal pSessionBuilder As SessionBuilder)
 Const ProcName As String = "setupSession"
 On Error GoTo Err
 
-mFutureBuilder.Value = pSessionBuilder.SessionFuture.Value
+mFutureBuilder.Value = pSessionBuilder.Session
 mFutureBuilder.Complete
 
 Exit Sub
