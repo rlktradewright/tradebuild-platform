@@ -290,8 +290,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractSpecsEqual( _
-                ByVal pContractSpec1 As IContract, _
-                ByVal pContractSpec2 As IContract) As Boolean
+                ByVal pContractSpec1 As IContractSpecifier, _
+                ByVal pContractSpec2 As IContractSpecifier) As Boolean
 Const ProcName As String = "ContractSpecsEqual"
 On Error GoTo Err
 
