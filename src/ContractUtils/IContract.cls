@@ -84,9 +84,6 @@ End Property
 Public Property Get Specifier() As IContractSpecifier
 End Property
 
-Public Property Let SortKeys(ByRef Value() As ContractSortKeyIds)
-End Property
-                
 Public Property Get TickSize() As Double
 End Property
 

@@ -73,9 +73,6 @@ End Property
 Public Sub Add(ByVal pContract As IContract)
 End Sub
 
-Public Sub Remove(ByVal index As Variant)
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Comparable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,32 @@ Private Const ModuleName                            As String = "ContractCompara
 ' Member variables
 '@================================================================================
 
+Private mSortKeys()                                 As ContractSortKeyIds
+Private mContractSpec                               As IContractSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' Comparable Interface Members
 '@================================================================================
+
+Private Function Comparable_CompareTo(ByVal pObj As Comparable) As Long
+Const ProcName As String = "Comparable_CompareTo"
+On Error GoTo Err
+
+Assert TypeOf pObj Is ContractComparable, "Type of pobj is not ContractComparable"
+
+Dim lComparable As ContractComparable
+Set lComparable = pObj
+Comparable_CompareTo = gContractSpecsCompare(mContractSpec, lComparable.ContractSpec, mSortKeys)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -60,10 +81,27 @@ Private Const ModuleName                            As String = "ContractCompara
 ' Properties
 '@================================================================================
 
+Friend Property Get ContractSpec() As IContractSpecifier
+Set ContractSpec = mContractSpec
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise(ByVal pContractSpec As IContractSpecifier, ByRef pSortkeys() As ContractSortKeyIds)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mContractSpec = pContractSpec
+mSortKeys = pSortkeys
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                
 '@================================================================================
 ' Helper Functions
 '@================================================================================

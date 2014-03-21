@@ -172,13 +172,10 @@ End Property
 Public Property Let zExpiry(ByVal Value As String)
 Attribute zExpiry.VB_MemberFlags = "40"
 Const ProcName As String = "Expiry"
-
 On Error GoTo Err
 
 If Value = "" Then Exit Property
-If Not gIsValidExpiry(Value) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid Expiry"
-End If
+AssertArgument gIsValidExpiry(Value), "Invalid Expiry"
 
 mExpiry = Value
 
@@ -194,7 +191,6 @@ End Property
 
 Public Property Get Key() As String
 Const ProcName As String = "Key"
-
 On Error GoTo Err
 
 Key = gGetContractSpecKey(Me)
@@ -256,7 +252,6 @@ End Property
 
 Public Function Equals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
 Const ProcName As String = "Equals"
-
 On Error GoTo Err
 
 Equals = gContractSpecsEqual(Me, pContractSpecifier)
@@ -291,47 +286,33 @@ Public Sub Initialise( _
                 Optional ByVal CurrencyCode As String, _
                 Optional ByVal Expiry As String, _
                 Optional ByVal Strike As Double, _
-                Optional ByVal Right As OptionRights = OptNone)
+                Optional ByVal Right As OptionRights = OptionRights.OptNone)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If LocalSymbol = "" And Symbol = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Symbol must be supplied if LocalSymbol is not supplied"
-End If
-
-If Exchange <> "" And _
-    Not gIsValidExchangeCode(Exchange) _
-Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Exchange & "' is not a valid Exchange code"
-End If
-
-If Expiry <> "" Then
-    If Not gIsValidExpiry(Expiry) Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Expiry & "' is not a valid Expiry format"
-    End If
-End If
+AssertArgument LocalSymbol <> "" Or Symbol <> "", "Symbol must be supplied if LocalSymbol is not supplied"
+AssertArgument Exchange = "" Or gIsValidExchangeCode(Exchange), "'" & Exchange & "' is not a valid Exchange code"
+If Expiry <> "" Then AssertArgument gIsValidExpiry(Expiry), "'" & Expiry & "' is not a valid Expiry format"
 
 Select Case SecType
 Case 0  ' ie not supplied
 Case SecTypeStock
 Case SecTypeFuture
 Case SecTypeOption, SecTypeFuturesOption
-    If Strike < 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Strike must be > 0"
-    End If
+    AssertArgument Strike >= 0, "Strike must be >= 0"
     Select Case Right
     Case OptCall
     Case OptPut
     Case OptNone
     Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & Right & "' is not a valid option Right"
+        AssertArgument False, "'" & Right & "' is not a valid option Right"
     End Select
 Case SecTypeCash
 Case SecTypeCombo
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Sectype 'combo' is not permissible"
+    AssertArgument False, "Sectype 'combo' is not permissible"
 Case SecTypeIndex
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "'" & SecType & "' is not a valid secType"
+    AssertArgument False, "'" & SecType & "' is not a valid secType"
 End Select
 
 mLocalSymbol = LocalSymbol
@@ -351,10 +332,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
-Dim jb As JSONBuilder
 Const ProcName As String = "ToJSON"
 On Error GoTo Err
 
+Dim jb As JSONBuilder
 Set jb = New JSONBuilder
 
 jb.BeginObject
@@ -365,7 +346,7 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeName "ComboLegs"
 jb.EncodeValue mComboLegs
 
-jb.EncodeName "zCurrency"
+jb.EncodeName "zCurrencyCode"
 jb.EncodeValue mCurrency
 
 jb.EncodeName "zExchange"
@@ -400,12 +381,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
+Const ProcName As String = "ToString"
+On Error GoTo Err
+
 Dim comboLegObj As ComboLeg
 Dim i As Long
-
-Const ProcName As String = "ToString"
-
-On Error GoTo Err
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
 ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")

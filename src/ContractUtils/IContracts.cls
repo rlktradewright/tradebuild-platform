@@ -60,9 +60,6 @@ Private Const ModuleName                            As String = "IContracts"
 ' Properties
 '@================================================================================
 
-Public Property Get ContractSpecifier() As IContractSpecifier
-End Property
-
 Public Property Get Count() As Long
 End Property
 
@@ -84,14 +81,20 @@ Public Sub AddCollectionChangeListener( _
                 ByVal pListener As CollectionChangeListener)
 End Sub
 
-Public Function Item(ByVal index As Variant) As IContract
+Public Function ItemAtIndex(ByVal pIndex As Long) As IContract
+End Function
+
+Public Function Item(ByVal pKey As IContractSpecifier) As IContract
+Attribute Item.VB_UserMemId = 0
+End Function
+
+Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
 End Function
 
 Public Sub RemoveCollectionChangeListener( _
                 ByVal pListener As CollectionChangeListener)
-End Sub
-
-Public Sub Sort()
 End Sub
 
 Public Function ToString() As String

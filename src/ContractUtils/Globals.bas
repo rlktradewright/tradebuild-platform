@@ -276,7 +276,7 @@ On Error GoTo Err
 gGetContractSpecKey = pSpec.LocalSymbol & "|" & _
     CStr(pSpec.SecType) & "|" & _
     pSpec.Symbol & "|" & _
-    Left$(pSpec.Expiry, 6) & "|" & _
+    pSpec.Expiry & "|" & _
     pSpec.Strike & "|" & _
     CStr(pSpec.Right) & "|" & _
     pSpec.Exchange & "|" & _
@@ -905,6 +905,7 @@ addExchangeCode "LAVA"
 addExchangeCode "LIFFE"
 addExchangeCode "LIFFE_NF"
 addExchangeCode "LSE"
+addExchangeCode "LSEIOB1"
 addExchangeCode "LSSF"
 
 addExchangeCode "MATIF"

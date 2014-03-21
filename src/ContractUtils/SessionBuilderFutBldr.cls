@@ -44,25 +44,108 @@ Private Const ModuleName                            As String = "SessionBuilderF
 ' Member variables
 '@================================================================================
 
+Private WithEvents mFutureBuilder                   As FutureBuilder
+Attribute mFutureBuilder.VB_VarHelpID = -1
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mUseExchangeTimeZone                        As Boolean
+
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mSelfRef = Me
+Set mFutureBuilder = New FutureBuilder
+Set mFutureWaiter = New FutureWaiter
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureBuilder Event Handlers
 '@================================================================================
+
+Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mFutureBuilder_Cancelled"
+On Error GoTo Err
+
+mFutureWaiter.Clear
+mFutureBuilder.Cancel
+
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Dim lContract As IContract
+Set lContract = ev.Future.Value
+
+Dim lSessionBuilder As SessionBuilder
+Set lSessionBuilder = CreateSessionBuilder(lContract.SessionStartTime, lContract.SessionEndTime, GetTimeZone(IIf(mUseExchangeTimeZone, lContract.TimezoneName, "")))
+   
+mFutureBuilder.Value = lSessionBuilder
+mFutureBuilder.Complete
+
+Set mSelfRef = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
+Friend Property Get Future() As IFuture
+Const ProcName As String = "Future"
+On Error GoTo Err
+
+Set Future = mFutureBuilder.Future
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pUseExchangeTimeZone As Boolean)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mFutureWaiter.Add pContractFuture
+mUseExchangeTimeZone = pUseExchangeTimeZone
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions

@@ -40,16 +40,6 @@ Implements Stringable
 Event CollectionChanged( _
                 ev As CollectionChangeEventData)
 
-'Event ContractSpecifierInvalid(ByVal reason As String)
-'
-'Event NoMoreContractDetails()
-'
-'Event Notification( _
-'                ByRef ev As NotificationEventData)
-'Event TryLater( _
-'                ByVal reason As String, _
-'                ByVal serviceProviderName As String)
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -68,23 +58,28 @@ Private Const ModuleName                As String = "Contracts"
 ' Member variables
 '@================================================================================
 
-Private mContracts As EnumerableCollection
+Private mContracts                      As SortedDictionary
 
-Private mContractSpecifier As IContractSpecifier
+Private mChangeListeners                As New Listeners
 
-Private mChangeListeners As Collection
-
-Private mSortKeys() As ContractSortKeyIds
+Private mSortKeys()                     As ContractSortKeyIds
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mContracts = New EnumerableCollection
-Set mChangeListeners = New Collection
-ReDim mSortKeys(0) As ContractSortKeyIds
-mSortKeys(0) = ContractSortKeyNone
+Set mContracts = CreateSortedDictionary(KeyTypeComparable, True)
+
+ReDim mSortKeys(6) As ContractSortKeyIds
+mSortKeys(0) = ContractSortKeySecType
+mSortKeys(1) = ContractSortKeySymbol
+mSortKeys(2) = ContractSortKeyExchange
+mSortKeys(3) = ContractSortKeyCurrency
+mSortKeys(4) = ContractSortKeyExpiry
+mSortKeys(5) = ContractSortKeyStrike
+mSortKeys(6) = ContractSortKeyRight
+
 End Sub
 
 '@================================================================================
@@ -92,35 +87,83 @@ End Sub
 '@================================================================================
 
 Private Sub IContracts_AddCollectionChangeListener(ByVal pListener As CollectionChangeListener)
+Const ProcName As String = "IContracts_AddCollectionChangeListener"
+On Error GoTo Err
+
 AddCollectionChangeListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IContracts_ContractSpecifier() As IContractSpecifier
-Set IContracts_ContractSpecifier = ContractSpecifier
-End Property
-
 Private Property Get IContracts_Count() As Long
+Const ProcName As String = "IContracts_Count"
+On Error GoTo Err
+
 IContracts_Count = Count
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IContracts_Enumerator() As Enumerator
+Const ProcName As String = "IContracts_Enumerator"
+On Error GoTo Err
+
 Set IContracts_Enumerator = Enumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function IContracts_Item(ByVal pIndex As Variant) As IContract
-Set IContracts_Item = Item(pIndex)
+Private Function IContracts_Item(ByVal pKey As IContractSpecifier) As IContract
+Const ProcName As String = "IContracts_Item"
+On Error GoTo Err
+
+Set IContracts_Item = Item(pKey)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContracts_ItemAtIndex(ByVal pIndex As Long) As IContract
+Const ProcName As String = "IContracts_ItemAtIndex"
+On Error GoTo Err
+
+Set IContracts_ItemAtIndex = ItemAtIndex(pIndex)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function IContracts_NewEnum() As stdole.IUnknown
+Set IContracts_NewEnum = NewEnum
 End Function
 
 Private Sub IContracts_RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
-RemoveCollectionChangeListener pListener
-End Sub
+Const ProcName As String = "IContracts_RemoveCollectionChangeListener"
+On Error GoTo Err
 
-Private Sub IContracts_Sort()
-Sort
+RemoveCollectionChangeListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IContracts_SortKeys(Value() As ContractSortKeyIds)
-SortKeys = Value
+setSortKeys Value
 End Property
 
 Private Property Get IContracts_SortKeys() As ContractSortKeyIds()
@@ -128,7 +171,15 @@ IContracts_SortKeys = SortKeys
 End Property
 
 Private Function IContracts_ToString() As String
+Const ProcName As String = "IContracts_ToString"
+On Error GoTo Err
+
 IContracts_ToString = ToString
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -147,13 +198,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get ContractSpecifier() As IContractSpecifier
-Set ContractSpecifier = mContractSpecifier
-End Property
-
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mContracts.Count
@@ -170,22 +216,10 @@ End Property
 
 Public Property Let SortKeys( _
                 ByRef Value() As ContractSortKeyIds)
-Dim lContract As IContract
-
 Const ProcName As String = "SortKeys"
-
 On Error GoTo Err
 
-If UBound(Value) < 0 Then
-    ReDim mSortKeys(0) As ContractSortKeyIds
-    mSortKeys(0) = ContractSortKeyNone
-Else
-    mSortKeys = Value
-End If
-
-For Each lContract In mContracts
-    lContract.SortKeys = mSortKeys
-Next
+setSortKeys Value
 
 Exit Property
 
@@ -202,16 +236,11 @@ End Property
 '@================================================================================
 
 Friend Sub Add(ByVal pContract As IContract)
-' we no longer use the following statement because some IB contracts have identical
-' specifiers and differ only in the tick size, eg for symb=ES, sectyp=STK, exchg=SMART, curr=EUR
-'mContracts.Add pContract, pContract.Specifier.Key
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
-pContract.SortKeys = mSortKeys
-mContracts.Add pContract
-fireChange CollItemAdded, pContract
+AddContract mContracts, pContract
+fireCollectionChange CollItemAdded, pContract
 
 Exit Sub
 
@@ -220,12 +249,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add Value
+mChangeListeners.Add pListener
 
 Exit Sub
 
@@ -233,22 +261,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'Friend Sub ContractSpecifierInvalid(ByVal reason As String)
-'RaiseEvent ContractSpecifierInvalid(reason)
-'End Sub
-
-Friend Sub Initialise( _
-                ByVal ContractSpec As IContractSpecifier)
-Set mContractSpecifier = ContractSpec
-End Sub
-
-Public Function Item(ByVal index As Variant) As IContract
-Attribute Item.VB_UserMemId = 0
+Public Function Item(ByVal pKey As IContractSpecifier) As IContract
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mContracts(index)
+Set Item = mContracts.Item(createComparable(pKey))
 
 Exit Function
 
@@ -256,9 +273,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-'Friend Sub LoadComplete()
-'RaiseEvent NoMoreContractDetails
-'End Sub
+Public Function ItemAtIndex(ByVal pIndex As Long) As IContract
+Const ProcName As String = "ItemAtIndex"
+On Error GoTo Err
+
+AssertArgument pIndex > 0 And pIndex <= mContracts.Count, "Invalid index"
+
+Dim en As Enumerator
+Set en = Enumerator
+
+Dim i As Long
+Do While en.MoveNext
+    i = i + 1
+    If i = pIndex Then
+        Set ItemAtIndex = en.Current
+        Exit Function
+    End If
+Loop
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
@@ -266,73 +303,12 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mContracts.Enumerator
 End Function
 
-'Friend Sub Notify( _
-'                ByRef ev As NotificationEventData)
-'RaiseEvent Notification(ev)
-'End Sub
-
-Friend Sub Remove(ByVal index As Variant)
-Dim lContract As IContract
-Const ProcName As String = "Remove"
-
-On Error GoTo Err
-
-Set lContract = mContracts(index)
-mContracts.Remove index
-fireChange CollItemRemoved, lContract
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Public Sub RemoveCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
-Dim i As Long
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is Value Then mChangeListeners.Remove i
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'Friend Sub ServiceProviderCantHandle( _
-'                ByVal reason As String, _
-'                ByVal serviceProviderName As String)
-'RaiseEvent TryLater(reason, serviceProviderName)
-'End Sub
-
-Public Sub Sort()
-Dim i As Long
-Dim ar() As Object
-
-Const ProcName As String = "Sort"
-
-On Error GoTo Err
-
-If mContracts.Count = 0 Then Exit Sub
-
-ReDim ar(mContracts.Count - 1) As Object
-
-For i = 0 To UBound(ar)
-    Set ar(i) = mContracts(i + 1)
-Next
-
-mContracts.Clear
-
-SortObjects ar
-
-For i = 0 To UBound(ar)
-    mContracts.Add ar(i)
-Next
+mChangeListeners.Remove pListener
 
 Exit Sub
 
@@ -341,14 +317,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String
-Dim lContract As IContract
 Const ProcName As String = "ToString"
-
 On Error GoTo Err
 
-For Each lContract In mContracts
+
+Dim en As Enumerator
+Set en = Enumerator
+Do While en.MoveNext
+    Dim lContract As IContract
+    Set lContract = en.Current
     ToString = ToString & lContract.Specifier.ToString & vbCrLf
-Next
+Loop
+
 
 Exit Function
 
@@ -360,22 +340,45 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Sub fireChange( _
-                ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As IContract)
-Dim listener As CollectionChangeListener
-Dim i As Long
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
-
+Private Sub AddContract(ByVal pContracts As SortedDictionary, ByVal pContract As IContract)
+Const ProcName As String = "addContract"
 On Error GoTo Err
 
+pContracts.Add pContract, createComparable(pContract.Specifier)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function createComparable(ByVal pContractSpec As IContractSpecifier) As ContractComparable
+Const ProcName As String = "createComparable"
+On Error GoTo Err
+
+Set createComparable = New ContractComparable
+createComparable.Initialise pContractSpec, mSortKeys
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub fireCollectionChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As IContract)
+Const ProcName As String = "fireCollectionChange"
+On Error GoTo Err
+
+Dim ev As CollectionChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
-    listener.Change ev
+
+Dim lListener As CollectionChangeListener
+For Each lListener In mChangeListeners.CurrentListeners
+    lListener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
 
@@ -385,4 +388,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub setSortKeys( _
+                ByRef Value() As ContractSortKeyIds)
+Const ProcName As String = "setSortKeys"
+On Error GoTo Err
+
+If UBound(Value) < 0 Then
+    ReDim mSortKeys(0) As ContractSortKeyIds
+    mSortKeys(0) = ContractSortKeyNone
+Else
+    mSortKeys = Value
+End If
+
+Dim lNewContracts As SortedDictionary
+Set lNewContracts = CreateSortedDictionary(KeyTypeComparable, True)
+
+Dim en As Enumerator
+Set en = Enumerator
+Do While en.MoveNext
+    AddContract lNewContracts, en.Current
+Loop
+
+Set mContracts = lNewContracts
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+                
 

@@ -30,7 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Comparable
 Implements IContract
 Implements JSONable
 Implements Stringable
@@ -69,28 +68,9 @@ Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs As Parameters
 Private mTimezoneName As String
 
-Private mSortKeys() As ContractSortKeyIds
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-'@================================================================================
-' Comparable Interface Members
-'@================================================================================
-
-Private Function Comparable_CompareTo( _
-                ByVal pObj As Comparable) As Long
-Const ProcName As String = "Comparable_CompareTo"
-On Error GoTo Err
-
-Comparable_CompareTo = gContractsCompare(Me, pObj, mSortKeys)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 '@================================================================================
 ' IContract Interface Members
@@ -122,10 +102,6 @@ End Property
 
 Private Property Get IContract_SessionStartTime() As Date
 IContract_SessionStartTime = SessionStartTime
-End Property
-
-Private Property Let IContract_SortKeys(Value() As ContractSortKeyIds)
-SortKeys = Value
 End Property
 
 Private Property Get IContract_Specifier() As IContractSpecifier
@@ -194,7 +170,6 @@ End Property
 
 Public Property Get Key() As String
 Const ProcName As String = "Key"
-
 On Error GoTo Err
 
 Key = Specifier.Key
@@ -219,7 +194,6 @@ End Property
 
 Public Property Get ProviderID(ByVal providerKey As String) As String
 Const ProcName As String = "ProviderID"
-
 On Error GoTo Err
 
 ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
@@ -254,11 +228,6 @@ Public Property Get SessionEndTime() As Date
 SessionEndTime = mSessionEndTime
 End Property
 
-Public Property Let SortKeys( _
-                ByRef Value() As ContractSortKeyIds)
-mSortKeys = Value
-End Property
-                
 Public Property Get Specifier() As IContractSpecifier
 Set Specifier = mSpecifier
 End Property
@@ -272,11 +241,10 @@ TickSize = mTickSize
 End Property
 
 Public Property Let TickSize(ByVal Value As Double)
-Dim minTickString As String
-
 Const ProcName As String = "TickSize"
-
 On Error GoTo Err
+
+Dim minTickString As String
 
 mTickSize = Value
 
@@ -288,7 +256,6 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Property
 
 Public Property Get TickValue() As Double
@@ -308,7 +275,25 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function FormatPrice(ByVal pPrice As Double) As String
+Const ProcName As String = "FormatPrice"
+On Error GoTo Err
+
+' see http://www.cmegroup.com/trading/interest-rates/files/TreasuryFuturesPriceRoundingConventions_Mar_24_Final.pdf
+' for details of price presentation, especially sections (2) and (7)
+
+FormatPrice = gFormatPrice(pPrice, mSpecifier.SecType, mTickSize)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Sub FromXML(ByVal contractXML As String)
+Const ProcName As String = "FromXML"
+On Error GoTo Err
+
 Dim XMLdoc As DOMDocument30
 Dim contractEl As IXMLDOMElement
 Dim specifierEl As IXMLDOMElement
@@ -318,17 +303,13 @@ Dim comboLegEl As IXMLDOMElement
 Dim comboLegObj As ComboLeg
 Dim nodeList As IXMLDOMNodeList
 Dim comboSpecifierEl As IXMLDOMElement
+
 Dim comboSpecifierObj As ContractSpecifier
-
-Const ProcName As String = "FromXML"
-
-On Error GoTo Err
+Dim comboLegsObj As ComboLegs
 
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
-If XMLdoc.parseError.errorCode <> 0 Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Contract XML cannot be parsed"
-End If
+Assert XMLdoc.parseError.errorCode = 0, "Contract XML cannot be parsed"
 
 Set contractEl = XMLdoc.selectSingleNode("contract")
 TickSize = contractEl.getAttribute("minimumtick")
@@ -377,7 +358,8 @@ With specifierObj
     If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
     For Each comboLegEl In nodeList
         Set comboLegObj = New ComboLeg
-        .ComboLegs.Add comboLegObj
+        Set comboLegsObj = .ComboLegs
+        comboLegsObj.Add comboLegObj
         Set comboSpecifierEl = comboLegEl.selectSingleNode("specifier")
         Set comboSpecifierObj = New ContractSpecifier
         comboSpecifierObj.Initialise comboSpecifierEl.getAttribute("localsymbol"), _
@@ -405,7 +387,6 @@ Public Function IsValidPrice( _
                 ByVal pPrice As Double, _
                 ByVal pPrevValidPrice As Double) As Boolean
 Const ProcName As String = "IsValidPrice"
-
 On Error GoTo Err
 
 IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickSize)
@@ -416,45 +397,23 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub SaveToConfig( _
-                ByVal config As ConfigurationSection)
-                
+Public Sub SaveToConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "SaveToConfig"
 On Error GoTo Err
 
-config.AddConfigurationSection ConfigSectionContractSpecifier
-With config
-    .SetSetting ConfigSettingContractSpecLocalSYmbol, mSpecifier.LocalSymbol
-    .SetSetting ConfigSettingContractSpecSymbol, mSpecifier.Symbol
-    .SetSetting ConfigSettingContractSpecExchange, mSpecifier.Exchange
-    .SetSetting ConfigSettingContractSpecSecType, gSecTypeToString(mSpecifier.SecType)
-    .SetSetting ConfigSettingContractSpecCurrency, mSpecifier.CurrencyCode
-    .SetSetting ConfigSettingContractSpecExpiry, mSpecifier.Expiry
-    .SetSetting ConfigSettingContractSpecStrikePrice, mSpecifier.Strike
-    .SetSetting ConfigSettingContractSpecRight, gOptionRightToString(mSpecifier.Right)
-
-    .SetSetting ConfigSettingDaysBeforeExpiryToSwitch, mDaysBeforeExpiryToSwitch
-    .SetSetting ConfigSettingDescription, mDescription
-    .SetSetting ConfigSettingExpiryDate, FormatTimestamp(mExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingMultiplier, mMultiplier
-    .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(mSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(mSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingTickSize, mTickSize
-    .SetSetting ConfigSettingTimezoneName, mTimezoneName
-End With
-
+gSaveContractToConfig Me, pConfig
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
-Dim jb As JSONBuilder
 Const ProcName As String = "ToJSON"
 On Error GoTo Err
 
+Dim jb As JSONBuilder
 Set jb = New JSONBuilder
 
 jb.BeginObject
@@ -503,10 +462,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
-Dim i As Long
-
 Const ProcName As String = "ToString"
-
 On Error GoTo Err
 
 ToString = gContractToString(Me)
@@ -518,68 +474,16 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToXML() As String
-Dim XMLdoc As DOMDocument30
-Dim Contract As IXMLDOMElement
-Dim Specifier As IXMLDOMElement
-Dim ComboLegs As IXMLDOMElement
-Dim ComboLeg As IXMLDOMElement
-Dim comboLegObj As ComboLeg
-
 Const ProcName As String = "ToXML"
-
 On Error GoTo Err
 
-Set XMLdoc = New DOMDocument30
-Set Contract = XMLdoc.createElement("contract")
-Set XMLdoc.documentElement = Contract
-Contract.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
-Contract.setAttribute "minimumtick", mTickSize
-Contract.setAttribute "multiplier", mMultiplier
-Contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
-Contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
-Contract.setAttribute "Description", mDescription
-Contract.setAttribute "numberofdecimals", mNumberOfDecimals
-Contract.setAttribute "timezonename", mTimezoneName
+ToXML = gContractToXML(Me)
 
-Set Specifier = XMLdoc.createElement("specifier")
-Contract.appendChild Specifier
-Specifier.setAttribute "symbol", mSpecifier.Symbol
-Specifier.setAttribute "sectype", mSpecifier.SecType
-Specifier.setAttribute "expiry", mSpecifier.Expiry
-Specifier.setAttribute "exchange", mSpecifier.Exchange
-Specifier.setAttribute "currencycode", mSpecifier.CurrencyCode
-Specifier.setAttribute "localsymbol", mSpecifier.LocalSymbol
-Specifier.setAttribute "right", mSpecifier.Right
-Specifier.setAttribute "strike", mSpecifier.Strike
-
-Set ComboLegs = XMLdoc.createElement("combolegs")
-Specifier.appendChild ComboLegs
-If Not mSpecifier.ComboLegs Is Nothing Then
-    For Each comboLegObj In mSpecifier.ComboLegs
-        Set ComboLeg = XMLdoc.createElement("comboleg")
-        ComboLegs.appendChild ComboLeg
-        
-        Set Specifier = XMLdoc.createElement("specifier")
-        ComboLeg.appendChild Specifier
-        ComboLeg.setAttribute "isBuyLeg", comboLegObj.IsBuyLeg
-        ComboLeg.setAttribute "Ratio", comboLegObj.Ratio
-        Specifier.setAttribute "symbol", mSpecifier.Symbol
-        Specifier.setAttribute "sectype", mSpecifier.SecType
-        Specifier.setAttribute "expiry", mSpecifier.Expiry
-        Specifier.setAttribute "exchange", mSpecifier.Exchange
-        Specifier.setAttribute "currencycode", mSpecifier.CurrencyCode
-        Specifier.setAttribute "localsymbol", mSpecifier.LocalSymbol
-        Specifier.setAttribute "right", mSpecifier.Right
-        Specifier.setAttribute "strike", mSpecifier.Strike
-    Next
-End If
-ToXML = XMLdoc.xml
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 '@================================================================================

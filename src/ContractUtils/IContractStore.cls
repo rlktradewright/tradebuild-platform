@@ -64,12 +64,19 @@ Private Const ModuleName                            As String = "IContractStore"
 ' Methods
 '@================================================================================
 
-Public Function RequestContracts( _
-                ByVal pContractSpec As IContractSpecifier) As TaskController
+'Public Function FetchContract( _
+'                ByVal pContractSpecifier As IContractSpecifier, _
+'                Optional ByVal pCookie As Variant) As IFuture
+'End Function
+
+Public Function FetchContracts( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pCookie As Variant) As IFuture
 End Function
 
-Public Function StoreContract(ByVal pContract As Contract) As TaskController
-End Function
+Public Sub Finish()
+End Sub
 
 Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
 End Function
