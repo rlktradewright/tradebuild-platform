@@ -18,6 +18,7 @@ copy %1\%filenamestub%%tbversion%.dll %1\Prev\*
 
 echo Setting project compatibility
 setprojectcomp %1\%1.vbp -mode:P
+if errorlevel 1 pause
 
 echo Compiling
 vb6 /m %1\%1.vbp
@@ -25,6 +26,7 @@ if errorlevel 1 pause
 
 echo Setting binary compatibility
 setprojectcomp %1\%1.vbp -mode:B
+if errorlevel 1 pause
 
 if %compat% == "no" goto end
 if exist %1\Compat goto compatDirectoryExists
