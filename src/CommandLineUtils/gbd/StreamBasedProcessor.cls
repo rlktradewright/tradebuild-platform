@@ -70,7 +70,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -81,38 +81,37 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub startData( _
-                ByVal spec As ContractSpecifier, _
+Friend Sub StartData( _
+                ByVal pTB As TradeBuildAPI, _
+                ByVal spec As IContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
                 ByVal number As Long, _
                 ByVal barLength As Long, _
                 ByVal barUnits As TimePeriodUnits, _
                 ByVal sessionOnly As Boolean)
-                
-Dim lTicker As Ticker
-
 Const ProcName As String = "startData"
 On Error GoTo Err
 
 Set mSelfRef = Me
 
-Set lTicker = TradeBuildAPI.Tickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
-lTicker.LoadTicker spec
-gProcessor.Ticker = lTicker
+Dim lticker As Ticker
+Set lticker = pTB.Tickers.CreateTicker(FetchContract(spec, pTB.ContractStorePrimary))
+gProcessor.Ticker = lticker
 
-Set mTimeframe = lTicker.Timeframes.AddHistorical(GetTimePeriod(barLength, barUnits), _
+Set mTimeframe = lticker.Timeframes.AddHistorical(GetTimePeriod(barLength, barUnits), _
                                         "", _
-                                        IIf(number = -1, &H7FFFFFFF, number), _
+                                        IIf(number = -1, 0, number), _
                                         fromDate, _
                                         toDate, _
+                                        , _
                                         Not sessionOnly)
 gProcessor.Timeframe = mTimeframe
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

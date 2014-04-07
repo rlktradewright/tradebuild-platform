@@ -47,31 +47,32 @@ Private Const ModuleName                    As String = "FileBasedProcessor"
 
 Private mSelfRef As Object
 
-Private WithEvents mTickfileManager As TickFileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
+Private WithEvents mReplayController As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
+
+Private WithEvents mReplayTaskController As TaskController
+Attribute mReplayTaskController.VB_VarHelpID = -1
 
 Private mNumber As Long
 Private mBarLength As Long
 Private mBarUnits As TimePeriodUnits
 Private mSessionOnly As Boolean
 
-Private WithEvents mTimer As BaseIntervalTimer
+Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
+
+Private mTB As TradeBuildAPI
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' mTickfileManager Event Handlers
+' mReplayTaskController Event Handlers
 '@================================================================================
 
-Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, ByVal tickfileName As String, ByVal TickfileSizeBytes As Long, ByVal pContract As ContractUtils27.Contract, continueMode As TradeBuild27.ReplayContinueModes)
-continueMode = ReplayContinue
-End Sub
-
-Private Sub mTickfileManager_ReplayCompleted()
-Const ProcName As String = "mTickfileManager_ReplayCompleted"
+Private Sub mReplayTaskController_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mReplayTaskController_Completed"
 On Error GoTo Err
 
 gProcessor.Finish
@@ -82,32 +83,35 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mTickfileManager_ReplayProgress(ByVal tickfileTimestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
-gCon.WriteLineToConsole "Processing tickfile: events processed=" & eventsPlayed & "; percent complete=" & Format(percentComplete, "0.0")
-End Sub
+'@================================================================================
+' mTickfileManager Event Handlers
+'@================================================================================
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
-Const ProcName As String = "mTickfileManager_TickerAllocated"
+Private Sub mReplayController_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "mReplayController_NotifyEvent"
 On Error GoTo Err
 
-gProcessor.Ticker = pTicker
-
-Dim lTimeframe As Timeframe
-Set lTimeframe = pTicker.Timeframes.AddHistorical(GetTimePeriod(mBarLength, mBarUnits), _
-                                        "", _
-                                        0, _
-                                        0, _
-                                        0, _
-                                        Not mSessionOnly)
-gProcessor.Timeframe = lTimeframe
+LogMessage TypeName(ev.Source) & " :" & ev.EventMessage
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub mReplayController_ReplayProgress(ByVal pTickfileTimestamp As Date, ByVal pEventsPlayed As Long, ByVal pPercentComplete As Long)
+Const ProcName As String = "mReplayController_ReplayProgress"
+On Error GoTo Err
+
+gCon.WriteLineToConsole "Processing tickfile: events processed=" & pEventsPlayed & "; percent complete=" & Format(pPercentComplete, "0.0")
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -118,7 +122,8 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub startData( _
+Friend Sub StartData( _
+                ByVal pTB As TradeBuildAPI, _
                 ByVal tickfileName As String, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
@@ -126,43 +131,68 @@ Friend Sub startData( _
                 ByVal barLength As Long, _
                 ByVal barUnits As TimePeriodUnits, _
                 ByVal sessionOnly As Boolean)
-                
-Dim tfs As New TickfileSpecifier
-
 Const ProcName As String = "startData"
 On Error GoTo Err
 
 Set mSelfRef = Me
+
+Set mTB = pTB
 
 mNumber = number
 mBarLength = barLength
 mBarUnits = barUnits
 mSessionOnly = sessionOnly
 
-tfs.FileName = tickfileName
-tfs.fromDate = fromDate
-tfs.toDate = toDate
-Set mTickfileManager = TradeBuildAPI.Tickers.CreateTickFileManager(0)
-mTickfileManager.TickfileSpecifier = tfs
-mTickfileManager.ReplayProgressEventIntervalMillisecs = 1000
-mTickfileManager.ReplaySpeed = 0
-mTickfileManager.StartReplay
+Dim lTickfileSpec As New TickfileSpecifier
+lTickfileSpec.FileName = tickfileName
+lTickfileSpec.fromDate = fromDate
+lTickfileSpec.toDate = toDate
 
-Set mTimer = CreateBaseIntervalTimer(1000, , 1000)
+Dim lTickfileSpecs As New TickFileSpecifiers
+lTickfileSpecs.Add lTickfileSpec
+
+Dim lTickDataManager As TickfileDataManager
+Set lTickDataManager = CreateTickDataManager(lTickfileSpecs, _
+                                            mTB.TickfileStoreInput, _
+                                            mTB.ContractStorePrimary, _
+                                            , _
+                                            MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments, _
+                                            , _
+                                            , _
+                                            0)
+
+Dim lTickers As Tickers
+Set lTickers = CreateTickers(lTickDataManager, mTB.StudyLibraryManager, mTB.HistoricalDataStoreInput)
+
+Dim lticker As Ticker
+Set lticker = lTickers.CreateTicker(mReplayController.TickStream(0).ContractFuture, False)
+
+Dim lTimeframe As Timeframe
+Set lTimeframe = lticker.Timeframes.AddHistorical(GetTimePeriod(mBarLength, mBarUnits), _
+                                        "", _
+                                        0, _
+                                        0, _
+                                        0, _
+                                        , _
+                                        Not mSessionOnly)
+gProcessor.Timeframe = lTimeframe
+
+Set mReplayController = lTickDataManager.ReplayController
+Set mReplayTaskController = mReplayController.StartReplay
+
+Set mTimer = CreateIntervalTimer(1000, , 1000)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-
-
-Private Sub mTimer_TimerExpired()
+Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
 Static lCounter As Long
 lCounter = lCounter + 1
 gCon.WriteLineToConsole "Timer tick " & lCounter

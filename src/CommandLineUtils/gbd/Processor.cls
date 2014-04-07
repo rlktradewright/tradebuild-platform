@@ -41,7 +41,6 @@ Implements LogListener
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                    As String = "Processor"
 
 '@================================================================================
@@ -54,8 +53,8 @@ Attribute mTB.VB_VarHelpID = -1
 Private mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 
-Private WithEvents mTickfileManager As TickFileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
+Private WithEvents mReplayController As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
 
 Private mFromDate As Date
 Private mToDate As Date
@@ -64,17 +63,19 @@ Private mBarLength As Long
 Private mBarUnits As TimePeriodUnits
 Private mSessionOnly As Boolean
 
-Private mBarStudy As Study
+Private mBarStudy As IStudy
 Private mBars As Bars
 
 Private mBar As Bar
+
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mTB = TradeBuildAPI
 If gLogToConsole Then GetLogger("").AddLogListener Me
 End Sub
 
@@ -82,17 +83,17 @@ End Sub
 ' CollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEventData)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
 On Error GoTo Err
 
 outputBar
-Set mBar = ev.affectedItem
+Set mBar = ev.AffectedItem
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -103,7 +104,7 @@ Private Sub LogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
 Static formatter As LogFormatter
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
@@ -114,44 +115,50 @@ gCon.WriteLineToConsole formatter.FormatRecord(Logrec)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Set mBars = ev.Future.Value
+mBars.AddCollectionChangeListener Me
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' mTB Event Handlers
 '@================================================================================
 
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
-Const ProcName As String = "mTB_Error"
-On Error GoTo Err
-
-gCon.WriteErrorLine "Error " & ev.errorCode & _
-                        ": " & ev.ErrorMessage
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
+Private Sub mTB_Notification(ev As NotificationEventData)
 Const ProcName As String = "mTB_Notification"
 On Error GoTo Err
 
-If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
+If ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Dim spe As ServiceProviderError
     Set spe = mTB.GetServiceProviderError
-    gCon.WriteLineToConsole "Service provider error " & spe.errorCode & _
+    gCon.WriteLineToConsole "Service provider error " & spe.ErrorCode & _
                             ": " & spe.Message & _
                             " (" & spe.ServiceProviderName & ")"
 Else
-    gCon.WriteLineToConsole ev.eventMessage
+    gCon.WriteLineToConsole ev.EventMessage
 End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -159,22 +166,27 @@ End Sub
 '@================================================================================
 
 Friend Property Let Ticker( _
-                ByVal value As Ticker)
-Set mTicker = value
+                ByVal Value As Ticker)
+Set mTicker = Value
 End Property
 
 Friend Property Let Timeframe( _
-                ByVal value As Timeframe)
+                ByVal Value As Timeframe)
 Const ProcName As String = "Timeframe"
 On Error GoTo Err
 
-Set mBars = value.TradeStudy.Bars
-mBars.AddCollectionChangeListener Me
+If Value.BarsFuture.IsAvailable Then
+    Set mBars = Value.BarsFuture.Value
+    mBars.AddCollectionChangeListener Me
+Else
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add Value.BarsFuture
+End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -192,20 +204,24 @@ GetLogger("").RemoveLogListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise(ByVal pTB As TradeBuildAPI)
+Set mTB = pTB
 End Sub
 
 Friend Sub StopData()
 Const ProcName As String = "StopData"
 On Error GoTo Err
 
-If Not mTicker Is Nothing Then mTicker.StopTicker
+If Not mTicker Is Nothing Then mTicker.Finish
 If Not mBars Is Nothing Then mBars.RemoveCollectionChangeListener Me
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -240,6 +256,6 @@ gCon.WriteLine mBar.OpenInterest
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
