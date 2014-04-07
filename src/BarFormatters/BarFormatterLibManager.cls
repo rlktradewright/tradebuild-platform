@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "BarFormatterLibManager"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -36,7 +36,7 @@ Option Explicit
 
 Private Type LibraryTableEntry
     Name            As String
-    libObject       As BarFormatterLibrary
+    libObject       As IBarFormatterLibrary
 End Type
 
 '@================================================================================
@@ -76,21 +76,23 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get AvailableBarFormatterFactories() As BarFormatterFactoryListEntry()
-Const ProcName As String = "AvailableBarFormatterFactories"
+Public Function GetAvailableBarFormatterFactories() As BarFormatterFactoryListEntry()
+Const ProcName As String = "GetAvailableBarFormatterFactories"
 On Error GoTo Err
 
 ReDim bffList(31) As BarFormatterFactoryListEntry
-Dim spList() As String
-Dim nextBffListIndex As Long
-Dim bffLib As BarFormatterLibrary
-Dim i As Long
-Dim j As Long
 
+Dim i As Long
 For i = 0 To mMaxLibIndex
     If Not mBarFormatterLibraries(i).libObject Is Nothing Then
+        Dim bffLib As IBarFormatterLibrary
         Set bffLib = mBarFormatterLibraries(i).libObject
+        
+        Dim spList() As String
         spList = bffLib.GetFactoryNames
+        
+        Dim nextBffListIndex As Long
+        Dim j As Long
         For j = 0 To UBound(spList)
             If nextBffListIndex > UBound(bffList) Then
                 ReDim Preserve bffList(2 * (UBound(bffList) + 1) - 1) As BarFormatterFactoryListEntry
@@ -104,90 +106,49 @@ Next
 
 If nextBffListIndex <> 0 Then
     ReDim Preserve bffList(nextBffListIndex - 1) As BarFormatterFactoryListEntry
-    AvailableBarFormatterFactories = bffList
+    GetAvailableBarFormatterFactories = bffList
 End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-Friend Function Add( _
-                ByVal bffLib As BarFormatterLibrary, _
-                ByVal Name As String _
-                ) As BarFormatterLibrary
-Dim i As Long
-
-Const ProcName As String = "Add"
-On Error GoTo Err
-
-If Name <> "" Then bffLib.Name = Name
-
-' we don't reuse removed entries to ensure that service providers added later are
-' always later in the table than those added earlier
-For i = 0 To mMaxLibIndex
-    If Not mBarFormatterLibraries(i).libObject Is Nothing Then
-        If mBarFormatterLibraries(i).libObject Is bffLib Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, , "This BarFormatterLibrary object has already been added"
-        End If
-        If mBarFormatterLibraries(i).Name = bffLib.Name Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, , "A BarFormatterLibrary with this Name has already been added"
-        End If
-    End If
-Next
-
-If mMaxLibIndex = UBound(mBarFormatterLibraries) Then
-    ReDim Preserve mBarFormatterLibraries(2 * (UBound(mBarFormatterLibraries) + 1) - 1) As LibraryTableEntry
-End If
-mMaxLibIndex = mMaxLibIndex + 1
-Set Add = bffLib
-
-mBarFormatterLibraries(mMaxLibIndex).Name = bffLib.Name
-Set mBarFormatterLibraries(mMaxLibIndex).libObject = bffLib
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+'@================================================================================
+' Methods
+'@================================================================================
 
 Friend Sub AddConfigEntry( _
                 ByVal ProgId As String, _
                 ByVal Enabled As Boolean, _
                 ByVal Name As String _
                 )
-Dim sl As ConfigurationSection
-
 Const ProcName As String = "AddConfigEntry"
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
-Set sl = mBarFormatterLibs.AddConfigurationSection(ConfigNameBarFormatterLibrary & "(" & Name & ")")
-sl.SetAttribute AttributeNameEnabled, Enabled
-sl.SetAttribute AttributeNameBarFormatterLibraryProgId, ProgId
+Dim cs As ConfigurationSection
+Set cs = mBarFormatterLibs.AddConfigurationSection(ConfigNameBarFormatterLibrary & "(" & Name & ")")
+cs.SetAttribute AttributeNameEnabled, Enabled
+cs.SetAttribute AttributeNameBarFormatterLibraryProgId, ProgId
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function AddBarFormatterLibrary( _
+Public Function AddBarFormatterLibrary( _
                 ByVal ProgId As String, _
                 ByVal Enabled As Boolean, _
-                ByVal Name As String _
-                ) As BarFormatterLibrary
-
+                Optional ByVal Name As String _
+                ) As IBarFormatterLibrary
 Const ProcName As String = "AddBarFormatterLibrary"
 On Error GoTo Err
 
+If Name = "" Then Name = GenerateGUIDString
 If Enabled Then
     Set AddBarFormatterLibrary = Add(CreateObject(ProgId), Name)
 End If
@@ -196,27 +157,26 @@ AddConfigEntry ProgId, Enabled, Name
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarFormatterFactory( _
-                ByVal barFormatterName As String, _
-                ByVal libName As String) As BarFormatterFactory
-Dim barFormatterLib As BarFormatterLibrary
-Dim i As Long
-
+                ByVal pBarFormatterName As String, _
+                ByVal pLibraryName As String) As IBarFormatterFactory
 Const ProcName As String = "CreateBarFormatterFactory"
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mMaxLibIndex
     If Not mBarFormatterLibraries(i).libObject Is Nothing Then
-        If (mBarFormatterLibraries(i).Name = libName Or _
-            libName = "") _
+        If (mBarFormatterLibraries(i).Name = pLibraryName Or _
+            pLibraryName = "") _
         Then
+            Dim barFormatterLib As IBarFormatterLibrary
             Set barFormatterLib = mBarFormatterLibraries(i).libObject
-            Set CreateBarFormatterFactory = barFormatterLib.CreateFactory(barFormatterName)
+            Set CreateBarFormatterFactory = barFormatterLib.CreateFactory(pBarFormatterName)
             If Not CreateBarFormatterFactory Is Nothing Or _
-                libName <> "" _
+                pLibraryName <> "" _
                 Then Exit For
         End If
     End If
@@ -225,12 +185,11 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub LoadBarFormatterLibraryConfiguration( _
+Public Sub LoadBarFormatterLibraryConfiguration( _
                 ByVal config As ConfigurationSection)
-
 Const ProcName As String = "LoadBarFormatterLibraryConfiguration"
 On Error GoTo Err
 
@@ -246,24 +205,23 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Remove( _
-                ByVal lib As BarFormatterLibrary, _
+Public Sub RemoveBarFormatterLibrary( _
+                ByVal library As IBarFormatterLibrary, _
                 Optional ByVal removeFromConfig As Boolean)
-Dim i As Long
-
-Const ProcName As String = "Remove"
+Const ProcName As String = "RemoveBarFormatterLibrary"
 On Error GoTo Err
 
-If lib Is Nothing Then Exit Sub
+If library Is Nothing Then Exit Sub
 
+Dim i As Long
 For i = 0 To mMaxLibIndex
-    If mBarFormatterLibraries(i).libObject Is lib Then
+    If mBarFormatterLibraries(i).libObject Is library Then
         Set mBarFormatterLibraries(i).libObject = Nothing
         If Not mConfig Is Nothing And removeFromConfig Then
-            mBarFormatterLibs.RemoveConfigurationSection (ConfigNameBarFormatterLibrary & "(" & mBarFormatterLibraries(i).Name & ")")
+            mBarFormatterLibs.RemoveConfigurationSection ConfigNameBarFormatterLibrary & "(" & mBarFormatterLibraries(i).Name & ")"
         End If
         mBarFormatterLibraries(i).Name = ""
         Exit For
@@ -273,23 +231,22 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub RemoveAll( _
+Public Sub RemoveAllBarFormatterLibraries( _
                 Optional ByVal removeFromConfig As Boolean)
-Dim i As Long
-Dim lib As BarFormatterLibrary
-
-Const ProcName As String = "RemoveAll"
+Const ProcName As String = "RemoveAllBarFormatterLibraries"
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mMaxLibIndex
     If Not mBarFormatterLibraries(i).libObject Is Nothing Then
+        Dim lib As IBarFormatterLibrary
         Set lib = mBarFormatterLibraries(i).libObject
         Set mBarFormatterLibraries(i).libObject = Nothing
         If Not mConfig Is Nothing And removeFromConfig Then
-            mBarFormatterLibs.RemoveConfigurationSection (ConfigNameBarFormatterLibrary & "(" & mBarFormatterLibraries(i).Name & ")")
+            mBarFormatterLibs.RemoveConfigurationSection ConfigNameBarFormatterLibrary & "(" & mBarFormatterLibraries(i).Name & ")"
         End If
         mBarFormatterLibraries(i).Name = ""
     End If
@@ -298,41 +255,72 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub loadBarFormatterLibs()
-Dim sl As ConfigurationSection
-Dim slName As String
-Dim slProgId As String
-Dim slObj As BarFormatterLibrary
-Dim slEnabled As String
+Private Function Add( _
+                ByVal bffLib As IBarFormatterLibrary, _
+                ByVal Name As String _
+                ) As IBarFormatterLibrary
+Const ProcName As String = "Add"
+On Error GoTo Err
 
+If Name <> "" Then bffLib.Name = Name
+
+' we don't reuse removed entries to ensure that service providers added later are
+' always later in the table than those added earlier
+Dim i As Long
+For i = 0 To mMaxLibIndex
+    If Not mBarFormatterLibraries(i).libObject Is Nothing Then
+        Assert Not mBarFormatterLibraries(i).libObject Is bffLib, "This BarFormatterLibrary object has already been added"
+        Assert mBarFormatterLibraries(i).Name <> bffLib.Name, "A BarFormatterLibrary with this Name has already been added"
+    End If
+Next
+
+If mMaxLibIndex = UBound(mBarFormatterLibraries) Then
+    ReDim Preserve mBarFormatterLibraries(2 * (UBound(mBarFormatterLibraries) + 1) - 1) As LibraryTableEntry
+End If
+mMaxLibIndex = mMaxLibIndex + 1
+Set Add = bffLib
+
+mBarFormatterLibraries(mMaxLibIndex).Name = bffLib.Name
+Set mBarFormatterLibraries(mMaxLibIndex).libObject = bffLib
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub loadBarFormatterLibs()
 Const ProcName As String = "loadBarFormatterLibs"
 On Error GoTo Err
 
+Dim sl As ConfigurationSection
 For Each sl In mBarFormatterLibs
+    Dim slEnabled As String
     slEnabled = sl.GetAttribute(AttributeNameEnabled, "True")
     If CBool(slEnabled) Then
+        Dim slName As String
         slName = sl.InstanceQualifier
         
+        Dim slProgId As String
         If sl.GetAttribute(AttributeNameBarFormatterLibraryBuiltIn) = "True" Then
             slProgId = BuiltInBarFormatterLibProgId
         Else
             slProgId = sl.GetAttribute(AttributeNameBarFormatterLibraryProgId)
-            If slProgId = "" Then _
-                Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Study library ProgId not specified in configuration file"
+            Assert slProgId <> "", "Study library ProgId not specified in configuration file"
         End If
         
+        Dim slObj As IBarFormatterLibrary
         Set slObj = Nothing
         On Error Resume Next
         Set slObj = CreateObject(slProgId)
-        If slObj Is Nothing Then _
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid study library ProgId in configuration file: " & slProgId
+        Assert Not slObj Is Nothing, "Invalid study library ProgId in configuration file: " & slProgId
         
         On Error GoTo Err
         Add slObj, slName
@@ -342,7 +330,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

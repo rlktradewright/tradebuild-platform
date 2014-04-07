@@ -63,11 +63,6 @@ Public Const ConfigNameBarFormatterLibrary              As String = "BarFormatte
 ' Properties
 '@================================================================================
 
-Public Property Get gBarFormatterLibManager() As BarFormatterLibManager
-Static lBarFormatterLibManager As New BarFormatterLibManager
-Set gBarFormatterLibManager = lBarFormatterLibManager
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================

@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements BarFormatter
+Implements IBarFormatter
 
 '@================================================================================
 ' Events
@@ -46,44 +46,61 @@ Private Const ModuleName                    As String = "DunniganBarFormatter"
 ' Member variables
 '@================================================================================
 
-Private mBars As TimeframeUtils27.bars
+Private mBars                               As Bars
+Private WithEvents mFutureWaiter            As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
  
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
+End Sub
+
 '@================================================================================
-' BarFormatter Interface Members
+' IBarFormatter Interface Members
 '@================================================================================
 
-Private Sub BarFormatter_FormatBar( _
-                ByVal sourceBar As TimeframeUtils27.Bar, _
+Private Sub IBarFormatter_FormatBar( _
+                ByVal sourceBar As BarUtils27.Bar, _
                 ByVal chartBar As ChartSkil27.Bar)
-Const ProcName As String = "BarFormatter_FormatBar"
+Const ProcName As String = "IBarFormatter_FormatBar"
 On Error GoTo Err
 
-If sourceBar.BarNumber <= 2 Or mBars.Count < 2 Then Exit Sub
+If mBars.Count < 2 Then Exit Sub
 
-If sourceBar.HighValue > mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
-    sourceBar.LowValue >= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
+Dim lFirstBarNumber As Long
+lFirstBarNumber = mBars.Bar(1).BarNumber
+
+Dim lPrevBarIndex As Long
+lPrevBarIndex = sourceBar.BarNumber - lFirstBarNumber
+
+If lPrevBarIndex < 1 Then Exit Sub
+
+Dim lPrevBar As BarUtils27.Bar
+Set lPrevBar = mBars.Bar(lPrevBarIndex)
+
+If sourceBar.HighValue > lPrevBar.HighValue And _
+    sourceBar.LowValue >= lPrevBar.LowValue _
 Then
     chartBar.Color = &H1D9311
     chartBar.UpColor = &H1D9311
     chartBar.DownColor = &H1D9311
-ElseIf sourceBar.HighValue <= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
-    sourceBar.LowValue < mBars.Bar(sourceBar.BarNumber - 1).LowValue _
+ElseIf sourceBar.HighValue <= lPrevBar.HighValue And _
+    sourceBar.LowValue < lPrevBar.LowValue _
 Then
     chartBar.Color = &H43FC2
     chartBar.UpColor = &H43FC2
     chartBar.DownColor = &H43FC2
-ElseIf sourceBar.HighValue <= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
-    sourceBar.LowValue >= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
+ElseIf sourceBar.HighValue <= lPrevBar.HighValue And _
+    sourceBar.LowValue >= lPrevBar.LowValue _
 Then
     chartBar.Color = vbMagenta
     chartBar.UpColor = vbMagenta
     chartBar.DownColor = vbMagenta
-ElseIf sourceBar.HighValue >= mBars.Bar(sourceBar.BarNumber - 1).HighValue And _
-    sourceBar.LowValue <= mBars.Bar(sourceBar.BarNumber - 1).LowValue _
+ElseIf sourceBar.HighValue >= lPrevBar.HighValue And _
+    sourceBar.LowValue <= lPrevBar.LowValue _
 Then
     chartBar.Color = vbBlue
     chartBar.UpColor = vbBlue
@@ -93,27 +110,39 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then Set mBars = ev.Future.Value
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Let bars(ByVal value As TimeframeUtils27.bars)
-Const ProcName As String = "bars"
+Friend Property Let BarsFuture(ByVal Value As IFuture)
+Const ProcName As String = "BarsFuture"
 On Error GoTo Err
 
-Set mBars = value
+mFutureWaiter.Add Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
  
 '@================================================================================

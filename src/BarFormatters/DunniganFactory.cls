@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements BarFormatterFactory
+Implements IBarFormatterFactory
 
 '@================================================================================
 ' Events
@@ -54,10 +54,10 @@ Private Const ModuleName                    As String = "DunniganFactory"
 ' BarFormatterFactory Interface Members
 '@================================================================================
 
-Private Property Let BarFormatterFactory_ConfigurationSection( _
-                ByVal RHS As TWUtilities30.ConfigurationSection)
+Private Property Let IBarFormatterFactory_ConfigurationSection( _
+                ByVal RHS As ConfigurationSection)
 'Nothing we need to record in the config
-Const ProcName As String = "BarFormatterFactory_ConfigurationSection"
+Const ProcName As String = "IBarFormatterFactory_ConfigurationSection"
 On Error GoTo Err
 
 
@@ -65,28 +65,28 @@ On Error GoTo Err
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function BarFormatterFactory_CreateBarFormatter( _
-                ByVal pBars As TimeframeUtils27.bars) As BarFormatter
-Dim bf As New DunniganBarFormatter
-Const ProcName As String = "BarFormatterFactory_CreateBarFormatter"
+Private Function IBarFormatterFactory_CreateBarFormatter( _
+                ByVal pBarsFuture As IFuture) As IBarFormatter
+Const ProcName As String = "IBarFormatterFactory_CreateBarFormatter"
 On Error GoTo Err
 
-bf.bars = pBars
-Set BarFormatterFactory_CreateBarFormatter = bf
+Dim bf As New DunniganBarFormatter
+bf.BarsFuture = pBarsFuture
+Set IBarFormatterFactory_CreateBarFormatter = bf
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub BarFormatterFactory_LoadFromConfig( _
-                ByVal config As TWUtilities30.ConfigurationSection)
+Private Sub IBarFormatterFactory_LoadFromConfig( _
+                ByVal config As ConfigurationSection)
 'Nothing to load from the config
-Const ProcName As String = "BarFormatterFactory_LoadFromConfig"
+Const ProcName As String = "IBarFormatterFactory_LoadFromConfig"
 On Error GoTo Err
 
 
@@ -94,7 +94,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

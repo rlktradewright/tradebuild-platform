@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements BarFormatterLibrary
+Implements IBarFormatterLibrary
 
 '@================================================================================
 ' Events
@@ -65,33 +65,33 @@ End Sub
 ' XXXX Interface Members
 '@================================================================================
 
-Private Function BarFormatterLibrary_CreateFactory(ByVal pName As String) As BarFormatterFactory
-Const ProcName As String = "BarFormatterLibrary_CreateFactory"
+Private Function IBarFormatterLibrary_CreateFactory(ByVal pName As String) As IBarFormatterFactory
+Const ProcName As String = "IBarFormatterLibrary_CreateFactory"
 On Error GoTo Err
 
 Select Case UCase$(pName)
 Case UCase$(NameDunnigan)
-    Set BarFormatterLibrary_CreateFactory = New DunniganFactory
+    Set IBarFormatterLibrary_CreateFactory = New DunniganFactory
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid BarFormatterFactory name"
+    AssertArgument False, "Invalid BarFormatterFactory name"
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function BarFormatterLibrary_GetFactoryNames() As String()
-BarFormatterLibrary_GetFactoryNames = mFactoryNames
+Private Function IBarFormatterLibrary_GetFactoryNames() As String()
+IBarFormatterLibrary_GetFactoryNames = mFactoryNames
 End Function
 
-Private Property Let BarFormatterLibrary_Name(ByVal RHS As String)
+Private Property Let IBarFormatterLibrary_Name(ByVal RHS As String)
 mName = RHS
 End Property
 
-Private Property Get BarFormatterLibrary_Name() As String
-BarFormatterLibrary_Name = mName
+Private Property Get IBarFormatterLibrary_Name() As String
+IBarFormatterLibrary_Name = mName
 End Property
 
 '@================================================================================
@@ -110,19 +110,19 @@ End Property
 ' Helper Functions
 '@================================================================================
 
-Private Sub addFactoryName(ByVal name As String)
+Private Sub addFactoryName(ByVal Name As String)
 Const ProcName As String = "addFactoryName"
 On Error GoTo Err
 
 If mFactoryNames(0) <> "" Then
     ReDim Preserve mFactoryNames(UBound(mFactoryNames) + 1) As String
 End If
-mFactoryNames(UBound(mFactoryNames)) = name
+mFactoryNames(UBound(mFactoryNames)) = Name
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarFormatterFactory"
+Attribute VB_Name = "IBarFormatterFactory"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "BarFormatterFactory"
+Private Const ModuleName                    As String = "IBarFormatterFactory"
 
 '@================================================================================
 ' Member variables
@@ -60,7 +60,7 @@ Private Const ModuleName                    As String = "BarFormatterFactory"
 ' Properties
 '@================================================================================
 
-Public Property Let ConfigurationSection(ByVal value As ConfigurationSection)
+Public Property Let ConfigurationSection(ByVal Value As ConfigurationSection)
 
 End Property
 
@@ -68,7 +68,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function CreateBarFormatter(ByVal pBars As Bars) As BarFormatter
+Public Function CreateBarFormatter(ByVal pBarsFuture As IFuture) As IBarFormatter
 
 End Function
 
