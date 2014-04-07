@@ -120,7 +120,7 @@ End Sub
 ' mTimer Event Handlers
 '================================================================================
 
-Private Sub mTimer_TimerExpired()
+Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
 Dim timestamp As Date
 Dim volume As Long
 

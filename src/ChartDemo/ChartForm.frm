@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#1.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#152.0#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8355
@@ -27,8 +27,6 @@ Begin VB.Form ChartForm
       Width           =   12120
       _ExtentX        =   21378
       _ExtentY        =   11298
-      HorizontalMouseScrollingAllowed=   0   'False
-      ChartBackColor  =   6566450
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -41,6 +39,24 @@ Begin VB.Form ChartForm
       TabIndex        =   7
       Top             =   6840
       Width           =   12015
+      Begin VB.CheckBox ShowYAxisCheck 
+         Caption         =   "Show Y Axis"
+         Height          =   255
+         Left            =   2640
+         TabIndex        =   26
+         Top             =   360
+         Value           =   1  'Checked
+         Width           =   1335
+      End
+      Begin VB.CheckBox ShowXAxisCheck 
+         Caption         =   "Show X Axis"
+         Height          =   255
+         Left            =   2640
+         TabIndex        =   25
+         Top             =   120
+         Value           =   1  'Checked
+         Width           =   1335
+      End
       Begin VB.CommandButton FinishButton 
          Caption         =   "Finish"
          Height          =   495
@@ -94,7 +110,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox SessionEndTimeText 
          Height          =   285
-         Left            =   5400
+         Left            =   5880
          TabIndex        =   16
          Text            =   "16:00"
          Top             =   960
@@ -102,7 +118,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox SessionStartTimeText 
          Height          =   285
-         Left            =   5400
+         Left            =   5880
          TabIndex        =   14
          Text            =   "09:30"
          Top             =   720
@@ -126,7 +142,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox BarLengthText 
          Height          =   285
-         Left            =   5400
+         Left            =   5880
          TabIndex        =   1
          Text            =   "1"
          Top             =   360
@@ -134,7 +150,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox InitialNumBarsText 
          Height          =   285
-         Left            =   5400
+         Left            =   5880
          TabIndex        =   0
          Text            =   "150"
          Top             =   120
@@ -142,7 +158,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox TickSizeText 
          Height          =   285
-         Left            =   7320
+         Left            =   7680
          TabIndex        =   3
          Text            =   "0.25"
          Top             =   360
@@ -150,7 +166,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox StartPriceText 
          Height          =   285
-         Left            =   7320
+         Left            =   7680
          TabIndex        =   2
          Text            =   "1145"
          Top             =   120
@@ -168,7 +184,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Session end time"
          Height          =   255
-         Left            =   3600
+         Left            =   4080
          TabIndex        =   15
          Top             =   960
          Width           =   1695
@@ -177,7 +193,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Session start time"
          Height          =   255
-         Left            =   3600
+         Left            =   4080
          TabIndex        =   13
          Top             =   720
          Width           =   1695
@@ -195,7 +211,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Bar length (minutes)"
          Height          =   255
-         Left            =   3840
+         Left            =   4320
          TabIndex        =   11
          Top             =   360
          Width           =   1455
@@ -204,7 +220,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Initial number of bars"
          Height          =   255
-         Left            =   3840
+         Left            =   4320
          TabIndex        =   10
          Top             =   120
          Width           =   1455
@@ -213,7 +229,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Tick size"
          Height          =   255
-         Left            =   5760
+         Left            =   6120
          TabIndex        =   9
          Top             =   360
          Width           =   1455
@@ -222,7 +238,7 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Start price"
          Height          =   255
-         Left            =   5760
+         Left            =   6120
          TabIndex        =   8
          Top             =   120
          Width           =   1455
@@ -588,6 +604,14 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
+Private Sub ShowXAxisCheck_Click()
+Chart1.XAxisVisible = (ShowXAxisCheck.value = vbChecked)
+End Sub
+
+Private Sub ShowYAxisCheck_Click()
+Chart1.YAxisVisible = (ShowYAxisCheck.value = vbChecked)
+End Sub
+
 Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
@@ -607,10 +631,13 @@ LoadButton.Enabled = False  ' prevent the user pressing load again until the cha
 Chart1.DisableDrawing               ' tells the chart not to draw anything. This is
                                     ' useful when loading bulk data into the chart
                                     ' as it speeds the loading process considerably
+                                    
+Chart1.XAxisVisible = (ShowXAxisCheck.value = vbChecked)
+Chart1.YAxisVisible = (ShowYAxisCheck.value = vbChecked)
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
-Chart1.PeriodLength = GetTimePeriod(mBarLength, TimePeriodMinute)
+Chart1.TimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
 
 mSessionStartTime = getSessionTime(SessionStartTimeText.Text)
 mSessionEndTime = getSessionTime(SessionEndTimeText.Text)
@@ -761,7 +788,7 @@ mPriceText.BoxColor = vbBlack
 mPriceText.BoxFillColor = vbBlack
 mPriceText.Align = AlignBoxCentreLeft
 mPriceText.Color = vbWhite
-mPriceText.Font.Bold = True
+mPriceText.Font = createFont("Times New Roman", pBold:=True, pSize:=8)
 
 ' Set up a datapoint series for the first moving average
 Set lDataPointStyle = New DataPointStyle
@@ -838,7 +865,7 @@ Set mNewSwingLine = Nothing
 ' Create a region to display the MACD study
 Set mMACDRegion = Chart1.Regions.Add(20, , mDataRegionStyle, mYAxisRegionStyle)
                                         ' use 20 percent of the space for this region
-mMACDRegion.GridlineSpacingY = 0.8      ' the horizontal grid lines should be about
+mMACDRegion.YGridlineSpacing = 0.8      ' the horizontal grid lines should be about
                                         ' 8 millimeters apart
 mMACDRegion.Title.Text = "MACD (12, 24, 5)"
 mMACDRegion.Title.Color = vbBlue
@@ -880,7 +907,7 @@ Set lVolumeRegionStyle = mDataRegionStyle.Clone
 lVolumeRegionStyle.IntegerYScale = True      ' constrain the Y scale to only display integer
                                         ' labels
 lVolumeRegionStyle.MinimumHeight = 10        ' don't let the Y scale drop below 10
-lVolumeRegionStyle.GridlineSpacingY = 0.8    ' the horizontal grid lines should be about
+lVolumeRegionStyle.YGridlineSpacing = 0.8    ' the horizontal grid lines should be about
                                         ' 8 millimeters apart
 
 Set mVolumeRegion = Chart1.Regions.Add(15, , lVolumeRegionStyle, mYAxisRegionStyle)
@@ -1024,7 +1051,7 @@ End Sub
 ' mClockTimer Event Handlers
 '================================================================================
 
-Private Sub mClockTimer_TimerExpired()
+Private Sub mClockTimer_TimerExpired(ev As TimerExpiredEventData)
 Const ProcName As String = "mClockTimer_TimerExpired"
 On Error GoTo Err
 
@@ -1211,7 +1238,7 @@ End Sub
 ' mUnhandledErrorHandler Event Handlers
 '================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 gHandleFatalError
 End Sub
 
@@ -1303,6 +1330,24 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
+Private Function createFont( _
+                Optional ByVal pName As String = "Arial", _
+                Optional ByVal pBold As Boolean = False, _
+                Optional ByVal pItalic As Boolean = False, _
+                Optional ByVal pSize As Currency = 8.25, _
+                Optional ByVal pStrikethrough As Boolean = False, _
+                Optional ByVal pUnderline As Boolean = False) As StdFont
+Dim aFont As New StdFont
+aFont.Name = pName
+aFont.Bold = pBold
+aFont.Italic = pItalic
+aFont.Size = pSize
+aFont.Strikethrough = pStrikethrough
+aFont.Underline = pUnderline
+
+Set createFont = aFont
+End Function
+
 Private Sub displayStudyValues()
 Const ProcName As String = "displayStudyValues"
 On Error GoTo Err
@@ -1339,12 +1384,11 @@ Const ProcName As String = "initialise"
 On Error GoTo Err
 
 Chart1.Autoscrolling = True            ' requests that the chart should automatically scroll
-                                    ' forward one period each time a new period is added
-Chart1.TwipsPerPeriod = 150            ' specifies the space between bars - there are
-                                    ' 1440 twips per inch or 567 per centimetre
+                                        ' forward one period each time a new period is added
+Chart1.PeriodWidth = 9                  ' specifies the space between bars in pixels
 Chart1.HorizontalScrollBarVisible = True
-                                    ' show a horizontal scrollbar for navigating back
-                                    ' and forth in the chart
+                                        ' show a horizontal scrollbar for navigating back
+                                        ' and forth in the chart
 Chart1.HorizontalMouseScrollingAllowed = True
                                     ' alternatively the user can scroll by dragging the
                                     ' mouse both horizontally...
@@ -1377,40 +1421,94 @@ mDataRegionStyle.BackGradientFillColors = GradientFillColors
                                     ' sets the default background color for all regions
                                     ' of the chart - but each separate region can
                                     ' have its own background color
-mDataRegionStyle.GridLineStyle.Color = &HC0C0C0    ' sets the colour of the gridlines
-mDataRegionStyle.GridLineStyle.LineStyle = LineSolid   ' sets the style of the gridlines
-mDataRegionStyle.GridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
-mDataRegionStyle.HasGrid = True          ' indicate that there is a grid
+
+Dim lGridlineStyle As New LineStyle
+
+lGridlineStyle.Color = &HC0C0C0    ' sets the colour of the gridlines
+lGridlineStyle.LineStyle = LineSolid   ' sets the style of the gridlines
+
+mDataRegionStyle.XGridLineStyle = lGridlineStyle
+mDataRegionStyle.YGridLineStyle = lGridlineStyle
+
+mDataRegionStyle.YGridlineSpacing = 1.8  ' specify that the price gridlines should be about 1.8cm apart
+mDataRegionStyle.HasXGrid = True          ' indicates that there are vertical gridlines
+mDataRegionStyle.HasYGrid = True          ' indicates that there are horizontal grid lines
+
+mDataRegionStyle.HasXGridText = True
+mDataRegionStyle.XGridTextPosition = XGridTextPositionTop
+
+Dim lGridTextStyle As New TextStyle
+lGridTextStyle.Font = createFont("Arial", pBold:=True, pSize:=12)
+lGridTextStyle.Color = &HD0D0D0
+lGridTextStyle.Box = True
+lGridTextStyle.BoxFillWithBackgroundColor = True
+lGridTextStyle.BoxStyle = LineInvisible
+mDataRegionStyle.XGridTextStyle = lGridTextStyle
+
+mDataRegionStyle.HasYGridText = True
+mDataRegionStyle.YGridTextPosition = YGridTextPositionRight
+mDataRegionStyle.YGridTextStyle = lGridTextStyle
+
+mDataRegionStyle.CursorTextMode = CursorTextModeCombined
+mDataRegionStyle.CursorTextPosition = CursorTextPositionBottomLeftFixed
+
+Dim lCursorTextStyle As New TextStyle
+lCursorTextStyle.Box = True
+lCursorTextStyle.BoxFillColor = vbYellow
+lCursorTextStyle.Color = vbBlue
+lCursorTextStyle.Font = createFont("Times New Roman", pBold:=True, pSize:=10)
+lCursorTextStyle.Offset = NewSize(0, 50, CoordsRelative, CoordsRelative)
+mDataRegionStyle.CursorTextStyle = lCursorTextStyle
+
+mDataRegionStyle.SessionStartGridLineStyle = New LineStyle
 mDataRegionStyle.SessionStartGridLineStyle.Color = RGB(184, 203, 165)
+mDataRegionStyle.SessionStartGridLineStyle.Thickness = 3
+
+mDataRegionStyle.SessionEndGridLineStyle = New LineStyle
 mDataRegionStyle.SessionEndGridLineStyle.Color = RGB(241, 135, 148)
-mDataRegionStyle.YAxisTextStyle.Font.Name = "Lucida Console"
-mDataRegionStyle.YAxisTextStyle.Font.Size = 7
-mDataRegionStyle.YCursorTextStyle.BoxFillColor = vbYellow
-mDataRegionStyle.YCursorTextStyle.Color = vbBlue
-mDataRegionStyle.YCursorTextStyle.Font.Name = "Times New Roman"
-mDataRegionStyle.YCursorTextStyle.Font.Bold = True
-mDataRegionStyle.YCursorTextStyle.Font.Size = 10
+mDataRegionStyle.SessionEndGridLineStyle.Thickness = 2
+
+mDataRegionStyle.YScaleQuantum = 0.01
+mDataRegionStyle.MinimumHeight = 0.1
 
 ' now set the style for the X axis
 GradientFillColors(0) = RGB(230, 236, 207)
 GradientFillColors(1) = RGB(222, 236, 215)
 Chart1.XAxisRegion.BackGradientFillColors = GradientFillColors
-Chart1.XAxisRegion.GridTextStyle.Font.Name = "Lucida Console"
-Chart1.XAxisRegion.GridTextStyle.Font.Size = 7
+Chart1.XAxisRegion.HasXGrid = False
+Chart1.XAxisRegion.HasXGridText = True
+Chart1.XAxisRegion.HasYGrid = False
+Chart1.XAxisRegion.HasYGridText = False
+Chart1.XAxisRegion.CursorTextMode = CursorTextModeXOnly
+Chart1.XAxisRegion.XCursorTextPosition = CursorTextPositionTop
+Chart1.XAxisRegion.XGridTextPosition = XGridTextPositionBottom
+
+Set lGridTextStyle = New TextStyle
+lGridTextStyle.Font = createFont("Lucida Console", pSize:=7)
+lGridTextStyle.Offset = NewSize(0#, 0.1, CoordsDistance, CoordsDistance)
+Chart1.XAxisRegion.XGridTextStyle = lGridTextStyle
+
+' set the style for the X-axis cursor label
+Set lCursorTextStyle = lCursorTextStyle.Clone
+lCursorTextStyle.Offset = NewSize(0#, -0.1, CoordsDistance, CoordsDistance)
+Chart1.XAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
 
 ' now create the style for Y axes
 Set mYAxisRegionStyle = New ChartRegionStyle
 GradientFillColors(0) = RGB(234, 246, 254)
 GradientFillColors(1) = RGB(226, 246, 255)
 mYAxisRegionStyle.BackGradientFillColors = GradientFillColors
-mYAxisRegionStyle.HasGrid = False
-
-' set the style for the X-axis cursor label
-Chart1.XCursorTextStyle.BoxFillColor = vbYellow
-Chart1.XCursorTextStyle.Color = vbBlue
-Chart1.XCursorTextStyle.Font.Name = "Times New Roman"
-Chart1.XCursorTextStyle.Font.Bold = True
-Chart1.XCursorTextStyle.Font.Size = 10
+mYAxisRegionStyle.HasXGrid = False
+mYAxisRegionStyle.HasXGridText = False
+mYAxisRegionStyle.HasYGrid = False
+mYAxisRegionStyle.HasYGridText = True
+mYAxisRegionStyle.CursorTextMode = CursorTextModeYOnly
+mYAxisRegionStyle.YGridTextStyle = lGridTextStyle.Clone
+mYAxisRegionStyle.YGridTextPosition = YGridTextPositionCentre
+mYAxisRegionStyle.YGridTextStyle.Offset = Nothing
+mYAxisRegionStyle.YCursorTextPosition = CursorTextPositionLeft
+mYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle.Clone
+mYAxisRegionStyle.YCursorTextStyle.Offset = NewSize(0.1, 0#, CoordsDistance, CoordsDistance)
 
 ' set the width of the Y-axis area
 Chart1.YAxisWidthCm = 2
