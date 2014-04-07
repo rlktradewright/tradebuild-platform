@@ -47,7 +47,7 @@ Private Const ModuleName                            As String = "ContractDetails
 ' Member variables
 '@================================================================================
 
-Private mContractSpecifier                          As ContractSpecifier
+Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractDetailsRequester
 
 Private mTaskContext                                As TaskContext
@@ -56,9 +56,39 @@ Private mContractsBuilder                           As ContractsBuilder
 
 Private mNumOutstandingRequests                     As Long
 
+Private mRequestId                                  As Long
+Private mRequestId1                                 As Long
+Private mRequestId2                                 As Long
+Private mRequestId3                                 As Long
+Private mRequestId4                                 As Long
+Private mRequestId5                                 As Long
+
+Private WithEvents mContractsFutureBuilder          As FutureBuilder
+Attribute mContractsFutureBuilder.VB_VarHelpID = -1
+
+Private mListener                                   As IContractFetchListener
+
+Private mCookie                                     As Variant
+
+Private mReturnTwsContracts                         As Boolean
+
+Private mTwsContracts                               As EnumerableCollection
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mContractsBuilder = New ContractsBuilder
+Set mContractsFutureBuilder = New FutureBuilder
+Set mTwsContracts = New EnumerableCollection
+mRequestId = NullIndex
+mRequestId1 = NullIndex
+mRequestId2 = NullIndex
+mRequestId3 = NullIndex
+mRequestId4 = NullIndex
+mRequestId5 = NullIndex
+End Sub
 
 '@================================================================================
 ' IContractDetailsConsumer Interface Members
@@ -68,14 +98,25 @@ Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long
 Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
 On Error GoTo Err
 
-EndRequest pRequestId
+requestCompleted pRequestId
 mNumOutstandingRequests = mNumOutstandingRequests - 1
-If mNumOutstandingRequests = 0 Then mTaskContext.Finish mContractsBuilder.Contracts, False
+If mNumOutstandingRequests = 0 Then
+    If mReturnTwsContracts Then
+        mContractsFutureBuilder.Value = mTwsContracts
+        mContractsFutureBuilder.Complete
+    Else
+        mContractsFutureBuilder.Value = mContractsBuilder.Contracts
+        mContractsFutureBuilder.Complete
+    End If
+    
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    mTaskContext.Finish Empty, False
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
@@ -83,7 +124,15 @@ Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
 If IsValidExchangeCode(pContractDetails.Summary.Exchange) Then
-    mContractsBuilder.AddContract gTwsContractDetailsToContract(pContractDetails)
+    If mReturnTwsContracts Then
+        mTwsContracts.Add pContractDetails
+    Else
+        Dim lContract As IContract
+        Set lContract = gTwsContractDetailsToContract(pContractDetails)
+        
+        mContractsBuilder.Add lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mCookie, lContract
+    End If
 Else
     gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pContractDetails.Summary.Exchange, pModName:=ModuleName, pProcName:=ProcName
 End If
@@ -91,28 +140,41 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "IContractDetailsConsumer_NotifyError"
 On Error GoTo Err
 
-EndRequest pRequestId
+requestCompleted pRequestId
 mNumOutstandingRequests = mNumOutstandingRequests - 1
 
-If mNumOutstandingRequests = 0 Then
-    If mContractsBuilder.Contracts.Count > 0 Then
-        mTaskContext.Finish mContractsBuilder.Contracts, False
+If pErrorCode <> 200 Then
+    
+    cancelOutstandingRequests
+    mTaskContext.Error pErrorCode, pErrorMsg
+    
+    mContractsFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+    If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErrorMsg, ""
+
+ElseIf mNumOutstandingRequests = 0 Then
+    If mReturnTwsContracts Then
+        mContractsFutureBuilder.Value = mTwsContracts
+        mContractsFutureBuilder.Complete
     Else
-        mTaskContext.Error pErrorCode, pErrorMsg
+        mContractsFutureBuilder.Value = mContractsBuilder.Contracts
+        mContractsFutureBuilder.Complete
     End If
+    
+    If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
+    mTaskContext.Finish Empty, False
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -120,12 +182,17 @@ End Sub
 '@================================================================================
 
 Private Sub Task_Cancel()
-
+doCancel
 End Sub
 
 Private Sub Task_Run()
 Const ProcName As String = "Task_Run"
 On Error GoTo Err
+
+If mTaskContext.CancelPending Then
+    doCancel
+    Exit Sub
+End If
 
 If mContractSpecifier.Sectype = SecTypeNone Then
     ' no Sectype supplied, so we'll place a separate Request for each of the following:
@@ -133,45 +200,45 @@ If mContractSpecifier.Sectype = SecTypeNone Then
     '       Indexes
     '       Stocks
     '       Cash
-    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId1 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry))
     
     If mContractSpecifier.LocalSymbol = "" Then
-        requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
+        mRequestId2 = requestContracts(CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
-                                                        mContractSpecifier.Expiry)
+                                                        mContractSpecifier.Expiry))
     End If
     
-    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId3 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry))
 
-    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId4 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry))
 
-    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    mRequestId5 = requestContracts(CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _
                                                     mContractSpecifier.CurrencyCode, _
-                                                    mContractSpecifier.Expiry)
+                                                    mContractSpecifier.Expiry))
 
 Else
-    requestContracts mContractSpecifier
+    mRequestId = requestContracts(mContractSpecifier)
 End If
 
 mTaskContext.Suspend -1
@@ -179,7 +246,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)
@@ -191,12 +258,28 @@ Task_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mContractsFutureBuilder Event Handlers
 '@================================================================================
+
+Private Sub mContractsFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mContractsFutureBuilder_Cancelled"
+On Error GoTo Err
+
+doCancel
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get ContractsFuture() As IFuture
+Set ContractsFuture = mContractsFutureBuilder.Future
+End Property
 
 '@================================================================================
 ' Methods
@@ -204,46 +287,85 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractsBuilder As ContractsBuilder)
+                ByVal pContractSpecifier As IContractSpecifier, _
+                ByVal pListener As IContractFetchListener, _
+                ByVal pCookie As Variant, _
+                ByVal pReturnTwsContracts As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContractRequester = pContractRequester
-Set mContractsBuilder = pContractsBuilder
-Set mContractSpecifier = mContractsBuilder.Contracts.ContractSpecifier
+Set mContractSpecifier = pContractSpecifier
+Set mListener = pListener
+
+gSetVariant mCookie, pCookie
+mContractsFutureBuilder.Cookie = mCookie
+
+mReturnTwsContracts = pReturnTwsContracts
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function EndRequest(ByVal pRequestId As Long)
-Const ProcName As String = "EndRequest"
+Private Sub cancelOutstandingRequests()
+Const ProcName As String = "cancelOutstandingRequests"
 On Error GoTo Err
 
-mContractRequester.CompleteRequest pRequestId
+If mRequestId <> NullIndex Then mContractRequester.CancelRequest mRequestId
+If mRequestId1 <> NullIndex Then mContractRequester.CancelRequest mRequestId1
+If mRequestId2 <> NullIndex Then mContractRequester.CancelRequest mRequestId2
+If mRequestId3 <> NullIndex Then mContractRequester.CancelRequest mRequestId3
+If mRequestId4 <> NullIndex Then mContractRequester.CancelRequest mRequestId4
+If mRequestId5 <> NullIndex Then mContractRequester.CancelRequest mRequestId5
 
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Private Function requestContracts(ByVal pContractSpec As ContractSpecifier) As Long
+Private Sub doCancel()
+Const ProcName As String = "doCancel"
+On Error GoTo Err
+
+cancelOutstandingRequests
+
+mTaskContext.Finish Nothing, True
+
+mContractsFutureBuilder.Cancel
+If Not mListener Is Nothing Then mListener.FetchCancelled mCookie
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function requestContracts(ByVal pContractSpec As IContractSpecifier) As Long
 Const ProcName As String = "requestContracts"
 On Error GoTo Err
 
+If gLogger.IsLoggable(LogLevelDetail) Then gLog "Request contract details for", ModuleName, ProcName, pContractSpec.ToString, LogLevelDetail
 requestContracts = mContractRequester.RequestContractDetails(pContractSpec, Me)
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub requestCompleted(ByVal pRequestId As Long)
+If pRequestId = mRequestId Then mRequestId = NullIndex
+If pRequestId = mRequestId1 Then mRequestId1 = NullIndex
+If pRequestId = mRequestId2 Then mRequestId2 = NullIndex
+If pRequestId = mRequestId3 Then mRequestId3 = NullIndex
+If pRequestId = mRequestId4 Then mRequestId4 = NullIndex
+If pRequestId = mRequestId5 Then mRequestId5 = NullIndex
+End Sub

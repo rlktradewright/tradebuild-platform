@@ -40,14 +40,17 @@ Option Explicit
 
 Private Const ModuleName                            As String = "HistDataRequestPacer"
 
+Private Const OneMinute                             As Double = 1 / (60# * 24#)
+Private Const OneSecond                             As Double = 1 / (60# * 60# * 24#)
+
 Private Const MaxTwsHistRequestsPerPeriod           As Long = 60
 
-Private Const TwsHistRequestPeriod                  As Double = 10# / (60# * 24#)
+Private Const TwsHistRequestPeriod                  As Double = 10# * OneMinute + 2# * OneSecond
 
-Private Const TwsHistRequestRepeatInterval          As Double = 15# / (60# * 60# * 24#)
+Private Const TwsHistRequestRepeatInterval          As Double = 15# * OneSecond
 
-Private Const TwsHistRequestContractAndTickTypePeriod   As Double = 9# / (60# * 60# * 24#)
-Private Const TwsHistRequestContractAndTickTypeRequestLimit   As Long = 6
+Private Const TwsHistRequestContractAndTickTypePeriod       As Double = 10# * OneSecond
+Private Const TwsHistRequestContractAndTickTypeRequestLimit As Long = 6
 
 '@================================================================================
 ' Member variables
@@ -69,8 +72,12 @@ Private Const TwsHistRequestContractAndTickTypeRequestLimit   As Long = 6
 ' Properties
 '@================================================================================
 
-Public Property Get DelayTillNextSubmission() As Long
-Const ProcName As String = "DelayTillNextSubmission"
+'@================================================================================
+' Methods
+'@================================================================================
+
+Public Function GetDelayTillNextSubmission(ByRef pReason As String) As Long
+Const ProcName As String = "GetDelayTillNextSubmission"
 On Error GoTo Err
 
 Dim lTimestamp As Date
@@ -81,42 +88,47 @@ lTimestamp = GetTimestamp
 If submittedHistDataRequests.Count = submittedHistDataRequests.CyclicSize Then
     lEarliestSubmissionTime = submittedHistDataRequests.GetSValue(1).Timestamp + TwsHistRequestPeriod
     If lTimestamp < lEarliestSubmissionTime Then
-        DelayTillNextSubmission = ((lEarliestSubmissionTime - lTimestamp) * 86400 + 5) * 1000
+        GetDelayTillNextSubmission = ((lEarliestSubmissionTime - lTimestamp) * 86400) * 1000
+        pReason = "overall pacing"
     Else
-        DelayTillNextSubmission = 0
+        GetDelayTillNextSubmission = 0
     End If
 Else
-    DelayTillNextSubmission = 0
+    GetDelayTillNextSubmission = 0
 End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-Public Function GetEarliestSubmissionTime(ByRef pRequest As HistoricalDataRequest) As Date
-Const ProcName As String = "GetEarliestSubmissionTime"
-On Error GoTo Err
-
-GetEarliestSubmissionTime = getEarliestTimeForIdenticalRequest(pRequest)
-
-Dim lContractTime As Date
-lContractTime = getEarliestTimeForContractAndTickType(pRequest)
-
-If lContractTime > GetEarliestSubmissionTime Then GetEarliestSubmissionTime = lContractTime
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function RecordSubmission(ByRef pRequest As HistoricalDataRequest) As Date
+Public Function GetEarliestSubmissionTime( _
+                ByRef pRequest As TwsHistoricalDataRequest, _
+                ByRef pReason As String) As Date
+Const ProcName As String = "GetEarliestSubmissionTime"
+On Error GoTo Err
+
+pReason = ""
+
+GetEarliestSubmissionTime = getEarliestTimeForIdenticalRequest(pRequest)
+If GetEarliestSubmissionTime <> 0 Then pReason = "identical request"
+
+Dim lContractTime As Date
+lContractTime = getEarliestTimeForContractAndTickType(pRequest)
+
+If lContractTime > GetEarliestSubmissionTime Then
+    GetEarliestSubmissionTime = lContractTime
+    pReason = "same contract and tick type"
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function RecordSubmission(ByRef pRequest As TwsHistoricalDataRequest) As Date
 Const ProcName As String = "RecordSubmission"
 On Error GoTo Err
 
@@ -144,14 +156,14 @@ RecordSubmission = lTimestamp
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function contractAndTickTypeToString(ByRef pRequest As HistoricalDataRequest) As String
+Private Function contractAndTickTypeToString(ByRef pRequest As TwsHistoricalDataRequest) As String
 Const ProcName As String = "contractAndTickTypeToString"
 On Error GoTo Err
 
@@ -161,10 +173,10 @@ contractAndTickTypeToString = pRequest.Contract.ToString & vbNullChar & _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getContractAndTickTypeCache(ByRef pRequest As HistoricalDataRequest) As ValueCache
+Private Function getContractAndTickTypeCache(ByRef pRequest As TwsHistoricalDataRequest) As ValueCache
 Const ProcName As String = "getContractAndTickTypeCache"
 On Error GoTo Err
 
@@ -178,7 +190,7 @@ Set lCache = requestTimesForContractAndTickType(lKey)
 On Error GoTo Err
 
 If lCache Is Nothing Then
-    Set lCache = CreateValueCache(TwsHistRequestContractAndTickTypeRequestLimit, "Time")
+    Set lCache = CreateValueCache(TwsHistRequestContractAndTickTypeRequestLimit - 1, "Time")
     requestTimesForContractAndTickType.Add lCache, lKey
 End If
 
@@ -187,10 +199,10 @@ Set getContractAndTickTypeCache = lCache
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getEarliestTimeForContractAndTickType(ByRef pRequest As HistoricalDataRequest) As Date
+Private Function getEarliestTimeForContractAndTickType(ByRef pRequest As TwsHistoricalDataRequest) As Date
 Const ProcName As String = "getEarliestTimeForContractAndTickType"
 On Error GoTo Err
 
@@ -205,10 +217,10 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getEarliestTimeForIdenticalRequest(ByRef pRequest As HistoricalDataRequest) As Date
+Private Function getEarliestTimeForIdenticalRequest(ByRef pRequest As TwsHistoricalDataRequest) As Date
 Const ProcName As String = "getEarliestTimeForIdenticalRequest"
 On Error GoTo Err
 
@@ -221,10 +233,10 @@ If lLastTime <> 0 Then getEarliestTimeForIdenticalRequest = lLastTime + TwsHistR
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function historicalDataRequestToString(ByRef pRequest As HistoricalDataRequest) As String
+Private Function historicalDataRequestToString(ByRef pRequest As TwsHistoricalDataRequest) As String
 Const ProcName As String = "historicalDataRequestToString"
 On Error GoTo Err
 
@@ -237,7 +249,7 @@ historicalDataRequestToString = pRequest.BarSizeSetting & vbNullChar & _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function requestTimes() As Collection
@@ -252,7 +264,7 @@ Set requestTimes = sRequestTimes
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function requestTimesForContractAndTickType() As Collection
@@ -267,7 +279,7 @@ Set requestTimesForContractAndTickType = sRequestTimesForContractAndTickType
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function submittedHistDataRequests() As ValueCache
@@ -276,13 +288,13 @@ On Error GoTo Err
 
 Static sSubmittedRequests As ValueCache
 
-If sSubmittedRequests Is Nothing Then Set sSubmittedRequests = CreateValueCache(MaxTwsHistRequestsPerPeriod, "HistRequest")
+If sSubmittedRequests Is Nothing Then Set sSubmittedRequests = CreateValueCache(MaxTwsHistRequestsPerPeriod - 1, "HistRequest")
 Set submittedHistDataRequests = sSubmittedRequests
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

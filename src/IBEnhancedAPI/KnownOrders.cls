@@ -82,30 +82,47 @@ mOrders.Add lMapEntry, generateTwsOrderKey(pOrder.BrokerId, pClientId)
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Cancel( _
+                ByVal pBrokerId As String, _
+                ByVal pClientId As Long)
+Const ProcName As String = "Cancel"
+On Error GoTo Err
+
+Dim lKey As String
+Dim lMapEntry As OrderIdMapEntry
+
+lKey = generateTwsOrderKey(pBrokerId, pClientId)
+lMapEntry = mOrders(lKey)
+lMapEntry.Cancelled = True
+mOrders.Remove lKey
+mOrders.Add lMapEntry, lKey
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Contains( _
-                ByVal pBrokerId As Long, _
+                ByVal pBrokerId As String, _
                 ByVal pClientId As Long) As Boolean
 Const ProcName As String = "Contains"
 On Error GoTo Err
 
-Dim lMapEntry As OrderIdMapEntry
-
-lMapEntry = mOrders(generateTwsOrderKey(pBrokerId, pClientId))
-Contains = True
+Contains = mOrders.Contains(generateTwsOrderKey(pBrokerId, pClientId))
 
 Exit Function
 
 Err:
-If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Function
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOrder( _
-                ByVal pBrokerId As Long, _
+                ByVal pBrokerId As String, _
                 ByVal pClientId As Long) As IOrder
 Const ProcName As String = "GetOrder"
 On Error GoTo Err
@@ -118,11 +135,11 @@ Set GetOrder = lMapEntry.Order
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOrderSubmitter( _
-                ByVal pBrokerId As Long, _
+                ByVal pBrokerId As String, _
                 ByVal pClientId As Long) As OrderSubmitter
 Const ProcName As String = "GetOrderSubmitter"
 On Error GoTo Err
@@ -135,7 +152,24 @@ Set GetOrderSubmitter = lMapEntry.OrderSubmitter
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function IsCancelled( _
+                ByVal pBrokerId As String, _
+                ByVal pClientId As Long) As Boolean
+Const ProcName As String = "IsCancelled"
+On Error GoTo Err
+
+Dim lMapEntry As OrderIdMapEntry
+
+lMapEntry = mOrders(generateTwsOrderKey(pBrokerId, pClientId))
+IsCancelled = lMapEntry.Cancelled
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -143,9 +177,9 @@ End Function
 '@================================================================================
 
 Private Function generateTwsOrderKey( _
-                ByVal pTwsOrderId As Long, _
+                ByVal pTwsOrderId As String, _
                 ByVal pClientId As Long) As String
-generateTwsOrderKey = pClientId & "/" & pTwsOrderId
+generateTwsOrderKey = pClientId & "/" & CStr(pTwsOrderId)
 End Function
 
 

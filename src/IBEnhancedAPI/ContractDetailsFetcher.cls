@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IContractStore
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -45,14 +47,46 @@ Private Const ModuleName                            As String = "ContractDetails
 '@================================================================================
 
 Private mContractRequester                          As ContractDetailsRequester
+Private mContractsFutures                           As New EnumerableCollection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IContractStore Interface Members
 '@================================================================================
+
+Private Function IContractStore_FetchContracts( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IContractStore_FetchContracts"
+On Error GoTo Err
+
+Set IContractStore_FetchContracts = FetchContracts(pContractSpecifier, pListener, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub IContractStore_Finish()
+Const ProcName As String = "IContractStore_Finish"
+On Error GoTo Err
+
+Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function IContractStore_Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
+IContractStore_Supports = Supports(pCapabilities)
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -66,27 +100,48 @@ Private mContractRequester                          As ContractDetailsRequester
 ' Methods
 '@================================================================================
 
-Public Function FetchContractDetails( _
-                ByVal pContractSpecifier As ContractSpecifier, _
-                Optional ByVal pCookie As Variant) As TaskController
-Const ProcName As String = "FetchContractDetails"
+Public Function FetchContracts( _
+                ByVal pContractSpecifier As IContractSpecifier, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-Dim lFetchTask As New ContractDetailsRequestTask
-
-lFetchTask.Initialise mContractRequester, CreateContractsBuilder(pContractSpecifier)
-Set FetchContractDetails = StartTask(lFetchTask, PriorityLow, , pCookie)
+Set FetchContracts = gFetchContracts(mContractRequester, pContractSpecifier, pListener, pCookie, False)
+mContractsFutures.Add FetchContracts
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Public Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+Dim f As IFuture
+For Each f In mContractsFutures
+    If f.IsPending Then f.Cancel
+Next
+
+Set mContractRequester = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester)
 Set mContractRequester = pContractRequester
 End Sub
+
+Public Function Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
+Const Capabilities As Long = ContractStoreCapabilities.ContractStoreCanQuery
+Supports = ((Capabilities And pCapabilities) = pCapabilities)
+End Function
 
 '@================================================================================
 ' Helper Functions

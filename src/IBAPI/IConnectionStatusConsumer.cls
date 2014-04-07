@@ -64,6 +64,17 @@ Private Const ModuleName                            As String = "IConnectionStat
 ' Methods
 '@================================================================================
 
+Public Sub NotifyAPIConnectionStateChange( _
+                ByVal pState As TwsConnectionStates, _
+                ByVal pMessage As String)
+End Sub
+
+Public Sub NotifyIBServerConnectionClosed()
+End Sub
+
+Public Sub NotifyIBServerConnectionRecovered(ByVal pDataLost As Boolean)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

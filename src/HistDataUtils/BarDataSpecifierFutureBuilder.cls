@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarDataSpecifierFuture"
+Attribute VB_Name = "BarDataSpecFutureBldr"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -21,8 +21,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IFuture
 
 '@================================================================================
 ' Events
@@ -40,7 +38,7 @@ Implements IFuture
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "BarDataSpecifierFuture"
+Private Const ModuleName                            As String = "BarDataSpecFutureBldr"
 
 '@================================================================================
 ' Member variables
@@ -53,17 +51,13 @@ Private mBarSpecifier                               As New BarDataSpecifier
 
 Private mExcludeCurrentBar                          As Boolean
 
-Private mIsCancelled                                As Boolean
-Private mIsAvailable                                As Boolean
-Private mIsFaulted                                  As Boolean
-Private mErrorNumber                                As Long
-Private mErrorMessage                               As String
-Private mErrorSource                                As String
-
-Private mListeners                                  As New EnumerableCollection
-
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private WithEvents mFutureBuilder                   As FutureBuilder
+Attribute mFutureBuilder.VB_VarHelpID = -1
+
+Private mSelfRef                                    As Object
 
 '@================================================================================
 ' Class Event Handlers
@@ -71,97 +65,31 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
+Set mFutureBuilder = New FutureBuilder
+Set mSelfRef = Me
 End Sub
 
 '@================================================================================
-' IFuture Interface Members
+' XXXX Interface Members
 '@================================================================================
 
-Private Sub IFuture_AddStateChangeListener(ByVal pListener As StateChangeListener)
-Const ProcName As String = "IFuture_AddStateChangeListener"
+'@================================================================================
+' mFutureBuilder Event Handlers
+'@================================================================================
+
+Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mFutureBuilder_Cancelled"
 On Error GoTo Err
 
-mListeners.Add pListener
+mFutureWaiter.Clear
+mFutureBuilder.Cancel
+Set mSelfRef = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
-
-Private Sub IFuture_Cancel()
-Const ProcName As String = "IFuture_Cancel"
-On Error GoTo Err
-
-If Not IFuture_IsPending Then Exit Sub
-
-mContractFuture.RemoveStateChangeListener Me
-If Not mClockFuture Is Nothing Then mClockFuture.RemoveStateChangeListener Me
-mIsCancelled = True
-fireStateChange FutureStateCancelled
-mListeners.Clear
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Get IFuture_ErrorMessage() As String
-IFuture_ErrorMessage = mErrorMessage
-End Property
-
-Private Property Get IFuture_ErrorNumber() As Long
-IFuture_ErrorNumber = mErrorNumber
-End Property
-
-Private Property Get IFuture_ErrorSource() As String
-IFuture_ErrorSource = mErrorSource
-End Property
-
-Private Property Get IFuture_IsAvailable() As Boolean
-IFuture_IsAvailable = mIsAvailable
-End Property
-
-Private Property Get IFuture_IsCancelled() As Boolean
-IFuture_IsCancelled = mIsCancelled
-End Property
-
-Private Property Get IFuture_IsFaulted() As Boolean
-IFuture_IsFaulted = mIsFaulted
-End Property
-
-Private Property Get IFuture_IsPending() As Boolean
-IFuture_IsPending = Not (mIsAvailable Or mIsCancelled Or mIsFaulted)
-End Property
-
-Private Sub IFuture_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
-Const ProcName As String = "IFuture_RemoveStateChangeListener"
-On Error GoTo Err
-
-mListeners.Remove pListener
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Get IFuture_Value() As Object
-Const ProcName As String = "IFuture_Value"
-On Error GoTo Err
-
-Assert Not mIsCancelled, "BarDataSpecifier creation was cancelled"
-Assert Not mIsFaulted, "BarDataSpecifier creation failed: error=" & mErrorNumber & "; description=" & mErrorMessage & "; source=" & mErrorSource
-Assert mIsAvailable, "BarDataSpecifier creation has not yet completed"
-
-Set IFuture_Value = mBarSpecifier
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -171,9 +99,11 @@ Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
 On Error GoTo Err
 
-    setupSpecifier
-    fireStateChange FutureStateCompleted
-    mListeners.Clear
+mBarSpecifier.Contract = mContractFuture.Value
+setupSpecifier
+mFutureBuilder.Value = mBarSpecifier
+mFutureBuilder.Complete
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -185,10 +115,7 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If Not checkFuture(ev.Future) Then
-    mFutureWaiter.Clear
-    mListeners.Clear
-End If
+If Not checkFuture(ev.Future) Then mFutureWaiter.Clear
 
 Exit Sub
 
@@ -199,6 +126,18 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get Future() As IFuture
+Const ProcName As String = "Future"
+On Error GoTo Err
+
+Set Future = mFutureBuilder.Future
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Methods
@@ -246,57 +185,36 @@ End Sub
 
 Private Function checkFuture(ByVal pFuture As IFuture) As Boolean
 If pFuture.IsCancelled Then
-    mIsCancelled = True
-    checkFuture = False
-    fireStateChange FutureStateCancelled
+    mFutureBuilder.Cancel
 ElseIf pFuture.IsFaulted Then
-    mIsFaulted = True
-    mErrorNumber = ErrorCodes.ErrIllegalStateException
-    mErrorMessage = "BarDataSpecifierFuture failed to complete"
-    mErrorSource = pFuture.ErrorSource
-    checkFuture = False
-    fireStateChange FutureStateErrored
+    mFutureBuilder.Fail pFuture.ErrorNumber, pFuture.ErrorMessage, pFuture.ErrorSource
 Else
     checkFuture = True
 End If
 End Function
 
-Private Sub fireStateChange(ByVal pState As FutureStates)
-Const ProcName As String = "fireStateChange"
-On Error GoTo Err
-
-Dim ev As StateChangeEventData
-
-Set ev.Source = Me
-ev.State = pState
-
-Dim lListener As StateChangeListener
-For Each lListener In mListeners
-    lListener.Change ev
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Sub setupSpecifier()
 Const ProcName As String = "setupSpecifier"
 On Error GoTo Err
 
-mBarSpecifier.Contract = mContractFuture.Value
+Dim lContract As IContract
+Set lContract = mBarSpecifier.Contract
 
 If mBarSpecifier.ToDate = 0 Then
     Dim lClock As Clock
     If Not mClockFuture Is Nothing Then
         Set lClock = mClockFuture.Value
     Else
-        Set lClock = GetClock(mBarSpecifier.Contract.TimezoneName)
+        Set lClock = GetClock(lContract.TimezoneName)
     End If
     
     Dim lTimestamp As Date
-    lTimestamp = lClock.TimeStamp
+        
+    If IsContractExpired(lContract) Then
+        lTimestamp = GetSessionTimes(lContract.ExpiryDate + lContract.SessionEndTime, lContract.SessionStartTime, lContract.SessionEndTime).EndTime
+    Else
+        lTimestamp = lClock.Timestamp
+    End If
     
     Dim lSessionStartTime As Date
     lSessionStartTime = IIf(mBarSpecifier.CustomSessionStartTime <> 0, mBarSpecifier.CustomSessionStartTime, mBarSpecifier.Contract.SessionStartTime)
@@ -306,7 +224,7 @@ If mBarSpecifier.ToDate = 0 Then
     
     Dim lSessionTimes As SessionTimes
     lSessionTimes = GetSessionTimes(lTimestamp, lSessionStartTime, lSessionEndTime)
-    If mExcludeCurrentBar Then
+    If mExcludeCurrentBar And Not IsContractExpired(lContract) Then
         mBarSpecifier.ToDate = BarStartTime(lTimestamp, _
                                     mBarSpecifier.BarTimePeriod, _
                                     lSessionTimes.StartTime)
@@ -318,8 +236,6 @@ If mBarSpecifier.ToDate = 0 Then
                                     lSessionTimes.EndTime)
     End If
 End If
-
-mIsAvailable = True
 
 Exit Sub
 

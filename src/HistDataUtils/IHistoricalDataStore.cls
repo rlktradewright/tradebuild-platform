@@ -89,8 +89,8 @@ End Function
 
 Public Function FetchBars( _
                 ByVal pBarDataSpecifierFuture As IFuture, _
-                Optional ByVal pListener As IBarListener, _
-                Optional ByVal pcookie As Variant) As IFuture
+                Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pCookie As Variant) As IFuture
 End Function
 
 Public Sub Finish()

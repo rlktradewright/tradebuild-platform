@@ -58,8 +58,6 @@ Private mConfig                                     As ConfigurationSection
 
 Private mDefaultStateChangeListener                 As StateChangeListener
 
-Private mContractFuture                             As IFuture
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -156,12 +154,10 @@ Public Function CreateMarketDataSource( _
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture is nothing"
-
 If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultStateChangeListener
 
 Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, pIsRecoverable)
+Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, pIsRecoverable, False)
 
 Set CreateMarketDataSource = lDataSource
 
@@ -243,32 +239,6 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getConfigSection( _
-                Optional ByVal pContract As IContract, _
-                Optional ByVal pOptions As MarketDataSourceOptions = MarketDataSourceOptUseExchangeTimeZone, _
-                Optional ByVal pKey As String, _
-                Optional ByVal pNumberOfMarketDepthRows As Long) As ConfigurationSection
-Const ProcName As String = "getConfigSection"
-On Error GoTo Err
-
-If mConfig Is Nothing Then Exit Function
-
-
-Dim lConfig As ConfigurationSection
-Set lConfig = mConfig.AddConfigurationSection(ConfigSectionMarketDataSource & "(" & pKey & ")")
-
-If Not pContract Is Nothing Then SaveContractToConfig pContract, lConfig.AddConfigurationSection(ConfigSectionContract)
-lConfig.SetSetting ConfigSettingKey, pKey
-lConfig.SetSetting ConfigSettingOptions, pOptions
-lConfig.SetSetting ConfigSettingNumberOfMarketDepthRows, pNumberOfMarketDepthRows
-
-Set getConfigSection = lConfig
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 
 

@@ -30,8 +30,9 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.ICommonServiceProvider
-Implements TradeBuildSP.IOrderSubmissionSrvcProvider
+Implements IServiceProvider
+Implements IOrderSubmissionSP
+Implements ITwsConnectionStateListener
 
 '================================================================================
 ' Events
@@ -55,26 +56,26 @@ Private Const ModuleName                As String = "OrderSubmissionSrvcProvider
 ' Member variables
 '================================================================================
 
-Private WithEvents mTWSAPI As TWSAPI
-Attribute mTWSAPI.VB_VarHelpID = -1
+Private mClient                         As Client
+Attribute mClient.VB_VarHelpID = -1
 
-Private mServer As String
-Private mPort As Long
-Private mClientID As Long
-Private mConnectionRetryIntervalSecs As Long
-Private mkeepConnection As Boolean
-Private mProviderKey As String
+Private mServer                         As String
+Private mPort                           As Long
+Private mClientID                       As Long
+Private mConnectionRetryIntervalSecs    As Long
+Private mkeepConnection                 As Boolean
+Private mProviderKey                    As String
 
-Private mName As String
-Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
+Private mName                           As String
+Private mHandle                         As Long
+Private mServiceProviderManager          As IServiceProviderManager
 
-Private mTWSLogLevel As TWSLogLevels
+Private mTwsLogLevel                    As TwsLogLevels
 
-Private mOrderSubmitters As Collection
+Private mOrderSubmitters                As Collection
 
-Private mOrderRecoveryServiceConsumer As IOrderRecoveryServiceConsumer
-Private mStartRecoveryFrom As Date
+Private mOrderRecoveryListener          As IOrderRecoveryListener
+Private mStartRecoveryFrom              As Date
 
 '================================================================================
 ' Class Event Handlers
@@ -90,19 +91,19 @@ mServer = "127.0.0.1"
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
 
-mTWSLogLevel = TWSLogLevelError
+mTwsLogLevel = TwsLogLevelError
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "IBTWSSP.OrderSubmissionServiceProvider terminated"
+Debug.Print "IBTwsSP.OrderSubmissionServiceProvider terminated"
 End Sub
 
 '================================================================================
-' ICommonServiceProvider Interface Members
+' IServiceProvider Interface Members
 '================================================================================
 
-Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
-Dim details As TradeBuildSP.ServiceProviderDetails
+Private Property Get IServiceProvider_Details() As ServiceProviderDetails
+Dim details As ServiceProviderDetails
 With details
     .Comments = App.Comments
     .EXEName = App.EXEName
@@ -116,265 +117,205 @@ With details
     .VersionMinor = App.Minor
     .VersionRevision = App.Revision
 End With
-ICommonServiceProvider_Details = details
+IServiceProvider_Details = details
 End Property
 
-Private Sub ICommonServiceProvider_Link( _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal Handle As Long, _
-                ByVal params As Parameters)
+Private Sub IServiceProvider_Link( _
+                ByVal pServiceProviderManager As IServiceProviderManager, _
+                ByVal pHandle As Long, _
+                ByVal pParams As Parameters)
 Dim param As Parameter
 
-gCommonServiceConsumer = CommonServiceConsumer
-Set mCommonServiceConsumer = CommonServiceConsumer
-mHandle = Handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.LiveOrderSubmission
+Set mServiceProviderManager = pServiceProviderManager
+mHandle = pHandle
+mServiceProviderManager.RegisterServiceProvider mHandle, _
+                            ServiceProviderRoles.SPRoleOrderSubmissionLive
 
-For Each param In params
+For Each param In pParams
     Select Case UCase$(param.Name)
     Case UCase$(ParamNameClientId)
-        clientID = gParseClientId(param.value)
+        ClientID = gParseClientId(param.Value)
     Case UCase$(ParamNameConnectionRetryIntervalSecs)
-        ConnectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
+        ConnectionRetryIntervalSecs = gParseConnectionRetryInterval(param.Value)
     Case UCase$(ParamNameKeepConnection)
-        KeepConnection = gParseKeepConnection(param.value)
+        KeepConnection = gParseKeepConnection(param.Value)
     Case UCase$(ParamNamePort)
-        Port = gParsePort(param.value)
+        Port = gParsePort(param.Value)
     Case UCase$(ParamNameProviderKey)
-        ProviderKey = param.value
+        ProviderKey = param.Value
     Case UCase$(ParamNameServer)
-        Server = param.value
+        Server = param.Value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = gParseTwsLogLevel(param.value)
+        TwsLogLevel = gParseTwsLogLevel(param.Value)
     End Select
 Next
 
 End Sub
 
-Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+Private Property Let IServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property
 
-Private Property Get ICommonServiceProvider_Name() As String
-ICommonServiceProvider_Name = mName
+Private Property Get IServiceProvider_Name() As String
+IServiceProvider_Name = mName
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
-Const ProcName As String = "ICommonServiceProvider_Terminate"
+Private Sub IServiceProvider_Terminate()
+Const ProcName As String = "IServiceProvider_Terminate"
 On Error GoTo Err
-logMessage "Order Submission Service Provider terminating", "ICommonServiceProvider_Terminate"
+logMessage "Order Submission Service Provider terminating", "IServiceProvider_Terminate"
 finishSubmitters
-Set mCommonServiceConsumer = Nothing
+If Not mClient Is Nothing Then mClient.Finish
+Set mServiceProviderManager = Nothing
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' IOrderSubmissionSrvcProvider Interface Members
+' IOrderSubmissionSP Interface Members
 '================================================================================
 
-Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
-                ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
-Const ProcName As String = "IOrderSubmissionSrvcProvider_CreateOrderSubmitter"
-
-Dim OrderSubmitter As OrderSubmitter
-
+Private Function IOrderSubmissionSP_GetOrderRecoveryAgent() As IOrderRecoveryAgent
+Const ProcName As String = "IOrderSubmissionSP_GetOrderRecoveryAgent"
 On Error GoTo Err
 
-If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, _
-                                    mPort, _
-                                    mClientID, _
-                                    mProviderKey, _
-                                    mConnectionRetryIntervalSecs, _
-                                    mTWSLogLevel)
+If mClient Is Nothing Then
+    Set mClient = GetClient(mServer, mPort, mClientID, mConnectionRetryIntervalSecs, , Me)
+    mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
-Set OrderSubmitter = New OrderSubmitter
-OrderSubmitter.Initialise Me, _
-                        mCommonServiceConsumer, _
-                        serviceConsumer, _
-                        pContract, _
-                        mTWSAPI, _
-                        mHandle
-mOrderSubmitters.add OrderSubmitter
+Set IOrderSubmissionSP_GetOrderRecoveryAgent = mClient
 
-Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = OrderSubmitter
 Exit Function
+
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IOrderSubmissionSrvcProvider_StartOrderRecovery( _
-                ByVal pOrderRecoveryServiceConsumer As TradeBuildSP.IOrderRecoveryServiceConsumer, _
-                ByVal pStartFrom As Date)
-Const ProcName As String = "IOrderSubmissionSrvcProvider_StartOrderRecovery"
+Private Function IOrderSubmissionSP_GetOrderSubmitterFactory() As IOrderSubmitterFactory
+Const ProcName As String = "IOrderSubmissionSP_GetOrderSubmitterFactory"
 On Error GoTo Err
 
-If pStartFrom = 0 Then Exit Sub
-
-If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, _
-                                    mPort, _
-                                    mClientID, _
-                                    mProviderKey, _
-                                    mConnectionRetryIntervalSecs, _
-                                    mTWSLogLevel)
+If mClient Is Nothing Then
+    Set mClient = GetClient(mServer, mPort, mClientID, mConnectionRetryIntervalSecs, , Me)
+    mClient.SetTwsLogLevel mTwsLogLevel
 End If
 
+Set IOrderSubmissionSP_GetOrderSubmitterFactory = mClient
 
-If mTWSAPI.ConnectionState = ConnConnected Then
-    mTWSAPI.StartOrderRecovery pOrderRecoveryServiceConsumer, pStartFrom
-Else
-    Set mOrderRecoveryServiceConsumer = pOrderRecoveryServiceConsumer
-    mStartRecoveryFrom = pStartFrom
-End If
+Exit Function
 
-Exit Sub
 Err:
-handleFatalError ProcName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '================================================================================
-' mTWSAPI Event Handlers
+' ITwsConnectionStateListener Interface Members
 '================================================================================
 
-Private Sub mTWSAPI_Connected()
-Const ProcName As String = "mTWSAPI_Connected"
+Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As IBENHAPI27.ApiConnectionStates, ByVal pMessage As String)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
-notifyEvent StandardSPEventCodes.LOConnectedToBroker, _
-            "Connected to TWS " & mTWSAPI.ConnectionString
-If Not mOrderRecoveryServiceConsumer Is Nothing Then
-    mTWSAPI.StartOrderRecovery mOrderRecoveryServiceConsumer, mStartRecoveryFrom
-    Set mOrderRecoveryServiceConsumer = Nothing
-End If
+Select Case pState
+Case ApiConnNotConnected
+    NotifyEvent ApiNotifyCodes.ApiNotifyLostConnection, "Disconnected from Tws: " & pMessage
+Case ApiConnConnecting
+    NotifyEvent ApiNotifyCodes.ApiNotifyConnecting, "Connecting to TWS: " & pMessage
+Case ApiConnConnected
+    NotifyEvent ApiNotifyCodes.ApiNotifyConnected, "Connected to Tws: " & pMessage
+    If Not mOrderRecoveryListener Is Nothing Then
+        mClient.StartOrderRecovery mOrderRecoveryListener, mStartRecoveryFrom
+        Set mOrderRecoveryListener = Nothing
+    End If
+Case ApiConnFailed
+    NotifyEvent ApiNotifyCodes.ApiNotifyCantConnect, "Connection to Tws failed: " & pMessage
+End Select
+
 Exit Sub
 
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-Const ProcName As String = "mTWSAPI_ConnectFailed"
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionClosed"
 On Error GoTo Err
-If Not retrying Then
-    notifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
-                "Connection to TWS failed (retrying) " & mTWSAPI.ConnectionString & _
-                ": " & Description
-Else
-    notifyEvent StandardSPEventCodes.LORetryConnectToBroker, _
-                "Connection to TWS failed (no retry) " & mTWSAPI.ConnectionString & _
-                ": " & Description
-End If
+
+NotifyEvent ApiNotifyCodes.ApiNotifyLostConnection, "Lost connection from Tws to IB servers"
+
 Exit Sub
+
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTWSAPI_ConnectionToIBClosed()
-Const ProcName As String = "mTWSAPI_ConnectionToIBClosed"
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
 On Error GoTo Err
-notifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
-            "Lost connection from TWS to IB servers"
-Exit Sub
-Err:
-handleFatalError ProcName
-End Sub
 
-Private Sub mTWSAPI_ConnectionToIBRecovered()
-Const ProcName As String = "mTWSAPI_ConnectionToIBRecovered"
-On Error GoTo Err
-notifyEvent StandardSPEventCodes.LOConnectedToBroker, _
-            "TWS connected to IB servers"
-Exit Sub
-Err:
-handleFatalError ProcName
-End Sub
+NotifyEvent ApiNotifyCodes.ApiNotifyConnected, "Tws connected to IB servers"
 
-Private Sub mTWSAPI_ConnectionToTWSClosed( _
-                ByVal reconnecting As Boolean)
-Const ProcName As String = "mTWSAPI_ConnectionToTWSClosed"
-On Error GoTo Err
-If Not reconnecting Then
-    notifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
-                "Lost connection to TWS (reconnecting) " & mTWSAPI.ConnectionString
-Else
-    notifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
-                "Lost connection to TWS " & mTWSAPI.ConnectionString
-End If
 Exit Sub
-Err:
-handleFatalError ProcName
-End Sub
 
-Private Sub mTWSAPI_Disconnected(ByVal reason As String)
-Const ProcName As String = "mTWSAPI_Disconnected"
-On Error GoTo Err
-notifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
-            "Disconnected from TWS " & mTWSAPI.ConnectionString & _
-            ": reason=: " & reason
-Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Friend Property Let clientID(ByVal value As Long)
-mClientID = value
+Friend Property Let ClientID(ByVal Value As Long)
+mClientID = Value
 End Property
 
-Friend Property Let ConnectionRetryIntervalSecs(ByVal value As Long)
-mConnectionRetryIntervalSecs = value
+Friend Property Let ConnectionRetryIntervalSecs(ByVal Value As Long)
+mConnectionRetryIntervalSecs = Value
 End Property
 
 Friend Property Get ConnectionRetryIntervalSecs() As Long
 ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
-Friend Property Let KeepConnection(ByVal value As Boolean)
-mkeepConnection = value
+Friend Property Let KeepConnection(ByVal Value As Boolean)
+mkeepConnection = Value
 End Property
 
-Friend Property Let Name(ByVal value As String)
-mName = value
+Friend Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
-Friend Property Let Port(ByVal value As Long)
-mPort = value
+Friend Property Let Port(ByVal Value As Long)
+mPort = Value
 End Property
 
-Friend Property Let ProviderKey(ByVal value As String)
-mProviderKey = value
+Friend Property Let ProviderKey(ByVal Value As String)
+mProviderKey = Value
 End Property
 
-Friend Property Let Server(ByVal value As String)
-mServer = value
+Friend Property Let Server(ByVal Value As String)
+mServer = Value
 If mServer = "" Then
     mServer = "127.0.0.1"
 End If
 End Property
 
-Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
-Const ProcName As String = "TWSLogLevel"
-Select Case value
-Case TWSLogLevelSystem
-Case TWSLogLevelError
-Case TWSLogLevelWarning
-Case TWSLogLevelInformation
-Case TWSLogLevelDetail
+Friend Property Let TwsLogLevel(ByVal Value As TwsLogLevels)
+Const ProcName As String = "TwsLogLevel"
+Select Case Value
+Case TwsLogLevelSystem
+Case TwsLogLevelError
+Case TwsLogLevelWarning
+Case TwsLogLevelInformation
+Case TwsLogLevelDetail
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Value must be one of the TWSLogLevels enum"
+                "Value must be one of the TwsLogLevels enum"
 End Select
-mTWSLogLevel = value
+mTwsLogLevel = Value
 End Property
 
 '================================================================================
@@ -386,13 +327,13 @@ Friend Sub orderSubmitterFinished( _
 Const ProcName As String = "orderSubmitterFinished"
 Dim i As Long
 Dim submitter As OrderSubmitter
-Dim failpoint As String
+
 On Error GoTo Err
 
 i = 1
 For Each submitter In mOrderSubmitters
     If submitter Is pOrderSubmitter Then
-        mOrderSubmitters.remove i
+        mOrderSubmitters.Remove i
         Exit For
     End If
     i = i + 1
@@ -401,14 +342,13 @@ Next
 If mOrderSubmitters.Count = 0 And _
     Not mkeepConnection _
 Then
-    gReleaseTWSAPIInstance mTWSAPI
-    Set mTWSAPI = Nothing
+    Set mClient = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '===============================================================================
@@ -417,49 +357,20 @@ End Sub
 
 Private Sub finishSubmitters()
 Const ProcName As String = "finishSubmitters"
-Dim submitter As OrderSubmitter
-Dim failpoint As String
+Dim lSubmitter As IOrderSubmitter
+
 On Error GoTo Err
 
-For Each submitter In mOrderSubmitters
-    submitter.Finish
+For Each lSubmitter In mOrderSubmitters
+    lSubmitter.Finish
 Next
 
-If Not mTWSAPI Is Nothing Then
-    Dim lTWSAPI As TWSAPI
-    Set lTWSAPI = mTWSAPI
-    Set mTWSAPI = Nothing   ' clear event handlers
-    gReleaseTWSAPIInstance lTWSAPI
-End If
+If Not mClient Is Nothing Then Set mClient = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Dim errNum As Long: errNum = Err.number
-Dim errSource As String: errSource = Err.source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.number, Err.source, Err.Description, mHandle
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -470,22 +381,22 @@ Private Sub logMessage( _
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
-Private Sub notifyEvent( _
-                ByVal eventCode As StandardSPEventCodes, _
+Private Sub NotifyEvent( _
+                ByVal eventCode As Long, _
                 ByVal eventMessage As String)
 Const ProcName As String = "notifyEvent"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If mCommonServiceConsumer Is Nothing Then Exit Sub
-mCommonServiceConsumer.notifyEvent eventCode, _
+If mServiceProviderManager Is Nothing Then Exit Sub
+mServiceProviderManager.NotifyEvent eventCode, _
                                     eventMessage, _
                                     mHandle
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

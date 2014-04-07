@@ -74,7 +74,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pComboLeg As TwsComboLeg)
+Public Sub Add(ByVal pComboLeg As TwsComboLeg)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -83,7 +83,7 @@ mComboLegs.Add pComboLeg
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Public Function Item(ByVal pIndex As Long) As TwsComboLeg
@@ -96,7 +96,7 @@ Set Item = mComboLegs(pIndex)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown

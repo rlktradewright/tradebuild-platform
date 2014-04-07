@@ -80,6 +80,8 @@ Public Function CreateRealtimeDataManager( _
 Const ProcName As String = "CreateRealtimeDataManager"
 On Error GoTo Err
 
+AssertArgument Not pMarketDataFactory Is Nothing, "pMarketDataFactory is Nothing"
+
 Dim rtm As New RealTimeDataManager
 rtm.Initialise pMarketDataFactory, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows
 Set CreateRealtimeDataManager = rtm
@@ -91,6 +93,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickDataManager( _
+                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
                 Optional ByVal pPrimaryContractStore As IContractStore, _
                 Optional ByVal pSecondaryContractStore As IContractStore, _
@@ -105,7 +108,7 @@ Const ProcName As String = "CreateTickDataManager"
 On Error GoTo Err
 
 Dim lTickDataManager As New TickfileDataManager
-lTickDataManager.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
 
 Set CreateTickDataManager = lTickDataManager
 

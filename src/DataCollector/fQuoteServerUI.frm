@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
 Begin VB.Form fDataCollectorUI 
    Caption         =   "TradeBuild Data Collector Version 2.7"
    ClientHeight    =   4230
@@ -340,12 +340,13 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements DeferredAction
 Implements IBarOutputMonitor
-Implements LogListener
 Implements IGenericTickListener
 Implements IRawMarketDepthListener
 Implements StateChangeListener
 Implements ITickfileOutputMonitor
+Implements LogListener
 
 '================================================================================
 ' Events
@@ -385,11 +386,13 @@ Private mTickers() As TickerTableEntry
 Private mTimerList As TimerList
 
 Private mLastTickTime As Date
+Private mNoDataRestartSecs As Long
 
 Private WithEvents mClock As Clock
 Attribute mClock.VB_VarHelpID = -1
 
-Private mTickCount As Long
+Private mNumTicksSinceConnected As Long
+Private mNumTicksThisSecond As Long
 
 Private mActivityMonitorVisible As Boolean
 
@@ -413,6 +416,8 @@ Private mConfigManager As ConfigManager
 
 Private WithEvents mFutureWaiter As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mConnected As Boolean
 
 '================================================================================
 ' Form Event Handlers
@@ -474,7 +479,6 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Resize()
-
 Const ProcName As String = "Form_Resize"
 On Error GoTo Err
 
@@ -486,7 +490,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-
 End Sub
 
 Private Sub Form_Terminate()
@@ -509,6 +512,22 @@ LogMessage "Data Collector program exiting"
 GetLogger("log").RemoveLogListener Me
 
 TerminateTWUtilities
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
+On Error GoTo Err
+
+startCollecting "Restarting collection"
 
 Exit Sub
 
@@ -591,14 +610,58 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' IGenericTickListener nterface Members
+' IGenericTickListener Interface Members
 '================================================================================
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-processTickEvent ev.Source
+Dim lDataSource As IMarketDataSource
+Set lDataSource = ev.Source
+processTickEvent lDataSource.Handle
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' IRawMarketDepth Interface Members
+'================================================================================
+
+Private Sub IRawMarketDepthListener_MarketDepthNotAvailable(ByVal reason As String)
+Const ProcName As String = "IRawMarketDepthListener_MarketDepthNotAvailable"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IRawMarketDepthListener_resetMarketDepth(ev As RawMarketDepthEventData)
+Const ProcName As String = "IRawMarketDepthListener_resetMarketDepth"
+On Error GoTo Err
+
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IRawMarketDepthListener_updateMarketDepth(ev As RawMarketDepthEventData)
+Const ProcName As String = "IRawMarketDepthListener_updateMarketDepth"
+On Error GoTo Err
+
+Dim lDataSource As IMarketDataSource
+Set lDataSource = ev.Source
+processTickEvent lDataSource.Handle
 
 Exit Sub
 
@@ -698,7 +761,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub LogListener_Notify(ByVal logrec As LogRecord)
-
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
 
@@ -722,55 +784,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' IRawMarketDepth Interface Members
-'================================================================================
-
-Private Sub IRawMarketDepthListener_MarketDepthNotAvailable(ByVal reason As String)
-Const ProcName As String = "IRawMarketDepthListener_MarketDepthNotAvailable"
-On Error GoTo Err
-
-
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IRawMarketDepthListener_resetMarketDepth(ev As RawMarketDepthEventData)
-Const ProcName As String = "IRawMarketDepthListener_resetMarketDepth"
-On Error GoTo Err
-
-
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IRawMarketDepthListener_updateMarketDepth(ev As RawMarketDepthEventData)
-Const ProcName As String = "IRawMarketDepthListener_updateMarketDepth"
-On Error GoTo Err
-
-processTickEvent ev.Source
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'================================================================================
 ' StateChangeListener Interface Members
 '================================================================================
 
 Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Dim tli As TimerListItem
-
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
+Dim tli As TimerListItem
 Set tli = ev.Source
 If Not tli Is Nothing Then
     If ev.State = TimerListItemStates.TimerListItemStateExpired Then
@@ -790,12 +811,10 @@ End Sub
 '================================================================================
 
 Private Sub ConfigDetailsButton_Click()
-Dim f As New fConfig
 Const ProcName As String = "ConfigDetailsButton_Click"
 On Error GoTo Err
 
-Set f = New fConfig
-
+Dim f As New fConfig
 f.Initialise mConfigManager, True
 f.Show vbModeless
 
@@ -857,11 +876,22 @@ Private Sub mClock_Tick()
 Const ProcName As String = "mClock_Tick"
 On Error GoTo Err
 
-TicksPerSecText = mTickCount
+TicksPerSecText = mNumTicksThisSecond
 TicksPerSecText.Refresh
-mTickCount = 0
-SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
+mNumTicksThisSecond = 0
+
+Dim lSecsSinceLastTick As Long
+lSecsSinceLastTick = Int(86400 * (GetTimestamp - mLastTickTime))
+SecsSinceLastTickText = lSecsSinceLastTick
 SecsSinceLastTickText.Refresh
+
+If mNoDataRestartSecs > 0 And mConnected And lSecsSinceLastTick >= mNoDataRestartSecs And mNumTicksSinceConnected > 0 Then
+    Set mClock = Nothing
+    stopCollecting "Stopping collection: possible undetected loss of connection to provider", False
+    
+    LogMessage "Restarting collection in 10 seconds"
+    DeferAction Me, , 10, ExpiryTimeUnitSeconds
+End If
 
 Exit Sub
 
@@ -874,10 +904,10 @@ End Sub
 '================================================================================
 
 Private Sub mDataCollector_CollectionStarted()
-Dim s As String
 Const ProcName As String = "mDataCollector_CollectionStarted"
 On Error GoTo Err
 
+Dim s As String
 If mDataCollector.nextEndTime <> 0 Then
     s = "Collection end: " & _
         FormatDateTime(mDataCollector.nextEndTime, vbShortDate) & " " & _
@@ -901,10 +931,10 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mDataCollector_CollectionStopped()
-Dim s As String
 Const ProcName As String = "mDataCollector_CollectionStopped"
 On Error GoTo Err
 
+Dim s As String
 If mDataCollector.nextStartTime <> 0 Then
     s = "Collection start: " & _
         FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
@@ -931,6 +961,9 @@ Private Sub mDataCollector_connected()
 Const ProcName As String = "mDataCollector_connected"
 On Error GoTo Err
 
+mNumTicksSinceConnected = 0
+
+mConnected = True
 ConnectionStatusText.BackColor = vbGreen
 StartStopButton.enabled = True
 
@@ -944,6 +977,7 @@ Private Sub mDataCollector_connectFailed(ByVal description As String)
 Const ProcName As String = "mDataCollector_connectFailed"
 On Error GoTo Err
 
+mConnected = False
 ConnectionStatusText.BackColor = vbRed
 
 Exit Sub
@@ -956,6 +990,7 @@ Private Sub mDataCollector_ConnectionClosed()
 Const ProcName As String = "mDataCollector_ConnectionClosed"
 On Error GoTo Err
 
+mConnected = False
 ConnectionStatusText.BackColor = vbRed
 StartStopButton.enabled = False
 
@@ -973,6 +1008,7 @@ LogMessage "Error " & ev.ErrorCode & ": " & vbCrLf & _
             ev.ErrorMessage, _
             LogLevelSevere
 
+mConnected = False
 stopCollecting "Closing due to error", False
 Unload Me
 
@@ -998,7 +1034,7 @@ Private Sub mDataCollector_FatalError(ev As ErrorEventData)
 Const ProcName As String = "mDataCollector_FatalError"
 On Error GoTo Err
 
-gHandleFatalError
+Err.Raise ev.ErrorCode, ev.ErrorSource, ev.ErrorMessage
 
 Exit Sub
 
@@ -1010,6 +1046,8 @@ Private Sub mDataCollector_Reconnecting()
 Const ProcName As String = "mDataCollector_Reconnecting"
 On Error GoTo Err
 
+mConnected = False
+ConnectionStatusText.BackColor = vbRed
 StartStopButton.enabled = True
 
 Exit Sub
@@ -1019,13 +1057,12 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mDataCollector_TickerAdded(ByVal pTicker As Ticker)
-Dim i As Long
-Dim index As Long
-
 Const ProcName As String = "mDataCollector_TickerAdded"
 On Error GoTo Err
 
+Dim index As Long
 index = pTicker.Handle
+
 If index > UBound(mTickers) Then
     ReDim Preserve mTickers(index / 100 * 100 + 99) As TickerTableEntry
 End If
@@ -1033,6 +1070,7 @@ Set mTickers(index).Ticker = pTicker
 Set mTickers(index).tli = Nothing
 
 If index > ShortNameText.UBound Then
+    Dim i As Long
     For i = ShortNameText.UBound + 1 To index
         Load ShortNameText(i)
         ShortNameText(i).Left = ShortNameText(i - 5).Left
@@ -1062,7 +1100,6 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
-
 End Sub
 
 '================================================================================
@@ -1102,11 +1139,12 @@ Friend Sub Initialise( _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
-                ByVal showMonitor As Boolean)
-
+                ByVal showMonitor As Boolean, _
+                ByVal pNoDataRestartSecs As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+mNoDataRestartSecs = pNoDataRestartSecs
 Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
 Set mDataCollector = pDataCollector
@@ -1157,11 +1195,10 @@ End Sub
 '================================================================================
 
 Private Sub clearTickers()
-Dim i As Long
-
 Const ProcName As String = "clearTickers"
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To ShortNameText.UBound
     ShortNameText(i).Text = ""
     DataLightLabel(i).BackColor = vbButtonFace
@@ -1175,13 +1212,13 @@ End Sub
 
 Private Function generateTaskInfo( _
                 ByVal en As Enumerator) As String
-Dim ts As TaskSummary
-Dim s As String
-
 Const ProcName As String = "generateTaskInfo"
 On Error GoTo Err
 
+Dim s As String
+
 Do While en.MoveNext
+    Dim ts As TaskSummary
     ts = en.Current
     s = s & "Name: " & ts.Name & _
         "; Priority: " & ts.Priority & _
@@ -1235,13 +1272,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
     
 Private Sub processTickEvent( _
-                pTicker As Ticker)
+                pHandle As Long)
 Const ProcName As String = "processTickEvent"
 On Error GoTo Err
 
-switchDataLightOn pTicker.Handle
+switchDataLightOn pHandle
 mLastTickTime = GetTimestamp
-mTickCount = mTickCount + 1
+mNumTicksThisSecond = mNumTicksThisSecond + 1
+mNumTicksSinceConnected = mNumTicksSinceConnected + 1
 
 Exit Sub
 
@@ -1250,8 +1288,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub resizeHeight()
-Dim heightIncrement As Long
-
 Const ProcName As String = "resizeHeight"
 On Error GoTo Err
 
@@ -1260,6 +1296,7 @@ If Not mActivityMonitorVisible And Not mAdjustingSize Then
     Exit Sub
 End If
 
+Dim heightIncrement As Long
 heightIncrement = Me.Height - mCurrentHeight
 
 If Not mAdjustingSize Then
@@ -1288,8 +1325,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub resizeWidth()
-Dim widthIncrement As Long
-
 Const ProcName As String = "resizeWidth"
 On Error GoTo Err
 
@@ -1303,6 +1338,7 @@ If Me.Width <= mStartStopButtonInitialLeft + StartStopButton.Width + 120 Then
     Exit Sub
 End If
 
+Dim widthIncrement As Long
 widthIncrement = Me.Width - mCurrentWidth
 
 If Not mAdjustingSize Then
@@ -1361,7 +1397,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub setStopped()
@@ -1373,9 +1408,12 @@ Set mClock = Nothing
 mCollectingData = False
 StartStopButton.Caption = "Start"
 
+mConnected = False
 ConnectionStatusText.BackColor = vbButtonFace
 
 clearTickers
+
+Set mClock = Nothing
 
 SecsSinceLastTickText = ""
 TicksPerSecText = ""
@@ -1384,20 +1422,21 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub setupTickerScroll()
-Dim totalLines As Long
-Dim linesPerpage As Single
-Dim pagesToScroll As Single
-
 Const ProcName As String = "setupTickerScroll"
 On Error GoTo Err
 
+Dim totalLines As Long
 totalLines = (ShortNameText.UBound + 5) / 5
+
+Dim linesPerpage As Single
 linesPerpage = TickersContainerPicture.Height / mLineSpacing
+
 If totalLines > linesPerpage Then mLinesToScroll = -Int(linesPerpage - totalLines)
+
+Dim pagesToScroll As Single
 pagesToScroll = mLinesToScroll / linesPerpage
 
 If mLinesToScroll > 1 Then
@@ -1438,7 +1477,6 @@ End Sub
 
 Private Sub startCollecting( _
                 ByVal message As String)
-                
 Const ProcName As String = "startCollecting"
 On Error GoTo Err
 
@@ -1450,7 +1488,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub stopCollecting( _
@@ -1472,7 +1509,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub switchDataLightOn( _

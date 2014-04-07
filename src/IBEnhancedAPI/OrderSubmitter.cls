@@ -18,20 +18,14 @@ Option Explicit
 '================================================================================
 '
 '
-'================================================================================
-' Amendment history
-'================================================================================
-'
-'
-'
-'
 
 '================================================================================
 ' Interfaces
 '================================================================================
 
-Implements IContractDetailsConsumer
 Implements IOrderSubmitter
+Implements ITwsConnectionStateListener
+Implements TaskCompletionListener
 
 '================================================================================
 ' Events
@@ -49,8 +43,8 @@ Private Const OrderModeTarget           As String = "target"
 Private Const OrderModeCloseout         As String = "closeout"
 
 Private Const EntryOrderIdIncrement     As Long = 0
-Private Const StopOrderIdIncrement      As Long = 0
-Private Const TargetOrderIdIncrement    As Long = 0
+Private Const StopOrderIdIncrement      As Long = 1
+Private Const TargetOrderIdIncrement    As Long = 2
 
 '================================================================================
 ' Enums
@@ -65,385 +59,115 @@ Private Const TargetOrderIdIncrement    As Long = 0
 '================================================================================
 
 Private mOrderPlacer                                As OrderPlacer
-Private mOrderSubmissionListener                    As IOrderSubmissionListener
 
-Private mContractDetails                            As TwsContractDetails
-
-Private WithEvents mTwsAPI                          As TwsAPI
+Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 Private mContractRequester                          As ContractDetailsRequester
 
 Private mState                                      As OrderSubmitterStates
-Private mStateChangeListeners                       As EnumerableCollection
+Private mStateChangeListeners                       As Listeners
 
-Private mPermittedOrderTypes                        As OrderTypes
-Private mPermittedOrderTifs                         As OrderTIFs
-Private mPermittedOrderAttributes                   As OrderAttributes
-Private mPermittedStopTriggerMethods                As StopTriggerMethods
+Private mOrderSubmissionListeners                   As Listeners
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mStateChangeListeners = New EnumerableCollection
+Set mStateChangeListeners = New Listeners
+Set mOrderSubmissionListeners = New Listeners
 End Sub
 
 Private Sub Class_Terminate()
 Finish
-Debug.Print "IBTwsSP.OrderSubmitter terminated"
-End Sub
-
-'================================================================================
-' IContractDetailsConsumer Interface Members
-'================================================================================
-
-Private Sub IContractDetailsConsumer_EndContractDetails(ByVal pRequestId As Long)
-Const ProcName As String = "IContractDetailsConsumer_EndContractDetails"
-On Error GoTo Err
-
-Dim i As Long
-Dim lOrderTypesStr() As String
-Dim lOrderType As OrderTypes
-
-If mContractDetails Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Failed to retrieve contract details"
-
-lOrderTypesStr = Split(mContractDetails.OrderTypes, ",")
-
-mPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttOriginatorRef
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttOverrideConstraints
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttPercentOffset
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttRule80A
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttAction
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttLimitPrice
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttOrderType
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttQuantity
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttTimeInForce
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttTriggerPrice
-mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttStopTriggerMethod
-
-For i = 0 To UBound(lOrderTypesStr)
-    lOrderType = gTwsOrderTypeFromString(lOrderTypesStr(i))
-    
-    If lOrderType <> OrderTypeNone Then
-        mPermittedOrderTypes = mPermittedOrderTypes Or lOrderType
-    Else
-        Select Case lOrderTypesStr(i)
-        Case "AON"  ' all or none
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttAllOrNone
-        Case "DAY"  ' today only
-            mPermittedOrderTifs = mPermittedOrderTifs Or OrderTIFs.OrderTIFDay
-        Case "DIS"  ' discretionary amount
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttDiscretionaryAmount
-        Case "ELECONLY"  ' electronic trade only
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttETradeOnly
-        Case "FIRMONLY"  ' firm quote only
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttFirmQuoteOnly
-        Case "GAT"  ' good after Time
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTime
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTimeTZ
-        Case "GTC"  ' good till cancelled
-            mPermittedOrderTifs = mPermittedOrderTifs Or OrderTIFs.OrderTIFGoodTillCancelled
-        Case "GTD"  ' good till date
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDate
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDateTZ
-        Case "GTT"  ' good till Time
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDate
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDateTZ
-        Case "HID"  ' hidden?
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttHidden
-        Case "ICE"  ' iceberg
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttDisplaySize
-        Case "IOC"  ' immediate or cancel
-            mPermittedOrderTifs = mPermittedOrderTifs Or OrderTIFs.OrderTIFImmediateOrCancel
-        Case "RTH"
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
-        Case "SWEEP"
-            mPermittedOrderAttributes = mPermittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
-        Case "ACTIVETIM", _
-            "ALLOC", _
-            "ALGO", _
-            "AVGCOST", _
-            "AUC", _
-            "BASKET", _
-            "COND", _
-            "CONDORDER", _
-            "CONSCOST", _
-            "DARKPOLL", _
-            "DEACT", _
-            "DEACTDIS", _
-            "DEACTEOD", _
-            "FOK", _
-            "HPENNY", _
-            "LARGE", _
-            "LTH"
-        Case "NONALGO", _
-            "OCA", _
-            "OPG", _
-            "OPGREROUT", _
-            "PAON", _
-            "PEGMID", _
-            "POSTONLY", _
-            "PREOPGRTH", _
-            "RELSTK", _
-            "RTHIGNOPG", _
-            "SCALE", _
-            "SCALERST", _
-            "SMARTSTG"
-        Case "SOI", _
-            "TIMEPRIO", _
-            "TRAILLIT", _
-            "TRAILMIT", _
-            "VOLAT", _
-            "WHATIF"
-            ' not sure what these signify
-        Case Else
-            If lOrderTypesStr(i) <> "" Then
-                logMessage "Unknown Order type received from Tws", pMsgQualifier:=lOrderTypesStr(i), pProcName:=ProcName
-            End If
-        End Select
-    End If
-Next
-
-mPermittedStopTriggerMethods = StopTriggerMethods.StopTriggerBidAsk Or _
-                                StopTriggerMethods.StopTriggerDefault Or _
-                                StopTriggerMethods.StopTriggerDoubleBidAsk Or _
-                                StopTriggerMethods.StopTriggerDoubleLast Or _
-                                StopTriggerMethods.StopTriggerLast Or _
-                                StopTriggerMethods.StopTriggerLastOrBidAsk Or _
-                                StopTriggerMethods.StopTriggerMidPoint
-
-setState OrderSubmitterStateReady
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
-Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
-On Error GoTo Err
-
-If Not mContractDetails Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Contract not uniquely specified"
-Set mContractDetails = pContractDetails
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
-Const ProcName As String = "IContractDetailsConsumer_NotifyError"
-On Error GoTo Err
-
-Err.Raise ErrorCodes.ErrIllegalStateException, , "Failed to retrieve contract details: errorcode=" & pErrorCode & "; description=" & pErrorMsg
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+Debug.Print "OrderSubmitter terminated"
 End Sub
 
 '================================================================================
 ' IOrderSubmitter Interface Members
 '================================================================================
 
+Private Sub IOrderSubmitter_AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "IOrderSubmitter_AddOrderSubmissionListener"
+On Error GoTo Err
+
+AddOrderSubmissionListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IOrderSubmitter_AddStateChangeListener(ByVal pListener As StateChangeListener)
 Const ProcName As String = "IOrderSubmitter_AddStateChangeListener"
 On Error GoTo Err
 
-mStateChangeListeners.Add pListener, Hex$(ObjPtr(pListener))
+AddStateChangeListener pListener
 
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function IOrderSubmitter_CancelOrderPlex(ByVal pOrderPlex As IOrderPlex) As Boolean
-Const ProcName As String = "IOrderSubmitter_cancelOrderPlex"
+Private Function IOrderSubmitter_CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
+Const ProcName As String = "IOrderSubmitter_cancelBracketOrder"
 On Error GoTo Err
 
-Dim entryOrder As IOrder
-Dim stopOrder As IOrder
-Dim targetOrder As IOrder
-
-Set entryOrder = pOrderPlex.entryOrder
-Select Case entryOrder.Status
-Case OrderStatuses.OrderStatusCreated, _
-    OrderStatuses.OrderStatusFilled, _
-    OrderStatuses.OrderStatusCancelling, _
-    OrderStatuses.OrderStatusCancelled
-Case Else
-    CancelOrder entryOrder, OrderModeEntry    ' should automatically cancel the other orders
-                                                    ' if they have parentid set
-    IOrderSubmitter_CancelOrderPlex = True
-End Select
-
-Set stopOrder = pOrderPlex.stopOrder
-If Not stopOrder Is Nothing Then
-    Select Case stopOrder.Status
-    Case OrderStatuses.OrderStatusCreated, _
-        OrderStatuses.OrderStatusFilled, _
-        OrderStatuses.OrderStatusCancelling, _
-        OrderStatuses.OrderStatusCancelled
-    Case Else
-        Select Case entryOrder.Status
-        Case OrderStatuses.OrderStatusFilled, _
-            OrderStatuses.OrderStatusCancelling, _
-            OrderStatuses.OrderStatusCancelled
-            CancelOrder stopOrder, OrderModeStop
-            IOrderSubmitter_CancelOrderPlex = True
-        End Select
-    End Select
-End If
-
-Set targetOrder = pOrderPlex.targetOrder
-If Not targetOrder Is Nothing Then
-    Select Case targetOrder.Status
-    Case OrderStatuses.OrderStatusCreated, _
-        OrderStatuses.OrderStatusFilled, _
-        OrderStatuses.OrderStatusCancelling, _
-        OrderStatuses.OrderStatusCancelled
-    Case Else
-        Select Case entryOrder.Status
-        Case OrderStatuses.OrderStatusFilled, _
-            OrderStatuses.OrderStatusCancelling, _
-            OrderStatuses.OrderStatusCancelled
-            CancelOrder targetOrder, OrderModeTarget
-            IOrderSubmitter_CancelOrderPlex = True
-        End Select
-    End Select
-End If
-    
-' need some stuff here to cancel if it's an oca group
+IOrderSubmitter_CancelBracketOrder = CancelBracketOrder(pBracketOrder)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IOrderSubmitter_CancelStopOrder(ByVal pOrderPlex As IOrderPlex)
+Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_cancelStopOrder"
 On Error GoTo Err
 
-Dim stopOrder As IOrder
-
-Set stopOrder = pOrderPlex.stopOrder
-If stopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "Order plex " & pOrderPlex.Key & " has no stop Order"
-
-Select Case stopOrder.Status
-Case OrderStatuses.OrderStatusCreated, _
-    OrderStatuses.OrderStatusFilled, _
-    OrderStatuses.OrderStatusCancelling, _
-    OrderStatuses.OrderStatusCancelled
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "Stop Order state invalid for cancellation"
-Case Else
-    CancelOrder stopOrder, OrderModeStop
-End Select
+CancelStopOrder pBracketOrder
 
 Exit Sub
-
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_CancelTargetOrder(ByVal pOrderPlex As IOrderPlex)
+Private Sub IOrderSubmitter_CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_cancelTargetOrder"
-Dim targetOrder As IOrder
-
 On Error GoTo Err
-Set targetOrder = pOrderPlex.targetOrder
-If targetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "Order plex " & pOrderPlex.Key & " has no target Order"
 
+CancelTargetOrder pBracketOrder
 
-Select Case targetOrder.Status
-Case OrderStatuses.OrderStatusCreated, _
-    OrderStatuses.OrderStatusCancelling, _
-    OrderStatuses.OrderStatusCancelled
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "Target Order state invalid for cancellation"
-Case Else
-    CancelOrder targetOrder, OrderModeTarget
-End Select
 Exit Sub
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let IOrderSubmitter_ClockRate(ByVal RHS As Single)
-
-End Property
-
-Private Sub IOrderSubmitter_ExecuteOrderPlex(ByVal pOrderPlex As IOrderPlex)
-Const ProcName As String = "IOrderSubmitter_executeOrderPlex"
-Dim entryOrder As IOrder
-Dim stopOrder As IOrder
-Dim targetOrder As IOrder
-Dim Transmit As Boolean
-Dim lPlexId As Long
-
+Private Sub IOrderSubmitter_ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "IOrderSubmitter_executeBracketOrder"
 On Error GoTo Err
-Set entryOrder = pOrderPlex.entryOrder
-Set stopOrder = pOrderPlex.stopOrder
-Set targetOrder = pOrderPlex.targetOrder
 
-lPlexId = getPlexId
+ExecuteBracketOrder pBracketOrder
 
-If Not entryOrder Is Nothing Then
-    entryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
-    Transmit = True
-    If Not stopOrder Is Nothing Then
-        stopOrder.BrokerId = lPlexId + StopOrderIdIncrement
-        If stopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
-    End If
-    If Not targetOrder Is Nothing Then
-        targetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
-        If targetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
-    End If
-        
-    PlaceOrder entryOrder, Transmit, "0", "", OrderModeEntry
-    
-    If Not stopOrder Is Nothing Then
-        Transmit = True
-        If Not targetOrder Is Nothing Then
-            If targetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
-        End If
-        
-        If stopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
-            ' note that AUTOSTP orders will be sent when the entry Order is filled
-            PlaceOrder stopOrder, Transmit, entryOrder.BrokerId, "", OrderModeStop
-        End If
-    End If
-    
-    If Not targetOrder Is Nothing Then
-        If targetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
-            PlaceOrder targetOrder, True, entryOrder.BrokerId, "", OrderModeTarget
-        End If
-    End If
-    
-Else
-    ' treat the other orders as an OCA group - still to be implemented
-End If
 Exit Sub
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function IOrderSubmitter_FetchPermittedOrderProperties(ByVal pContractFuture As IFuture, Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "IOrderSubmitter_FetchPermittedOrderProperties"
+On Error GoTo Err
+
+Set IOrderSubmitter_FetchPermittedOrderProperties = FetchPermittedOrderProperties(pContractFuture, pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub IOrderSubmitter_Finish()
 Const ProcName As String = "IOrderSubmitter_Finish"
@@ -454,228 +178,399 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_ModifyOrderPlex( _
-                ByVal pOrderPlex As IOrderPlex, _
-                ByVal entryOrderChanged As Boolean, _
-                ByVal stopOrderChanged As Boolean, _
-                ByVal targetOrderChanged As Boolean, _
-                ByVal closeoutOrderChanged As Boolean)
-Const ProcName As String = "IOrderSubmitter_modifyOrderPlex"
-
-
-Dim OcaGroup As String
-Dim ParentId As String
-
+Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "IOrderSubmitter_ModifyOrder"
 On Error GoTo Err
 
-Select Case pOrderPlex.entryOrder.Status
-Case OrderStatusFilled, _
-        OrderStatusCancelling, _
-        OrderStatusCancelled
-    ParentId = "0"
-Case Else
-    ParentId = pOrderPlex.entryOrder.BrokerId
-End Select
+ModifyOrder pOrder
 
-If pOrderPlex.entryOrder.QuantityRemaining = 0 Then ParentId = "0"
-
-If Not pOrderPlex.stopOrder Is Nothing Then OcaGroup = pOrderPlex.stopOrder.ProviderProperties.GetParameterValue("OCA group")
-If OcaGroup = "" And Not pOrderPlex.targetOrder Is Nothing Then OcaGroup = pOrderPlex.targetOrder.ProviderProperties.GetParameterValue("OCA group")
-If OcaGroup = "" Then OcaGroup = GenerateGUIDString
-
-If entryOrderChanged Then
-    PlaceOrder pOrderPlex.entryOrder, True, "0", "", OrderModeEntry
-End If
-If stopOrderChanged Then
-    PlaceOrder pOrderPlex.stopOrder, True, ParentId, OcaGroup, OrderModeStop
-End If
-If targetOrderChanged Then
-    PlaceOrder pOrderPlex.targetOrder, True, ParentId, OcaGroup, OrderModeTarget
-End If
-If closeoutOrderChanged Then
-    PlaceOrder pOrderPlex.CloseoutOrder, True, "0", "", OrderModeCloseout
-End If
 Exit Sub
+
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IOrderSubmitter_PermittedOrderAttributes() As Long
-IOrderSubmitter_PermittedOrderAttributes = mPermittedOrderAttributes
-End Property
+Private Sub IOrderSubmitter_ModifyBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal EntryOrderChanged As Boolean, _
+                ByVal StopOrderChanged As Boolean, _
+                ByVal TargetOrderChanged As Boolean, _
+                ByVal CloseoutOrderChanged As Boolean)
+Const ProcName As String = "IOrderSubmitter_ModifyBracketOrder"
+On Error GoTo Err
 
-Private Property Get IOrderSubmitter_PermittedOrderTifs() As Long
-IOrderSubmitter_PermittedOrderTifs = mPermittedOrderTifs
-End Property
+ModifyBracketOrder pBracketOrder, EntryOrderChanged, StopOrderChanged, TargetOrderChanged, CloseoutOrderChanged
 
-Private Property Get IOrderSubmitter_PermittedOrderTypes() As Long
-IOrderSubmitter_PermittedOrderTypes = mPermittedOrderTypes
-End Property
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Private Property Get IOrderSubmitter_PermittedStopTriggerMethods() As Long
-IOrderSubmitter_PermittedStopTriggerMethods = mPermittedStopTriggerMethods
-End Property
+Private Sub IOrderSubmitter_NotifyRecoveredOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "IOrderSubmitter_NotifyRecoveredOrder"
+On Error GoTo Err
+
+NotifyRecoveredOrder pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IOrderSubmitter_PlaceOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "IOrderSubmitter_PlaceOrder"
+On Error GoTo Err
+
+PlaceOrder pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IOrderSubmitter_RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "IOrderSubmitter_RemoveOrderSubmissionListener"
+On Error GoTo Err
+
+RemoveOrderSubmissionListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub IOrderSubmitter_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
 Const ProcName As String = "IOrderSubmitter_RemoveStateChangeListener"
 On Error GoTo Err
 
-mStateChangeListeners.Add pListener, Hex$(ObjPtr(pListener))
+RemoveStateChangeListener pListener
 
 Exit Sub
 
 Err:
-If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_ResubmitStopAndTargetOrders(ByVal pOrderPlex As IOrderPlex)
+Private Sub IOrderSubmitter_ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_resubmitStopAndTargetOrders"
-Dim stopOrder As IOrder
-Dim targetOrder As IOrder
-Dim OcaGroup As String
-
 On Error GoTo Err
-OcaGroup = GenerateGUIDString
 
-Set stopOrder = pOrderPlex.stopOrder
-stopOrder.BrokerId = ""   ' force a new id to be allocated
-PlaceOrder stopOrder, False, "0", OcaGroup, OrderModeStop
+ResubmitStopAndTargetOrders pBracketOrder
 
-Set targetOrder = pOrderPlex.targetOrder
-targetOrder.BrokerId = "" ' force a new id to be allocated
-PlaceOrder targetOrder, True, "0", OcaGroup, OrderModeTarget
 Exit Sub
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_ResubmitStopOrder(ByVal pOrderPlex As IOrderPlex)
+Private Sub IOrderSubmitter_ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_resubmitStopOrder"
-Dim stopOrder As IOrder
-Dim targetOrder As IOrder
-Dim OcaGroup As String
-
 On Error GoTo Err
-Set stopOrder = pOrderPlex.stopOrder
-Set targetOrder = pOrderPlex.targetOrder
-stopOrder.BrokerId = ""     ' force a new id to be allocated
-If targetOrder Is Nothing Then
-    PlaceOrder stopOrder, True, "0", "", OrderModeStop
-Else
-    OcaGroup = GenerateGUIDString
-    PlaceOrder stopOrder, False, "0", OcaGroup, OrderModeStop
-    PlaceOrder targetOrder, True, "0", OcaGroup, OrderModeTarget
-End If
+
+ResubmitStopOrder pBracketOrder
+
 Exit Sub
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IOrderSubmitter_ResubmitTargetOrder(ByVal pOrderPlex As IOrderPlex)
+Private Sub IOrderSubmitter_ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_resubmitTargetOrder"
-Dim stopOrder As IOrder
-Dim targetOrder As IOrder
-Dim OcaGroup As String
-
 On Error GoTo Err
-Set stopOrder = pOrderPlex.stopOrder
-Set targetOrder = pOrderPlex.targetOrder
-targetOrder.BrokerId = ""   ' force a new id to be allocated
-If stopOrder Is Nothing Then
-    PlaceOrder targetOrder, True, "0", "", OrderModeTarget
-Else
-    OcaGroup = GenerateGUIDString
-    PlaceOrder stopOrder, False, "0", OcaGroup, OrderModeStop
-    PlaceOrder targetOrder, True, "0", OcaGroup, OrderModeTarget
-End If
+
+ResubmitTargetOrder pBracketOrder
 Exit Sub
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrderSubmitter_State() As OrderSubmitterStates
-IOrderSubmitter_State = mState
+IOrderSubmitter_State = State
 End Property
 
 '================================================================================
-' mTwsAPI Event Handlers
+' ITwsConnectionStateListener Interface Members
 '================================================================================
 
-Private Sub mTwsAPI_Connected()
-Const ProcName As String = "mTwsAPI_Connected"
+Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As ApiConnectionStates, ByVal pMessage As String)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
-If Not mContractDetails Is Nothing Then setState OrderSubmitterStateReady
+Select Case pState
+Case ApiConnNotConnected
+    setState OrderSubmitterStateNotReady
+Case ApiConnConnecting
+
+Case ApiConnConnected
+    setState OrderSubmitterStateReady
+Case ApiConnFailed
+    setState OrderSubmitterStateNotReady
+End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTwsAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-Const ProcName As String = "mTwsAPI_ConnectFailed"
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionClosed"
 On Error GoTo Err
 
 setState OrderSubmitterStateNotReady
+
 Exit Sub
+
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTwsAPI_ConnectionToIBClosed()
-Const ProcName As String = "mTwsAPI_ConnectionToIBClosed"
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
 On Error GoTo Err
 
-setState OrderSubmitterStateNotReady
+setState OrderSubmitterStateReady
+
 Exit Sub
+
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub mTwsAPI_ConnectionToIBRecovered()
-Const ProcName As String = "mTwsAPI_ConnectionToIBRecovered"
-On Error GoTo Err
-If Not mContractDetails Is Nothing Then setState OrderSubmitterStateReady
-Exit Sub
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+'@================================================================================
+' TaskCompletionListener Interface Members
+'@================================================================================
 
-Private Sub mTwsAPI_ConnectionToTwsClosed( _
-                ByVal reconnecting As Boolean)
-Const ProcName As String = "mTwsAPI_ConnectionToTwsClosed"
+Private Sub TaskCompletionListener_TaskCompleted(ev As TaskCompletionEventData)
+Const ProcName As String = "TaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
-setState OrderSubmitterStateNotReady
-Exit Sub
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+Dim lContract As TwsContract
+Dim lDeferredAction As DeferredOrderAction
 
-Private Sub mTwsAPI_Disconnected(ByVal reason As String, ByVal pForced As Boolean)
-Const ProcName As String = "mTwsAPI_Disconnected"
-On Error GoTo Err
+Set lDeferredAction = ev.Cookie
 
-setState OrderSubmitterStateNotReady
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+    If lDeferredAction.TargetIsBracketOrder Then
+        Assert False, "Deferred " & IIf(lDeferredAction.ActionIsModify, "modify", "execute") & "bracket order failed: " & ev.ErrorMessage, ev.ErrorNumber
+    Else
+        Assert False, "Deferred " & IIf(lDeferredAction.ActionIsModify, "modify", "place") & "order failed: " & ev.ErrorMessage, ev.ErrorNumber
+    End If
+Else
+    Set lContract = ev.Result
+    If lDeferredAction.TargetIsBracketOrder Then
+        If lDeferredAction.ActionIsModify Then
+            modifyABracketOrder lDeferredAction.BracketOrder, lContract, lDeferredAction.EntryOrderChanged, lDeferredAction.StopOrderChanged, lDeferredAction.TargetOrderChanged, lDeferredAction.CloseoutOrderChanged
+        Else
+            execBracketOrder lDeferredAction.BracketOrder, lContract
+        End If
+    Else
+        placeAnOrder lDeferredAction.Order, lContract, lDeferredAction.Transmit, lDeferredAction.ParentId, lDeferredAction.OcaGroup, lDeferredAction.OrderMode
+    End If
+End If
+
 Exit Sub
+
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
+Public Property Get State() As OrderSubmitterStates
+State = mState
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub Finish()
+Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "AddOrderSubmissionListener"
+On Error GoTo Err
+
+mOrderSubmissionListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "AddStateChangeListener"
+On Error GoTo Err
+
+mStateChangeListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
+Const ProcName As String = "CancelBracketOrder"
+On Error GoTo Err
+
+Dim lEntryOrder As IOrder
+Dim lStopOrder As IOrder
+Dim lTargetOrder As IOrder
+
+Set lEntryOrder = pBracketOrder.EntryOrder
+Select Case lEntryOrder.Status
+Case OrderStatuses.OrderStatusCreated, _
+    OrderStatuses.OrderStatusFilled, _
+    OrderStatuses.OrderStatusCancelling, _
+    OrderStatuses.OrderStatusCancelled
+Case Else
+    CancelOrder lEntryOrder, OrderModeEntry    ' should automatically cancel the other orders
+                                                    ' if they have parentid set
+    CancelBracketOrder = True
+End Select
+
+Set lStopOrder = pBracketOrder.StopLossOrder
+If Not lStopOrder Is Nothing Then
+    Select Case lStopOrder.Status
+    Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+    Case Else
+        Select Case lEntryOrder.Status
+        Case OrderStatuses.OrderStatusFilled, _
+            OrderStatuses.OrderStatusCancelling, _
+            OrderStatuses.OrderStatusCancelled
+            CancelOrder lStopOrder, OrderModeStop
+            CancelBracketOrder = True
+        End Select
+    End Select
+End If
+
+Set lTargetOrder = pBracketOrder.TargetOrder
+If Not lTargetOrder Is Nothing Then
+    Select Case lTargetOrder.Status
+    Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+    Case Else
+        Select Case lEntryOrder.Status
+        Case OrderStatuses.OrderStatusFilled, _
+            OrderStatuses.OrderStatusCancelling, _
+            OrderStatuses.OrderStatusCancelled
+            CancelOrder lTargetOrder, OrderModeTarget
+            CancelBracketOrder = True
+        End Select
+    End Select
+End If
+    
+' need some stuff here to cancel if it's an oca group
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "CancelStopOrder"
+On Error GoTo Err
+
+Dim lStopOrder As IOrder
+
+Set lStopOrder = pBracketOrder.StopLossOrder
+Assert Not lStopOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no stop Order"
+
+Select Case lStopOrder.Status
+Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+    Assert False, "Stop Order state invalid for cancellation"
+Case Else
+    CancelOrder lStopOrder, OrderModeStop
+End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "CancelTargetOrder"
+Dim lTargetOrder As IOrder
+
+On Error GoTo Err
+Set lTargetOrder = pBracketOrder.TargetOrder
+Assert Not lTargetOrder Is Nothing, "Order plex " & pBracketOrder.Key & " has no target Order"
+
+
+Select Case lTargetOrder.Status
+Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
+    Assert False, "Target Order state invalid for cancellation"
+Case Else
+    CancelOrder lTargetOrder, OrderModeTarget
+End Select
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "ExecuteBracketOrder"
+On Error GoTo Err
+
+
+If pBracketOrder.Contract.Specifier.Sectype = SecTypeCombo Then
+    Dim lTask As ComboContractConversionTask
+    Set lTask = New ComboContractConversionTask
+    lTask.Initialise mContractRequester, pBracketOrder.Contract.Specifier
+    
+    Dim lCookie As New DeferredOrderAction
+    lCookie.TargetIsBracketOrder = True
+    lCookie.BracketOrder = pBracketOrder
+    StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
+Else
+    execBracketOrder pBracketOrder, gContractSpecToTwsContract(pBracketOrder.Contract.Specifier)
+End If
+
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function FetchPermittedOrderProperties( _
+                ByVal pContractFuture As IFuture, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchPermittedOrderAttributes"
+On Error GoTo Err
+
+Dim lFetchTask As New PermittedOrderPropsFetchTask
+
+lFetchTask.Initialise pContractFuture, mContractRequester, pCookie
+StartTask lFetchTask, PriorityLow, , pCookie
+Set FetchPermittedOrderProperties = lFetchTask.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub Finish()
 Const ProcName As String = "Finish"
 
 On Error GoTo Err
@@ -685,29 +580,95 @@ mStateChangeListeners.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pOrderPlacer As OrderPlacer, _
-                ByVal pContractSpec As ContractSpecifier, _
                 ByVal pOrderSubmissionListener As IOrderSubmissionListener, _
                 ByVal pContractRequester As ContractDetailsRequester)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mOrderPlacer = pOrderPlacer
-Set mOrderSubmissionListener = pOrderSubmissionListener
+If Not pOrderSubmissionListener Is Nothing Then AddOrderSubmissionListener pOrderSubmissionListener
 Set mTwsAPI = pTwsAPI
+If mTwsAPI.ConnectionState = TwsConnConnected Then
+    setState OrderSubmitterStateReady
+Else
+    setState OrderSubmitterStateNotReady
+End If
 Set mContractRequester = pContractRequester
-
-mContractRequester.RequestContractDetails pContractSpec, Me
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ModifyOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "ModifyOrder"
+On Error GoTo Err
+
+If pOrder.ContractSpecifier.Sectype = SecTypeCombo Then
+    Dim lTask As ComboContractConversionTask
+    Set lTask = New ComboContractConversionTask
+    lTask.Initialise mContractRequester, pOrder.ContractSpecifier
+    
+    Dim lCookie As New DeferredOrderAction
+    lCookie.TargetIsBracketOrder = False
+    lCookie.ActionIsModify = True
+    lCookie.Order = pOrder
+    lCookie.OrderMode = OrderModeEntry
+    lCookie.ParentId = "0"
+    lCookie.Transmit = True
+    StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
+Else
+    placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), True, 0, "", OrderModeEntry
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ModifyBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pEntryOrderChanged As Boolean, _
+                ByVal pStopOrderChanged As Boolean, _
+                ByVal pTargetOrderChanged As Boolean, _
+                ByVal pCloseoutOrderChanged As Boolean)
+Const ProcName As String = "ModifyBracketOrder"
+On Error GoTo Err
+
+If pBracketOrder.Contract.Specifier.Sectype = SecTypeCombo Then
+    Dim lTask As ComboContractConversionTask
+    Set lTask = New ComboContractConversionTask
+    lTask.Initialise mContractRequester, pBracketOrder.Contract.Specifier
+    
+    Dim lCookie As New DeferredOrderAction
+    lCookie.TargetIsBracketOrder = True
+    lCookie.ActionIsModify = True
+    lCookie.CloseoutOrderChanged = pCloseoutOrderChanged
+    lCookie.EntryOrderChanged = pEntryOrderChanged
+    lCookie.StopOrderChanged = pStopOrderChanged
+    lCookie.TargetOrderChanged = pTargetOrderChanged
+    lCookie.BracketOrder = pBracketOrder
+    StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
+Else
+    modifyABracketOrder pBracketOrder, _
+                        gContractSpecToTwsContract(pBracketOrder.Contract.Specifier), _
+                        pEntryOrderChanged, _
+                        pStopOrderChanged, _
+                        pTargetOrderChanged, _
+                        pCloseoutOrderChanged
+End If
+
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyError( _
@@ -717,48 +678,162 @@ Friend Sub NotifyError( _
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-mOrderSubmissionListener.NotifyError pOrderId, pErrorCode, pErrorMsg
+Dim lListener As IOrderSubmissionListener
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
+    lListener.NotifyError pOrderId, pErrorCode, pErrorMsg
+Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
 Const ProcName As String = "NotifyExecutionReport"
 On Error GoTo Err
 
-mOrderSubmissionListener.NotifyExecutionReport pExecutionReport
+Dim lListener As IOrderSubmissionListener
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
+    lListener.NotifyExecutionReport pExecutionReport
+Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
 Const ProcName As String = "NotifyOrderReport"
 On Error GoTo Err
 
-mOrderSubmissionListener.NotifyOrderReport pOrderReport
+Dim lListener As IOrderSubmissionListener
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
+    lListener.NotifyOrderReport pOrderReport
+Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusReport)
 Const ProcName As String = "NotifyOrderStatusReport"
 On Error GoTo Err
 
-mOrderSubmissionListener.NotifyOrderStatusReport pOrderStatusReport
+Dim lListener As IOrderSubmissionListener
+For Each lListener In mOrderSubmissionListeners.CurrentListeners
+    lListener.NotifyOrderStatusReport pOrderStatusReport
+Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "NotifyRecoveredOrder"
+On Error GoTo Err
+
+mOrderPlacer.NotifyRecoveredOrder Me, pOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub PlaceOrder(ByVal pOrder As IOrder)
+Const ProcName As String = "PlaceOrder"
+On Error GoTo Err
+
+placeOrderEx pOrder, True, 0, "", OrderModeEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
+Const ProcName As String = "RemoveOrderSubmissionListener"
+On Error GoTo Err
+
+mOrderSubmissionListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "RemoveStateChangeListener"
+On Error GoTo Err
+
+mStateChangeListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "ResubmitStopAndTargetOrders"
+On Error GoTo Err
+
+Dim lOCAGroup As String
+
+lOCAGroup = GenerateGUIDString
+
+placeOrderEx pBracketOrder.StopLossOrder, True, "0", lOCAGroup, OrderModeStop
+placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "ResubmitStopOrder"
+On Error GoTo Err
+
+Dim lOCAGroup As String
+
+
+If pBracketOrder.TargetOrder Is Nothing Then
+    placeOrderEx pBracketOrder.StopLossOrder, True, "0", "", OrderModeStop
+Else
+    lOCAGroup = GenerateGUIDString
+    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
+    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+End If
+
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "ResubmitTargetOrder"
+On Error GoTo Err
+
+Dim lOCAGroup As String
+
+If pBracketOrder.StopLossOrder Is Nothing Then
+    placeOrderEx pBracketOrder.TargetOrder, True, "0", "", OrderModeTarget
+Else
+    lOCAGroup = GenerateGUIDString
+    placeOrderEx pBracketOrder.StopLossOrder, False, "0", lOCAGroup, OrderModeStop
+    placeOrderEx pBracketOrder.TargetOrder, True, "0", lOCAGroup, OrderModeTarget
+End If
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -767,14 +842,14 @@ End Sub
 
 Private Sub CancelOrder( _
                 ByVal pOrder As IOrder, _
-                ByRef orderMode As String)
+                ByRef pOrderMode As String)
 Const ProcName As String = "CancelOrder"
 
 On Error GoTo Err
 
-logMessage "Cancel " & orderMode & " Order: " & _
+logMessage "Cancel " & pOrderMode & " Order: " & _
             "broker id=" & pOrder.BrokerId & _
-            "; TradeBuild id=" & pOrder.id, _
+            "; TradeBuild id=" & pOrder.Id, _
             ProcName
 
 mOrderPlacer.CancelOrder pOrder
@@ -783,7 +858,64 @@ mOrderPlacer.CancelOrder pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub execBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pContract As TwsContract)
+Const ProcName As String = "execBracketOrder"
+Dim lEntryOrder As IOrder
+Dim lStopOrder As IOrder
+Dim lTargetOrder As IOrder
+Dim Transmit As Boolean
+Dim lPlexId As Long
+
+On Error GoTo Err
+Set lEntryOrder = pBracketOrder.EntryOrder
+Set lStopOrder = pBracketOrder.StopLossOrder
+Set lTargetOrder = pBracketOrder.TargetOrder
+
+lPlexId = getNextBracketId
+
+If Not lEntryOrder Is Nothing Then
+    lEntryOrder.BrokerId = lPlexId + EntryOrderIdIncrement
+    Transmit = True
+    If Not lStopOrder Is Nothing Then
+        lStopOrder.BrokerId = lPlexId + StopOrderIdIncrement
+        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then Transmit = False
+    End If
+    If Not lTargetOrder Is Nothing Then
+        lTargetOrder.BrokerId = lPlexId + TargetOrderIdIncrement
+        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
+    End If
+        
+    placeAnOrder lEntryOrder, pContract, Transmit, 0, "", OrderModeEntry
+    
+    If Not lStopOrder Is Nothing Then
+        Transmit = True
+        If Not lTargetOrder Is Nothing Then
+            If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then Transmit = False
+        End If
+        
+        If lStopOrder.OrderType <> OrderTypes.OrderTypeAutoStop Then
+            ' note that AUTOSTP orders will be sent when the entry Order is filled
+            placeAnOrder lStopOrder, pContract, Transmit, lEntryOrder.BrokerId, "", OrderModeStop
+        End If
+    End If
+    
+    If Not lTargetOrder Is Nothing Then
+        If lTargetOrder.OrderType <> OrderTypes.OrderTypeAutoLimit Then
+            placeAnOrder lTargetOrder, pContract, True, lEntryOrder.BrokerId, "", OrderModeTarget
+        End If
+    End If
+    
+Else
+    ' treat the other orders as an OCA group - still to be implemented
+End If
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireStateChange()
@@ -793,28 +925,28 @@ On Error GoTo Err
 Dim lListener As StateChangeListener
 Dim ev As StateChangeEventData
 
-Set ev.source = Me
-ev.state = mState
-For Each lListener In mStateChangeListeners
+Set ev.Source = Me
+ev.State = mState
+For Each lListener In mStateChangeListeners.CurrentListeners
     lListener.Change ev
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getPlexId() As Long
-Const ProcName As String = "getPlexId"
+Private Function getNextBracketId() As Long
+Const ProcName As String = "getNextBracketId"
 On Error GoTo Err
 
-getPlexId = Int((mTwsAPI.NextOrderId + 4) / 5) * 5
+getNextBracketId = Int((mTwsAPI.NextOrderId + 4) / 5) * 5
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -825,33 +957,123 @@ Private Sub logMessage( _
 gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
-Private Sub PlaceOrder( _
+Private Sub modifyABracketOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pContract As TwsContract, _
+                ByVal pEntryOrderChanged As Boolean, _
+                ByVal pStopOrderChanged As Boolean, _
+                ByVal pTargetOrderChanged As Boolean, _
+                ByVal pCloseoutOrderChanged As Boolean)
+Const ProcName As String = "modifyABracketOrder"
+On Error GoTo Err
+
+Dim lOCAGroup As String
+Dim lParentId As Long
+
+Select Case pBracketOrder.EntryOrder.Status
+Case OrderStatusFilled, _
+        OrderStatusCancelling, _
+        OrderStatusCancelled
+    lParentId = 0
+Case Else
+    lParentId = pBracketOrder.EntryOrder.BrokerId
+End Select
+
+If pBracketOrder.EntryOrder.QuantityRemaining = 0 Then lParentId = 0
+
+If Not pBracketOrder.StopLossOrder Is Nothing Then lOCAGroup = pBracketOrder.StopLossOrder.ProviderProperties.GetParameterValue("OCA group")
+If lOCAGroup = "" And Not pBracketOrder.TargetOrder Is Nothing Then lOCAGroup = pBracketOrder.TargetOrder.ProviderProperties.GetParameterValue("OCA group")
+If lOCAGroup = "" Then lOCAGroup = GenerateGUIDString
+
+If pEntryOrderChanged Then
+    placeAnOrder pBracketOrder.EntryOrder, pContract, True, 0, "", OrderModeEntry
+End If
+If pStopOrderChanged Then
+    placeAnOrder pBracketOrder.StopLossOrder, pContract, True, lParentId, lOCAGroup, OrderModeStop
+End If
+If pTargetOrderChanged Then
+    placeAnOrder pBracketOrder.TargetOrder, pContract, True, lParentId, lOCAGroup, OrderModeTarget
+End If
+If pCloseoutOrderChanged Then
+    placeAnOrder pBracketOrder.CloseoutOrder, pContract, True, 0, "", OrderModeCloseout
+End If
+
+Exit Sub
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub placeAnOrder( _
                 ByVal pOrder As IOrder, _
+                ByVal pContract As TwsContract, _
                 ByVal pTransmit As Boolean, _
-                ByVal pParentId As String, _
+                ByVal pParentId As Long, _
                 ByVal pOcaGroup As String, _
                 ByRef pOrderMode As String)
-Const ProcName As String = "PlaceOrder"
-
+Const ProcName As String = "placeAnOrder"
 On Error GoTo Err
 
 logMessage "Place " & pOrderMode & " Order: " & _
                 "broker id=" & pOrder.BrokerId & _
-                "; TradeBuild id=" & pOrder.id, _
+                "; TradeBuild id=" & pOrder.Id, _
             ProcName
 
-mOrderPlacer.PlaceOrder Me, pOrder, mContractDetails.Summary, pTransmit, pParentId, pOcaGroup
+Assert pOrder.Id <> "", "Order has no id"
+Assert pOrder.Action <> OrderActionNone, "Order has no action"
+Assert pOrder.OrderType <> OrderTypeNone, "Order has no order type"
+Assert pOrder.Quantity <> 0, "Order has zero quantity"
+
+mOrderPlacer.PlaceOrder Me, pOrder, pContract, pTransmit, pParentId, pOcaGroup
 
 If pOrder.Status = OrderStatusCreated Then
     Dim statusRpt As New OrderStatusReport
-    statusRpt.Initialise pOrder.id, OrderStatusPendingSubmit
-    mOrderSubmissionListener.NotifyOrderStatusReport statusRpt
+    statusRpt.OrderId = pOrder.Id
+    statusRpt.BrokerId = pOrder.BrokerId
+    statusRpt.Status = OrderStatusPendingSubmit
+    Dim lListener As IOrderSubmissionListener
+    For Each lListener In mOrderSubmissionListeners.CurrentListeners
+        lListener.NotifyOrderStatusReport statusRpt
+    Next
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub placeOrderEx( _
+                ByVal pOrder As IOrder, _
+                ByVal pTransmit As Boolean, _
+                ByVal pParentId As Long, _
+                ByVal pOcaGroup As String, _
+                ByRef pOrderMode As String)
+Const ProcName As String = "placeOrderEx"
+On Error GoTo Err
+
+pOrder.BrokerId = CStr(mTwsAPI.NextOrderId)
+
+If pOrder.ContractSpecifier.Sectype = SecTypeCombo Then
+    Dim lTask As ComboContractConversionTask
+    Set lTask = New ComboContractConversionTask
+    lTask.Initialise mContractRequester, pOrder.ContractSpecifier
+    
+    Dim lCookie As New DeferredOrderAction
+    lCookie.TargetIsBracketOrder = False
+    lCookie.Order = pOrder
+    lCookie.OcaGroup = pOcaGroup
+    lCookie.OrderMode = pOrderMode
+    lCookie.ParentId = pParentId
+    lCookie.Transmit = pTransmit
+    StartTask(lTask, PriorityNormal, , pOrder).AddTaskCompletionListener Me
+Else
+    placeAnOrder pOrder, gContractSpecToTwsContract(pOrder.ContractSpecifier), pTransmit, pParentId, pOcaGroup, pOrderMode
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal pState As OrderSubmitterStates)
@@ -865,7 +1087,7 @@ fireStateChange
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

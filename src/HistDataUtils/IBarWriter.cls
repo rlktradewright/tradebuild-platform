@@ -60,13 +60,33 @@ Private Const ModuleName                            As String = "IBarWriter"
 ' Properties
 '@================================================================================
 
+Public Property Get ContractFuture() As IFuture
+End Property
+
+Public Property Get IsReady() As Boolean
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Public Sub Finish()
+End Sub
+
+Public Sub WriteBar( _
+                ByVal pBar As Bar, _
+                ByVal pBarType As BarTypes, _
+                ByVal pTimePeriod As TimePeriod)
+End Sub
+
+Public Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
 

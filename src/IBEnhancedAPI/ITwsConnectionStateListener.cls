@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IConnectionStateListener"
+Attribute VB_Name = "ITwsConnectionStateListener"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IConnectionStateListener"
+Private Const ModuleName                            As String = "ITwsConnectionStateListener"
 
 '@================================================================================
 ' Member variables
@@ -63,6 +63,15 @@ Private Const ModuleName                            As String = "IConnectionStat
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As ApiConnectionStates, ByVal pMessage As String)
+End Sub
+
+Public Sub NotifyIBServerConnectionClosed(ByVal pSource As Object)
+End Sub
+
+Public Sub NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+End Sub
 
 '@================================================================================
 ' Helper Functions

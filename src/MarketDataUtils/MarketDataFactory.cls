@@ -67,17 +67,6 @@ Private Type TickerTableEntry
     NumberOfRows            As Long
 End Type
 
-'Private Type MarketDepthTableEntry
-'    InUse                   As Boolean
-'    TickStreamBuilder       As TickStreamBuilder
-'    Incarnation             As Long
-'    ContractDetails         As TwsContractDetails
-'    TimeZone                As TimeZone
-'    ErrorListener           As IMarketDataErrorListener
-'    NumberOfRows            As Long
-'    DataHasBeenReceived     As Boolean
-'End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -109,6 +98,8 @@ Private mContractRequester                          As ContractDetailsRequester
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mContractCache                              As TwsContractCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -533,22 +524,29 @@ End Sub
 '@================================================================================
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_FutureWaitComplete"
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-Dim lTwsContractFuture As IFuture
-Set lTwsContractFuture = ev.Future
+If Not ev.Future.IsAvailable Then Exit Sub
 
-If lTwsContractFuture.IsAvailable Then
-    Dim lStreamId As Long
-    lStreamId = ev.ContinuationData
-    
+Dim lStreamId As Long
+lStreamId = ev.ContinuationData
+
+If TypeOf ev.Future.Value Is TwsContractDetails Then
+    gLogger.Log "Got TwsContractDetails", ProcName, ModuleName, LogLevelDetail
     If lStreamId < MarketDepthIdOffset Then
-        setContractForMarketData lStreamId, lTwsContractFuture.Value
-        reqMarketData lStreamId
+        setContractForMarketData lStreamId, ev.Future.Value
+        If mMarketDataTable(lStreamId).TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then reqMarketData lStreamId
     Else
-        setContractForMarketDepth lStreamId - MarketDepthIdOffset, lTwsContractFuture.Value
-        reqMarketDepth lStreamId - MarketDepthIdOffset
+        setContractForMarketDepth lStreamId - MarketDepthIdOffset, ev.Future.Value
+        If mMarketDepthTable(lStreamId - MarketDepthIdOffset).TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then reqMarketDepth lStreamId - MarketDepthIdOffset
+    End If
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
+    If lStreamId < MarketDepthIdOffset Then
+        If Not mMarketDataTable(lStreamId).ContractDetails Is Nothing Then reqMarketData lStreamId
+    Else
+        If Not mMarketDepthTable(lStreamId - MarketDepthIdOffset).ContractDetails Is Nothing Then reqMarketDepth lStreamId - MarketDepthIdOffset
     End If
 End If
 
@@ -676,15 +674,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
 Const ProcName As String = "CreateMarketDataStream"
 On Error GoTo Err
 
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, mMarketDataTableMaxUsedIndex, pStreamId, pErrorListener)
+pStreamId = getTableEntry(mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, mMarketDataTableMaxUsedIndex, pStreamId, pContractFuture, pErrorListener)
 
-mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture), pStreamId
+gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
+
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId
+mFutureWaiter.Add mMarketDataTable(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
+
 Set CreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -693,16 +696,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
 Const ProcName As String = "CreateMarketDepthStream"
 On Error GoTo Err
 
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument IsInteger(pStreamId, -1, MaxTickerId), "Invalid stream id"
 
-pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, mMarketDepthTableMaxUsedIndex, pStreamId, pErrorListener)
+pStreamId = getTableEntry(mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, mMarketDepthTableMaxUsedIndex, pStreamId, pContractFuture, pErrorListener)
 mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
-mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture), pStreamId + MarketDepthIdOffset
+gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
+
+mFutureWaiter.Add gContractFutureToTwsContractDetails(mContractRequester, pContractFuture, mContractCache), pStreamId + MarketDepthIdOffset
+mFutureWaiter.Add mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId + MarketDepthIdOffset
+
 Set CreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -713,9 +721,11 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
-                ByVal pContractRequester As ContractDetailsRequester)
+                ByVal pContractRequester As ContractDetailsRequester, _
+                ByVal pContractCache As TwsContractCache)
 Set mTwsAPI = pTwsAPI
 Set mContractRequester = pContractRequester
+Set mContractCache = pContractCache
 End Sub
 
 Friend Sub ReEstablishMarketData(ByVal pNewConnection As Boolean)
@@ -860,6 +870,7 @@ Private Function getTableEntry( _
                 ByRef pFirstFreeIndex As Long, _
                 ByRef pMaxUsedIndex As Long, _
                 ByVal pIndex As Long, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pErrorListener As IMarketDataErrorListener) As Long
 Const ProcName As String = "getTableEntry"
 On Error GoTo Err
@@ -891,7 +902,7 @@ If lIndex > pMaxUsedIndex Then pMaxUsedIndex = lIndex
 With pTable(lIndex)
     .InUse = True
     Set .ErrorListener = pErrorListener
-    Set .TickStreamBuilder = CreateTickStreamBuilder(lIndex)
+    Set .TickStreamBuilder = CreateTickStreamBuilder(lIndex, pContractFuture, CreateClockFuture(pContractFuture))
     .TickStreamBuilder.AddStateChangeListener Me
 End With
 
@@ -931,7 +942,10 @@ Private Sub reqMarketData( _
 Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
+If mTwsAPI.ConnectionState <> TwsConnConnected Then Exit Sub
+If mMarketDataTable(pIndex).ContractDetails Is Nothing Then Exit Sub
+
+mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), mMarketDataTable(pIndex).ContractDetails.Summary, "", False
 
 Exit Sub
 
@@ -944,7 +958,10 @@ Private Sub reqMarketDepth( _
 Const ProcName As String = "reqMarketDepth"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState = TwsConnConnected Then mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
+If mTwsAPI.ConnectionState <> TwsConnConnected Then Exit Sub
+If mMarketDepthTable(pIndex).ContractDetails Is Nothing Then Exit Sub
+
+mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).ContractDetails.Summary, mMarketDepthTable(pIndex).NumberOfRows
 
 Exit Sub
 

@@ -26,6 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                            As String = "HistDataUtils27"
 Private Const ModuleName                            As String = "Globals"
 
 '@================================================================================
@@ -48,9 +49,75 @@ Private Const ModuleName                            As String = "Globals"
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("histdatautils", ProjectName)
+Set gLogger = sLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function gBarTypeToString(ByVal pBarType As BarTypes) As String
+Select Case pBarType
+Case BarTypeTrade
+    gBarTypeToString = "TRADE"
+Case BarTypeBid
+    gBarTypeToString = "BID"
+Case BarTypeAsk
+    gBarTypeToString = "ASK"
+Case Else
+    AssertArgument False, "Invalid bar type"
+End Select
+End Function
+
+Public Function gCreateBarDataSpecifierFuture( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pToTime As Date, _
+                ByVal pFromTime As Date, _
+                ByVal pMaxNumberOfBars As Long, _
+                ByVal pBarType As BarTypes, _
+                ByVal pClockFuture As IFuture, _
+                ByVal pExcludeCurrentBar As Boolean, _
+                ByVal pIncludeBarsOutsideSession As Boolean, _
+                ByVal pCustomSessionStartTime As Date, _
+                ByVal pCustomSessionEndTime As Date) As IFuture
+Const ProcName As String = "gCreateBarDataSpecifier"
+On Error GoTo Err
+
+AssertArgument Not pContractFuture Is Nothing
+AssertArgument Not pBarTimePeriod Is Nothing
+
+Dim lBarDataSpecifierFutureBuilder As New BarDataSpecFutureBldr
+lBarDataSpecifierFutureBuilder.Initialise pContractFuture, pBarTimePeriod, pToTime, pFromTime, pMaxNumberOfBars, pBarType, pClockFuture, pExcludeCurrentBar, pIncludeBarsOutsideSession, pCustomSessionStartTime, pCustomSessionEndTime
+Set gCreateBarDataSpecifierFuture = lBarDataSpecifierFutureBuilder.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gCreateBufferedBarWriter( _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pOutputMonitor As IBarOutputMonitor, _
+                ByVal pContractFuture As IFuture) As IBarWriter
+Const ProcName As String = "gCreateBufferedBarWriter"
+On Error GoTo Err
+
+Dim lBufferedWriter As New BufferedBarWriter
+Dim lWriter As IBarWriter
+Set lWriter = pHistDataStore.CreateBarWriter(lBufferedWriter, pContractFuture)
+lBufferedWriter.Initialise pOutputMonitor, lWriter, pContractFuture
+Set gCreateBufferedBarWriter = lBufferedWriter
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Sub gHandleUnexpectedError( _
                 ByRef pProcedureName As String, _

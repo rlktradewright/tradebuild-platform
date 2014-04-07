@@ -44,6 +44,18 @@ Private Const ModuleName                            As String = "HistDataWriter"
 ' Member variables
 '@================================================================================
 
+Private mDataSource                                 As IMarketDataSource
+Private mContractFuture                             As IFuture
+
+Private mOptions                                    As HistDataWriteOptions
+
+Private WithEvents mTimeframeSetupTC                As TaskController
+Attribute mTimeframeSetupTC.VB_VarHelpID = -1
+
+Private mTimeframeHandlers                          As EnumerableCollection
+
+Private mBarWriter                                  As IBarWriter
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -53,8 +65,24 @@ Private Const ModuleName                            As String = "HistDataWriter"
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mTimeframeSetupTC Event Handlers
 '@================================================================================
+
+Private Sub mTimeframeSetupTC_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mTimeframeSetupTC_Completed"
+On Error GoTo Err
+
+If ev.Cancelled Then
+ElseIf ev.ErrorNumber <> 0 Then
+Else
+    Set mTimeframeHandlers = ev.Result
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -64,10 +92,83 @@ Private Const ModuleName                            As String = "HistDataWriter"
 ' Methods
 '@================================================================================
 
+Public Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+If mTimeframeHandlers Is Nothing Then
+    If Not mTimeframeSetupTC Is Nothing Then mTimeframeSetupTC.CancelTask
+    Exit Sub
+End If
+    
+Dim s As String
+If mContractFuture.IsAvailable Then
+    Dim lContract As IContract
+    Set lContract = mContractFuture.Value
+    s = " (" & lContract.Specifier.LocalSymbol & ")"
+End If
+
+Dim lTimeframeHandler As TimeframeHandler
+For Each lTimeframeHandler In mTimeframeHandlers
+    lTimeframeHandler.Finish
+    s = s & vbCrLf & "    " & lTimeframeHandler.TimePeriod.ToString & ":"
+    If mOptions And HistDataWriteOptionWriteTradeBars Then
+        s = s & " " & lTimeframeHandler.TradeBarsWritten & " trade bars written in " & lTimeframeHandler.TradeDatabaseWrites & " writes;"
+    End If
+    If mOptions And HistDataWriteOptionWriteBidAndAskBars Then
+        s = s & " " & lTimeframeHandler.AskBarsWritten & " ask bars written in " & lTimeframeHandler.AskDatabaseWrites & " writes;"
+        s = s & " " & lTimeframeHandler.BidBarsWritten & " bid bars written in " & lTimeframeHandler.BidDatabaseWrites & " writes;"
+    End If
+Next
+
+gLogger.Log "HistDataWriter finished" & s, ProcName, ModuleName
+
+mTimeframeHandlers.Clear
+
+If Not mBarWriter Is Nothing Then mBarWriter.Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pStudyLibManager As StudyLibraryManager, _
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pOutputMonitor As IBarOutputMonitor, _
+                ByVal pOptions As HistDataWriteOptions, _
+                ByVal pSaveIntervalSeconds As Long)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+If pOptions And HistDataWriteOptionWriteTradeBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteTradeBars), "HistDataStore does not support writing trade bars"
+If pOptions And HistDataWriteOptionWriteBidAndAskBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteBidAndAskBars), "HistDataStore does not support writing bid and ask bars"
+
+Set mDataSource = pDataSource
+Set mContractFuture = mDataSource.ContractFuture
+mOptions = pOptions
+
+Set mBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mDataSource.ContractFuture)
+
+Dim lStudyBase As IStudyBase
+Set lStudyBase = CreateTickDataStudyBaseFromMarketDataSource(pStudyLibManager.CreateStudyManagerWithSessionFuture(mDataSource.SessionFuture), mDataSource)
+
+Dim lTask As New TimeframeSetupTask
+lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, pDataSource.ContractFuture, pDataSource.ClockFuture, lStudyBase, pOptions, pSaveIntervalSeconds
+
+Set mTimeframeSetupTC = StartTask(lTask, PriorityNormal)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 

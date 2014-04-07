@@ -47,8 +47,8 @@ Private Const ModuleName                            As String = "TickfileDataMan
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTickfileManager                 As TickfileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
+Private WithEvents mReplayController                As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
 
 Private mDataManager                                As MarketDataManager
 
@@ -75,8 +75,8 @@ Const ProcName As String = "IMarketDataFactory_CreateMarketDataStream"
 On Error GoTo Err
 
 Dim lStream As ITickStream
-
 Set lStream = mTickStreams.Item(GetObjectKey(pContractFuture))
+
 Assert Not lStream Is Nothing, "Specified contract future does not identify an existing tick stream"
 
 Set IMarketDataFactory_CreateMarketDataStream = lStream
@@ -93,8 +93,8 @@ Const ProcName As String = "IMarketDataFactory_CreateMarketDepthStream"
 On Error GoTo Err
 
 Dim lStream As ITickStream
-
 Set lStream = mTickStreams.Item(GetObjectKey(pContractFuture))
+
 Assert Not lStream Is Nothing, "Specified contract future does not identify an existing tick stream"
 
 Set IMarketDataFactory_CreateMarketDepthStream = lStream
@@ -182,40 +182,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mTickfileManager Event Handlers
+' mReplayController Event Handlers
 '@================================================================================
 
-Private Sub mTickfileManager_NotifyEvent(ev As NotificationEventData)
-
-End Sub
-
-Private Sub mTickfileManager_QueryReplayNextTickfile(ev As TickfileEventData, pContinueMode As ReplayContinueModes)
-pContinueMode = ReplayContinue
-End Sub
-
-Private Sub mTickfileManager_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
-Const ProcName As String = "mTickfileManager_TickfileCompleted"
+Private Sub mReplayController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
+Const ProcName As String = "mReplayController_TickfileCompleted"
 On Error GoTo Err
 
-mTickStreams.Remove GetObjectKey(ev.Specifier.ContractFuture)
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mTickfileManager_TickStreamStarted(ev As TickfileEventData, ByVal pClock As Clock)
-Const ProcName As String = "mTickfileManager_TickStreamStarted"
-On Error GoTo Err
-
-mTickStreams.Add ev.TickStream, GetObjectKey(ev.Specifier.ContractFuture)
-
-mDataManager.GetMarketDataStream ev.Specifier.ContractFuture, ev.TickStream.StreamId, , pClock
-
-Dim lDataSource As IMarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(ev.Specifier.ContractFuture, "", mDefaultStateChangeListener, ev.TickStream.StreamId)
-lDataSource.StartMarketData
+mTickStreams.Remove GetObjectKey(ev.TickStream.ContractFuture)
 
 Exit Sub
 
@@ -231,8 +205,8 @@ Public Property Get DataSources() As EnumerableCollection
 Set DataSources = mDataManager.DataSources
 End Property
 
-Public Property Get TickfileManager() As TickfileManager
-Set TickfileManager = mTickfileManager
+Public Property Get ReplayController() As ReplayController
+Set ReplayController = mReplayController
 End Property
 
 '@================================================================================
@@ -247,14 +221,18 @@ Public Function CreateMarketDataSource( _
 Const ProcName As String = "CreateMarketDataSource"
 On Error GoTo Err
 
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture cannot be Nothing"
 AssertArgument Not pIsRecoverable, "Recoverable tickfile-based market data sources not supported"
 
 If pStateChangeListener Is Nothing Then Set pStateChangeListener = mDefaultStateChangeListener
 
-Dim lDataSource As New MarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, , True)
+AssertArgument mTickStreams.Contains(GetObjectKey(pContractFuture)), "No data for this contract"
 
-AssertArgument Not lDataSource Is Nothing, "No data available for this contract"
+Dim lTickStream As ITickStream
+Set lTickStream = mTickStreams(GetObjectKey(pContractFuture))
+
+Dim lDataSource As New MarketDataSource
+Set lDataSource = mDataManager.CreateMarketDataSource(pContractFuture, pKey, pStateChangeListener, False, True, lTickStream.StreamId)
 
 Set CreateMarketDataSource = lDataSource
 
@@ -289,6 +267,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
+                ByVal pTickfileSpecifiers As TickFileSpecifiers, _
                 ByVal pTickfileStore As ITickfileStore, _
                 ByVal pPrimaryContractStore As IContractStore, _
                 ByVal pSecondaryContractStore As IContractStore, _
@@ -312,7 +291,16 @@ mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 Set mDataManager = New MarketDataManager
 mDataManager.Initialise Me, pOptions, pNumberOfMarketDepthRows
 
-Set mTickfileManager = CreateTickfileManager(pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+Set mReplayController = CreateTickfileReplayController(pTickfileSpecifiers, pTickfileStore, mPrimaryContractStore, mSecondaryContractStore, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+
+Dim i As Long
+For i = 1 To pTickfileSpecifiers.Count
+    Dim lTickStream As ITickStream
+    Set lTickStream = mReplayController.TickStream(i - 1)
+    
+    mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
+    
+Next
 
 Exit Sub
 

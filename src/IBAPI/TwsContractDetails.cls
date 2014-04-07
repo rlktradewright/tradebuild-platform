@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "TwsContractDeta
 ' Member variables
 '@================================================================================
 
-Private mSummary                                    As TWSContract
+Private mSummary                                    As TwsContract
 Private mMarketName                                 As String
 Private mTradingClass                               As String
 Private mMinTick                                    As Double
@@ -157,11 +157,11 @@ Public Property Get Subcategory() As String
 Subcategory = mSubcategory
 End Property
 
-Public Property Let Summary(ByVal Value As TWSContract)
+Public Property Let Summary(ByVal Value As TwsContract)
 Set mSummary = Value
 End Property
 
-Public Property Get Summary() As TWSContract
+Public Property Get Summary() As TwsContract
 Set Summary = mSummary
 End Property
 

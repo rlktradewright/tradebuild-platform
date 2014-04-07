@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IBTWSSP"
+Attribute VB_Name = "IBAPI"
 Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -88,6 +88,30 @@ Public Enum TwsAuctionStrategies
     TwsAuctionStrategyMatch = 1
     TwsAuctionStrategyImprovement = 2
     TwsAuctionStrategyTransparent = 3
+End Enum
+
+Public Enum TwsConnectionStates
+    TwsConnNotConnected
+    TwsConnConnecting
+    TwsConnConnected
+    TwsConnFailed
+End Enum
+
+Public Enum TwsDOMOperations
+    TwsDOMInsert
+    TwsDOMUpdate
+    TwsDOMDelete
+End Enum
+
+Public Enum TwsDOMSides
+    TwsDOMAsk
+    TwsDOMBid
+End Enum
+
+Public Enum TwsFADataTypes
+    TwsFAGroups = 1
+    TwsFaProfile
+    TwsFAAccountAliases
 End Enum
 
 Public Enum TwsLogLevels
@@ -175,13 +199,13 @@ Public Enum TwsShortSaleSlotCodes
 End Enum
 
 Public Enum TwsStopTriggerMethods
-    TwsStopTriggerDefault = 1
-    TwsStopTriggerDoubleBidAsk = 2
-    TwsStopTriggerLast = 3
-    TwsStopTriggerDoubleLast = 4
-    TwsStopTriggerBidAsk = 5
-    TwsStopTriggerLastOrBidAsk = 6
-    TwsStopTriggerMidPoint = 7
+    TwsStopTriggerDefault = 0
+    TwsStopTriggerDoubleBidAsk = 1
+    TwsStopTriggerLast = 2
+    TwsStopTriggerDoubleLast = 3
+    TwsStopTriggerBidAsk = 4
+    TwsStopTriggerLastOrBidAsk = 7
+    TwsStopTriggerMidPoint = 8
 End Enum
 
 Public Enum TwsTickTypes
@@ -238,15 +262,9 @@ End Enum
 ' Types
 '@================================================================================
 
-Public Type ContractDetailsRequestTableEntry
-    Contract                As TwsContract
-    Requester               As IContractDetailsConsumer
-    Next                    As Long
-End Type
-
-Public Type HistoricalDataRequest
+Public Type TwsHistoricalDataRequest
     'Id                      As Long
-    Contract                As TwsContract
+    contract                As TwsContract
     EndDateTime             As String
     BarSizeSetting          As String
     Duration                As String
@@ -254,22 +272,8 @@ Public Type HistoricalDataRequest
     RequestTime             As Date
 End Type
 
-Public Type HistoricalDataRequestTableEntry
-    EarliestSubmissionTime  As Date
-    ActualSubmissionTime    As Date
-    Cancelling              As Boolean
-    Request                 As HistoricalDataRequest
-    Requester               As HistDataRequestTask
-    Next                    As Long
-End Type
-
-Public Type OrderIdMapEntry
-    Order                   As IOrder
-    OrderSubmitter          As OrderSubmitter
-End Type
-
-Public Type TWSBar
-    Timestamp               As String
+Public Type TwsBar
+    timeStamp               As String
     OpenValue               As Double
     HighValue               As Double
     LowValue                As Double
@@ -280,7 +284,7 @@ Public Type TWSBar
     HasGaps                 As Boolean
 End Type
 
-Public Type TWSHistDataStartInfo
+Public Type TwsHistDataStartInfo
     RequestId               As Long
     StartDate               As String
     EndDate                 As String
@@ -322,103 +326,35 @@ End Type
 ' Methods
 '@================================================================================
 
-Public Function CreateContractDetailsFetcher( _
-                ByVal pClient As TwsAPI) As ContractDetailsFetcher
-Const ProcName As String = "CreateContractDetailsFetcher"
-On Error GoTo Err
-
-Set CreateContractDetailsFetcher = gCreateContractDetailsFetcher(pClient)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function CreateHistoricalDataFetcher( _
-                ByVal pClient As TwsAPI) As HistoricalDataFetcher
-Const ProcName As String = "CreateHistoricalDataFetcher"
-On Error GoTo Err
-
-Set CreateHistoricalDataFetcher = gCreateHistoricalDataFetcher(pClient)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function CreateMarketDataSource( _
-                ByVal pClient As TwsAPI, _
-                ByVal pContract As Contract) As MarketDataSource
-Const ProcName As String = "CreateMarketDataSource"
-On Error GoTo Err
-
-Set CreateMarketDataSource = gCreateMarketDataSource(pClient, pContract)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function CreateOrderSubmitter( _
-                ByVal pClient As TwsAPI, _
-                ByVal pContractSpec As ContractSpecifier, _
-                ByVal pOrderSubmissionListener As IOrderSubmissionListener) As OrderSubmitter
-Const ProcName As String = "CreateOrderSubmitter"
-On Error GoTo Err
-
-Set CreateOrderSubmitter = gCreateOrderSubmitter(pClient, pContractSpec, pOrderSubmissionListener)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Sub DisableHistoricalDataRequestPacing(ByVal pClient As TwsAPI)
-Const ProcName As String = "DisableHistoricalDataRequestPacing"
-On Error GoTo Err
-
-gDisableHistoricalDataRequestPacing pClient
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Public Function GetAPIClient( _
+Public Function GetAPI( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
-                Optional ByVal pTwsLogLevel As TwsLogLevels = TwsLogLevels.TwsLogLevelError) As TwsAPI
-Const ProcName As String = "GetAPIClient"
+                Optional ByVal pConnectionRetryIntervalSecs As Long = 10) As TwsAPI
+Const ProcName As String = "GetAPI"
 On Error GoTo Err
 
-Set GetAPIClient = gGetTwsAPIInstance(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pTwsLogLevel)
+Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Sub ReleaseAPIClient( _
-                ByVal pClient As TwsAPI, _
-                Optional ByVal pForceDisconnect As Boolean = False)
-Const ProcName As String = "ReleaseAPIClient"
+Public Function TwsDateStringToDate( _
+                ByRef pDateString As String, _
+                Optional ByRef pTimezoneName As String) As Date
+Const ProcName As String = "TwsDateStringToDate"
 On Error GoTo Err
 
-gReleaseTwsAPIInstance pClient, pForceDisconnect
+TwsDateStringToDate = gGetDate(pDateString, pTimezoneName)
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
 
 Public Function TwsOptionRightFromString( _
                 ByVal Value As String) As TwsOptionRights
@@ -431,7 +367,7 @@ TwsOptionRightFromString = gTwsOptionRightFromString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOptionRightToString( _
@@ -445,7 +381,7 @@ TwsOptionRightToString = gTwsOptionRightToString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderActionFromString( _
@@ -458,12 +394,12 @@ TwsOrderActionFromString = gTwsOrderActionFromString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderActionToString( _
                 ByVal Value As TwsOrderActions) As String
-Const ProcName As String = "OrderActionToString"
+Const ProcName As String = "TwsOrderActionToString"
 On Error GoTo Err
 
 TwsOrderActionToString = gTwsOrderActionToString(Value)
@@ -471,7 +407,31 @@ TwsOrderActionToString = gTwsOrderActionToString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function TwsOrderTypeFromString(ByVal Value As String) As TwsOrderTypes
+Const ProcName As String = "TwsOrderTypeFromString"
+On Error GoTo Err
+
+TwsOrderTypeFromString = gTwsOrderTypeFromString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function TwsOrderTypeToString(ByVal Value As TwsOrderTypes) As String
+Const ProcName As String = "TwsOrderTypeToString"
+On Error GoTo Err
+
+TwsOrderTypeToString = gTwsOrderTypeToString(Value)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeFromString( _
@@ -485,7 +445,7 @@ TwsSecTypeFromString = gTwsSecTypeFromString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeToShortString( _
@@ -499,7 +459,7 @@ TwsSecTypeToShortString = gTwsSecTypeToShortString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeToString( _
@@ -513,7 +473,7 @@ TwsSecTypeToString = gTwsSecTypeToString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsShortSaleSlotFromString( _
@@ -526,7 +486,7 @@ TwsShortSaleSlotFromString = gTwsShortSaleSlotFromString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 ''
@@ -552,7 +512,7 @@ TwsShortSaleSlotToString = gTwsShortSaleSlotToString(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 '@================================================================================

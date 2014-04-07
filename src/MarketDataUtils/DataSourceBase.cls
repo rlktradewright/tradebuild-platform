@@ -22,6 +22,10 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IGenericTickListener
+Implements IMarketDataErrorListener
+Implements StateChangeListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -95,42 +99,145 @@ Private mVolumeAdjuster                             As VolumeAdjuster
 
 Private mDOMManager                                 As DOMManager
 
-Private mSessionBuilder                             As New SessionBuilder
+Private mSessionBuilder                             As SessionBuilder
 
 Private mSessionFutureBuilder                       As FutureBuilder
 Private mSessionFuture                              As IFuture
 
-Private mClock                                      As Clock
-
 Private mNumberOfMarketDataSubscriptions            As Long
 Private mNumberOfMarketDepthSubscriptions           As Long
+
+Private mClockFutureBuilder                         As New FutureBuilder
+
+Private mGotClockFuture                             As Boolean
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mDataTickStream                             As ITickStream
+Private mDepthTickStream                            As ITickStream
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+Const ProcName As String = "Class_Initialize"
+On Error GoTo Err
+
+Set mFutureWaiter = New FutureWaiter
+
 Set mDataSources = New DataSources
 mDataSources.Initialise Me
 
 Set mSessionFutureBuilder = New FutureBuilder
 Set mSessionFuture = mSessionFutureBuilder.Future
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
 
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
+On Error GoTo Err
+
+NotifyTick ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '@================================================================================
-' XXXX Event Handlers
+' IMarketDataErrorListener Interface Members
 '@================================================================================
+
+Private Sub IMarketDataErrorListener_NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDataError"
+On Error GoTo Err
+
+NotifyMarketDataError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDepthError"
+On Error GoTo Err
+
+NotifyMarketDepthError pErrorCode, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+If ev.State <> TickStreamStates.TickStreamStateFinished Then Exit Sub
+
+NotifyStreamFinished
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is Clock Then
+    Dim lClock As Clock
+    Set lClock = ev.Future.Value
+    
+    processClockAvailable lClock
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Get Clock() As Clock
-Set Clock = mClock
+Friend Property Get ClockFuture() As IFuture
+Const ProcName As String = "ClockFuture"
+On Error GoTo Err
+
+Set ClockFuture = mClockFutureBuilder.Future
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ContractFuture() As IFuture
@@ -177,7 +284,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub AddMarketDataSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub AddMarketDataSubscription()
 Const ProcName As String = "AddMarketDataSubscription"
 On Error GoTo Err
 
@@ -190,7 +297,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub AddMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
+Friend Sub AddMarketDepthSubscription()
 Const ProcName As String = "AddMarketDepthSubscription"
 On Error GoTo Err
 
@@ -273,6 +380,26 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
+
+If Not mDataTickStream Is Nothing Then
+    mDataTickStream.Finish
+    Set mDataTickStream = Nothing
+End If
+
+If Not mDepthTickStream Is Nothing Then
+    mDepthTickStream.Finish
+    Set mDepthTickStream = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Function GetCurrentTick(ByVal pTickType As TickTypes) As GenericTick
 Const ProcName As String = "GetCurrentTick"
@@ -369,10 +496,10 @@ End Function
 Friend Sub Initialise( _
                 ByVal pMarketDataManager As MarketDataManager, _
                 ByVal pContractFuture As IFuture, _
+                ByVal pIsTickReplay As Boolean, _
                 ByVal pStreamId As Long, _
                 ByVal pOptions As MarketDataSourceOptions, _
-                ByVal pNumberOfMarketDepthRows As Long, _
-                ByVal pClock As Clock)
+                ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -388,18 +515,17 @@ mUseExchangeTimeZone = mOptions And MarketDataSourceOptions.MarketDataSourceOptU
 Set mContractFuture = pContractFuture
 Set mContract = mContractFuture.Value
 
-Set mClock = pClock
+If IsContractExpired(mContract) And Not pIsTickReplay Then
+    mFutureWaiter.Add CreateClockFuture(mContractFuture)
+    mGotClockFuture = True
+End If
 
-mSessionBuilder.TimeZone = GetTimeZone(IIf(pOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, ""))
-mSessionBuilder.CompleteSessionCreation
-
-mSessionFutureBuilder.Value = mSessionBuilder.SessionFuture.Value
+Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+mSessionFutureBuilder.Value = mSessionBuilder.Session
 mSessionFutureBuilder.Complete
 
 Set mVolumeAdjuster = New VolumeAdjuster
-mVolumeAdjuster.Initialise mSessionBuilder.SessionFuture.Value, mNoVolumeAdjustments, mNoImpliedTrades
-
-mSessionBuilder.SetSessionCurrentTime mClock.Timestamp
+mVolumeAdjuster.Initialise mSessionBuilder.Session, mNoVolumeAdjustments, mNoImpliedTrades
 
 If mNumberOfMarketDepthRows <> 0 Then
     Set mDOMManager = New DOMManager
@@ -487,7 +613,114 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
+Const ProcName As String = "RemoveMarketDataSource"
+On Error GoTo Err
+
+mDataSources.Remove pDataSource
+If pDataSource.SubscribedToMarketData Then mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
+If pDataSource.SubscribedToMarketDepth Then mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
+CancelMarketData
+CancelMarketDepth
+
+If mDataSources.NumberOfSubscribers = 0 Then getDataManager.ReleaseDataSourceBase Me
+
+getDataManager.RemoveMarketDataSource pDataSource
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub RemoveMarketDataSubscription()
+Const ProcName As String = "RemoveMarketDataSubscription"
+On Error GoTo Err
+
+mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
+CancelMarketData
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub RemoveMarketDepthSubscription()
+Const ProcName As String = "RemoveMarketDepthSubscription"
+On Error GoTo Err
+
+mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
+CancelMarketDepth
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub CancelMarketData()
+Const ProcName As String = "CancelMarketData"
+On Error GoTo Err
+
+If mDataTickStream Is Nothing Then Exit Sub
+
+If mNumberOfMarketDataSubscriptions = 0 Then
+    mDataTickStream.RemoveStateChangeListener Me
+    mDataTickStream.Finish
+    Set mDataTickStream = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub CancelMarketDepth()
+Const ProcName As String = "CancelMarketDepth"
+On Error GoTo Err
+
+If mDepthTickStream Is Nothing Then Exit Sub
+
+If mNumberOfMarketDepthSubscriptions = 0 Then
+    mDepthTickStream.RemoveStateChangeListener Me
+    mDepthTickStream.Finish
+    Set mDepthTickStream = Nothing
+    mDOMManager.Reset
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub FireTick(ByVal pListener As IGenericTickListener, ByRef pTick As GenericTick, ByVal pSource As Object)
+Const ProcName As String = "fireTick"
+On Error GoTo Err
+
+Dim ev As GenericTickEventData
+If pTick.Timestamp = 0 Then Exit Sub
+Set ev.Source = pSource
+ev.Tick = pTick
+pListener.NotifyTick ev
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function getDataManager() As MarketDataManager
+Set getDataManager = mMarketDataManagerRef.Target
+End Function
+
+Private Sub NotifyMarketDataError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
 Const ProcName As String = "NotifyMarketDataError"
 On Error GoTo Err
 
@@ -499,7 +732,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyMarketDepthError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
+Private Sub NotifyMarketDepthError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
 Const ProcName As String = "NotifyMarketDepthError"
 On Error GoTo Err
 
@@ -511,7 +744,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyStreamFinished()
+Private Sub NotifyStreamFinished()
 Const ProcName As String = "NotifyStreamFinished"
 On Error GoTo Err
 
@@ -523,7 +756,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyTick(ByRef ev As GenericTickEventData)
+Private Sub NotifyTick(ByRef ev As GenericTickEventData)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
 
@@ -608,112 +841,36 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "RemoveMarketDataSource"
+Private Sub processClockAvailable(ByVal pClock As Clock)
+Const ProcName As String = "processClockAvailable"
 On Error GoTo Err
 
-mDataSources.Remove pDataSource
-If pDataSource.SubscribedToMarketData Then mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions - 1
-If pDataSource.SubscribedToMarketDepth Then mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
-cancelMarketData
-cancelMarketDepth
+mClockFutureBuilder.Value = pClock
+mClockFutureBuilder.Complete
 
-If mDataSources.NumberOfSubscribers = 0 Then getDataManager.ReleaseStream Me
-
-getDataManager.RemoveMarketDataSource pDataSource
+mSessionBuilder.SetSessionCurrentTime pClock.Timestamp
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Friend Sub RemoveMarketDataSubscription(ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "RemoveMarketDataSubscription"
-On Error GoTo Err
-
-mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions + 1
-cancelMarketData
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub RemoveMarketDepthSubscription(ByVal pDataSource As MarketDataSource)
-Const ProcName As String = "RemoveMarketDepthSubscription"
-On Error GoTo Err
-
-mNumberOfMarketDepthSubscriptions = mNumberOfMarketDepthSubscriptions - 1
-cancelMarketDepth
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Sub cancelMarketData()
-Const ProcName As String = "cancelMarketData"
-On Error GoTo Err
-
-If mContract Is Nothing Then Exit Sub
-
-If mNumberOfMarketDataSubscriptions = 0 Then getDataManager.cancelMarketData Me
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub cancelMarketDepth()
-Const ProcName As String = "cancelMarketDepth"
-On Error GoTo Err
-
-If mContract Is Nothing Then Exit Sub
-
-If mNumberOfMarketDepthSubscriptions = 0 Then
-    getDataManager.cancelMarketDepth Me
-    mDOMManager.Reset
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub FireTick(ByVal pListener As IGenericTickListener, ByRef pTick As GenericTick, ByVal pSource As Object)
-Const ProcName As String = "fireTick"
-On Error GoTo Err
-
-Dim ev As GenericTickEventData
-If pTick.Timestamp = 0 Then Exit Sub
-Set ev.Source = pSource
-ev.Tick = pTick
-pListener.NotifyTick ev
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function getDataManager() As MarketDataManager
-Set getDataManager = mMarketDataManagerRef.Target
-End Function
 
 Private Sub RequestMarketData()
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
-If mNumberOfMarketDataSubscriptions = 1 Then getDataManager.RequestMarketData Me
+If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
+
+Set mDataTickStream = getDataManager.RequestMarketData(Me)
+mDataTickStream.AddGenericTickListener Me
+mDataTickStream.AddStateChangeListener Me
+mDataTickStream.Start
+
+If Not mGotClockFuture And mNumberOfMarketDepthSubscriptions = 0 Then
+    mFutureWaiter.Add mDataTickStream.ClockFuture
+    mGotClockFuture = True
+End If
 
 Exit Sub
 
@@ -725,7 +882,16 @@ Private Sub RequestMarketDepth()
 Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
 
-If mNumberOfMarketDepthSubscriptions = 1 Then getDataManager.RequestMarketDepth Me, mNumberOfMarketDepthRows
+If mNumberOfMarketDepthSubscriptions <> 1 Then Exit Sub
+
+Set mDepthTickStream = getDataManager.RequestMarketDepth(Me, mNumberOfMarketDepthRows)
+mDepthTickStream.AddGenericTickListener Me
+mDepthTickStream.Start
+
+If Not mGotClockFuture And mNumberOfMarketDataSubscriptions = 0 Then
+    mFutureWaiter.Add mDepthTickStream.ClockFuture
+    mGotClockFuture = True
+End If
 
 Exit Sub
 

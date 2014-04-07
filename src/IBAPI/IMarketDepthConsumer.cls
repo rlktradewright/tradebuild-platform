@@ -74,8 +74,8 @@ Public Sub NotifyMarketDepth( _
                 ByVal pTickerId As Long, _
                 ByVal pPosition As Long, _
                 ByVal pMarketMaker As String, _
-                ByVal pOperation As DOMOperations, _
-                ByVal pSide As DOMSides, _
+                ByVal pOperation As TwsDOMOperations, _
+                ByVal pSide As TwsDOMSides, _
                 ByVal pPrice As Double, _
                 ByVal pSize As Long)
                 

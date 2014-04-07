@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IErrorConsumer"
+Attribute VB_Name = "IErrorAndNotificationConsumer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IErrorConsumer"
+Private Const ModuleName                            As String = "IErrorAndNotificationConsumer"
 
 '@================================================================================
 ' Member variables
@@ -63,6 +63,12 @@ Private Const ModuleName                            As String = "IErrorConsumer"
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub NotifyApiError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
+End Sub
+
+Public Sub NotifyApiEvent(ByVal pEventCode As Long, ByVal pEventMsg As String)
+End Sub
 
 '@================================================================================
 ' Helper Functions

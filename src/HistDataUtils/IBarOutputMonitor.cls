@@ -67,16 +67,16 @@ Private Const ModuleName                            As String = "IBarOutputMonit
 Public Sub NotifyEvent(ByRef ev As NotificationEventData)
 End Sub
 
-Public Sub NotifyNotReady()
+Public Sub NotifyNotReady(ByVal pSource As Object)
 End Sub
 
-Public Sub NotifyOutputFileCreated(ByVal pFilename As String)
+Public Sub NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
 End Sub
                        
-Public Sub NotifyOutputFileClosed()
+Public Sub NotifyOutputFileClosed(ByVal pSource As Object)
 End Sub
                        
-Public Sub NotifyReady()
+Public Sub NotifyReady(ByVal pSource As Object)
 End Sub
 
 '@================================================================================

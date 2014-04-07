@@ -224,7 +224,8 @@ End Property
 '@================================================================================
 
 Public Function ToString() As String
-Dim s As String
+Const ProcName As String = "ToString"
+On Error GoTo Err
 
 ReDim mAr(3) As String
 mArIndex = 0
@@ -269,6 +270,11 @@ ReDim Preserve mAr(mArIndex - 1) As String
 ToString = Join(mAr, "")
 
 Erase mAr
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 '@================================================================================

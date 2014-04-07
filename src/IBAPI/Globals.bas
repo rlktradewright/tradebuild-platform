@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                        As String = "IBTWSSP27"
+Public Const ProjectName                        As String = "IBAPI964"
 Private Const ModuleName                        As String = "Globals"
 
 Public Const InvalidEnumValue                   As String = "*ERR*"
@@ -21,44 +21,64 @@ Public Const NumDaysInMonth                     As Long = 22
 Public Const NumDaysInYear                      As Long = 260
 Public Const NumMonthsInYear                    As Long = 12
 
-Public Const ContractInfoSPName                 As String = "IB Tws Contract Info Service Provider"
-Public Const HistoricDataSPName                 As String = "IB Tws Historic Data Service Provider"
-Public Const RealtimeDataSPName                 As String = "IB Tws Realtime Data Service Provider"
-Public Const OrderSubmissionSPName              As String = "IB Tws Order Submission Service Provider"
-
-Public Const ProviderKey                        As String = "Tws"
-
-Public Const ParamNameClientId                  As String = "Client Id"
-Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
-Public Const ParamNameKeepConnection            As String = "Keep Connection"
-Public Const ParamNamePort                      As String = "Port"
-Public Const ParamNameProviderKey               As String = "Provider Key"
-Public Const ParamNameRole                      As String = "Role"
-Public Const ParamNameServer                    As String = "Server"
-Public Const ParamNameTwsLogLevel               As String = "Tws Log Level"
-Public Const ParamNameDisableRequestPacing      As String = "Disable Request Pacing"
-
 Public Const TwsLogLevelDetailString            As String = "Detail"
 Public Const TwsLogLevelErrorString             As String = "Error"
 Public Const TwsLogLevelInformationString       As String = "Information"
 Public Const TwsLogLevelSystemString            As String = "System"
 Public Const TwsLogLevelWarningString           As String = "Warning"
 
+Public Const BaseMarketDataRequestId            As Long = 0
+Public Const BaseMarketDepthRequestId           As Long = &H400000
+Public Const BaseHistoricalDataRequestId        As Long = &H800000
+Public Const BaseExecutionsRequestId            As Long = &H810000
+Public Const BaseContractRequestId              As Long = &H1000000
+Public Const BaseOrderId                        As Long = &H10000000
+
+Public Const MaxCallersMarketDataRequestId      As Long = BaseMarketDepthRequestId - 1
+Public Const MaxCallersMarketDepthRequestId     As Long = BaseHistoricalDataRequestId - BaseMarketDepthRequestId - 1
+Public Const MaxCallersHistoricalDataRequestId  As Long = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
+Public Const MaxCallersExecutionsRequestId      As Long = BaseContractRequestId - BaseExecutionsRequestId - 1
+Public Const MaxCallersContractRequestId        As Long = BaseOrderId - BaseContractRequestId - 1
+Public Const MaxCallersOrderId                  As Long = &H7FFFFFFF - BaseOrderId - 1
+
+Public Const MIN_SERVER_VER_REAL_TIME_BARS             As Long = 34
+Public Const MIN_SERVER_VER_SCALE_ORDERS               As Long = 35
+Public Const MIN_SERVER_VER_SNAPSHOT_MKT_DATA          As Long = 35
+Public Const MIN_SERVER_VER_SSHORT_COMBO_LEGS          As Long = 35
+Public Const MIN_SERVER_VER_WHAT_IF_ORDERS             As Long = 36
+Public Const MIN_SERVER_VER_CONTRACT_CONID             As Long = 37
+Public Const MIN_SERVER_VER_PTA_ORDERS                 As Long = 39
+Public Const MIN_SERVER_VER_FUNDAMENTAL_DATA           As Long = 40
+Public Const MIN_SERVER_VER_UNDER_COMP                 As Long = 40
+Public Const MIN_SERVER_VER_CONTRACT_DATA_CHAIN        As Long = 40
+Public Const MIN_SERVER_VER_SCALE_ORDERS2              As Long = 40
+Public Const MIN_SERVER_VER_ALGO_ORDERS                As Long = 41
+Public Const MIN_SERVER_VER_EXECUTION_DATA_CHAIN       As Long = 42
+Public Const MIN_SERVER_VER_NOT_HELD                   As Long = 44
+Public Const MIN_SERVER_VER_SEC_ID_TYPE                As Long = 45
+Public Const MIN_SERVER_VER_PLACE_ORDER_CONID          As Long = 46
+Public Const MIN_SERVER_VER_REQ_MKT_DATA_CONID         As Long = 47
+Public Const MIN_SERVER_VER_REQ_CALC_IMPLIED_VOLAT     As Long = 49
+Public Const MIN_SERVER_VER_REQ_CALC_OPTION_PRICE      As Long = 50
+Public Const MIN_SERVER_VER_CANCEL_CALC_IMPLIED_VOLAT  As Long = 50
+Public Const MIN_SERVER_VER_CANCEL_CALC_OPTION_PRICE   As Long = 50
+
 '================================================================================
 ' Enums
 '================================================================================
 
-Public Enum ConnectionStates
-    ConnNotConnected
-    ConnConnecting
-    ConnReSynching
-    ConnConnected
+Public Enum InternalErrorCodes
+    DataIncomplete = vbObjectError + 4327   ' let's hope nothing else uses this number!
 End Enum
 
-Public Enum FADataTypes
-    FAGroups = 1
-    FaProfile
-    FAAccountAliases
+Public Enum IdTypes
+    IdTypeNone
+    IdTypeRealtimeData
+    IdTypeMarketDepth
+    IdTypeHistoricalData
+    IdTypeOrder
+    IdTypeContractData
+    IdTypeExecution
 End Enum
 
 Public Enum TwsSocketInMsgTypes
@@ -134,9 +154,19 @@ End Enum
 '================================================================================
 
 '================================================================================
-' Global variables
+' External function declarations
 '================================================================================
 
+Public Declare Sub CopyMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
+                Destination As Any, _
+                source As Any, _
+                ByVal length As Long)
+                            
+Public Declare Sub MoveMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
+                Destination As Any, _
+                source As Any, _
+                ByVal length As Long)
+                            
 '================================================================================
 ' Private variables
 '================================================================================
@@ -148,178 +178,65 @@ Private mLogger As FormattingLogger
 '================================================================================
 
 Public Property Get gLogger() As FormattingLogger
-If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.serviceprovider.ibtwssp", ProjectName)
+If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.ibapi", ProjectName)
 Set gLogger = mLogger
+End Property
+
+Public Property Get gSocketLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tradebuild.log.ibapi.socket", ProjectName)
+Set gSocketLogger = sLogger
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function gContractSpecToTwsContract(ByVal pContractSpecifier As ContractSpecifier) As TwsContract
-Const ProcName As String = "gContractSpecToTwsContract"
+Public Function gFormatBuffer( _
+                ByRef pBuffer() As Byte, _
+                ByVal pBufferNextFreeIndex As Long) As String
+Dim s As StringBuilder
+Dim i As Long
+Dim j As Long
+
+Const ProcName As String = "gFormatBuffer"
 On Error GoTo Err
 
-Dim lComboLeg As comboLeg
-Dim lTwsComboLeg As TwsComboLeg
-
-Set gContractSpecToTwsContract = New TwsContract
-
-With gContractSpecToTwsContract
-    .CurrencyCode = pContractSpecifier.CurrencyCode
-    .Exchange = pContractSpecifier.Exchange
-    .Expiry = pContractSpecifier.Expiry
-    .IncludeExpired = True
-    .LocalSymbol = pContractSpecifier.LocalSymbol
-    .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
-    .Sectype = gSecTypeToTwsSecType(pContractSpecifier.Sectype)
-    .Strike = pContractSpecifier.Strike
-    .Symbol = pContractSpecifier.Symbol
-    If Not pContractSpecifier.ComboLegs Is Nothing Then
-        For Each lComboLeg In pContractSpecifier.ComboLegs
-            Set lTwsComboLeg = New TwsComboLeg
-            With lTwsComboLeg
-                .Action = IIf(lComboLeg.IsBuyLeg, TwsOrderActions.TwsOrderActionBuy, TwsOrderActions.TwsOrderActionSell)
-                Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Combo contracts not supported"
-                ' Need to fix this: the problem is that we need to do a contract details
-                ' request to discover the contact id for the combo leg
-            End With
-        Next
-    End If
-End With
+Set s = CreateStringBuilder
+Do While i < pBufferNextFreeIndex
+    s.Append Format(i, "0000  ")
+    For j = i To i + 49
+        If j = pBufferNextFreeIndex Then Exit For
+        s.Append IIf(pBuffer(j) <> 0, Chr$(pBuffer(j)), "_")
+    Next
+    i = i + 50
+    If j < pBufferNextFreeIndex Then s.AppendLine ""
+Loop
+gFormatBuffer = s.ToString
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function gContractToTwsContractDetails(ByVal pContract As Contract) As TwsContractDetails
-Const ProcName As String = "gContractToTwsContractDetails"
+Public Function gGetApi( _
+                ByVal pServer As String, _
+                ByVal pPort As String, _
+                ByVal pClientId As Long, _
+                ByVal pConnectionRetryIntervalSecs As Long) As TwsAPI
+Const ProcName As String = "gGetApi"
 On Error GoTo Err
 
-Dim lContract As TwsContract
-Dim lContractDetails As TwsContractDetails
-
-If pContract.Specifier.Sectype = SecTypeCombo Then Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Combo contracts not supported"
-
-Set lContractDetails = New TwsContractDetails
-Set lContract = gContractSpecToTwsContract(pContract.Specifier)
-
-With lContractDetails
-    .Summary = lContract
-    .MinTick = pContract.TickSize
-    .TimeZoneId = gStandardTimezoneNameToTwsTimeZoneName(pContract.TimeZone.StandardName)
-End With
-
-Set gContractToTwsContractDetails = lContractDetails
+Set gGetApi = New TwsAPI
+gGetApi.Initialise pServer, pPort, pClientId
+gGetApi.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
-
-Public Function gCreateContractDetailsFetcher( _
-                ByVal pClient As TwsAPI) As ContractDetailsFetcher
-Const ProcName As String = "CreateContractDetailsFetcher"
-On Error GoTo Err
-
-Set gCreateContractDetailsFetcher = New ContractDetailsFetcher
-gCreateContractDetailsFetcher.Initialise getContractDetailsRequester(pClient)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gCreateHistoricalDataFetcher( _
-                ByVal pClient As TwsAPI) As HistoricalDataFetcher
-Const ProcName As String = "gCreateHistoricalDataFetcher"
-On Error GoTo Err
-
-Dim lHistDataRequester As HistDataRequester
-
-Set lHistDataRequester = getHistDataRequester(pClient)
-If lHistDataRequester Is Nothing Then Set lHistDataRequester = setupHistDataRequester(pClient)
-
-Set gCreateHistoricalDataFetcher = New HistoricalDataFetcher
-gCreateHistoricalDataFetcher.Initialise lHistDataRequester, getContractDetailsRequester(pClient)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gCreateMarketDataSource( _
-                ByVal pClient As TwsAPI, _
-                ByVal pContract As Contract) As MarketDataSource
-Const ProcName As String = "gCreateMarketDataSource"
-On Error GoTo Err
-
-Dim lMarketDataRequester As MarketDataRequester
-
-If Not pClient.Tws.MarketDataConsumer Is Nothing Then
-    If Not TypeOf pClient.Tws.MarketDataConsumer Is MarketDataRequester Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Tws is already configured with an incompatible IMarketDataConsumer"
-    Set lMarketDataRequester = pClient.Tws.MarketDataConsumer
-Else
-    Set lMarketDataRequester = New MarketDataRequester
-    lMarketDataRequester.Initialise pClient
-    pClient.Tws.MarketDataConsumer = lMarketDataRequester
-    pClient.Tws.MarketDepthConsumer = lMarketDataRequester
-End If
-
-Dim lMarketDataSource As New MarketDataSource
-lMarketDataSource.Initialise lMarketDataRequester, pContract, getContractDetailsRequester(pClient)
-
-Set gCreateMarketDataSource = lMarketDataSource
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gCreateOrderSubmitter( _
-                ByVal pClient As TwsAPI, _
-                ByVal pContractSpec As ContractSpecifier, _
-                ByVal pOrderSubmissionListener As IOrderSubmissionListener) As OrderSubmitter
-Const ProcName As String = "gCreateOrderSubmitter"
-On Error GoTo Err
-
-Dim lOrderPlacer As OrderPlacer
-
-If Not pClient.Tws.OrderInfoConsumer Is Nothing Then
-    If Not TypeOf pClient.Tws.OrderInfoConsumer Is OrderPlacer Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Tws is already configured with an incompatible IOrderInfoConsumer"
-    Set lOrderPlacer = pClient.Tws.OrderInfoConsumer
-Else
-    Set lOrderPlacer = New OrderPlacer
-    lOrderPlacer.Initialise pClient
-    pClient.Tws.OrderInfoConsumer = lOrderPlacer
-End If
-
-Set gCreateOrderSubmitter = New OrderSubmitter
-gCreateOrderSubmitter.Initialise pClient, lOrderPlacer, pContractSpec, pOrderSubmissionListener, getContractDetailsRequester(pClient)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Sub gDisableHistoricalDataRequestPacing(ByVal pClient As TwsAPI)
-Const ProcName As String = "gDisableHistoricalDataRequestPacing"
-On Error GoTo Err
-
-If getHistDataRequester(pClient) Is Nothing Then setupHistDataRequester(pClient).DisableHistoricalDataRequestPacing
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 ' format is yyyymmdd [hh:mm:ss [timezone]]
 Public Function gGetDate( _
@@ -327,6 +244,8 @@ Public Function gGetDate( _
                 Optional ByRef pTimezoneName As String) As Date
 Const ProcName As String = "gGetDate"
 On Error GoTo Err
+
+If pDateString = "" Then Exit Function
 
 If Len(pDateString) = 8 Then
     gGetDate = CDate(Left$(pDateString, 4) & "/" & _
@@ -336,7 +255,7 @@ ElseIf Len(pDateString) >= 17 Then
     gGetDate = CDate(Left$(pDateString, 4) & "/" & _
                         Mid$(pDateString, 5, 2) & "/" & _
                         Mid$(pDateString, 7, 2) & " " & _
-                        Mid$(pDateString, 10, 8))
+                        Mid$(pDateString, 11, 8))
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid date string format"
 End If
@@ -352,40 +271,11 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gGetTwsAPIInstance(ByVal pServer As String, _
-                                    ByVal pPort As String, _
-                                    ByVal pClientId As Long, _
-                                    ByVal pConnectionRetryIntervalSecs As Long, _
-                                    ByVal pTwsLogLevel As TwsLogLevels) As TwsAPI
-Const ProcName As String = "gGetTwsAPIInstance"
-On Error GoTo Err
-
-Set gGetTwsAPIInstance = gGetTws(pServer, pPort).GetAPI(pClientId)
-gGetTwsAPIInstance.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
-gGetTwsAPIInstance.TwsLogLevel = pTwsLogLevel
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gHistDataCapabilities() As Long
-Const ProcName As String = "gHistDataCapabilities"
-On Error GoTo Err
-
-gHistDataCapabilities = 0
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _
+                ByVal pErrorHandler As ProgramErrorListener, _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
@@ -396,12 +286,39 @@ Public Sub gHandleUnexpectedError( _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+If Not pErrorHandler Is Nothing Then
+    On Error GoTo HandleError
+    ' ensure the calling proc's details are included in the error source
+    HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, True, False, errNum, errDesc, errSource
+    ' will never get here!
+End If
 
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+
+' will never get here!
+Exit Sub
+
+HandleError:
+Dim ev As ErrorEventData
+ev.ErrorCode = Err.Number
+errNum = Err.Number
+
+ev.ErrorMessage = Err.Description
+errDesc = Err.Description
+
+ev.ErrorSource = Err.source
+errSource = Err.source
+
+pErrorHandler.NotifyUnexpectedProgramError ev
+
+' if we get to here, the error handler hasn't re-raised the error, so we will
+Err.Raise errNum, errSource, errDesc
 End Sub
 
 Public Sub gNotifyUnhandledError( _
+                ByVal pErrorHandler As ProgramErrorListener, _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
                 Optional ByRef pFailpoint As String, _
@@ -410,22 +327,32 @@ Public Sub gNotifyUnhandledError( _
                 Optional ByRef pErrorSource As String)
 Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+If Not pErrorHandler Is Nothing Then
+    On Error GoTo HandleError
+    ' ensure the calling proc's details are included in the error source
+    HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, True, False, errNum, errDesc, errSource
+End If
 
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+
+' will never get here!
+Exit Sub
+
+HandleError:
+Dim ev As ErrorEventData
+ev.ErrorCode = Err.Number
+
+ev.ErrorMessage = Err.Description
+
+ev.ErrorSource = Err.source
+
+pErrorHandler.NotifyUnhandledProgramError ev
+
+' if we get to here, the error handler hasn't called the unhandled error mechanism, so we will
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
-
-Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
-Const ProcName As String = "gHistDataSupports"
-On Error GoTo Err
-
-gHistDataSupports = (gHistDataCapabilities And capabilities)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 Public Function gInputMessageIdToString( _
                 ByVal msgId As TwsSocketInMsgTypes) As String
@@ -506,7 +433,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Sub gLog(ByRef pMsg As String, _
@@ -523,211 +450,8 @@ gLogger.Log pMsg, pProcName, pModName, pLogLevel, pMsgQualifier
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
-
-Public Function gOptionRightToTwsOptRight(ByVal Value As OptionRights) As TwsOptionRights
-Select Case Value
-Case OptionRights.OptCall
-    gOptionRightToTwsOptRight = TwsOptRightCall
-Case OptionRights.OptPut
-    gOptionRightToTwsOptRight = TwsOptRightPut
-Case OptionRights.OptNone
-    gOptionRightToTwsOptRight = TwsOptRightNone
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Option Right"
-End Select
-End Function
-
-Public Function gOrderActionFromString(ByVal Value As String) As OrderActions
-Select Case UCase$(Value)
-Case ""
-    gOrderActionFromString = OrderActionNone
-Case "BUY"
-    gOrderActionFromString = OrderActionBuy
-Case "SELL"
-    gOrderActionFromString = OrderActionSell
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order Action"
-End Select
-End Function
-
-Public Function gOrderActionToTwsOrderAction(ByVal Value As OrderActions) As TwsOrderActions
-Select Case Value
-Case OrderActions.OrderActionBuy
-    gOrderActionToTwsOrderAction = TwsOrderActionBuy
-Case OrderActions.OrderActionSell
-    gOrderActionToTwsOrderAction = TwsOrderActionSell
-Case OrderActions.OrderActionNone
-    gOrderActionToTwsOrderAction = TwsOrderActionNone
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid OrderAction"
-End Select
-End Function
-
-Public Function gOrderStatusFromString(ByVal Value As String) As OrderStatuses
-Select Case UCase$(Value)
-Case "CREATED"
-    gOrderStatusFromString = OrderStatusCreated
-Case "REJECTED", "INACTIVE"
-    gOrderStatusFromString = OrderStatusRejected
-Case "PENDINGSUBMIT"
-    gOrderStatusFromString = OrderStatusPendingSubmit
-Case "PRESUBMITTED"
-    gOrderStatusFromString = OrderStatusPreSubmitted
-Case "SUBMITTED"
-    gOrderStatusFromString = OrderStatusSubmitted
-Case "PENDINGCANCEL"
-    gOrderStatusFromString = OrderStatusCancelling
-Case "CANCELLED"
-    gOrderStatusFromString = OrderStatusCancelled
-Case "FILLED"
-    gOrderStatusFromString = OrderStatusFilled
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid order status: " & Value
-End Select
-End Function
-
-Public Function gOrderTIFFromString(ByVal Value As String) As OrderTIFs
-Select Case UCase$(Value)
-Case ""
-    gOrderTIFFromString = OrderTIFNone
-Case "DAY"
-    gOrderTIFFromString = OrderTIFDay
-Case "GTC"
-    gOrderTIFFromString = OrderTIFGoodTillCancelled
-Case "IOC"
-    gOrderTIFFromString = OrderTIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order TIF"
-End Select
-End Function
-
-Public Function gOrderTIFToString(ByVal Value As OrderTIFs) As String
-Select Case Value
-Case OrderTIFs.OrderTIFDay
-    gOrderTIFToString = "DAY"
-Case OrderTIFs.OrderTIFGoodTillCancelled
-    gOrderTIFToString = "GTC"
-Case OrderTIFs.OrderTIFImmediateOrCancel
-    gOrderTIFToString = "IOC"
-Case OrderTIFs.OrderTIFNone
-    gOrderTIFToString = ""
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order TIF"
-End Select
-End Function
-
-Public Function gOrderTIFToTwsOrderTIF(ByVal Value As OrderTIFs) As TwsOrderTIFs
-Select Case Value
-Case OrderTIFNone
-    gOrderTIFToTwsOrderTIF = TwsOrderTIFNone
-Case OrderTIFDay
-    gOrderTIFToTwsOrderTIF = TwsOrderTIFDay
-Case OrderTIFGoodTillCancelled
-    gOrderTIFToTwsOrderTIF = TwsOrderTIFGoodTillCancelled
-Case OrderTIFImmediateOrCancel
-    gOrderTIFToTwsOrderTIF = TwsOrderTIFImmediateOrCancel
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid OrderTIF"
-End Select
-End Function
-
-Public Function gOrderToTwsOrder(ByVal pOrder As IOrder) As TwsOrder
-Const ProcName As String = "gOrderToTwsOrder"
-On Error GoTo Err
-
-Set gOrderToTwsOrder = New TwsOrder
-With pOrder
-    gOrderToTwsOrder.Action = gOrderActionToTwsOrderAction(.Action)
-    gOrderToTwsOrder.AllOrNone = .AllOrNone
-    gOrderToTwsOrder.BlockOrder = .BlockOrder
-    gOrderToTwsOrder.OrderId = .BrokerId
-    gOrderToTwsOrder.DiscretionaryAmt = .DiscretionaryAmount
-    gOrderToTwsOrder.DisplaySize = .DisplaySize
-    gOrderToTwsOrder.ETradeOnly = .ETradeOnly
-    gOrderToTwsOrder.FirmQuoteOnly = .FirmQuoteOnly
-    If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & .GoodAfterTimeTZ, "")
-    If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & .GoodTillDateTZ, "")
-    gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
-    gOrderToTwsOrder.LmtPrice = .LimitPrice
-    gOrderToTwsOrder.MinQty = .MinimumQuantity
-    gOrderToTwsOrder.NbboPriceCap = .NbboPriceCap
-    gOrderToTwsOrder.OrderType = gOrderTypeToTwsOrderType(.OrderType)
-    gOrderToTwsOrder.Origin = .Origin
-    gOrderToTwsOrder.OrderRef = .OriginatorRef
-    gOrderToTwsOrder.OverridePercentageConstraints = .OverrideConstraints
-    gOrderToTwsOrder.TotalQuantity = .Quantity
-    gOrderToTwsOrder.SettlingFirm = .SettlingFirm
-    gOrderToTwsOrder.TriggerMethod = gStopTriggerMethodToTwsTriggerMethod(.StopTriggerMethod)
-    gOrderToTwsOrder.SweepToFill = .SweepToFill
-    gOrderToTwsOrder.Tif = gOrderTIFToTwsOrderTIF(.TimeInForce)
-    gOrderToTwsOrder.AuxPrice = .TriggerPrice
-End With
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gOrderTypeToTwsOrderType(ByVal Value As OrderTypes) As TwsOrderTypes
-Const ProcName As String = "gOrderTypeToTwsOrderType"
-On Error GoTo Err
-
-Select Case Value
-Case OrderTypes.OrderTypeMarket
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarket
-Case OrderTypes.OrderTypeMarketOnClose
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketOnClose
-Case OrderTypes.OrderTypeLimit
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimit
-Case OrderTypes.OrderTypeLimitOnClose
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimitOnClose
-Case OrderTypes.OrderTypePeggedToMarket
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypePeggedToMarket
-Case OrderTypes.OrderTypeStop
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeStop
-Case OrderTypes.OrderTypeStopLimit
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeStopLimit
-Case OrderTypes.OrderTypeTrail
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeTrail
-Case OrderTypes.OrderTypeRelative
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeRelative
-Case OrderTypes.OrderTypeVWAP
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeVWAP
-Case OrderTypes.OrderTypeMarketToLimit
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketToLimit
-Case OrderTypes.OrderTypeQuote
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeQuote
-Case OrderTypes.OrderTypeAdjust
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeAdjust
-Case OrderTypes.OrderTypeAlert
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeAlert
-Case OrderTypes.OrderTypeLimitIfTouched
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimitIfTouched
-Case OrderTypes.OrderTypeMarketIfTouched
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketIfTouched
-Case OrderTypes.OrderTypeTrailLimit
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeTrailLimit
-Case OrderTypes.OrderTypeMarketWithProtection
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketWithProtection
-Case OrderTypes.OrderTypeMarketOnOpen
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMarketOnOpen
-Case OrderTypes.OrderTypeLimitOnOpen
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimitOnOpen
-Case OrderTypes.OrderTypePeggedToPrimary
-    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypePeggedToPrimary
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid OrderType"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 Public Function gOutputMessageIdToString( _
                 ByVal msgId As TwsSocketOutMsgTypes) As String
@@ -798,173 +522,13 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
-
-Public Function gParseClientId( _
-                Value As String) As Long
-Const ProcName As String = "gParseClientId"
-
-On Error GoTo Err
-
-If Value = "" Then
-    gParseClientId = -1
-ElseIf Not IsInteger(Value) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Client Id' parameter: Value must be an integer"
-Else
-    gParseClientId = CLng(Value)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gParseConnectionRetryInterval( _
-                Value As String) As Long
-Const ProcName As String = "gParseConnectionRetryInterval"
-
-On Error GoTo Err
-
-If Value = "" Then
-    gParseConnectionRetryInterval = 0
-ElseIf Not IsInteger(Value, 0) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Connection Retry Interval Secs' parameter: Value must be an integer >= 0"
-Else
-    gParseConnectionRetryInterval = CLng(Value)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gParseKeepConnection( _
-                Value As String) As Boolean
-Const ProcName As String = "gParseKeepConnection"
-On Error GoTo Err
-If Value = "" Then
-    gParseKeepConnection = False
-Else
-    gParseKeepConnection = CBool(Value)
-End If
-Exit Function
-
-Err:
-Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-        ProjectName & "." & ModuleName & ":" & ProcName, _
-        "Invalid 'Keep Connection' parameter: Value must be 'true' or 'false'"
-End Function
-
-Public Function gParsePort( _
-                Value As String) As Long
-Const ProcName As String = "gParsePort"
-
-On Error GoTo Err
-
-If Value = "" Then
-    gParsePort = 7496
-ElseIf Not IsInteger(Value, 1024, 65535) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Port' parameter: Value must be an integer >= 1024 and <=65535"
-Else
-    gParsePort = CLng(Value)
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gParseRole( _
-                Value As String) As String
-Const ProcName As String = "gParseRole"
-
-
-
-On Error GoTo Err
-
-Select Case UCase$(Value)
-Case "", "P", "PR", "PRIM", "PRIMARY"
-    gParseRole = "PRIMARY"
-Case "S", "SEC", "SECOND", "SECONDARY"
-    gParseRole = "SECONDARY"
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Role' parameter: Value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gParseTwsLogLevel( _
-                Value As String) As TwsLogLevels
-Const ProcName As String = "gParseTwsLogLevel"
-
-On Error GoTo Err
-
-If Value = "" Then
-    gParseTwsLogLevel = TwsLogLevelError
-Else
-    gParseTwsLogLevel = gTwsLogLevelFromString(Value)
-End If
-Exit Function
-
-Err:
-If Err.number = ErrorCodes.ErrIllegalArgumentException Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Tws Log Level' parameter: Value must be one of " & _
-            TwsLogLevelSystemString & ", " & _
-            TwsLogLevelErrorString & ", " & _
-            TwsLogLevelWarningString & ", " & _
-            TwsLogLevelInformationString & " or " & _
-            TwsLogLevelDetailString
-End If
-
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gRealtimeDataCapabilities() As Long
-Const ProcName As String = "gRealtimeDataCapabilities"
-gRealtimeDataCapabilities = RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition
-End Function
-
-Public Function gRealtimeDataSupports(ByVal capabilities As Long) As Boolean
-Const ProcName As String = "gRealtimeDataSupports"
-gRealtimeDataSupports = (gRealtimeDataCapabilities And capabilities)
-End Function
-
-Public Sub gReleaseTwsAPIInstance( _
-                ByVal pTwsAPI As TwsAPI, _
-                ByVal pForceDisconnect As Boolean)
-Const ProcName As String = "gReleaseTwsAPIInstance"
-On Error GoTo Err
-
-pTwsAPI.Tws.ReleaseAPI pTwsAPI, pForceDisconnect
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 Public Function gRoundTimeToSecond( _
-                ByVal Timestamp As Date) As Date
+                ByVal timeStamp As Date) As Date
 Const ProcName As String = "gRoundTimeToSecond"
-gRoundTimeToSecond = Int((Timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+gRoundTimeToSecond = Int((timeStamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
@@ -974,27 +538,6 @@ Else
     pTarget = pSource
 End If
 End Sub
-
-Public Function gSecTypeToTwsSecType(ByVal Value As SecurityTypes) As TwsSecTypes
-Select Case UCase$(Value)
-Case SecurityTypes.SecTypeStock
-    gSecTypeToTwsSecType = TwsSecTypeStock
-Case SecurityTypes.SecTypeFuture
-    gSecTypeToTwsSecType = TwsSecTypeFuture
-Case SecurityTypes.SecTypeOption
-    gSecTypeToTwsSecType = TwsSecTypeOption
-Case SecurityTypes.SecTypeFuturesOption
-    gSecTypeToTwsSecType = TwsSecTypeFuturesOption
-Case SecurityTypes.SecTypeCash
-    gSecTypeToTwsSecType = TwsSecTypeCash
-Case SecurityTypes.SecTypeCombo
-    gSecTypeToTwsSecType = TwsSecTypeCombo
-Case SecurityTypes.SecTypeIndex
-    gSecTypeToTwsSecType = TwsSecTypeIndex
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Security Type"
-End Select
-End Function
 
 Public Function gSocketInMsgTypeToString( _
                 ByVal Value As TwsSocketInMsgTypes) As String
@@ -1075,158 +618,42 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 
 End Function
 
-Public Function gStandardTimezoneNameToTwsTimeZoneName(ByVal pTimezoneName As String) As String
-Const ProcName As String = "gStandardTimezoneNameToTwsTimeZoneName"
-On Error GoTo Err
-
-Select Case pTimezoneName
-Case ""
-    gStandardTimezoneNameToTwsTimeZoneName = ""
-Case "AUS Eastern Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "AET"
-Case "Central Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "CTT"
-Case "GMT Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "GMT"
-Case "Eastern Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "EST"
-Case Else
-    gLog "Unrecognised timezone", ModuleName, ProcName, pTimezoneName
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gStopTriggerMethodToTwsTriggerMethod(ByVal Value As StopTriggerMethods) As TwsStopTriggerMethods
-Select Case Value
-Case StopTriggerDefault
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerDefault
-Case StopTriggerDoubleBidAsk
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerBidAsk
-Case StopTriggerLast
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerLast
-Case StopTriggerDoubleLast
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerDoubleLast
-Case StopTriggerBidAsk
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerBidAsk
-Case StopTriggerLastOrBidAsk
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerLastOrBidAsk
-Case StopTriggerMidPoint
-    gStopTriggerMethodToTwsTriggerMethod = TwsStopTriggerMidPoint
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid StopTriggerMethod"
-End Select
-End Function
-                
-Public Function gTruncateTimeToNextMinute(ByVal Timestamp As Date) As Date
+Public Function gTruncateTimeToNextMinute(ByVal timeStamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToNextMinute"
 On Error GoTo Err
 
-gTruncateTimeToNextMinute = Int((Timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToNextMinute = Int((timeStamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function gTruncateTimeToMinute(ByVal Timestamp As Date) As Date
+Public Function gTruncateTimeToMinute(ByVal timeStamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToMinute"
 On Error GoTo Err
 
-gTruncateTimeToMinute = Int((Timestamp + OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToMinute = Int((timeStamp + OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gTwsContractDetailsToContract(ByVal pTwsContractDetails As TwsContractDetails) As Contract
-Const ProcName As String = "gTwsContractDetailsToContract"
-On Error GoTo Err
-
-Dim lBuilder As ContractBuilder
-
-With pTwsContractDetails
-    With .Summary
-        Set lBuilder = CreateContractBuilder(CreateContractSpecifier(.LocalSymbol, .Symbol, .Exchange, gTwsSecTypeToSecType(.Sectype), .CurrencyCode, .Expiry, .Strike, gTwsOptionRightToOptionRight(.OptRight)))
-        If .Expiry <> "" Then
-            lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
-                                                Mid$(.Expiry, 5, 2) & "/" & _
-                                                Right$(.Expiry, 2))
-        End If
-        lBuilder.Multiplier = .Multiplier
-    End With
-    lBuilder.Description = .LongName
-    lBuilder.TickSize = .MinTick
-    lBuilder.TimeZone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId))
-
-End With
-
-Set gTwsContractDetailsToContract = lBuilder.Contract
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gTwsLogLevelFromString( _
-                ByVal Value As String) As TwsLogLevels
-Const ProcName As String = "gTwsLogLevelFromString"
-
-On Error GoTo Err
-
-Select Case UCase$(Value)
-Case UCase$(TwsLogLevelDetailString)
-    gTwsLogLevelFromString = TwsLogLevelDetail
-Case UCase$(TwsLogLevelErrorString)
-    gTwsLogLevelFromString = TwsLogLevelError
-Case UCase$(TwsLogLevelInformationString)
-    gTwsLogLevelFromString = TwsLogLevelInformation
-Case UCase$(TwsLogLevelSystemString)
-    gTwsLogLevelFromString = TwsLogLevelSystem
-Case UCase$(TwsLogLevelWarningString)
-    gTwsLogLevelFromString = TwsLogLevelWarning
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Tws Log Level"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function gTwsOptionRightFromString(ByVal Value As String) As TwsOptionRights
 Select Case UCase$(Value)
-Case ""
+Case "", "?"
     gTwsOptionRightFromString = TwsOptRightNone
 Case "CALL", "C"
     gTwsOptionRightFromString = TwsOptRightCall
 Case "PUT", "P"
     gTwsOptionRightFromString = TwsOptRightPut
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Option Right"
-End Select
-End Function
-
-Public Function gTwsOptionRightToOptionRight(ByVal Value As TwsOptionRights) As OptionRights
-Select Case Value
-Case TwsOptRightNone
-    gTwsOptionRightToOptionRight = OptionRights.OptNone
-Case TwsOptRightCall
-    gTwsOptionRightToOptionRight = OptionRights.OptCall
-Case TwsOptRightPut
-    gTwsOptionRightToOptionRight = OptionRights.OptPut
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Option Right"
 End Select
@@ -1255,19 +682,6 @@ Case "SELL"
     gTwsOrderActionFromString = TwsOrderActionSell
 Case "SSHORT"
     gTwsOrderActionFromString = TwsOrderActionSellShort
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order Action"
-End Select
-End Function
-
-Public Function gTwsOrderActionToOrderAction(ByVal Value As TwsOrderActions) As OrderActions
-Select Case Value
-Case TwsOrderActionBuy
-    gTwsOrderActionToOrderAction = OrderActionBuy
-Case TwsOrderActionSell
-    gTwsOrderActionToOrderAction = OrderActionSell
-Case TwsOrderActionNone
-    gTwsOrderActionToOrderAction = OrderActionNone
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order Action"
 End Select
@@ -1373,68 +787,13 @@ Case Else
 End Select
 End Function
 
-Public Function gTwsOrderTypeToOrderType(ByVal Value As TwsOrderTypes) As OrderTypes
-Const ProcName As String = "gTwsOrderTypeToOrderType"
-On Error GoTo Err
-
-Select Case Value
-Case TwsOrderTypes.TwsOrderTypeMarket
-    gTwsOrderTypeToOrderType = OrderTypeMarket
-Case TwsOrderTypes.TwsOrderTypeMarketOnClose
-    gTwsOrderTypeToOrderType = OrderTypeMarketOnClose
-Case TwsOrderTypes.TwsOrderTypeLimit
-    gTwsOrderTypeToOrderType = OrderTypeLimit
-Case TwsOrderTypes.TwsOrderTypeLimitOnClose
-    gTwsOrderTypeToOrderType = OrderTypeLimitOnClose
-Case TwsOrderTypes.TwsOrderTypePeggedToMarket
-    gTwsOrderTypeToOrderType = OrderTypePeggedToMarket
-Case TwsOrderTypes.TwsOrderTypeStop
-    gTwsOrderTypeToOrderType = OrderTypeStop
-Case TwsOrderTypes.TwsOrderTypeStopLimit
-    gTwsOrderTypeToOrderType = OrderTypeStopLimit
-Case TwsOrderTypes.TwsOrderTypeTrail
-    gTwsOrderTypeToOrderType = OrderTypeTrail
-Case TwsOrderTypes.TwsOrderTypeRelative
-    gTwsOrderTypeToOrderType = OrderTypeRelative
-Case TwsOrderTypes.TwsOrderTypeVWAP
-    gTwsOrderTypeToOrderType = OrderTypeVWAP
-Case TwsOrderTypes.TwsOrderTypeMarketToLimit
-    gTwsOrderTypeToOrderType = OrderTypeMarketToLimit
-Case TwsOrderTypes.TwsOrderTypeQuote
-    gTwsOrderTypeToOrderType = OrderTypeQuote
-Case TwsOrderTypes.TwsOrderTypeAdjust
-    gTwsOrderTypeToOrderType = OrderTypeAdjust
-Case TwsOrderTypes.TwsOrderTypeAlert
-    gTwsOrderTypeToOrderType = OrderTypeAlert
-Case TwsOrderTypes.TwsOrderTypeLimitIfTouched
-    gTwsOrderTypeToOrderType = OrderTypeLimitIfTouched
-Case TwsOrderTypes.TwsOrderTypeMarketIfTouched
-    gTwsOrderTypeToOrderType = OrderTypeMarketIfTouched
-Case TwsOrderTypes.TwsOrderTypeTrailLimit
-    gTwsOrderTypeToOrderType = OrderTypeTrailLimit
-Case TwsOrderTypes.TwsOrderTypeMarketWithProtection
-    gTwsOrderTypeToOrderType = OrderTypeMarketWithProtection
-Case TwsOrderTypes.TwsOrderTypeMarketOnOpen
-    gTwsOrderTypeToOrderType = OrderTypeMarketOnOpen
-Case TwsOrderTypes.TwsOrderTypeLimitOnOpen
-    gTwsOrderTypeToOrderType = OrderTypeLimitOnOpen
-Case TwsOrderTypes.TwsOrderTypePeggedToPrimary
-    gTwsOrderTypeToOrderType = OrderTypePeggedToPrimary
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Unsupported order type"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
 Public Function gTwsOrderTypeToString(ByVal Value As TwsOrderTypes) As String
 Const ProcName As String = "gTwsOrderTypeToString"
 On Error GoTo Err
 
 Select Case Value
+Case TwsOrderTypes.TwsOrderTypeNone
+    gTwsOrderTypeToString = ""
 Case TwsOrderTypes.TwsOrderTypeMarket
     gTwsOrderTypeToString = "MKT"
 Case TwsOrderTypes.TwsOrderTypeMarketOnClose
@@ -1486,7 +845,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function gTwsSecTypeFromString(ByVal Value As String) As TwsSecTypes
@@ -1505,27 +864,6 @@ Case "BAG", "COMBO", "CMB"
     gTwsSecTypeFromString = TwsSecTypeCombo
 Case "INDEX", "IND"
     gTwsSecTypeFromString = TwsSecTypeIndex
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Security Type"
-End Select
-End Function
-
-Public Function gTwsSecTypeToSecType(ByVal Value As TwsSecTypes) As SecurityTypes
-Select Case Value
-Case TwsSecTypeStock
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeStock
-Case TwsSecTypeFuture
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeFuture
-Case TwsSecTypeOption
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeOption
-Case TwsSecTypeFuturesOption
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeFuturesOption
-Case TwsSecTypeCash
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeCash
-Case TwsSecTypeCombo
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeCombo
-Case TwsSecTypeIndex
-    gTwsSecTypeToSecType = SecurityTypes.SecTypeIndex
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Security Type"
 End Select
@@ -1643,91 +981,7 @@ Case TwsStopTriggerMethods.TwsStopTriggerMidPoint
 End Select
 End Function
 
-Public Function gTwsTimezoneNameToStandardTimeZoneName(ByVal pTimeZoneId As String) As String
-Const ProcName As String = "gTwsTimezoneNameToStandardTimeZoneName"
-On Error GoTo Err
-
-Select Case pTimeZoneId
-Case ""
-    gTwsTimezoneNameToStandardTimeZoneName = ""
-Case "AET"
-    gTwsTimezoneNameToStandardTimeZoneName = "AUS Eastern Standard Time"
-Case "CTT"
-    gTwsTimezoneNameToStandardTimeZoneName = "Central Standard Time"
-Case "GMT"
-    gTwsTimezoneNameToStandardTimeZoneName = "GMT Standard Time"
-Case "EST"
-    gTwsTimezoneNameToStandardTimeZoneName = "Eastern Standard Time"
-Case Else
-    gLog "Unrecognised timezone", ModuleName, ProcName, pTimeZoneId
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-Private Function getContractDetailsRequester( _
-                ByVal pClient As TwsAPI) As ContractDetailsRequester
-Const ProcName As String = "getContractDetailsRequester"
-On Error GoTo Err
-
-Dim lContractDetailsRequester As ContractDetailsRequester
-
-If Not pClient.Tws.ContractDetailsConsumer Is Nothing Then
-    If Not TypeOf pClient.Tws.ContractDetailsConsumer Is ContractDetailsRequester Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Tws is already configured with an incompatible IContractDetailsConsumer"
-    Set lContractDetailsRequester = pClient.Tws.ContractDetailsConsumer
-Else
-    Set lContractDetailsRequester = New ContractDetailsRequester
-    lContractDetailsRequester.Initialise pClient
-    pClient.Tws.ContractDetailsConsumer = lContractDetailsRequester
-End If
-
-Set getContractDetailsRequester = lContractDetailsRequester
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function getHistDataRequester( _
-                ByVal pClient As TwsAPI) As HistDataRequester
-Const ProcName As String = "getHistDataRequester "
-On Error GoTo Err
-
-Dim lHistDataRequester As HistDataRequester
-
-If Not pClient.Tws.HistDataConsumer Is Nothing Then
-    If Not TypeOf pClient.Tws.HistDataConsumer Is HistDataRequester Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Tws is already configured with an incompatible IHistDataConsumer"
-    Set lHistDataRequester = pClient.Tws.HistDataConsumer
-End If
-
-Set getHistDataRequester = lHistDataRequester
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function setupHistDataRequester(ByVal pClient As TwsAPI) As HistDataRequester
-Const ProcName As String = "setupHistDataRequester"
-On Error GoTo Err
-
-Set setupHistDataRequester = New HistDataRequester
-setupHistDataRequester.Initialise pClient
-pClient.Tws.HistDataConsumer = setupHistDataRequester
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-    
 

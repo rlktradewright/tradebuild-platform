@@ -5,198 +5,51 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                    As String = "IBTWSSP26"
-Private Const ModuleName                As String = "Globals"
+Public Const ProjectName                        As String = "IBTWSSP27"
+Private Const ModuleName                        As String = "Globals"
 
+Public Const InvalidEnumValue                   As String = "*ERR*"
+Public Const NullIndex                          As Long = -1
 
-Public Const MaxLong As Long = &H7FFFFFFF
-Public Const OneMicrosecond As Double = 1# / 86400000000#
-Public Const OneMinute As Double = 1# / 1440#
-Public Const OneSecond As Double = 1# / 86400#
+Public Const MaxLong                            As Long = &H7FFFFFFF
+Public Const OneMicrosecond                     As Double = 1# / 86400000000#
+Public Const OneMinute                          As Double = 1# / 1440#
+Public Const OneSecond                          As Double = 1# / 86400#
 
-Public Const ContractInfoSPName As String = "IB TWS Contract Info Service Provider"
-Public Const HistoricDataSPName As String = "IB TWS Historic Data Service Provider"
-Public Const RealtimeDataSPName As String = "IB TWS Realtime Data Service Provider"
-Public Const OrderSubmissionSPName As String = "IB TWS Order Submission Service Provider"
+Public Const NumDaysInWeek                      As Long = 5
+Public Const NumDaysInMonth                     As Long = 22
+Public Const NumDaysInYear                      As Long = 260
+Public Const NumMonthsInYear                    As Long = 12
 
-Public Const ProviderKey As String = "TWS"
+Public Const ContractInfoSPName                 As String = "IB Tws Contract Info Service Provider"
+Public Const HistoricDataSPName                 As String = "IB Tws Historic Data Service Provider"
+Public Const RealtimeDataSPName                 As String = "IB Tws Realtime Data Service Provider"
+Public Const OrderSubmissionSPName              As String = "IB Tws Order Submission Service Provider"
 
-Public Const ParamNameClientId As String = "Client Id"
+Public Const ProviderKey                        As String = "Tws"
+
+Public Const ParamNameClientId                  As String = "Client Id"
 Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
-Public Const ParamNameKeepConnection As String = "Keep Connection"
-Public Const ParamNamePort As String = "Port"
-Public Const ParamNameProviderKey As String = "Provider Key"
-Public Const ParamNameRole As String = "Role"
-Public Const ParamNameServer As String = "Server"
-Public Const ParamNameTwsLogLevel As String = "TWS Log Level"
+Public Const ParamNameKeepConnection            As String = "Keep Connection"
+Public Const ParamNamePort                      As String = "Port"
+Public Const ParamNameProviderKey               As String = "Provider Key"
+Public Const ParamNameRole                      As String = "Role"
+Public Const ParamNameServer                    As String = "Server"
+Public Const ParamNameTwsLogLevel               As String = "Tws Log Level"
 
-Public Const TWSLogLevelDetailString        As String = "Detail"
-Public Const TWSLogLevelErrorString         As String = "Error"
-Public Const TWSLogLevelInformationString   As String = "Information"
-Public Const TWSLogLevelSystemString        As String = "System"
-Public Const TWSLogLevelWarningString       As String = "Warning"
+Public Const TwsLogLevelDetailString            As String = "Detail"
+Public Const TwsLogLevelErrorString             As String = "Error"
+Public Const TwsLogLevelInformationString       As String = "Information"
+Public Const TwsLogLevelSystemString            As String = "System"
+Public Const TwsLogLevelWarningString           As String = "Warning"
 
 '================================================================================
 ' Enums
 '================================================================================
 
-Public Enum ConnectionStates
-    ConnNotConnected
-    ConnConnecting
-    ConnReSynching
-    ConnConnected
-End Enum
-
-Public Enum FADataTypes
-    FAGroups = 1
-    FAProfile
-    FAAccountAliases
-End Enum
-
-Public Enum TWSLogLevels
-    TWSLogLevelSystem = 1
-    TWSLogLevelError
-    TWSLogLevelWarning
-    TWSLogLevelInformation
-    TWSLogLevelDetail
-End Enum
-
-Public Enum TWSSocketInMsgTypes
-    TICK_PRICE = 1
-    TICK_SIZE = 2
-    ORDER_STATUS = 3
-    ERR_MSG = 4
-    OPEN_ORDER = 5
-    ACCT_VALUE = 6
-    PORTFOLIO_VALUE = 7
-    ACCT_UPDATE_TIME = 8
-    NEXT_VALID_ID = 9
-    CONTRACT_DATA = 10
-    EXECUTION_DATA = 11
-    MARKET_DEPTH = 12
-    MARKET_DEPTH_L2 = 13
-    NEWS_BULLETINS = 14
-    MANAGED_ACCTS = 15
-    RECEIVE_FA = 16
-    HISTORICAL_DATA = 17
-    BOND_CONTRACT_DATA = 18
-    SCANNER_PARAMETERS = 19
-    SCANNER_DATA = 20
-    TICK_OPTION_COMPUTATION = 21
-    TICK_GENERIC = 45
-    TICK_STRING = 46
-    TICK_EFP = 47
-    CURRENT_TIME = 49
-    REAL_TIME_BARS = 50
-    FUNDAMENTAL_DATA = 51
-    CONTRACT_DATA_END = 52
-    OPEN_ORDER_END = 53
-    ACCT_DOWNLOAD_END = 54
-    EXECUTION_DATA_END = 55
-    DELTA_NEUTRAL_VALIDATION = 56
-    TICK_SNAPSHOT_END = 57
-    MAX_SOCKET_INMSG
-End Enum
-
-Public Enum TWSSocketOutMsgTypes
-    REQ_MKT_DATA = 1
-    CANCEL_MKT_DATA = 2
-    PLACE_ORDER = 3
-    CANCEL_ORDER = 4
-    REQ_OPEN_ORDERS = 5
-    REQ_ACCT_DATA = 6
-    REQ_EXECUTIONS = 7
-    REQ_IDS = 8
-    REQ_CONTRACT_DATA = 9
-    REQ_MKT_DEPTH = 10
-    CANCEL_MKT_DEPTH = 11
-    REQ_NEWS_BULLETINS = 12
-    CANCEL_NEWS_BULLETINS = 13
-    SET_SERVER_LOGLEVEL = 14
-    REQ_AUTO_OPEN_ORDERS = 15
-    REQ_ALL_OPEN_ORDERS = 16
-    REQ_MANAGED_ACCTS = 17
-    REQ_FA = 18
-    REPLACE_FA = 19
-    REQ_HISTORICAL_DATA = 20
-    EXERCISE_OPTIONS = 21
-    REQ_SCANNER_SUBSCRIPTION = 22
-    CANCEL_SCANNER_SUBSCRIPTION = 23
-    REQ_SCANNER_PARAMETERS = 24
-    CANCEL_HISTORICAL_DATA = 25
-    REQ_CURRENT_TIME = 49
-    REQ_REAL_TIME_BARS = 50
-    CANCEL_REAL_TIME_BARS = 51
-End Enum
-
-Public Enum TWSSocketTickTypes
-    TICK_BID_SIZE                   ' 0
-    TICK_BID                        ' 1
-    TICK_ASK                        ' 2
-    TICK_ASK_SIZE                   ' 3
-    TICK_LAST                       ' 4
-    TICK_LAST_SIZE                  ' 5
-    TICK_HIGH                       ' 6
-    TICK_LOW                        ' 7
-    TICK_VOLUME                     ' 8
-    TICK_CLOSE                      ' 9
-    TICK_BID_OPTION                 ' 10
-    TICK_ASK_OPTION                 ' 11
-    TICK_LAST_OPTION                ' 12
-    TICK_MODEL_OPTION               ' 13
-    TICK_OPEN                       ' 14
-    TICK_LOW_13_WEEK                ' 15
-    TICK_HIGH_13_WEEK               ' 16
-    TICK_LOW_26_WEEK                ' 17
-    TICK_HIGH_26_WEEK               ' 18
-    TICK_LOW_52_WEEK                ' 19
-    TICK_HIGH_52_WEEK               ' 20
-    TICK_AVG_VOLUME                 ' 21
-    TICK_OPEN_INTEREST              ' 22
-    TICK_OPTION_HISTORICAL_VOL      ' 23
-    TICK_OPTION_IMPLIED_VOL         ' 24
-    TICK_OPTION_BID_EXCH            ' 25
-    TICK_OPTION_ASK_EXCH            ' 26
-    TICK_OPTION_CALL_OPEN_INTEREST  ' 27
-    TICK_OPTION_PUT_OPEN_INTEREST   ' 28
-    TICK_OPTION_CALL_VOLUME         ' 29
-    TICK_OPTION_PUT_VOLUME          ' 30
-    TICK_INDEX_FUTURE_PREMIUM       ' 31
-    TICK_BID_EXCH                   ' 32
-    TICK_ASK_EXCH                   ' 33
-    TICK_AUCTION_VOLUME             ' 34
-    TICK_AUCTION_PRICE              ' 35
-    TICK_AUCTION_IMBALANCE          ' 36
-    TICK_MARK_PRICE                 ' 37
-    TICK_BID_EFP_COMPUTATION        ' 38
-    TICK_ASK_EFP_COMPUTATION        ' 39
-    TICK_LAST_EFP_COMPUTATION       ' 40
-    TICK_OPEN_EFP_COMPUTATION       ' 41
-    TICK_HIGH_EFP_COMPUTATION       ' 42
-    TICK_LOW_EFP_COMPUTATION        ' 43
-    TICK_CLOSE_EFP_COMPUTATION      ' 44
-    TICK_LAST_TIMESTAMP             ' 45
-    TICK_SHORTABLE                  ' 46
-End Enum
-
 '================================================================================
 ' Types
 '================================================================================
-
-Private Type TWSAPITableEntry
-    Server          As String
-    Port            As Long
-    clientID        As Long
-    ProviderKey     As String
-    ConnectionRetryIntervalSecs As Long
-'    KeepConnection  As Boolean  ' once this flag is set, the TWSAPI instance
-'                                ' will only be disconnected by a call to
-'                                ' gReleaseTWSAPIInstance with <forceDisconnect>
-'                                ' set to true (and the usageCount is zero),
-'                                ' or by a call to gReleaseAllTWSAPIInstances
-    TWSAPI          As TWSAPI
-    usageCount      As Long
-End Type
 
 '================================================================================
 ' Global variables
@@ -206,30 +59,74 @@ End Type
 ' Private variables
 '================================================================================
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mTWSAPITable() As TWSAPITableEntry
-Private mTWSAPITableNextIndex As Long
-
-Private mRandomClientIds As Collection
-
 Private mLogger As FormattingLogger
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Let gCommonServiceConsumer( _
-                ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Const ProcName As String = "gCommonServiceConsumer"
+Public Property Get gLogger() As FormattingLogger
+If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.serviceprovider.ibtwssp", ProjectName)
+Set gLogger = mLogger
+End Property
+
+'================================================================================
+' Methods
+'================================================================================
+
+Public Function gHistDataCapabilities() As Long
+Const ProcName As String = "gHistDataCapabilities"
 On Error GoTo Err
 
-Set mCommonServiceConsumer = RHS
+gHistDataCapabilities = 0
 
-Exit Property
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
+Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
+Const ProcName As String = "gHistDataSupports"
+On Error GoTo Err
+
+gHistDataSupports = (gHistDataCapabilities And capabilities)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Public Sub gLog(ByRef pMsg As String, _
                 ByRef pModName As String, _
@@ -245,712 +142,200 @@ gLogger.Log pMsg, pProcName, pModName, pLogLevel, pMsgQualifier
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Property Get gLogger() As FormattingLogger
-If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.serviceprovider.ibtwssp", ProjectName)
-Set gLogger = mLogger
-End Property
-
-'================================================================================
-' Methods
-'================================================================================
-
-Public Function gGetTWSAPIInstance( _
-                ByVal Server As String, _
-                ByVal Port As Long, _
-                ByVal clientID As Long, _
-                ByVal ProviderKey As String, _
-                ByVal ConnectionRetryIntervalSecs As Long, _
-                ByVal TWSLogLevel As TWSLogLevels) As TWSAPI
-Const ProcName As String = "gGetTWSAPIInstance"
-Dim i As Long
-
-Dim failpoint As String
-On Error GoTo Err
-
-If mTWSAPITableNextIndex = 0 Then
-    ReDim mTWSAPITable(1) As TWSAPITableEntry
-End If
-
-If clientID < 0 Then clientID = getRandomClientId(clientID & ProviderKey)
-
-Server = UCase$(Server)
-
-For i = 0 To mTWSAPITableNextIndex - 1
-    If mTWSAPITable(i).Server = Server And _
-        mTWSAPITable(i).Port = Port And _
-        mTWSAPITable(i).clientID = clientID And _
-        mTWSAPITable(i).ProviderKey = ProviderKey _
-    Then
-        Set gGetTWSAPIInstance = mTWSAPITable(i).TWSAPI
-        mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount + 1
-        If ConnectionRetryIntervalSecs > 0 And _
-            ConnectionRetryIntervalSecs < mTWSAPITable(i).ConnectionRetryIntervalSecs _
-        Then
-            mTWSAPITable(i).ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
-        End If
-        Exit Function
-    End If
-Next
-
-If mTWSAPITableNextIndex > UBound(mTWSAPITable) Then
-    ReDim Preserve mTWSAPITable(2 * (UBound(mTWSAPITable) + 1) - 1) As TWSAPITableEntry
-End If
-
-mTWSAPITable(mTWSAPITableNextIndex).Server = Server
-mTWSAPITable(mTWSAPITableNextIndex).Port = Port
-mTWSAPITable(mTWSAPITableNextIndex).clientID = clientID
-mTWSAPITable(mTWSAPITableNextIndex).ProviderKey = ProviderKey
-mTWSAPITable(mTWSAPITableNextIndex).ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
-mTWSAPITable(mTWSAPITableNextIndex).usageCount = 1
-Set mTWSAPITable(mTWSAPITableNextIndex).TWSAPI = New TWSAPI
-Set gGetTWSAPIInstance = mTWSAPITable(mTWSAPITableNextIndex).TWSAPI
-
-mTWSAPITableNextIndex = mTWSAPITableNextIndex + 1
-
-gGetTWSAPIInstance.CommonServiceConsumer = mCommonServiceConsumer
-gGetTWSAPIInstance.Server = Server
-gGetTWSAPIInstance.Port = Port
-gGetTWSAPIInstance.clientID = clientID
-gGetTWSAPIInstance.ProviderKey = ProviderKey
-gGetTWSAPIInstance.ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
-gGetTWSAPIInstance.TWSLogLevel = TWSLogLevel
-gGetTWSAPIInstance.Connect
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
-End Function
-
-Public Function gHistDataCapabilities() As Long
-Const ProcName As String = "gHistDataCapabilities"
-On Error GoTo Err
-
-gHistDataCapabilities = 0
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
-
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
-
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pProjectName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.number)
-
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, pProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
-
-Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
-Const ProcName As String = "gHistDataSupports"
-On Error GoTo Err
-
-gHistDataSupports = (gHistDataCapabilities And capabilities)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function gInputMessageIdToString( _
-                ByVal msgId As TWSSocketInMsgTypes) As String
-Const ProcName As String = "gInputMessageIdToString"
-On Error GoTo Err
-
-Select Case msgId
-Case TICK_PRICE
-    gInputMessageIdToString = "TICK_PRICE"
-Case TICK_SIZE
-    gInputMessageIdToString = "TICK_SIZE"
-Case ORDER_STATUS
-    gInputMessageIdToString = "ORDER_STATUS"
-Case ERR_MSG
-    gInputMessageIdToString = "ERR_MSG"
-Case OPEN_ORDER
-    gInputMessageIdToString = "OPEN_ORDER"
-Case ACCT_VALUE
-    gInputMessageIdToString = "ACCT_VALUE"
-Case PORTFOLIO_VALUE
-    gInputMessageIdToString = "PORTFOLIO_VALUE"
-Case ACCT_UPDATE_TIME
-    gInputMessageIdToString = "ACCT_UPDATE_TIME"
-Case NEXT_VALID_ID
-    gInputMessageIdToString = "NEXT_VALID_ID"
-Case CONTRACT_DATA
-    gInputMessageIdToString = "CONTRACT_DATA"
-Case EXECUTION_DATA
-    gInputMessageIdToString = "EXECUTION_DATA"
-Case MARKET_DEPTH
-    gInputMessageIdToString = "MARKET_DEPTH"
-Case MARKET_DEPTH_L2
-    gInputMessageIdToString = "MARKET_DEPTH_L2"
-Case NEWS_BULLETINS
-    gInputMessageIdToString = "NEWS_BULLETINS"
-Case MANAGED_ACCTS
-    gInputMessageIdToString = "MANAGED_ACCTS"
-Case RECEIVE_FA
-    gInputMessageIdToString = "RECEIVE_FA"
-Case HISTORICAL_DATA
-    gInputMessageIdToString = "HISTORICAL_DATA"
-Case BOND_CONTRACT_DATA
-    gInputMessageIdToString = "BOND_CONTRACT_DATA"
-Case SCANNER_PARAMETERS
-    gInputMessageIdToString = "SCANNER_PARAMETERS"
-Case SCANNER_DATA
-    gInputMessageIdToString = "SCANNER_DATA"
-Case TICK_OPTION_COMPUTATION
-    gInputMessageIdToString = "TICK_OPTION_COMPUTATION"
-Case TICK_GENERIC
-    gInputMessageIdToString = "TICK_GENERIC"
-Case TICK_STRING
-    gInputMessageIdToString = "TICK_STRING"
-Case TICK_EFP
-    gInputMessageIdToString = "TICK_EFP"
-Case CURRENT_TIME
-    gInputMessageIdToString = "CURRENT_TIME"
-Case REAL_TIME_BARS
-    gInputMessageIdToString = "REAL_TIME_BARS"
-Case FUNDAMENTAL_DATA
-    gInputMessageIdToString = "FUNDAMENTAL_DATA"
-Case CONTRACT_DATA_END
-    gInputMessageIdToString = "CONTRACT_DATA_END"
-Case OPEN_ORDER_END
-    gInputMessageIdToString = "OPEN_ORDER_END"
-Case ACCT_DOWNLOAD_END
-    gInputMessageIdToString = "ACCT_DOWNLOAD_END"
-Case EXECUTION_DATA_END
-    gInputMessageIdToString = "EXECUTION_DATA_END"
-Case DELTA_NEUTRAL_VALIDATION
-    gInputMessageIdToString = "DELTA_NEUTRAL_VALIDATION"
-Case TICK_SNAPSHOT_END
-    gInputMessageIdToString = "TICK_SNAPSHOT_END"
-Case Else
-    gInputMessageIdToString = "?????"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-                
-End Function
-
-Public Function gOutputMessageIdToString( _
-                ByVal msgId As TWSSocketOutMsgTypes) As String
-Const ProcName As String = "gOutputMessageIdToString"
-On Error GoTo Err
-
-Select Case msgId
-Case REQ_MKT_DATA
-    gOutputMessageIdToString = "REQ_MKT_DATA"
-Case CANCEL_MKT_DATA
-    gOutputMessageIdToString = "CANCEL_MKT_DATA"
-Case PLACE_ORDER
-    gOutputMessageIdToString = "PLACE_ORDER"
-Case CANCEL_ORDER
-    gOutputMessageIdToString = "CANCEL_ORDER"
-Case REQ_OPEN_ORDERS
-    gOutputMessageIdToString = "REQ_OPEN_ORDERS"
-Case REQ_ACCT_DATA
-    gOutputMessageIdToString = "REQ_ACCT_DATA"
-Case REQ_EXECUTIONS
-    gOutputMessageIdToString = "REQ_EXECUTIONS"
-Case REQ_IDS
-    gOutputMessageIdToString = "REQ_IDS"
-Case REQ_CONTRACT_DATA
-    gOutputMessageIdToString = "REQ_CONTRACT_DATA"
-Case REQ_MKT_DEPTH
-    gOutputMessageIdToString = "REQ_MKT_DEPTH"
-Case CANCEL_MKT_DEPTH
-    gOutputMessageIdToString = "CANCEL_MKT_DEPTH"
-Case REQ_NEWS_BULLETINS
-    gOutputMessageIdToString = "REQ_NEWS_BULLETINS"
-Case CANCEL_NEWS_BULLETINS
-    gOutputMessageIdToString = "CANCEL_NEWS_BULLETINS"
-Case SET_SERVER_LOGLEVEL
-    gOutputMessageIdToString = "SET_SERVER_LOGLEVEL"
-Case REQ_AUTO_OPEN_ORDERS
-    gOutputMessageIdToString = "REQ_AUTO_OPEN_ORDERS"
-Case REQ_ALL_OPEN_ORDERS
-    gOutputMessageIdToString = "REQ_ALL_OPEN_ORDERS"
-Case REQ_MANAGED_ACCTS
-    gOutputMessageIdToString = "REQ_MANAGED_ACCTS"
-Case REQ_FA
-    gOutputMessageIdToString = "REQ_FA"
-Case REPLACE_FA
-    gOutputMessageIdToString = "REPLACE_FA"
-Case REQ_HISTORICAL_DATA
-    gOutputMessageIdToString = "REQ_HISTORICAL_DATA"
-Case EXERCISE_OPTIONS
-    gOutputMessageIdToString = "EXERCISE_OPTIONS"
-Case REQ_SCANNER_SUBSCRIPTION
-    gOutputMessageIdToString = "REQ_SCANNER_SUBSCRIPTION"
-Case CANCEL_SCANNER_SUBSCRIPTION
-    gOutputMessageIdToString = "CANCEL_SCANNER_SUBSCRIPTION"
-Case REQ_SCANNER_PARAMETERS
-    gOutputMessageIdToString = "REQ_SCANNER_PARAMETERS"
-Case CANCEL_HISTORICAL_DATA
-    gOutputMessageIdToString = "CANCEL_HISTORICAL_DATA"
-Case REQ_CURRENT_TIME
-    gOutputMessageIdToString = "REQ_CURRENT_TIME"
-Case REQ_REAL_TIME_BARS
-    gOutputMessageIdToString = "REQ_REAL_TIME_BARS"
-Case CANCEL_REAL_TIME_BARS
-    gOutputMessageIdToString = "CANCEL_REAL_TIME_BARS"
-Case Else
-    gOutputMessageIdToString = "?????"
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 Public Function gParseClientId( _
-                value As String) As Long
+                Value As String) As Long
 Const ProcName As String = "gParseClientId"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If value = "" Then
+If Value = "" Then
     gParseClientId = -1
-ElseIf Not IsInteger(value) Then
+ElseIf Not IsInteger(Value) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Client Id' parameter: value must be an integer"
+            "Invalid 'Client Id' parameter: Value must be an integer"
 Else
-    gParseClientId = CLng(value)
+    gParseClientId = CLng(Value)
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParseConnectionRetryInterval( _
-                value As String) As Long
+                Value As String) As Long
 Const ProcName As String = "gParseConnectionRetryInterval"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If value = "" Then
+If Value = "" Then
     gParseConnectionRetryInterval = 0
-ElseIf Not IsInteger(value, 0) Then
+ElseIf Not IsInteger(Value, 0) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
+            "Invalid 'Connection Retry Interval Secs' parameter: Value must be an integer >= 0"
 Else
-    gParseConnectionRetryInterval = CLng(value)
+    gParseConnectionRetryInterval = CLng(Value)
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParseKeepConnection( _
-                value As String) As Boolean
+                Value As String) As Boolean
 Const ProcName As String = "gParseKeepConnection"
 On Error GoTo Err
-If value = "" Then
+If Value = "" Then
     gParseKeepConnection = False
 Else
-    gParseKeepConnection = CBool(value)
+    gParseKeepConnection = CBool(Value)
 End If
 Exit Function
 
 Err:
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
         ProjectName & "." & ModuleName & ":" & ProcName, _
-        "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
+        "Invalid 'Keep Connection' parameter: Value must be 'true' or 'false'"
 End Function
 
 Public Function gParsePort( _
-                value As String) As Long
+                Value As String) As Long
 Const ProcName As String = "gParsePort"
-Dim failpoint As String
 On Error GoTo Err
 
-If value = "" Then
+If Value = "" Then
     gParsePort = 7496
-ElseIf Not IsInteger(value, 1024, 65535) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
+ElseIf Not IsInteger(Value, 1024, 65535) Then
+    AssertArgument False, "Invalid 'Port' parameter: Value must be an integer >= 1024 and <=65535"
 Else
-    gParsePort = CLng(value)
+    gParsePort = CLng(Value)
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParseRole( _
-                value As String) As String
+                Value As String) As String
 Const ProcName As String = "gParseRole"
-
-
-Dim failpoint As String
 On Error GoTo Err
 
-Select Case UCase$(value)
+Select Case UCase$(Value)
 Case "", "P", "PR", "PRIM", "PRIMARY"
     gParseRole = "PRIMARY"
 Case "S", "SEC", "SECOND", "SECONDARY"
     gParseRole = "SECONDARY"
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
+    AssertArgument False, "Invalid 'Role' parameter: Value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParseTwsLogLevel( _
-                value As String) As TWSLogLevels
+                Value As String) As TwsLogLevels
 Const ProcName As String = "gParseTwsLogLevel"
-Dim failpoint As String
 On Error GoTo Err
 
-If value = "" Then
-    gParseTwsLogLevel = TWSLogLevelError
+If Value = "" Then
+    gParseTwsLogLevel = TwsLogLevelError
 Else
-    gParseTwsLogLevel = gTwsLogLevelFromString(value)
+    gParseTwsLogLevel = gTwsLogLevelFromString(Value)
 End If
 Exit Function
 
 Err:
-If Err.number = ErrorCodes.ErrIllegalArgumentException Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid 'Tws Log Level' parameter: value must be one of " & _
-            TWSLogLevelSystemString & ", " & _
-            TWSLogLevelErrorString & ", " & _
-            TWSLogLevelWarningString & ", " & _
-            TWSLogLevelInformationString & " or " & _
-            TWSLogLevelDetailString
-End If
+AssertArgument Err.Number = ErrorCodes.ErrIllegalArgumentException, _
+                "Invalid 'Tws Log Level' parameter: Value must be one of " & _
+                    TwsLogLevelSystemString & ", " & _
+                    TwsLogLevelErrorString & ", " & _
+                    TwsLogLevelWarningString & ", " & _
+                    TwsLogLevelInformationString & " or " & _
+                    TwsLogLevelDetailString
 
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Function gRealtimeDataCapabilities() As Long
-Const ProcName As String = "gRealtimeDataCapabilities"
-gRealtimeDataCapabilities = TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition
-End Function
-
-Public Function gRealtimeDataSupports(ByVal capabilities As Long) As Boolean
-Const ProcName As String = "gRealtimeDataSupports"
-gRealtimeDataSupports = (gRealtimeDataCapabilities And capabilities)
-End Function
-
-Public Sub gReleaseAllTWSAPIInstances()
-Const ProcName As String = "gReleaseAllTWSAPIInstances"
-
-
-Dim i As Long
-
-Dim failpoint As String
-On Error GoTo Err
-
-For i = 0 To mTWSAPITableNextIndex - 1
-    mTWSAPITable(i).usageCount = 0
-    If Not mTWSAPITable(i).TWSAPI Is Nothing Then
-        mTWSAPITable(i).TWSAPI.Disconnect "release all", True
-        Set mTWSAPITable(i).TWSAPI = Nothing
-    End If
-    mTWSAPITable(i).clientID = 0
-    mTWSAPITable(i).ConnectionRetryIntervalSecs = 0
-    mTWSAPITable(i).Port = 0
-    mTWSAPITable(i).Server = ""
-    mTWSAPITable(i).ProviderKey = ""
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-                
-End Sub
-
-Public Sub gReleaseTWSAPIInstance( _
-                ByVal instance As TWSAPI, _
-                Optional ByVal forceDisconnect As Boolean)
-Const ProcName As String = "gReleaseTWSAPIInstance"
-
-
-Dim i As Long
-
-Dim failpoint As String
-On Error GoTo Err
-
-For i = 0 To mTWSAPITableNextIndex - 1
-    If mTWSAPITable(i).TWSAPI Is instance Then
-        mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount - 1
-        If mTWSAPITable(i).usageCount = 0 Or _
-            forceDisconnect _
-        Then
-            If mTWSAPITable(i).TWSAPI.ConnectionState <> ConnNotConnected Then
-                mTWSAPITable(i).TWSAPI.Disconnect "release", forceDisconnect
-            End If
-            Set mTWSAPITable(i).TWSAPI = Nothing
-            mTWSAPITable(i).clientID = 0
-            mTWSAPITable(i).ConnectionRetryIntervalSecs = 0
-            mTWSAPITable(i).Port = 0
-            mTWSAPITable(i).Server = ""
-            mTWSAPITable(i).ProviderKey = ""
-        End If
-        Exit For
-    End If
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-                
-End Sub
 
 Public Function gRoundTimeToSecond( _
-                ByVal timestamp As Date) As Date
+                ByVal Timestamp As Date) As Date
 Const ProcName As String = "gRoundTimeToSecond"
-gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+gRoundTimeToSecond = Int((Timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
-Public Function gSocketInMsgTypeToString( _
-                ByVal value As TWSSocketInMsgTypes) As String
-Const ProcName As String = "gSocketInMsgTypeToString"
-On Error GoTo Err
+Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
+If IsObject(pSource) Then
+    Set pTarget = pSource
+Else
+    pTarget = pSource
+End If
+End Sub
 
-Select Case value
-Case TICK_PRICE
-    gSocketInMsgTypeToString = "Tick price          "
-Case TICK_SIZE
-    gSocketInMsgTypeToString = "Tick size           "
-Case ORDER_STATUS
-    gSocketInMsgTypeToString = "Order status        "
-Case ERR_MSG
-    gSocketInMsgTypeToString = "Error message       "
-Case OPEN_ORDER
-    gSocketInMsgTypeToString = "Open order          "
-Case ACCT_VALUE
-    gSocketInMsgTypeToString = "Account value       "
-Case PORTFOLIO_VALUE
-    gSocketInMsgTypeToString = "Portfolio value     "
-Case ACCT_UPDATE_TIME
-    gSocketInMsgTypeToString = "Account update time "
-Case NEXT_VALID_ID
-    gSocketInMsgTypeToString = "Next valid id       "
-Case CONTRACT_DATA
-    gSocketInMsgTypeToString = "Contract data       "
-Case EXECUTION_DATA
-    gSocketInMsgTypeToString = "Execution data      "
-Case MARKET_DEPTH
-    gSocketInMsgTypeToString = "Market depth        "
-Case MARKET_DEPTH_L2
-    gSocketInMsgTypeToString = "Market depth L2     "
-Case NEWS_BULLETINS
-    gSocketInMsgTypeToString = "New bulletin        "
-Case MANAGED_ACCTS
-    gSocketInMsgTypeToString = "Managed accounts    "
-Case RECEIVE_FA
-    gSocketInMsgTypeToString = "Receive FA          "
-Case HISTORICAL_DATA
-    gSocketInMsgTypeToString = "Historical data     "
-Case BOND_CONTRACT_DATA
-    gSocketInMsgTypeToString = "Bond contract data  "
-Case SCANNER_PARAMETERS
-    gSocketInMsgTypeToString = "scanner parameters  "
-Case SCANNER_DATA
-    gSocketInMsgTypeToString = "Scanner data        "
-Case TICK_OPTION_COMPUTATION
-    gSocketInMsgTypeToString = "Option computation  "
-Case TICK_GENERIC
-    gSocketInMsgTypeToString = "Generic             "
-Case TICK_STRING
-    gSocketInMsgTypeToString = "String              "
-Case TICK_EFP
-    gSocketInMsgTypeToString = "EFP                 "
-Case CURRENT_TIME
-    gSocketInMsgTypeToString = "Current time        "
-Case REAL_TIME_BARS
-    gSocketInMsgTypeToString = "Realtime bar        "
-Case FUNDAMENTAL_DATA
-    gSocketInMsgTypeToString = "Fundamental data    "
-Case CONTRACT_DATA_END
-    gSocketInMsgTypeToString = "Contract data end   "
-Case OPEN_ORDER_END
-    gSocketInMsgTypeToString = "Open order end      "
-Case ACCT_DOWNLOAD_END
-    gSocketInMsgTypeToString = "Account download end"
-Case EXECUTION_DATA_END
-    gSocketInMsgTypeToString = "Execution data end  "
-Case DELTA_NEUTRAL_VALIDATION
-    gSocketInMsgTypeToString = "Delta neutral validn"
-Case TICK_SNAPSHOT_END
-    gSocketInMsgTypeToString = "Tick snapshot end   "
-Case Else
-    gSocketInMsgTypeToString = "Msg type " & Format(value, "00         ")
-End Select
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
-End Function
-                
-Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
+Public Function gTruncateTimeToNextMinute(ByVal Timestamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToNextMinute"
 On Error GoTo Err
 
-gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToNextMinute = Int((Timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
+Public Function gTruncateTimeToMinute(ByVal Timestamp As Date) As Date
 Const ProcName As String = "gTruncateTimeToMinute"
 On Error GoTo Err
 
-gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
+gTruncateTimeToMinute = Int((Timestamp + OneMicrosecond) / OneMinute) * OneMinute
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gTwsLogLevelFromString( _
-                ByVal value As String) As TWSLogLevels
+                ByVal Value As String) As TwsLogLevels
 Const ProcName As String = "gTwsLogLevelFromString"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Select Case UCase$(value)
-Case UCase$(TWSLogLevelDetailString)
-    gTwsLogLevelFromString = TWSLogLevelDetail
-Case UCase$(TWSLogLevelErrorString)
-    gTwsLogLevelFromString = TWSLogLevelError
-Case UCase$(TWSLogLevelInformationString)
-    gTwsLogLevelFromString = TWSLogLevelInformation
-Case UCase$(TWSLogLevelSystemString)
-    gTwsLogLevelFromString = TWSLogLevelSystem
-Case UCase$(TWSLogLevelWarningString)
-    gTwsLogLevelFromString = TWSLogLevelWarning
+Select Case UCase$(Value)
+Case UCase$(TwsLogLevelDetailString)
+    gTwsLogLevelFromString = TwsLogLevelDetail
+Case UCase$(TwsLogLevelErrorString)
+    gTwsLogLevelFromString = TwsLogLevelError
+Case UCase$(TwsLogLevelInformationString)
+    gTwsLogLevelFromString = TwsLogLevelInformation
+Case UCase$(TwsLogLevelSystemString)
+    gTwsLogLevelFromString = TwsLogLevelSystem
+Case UCase$(TwsLogLevelWarningString)
+    gTwsLogLevelFromString = TwsLogLevelWarning
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "value invalid"
+    AssertArgument False, "Value is not a valid Tws Log Level"
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-Private Function clientIdAlreadyInUse( _
-                ByVal value As Long) As Boolean
-Const ProcName As String = "clientIdAlreadyInUse"
-Dim i As Long
-Dim failpoint As String
-On Error GoTo Err
-
-For i = 0 To mTWSAPITableNextIndex - 1
-    If mTWSAPITable(i).clientID = value Then
-        clientIdAlreadyInUse = True
-        Exit Function
-    End If
-Next
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-                
-End Function
-
-Private Function getRandomClientId( _
-                ByVal designator As String) As Long
-Const ProcName As String = "getRandomClientId"
-                
-Dim failpoint As String
-On Error GoTo Err
-
-If mRandomClientIds Is Nothing Then
-    Set mRandomClientIds = New Collection
-    Randomize
-End If
-
-' first see if a clientId has already been generated for this designator
-
-On Error Resume Next
-getRandomClientId = mRandomClientIds(CStr(designator))
-On Error GoTo Err
-
-If getRandomClientId <> 0 Then
-    Exit Function   ' clientId already exists for this designator
-End If
-
-getRandomClientId = Rnd * (&H7FFFFFFF - &H70000000) + &H70000000
-
-Do While clientIdAlreadyInUse(getRandomClientId)
-    getRandomClientId = Rnd * (&H7FFFFFFF - &H70000000) + &H70000000
-Loop
-
-mRandomClientIds.add getRandomClientId, CStr(designator)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
-End Function
 
 

@@ -49,7 +49,7 @@ Private Const ModuleName                            As String = "ComboContractCo
 
 Private mTaskContext                                As TaskContext
 
-Private mContractSpec                               As ContractSpecifier
+Private mContractSpec                               As IContractSpecifier
 
 Private mContractRequester                          As ContractDetailsRequester
 
@@ -88,7 +88,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, pContractDetails As TwsContractDetails)
@@ -108,7 +108,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -127,7 +127,7 @@ If mRequestsOutstanding = 0 Then mTaskContext.Error mErrorCode, mErrorMsg
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -142,7 +142,7 @@ Private Sub Task_Run()
 Const ProcName As String = "Task_Run"
 On Error GoTo Err
 
-Dim lComboLeg As comboLeg
+Dim lComboLeg As ComboLeg
 
 For Each lComboLeg In mContractSpec.ComboLegs
     mRequestIds(mRequestsOutstanding) = mContractRequester.RequestContractDetails(lComboLeg.ContractSpec, Me)
@@ -154,7 +154,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)
@@ -179,12 +179,12 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractDetailsRequester, _
-                ByVal pContractSpec As ContractSpecifier)
+                ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If pContractSpec.Sectype <> SecTypeCombo Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Argument is not a combo contract specifier"
-If pContractSpec.ComboLegs.Count = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "No combo legs specified"
+AssertArgument pContractSpec.Sectype = SecTypeCombo, "Argument is not a combo contract specifier"
+AssertArgument pContractSpec.ComboLegs.Count <> 0, "No combo legs specified"
 
 Set mContractRequester = pContractRequester
 Set mContractSpec = pContractSpec
@@ -194,7 +194,7 @@ ReDim mRequestIds(mContractSpec.ComboLegs.Count - 1) As Long
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -210,12 +210,12 @@ alreadyGotContract = mLegs.Contains(CStr(pRequestId))
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function createTwsComboLeg( _
                 ByVal pContract As TwsContract, _
-                ByVal pComboLeg As comboLeg) As TwsComboLeg
+                ByVal pComboLeg As ComboLeg) As TwsComboLeg
 Const ProcName As String = "createTwsComboLeg"
 On Error GoTo Err
 
@@ -231,7 +231,7 @@ createTwsComboLeg.ShortSaleSlot = TwsShortSaleSlotNotApplicable
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateTwsContractDetails() As TwsContractDetails
@@ -259,7 +259,7 @@ generateTwsContractDetails.TimeZoneId = mTimezoneId
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getLegIndexFromRequestId(ByVal pRequestId As Long) As Long
@@ -273,12 +273,12 @@ For i = 0 To UBound(mRequestIds)
         Exit Function
     End If
 Next
-Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid request id"
+Assert False, "Invalid request id"
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

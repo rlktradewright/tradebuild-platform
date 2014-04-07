@@ -51,7 +51,7 @@ Private Const ModuleName                    As String = "BarDataSpecifier"
 
 Private mBarTimePeriod As TimePeriod
 Private mBartype As BarTypes
-Private mContract As Contract
+Private mContract As IContract
 Private mFromDate As Date
 Private mToDate As Date
 Private mMaxNumberOfBars As Long
@@ -95,11 +95,11 @@ Public Property Get BarType() As BarTypes
 BarType = mBartype
 End Property
 
-Public Property Let Contract(ByVal Value As Contract)
+Public Property Let Contract(ByVal Value As IContract)
 Set mContract = Value
 End Property
 
-Public Property Get Contract() As Contract
+Public Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
@@ -115,13 +115,13 @@ Public Property Let FromDate(ByVal Value As Date)
 Const ProcName As String = "FromDate"
 On Error GoTo Err
 
-If mToDate <> 0 And Value > mToDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "FromDate must be before ToDate"
+If mToDate <> 0 And Value > mToDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be before ToDaye"
 mFromDate = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FromDate() As Date
@@ -140,14 +140,13 @@ Public Property Let MaxNumberOfBars(ByVal Value As Long)
 Const ProcName As String = "MaxNumberOfBars"
 On Error GoTo Err
 
-If Value <= 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value must be greater than 0"
-                
+Assert Value > 0 Or mFromDate <> 0, "MaxNumberOfBars must be > 0 if no FromDate supplied"
 mMaxNumberOfBars = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxNumberOfBars() As Long
@@ -158,14 +157,13 @@ Public Property Let ToDate(ByVal Value As Date)
 Const ProcName As String = "ToDate"
 On Error GoTo Err
 
-If Value < mFromDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "FromDate must be before ToDate"
-                        
+If Value <> 0 And Value < mFromDate Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value cannot be before FromDate"
 mToDate = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ToDate() As Date
@@ -189,13 +187,13 @@ Clone.ToDate = ToDate
 End Function
 
 Public Sub SetCustomSessionTimes( _
-                ByVal startTime As Date, _
-                ByVal endTime As Date)
-If startTime >= 1 Then startTime = startTime - Int(startTime)
-If endTime >= 1 Then endTime = endTime - Int(endTime)
+                ByVal pStartTime As Date, _
+                ByVal pEndTime As Date)
+If pStartTime >= 1 Then pStartTime = pStartTime - Int(pStartTime)
+If pEndTime >= 1 Then pEndTime = pEndTime - Int(pEndTime)
     
-mCustomSessionStartTime = startTime
-mCustomSessionEndTime = endTime
+mCustomSessionStartTime = pStartTime
+mCustomSessionEndTime = pEndTime
 End Sub
 
 Public Function ToString() As String

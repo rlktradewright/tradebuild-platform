@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarWriter"
+Attribute VB_Name = "BarWriteController"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -40,7 +40,7 @@ Implements DeferredAction
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "BarWriter"
+Private Const ModuleName                            As String = "BarWriteController"
 
 Private Const OneMillisec                           As Date = 1# / (86400000#)
 
@@ -60,11 +60,11 @@ Private mDeferredWriteInProgress                    As Boolean
 
 Private mLastWriteTime                              As Date
 
-Private mSelfRef                                    As Object
-
 Private mLocalSymbol                                As String
 
 Private mBarWriter                                  As IBarWriter
+
+Private mDatabaseWrites                             As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -81,7 +81,6 @@ On Error GoTo Err
 mDeferredWriteInProgress = False
 WriteBar
 mLastWriteTime = GetTimestamp
-Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -98,6 +97,7 @@ Const ProcName As String = "mBar_Changed"
 On Error GoTo Err
 
 If mDeferredWriteInProgress Then Exit Sub
+If mSaveIntervalSeconds = 0 Then Exit Sub
 
 Dim lDeferInterval As Long
 lDeferInterval = calculateDeferralTime
@@ -119,6 +119,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Friend Property Get DatabaseWrites() As Long
+DatabaseWrites = mDatabaseWrites
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -127,7 +131,9 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-If mDeferredWriteInProgress Then Set mSelfRef = Me
+If mSaveIntervalSeconds = 0 Or mDeferredWriteInProgress Then WriteBar
+
+Set mBarWriter = Nothing
 
 Exit Sub
 
@@ -152,7 +158,7 @@ mLocalSymbol = pLocalSymbol
 mSaveIntervalSeconds = pSaveIntervalSeconds
 Set mBarWriter = pBarWriter
 
-If Not mBar.Blank Then
+If Not mBar.Blank And mSaveIntervalSeconds <> 0 Then
     DeferAction Me, , 10 + Int(Rnd * 20)
     mDeferredWriteInProgress = True
 End If
@@ -172,7 +178,7 @@ Const ProcName As String = "calculateDeferralTime"
 On Error GoTo Err
 
 Dim lNextWriteTime As Date
-lNextWriteTime = mLastWriteTime + OneMillisec * IIf(mSaveIntervalSeconds = 0, 10 + Int(Rnd * 20), mSaveIntervalSeconds * 1000 + Int(Rnd * 20))
+lNextWriteTime = mLastWriteTime + OneMillisec * (mSaveIntervalSeconds * 1000 - 20 + Int(Rnd * 40))
 
 Dim lTimestamp As Date
 lTimestamp = GetTimestamp
@@ -193,18 +199,20 @@ Const ProcName As String = "WriteBar"
 On Error GoTo Err
 
 ' because of the delayed writes, the TimeframeHandler may have been Finished between
-' initiating the write timer and getting here, so check for this
+' initiating the deferred action and getting here, so check for this
 If mBarWriter Is Nothing Then Exit Sub
+If mBar.Blank Then Exit Sub
 
 If gLogger.IsLoggable(LogLevelHighDetail) Then
-    gLogger.Log "Write bar for  " & mLocalSymbol & _
+    gLogger.Log "Write " & gBarTypeToString(mBarType) & " bar for " & mLocalSymbol & _
                     ": " & mTimePeriod.ToString & _
-                    " type " & mBarType & " bar " & mBar.BarNumber & _
+                    " bar " & mBar.BarNumber & ": " & _
                     mBar.ToString, _
-                ProcName, ModuleName
+                ProcName, ModuleName, LogLevelDetail
 End If
 
 mBarWriter.WriteBar mBar, mBarType, mTimePeriod
+mDatabaseWrites = mDatabaseWrites + 1
 
 Exit Sub
 

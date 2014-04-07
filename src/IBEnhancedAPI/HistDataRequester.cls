@@ -23,6 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IHistDataConsumer
+Implements ITwsConnectionStateListener
 Implements StateChangeListener
 Implements Task
 
@@ -34,9 +35,27 @@ Implements Task
 ' Enums
 '@================================================================================
 
+Private Enum States
+    StateFree
+    StateAllocated
+    StateRequestQueued
+    StateRequestInProgress
+    StateRequestCancelling
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
+
+Private Type HistoricalDataRequestTableEntry
+    State                   As States
+    EarliestSubmissionTime  As Date
+    ActualSubmissionTime    As Date
+    DelayReason             As String
+    Request                 As TwsHistoricalDataRequest
+    Requester               As HistDataRequestTask
+    Next                    As Long
+End Type
 
 '@================================================================================
 ' Constants
@@ -51,7 +70,7 @@ Private Const MaxConcurrentHistDataRequests         As Long = 5
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTwsAPI                          As TwsAPI
+Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
 
 Private mRequests()                                 As HistoricalDataRequestTableEntry
@@ -69,8 +88,6 @@ Private mIsRequestPacingDisabled                    As Boolean
 
 Private mPacer                                      As HistDataRequestPacer
 
-Private mCurrRequestTask                            As HistDataRequestTask
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -87,54 +104,81 @@ End Sub
 ' IHistDataConsumer Interface Members
 '@================================================================================
 
-Private Sub IHistDataConsumer_EndHistData()
+Private Sub IHistDataConsumer_EndHistData(ByVal pRequestId As Long)
 Const ProcName As String = "IHistDataConsumer_EndHistData"
 On Error GoTo Err
 
-mCurrRequestTask.EndHistData
-Set mCurrRequestTask = Nothing
+CompleteRequest pRequestId
+If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+mRequests(pRequestId).Requester.EndHistData
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IHistDataConsumer_NotifyBar(pBar As TWSBar)
+Private Sub IHistDataConsumer_NotifyBar(ByVal pRequestId As Long, pBar As TwsBar)
 Const ProcName As String = "IHistDataConsumer_NotifyBar"
 On Error GoTo Err
 
-mCurrRequestTask.NotifyBar pBar
+If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+mRequests(pRequestId).Requester.NotifyBar pBar
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IHistDataConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "IHistDataConsumer_NotifyError"
 On Error GoTo Err
 
-Set mCurrRequestTask = Nothing
+CompleteRequest pRequestId
+If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
 mRequests(pRequestId).Requester.NotifyError pErrorCode, pErrorMsg
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IHistDataConsumer_StartHistData(pStartInfo As TWSHistDataStartInfo)
+Private Sub IHistDataConsumer_StartHistData(pStartInfo As TwsHistDataStartInfo)
 Const ProcName As String = "IHistDataConsumer_StartHistData"
 On Error GoTo Err
 
-Set mCurrRequestTask = mRequests(pStartInfo.RequestId).Requester
+' nothing to do
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' ITwsConnectionStateListener Interface Members
+'@================================================================================
+
+Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As ApiConnectionStates, ByVal pMessage As String)
+Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
+On Error GoTo Err
+
+If pState = TwsConnConnected Then doSchedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
+
+End Sub
+
+Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
+
 End Sub
 
 '@================================================================================
@@ -142,17 +186,17 @@ End Sub
 '@================================================================================
 
 Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Dim tli As TimerListItem
-
 Const ProcName As String = "StateChangeListener_Change"
 On Error GoTo Err
 
-Set tli = ev.source
+Dim tli As TimerListItem
+Set tli = ev.Source
 releaseEntry CLng(tli.data)
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -172,7 +216,7 @@ doSchedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
@@ -182,22 +226,6 @@ End Property
 Private Property Get Task_TaskName() As String
 Task_TaskName = mTaskContext.Name
 End Property
-
-'@================================================================================
-' mTwsAPI Event Handlers
-'@================================================================================
-
-Private Sub mTwsAPI_Connected()
-Const ProcName As String = "mTwsAPI_Connected"
-On Error GoTo Err
-
-doSchedule
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -216,48 +244,36 @@ End Property
 '@================================================================================
 
 Friend Sub CancelHistoricalDataRequest( _
-                ByVal pRequestId As Long)
+                ByVal pRequesterId As Long)
 Const ProcName As String = "CancelHistoricalDataRequest"
 On Error GoTo Err
 
-If mRequests(pRequestId).Cancelling Then Exit Sub
-mRequests(pRequestId).Cancelling = True
+Select Case mRequests(pRequesterId).State
+Case StateFree
 
-If mRequests(pRequestId).ActualSubmissionTime = 0 Then
-    unqueueEntry pRequestId
-    releaseEntry pRequestId
-Else
-    mTwsAPI.CancelHistoricalData pRequestId
+Case StateAllocated
+
+Case StateRequestQueued
+    unqueueEntry pRequesterId
+    Schedule
+Case StateRequestInProgress
+    mRequests(pRequesterId).State = StateRequestCancelling
+    mTwsAPI.CancelHistoricalData pRequesterId
     
     ' it's possible that Tws has already sent the data but we haven't received it yet,
     ' so we keep this entry for 'long enough' to ensure that any pending data
     ' has been received - ie 60 seconds
-    GetGlobalTimerList.Add(pRequestId, 60).AddStateChangeListener Me
-End If
-
-Schedule
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Friend Sub CompleteRequest(ByVal pRequestId As Long)
-Const ProcName As String = "CompleteRequest"
-On Error GoTo Err
-
-If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
-releaseEntry pRequestId
-Schedule
+    GetGlobalTimerList.Add(pRequesterId, 60).AddStateChangeListener Me
+Case StateRequestCancelling
+End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub DisableHistoricalDataRequestPacing()
+Friend Sub DisableHistoricalDataRequestPacing()
 Const ProcName As String = "DisableHistoricalDataRequestPacing"
 On Error GoTo Err
 
@@ -267,7 +283,7 @@ Set mPacer = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -280,8 +296,20 @@ If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function GetTwsMessage() As Byte()
+Const ProcName As String = "GetTwsMessage"
+On Error GoTo Err
+
+GetTwsMessage = mTwsAPI.GetRawTwsMessage
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Friend Sub Initialise(ByVal pTwsAPI As TwsAPI)
 Const ProcName As String = "Initialise"
@@ -295,33 +323,58 @@ StartTask Me, PriorityNormal
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function RequestHistoricalData( _
-                ByRef pRequest As HistoricalDataRequest, _
-                ByVal pPriority As Boolean, _
+Friend Sub ProcessTwsMessage( _
+                ByRef pMessage() As Byte)
+Const ProcName As String = "ProcessTwsMessage"
+On Error GoTo Err
+
+mTwsAPI.ProcessRawTwsMessage pMessage, False
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Function RegisterHistoricalDataRequestTask( _
                 ByVal pRequester As HistDataRequestTask) As Long
-Const ProcName As String = "RequestHistoricalData"
+Const ProcName As String = "RegisterHistoricalDataRequestTask"
 On Error GoTo Err
 
 Dim lIndex As Long
 
 lIndex = allocateEntry
-mRequests(lIndex).Request = pRequest
 Set mRequests(lIndex).Requester = pRequester
 
-queueEntry lIndex, pPriority
-
-RequestHistoricalData = lIndex
-
-Schedule
+RegisterHistoricalDataRequestTask = lIndex
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub RequestHistoricalData( _
+                ByVal pRequesterId As Long, _
+                ByRef pRequest As TwsHistoricalDataRequest, _
+                ByVal pPriority As Boolean)
+Const ProcName As String = "RequestHistoricalData"
+On Error GoTo Err
+
+mRequests(pRequesterId).Request = pRequest
+
+queueEntry pRequesterId, pPriority
+
+Schedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Schedule()
 Const ProcName As String = "Schedule"
@@ -332,8 +385,21 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function UnregisterHistoricalDataRequestTask( _
+                ByVal pRequesterId As Long) As Long
+Const ProcName As String = "UnregisterHistoricalDataRequestTask"
+On Error GoTo Err
+
+If mRequests(pRequesterId).State <> StateRequestCancelling Then releaseEntry pRequesterId
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -355,17 +421,36 @@ Else
     allocateEntry = mRequestsIndex
 End If
 
+mRequests(allocateEntry).EarliestSubmissionTime = MaxDate
+mRequests(allocateEntry).State = StateAllocated
+
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub CompleteRequest(ByVal pRequestId As Long)
+Const ProcName As String = "CompleteRequest"
+On Error GoTo Err
+
+mRequests(pRequestId).ActualSubmissionTime = 0
+mRequests(pRequestId).EarliestSubmissionTime = MaxDate
+mRequests(pRequestId).DelayReason = ""
+If mConcurrentHistDataRequests > 0 Then mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
+Schedule
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub doSchedule()
 Const ProcName As String = "doSchedule"
 On Error GoTo Err
 
-If mTwsAPI.ConnectionState <> ConnConnected Then
+If mTwsAPI.ConnectionState <> TwsConnConnected Then
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -379,8 +464,76 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getDelayTillEarliestSubmission(ByRef pReason As String) As Long
+Const ProcName As String = "getDelayTillEarliestSubmission"
+On Error GoTo Err
+
+Dim lCurrIndex As Long
+Dim lTimestamp As Date
+Dim lEarliest As Date
+Dim lEarliestReason As String
+
+lTimestamp = GetTimestamp
+lEarliest = MaxDate
+lCurrIndex = mFirstPendingRequestsEntry
+
+Do While lCurrIndex <> NullIndex
+    setEarliestSubmissionTime lCurrIndex
+    If mRequests(lCurrIndex).EarliestSubmissionTime < lEarliest Then
+        lEarliest = mRequests(lCurrIndex).EarliestSubmissionTime
+        lEarliestReason = mRequests(lCurrIndex).DelayReason
+    End If
+    lCurrIndex = mRequests(lCurrIndex).Next
+Loop
+
+If lEarliest <> MaxDate And lEarliest <> 0# Then
+    pReason = lEarliestReason
+    getDelayTillEarliestSubmission = (lEarliest - lTimestamp) * 86400# * 1000#
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getReadyRequestIndexes() As Long()
+ Const ProcName As String = "getReadyRequestIndexes"
+On Error GoTo Err
+
+Dim lCurrIndex As Long
+Dim lTimestamp As Date
+
+ReDim lRequestIndexes(3) As Long
+Dim lRequestIndexesIndex As Long
+
+lRequestIndexes(0) = NullIndex  ' ensure the array has at least one entry
+
+lTimestamp = GetTimestamp
+lCurrIndex = mFirstPendingRequestsEntry
+
+Do While lCurrIndex <> NullIndex
+    setEarliestSubmissionTime lCurrIndex
+    If mRequests(lCurrIndex).EarliestSubmissionTime <= lTimestamp Then
+        lRequestIndexesIndex = lRequestIndexesIndex + 1
+        If lRequestIndexesIndex > UBound(lRequestIndexes) Then ReDim Preserve lRequestIndexes(2 * (UBound(lRequestIndexes) + 1) - 1) As Long
+        lRequestIndexes(lRequestIndexesIndex) = lCurrIndex
+    End If
+    lCurrIndex = mRequests(lCurrIndex).Next
+Loop
+
+ReDim Preserve lRequestIndexes(lRequestIndexesIndex) As Long
+
+getReadyRequestIndexes = lRequestIndexes
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub queueEntry(ByVal pIndex As Long, ByVal pPriority As Boolean)
 Const ProcName As String = "queueEntry"
@@ -407,82 +560,63 @@ Else
     mRequests(mLastPendingRequestsEntry).Next = NullIndex
 End If
 
-gLogger.Log "Queue entry " & pIndex & _
+mRequests(pIndex).State = StateRequestQueued
+
+gLog "Queue entry " & pIndex & _
             "; FirstEntry=" & mFirstPendingRequestsEntry & _
             "; LastEntry=" & mLastPendingRequestsEntry & _
             "; LastPriorityEntry=" & mLastPriorityPendingRequestsEntry, _
-            ProcName, ModuleName, LogLevelDetail
+            ModuleName, ProcName, , LogLevelDetail
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function releaseEntry(ByVal pIndex As Long)
 Const ProcName As String = "releaseEntry"
 On Error GoTo Err
 
-Dim lBlankRequest As HistoricalDataRequest
+Dim lBlankRequest As TwsHistoricalDataRequest
 
+mRequests(pIndex).State = StateFree
 mRequests(pIndex).Next = mFirstFreeRequestsEntry
 mFirstFreeRequestsEntry = pIndex
-mRequests(pIndex).Cancelling = False
+mRequests(pIndex).State = StateFree
 mRequests(pIndex).ActualSubmissionTime = 0
 mRequests(pIndex).EarliestSubmissionTime = 0
 mRequests(pIndex).Request = lBlankRequest
+mRequests(pIndex).DelayReason = ""
 Set mRequests(pIndex).Requester = Nothing
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub schedulePaced()
 Const ProcName As String = "schedulePaced"
 On Error GoTo Err
 
-Dim lIndex As Long
-Dim lCurrIndex As Long
 Dim lDelay As Long
-Dim lTimestamp As Date
-Dim lEarliest As Date
+Dim lReason As String
 
-lTimestamp = GetTimestamp
-lEarliest = MaxDate
-lIndex = mFirstPendingRequestsEntry
-lDelay = mPacer.DelayTillNextSubmission
+lDelay = mPacer.GetDelayTillNextSubmission(lReason)
 
-Do While lDelay = 0 And lIndex <> NullIndex And mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
-    lCurrIndex = lIndex
-    lIndex = mRequests(lIndex).Next
-    If mRequests(lCurrIndex).EarliestSubmissionTime = 0 Then mRequests(lCurrIndex).EarliestSubmissionTime = mPacer.GetEarliestSubmissionTime(mRequests(lCurrIndex).Request)
-    If mRequests(lCurrIndex).EarliestSubmissionTime < lTimestamp Then
-        
-        mTwsAPI.RequestHistoricalData lCurrIndex, mRequests(lCurrIndex).Request
-        mRequests(lCurrIndex).ActualSubmissionTime = mPacer.RecordSubmission(mRequests(lCurrIndex).Request)
-        
-        mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
-        
-        unqueueEntry lCurrIndex
-        lDelay = mPacer.DelayTillNextSubmission
-    ElseIf mRequests(lCurrIndex).EarliestSubmissionTime < lEarliest Then
-        lEarliest = mRequests(lCurrIndex).EarliestSubmissionTime
-    End If
-Loop
-
-If lDelay <> 0 Then
-    mTaskContext.Suspend lDelay
-ElseIf lEarliest <> MaxDate Then
-    mTaskContext.Suspend (lEarliest - lTimestamp) * 86400# * 1000#
-Else
-    mTaskContext.Suspend -1
+If lDelay = 0 Then
+    lDelay = submitEntries(getReadyRequestIndexes, lReason)
+    If lDelay = 0 Then lDelay = getDelayTillEarliestSubmission(lReason)
+    If lDelay = 0 Then lDelay = -1
 End If
+    
+If lDelay <> -1 Then gLog "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
+mTaskContext.Suspend lDelay
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub scheduleUnpaced()
@@ -510,7 +644,60 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setEarliestSubmissionTime(ByVal pIndex As Long)
+Dim lReason As String
+Const ProcName As String = "setEarliestSubmissionTime"
+On Error GoTo Err
+
+If mRequests(pIndex).EarliestSubmissionTime = MaxDate Then
+    mRequests(pIndex).EarliestSubmissionTime = mPacer.GetEarliestSubmissionTime(mRequests(pIndex).Request, lReason)
+    mRequests(pIndex).DelayReason = lReason
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function submitEntries(ByRef pIndexes() As Long, ByRef pReason As String) As Long
+Const ProcName As String = "submitEntries"
+On Error GoTo Err
+
+Dim i As Long: i = 1    ' first index in pIndexes is always NullIndex
+Dim lDelay As Long
+
+Do While lDelay = 0 And i <= UBound(pIndexes) And mConcurrentHistDataRequests < MaxConcurrentHistDataRequests
+    submitEntry pIndexes(i)
+    mConcurrentHistDataRequests = mConcurrentHistDataRequests + 1
+    lDelay = mPacer.GetDelayTillNextSubmission(pReason)
+    i = i + 1
+Loop
+
+submitEntries = lDelay
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub submitEntry(ByVal pIndex As Long)
+Const ProcName As String = "submitEntry"
+On Error GoTo Err
+
+mTwsAPI.RequestHistoricalData pIndex, mRequests(pIndex).Request
+mRequests(pIndex).ActualSubmissionTime = mPacer.RecordSubmission(mRequests(pIndex).Request)
+mRequests(pIndex).State = StateRequestInProgress
+unqueueEntry pIndex
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unqueueEntry(ByVal pIndex As Long)
@@ -520,15 +707,14 @@ On Error GoTo Err
 Dim lIndex As Long
 Dim lPrevIndex As Long
 
-If mFirstPendingRequestsEntry = NullIndex Or _
-    mLastPendingRequestsEntry = NullIndex Then Err.Raise ErrorCodes.ErrIllegalStateException, , "No pending entries"
+Assert mFirstPendingRequestsEntry <> NullIndex And mLastPendingRequestsEntry <> NullIndex, "No pending entries"
 
 lIndex = mFirstPendingRequestsEntry
 lPrevIndex = NullIndex
 Do While lIndex <> pIndex
     lPrevIndex = lIndex
     lIndex = mRequests(lIndex).Next
-    If lIndex = NullIndex Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Can't find entry to be removed"
+    Assert lIndex <> NullIndex, "Can't find entry to be removed"
 Loop
 
 If lIndex = mFirstPendingRequestsEntry Then mFirstPendingRequestsEntry = mRequests(lIndex).Next
@@ -541,12 +727,12 @@ gLogger.Log "Unqueue entry " & pIndex & _
             "; FirstEntry=" & mFirstPendingRequestsEntry & _
             "; LastEntry=" & mLastPendingRequestsEntry & _
             "; LastPriorityEntry=" & mLastPriorityPendingRequestsEntry, _
-            ProcName, ModuleName, LogLevelNormal
+            ProcName, ModuleName, LogLevelMediumDetail
             
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

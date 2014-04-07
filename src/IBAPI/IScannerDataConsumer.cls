@@ -64,6 +64,22 @@ Private Const ModuleName                            As String = "IScannerDataCon
 ' Methods
 '@================================================================================
 
+Public Sub EndScannerData(ByVal pRequestId As Long)
+End Sub
+
+Public Sub NotifyScannerData( _
+                ByVal pRequestId As Long, _
+                ByVal pRank As Long, _
+                ByVal pContractDetails As TwsContractDetails, _
+                ByVal pDistance As String, _
+                ByVal pBenchmark As String, _
+                ByVal pProjection As String, _
+                ByVal pLegs As String)
+End Sub
+
+Public Sub NotifyScannerParameters(ByVal pXml As String)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

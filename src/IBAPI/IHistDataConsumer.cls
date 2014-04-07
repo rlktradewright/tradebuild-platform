@@ -64,10 +64,10 @@ Private Const ModuleName                            As String = "IHistDataConsum
 ' Methods
 '@================================================================================
 
-Public Sub EndHistData()
+Public Sub EndHistData(ByVal pRequestId As Long)
 End Sub
 
-Public Sub NotifyBar(ByRef pBar As TWSBar)
+Public Sub NotifyBar(ByVal pRequestId As Long, ByRef pBar As TwsBar)
 End Sub
 
 Public Sub NotifyError( _
@@ -76,7 +76,7 @@ Public Sub NotifyError( _
                 ByVal pErrorMsg As String)
 End Sub
 
-Public Sub StartHistData(ByRef pStartInfo As TWSHistDataStartInfo)
+Public Sub StartHistData(ByRef pStartInfo As TwsHistDataStartInfo)
 End Sub
 
 '@================================================================================

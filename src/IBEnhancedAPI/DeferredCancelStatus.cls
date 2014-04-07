@@ -64,7 +64,9 @@ If lMapEntry.Order.Status <> OrderStatusCancelled And _
     lMapEntry.Order.Status <> OrderStatusFilled _
 Then
     Dim lStatusRpt As New OrderStatusReport
-    lStatusRpt.Initialise lMapEntry.Order.Id, OrderStatusCancelled
+    lStatusRpt.OrderId = lMapEntry.Order.Id
+    lStatusRpt.BrokerId = lMapEntry.Order.BrokerId
+    lStatusRpt.Status = OrderStatusCancelled
     lMapEntry.OrderSubmitter.NotifyOrderStatusReport lStatusRpt
 End If
 

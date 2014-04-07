@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "DataSources"
 ' Member variables
 '@================================================================================
 
-Private mDataStreamRef                              As WeakReference
+Private mDataSourceBaseRef                              As WeakReference
 
 Private mDataSources                                As New Listeners
 
@@ -120,8 +120,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
-Friend Sub Initialise(ByVal pDataStream As MarketDataStream)
-Set mDataStreamRef = CreateWeakReference(pDataStream)
+Friend Sub Initialise(ByVal pDataSourceBase As DataSourceBase)
+Set mDataSourceBaseRef = CreateWeakReference(pDataSourceBase)
 End Sub
 
 Friend Sub NotifyError( _
@@ -207,13 +207,13 @@ For Each lDataSource In mDataSources.CurrentListeners
         lDataSource.FireTick pTick
         If lDataSource.HasQuoteListeners Then
             Dim lQuote As Quote
-            If Not lGotQuote Then lQuote = getDataStream.GetCurrentQuote(pTick.TickType): lGotQuote = True
+            If Not lGotQuote Then lQuote = DataSourceBase.GetCurrentQuote(pTick.TickType): lGotQuote = True
             lDataSource.FireQuote lQuote, pTick.TickType
         End If
         If pTick.TickType = TickTypeTrade Or pTick.TickType = TickTypeClosePrice Then
             If lDataSource.HasPriceChangeListeners Then
                 Dim lPriceChange As PriceChange
-                If Not lGotPriceChange Then lPriceChange = getDataStream.GetPriceChange: lGotPriceChange = True
+                If Not lGotPriceChange Then lPriceChange = DataSourceBase.GetPriceChange: lGotPriceChange = True
                 lDataSource.FirePriceChange lPriceChange
             End If
         End If
@@ -243,8 +243,8 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function getDataStream() As MarketDataStream
-Set getDataStream = mDataStreamRef.Target
+Private Function DataSourceBase() As DataSourceBase
+Set DataSourceBase = mDataSourceBaseRef.Target
 End Function
 
 

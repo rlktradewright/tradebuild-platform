@@ -115,6 +115,8 @@ Private mStartTimeDescriptor                            As String
 Private mEndTimeDescriptor                              As String
 Private mExitTimeDescriptor                             As String
 
+Private mNoDataRestartSecs                              As Long
+
 Private mConfigManager                                  As ConfigManager
 
 Private mFatalErrorHandler                              As FatalErrorHandler
@@ -188,14 +190,14 @@ On Error Resume Next    ' ignore any further errors that might arise
 ' entire development environment as well which can have undesirable side effects if other
 ' components are also loaded.)
 
-If mIsInDev Then
-    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
-    ' needed here because the End statement will prevent return to TWUtilities
-    UnhandledErrorHandler.Handled = True
-    End
-Else
-    EndProcess
-End If
+'If mIsInDev Then
+'    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
+'    ' needed here because the End statement will prevent return to TWUtilities
+'    UnhandledErrorHandler.Handled = True
+'    End
+'Else
+'    EndProcess
+'End If
 
 End Sub
 
@@ -286,6 +288,8 @@ mExitTimeDescriptor = getExitTimeDescriptor
 
 mNoAutoStart = getNoAutostart
 
+mNoDataRestartSecs = getNoDataRestartSecs
+
 If mNoUI Then
     
     LogMessage "Creating data collector object"
@@ -327,7 +331,7 @@ End If
 
 Exit Sub
 Err:
-UnhandledErrorHandler.Notify ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -521,6 +525,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getNoDataRestartSecs() As Long
+Const ProcName As String = "getNoDataRestartSecs"
+On Error GoTo Err
+
+If mCLParser.Switch("noDataRestartSecs") Then
+    getNoDataRestartSecs = mCLParser.SwitchValue("noDataRestartSecs")
+End If
+LogMessage "No data restart interval (secs): " & getNoDataRestartSecs
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function getNoUi() As Boolean
 Const ProcName As String = "getNoUi"
 On Error GoTo Err
@@ -591,7 +610,6 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTaskParameters()
-
 Const ProcName As String = "setTaskParameters"
 On Error GoTo Err
 
@@ -645,7 +663,7 @@ On Error GoTo Err
 
 Set f = New fConfig
 f.Initialise mConfigManager, False
-f.Show vbModal
+f.Show vbModeless
 
 Exit Sub
 
@@ -675,6 +693,7 @@ If mCLParser.Switch("?") Then
             "                [/endAt:[day]hh:mm]" & vbCrLf & _
             "                [/loglevel:levelName]" & vbCrLf
     s = s & _
+            "                [/noDataRestartSecs:n]" & vbCrLf & _
             "                [/concurrency:n]" & vbCrLf & _
             "                [/quantum:n]" & vbCrLf
     s = s & vbCrLf & _
@@ -749,7 +768,8 @@ pForm.Initialise mDataCollector, _
                 mConfigManager, _
                 getConfigName, _
                 getNoAutostart, _
-                CBool(mCLParser.Switch("showMonitor"))
+                CBool(mCLParser.Switch("showMonitor")), _
+                mNoDataRestartSecs
 
 pForm.Left = mPosX * pForm.Width
 pForm.Top = mPosY * pForm.Height
