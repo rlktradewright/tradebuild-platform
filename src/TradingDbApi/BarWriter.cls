@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "HistDataWriter"
+Attribute VB_Name = "BarWriter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@===============================================================================
@@ -30,19 +30,12 @@ Option Explicit
 ' Interfaces
 '@===============================================================================
 
-Implements IBarDataWriter
+Implements IBarWriter
 Implements TaskCompletionListener
 
 '@===============================================================================
 ' Events
 '@===============================================================================
-
-'@===============================================================================
-' Constants
-'@===============================================================================
-
-
-Private Const ModuleName As String = "HistDataWriter"
 
 '@===============================================================================
 ' Enums
@@ -53,93 +46,92 @@ Private Const ModuleName As String = "HistDataWriter"
 '@===============================================================================
 
 Private Type TimeframeEntry
-    timeframe               As TimePeriod
-    saveIntervalSeconds     As Long
-    prevTimestamp           As Date
-    barsWritten             As Long
-    writes                  As Long
+    Timeframe               As TimePeriod
+    PrevTimestamp           As Date
+    BarsWritten             As Long
+    Writes                  As Long
 End Type
+
+'@===============================================================================
+' Constants
+'@===============================================================================
+
+Private Const ModuleName                    As String = "BarWriter"
 
 '@===============================================================================
 ' Member variables
 '@===============================================================================
 
-Private mTradingDB                  As TradingDB
+Private mTradingDB                          As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
-Private mConnectionString           As String
 
-Private mHistDataServiceProvider    As HistDataServiceProvider
+Private mParent                             As HistDataStore
+Private mOutputMonitor                      As IBarOutputMonitor
 
-Private mCommonServiceConsumer      As ICommonServiceConsumer
-Private mServiceConsumer            As IBarDataOutputServiceConsumer
-Private mServiceProviderName        As String
+Private mReady                              As Boolean
 
-Private mContract                   As Contract
+Private mContractFuture                     As IFuture
+Private mContract                           As IContract
 
-Private mPath                       As String
+Private mPath                               As String
 
-Private mInstrument                 As Instrument
+Private mInstrument                         As Instrument
 
-Private mTimeframeTable(3)          As TimeframeEntry
+Private mTimeframeTable()                   As TimeframeEntry
 
-Private mUseSynchronousWrites       As Boolean
+Private mUseSynchronousReads                As Boolean
+Private mUseSynchronousWrites               As Boolean
 
-Private WithEvents mInstrumentTC    As TaskController
+Private WithEvents mInstrumentTC            As TaskController
 Attribute mInstrumentTC.VB_VarHelpID = -1
+
+Private WithEvents mFutureWaiter            As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
 
 Private Sub Class_Initialize()
-Set mTimeframeTable(0).timeframe = GetTimePeriod(1, TimePeriodMinute)
-mTimeframeTable(0).saveIntervalSeconds = 5
-
-Set mTimeframeTable(1).timeframe = GetTimePeriod(5, TimePeriodMinute)
-mTimeframeTable(1).saveIntervalSeconds = 5
-
-Set mTimeframeTable(2).timeframe = GetTimePeriod(15, TimePeriodMinute)
-mTimeframeTable(2).saveIntervalSeconds = 5
-
-Set mTimeframeTable(3).timeframe = GetTimePeriod(60, TimePeriodMinute)
-mTimeframeTable(3).saveIntervalSeconds = 5
-
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@===============================================================================
-' IBarDataWriter Interface Members
+' IBarWriter Interface Members
 '@===============================================================================
 
-Private Property Get IBarDataWriter_ContractSpecifier() As ContractSpecifier
-Set IBarDataWriter_ContractSpecifier = mContract.Specifier
+Private Property Get IBarWriter_ContractFuture() As IFuture
+Set IBarWriter_ContractFuture = mContractFuture
 End Property
 
-Private Sub IBarDataWriter_ReleaseDataStore()
-Const ProcName As String = "IBarDataWriter_ReleaseDataStore"
+Private Sub IBarWriter_Finish()
+Const ProcName As String = "IBarWriter_Finish"
 On Error GoTo Err
-finish
-mHistDataServiceProvider.dataWriterFinished Me
+
+Finish
+
 Exit Sub
+
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBarDataWriter_WriteBar( _
-                ByVal data As Bar, _
-                ByVal barType As BarTypes, _
-                ByVal barTimePeriod As TimePeriod)
-Const ProcName As String = "IBarDataWriter_WriteBar"
-Dim index As Long
-Dim tc As TaskController
+Private Property Get IBarWriter_IsReady() As Boolean
+IBarWriter_IsReady = mReady
+End Property
 
-Dim failpoint As Long
+Private Sub IBarWriter_WriteBar( _
+                ByVal pBar As Bar, _
+                ByVal pBarType As BarTypes, _
+                ByVal pTimePeriod As TimePeriod)
+Const ProcName As String = "IBarWriter_WriteBar"
 On Error GoTo Err
 
-With data
+With pBar
     If mUseSynchronousWrites Then
         mInstrument.WriteBar .TimeStamp, _
-                            barType, _
-                            barTimePeriod.length, _
+                            pBarType, _
+                            pTimePeriod.Length, _
                             .OpenValue, _
                             .HighValue, _
                             .LowValue, _
@@ -148,26 +140,27 @@ With data
                             .TickVolume, _
                             .OpenInterest
     Else
-        Set tc = mInstrument.WriteBarAsync(.TimeStamp, _
-                                            barType, _
-                                            barTimePeriod.length, _
-                                            .OpenValue, _
-                                            .HighValue, _
-                                            .LowValue, _
-                                            .CloseValue, _
-                                            .Volume, _
-                                            .TickVolume, _
-                                            .OpenInterest)
-        tc.AddTaskCompletionListener Me
+        mInstrument.WriteBarAsync(.TimeStamp, _
+                                pBarType, _
+                                pTimePeriod.Length, _
+                                .OpenValue, _
+                                .HighValue, _
+                                .LowValue, _
+                                .CloseValue, _
+                                .Volume, _
+                                .TickVolume, _
+                                .OpenInterest).AddTaskCompletionListener Me
     End If
+    
+    Dim index As Long
     For index = 0 To UBound(mTimeframeTable)
-        If mTimeframeTable(index).timeframe.length = barTimePeriod.length Then
+        If mTimeframeTable(index).Timeframe Is pTimePeriod Then
             With mTimeframeTable(index)
-                If .prevTimestamp <> data.TimeStamp Then
-                    .barsWritten = .barsWritten + 1
-                    .prevTimestamp = data.TimeStamp
+                If .PrevTimestamp <> pBar.TimeStamp Then
+                    .BarsWritten = .BarsWritten + 1
+                    .PrevTimestamp = pBar.TimeStamp
                 End If
-                .writes = .writes + 1
+                .Writes = .Writes + 1
             End With
             Exit For
         End If
@@ -178,7 +171,11 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
+
 End Sub
 
 '@===============================================================================
@@ -186,81 +183,108 @@ End Sub
 '@===============================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
-                ev As TWUtilities30.TaskCompletionEventData)
+                ev As TaskCompletionEventData)
 Const ProcName As String = "TaskCompletionListener_taskCompleted"
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim lEv As NotificationEventData
 If ev.ErrorNumber <> 0 Then
-    logMessage pMsg:="error (" & ev.ErrorNumber & "): " & ev.ErrorMessage, pProcName:="TaskCompletionListener_taskCompleted", pLogLevel:=LogLevelHighDetail
-    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
-                                        ev.ErrorMessage, _
-                                        mHistDataServiceProvider.handle
+    Dim lMessage As String
+    lMessage = "Error (" & ev.ErrorNumber & "): " & ev.ErrorMessage
+    logMessage lMessage, ProcName, , LogLevelHighDetail
+    
+    Set lEv.Source = Me
+    lEv.EventCode = ev.ErrorNumber
+    lEv.EventMessage = ev.ErrorMessage
+    If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@===============================================================================
+' mFutureWaiter Event Handlers
+'@===============================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is TradingDB Then
+    Set mTradingDB = ev.Future.Value
+Else
+    Set mContract = ev.Future.Value
+End If
+
+If mTradingDB Is Nothing Or mContract Is Nothing Then Exit Sub
+
+If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
+Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
 ' mInstrumentTC Event Handlers
 '@===============================================================================
 
-Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mInstrumentTC_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTC_Completed"
-Dim failpoint As Long
 On Error GoTo Err
+
+Dim lEv As NotificationEventData
+Set lEv.Source = Me
 
 If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
-    mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error " & ev.ErrorNumber & ": " & ev.ErrorMessage, _
-                                mHistDataServiceProvider.handle
-ElseIf IsEmpty(ev.result) Then
-    mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error: specified instrument does not exist: " & mContract.Specifier.ToString, _
-                                mHistDataServiceProvider.handle
+    lEv.EventCode = ev.ErrorNumber
+    lEv.EventMessage = ev.ErrorMessage
+    If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
+ElseIf IsEmpty(ev.Result) Then
+    lEv.EventCode = HistDataEventCodes.HistDataEventNoContractDetails
+    lEv.EventMessage = "Error: specified instrument does not exist: " & mContract.Specifier.ToString
+    If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
 Else
-    Set mInstrument = ev.result
+    Set mInstrument = ev.Result
     
-    requestTimeframes
+    setupTimeframeTable
     
-    mServiceConsumer.Ready
-    mServiceConsumer.OutputBarfileCreated mConnectionString
+    mReady = True
+    If Not mOutputMonitor Is Nothing Then
+        mOutputMonitor.NotifyReady Me
+        mOutputMonitor.NotifyOutputFileCreated Me, mContract.Specifier.ToString & ": " & mTradingDB.ToString
+    End If
 End If
 Set mInstrumentTC = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
 ' Properties
 '@===============================================================================
 
-Friend Property Let HistDataServiceProvider( _
-                ByVal value As HistDataServiceProvider)
-Set mHistDataServiceProvider = value
-End Property
-
-Friend Property Let Path(ByVal value As String)
-mPath = value
+Friend Property Let Path(ByVal Value As String)
+mPath = Value
 End Property
 
 '@===============================================================================
 ' Methods
 '@===============================================================================
 
-Friend Sub finish()
-Const ProcName As String = "finish"
-Dim s As String
-Dim i As Long
-
-Dim failpoint As Long
+Friend Sub Finish()
+Const ProcName As String = "Finish"
 On Error GoTo Err
 
 If Not mInstrumentTC Is Nothing Then
@@ -268,115 +292,87 @@ If Not mInstrumentTC Is Nothing Then
     Set mInstrumentTC = Nothing
 End If
 
-s = mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")"
+Dim s As String
+s = "Bar writer (" & mContract.Specifier.LocalSymbol & ")"
+
+Dim i As Long
 For i = 0 To UBound(mTimeframeTable)
-    s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
-            mTimeframeTable(i).timeframe.ToString & _
+    s = s & vbCrLf & "    Total of " & mTimeframeTable(i).BarsWritten & " bars (" & _
+            mTimeframeTable(i).Timeframe.ToString & _
             ") written in " & _
-            mTimeframeTable(i).writes & " database writes"
+            mTimeframeTable(i).Writes & " database writes"
 Next
-logMessage pMsg:=s, pProcName:="finish"
-Set mServiceConsumer = Nothing
+logMessage s, ProcName, , LogLevelDetail
+
+mParent.BarWriterFinished Me
+Set mParent = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub initialise( _
-                ByVal Name As String, _
-                ByVal dbType As DatabaseTypes, _
-                ByVal connectionString As String, _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
-                ByVal pContract As Contract, _
-                ByVal useSynchronousWrites As Boolean)
+Friend Sub Initialise( _
+                ByVal pTradingDBFuture As IFuture, _
+                ByVal pParent As HistDataStore, _
+                ByVal pOutputMonitor As IBarOutputMonitor, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pUseSynchronousReads As Boolean, _
+                ByVal pUseSynchronousWrites As Boolean)
 Const ProcName As String = "initialise"
-Dim failpoint As Long
 On Error GoTo Err
 
-mServiceProviderName = Name
+If pTradingDBFuture.IsAvailable Then
+    Set mTradingDB = pTradingDBFuture.Value
+Else
+    mFutureWaiter.Add pTradingDBFuture
+End If
 
-Set mCommonServiceConsumer = CommonServiceConsumer
-Set mServiceConsumer = barDataOutputServiceConsumer
+Set mParent = pParent
+Set mOutputMonitor = pOutputMonitor
 
-mUseSynchronousWrites = useSynchronousWrites
+mUseSynchronousReads = pUseSynchronousReads
+mUseSynchronousWrites = pUseSynchronousWrites
 
-logMessage pMsg:="Connecting to database", pProcName:="initialise", pLogLevel:=LogLevelDetail
-
-mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
-
-Set mHistDataServiceProvider = HistDataServiceProvider
-Set mContract = pContract
-
-If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
-
-Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
+Set mContractFuture = pContractFuture
+mFutureWaiter.Add mContractFuture
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
 
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Const ProcName As String = "handleFatalError"
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHistDataServiceProvider.handle
-End Sub
-
 Private Sub logMessage( _
                 ByRef pMsg As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
-Private Sub requestTimeframes()
+Private Sub setupTimeframeTable()
 Const ProcName As String = "requestTimeframes"
-Dim i As Long
-
-Dim failpoint As Long
 On Error GoTo Err
 
-logMessage pMsg:="requesting " & (UBound(mTimeframeTable) + 1) & " timeframes", pProcName:="requestTimeframes", pLogLevel:=LogLevelDetail
+Dim lTimeperiods() As TimePeriod
+lTimeperiods = mParent.WriterTimeframes
 
+ReDim mTimeframeTable(UBound(lTimeperiods)) As TimeframeEntry
+
+Dim i As Long
 For i = 0 To UBound(mTimeframeTable)
-    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
-                                        mTimeframeTable(i).saveIntervalSeconds
+    Set mTimeframeTable(i).Timeframe = lTimeperiods(i)
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
