@@ -82,7 +82,7 @@ Count = mExecutions.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Item(ByVal pExecId As String) As Execution
@@ -94,7 +94,7 @@ Set Item = mExecutions.Item(pExecId)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -111,7 +111,7 @@ fireChange CollItemAdded, pExecution
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
@@ -126,7 +126,7 @@ gNotifyExistingCollectionMembers mExecutions, value, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Change(pExecution As Execution)
@@ -145,7 +145,7 @@ fireChange CollItemChanged, pExecution
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Clear()
@@ -159,7 +159,7 @@ fireChange CollCollectionCleared, Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -173,7 +173,7 @@ Set NewEnum = mExecutions.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
@@ -188,7 +188,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -205,7 +205,7 @@ On Error GoTo Err
 
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
+Set ev.AffectedItem = affectedObject
 For Each listener In mChangeListeners
     listener.Change ev
 Next
@@ -214,7 +214,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 

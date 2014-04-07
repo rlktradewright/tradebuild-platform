@@ -54,27 +54,23 @@ Private Const ModuleName                As String = "WorkSpace"
 ' Member variables
 '@================================================================================
 
-Private mName                       As String
+Private mName                           As String
 
-Private mTickers                    As Tickers
-Private mOrderPlexes                As OrderPlexes
-Private mOrderPlexesSimulated       As OrderPlexes
-Private mExecutions                 As Executions
-Private mExecutionsSimulated        As Executions
+Private mTickers                        As Tickers
+Private mBracketOrders                  As BracketOrders
+Private mBracketOrdersSimulated         As BracketOrders
+Private mExecutions                     As Executions
+Private mExecutionsSimulated            As Executions
 
-Private mInihibitOrderRecovery      As Boolean
+Private mConfig                         As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mTickers = New Tickers
-mTickers.AddCollectionChangeListener Me
-mTickers.WorkSpace = Me
-
-Set mOrderPlexes = New OrderPlexes
-Set mOrderPlexesSimulated = New OrderPlexes
+Set mBracketOrders = New BracketOrders
+Set mBracketOrdersSimulated = New BracketOrders
 
 Set mExecutions = New Executions
 Set mExecutionsSimulated = New Executions
@@ -93,9 +89,9 @@ Const ProcName As String = "CollectionChangeListener_Change"
 
 On Error GoTo Err
 
-If TypeOf ev.source Is Tickers Then
+If TypeOf ev.Source Is Tickers Then
     Dim lTicker As Ticker
-    Set lTicker = ev.affectedItem
+    Set lTicker = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         lTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
@@ -105,32 +101,32 @@ If TypeOf ev.source Is Tickers Then
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
-ElseIf TypeOf ev.source Is OrderContexts Then
+ElseIf TypeOf ev.Source Is OrderContexts Then
     Dim lOrderContext As OrderContext
-    Set lOrderContext = ev.affectedItem
+    Set lOrderContext = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        lOrderContext.ActiveOrderPlexes.AddCollectionChangeListener Me
+        lOrderContext.ActiveBracketOrders.AddCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
-        lOrderContext.ActiveOrderPlexes.RemoveCollectionChangeListener Me
+        lOrderContext.ActiveBracketOrders.RemoveCollectionChangeListener Me
     End Select
-ElseIf TypeOf ev.source Is OrderPlexes Then
-    Dim lOrderPlex As orderPlex
-    Set lOrderPlex = ev.affectedItem
+ElseIf TypeOf ev.Source Is BracketOrders Then
+    Dim lBracketOrder As BracketOrder
+    Set lBracketOrder = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        If lOrderPlex.IsSimulated Then
-            mOrderPlexesSimulated.Add lOrderPlex
+        If lBracketOrder.IsSimulated Then
+            mBracketOrdersSimulated.Add lBracketOrder
         Else
-            mOrderPlexes.Add lOrderPlex
+            mBracketOrders.Add lBracketOrder
         End If
     Case CollectionChangeTypes.CollItemRemoved
-        ' do nothing here because we don't care whether the order plex
+        ' do nothing here because we don't care whether the bracket order
         ' is active or not
     End Select
-ElseIf TypeOf ev.source Is Executions Then
+ElseIf TypeOf ev.Source Is Executions Then
     Dim lExec As Execution
-    Set lExec = ev.affectedItem
+    Set lExec = ev.AffectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         If lExec.IsSimulated Then
@@ -146,7 +142,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -165,24 +161,16 @@ Public Property Get ExecutionsSimulated() As Executions
 Set ExecutionsSimulated = mExecutionsSimulated
 End Property
 
-Public Property Let InihibitOrderRecovery(ByVal value As Boolean)
-mInihibitOrderRecovery = value
+Public Property Get Name() As String
+Name = mName
 End Property
 
-Public Property Let name(ByVal value As String)
-mName = value
+Public Property Get BracketOrders() As BracketOrders
+Set BracketOrders = mBracketOrders
 End Property
 
-Public Property Get name() As String
-name = mName
-End Property
-
-Public Property Get OrderPlexes() As OrderPlexes
-Set OrderPlexes = mOrderPlexes
-End Property
-
-Public Property Get OrderPlexesSimulated() As OrderPlexes
-Set OrderPlexesSimulated = mOrderPlexesSimulated
+Public Property Get BracketOrdersSimulated() As BracketOrders
+Set BracketOrdersSimulated = mBracketOrdersSimulated
 End Property
 
 Public Property Get Tickers() As Tickers
@@ -192,6 +180,51 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal pName As String, _
+                ByVal pScopeName As String, _
+                ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pOrderSubmitterLive As IOrderSubmitter, _
+                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers, _
+                ByVal pMoneyManager As IMoneyManager)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+mName = pName
+Set mTickers = CreateTickers(pTradeBuildAPI.ServiceProviders.MarketDataManager, _
+                            pTradeBuildAPI.StudyLibraryManager, _
+                            pTradeBuildAPI.ServiceProviders.HistoricalDataStoreInput, _
+                            pOrderSubmitterLive, _
+                            pOrderSubmitterSimulated, _
+                            pPositionManagersLive, _
+                            pPositionManagersSimulated, _
+                            pName, _
+                            pScopeName, _
+                            pMoneyManager)
+mTickers.Tickers.AddCollectionChangeListener Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "LoadFromConfig"
+On Error GoTo Err
+
+Set mConfig = pConfig
+
+mTickers.LoadFromConfig mConfig.AddPrivateConfigurationSection(ConfigSectionTickers)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions

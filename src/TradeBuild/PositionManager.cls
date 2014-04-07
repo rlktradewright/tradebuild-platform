@@ -137,7 +137,7 @@ Private mLastAsk As Double
 Private mProfitListeners As Collection
 Private mChangeListeners As Collection
 
-Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+Private mOrderSubmitter As IOrderSubmitter
 
 Private mRecovering As Boolean
 
@@ -170,11 +170,11 @@ Debug.Print "PositionManager terminated"
 End Sub
 
 '@================================================================================
-' TradeBuildSP.IOrderSubmissionSrvcConsumer Interface Members
+' IOrderSubmissionSrvcConsumer Interface Members
 '@================================================================================
 
 Private Sub IOrderSubmissionSrvcConsumer_cancelTickData( _
-                ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
+                ByVal consumer As IStreamingDataConsumer)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_cancelTickData"
 
 On Error GoTo Err
@@ -187,7 +187,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub IOrderSubmissionSrvcConsumer_ExecutionReport(ByVal pExecutionReport As TradeBuildSP.IExecutionReport)
+Private Sub IOrderSubmissionSrvcConsumer_ExecutionReport(ByVal pExecutionReport As IExecutionReport)
 Dim lExec As Execution
 
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_ExecutionReport"
@@ -225,7 +225,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventCode As StandardSPEventCodes, _
                 ByVal eventMessage As String, _
                 ByVal spHandle As Long)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_NotifyEvent"
@@ -257,7 +257,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub IOrderSubmissionSrvcConsumer_OrderReport(ByVal OrderReport As TradeBuildSP.IOrderReport)
+Private Sub IOrderSubmissionSrvcConsumer_OrderReport(ByVal OrderReport As IOrderReport)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_OrderReport"
 
 On Error GoTo Err
@@ -270,7 +270,7 @@ Err:
 gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Sub
 
-Private Sub IOrderSubmissionSrvcConsumer_OrderStatusReport(ByVal pOrderStatusReport As TradeBuildSP.IOrderStatusReport)
+Private Sub IOrderSubmissionSrvcConsumer_OrderStatusReport(ByVal pOrderStatusReport As IOrderStatusReport)
 Dim lOrder As Order
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_OrderStatusReport"
 
@@ -332,7 +332,7 @@ gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pM
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_requestTickData( _
-                ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
+                ByVal consumer As IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
 Const ProcName As String = "IOrderSubmissionSrvcConsumer_requestTickData"
 
@@ -627,7 +627,7 @@ Set Orders = mOrders
 End Property
 
 Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuildSP.IOrderSubmitter)
+                ByVal value As IOrderSubmitter)
 Const ProcName As String = "OrderSubmitter"
 
 On Error GoTo Err

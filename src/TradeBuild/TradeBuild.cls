@@ -33,89 +33,29 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                            As String = "TradeBuild"
+
 '@================================================================================
 ' Enums
 '@================================================================================
 
 Public Enum ApiNotifyCodes
-    
-    ' TradeBuild-specific
     ApiNotifyServiceProviderError = 900
-                            ' Error notified by service provider and not
-                            ' handled by TradeBuild
-    ApiNotifyTickfileEmpty     ' Tickfile is empty
-    ApiNotifyTickfileInvalid   ' Not a valid tickfile format
-    ApiNotifyTickfileVersionNotSupported
-                            ' The version of tickfile is not supported
-    ApiNotifyTickfileContractDetailsInvalid  ' The tickfile contains contract details from
-                            ' an old version of Contract class
-    ApiNotifyTickfileNoContractDetails ' The tickfile contains no contract details
-                            ' (eg an eSignal tickfile) and no contract
-                            ' has been specified in the contract property
-    ApiNotifyTickfileDataSourceNotResponding
-    ApiNotifyTickfileDoesntExist
-    ApiNOtifyTickfileFormatNotSupported
-    ApiNotifyTickfileContractSpecifierInvalid
     
-    ApiNotifyCantWriteToTickfileDataStore
-    ApiNotifyRetryingConnectionToTickfileDataSource
-    ApiNotifyConnectedToTickfileDataSource
-    ApiNotifyReconnectingToTickfileDataSource
-    ApiNotifyLostConnectionToTickfileDataSource
-    
-    ApiNotifyNoHistoricDataSource
-    ApiNotifyCantConnectHistoricDataSource
-    ApiNotifyConnectedToHistoricDataSource
-    ApiNotifyDisconnectedFromHistoricDataSource
-    ApiNotifyRetryingConnectionToHistoricDataSource
-    ApiNotifyLostConnectionToHistoricDataSource
-    ApiNotifyReconnectingToHistoricDataSource
-    ApiNotifyHistoricDataRequestFailed
-    
-'    ApiNotifyMarketDepthNotAvailable
-    
-    ApiNotifyInvalidRequest
-    
-    ApiNotifyCantConnectRealtimeDataSource
-    ApiNotifyConnectedToRealtimeDataSource
-    ApiNotifyLostConnectionToRealtimeDataSource
-    ApiNotifyNoRealtimeDataSource
-    ApiNotifyReconnectingToRealtimeDataSource
-    ApiNotifyDisconnectedFromRealtimeDataSource
-    ApiNotifyRealtimeDataRequestFailed
-    ApiNotifyRealtimeDataSourceNotResponding
-    
-    ApiNotifyCantConnectToBroker
-    ApiNotifyConnectedToBroker
-    ApiNotifyRetryConnectToBroker
-    ApiNotifyLostConnectionToBroker
-    ApiNotifyReConnectingToBroker
-    ApiNotifyDisconnectedFromBroker
-    
-    ApiNotifyNonSpecificNotification
-    
-    ApiNotifyCantWriteToHistoricDataStore
-    
-    ApiNotifyTryLater
-    
-    ApiNotifyCantConnectContractDataSource
-    ApiNotifyConnectedToContractDataSource
-    ApiNotifyDisconnectedFromContractDataSource
-    ApiNotifyLostConnectionToContractDataSource
-    ApiNotifyReConnectingContractDataSource
-    ApiNotifyRetryConnectContractDataSource
-    
-    ApiNotifyOrderRejected
-    ApiNotifyOrderDeferred
-    
-    ApiNotifyCantConnectTickfileDataSource
+    ApiNotifySourceNotResponding
+    ApiNotifyConnecting
+    ApiNotifyConnected
+    ApiNotifyCantConnect
+    ApiNotifyRetryingConnection
+    ApiNotifyReconnecting
+    ApiNotifyLostConnection
 
+    ApiNotifyNonSpecificNotification
 End Enum
 
-Public Enum BulletinTypes
-    BulletinNews = 1
-    BulletinExchangeUnavailable
-    BulletinExchangeAvailable
+Public Enum ClosePositionFlags
+    ClosePositionCancelOrders = 1
+    ClosePositionWaitForCancel = 2
 End Enum
 
 Public Enum PositionTypes
@@ -124,339 +64,17 @@ Public Enum PositionTypes
     PositionTypeAll = 3
 End Enum
 
-Public Enum ClosePositionFlags
-    ClosePositionCancelOrders = 1
-    ClosePositionWaitForCancel = 2
-End Enum
-
-Public Enum ConnectionStates
-    ConnNotConnected
-    ConnConnecting
-    ConnConnected
-    ConnReplaying
-End Enum
-
-Public Enum DOMEvents
-    DOMNoEvents
-    DOMRawEvents
-    DOMProcessedEvents
-    DOMBothEvents
-End Enum
-
-Public Enum DOMUpdateTypes
-    DOMUpdateAsk
-    DOMUpdateBid
-    DOMUpdateLast
-End Enum
-
-Public Enum EntryOrderTypes
-    EntryOrderTypeMarket = 1000
-    EntryOrderTypeMarketOnOpen
-    EntryOrderTypeMarketOnClose
-    EntryOrderTypeMarketIfTouched
-    EntryOrderTypeMarketToLimit
-    EntryOrderTypeBid
-    EntryOrderTypeAsk
-    EntryOrderTypeLast
-    EntryOrderTypeLimit
-    EntryOrderTypeLimitOnOpen
-    EntryOrderTypeLimitOnClose
-    EntryOrderTypeLimitIfTouched
-    EntryOrderTypeStop
-    EntryOrderTypeStopLimit
-End Enum
-
-Public Enum FADataTypes
-    FAGroups = 1
-    FAProfile
-    FAAccountAliases
-End Enum
-
-Public Enum LegOpenClose
-    LegSamePos
-    LegOpenPos
-    LegClosePos
-    LegUnknownPos
-End Enum
-
-Public Enum MarketDepthTypes
-    MarketDepthAny
-    MarketDepthProcessed
-    MarketDepthRaw
-    MarketDepthRawL2
-End Enum
-
-Public Enum OrderActions
-    ActionNone
-    ActionBuy = 1
-    ActionSell
-End Enum
-
-Public Enum OrderAttributeIds
-    OrderAttOpenClose = &H1&
-    OrderAttOrigin = &H2&
-    OrderAttOriginatorRef = &H4&
-    OrderAttBlockOrder = &H8&
-    OrderAttSweepToFill = &H10&
-    OrderAttDisplaySize = &H20&
-    OrderAttIgnoreRTH = &H40&
-    OrderAttHidden = &H80&
-    OrderAttDiscretionaryAmount = &H100&
-    OrderAttGoodAfterTime = &H200&
-    OrderAttGoodTillDate = &H400&
-    'OrderAttRTHOnly = &H800&
-    OrderAttRule80A = &H1000&
-    OrderAttSettlingFirm = &H2000&
-    OrderAttAllOrNone = &H4000&
-    OrderAttMinimumQuantity = &H8000&
-    OrderAttPercentOffset = &H10000
-    OrderAttETradeOnly = &H20000
-    OrderAttFirmQuoteOnly = &H40000
-    OrderAttNBBOPriceCap = &H80000
-    OrderAttOverrideConstraints = &H100000
-    OrderAttAction = &H200000
-    OrderAttLimitPrice = &H400000
-    OrderAttOrderType = &H800000
-    OrderAttQuantity = &H1000000
-    OrderAttTimeInForce = &H2000000
-    OrderAttTriggerPrice = &H4000000
-    OrderAttGoodAfterTimeTZ = &H8000000
-    OrderAttGoodTillDateTZ = &H10000000
-    OrderAttStopTriggerMethod = &H20000000
-End Enum
-
-Public Enum OrderOrigins
-    OriginCustomer
-    OriginFirm
-    OriginUnknown
-End Enum
-
-Public Enum OrderPlexChangeTypes
-    OrderPlexCreated = 1
-    OrderPlexCompleted
-    OrderPlexSelfCancelled
-    OrderPlexEntryOrderChanged
-    OrderPlexStopOrderChanged
-    OrderPlexTargetOrderChanged
-    OrderPlexCloseoutOrderCreated
-    OrderPlexCloseoutOrderChanged
-    OrderPlexProfitThresholdExceeded
-    OrderPlexLossThresholdExceeded
-    OrderPlexDrawdownThresholdExceeded
-    OrderPlexSizeChanged
-    OrderPlexStateChanged
-    OrderPlexChangesPending
-    OrderPlexChangesApplied
-    OrderPlexChangesCancelled
-End Enum
-
-Public Enum OrderStatuses
-    OrderStatusCreated
-    OrderStatusRejected         ' by the broker
-    OrderStatusPendingSubmit
-    OrderStatusPreSubmitted
-    OrderStatusSubmitted
-    OrderStatusFilled
-    OrderStatusCancelling
-    OrderStatusCancelled
-End Enum
-
-Public Enum OrderTifs
-    TIFNone = 0
-    TIFDay = 1
-    TIFGoodTillCancelled = 2
-    TIFImmediateOrCancel = 4
-End Enum
-
-Public Enum OrderTypes
-    OrderTypeNone = 0
-    OrderTypeMarket = TradeBuildSP.OrderTypes.OrderTypeMarket
-    OrderTypeMarketOnClose = TradeBuildSP.OrderTypes.OrderTypeMarketOnClose
-    OrderTypeLimit = TradeBuildSP.OrderTypes.OrderTypeLimit
-    OrderTypeLimitOnClose = TradeBuildSP.OrderTypes.OrderTypeLimitOnClose
-    OrderTypePeggedToMarket = TradeBuildSP.OrderTypes.OrderTypePeggedToMarket
-    OrderTypeStop = TradeBuildSP.OrderTypes.OrderTypeStop
-    OrderTypeStopLimit = TradeBuildSP.OrderTypes.OrderTypeStopLimit
-    OrderTypeTrail = TradeBuildSP.OrderTypes.OrderTypeTrail
-    OrderTypeRelative = TradeBuildSP.OrderTypes.OrderTypeRelative
-    OrderTypeVWAP = TradeBuildSP.OrderTypes.OrderTypeVWAP
-    OrderTypeMarketToLimit = TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
-    OrderTypeQuote = TradeBuildSP.OrderTypes.OrderTypeQuote
-    OrderTypeAutoStop = TradeBuildSP.OrderTypes.OrderTypeAutoStop
-    OrderTypeAutoLimit = TradeBuildSP.OrderTypes.OrderTypeAutoLimit
-    OrderTypeAdjust = TradeBuildSP.OrderTypes.OrderTypeAdjust
-    OrderTypeAlert = TradeBuildSP.OrderTypes.OrderTypeAlert
-    OrderTypeLimitIfTouched = TradeBuildSP.OrderTypes.OrderTypeLimitIfTouched
-    OrderTypeMarketIfTouched = TradeBuildSP.OrderTypes.OrderTypeMarketIfTouched
-    OrderTypeTrailLimit = TradeBuildSP.OrderTypes.OrderTypeTrailLimit
-    OrderTypeMarketWithProtection = TradeBuildSP.OrderTypes.OrderTypeMarketWithProtection
-    OrderTypeMarketOnOpen = TradeBuildSP.OrderTypes.OrderTypeMarketOnOpen
-    OrderTypeLimitOnOpen = TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
-    OrderTypePeggedToPrimary = TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
-End Enum
-
-Public Enum PositionManagerChangeTypes
-    PositionSizeChanged
-    ProviderReadinessChanged
-    PositionClosed
-End Enum
-
-Public Enum ProfitTypes
-    ProfitTypeProfit
-    ProfitTypeMaxProfit
-    ProfitTypeMaxLoss
-    ProfitTypeDrawdown
-    ProfitTypeSessionProfit
-    ProfitTypeSessionMaxProfit
-    ProfitTypeSessionMaxLoss
-    ProfitTypeSessionDrawdown
-    ProfitTypeTradeProfit
-    ProfitTypeTradeMaxProfit
-    ProfitTypeTradeMaxLoss
-    ProfitTypeTradeDrawdown
-End Enum
-
-Public Enum ReplayContinueModes
-    ReplayContinue
-    ReplayCancelThisFile
-    ReplayCancelAllFiles
-End Enum
-
 Public Enum ServiceProviderRoles
-    SPRealtimeData = 1
-    SPPrimaryContractData = 2
-    SPSecondaryContractData = 4
-    SPHistoricalDataInput = 8
-    SPHistoricalDataOutput = &H10
-    SPBrokerSimulated = &H20
-    SPTickfileInput = &H40
-    SPTickfileOutput = &H80
-    SPBrokerLive = &H100
-End Enum
-
-Public Enum StopOrderTypes
-    StopOrderTypeNone = 2000
-    StopOrderTypeStop
-    StopOrderTypeStopLimit
-    StopOrderTypeBid
-    StopOrderTypeAsk
-    StopOrderTypeLast
-    StopOrderTypeAuto
-End Enum
-
-Public Enum StopTriggerMethods
-    StopTriggerNone = 0
-    StopTriggerDefault = 1
-    StopTriggerDoubleBidAsk = 2
-    StopTriggerLast = 4
-    StopTriggerDoubleLast = 8
-    StopTriggerBidAsk = 16
-    StopTriggerLastOrBidAsk = 32
-    StopTriggerMidPoint = 64
-End Enum
-
-Public Enum TargetOrderTypes
-    TargetOrderTypeNone = 3000
-    TargetOrderTypeLimit
-    TargetOrderTypeLimitIfTouched
-    TargetOrderTypeMarketIfTouched
-    TargetOrderTypeBid
-    TargetOrderTypeAsk
-    TargetOrderTypeLast
-    TargetOrderTypeAuto
-End Enum
-
-''
-' Members of this enum govern the operation of a <code>Ticker</code> object.
-'
-' @param TickerOptOrdersAreLive
-'   Orders placed via this Ticker are to be passed to the live order submission
-'   service provider (if one has been configured).
-' @param TickerOptUseExchangeTimeZone
-'   Timestamps for ticks received via this Ticker are to be expressed in the
-'   timezone of the relevant exchange, rather than the computer&39;s local
-'   timezone. Note that this only has effect when the contract service provider
-'   supplies exchange timezone information (the IB contract service provider does not).
-' @param TickerOptWriteTickData
-'   Indicates that tick Data for this Ticker (excluding market depth Data) is to
-'   be written to a tickfile. Note that the nature of this tickfile is governed by
-'   the currently configured Tickfile Service Provider.
-' @param TickerOptWriteTradeBarData
-'   Indicates that bar Data for trades notified via this Ticker is to
-'   be written to a historical Data store. Note that the nature of this Data store, and
-'   the timeframes of the bars recorded, is governed by the currently configured
-'   Historical Data Service Provider.
-' @param TickerOptWriteBidAndAskBarData
-'   Indicates that bar Data for bids and asks notified via this Ticker is to
-'   be written to a historical Data store. Note that the nature of this Data store, and
-'   the timeframes of the bars recorded, is governed by the currently configured
-'   Historical Data Service Provider.
-' @param TickerOptUpdateLatestBar
-'   Indicates that where the latest bar written to the historical Data store is still
-'   open (ie the end of the bar has not yet been reached), then the Data from this Ticker
-'   is to be used to update that bar. If not set, the previously recorded Data for that bar
-'   is overwritten. This value is ignored if <code>TickerOptWriteTradeBarData</code> and
-'   <code>TickerOptWriteBidAndAskBarData</code> are not set.
-' @param TickerOptIncludeMarketDepthInTickfile
-'   Indicates that market depth Data is to be included in the tickfile. This value is
-'   ignored if <code>TickerOptWriteTickData</code> is not set.
-' @param TickerOptNoImpliedTrades
-'   If set, the Ticker does not attempt to deduce the existence of unreported trades
-'   which may be indicated by the Ticker Data received from the Data source. For example,
-'   if Volume is incremented by an amount equal to the last reported Trade, but no
-'   Trade is reported, then an implied Trade exists - setting this option prevents
-'   that implied Trade being notified.
-' @param TickerOptNoVolumeAdjustments
-'   If set, the Ticker reports all Volume ticks exactly as received from the Data source.
-'   Otherwise, the Ticker may adjust Volume figures to ensure that Volume notified by the
-'   Ticker is always increasing (this adjustment is to eliminate the backward movement in
-'   total Volume that occurs sometimes with some Data sources).
-'@/
-Public Enum TickerOptions
-    TickerOptOrdersAreLive = 1
-    TickerOptUseExchangeTimeZone = 2
-    TickerOptWriteTickData = 4
-    TickerOptWriteTradeBarData = 8
-    TickerOptWriteBidAndAskBarData = &H10
-    TickerOptUpdateLatestBar = &H20
-    TickerOptIncludeMarketDepthInTickfile = &H40
-    TickerOptNoImpliedTrades = &H80
-    TickerOptNoVolumeAdjustments = &H100
-End Enum
-
-Public Enum TickerStates
-    TickerStateCreated
-    TickerStateStarting
-    TickerStateRunning
-    TickerStatePaused
-    TickerStateClosing
-    TickerStateStopped
-    TickerStateReady
-End Enum
-
-Public Enum TickfileFormatType
-    FileBased = TradeBuildSP.TickfileFormatTypes.FileBased
-    StreamBased = TradeBuildSP.TickfileFormatTypes.StreamBased
-End Enum
-
-Public Enum TimeframeStates
-    TimeframeStateCreated
-    TimeframeStateLoading
-    TimeframeStateLoaded
-    TimeframeStateFinished
-End Enum
-
-Public Enum ValueChanges
-    ValueChangeNone
-    ValueChangeUp
-    ValueChangeDown
-End Enum
-
-Public Enum WriterNotifications
-    WriterReady
-    WriterNotReady
-    WriterFileCreated
-    WriterWriteOperationCompleted
+    SPRoleRealtimeData = 1&
+    SPRoleContractDataPrimary = 2&
+    SPRoleContractDataSecondary = 4&
+    SPRoleHistoricalDataInput = 8&
+    SPRoleHistoricalDataOutput = &H10&
+    SPRoleOrderSubmissionSimulated = &H20&
+    SPRoleTickfileInput = &H40&
+    SPRoleTickfileOutput = &H80&
+    SPRoleOrderSubmissionLive = &H100&
+    SPRoleOrderPersistence = &H200&
 End Enum
 
 '@================================================================================
@@ -464,74 +82,22 @@ End Enum
 '@================================================================================
 
 Public Type ClosePositionsResult
-    numberOfPositionsClosed     As Long
-    numberOfPositionsNotClosed  As Long
+    NumberOfPositionsClosed     As Long
+    NumberOfPositionsNotClosed  As Long
 End Type
 
-Public Type InfoEventData
-    source          As Object
-    valueType       As Long
-    Data            As Variant
-End Type
-
-Public Type PriceChangeEventData
-    source          As Object
-    Change          As Double
-    ChangeString    As String
-    ChangePercent   As Double
-End Type
-
-Public Type ProfitEventData
-    source          As Object
-    profitType    As Long
-    ProfitAmount    As Currency
-    currencyCode    As String
-End Type
-
-Public Type MarketDepthEventData
-    source          As Object
-    type            As DOMUpdateTypes
-    price           As Double
-    size            As Long
-End Type
-
-Public Type QuoteEventData
-    source          As Object
-    price           As Double
-    size            As Long
-    PriceChange     As ValueChanges
-    sizeChange      As ValueChanges
-    recentPriceChange     As ValueChanges   ' if PriceChange = ValueChangeNone
-    recentSizeChange      As ValueChanges   ' if sizeChange = ValueChangeNone
-End Type
-
-Public Type RawMarketDepthEventData
-    source          As Object
-    position        As Long
-    marketMaker     As String
-    operation       As DOMOperations
-    side            As DOMSides
-    price           As Double
-    size            As Long
-End Type
-
-Public Type TickfileFormatSpecifier
-    FormatType      As TickfileFormatType
-    capabilities    As Long
-    FormalID        As String
-    name            As String
-    FileExtension   As String
-End Type
-
-Public Type TickWriterComment
-    Timestamp       As Date
-    Comment         As String
-End Type
-
-Public Type WriterEventData
-    source          As Object
-    action          As WriterNotifications
-    Filename        As String
+Public Type ServiceProviderDetails
+    Comments                    As String
+    Vendor                      As String
+    EXEName                     As String
+    FileDescription             As String
+    LegalCopyright              As String
+    LegalTrademarks             As String
+    VersionMajor                As Long
+    VersionMinor                As Long
+    VersionRevision             As Long
+    Path                        As String
+    ProductName                 As String
 End Type
 
 '@================================================================================
@@ -558,138 +124,427 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get TradeBuildAPI() As TradeBuildAPI
-If gTB Is Nothing Then Set gTB = New TradeBuildAPI
-Set TradeBuildAPI = gTB
+Public Property Get SPNameContractDataPrimary() As String
+SPNameContractDataPrimary = SrvcProviderNamePrimaryContractData
+End Property
+
+Public Property Get SPNameContractDataSecondary() As String
+SPNameContractDataSecondary = SrvcProviderNameSecondaryContractData
+End Property
+
+Public Property Get SPNameHistoricalDataInput() As String
+SPNameHistoricalDataInput = SrvcProviderNameHistoricalDataInput
+End Property
+
+Public Property Get SPNameHistoricalDataOutput() As String
+SPNameHistoricalDataOutput = SrvcProviderNameHistoricalDataOutput
+End Property
+
+Public Property Get SPNameOrderSubmissionLive() As String
+SPNameOrderSubmissionLive = SrvcProviderNameBrokerLive
+End Property
+
+Public Property Get SPNameOrderSubmissionSimulated() As String
+SPNameOrderSubmissionSimulated = SrvcProviderNameBrokerSimulated
+End Property
+
+Public Property Get SPNameRealtimeData() As String
+SPNameRealtimeData = SrvcProviderNameRealtimeData
+End Property
+
+Public Property Get SPNameTickfileInput() As String
+SPNameTickfileInput = SrvcProviderNameTickfileInput
+End Property
+
+Public Property Get SPNameTickfileOutput() As String
+SPNameTickfileOutput = SrvcProviderNameTickfileOutput
+End Property
+
+'Public Property Get SPProgIdQtBarData() As String
+'SPProgIdQtBarData = ProgIdQtBarData
+'End Property
+'
+'Public Property Get SPProgIdQtRealtimeData() As String
+'SPProgIdQtRealtimeData = ProgIdQtRealtimeData
+'End Property
+'
+'Public Property Get SPProgIdQtTickData() As String
+'SPProgIdQtTickData = ProgIdQtTickData
+'End Property
+
+Public Property Get SPProgIdTbBarData() As String
+SPProgIdTbBarData = ProgIdTbBarData
+End Property
+
+Public Property Get SPProgIdTbContractData() As String
+SPProgIdTbContractData = ProgIdTbContractData
+End Property
+
+Public Property Get SPProgIdTbOrders() As String
+SPProgIdTbOrders = ProgIdTbOrders
+End Property
+
+Public Property Get SPProgIdTbTickData() As String
+SPProgIdTbTickData = ProgIdTbTickData
+End Property
+
+Public Property Get SPProgIdFileTickData() As String
+SPProgIdFileTickData = ProgIdFileTickData
+End Property
+
+Public Property Get SPProgIdTwsBarData() As String
+SPProgIdTwsBarData = ProgIdTwsBarData
+End Property
+
+Public Property Get SPProgIdTwsContractData() As String
+SPProgIdTwsContractData = ProgIdTwsContractData
+End Property
+
+Public Property Get SPProgIdTwsOrders() As String
+SPProgIdTwsOrders = ProgIdTwsOrders
+End Property
+
+Public Property Get SPProgIdTwsRealtimeData() As String
+SPProgIdTwsRealtimeData = ProgIdTwsRealtimeData
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-''
-'
-' Converts a member of the EntryOrderTypes enumeration to the equivalent OrderTypes value.
-'
-' @return           the OrderTypes value corresponding to the parameter
-'
-' @param pEntryOrderType the EntryOrderTypes value to be converted
-'
-'@/
-Public Function EntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
-EntryOrderTypeToOrderType = GEntryOrderTypeToOrderType(pEntryOrderType)
+Public Function CreateTradeBuildAPI( _
+                Optional ByVal pScopeName As String, _
+                Optional ByVal pPermittedServiceProviderRoles As ServiceProviderRoles = _
+                                SPRoleOrderSubmissionSimulated + _
+                                SPRoleHistoricalDataInput + _
+                                SPRoleContractDataPrimary + _
+                                SPRoleRealtimeData, _
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                Optional ByVal pPositionManagersLive As PositionManagers, _
+                Optional ByVal pPositionManagersSimulated As PositionManagers, _
+                Optional ByVal pMarketDataSourceOptions As MarketDataSourceOptions = MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As TradeBuildAPI
+Const ProcName As String = "CreateTradeBuildAPI"
+On Error GoTo Err
+
+Set CreateTradeBuildAPI = New TradeBuildAPI
+CreateTradeBuildAPI.Initialise pScopeName, _
+                                pPermittedServiceProviderRoles, _
+                                pDefaultStateChangeListener, _
+                                pOrderSubmissionListenerLive, _
+                                pOrderSubmissionListenerSimulated, _
+                                pPositionManagersLive, _
+                                pPositionManagersSimulated, _
+                                pMarketDataSourceOptions, _
+                                pNumberOfMarketDepthRows
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function EntryOrderTypeToString( _
-                ByVal value As EntryOrderTypes) As String
-EntryOrderTypeToString = GEntryOrderTypeToString(value)
+Public Function CreateTradeBuildAPIFromConfig( _
+                ByVal pConfig As ConfigurationSection, _
+                Optional ByVal pScopeName As String, _
+                Optional ByVal pPermittedServiceProviderRoles As ServiceProviderRoles = _
+                                SPRoleOrderSubmissionSimulated + _
+                                SPRoleHistoricalDataInput + _
+                                SPRoleContractDataPrimary + _
+                                SPRoleRealtimeData, _
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                Optional ByVal pPositionManagersLive As PositionManagers, _
+                Optional ByVal pPositionManagersSimulated As PositionManagers) As TradeBuildAPI
+Const ProcName As String = "CreateTradeBuildAPIFromConfig"
+On Error GoTo Err
+
+AssertArgument Not pConfig Is Nothing, "No configuration supplied"
+
+Set CreateTradeBuildAPIFromConfig = New TradeBuildAPI
+CreateTradeBuildAPIFromConfig.InitialiseFromConfig _
+                pConfig.AddConfigurationSection(ConfigSectionTradeBuild), _
+                pScopeName, _
+                pPermittedServiceProviderRoles, _
+                pDefaultStateChangeListener, _
+                pOrderSubmissionListenerLive, _
+                pOrderSubmissionListenerSimulated, _
+                pPositionManagersLive, _
+                pPositionManagersSimulated
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function EntryOrderTypeToShortString( _
-                ByVal value As EntryOrderTypes) As String
-EntryOrderTypeToShortString = GEntryOrderTypeToShortString(value)
+Public Function CreateTradeBuildAPIWithDefaultProviders( _
+                Optional ByVal pPermittedServiceProviderRoles As ServiceProviderRoles = _
+                                SPRoleOrderSubmissionSimulated + _
+                                SPRoleHistoricalDataInput + _
+                                SPRoleContractDataPrimary + _
+                                SPRoleRealtimeData, _
+                Optional ByVal pScopeName As String, _
+                Optional ByVal pDefaultStateChangeListener As StateChangeListener, _
+                Optional ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                Optional ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                Optional ByVal pPositionManagersLive As PositionManagers, _
+                Optional ByVal pPositionManagersSimulated As PositionManagers, _
+                Optional ByVal pTwsServer As String, _
+                Optional ByVal pTwsPort As Long = 7496, _
+                Optional ByVal pTwsClientId As Long = -1, _
+                Optional ByVal pTwsConnectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal pTwsLogLevel As String = "ERROR", _
+                Optional ByVal pTickfilesPath As String, _
+                Optional ByVal pOrderPersistenceFilePath As String) As TradeBuildAPI
+Const ProcName As String = "CreateTradeBuildAPIWithDefaultProviders"
+On Error GoTo Err
+
+Set CreateTradeBuildAPIWithDefaultProviders = New TradeBuildAPI
+CreateTradeBuildAPIWithDefaultProviders.InitialiseWithDefaultProviders _
+                pScopeName, _
+                pPermittedServiceProviderRoles, _
+                pDefaultStateChangeListener, _
+                pOrderSubmissionListenerLive, _
+                pOrderSubmissionListenerSimulated, _
+                pPositionManagersLive, _
+                pPositionManagersSimulated, _
+                pTwsServer, _
+                pTwsPort, _
+                pTwsClientId, _
+                pTwsConnectionRetryIntervalSecs, _
+                pTwsLogLevel, _
+                pTickfilesPath, _
+                pOrderPersistenceFilePath
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetFormattedPriceFromQuoteEvent( _
-                ByRef ev As QuoteEventData) As String
-Dim lTicker As Ticker
-Set lTicker = ev.source
-GetFormattedPriceFromQuoteEvent = lTicker.FormatPrice(ev.price)
-End Function
 
-Public Function LegOpenCloseFromString( _
-                ByVal value As String) As LegOpenClose
-LegOpenCloseFromString = GLegOpenCloseFromString(value)
-End Function
+Public Sub SetDefaultTradeBuildConfiguration( _
+                ByVal pConfig As ConfigurationSection, _
+                Optional ByVal pPermittedServiceProviderRoles As ServiceProviderRoles = _
+                                SPRoleOrderSubmissionSimulated + _
+                                SPRoleHistoricalDataInput + _
+                                SPRoleContractDataPrimary + _
+                                SPRoleRealtimeData, _
+                Optional ByVal pTwsServer As String, _
+                Optional ByVal pTwsPort As Long = 7496, _
+                Optional ByVal pTwsClientId As Long = -1, _
+                Optional ByVal pTwsConnectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal pTwsLogLevel As String = "ERROR", _
+                Optional ByVal pMarketDataSourceOptions As MarketDataSourceOptions = MarketDataSourceOptions.MarketDataSourceOptUseExchangeTimeZone, _
+                Optional ByVal pNumberOfMarketDepthRows As Long = 20, _
+                Optional ByVal pTickfilesPath As String, _
+                Optional ByVal pOrderPersistenceFilePath As String)
+Const ProcName As String = "SetDefaultTradeBuildConfiguration"
+On Error GoTo Err
 
-Public Function LegOpenCloseToString( _
-                ByVal value As LegOpenClose) As String
-LegOpenCloseToString = GLegOpenCloseToString(value)
-End Function
+setDefaultSPConfiguration pConfig, pPermittedServiceProviderRoles, pTwsServer, pTwsPort, pTwsClientId, pTwsConnectionRetryIntervalSecs, pTwsLogLevel, pTickfilesPath, pOrderPersistenceFilePath
+setDefaultMarketDataSourceSettingsConfig pConfig, pMarketDataSourceOptions, pNumberOfMarketDepthRows
 
-Public Function OrderActionFromString( _
-                ByVal value As String) As OrderActions
-OrderActionFromString = GOrderActionFromString(value)
-End Function
+Exit Sub
 
-Public Function OrderActionToString( _
-                ByVal value As OrderActions) As String
-OrderActionToString = GOrderActionToString(value)
-End Function
-
-Public Function OrderAttributeToString(ByVal value As OrderAttributes) As String
-OrderAttributeToString = GOrderAttributeToString(value)
-End Function
-Public Function OrderStatusToString( _
-                ByVal value As OrderStatuses) As String
-OrderStatusToString = GOrderStatusToString(value)
-End Function
-
-Public Function OrderStopTriggerMethodToString( _
-                ByVal value As StopTriggerMethods) As String
-OrderStopTriggerMethodToString = GOrderStopTriggerMethodToString(value)
-End Function
-
-Public Function OrderTIFToString( _
-                ByVal value As OrderTifs) As String
-OrderTIFToString = GOrderTIFToString(value)
-End Function
-
-Public Function OrderTypeToShortString( _
-                ByVal value As OrderTypes) As String
-OrderTypeToShortString = gOrderTypeToShortString(value)
-End Function
-
-Public Function OrderTypeToString( _
-                ByVal value As OrderTypes) As String
-OrderTypeToString = GOrderTypeToString(value)
-End Function
-
-''
-' Converts a member of the StopOrderTypes enumeration to the equivalent OrderTypes value.
-'
-' @return           the OrderTypes value corresponding to the parameter
-' @param pStopOrderType the StopOrderTypes value to be converted
-' @see
-'
-'@/
-Public Function StopOrderTypeToOrderType( _
-                ByVal pStopOrderType As StopOrderTypes) As OrderTypes
-StopOrderTypeToOrderType = GStopOrderTypeToOrderType(pStopOrderType)
-End Function
-
-Public Function StopOrderTypeToString( _
-                ByVal value As StopOrderTypes)
-StopOrderTypeToString = GStopOrderTypeToString(value)
-End Function
-
-''
-' Converts a member of the <code>TargetOrderTypes</code> enumeration to the equivalent <code>OrderTypes</code> value.
-'
-' @return           the <code>OrderTypes</code> value corresponding to the parameter
-' @param pTargetOrderType the <code>TargetOrderTypes</code> value to be converted
-' @see
-'
-'@/
-Public Function TargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
-TargetOrderTypeToOrderType = GTargetOrderTypeToOrderType(pTargetOrderType)
-End Function
-
-Public Function TargetOrderTypeToString( _
-                ByVal value As TargetOrderTypes) As String
-TargetOrderTypeToString = GTargetOrderTypeToString(value)
-End Function
-
-Public Function TickfileSpecifierToString( _
-                ByVal TickfileSpec As TickfileSpecifier) As String
-TickfileSpecifierToString = GTickfileSpecifierToString(TickfileSpec)
-End Function
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function createSPConfigSection( _
+                ByVal pSPsConfig As ConfigurationSection, _
+                ByVal pSPName As String, _
+                ByVal pSPProgId As String, _
+                Optional ByVal pEnabled As Boolean = True) As ConfigurationSection
+Const ProcName As String = "createSPConfigSection"
+On Error GoTo Err
+
+Dim lSPConfig As ConfigurationSection
+Set lSPConfig = pSPsConfig.AddConfigurationSection(ConfigSectionServiceProvider & _
+                                                "(" & pSPName & ")")
+lSPConfig.setAttribute AttributeNameServiceProviderEnabled, CStr(pEnabled)
+lSPConfig.setAttribute AttributeNameServiceProviderProgId, pSPProgId
+
+Set createSPConfigSection = lSPConfig
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub setDefaultMarketDataSourceSettingsConfig( _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pMarketDataSourceOptions As MarketDataSourceOptions, _
+                ByVal pNumberOfMarketDepthRows As Long)
+Const ProcName As String = "setDefaultMarketDataSourceSettingsConfig"
+On Error GoTo Err
+
+Dim lDataSourceConfig As ConfigurationSection
+Set lDataSourceConfig = pConfig.AddConfigurationSection(ConfigSectionMarketDataSources)
+
+lDataSourceConfig.setAttribute ConfigSettingNoImpliedTrades, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoImpliedTrades) = MarketDataSourceOptNoImpliedTrades)
+lDataSourceConfig.setAttribute ConfigSettingNoVolumeAdjustments, CStr((pMarketDataSourceOptions And MarketDataSourceOptNoVolumeAdjustments) = MarketDataSourceOptNoVolumeAdjustments)
+lDataSourceConfig.setAttribute ConfigSettingUseExchangeTimezone, CStr((pMarketDataSourceOptions And MarketDataSourceOptUseExchangeTimeZone) = MarketDataSourceOptUseExchangeTimeZone)
+lDataSourceConfig.setAttribute ConfigSettingNumberOfMarketDepthRows, CStr(pNumberOfMarketDepthRows)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setDefaultSPConfiguration( _
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pTwsServer As String, _
+                ByVal pTwsPort As Long, _
+                ByVal pTwsClientId As Long, _
+                ByVal pTwsConnectionRetryIntervalSecs As Long, _
+                ByVal pTwsLogLevel As String, _
+                ByVal pTickfilesPath As String, _
+                ByVal pOrderPersistenceFilePath As String)
+Const ProcName As String = "setDefaultSPConfiguration"
+On Error GoTo Err
+
+Dim lSPConfig As ConfigurationSection
+Dim lPropsConfig As ConfigurationSection
+
+Dim lSPsConfig As ConfigurationSection
+On Error Resume Next
+Set lSPsConfig = pConfig.GetConfigurationSection(ConfigSectionServiceProviders)
+On Error GoTo Err
+
+If Not lSPsConfig Is Nothing Then lSPsConfig.Remove
+
+If pTwsClientId < 0 Then pTwsClientId = Rnd * &H6FFFFFFF + &H10000000
+
+Set lSPsConfig = pConfig.AddConfigurationSection(ConfigSectionServiceProviders, , ServiceProvidersRenderer)
+
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameRealtimeData, ProgIdTwsRealtimeData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameTwsServer, pTwsServer
+    setProperty lPropsConfig, PropertyNameTwsPort, pTwsPort
+    setProperty lPropsConfig, PropertyNameTwsClientId, pTwsClientId
+    setProperty lPropsConfig, PropertyNameTwsKeepConnection, "True"
+    setProperty lPropsConfig, PropertyNameTwsConnectionRetryInterval, pTwsConnectionRetryIntervalSecs
+    setProperty lPropsConfig, PropertyNameTwsLogLevel, pTwsLogLevel
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPrimary Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNamePrimaryContractData, ProgIdTwsContractData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameRole, "Primary"
+    setProperty lPropsConfig, PropertyNameTwsServer, pTwsServer
+    setProperty lPropsConfig, PropertyNameTwsPort, pTwsPort
+    setProperty lPropsConfig, PropertyNameTwsClientId, pTwsClientId
+    setProperty lPropsConfig, PropertyNameTwsKeepConnection, "True"
+    setProperty lPropsConfig, PropertyNameTwsConnectionRetryInterval, pTwsConnectionRetryIntervalSecs
+    setProperty lPropsConfig, PropertyNameTwsLogLevel, pTwsLogLevel
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataSecondary Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameSecondaryContractData, ProgIdTwsContractData, False)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameRole, "Secondary"
+    setProperty lPropsConfig, PropertyNameTwsServer, pTwsServer
+    setProperty lPropsConfig, PropertyNameTwsPort, pTwsPort
+    setProperty lPropsConfig, PropertyNameTwsClientId, pTwsClientId
+    setProperty lPropsConfig, PropertyNameTwsKeepConnection, "True"
+    setProperty lPropsConfig, PropertyNameTwsConnectionRetryInterval, pTwsConnectionRetryIntervalSecs
+    setProperty lPropsConfig, PropertyNameTwsLogLevel, pTwsLogLevel
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataInput Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameHistoricalDataInput, ProgIdTwsBarData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameTwsServer, pTwsServer
+    setProperty lPropsConfig, PropertyNameTwsPort, pTwsPort
+    setProperty lPropsConfig, PropertyNameTwsClientId, pTwsClientId
+    setProperty lPropsConfig, PropertyNameTwsKeepConnection, "True"
+    setProperty lPropsConfig, PropertyNameTwsConnectionRetryInterval, pTwsConnectionRetryIntervalSecs
+    setProperty lPropsConfig, PropertyNameTwsLogLevel, pTwsLogLevel
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataOutput Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameHistoricalDataOutput, ProgIdTbBarData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameDatabaseType, "Sql Server"
+    setProperty lPropsConfig, PropertyNameDatabaseName, "TradingDB"
+    setProperty lPropsConfig, PropertyNameDatabasePassword, ""
+    setProperty lPropsConfig, PropertyNameDatabaseServer, ""
+    setProperty lPropsConfig, PropertyNameDatabaseUserName, ""
+    setProperty lPropsConfig, PropertyNameDatabaseUseSynchronousWrites, "False"
+    setProperty lPropsConfig, PropertyNameDatabaseUseSynchronousReads, "False"
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderPersistence Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameOrderPersistence, ProgIdTbOrderPersistence)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameOrderPersistenceFilePath, pOrderPersistenceFilePath
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionLive Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameBrokerLive, ProgIdTwsOrders)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameTwsServer, pTwsServer
+    setProperty lPropsConfig, PropertyNameTwsPort, pTwsPort
+    setProperty lPropsConfig, PropertyNameTwsClientId, pTwsClientId
+    setProperty lPropsConfig, PropertyNameTwsKeepConnection, "True"
+    setProperty lPropsConfig, PropertyNameTwsConnectionRetryInterval, pTwsConnectionRetryIntervalSecs
+    setProperty lPropsConfig, PropertyNameTwsLogLevel, pTwsLogLevel
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionSimulated Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameBrokerSimulated, ProgIdTbOrders)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileInput Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameTickfileInput, ProgIdFileTickData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameRole, "Input"
+    setProperty lPropsConfig, PropertyNameTfTickfilePath, pTickfilesPath
+End If
+If pPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileOutput Then
+    Set lSPConfig = createSPConfigSection(lSPsConfig, SrvcProviderNameTickfileOutput, ProgIdFileTickData)
+
+    Set lPropsConfig = lSPConfig.AddConfigurationSection(ConfigSectionProperties)
+    setProperty lPropsConfig, PropertyNameRole, "Output"
+    setProperty lPropsConfig, PropertyNameTfTickfilePath, pTickfilesPath
+    setProperty lPropsConfig, PropertyNameTfTickfileGranularity, "FILE PER WEEK"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setProperty( _
+                ByVal props As ConfigurationSection, _
+                ByVal Name As String, _
+                ByVal Value As String)
+Const ProcName As String = "setProperty"
+On Error GoTo Err
+
+props.SetSetting "." & ConfigSectonProperty & "(" & Name & ")", Value
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 

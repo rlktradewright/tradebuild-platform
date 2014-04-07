@@ -74,7 +74,7 @@ Private Property Get IExecutionReport_AccountIdentifier() As String
 IExecutionReport_AccountIdentifier = mAccountIdentifier
 End Property
 
-Private Property Get IExecutionReport_Action() As TradeBuildSP.OrderActions
+Private Property Get IExecutionReport_Action() As OrderActions
 IExecutionReport_Action = mAction
 End Property
 
@@ -253,7 +253,7 @@ End Property
 Friend Sub Initialise( _
                 ByVal pSecurityName As String, _
                 ByVal pAccountIdentifier As String, _
-                ByVal pAction As TradeBuildSP.OrderActions, _
+                ByVal pAction As OrderActions, _
                 ByVal pExecId As String, _
                 ByVal pFillingExchange As String, _
                 ByVal pIsLiquidation As Boolean, _
@@ -287,7 +287,7 @@ gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SyncToExecutionReport( _
@@ -316,7 +316,7 @@ If changed Then SaveRecoveryInfo pKey
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function ToJSON() As String
@@ -377,7 +377,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

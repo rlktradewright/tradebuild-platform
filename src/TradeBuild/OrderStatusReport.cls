@@ -47,7 +47,7 @@ Private Const ModuleName                            As String = "OrderStatusRepo
 '@================================================================================
 
 Private mOrderId As String
-Private mStatus As TradeBuildSP.OrderStatuses
+Private mStatus As OrderStatuses
 
 '@================================================================================
 ' Class Event Handlers
@@ -61,7 +61,7 @@ Private Property Get IOrderStatusReport_OrderId() As String
 IOrderStatusReport_OrderId = mOrderId
 End Property
 
-Private Property Get IOrderStatusReport_Status() As TradeBuildSP.OrderStatuses
+Private Property Get IOrderStatusReport_Status() As OrderStatuses
 IOrderStatusReport_Status = mStatus
 End Property
 

@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IOrder
+Implements IOrder
 
 '@================================================================================
 ' Events
@@ -124,7 +124,7 @@ End Sub
 ' IOrder Interface Members
 '@================================================================================
 
-Private Property Get IOrder_Action() As TradeBuildSP.OrderActions
+Private Property Get IOrder_Action() As OrderActions
 IOrder_Action = mAction
 End Property
 
@@ -200,11 +200,11 @@ Private Property Get IOrder_NbboPriceCap() As Double
 IOrder_NbboPriceCap = mNBBOPriceCap
 End Property
 
-Private Property Get IOrder_orderType() As TradeBuildSP.OrderTypes
+Private Property Get IOrder_orderType() As OrderTypes
 IOrder_orderType = mOrderType
 End Property
 
-Private Property Get IOrder_origin() As TradeBuildSP.OrderOrigins
+Private Property Get IOrder_origin() As OrderOrigins
 IOrder_origin = mOrigin
 End Property
 
@@ -216,7 +216,7 @@ Private Property Get IOrder_overrideConstraints() As Boolean
 IOrder_overrideConstraints = mOverrideConstraints
 End Property
 
-Private Property Get IOrder_providerProperties() As TWUtilities30.Parameters
+Private Property Get IOrder_providerProperties() As Parameters
 Set IOrder_providerProperties = mProviderProperties
 End Property
 
@@ -236,7 +236,7 @@ Private Property Get IOrder_settlingFirm() As String
 IOrder_settlingFirm = mSettlingFirm
 End Property
 
-Private Property Get IOrder_status() As TradeBuildSP.OrderStatuses
+Private Property Get IOrder_status() As OrderStatuses
 IOrder_status = mStatus
 End Property
 
@@ -244,7 +244,7 @@ Private Property Get IOrder_sweepToFill() As Boolean
 IOrder_sweepToFill = mSweepToFill
 End Property
 
-Private Property Get IOrder_timeInForce() As TradeBuildSP.OrderTifs
+Private Property Get IOrder_timeInForce() As OrderTifs
 IOrder_timeInForce = mTimeInForce
 End Property
 
@@ -252,7 +252,7 @@ Private Property Get IOrder_tradeBuildId() As String
 IOrder_tradeBuildId = mIdentifier
 End Property
 
-Private Property Get IOrder_stopTriggerMethod() As TradeBuildSP.StopTriggerMethods
+Private Property Get IOrder_stopTriggerMethod() As StopTriggerMethods
 IOrder_stopTriggerMethod = mStopTriggerMethod
 End Property
 
@@ -281,7 +281,7 @@ Const ProcName As String = "allOrNone"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttAllOrNone
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttAllOrNone
 If value = mAllOrNone Then Exit Property
 setDirty
 mAllOrNone = value
@@ -289,7 +289,7 @@ mAllOrNone = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -309,7 +309,7 @@ Const ProcName As String = "blockOrder"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttBlockOrder
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttBlockOrder
 If value = mBlockOrder Then Exit Property
 setDirty
 mBlockOrder = value
@@ -317,7 +317,7 @@ mBlockOrder = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -341,7 +341,7 @@ Const ProcName As String = "discretionaryAmount"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDiscretionaryAmount
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttDiscretionaryAmount
 If value = mDiscretionaryAmount Then Exit Property
 setDirty
 mDiscretionaryAmount = value
@@ -349,7 +349,7 @@ mDiscretionaryAmount = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DiscretionaryAmount() As Double
@@ -361,7 +361,7 @@ Const ProcName As String = "displaySize"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDisplaySize
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttDisplaySize
 If value = mDisplaySize Then Exit Property
 setDirty
 mDisplaySize = value
@@ -369,7 +369,7 @@ mDisplaySize = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DisplaySize() As Long
@@ -381,7 +381,7 @@ Const ProcName As String = "eTradeOnly"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttETradeOnly
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttETradeOnly
 If value = mETradeOnly Then Exit Property
 setDirty
 mETradeOnly = value
@@ -389,7 +389,7 @@ mETradeOnly = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ETradeOnly() As Boolean
@@ -409,7 +409,7 @@ Const ProcName As String = "firmQuoteOnly"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttFirmQuoteOnly
 If value = mFirmQuoteOnly Then Exit Property
 setDirty
 mFirmQuoteOnly = value
@@ -417,7 +417,7 @@ mFirmQuoteOnly = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get FirmQuoteOnly() As Boolean
@@ -429,7 +429,7 @@ Const ProcName As String = "goodAfterTime"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttGoodAfterTime
 If value = mGoodAfterTime Then Exit Property
 setDirty
 mGoodAfterTime = value
@@ -437,7 +437,7 @@ mGoodAfterTime = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -449,7 +449,7 @@ Const ProcName As String = "goodAfterTimeTZ"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttGoodAfterTimeTZ
 If value = mGoodAfterTimeTZ Then Exit Property
 setDirty
 mGoodAfterTimeTZ = value
@@ -457,7 +457,7 @@ mGoodAfterTimeTZ = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -469,7 +469,7 @@ Const ProcName As String = "goodTillDate"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttGoodTillDate
 If value = mGoodTillDate Then Exit Property
 setDirty
 mGoodTillDate = value
@@ -477,7 +477,7 @@ mGoodTillDate = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -489,7 +489,7 @@ Const ProcName As String = "goodTillDateTZ"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttGoodTillDateTZ
 If value = mGoodTillDateTZ Then Exit Property
 setDirty
 mGoodTillDateTZ = value
@@ -497,7 +497,7 @@ mGoodTillDateTZ = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -509,7 +509,7 @@ Const ProcName As String = "hidden"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttHidden
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttHidden
 If value = mHidden Then Exit Property
 setDirty
 mHidden = value
@@ -517,7 +517,7 @@ mHidden = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -537,7 +537,7 @@ Const ProcName As String = "ignoreRegularTradingHours"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttIgnoreRTH
 If value = mIgnoreRegularTradingHours Then Exit Property
 setDirty
 mIgnoreRegularTradingHours = value
@@ -545,7 +545,7 @@ mIgnoreRegularTradingHours = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
@@ -592,7 +592,7 @@ Const ProcName As String = "minimumQuantity"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttMinimumQuantity
 If value = mMinimumQuantity Then Exit Property
 setDirty
 mMinimumQuantity = value
@@ -600,7 +600,7 @@ mMinimumQuantity = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -612,7 +612,7 @@ Const ProcName As String = "NbboPriceCap"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttNBBOPriceCap
 If value = mNBBOPriceCap Then Exit Property
 setDirty
 mNBBOPriceCap = value
@@ -620,7 +620,7 @@ mNBBOPriceCap = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get NbboPriceCap() As Double
@@ -656,9 +656,9 @@ Const ProcName As String = "orderType"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrderType
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttOrderType
 If Not mOrderContext Is Nothing Then
-    If Not mOrderContext.IsOrderTypeValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttOrderType, value
+    If Not mOrderContext.IsOrderTypeValueSupported(value) Then attributeValueNotSupported TradeBuild27.OrderAttributeIds.OrderAttOrderType, value
 End If
 If value = mOrderType Then Exit Property
 setDirty
@@ -667,7 +667,7 @@ mOrderType = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -679,7 +679,7 @@ Const ProcName As String = "origin"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrigin
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttOrigin
 If value = mOrigin Then Exit Property
 setDirty
 mOrigin = value
@@ -687,7 +687,7 @@ mOrigin = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -699,7 +699,7 @@ Const ProcName As String = "originatorRef"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttOriginatorRef
 If value = moriginatorRef Then Exit Property
 setDirty
 moriginatorRef = value
@@ -707,7 +707,7 @@ moriginatorRef = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OriginatorRef() As String
@@ -719,7 +719,7 @@ Const ProcName As String = "overrideConstraints"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttOverrideConstraints
 If value = mOverrideConstraints Then Exit Property
 setDirty
 mOverrideConstraints = value
@@ -727,7 +727,7 @@ mOverrideConstraints = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -739,7 +739,7 @@ Const ProcName As String = "percentOffset"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttPercentOffset
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttPercentOffset
 If value = mPercentOffset Then Exit Property
 setDirty
 mPercentOffset = value
@@ -747,7 +747,7 @@ mPercentOffset = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -755,11 +755,11 @@ PercentOffset = mPercentOffset
 End Property
 
 Friend Property Let ProviderProperties( _
-                ByVal value As TWUtilities30.Parameters)
+                ByVal value As Parameters)
 Set mProviderProperties = value
 End Property
 
-Public Property Get ProviderProperties() As TWUtilities30.Parameters
+Public Property Get ProviderProperties() As Parameters
 Set ProviderProperties = mProviderProperties
 End Property
 
@@ -768,7 +768,7 @@ Const ProcName As String = "quantity"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttQuantity
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttQuantity
 If value = mQuantity Then Exit Property
 mQuantity = value
 setDirty
@@ -777,7 +777,7 @@ mQuantityRemaining = mQuantity - mQuantityFilled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Quantity() As Long
@@ -805,7 +805,7 @@ Const ProcName As String = "settlingFirm"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttSettlingFirm
 If value = mSettlingFirm Then Exit Property
 setDirty
 mSettlingFirm = value
@@ -813,7 +813,7 @@ mSettlingFirm = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -833,9 +833,9 @@ Const ProcName As String = "StopTriggerMethod"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttStopTriggerMethod
 If Not mOrderContext Is Nothing Then
-    If Not mOrderContext.IsStopTriggerMethodValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod, value
+    If Not mOrderContext.IsStopTriggerMethodValueSupported(value) Then attributeValueNotSupported TradeBuild27.OrderAttributeIds.OrderAttStopTriggerMethod, value
 End If
 If value = mStopTriggerMethod Then Exit Property
 setDirty
@@ -844,7 +844,7 @@ mStopTriggerMethod = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StopTriggerMethod() As StopTriggerMethods
@@ -856,7 +856,7 @@ Const ProcName As String = "SweepToFill"
 
 On Error GoTo Err
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSweepToFill
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttSweepToFill
 If value = mSweepToFill Then Exit Property
 setDirty
 mSweepToFill = value
@@ -864,7 +864,7 @@ mSweepToFill = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -882,7 +882,7 @@ Set mContract = mTicker.Contract
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Ticker() As Ticker
@@ -900,9 +900,9 @@ If Not GIsValidTIF(value) Then
             "Value must be a member of the OrderTifs enum"
 End If
 
-checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttTimeInForce
+checkAttributeModificationPermitted TradeBuild27.OrderAttributeIds.OrderAttTimeInForce
 If Not mOrderContext Is Nothing Then
-    If Not mOrderContext.IsOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttTimeInForce, value
+    If Not mOrderContext.IsOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild27.OrderAttributeIds.OrderAttTimeInForce, value
 End If
 If value = mTimeInForce Then Exit Property
 setDirty
@@ -911,7 +911,7 @@ mTimeInForce = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TimeInForce() As OrderTifs
@@ -941,7 +941,7 @@ syncToMe Clone
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 ''
@@ -992,7 +992,7 @@ If mStatus = OrderStatusFilled Then RaiseEvent StatusChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1008,7 +1008,7 @@ Set mOrderContext = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Function IsAttributeModifiable( _
@@ -1112,7 +1112,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function IsModifiable() As Boolean
@@ -1128,7 +1128,7 @@ Then IsModifiable = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub SaveRecoveryInfo(pKey As String)
@@ -1186,7 +1186,7 @@ gTB.OrderPlexRecoveryController.SaveRecoveryInfo pKey, summary
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -1204,7 +1204,7 @@ RaiseEvent Clean
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -1264,7 +1264,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub SyncToOrderReport( _
@@ -1314,7 +1314,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 ''
@@ -1342,7 +1342,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -1363,7 +1363,7 @@ Err.Raise ErrorCodes.ErrIllegalArgumentException, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkAttributeModificationPermitted( _
@@ -1381,7 +1381,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function propertiesEqual( _
@@ -1413,7 +1413,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 

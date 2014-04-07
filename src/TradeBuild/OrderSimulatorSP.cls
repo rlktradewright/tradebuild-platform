@@ -30,8 +30,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.ICommonServiceProvider
-Implements TradeBuildSP.IOrderSubmissionSrvcProvider
+Implements IServiceProvider
+Implements IOrderSubmitterFactory
+Implements IOrderSubmissionSP
 
 '@================================================================================
 ' Events
@@ -55,11 +56,12 @@ Private Const ModuleName                As String = "OrderSimulatorSP"
 ' Member variables
 '@================================================================================
 
-Private mName As String
-Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
-
-Private mSimulator As AdvancedOrderSimulator
+Private mName                           As String
+Private mHandle                         As Long
+Private mServiceProviderManager         As IServiceProviderManager
+Private mMarketDataManager              As IMarketDataManager
+Private mPrimaryContractStore           As IContractStore
+Private mSecondaryContractStore         As IContractStore
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,8 +69,6 @@ Private mSimulator As AdvancedOrderSimulator
 
 Private Sub Class_Initialize()
 mName = "TradeBuild Default Order Simulator"
-
-Set mSimulator = New AdvancedOrderSimulator
 End Sub
 
 Private Sub Class_Terminate()
@@ -76,15 +76,15 @@ Debug.Print "OrderSimulatorSP terminated"
 End Sub
 
 '@================================================================================
-' ICommonServiceProvider Interface Members
+' IServiceProvider Interface Members
 '@================================================================================
 
-Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
-Dim details As TradeBuildSP.ServiceProviderDetails
-Const ProcName As String = "ICommonServiceProvider_Details"
+Private Property Get IServiceProvider_Details() As ServiceProviderDetails
+Dim Details As ServiceProviderDetails
+Const ProcName As String = "IServiceProvider_Details"
 On Error GoTo Err
 
-With details
+With Details
     .Comments = App.Comments
     .EXEName = App.EXEName
     .FileDescription = App.FileDescription
@@ -97,37 +97,36 @@ With details
     .VersionMinor = App.Minor
     .VersionRevision = App.Revision
 End With
-ICommonServiceProvider_Details = details
+IServiceProvider_Details = Details
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub ICommonServiceProvider_Link( _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+Private Sub IServiceProvider_Link( _
+                ByVal ServiceProviderManager As IServiceProviderManager, _
                 ByVal Handle As Long, _
-                ByVal params As Parameters)
-Const ProcName As String = "ICommonServiceProvider_Link"
+                ByVal Params As Parameters)
+Const ProcName As String = "IServiceProvider_Link"
 On Error GoTo Err
 
-Set mCommonServiceConsumer = CommonServiceConsumer
-mSimulator.CommonServiceConsumer = mCommonServiceConsumer
+Set mServiceProviderManager = ServiceProviderManager
 mHandle = Handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.ExchangeSimulator
+mServiceProviderManager.RegisterServiceProvider mHandle, _
+                            ServiceProviderRoles.SPRoleOrderSubmissionSimulated
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Property Let ICommonServiceProvider_name(ByVal RHS As String)
+Private Property Let IServiceProvider_Name(ByVal Value As String)
 
-Const ProcName As String = "ICommonServiceProvider_name"
+Const ProcName As String = "IServiceProvider_Name"
 On Error GoTo Err
 
 
@@ -135,24 +134,24 @@ On Error GoTo Err
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get ICommonServiceProvider_name() As String
-Const ProcName As String = "ICommonServiceProvider_name"
+Private Property Get IServiceProvider_Name() As String
+Const ProcName As String = "IServiceProvider_Name"
 On Error GoTo Err
 
-ICommonServiceProvider_name = name
+IServiceProvider_Name = Name
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
+Private Sub IServiceProvider_Terminate()
 ' nothing to do
-Const ProcName As String = "ICommonServiceProvider_Terminate"
+Const ProcName As String = "IServiceProvider_Terminate"
 On Error GoTo Err
 
 
@@ -160,49 +159,49 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' IOrderSubmissionSrvcProvider Interface Members
+' IOrderSubmissionSP Interface Members
 '@================================================================================
 
-Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
-                ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal Contract As Contract) As TradeBuildSP.IOrderSubmitter
-Dim orderSubmitter As SimulatedOrderSubmitter
+Private Function IOrderSubmissionSP_GetOrderRecoveryAgent() As IOrderRecoveryAgent
 
-Const ProcName As String = "IOrderSubmissionSrvcProvider_CreateOrderSubmitter"
+End Function
 
+Private Function IOrderSubmissionSP_GetOrderSubmitterFactory() As IOrderSubmitterFactory
+Const ProcName As String = "IOrderSubmissionSP_GetOrderSubmitterFactory"
 On Error GoTo Err
 
-Set orderSubmitter = New SimulatedOrderSubmitter
-orderSubmitter.serviceConsumer = serviceConsumer
-orderSubmitter.Contract = Contract
-orderSubmitter.simulator = mSimulator
-
-Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
+Set IOrderSubmissionSP_GetOrderSubmitterFactory = Me
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub IOrderSubmissionSrvcProvider_StartOrderRecovery( _
-                ByVal pOrderRecoveryServiceConsumer As TradeBuildSP.IOrderRecoveryServiceConsumer, _
-                ByVal pStartFrom As Date)
+'@================================================================================
+' IOrderSubmitterFactory Interface Members
+'@================================================================================
 
-Const ProcName As String = "IOrderSubmissionSrvcProvider_StartOrderRecovery"
+Private Function IOrderSubmitterFactory_CreateOrderSubmitter(ByVal pOrderSubmissionListener As IOrderSubmissionListener) As IOrderSubmitter
+Const ProcName As String = "IOrderSubmitterFactory_CreateOrderSubmitter"
 On Error GoTo Err
 
+Dim lOrderSubmitter As New SimulatedOrderSubmitter
+lOrderSubmitter.Initialise getOrderSimulator
 
+Set IOrderSubmitterFactory_CreateOrderSubmitter = lOrderSubmitter
 
-Exit Sub
+If Not pOrderSubmissionListener Is Nothing Then IOrderSubmitterFactory_CreateOrderSubmitter.AddOrderSubmissionListener pOrderSubmissionListener
+
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -212,19 +211,39 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let name(ByVal value As String)
-mName = value
+Public Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get Name() As String
+Name = mName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise(ByVal pMarketDataManager As IMarketDataManager, ByVal pPrimaryContractStore As IContractStore, ByVal pSecondaryContractStore As IContractStore)
+Set mMarketDataManager = pMarketDataManager
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function getOrderSimulator() As InProcessExchangeSimulator
+Const ProcName As String = "getOrderSimulator"
+On Error GoTo Err
+
+Static sSimulator As InProcessExchangeSimulator
+If sSimulator Is Nothing Then Set sSimulator = CreateInProcessExchangeSimulator(mMarketDataManager, mPrimaryContractStore, mSecondaryContractStore)
+Set getOrderSimulator = sSimulator
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 

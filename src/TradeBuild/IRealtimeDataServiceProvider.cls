@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IRealtimeDataServiceProvider"
+Attribute VB_Name = "IRealtimeDataSP"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IRealtimeDataServiceProvider"
+Private Const ModuleName                            As String = "IRealtimeDataSP"
 
 '@================================================================================
 ' Member variables
@@ -59,6 +59,9 @@ Private Const ModuleName                            As String = "IRealtimeDataSe
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Function GetMarketDataFactory() As IMarketDataFactory
+End Function
 
 '@================================================================================
 ' Methods

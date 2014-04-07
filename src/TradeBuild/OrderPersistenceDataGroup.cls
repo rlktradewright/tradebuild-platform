@@ -70,7 +70,7 @@ End Sub
 ' Enumerable Interface Members
 '@================================================================================
 
-Private Property Get Enumerable_Enumerator() As TWUtilities30.Enumerator
+Private Property Get Enumerable_Enumerator() As Enumerator
 Const ProcName As String = "Enumerable_Enumerator"
 On Error GoTo Err
 
@@ -79,7 +79,7 @@ Set Enumerable_Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Private Function Enumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
@@ -102,7 +102,7 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Get Enumerator() As TWUtilities30.Enumerator
+Public Property Get Enumerator() As Enumerator
 Const ProcName As String = "Enumerator"
 
 On Error GoTo Err
@@ -112,7 +112,7 @@ Set Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -132,7 +132,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================

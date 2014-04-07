@@ -67,7 +67,7 @@ Private mIsSimulated As Boolean
 Private mTicker As Ticker
 Private mPositionManager As PositionManager
 
-Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+Private mOrderSubmitter As IOrderSubmitter
 
 Private mProviderReady As Boolean
 
@@ -107,7 +107,7 @@ Count = mOrderContexts.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DefaultOrderContext() As OrderContext
@@ -128,7 +128,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -149,7 +149,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -157,7 +157,7 @@ IsSimulated = mIsSimulated
 End Property
 
 Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuildSP.IOrderSubmitter)
+                ByVal value As IOrderSubmitter)
 Dim lOrderContext As OrderContext
 Const ProcName As String = "OrderSubmitter"
 
@@ -171,7 +171,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let ProviderReady(ByVal value As Boolean)
@@ -188,7 +188,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
@@ -205,7 +205,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 '@================================================================================
@@ -231,7 +231,7 @@ Add.IsReady = mProviderReady
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -248,7 +248,7 @@ gNotifyExistingCollectionMembers mOrderContexts, value, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Finish()
@@ -270,7 +270,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise(ByVal pPositionManager As PositionManager)
@@ -289,7 +289,7 @@ Set Item = mOrderContexts(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -304,7 +304,7 @@ Set NewEnum = mOrderContexts.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub Remove( _
@@ -319,7 +319,7 @@ fireChange CollItemRemoved, pOrderContext
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
@@ -335,7 +335,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -353,7 +353,7 @@ On Error GoTo Err
 
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
+Set ev.AffectedItem = affectedObject
 For Each listener In mChangeListeners
     listener.Change ev
 Next
@@ -362,7 +362,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 

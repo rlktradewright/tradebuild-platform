@@ -60,9 +60,27 @@ Private Const ModuleName                            As String = "IServiceProvide
 ' Properties
 '@================================================================================
 
+Public Property Let Name(ByVal Value As String)
+End Property
+
+Public Property Get Name() As String
+End Property
+
+Public Property Get Details() As ServiceProviderDetails
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Link( _
+    ByVal pManager As IServiceProviderManager, _
+    ByVal pHandle As Long, _
+    ByVal pParameters As Parameters)
+End Sub
+
+Public Sub Terminate()
+End Sub
 
 '@================================================================================
 ' Helper Functions

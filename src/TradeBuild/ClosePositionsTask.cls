@@ -54,6 +54,8 @@ Private mFlags                              As ClosePositionFlags
 
 Private mClosePositionsResult               As ClosePositionsResult
 
+Private mWorkspaces                         As WorkSpaces
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -62,7 +64,7 @@ Private mClosePositionsResult               As ClosePositionsResult
 ' ChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEventData)
+Private Sub ChangeListener_Change(ev As ChangeEventData)
 Dim pm As PositionManager
 Dim changeType As PositionManagerChangeTypes
 
@@ -75,14 +77,14 @@ Select Case changeType
 Case PositionManagerChangeTypes.PositionClosed
     If pm.PositionSize = 0 And pm.PendingPositionSize = 0 Then
         mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.numberOfPositionsClosed = mClosePositionsResult.numberOfPositionsClosed + 1
+        mClosePositionsResult.NumberOfPositionsClosed = mClosePositionsResult.NumberOfPositionsClosed + 1
         pm.RemoveChangeListener Me
         If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
 Case PositionManagerChangeTypes.ProviderReadinessChanged
     If Not pm.ProviderIsReady Then
         mNumberRemaining = mNumberRemaining - 1
-        mClosePositionsResult.numberOfPositionsNotClosed = mClosePositionsResult.numberOfPositionsNotClosed + 1
+        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
         pm.RemoveChangeListener Me
         If mNumberRemaining = 0 Then mTaskContext.Finish mClosePositionsResult, False
     End If
@@ -91,7 +93,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -103,7 +105,6 @@ Private Sub Task_Cancel()
 End Sub
 
 Private Sub Task_run()
-
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
@@ -117,16 +118,15 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Let Task_TaskContext(ByVal Value As TaskContext)
+Set mTaskContext = Value
 End Property
 
 Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.name
+Task_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -142,10 +142,12 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal types As PositionTypes, _
-                ByVal flags As ClosePositionFlags)
-mTypes = types
-mFlags = flags
+                ByVal pWorkspaces As WorkSpaces, _
+                ByVal pTypes As PositionTypes, _
+                ByVal pFlags As ClosePositionFlags)
+Set mWorkspaces = pWorkspaces
+mTypes = pTypes
+mFlags = pFlags
 End Sub
 
 '@================================================================================
@@ -166,24 +168,24 @@ Then
         pm.ClosePositions mFlags
         pm.AddChangeListener Me
     Else
-        mClosePositionsResult.numberOfPositionsNotClosed = mClosePositionsResult.numberOfPositionsNotClosed + 1
+        mClosePositionsResult.NumberOfPositionsNotClosed = mClosePositionsResult.NumberOfPositionsNotClosed + 1
     End If
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initiateCloses()
-Dim ws As WorkSpace
-Dim tckr As Ticker
-
 Const ProcName As String = "initiateCloses"
 On Error GoTo Err
 
-For Each ws In gTB.WorkSpaces
+Dim ws As WorkSpace
+Dim tckr As Ticker
+
+For Each ws In mWorkspaces
     For Each tckr In ws.Tickers
         If mTypes And PositionTypeLive Then check tckr.PositionManager
         If mTypes And PositionTypeSimulated Then check tckr.PositionManagerSimulated
@@ -193,6 +195,6 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

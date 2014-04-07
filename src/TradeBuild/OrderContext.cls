@@ -70,7 +70,7 @@ Private mCompletedSize As Long
     ' the total Size for all completed order plexes (may be non-zero if one
     ' or more completed order plexes has no target or stop orders)
     
-Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+Private mOrderSubmitter As IOrderSubmitter
 Private mPermittedOrderAttributes As Long
 Private mPermittedOrderTifs As Long
 Private mPermittedOrderTypes As Long
@@ -129,7 +129,7 @@ End Sub
 ' mTicker Event Handlers
 '@================================================================================
 
-Private Sub mTicker_StateChange(ev As TWUtilities30.StateChangeEventData)
+Private Sub mTicker_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mTicker_StateChange"
 
 On Error GoTo Err
@@ -166,7 +166,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let AllOrNone(ByVal value As Boolean)
@@ -180,7 +180,7 @@ mAllOrNone = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -198,7 +198,7 @@ mBlockOrder = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -223,7 +223,7 @@ Complete = True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get CompletedSize() As Long
@@ -241,7 +241,7 @@ mDisplaySize = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get DisplaySize() As Long
@@ -259,7 +259,7 @@ checkReady
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let ETradeOnly(ByVal value As Boolean)
@@ -273,7 +273,7 @@ mETradeOnly = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get ETradeOnly() As Boolean
@@ -291,7 +291,7 @@ mFirmQuoteOnly = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get FirmQuoteOnly() As Boolean
@@ -309,7 +309,7 @@ mGoodAfterTime = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -327,7 +327,7 @@ mGoodAfterTimeTZ = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -345,7 +345,7 @@ mGoodTillDate = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -363,7 +363,7 @@ mGoodTillDateTZ = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -381,7 +381,7 @@ mHidden = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -399,7 +399,7 @@ mIgnoreRegularTradingHours = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
@@ -417,7 +417,7 @@ checkReady
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get IsReady() As Boolean
@@ -443,7 +443,7 @@ mLimitPrice = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -461,7 +461,7 @@ mMinimumQuantity = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -487,7 +487,7 @@ mNBBOPriceCap = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get NbboPriceCap() As Double
@@ -506,7 +506,7 @@ mOrderType = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -524,7 +524,7 @@ mOrigin = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -532,7 +532,7 @@ Origin = mOrigin
 End Property
 
 Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuildSP.IOrderSubmitter)
+                ByVal value As IOrderSubmitter)
 Set mOrderSubmitter = value
 End Property
 
@@ -547,7 +547,7 @@ mOverrideConstraints = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -567,7 +567,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let PercentOffset(ByVal value As Double)
@@ -581,7 +581,7 @@ mPercentOffset = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -624,7 +624,7 @@ mQuantity = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Quantity() As Long
@@ -648,7 +648,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let SettlingFirm(ByVal value As String)
@@ -662,7 +662,7 @@ mSettlingFirm = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -685,7 +685,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
@@ -700,7 +700,7 @@ mStopTriggerMethod = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get StopTriggerMethod() As StopTriggerMethods
@@ -718,7 +718,7 @@ mSweepToFill = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -735,7 +735,7 @@ Set mTicker = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get Ticker() As Ticker
@@ -760,7 +760,7 @@ mTimeInForce = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TimeInForce() As OrderTifs
@@ -778,7 +778,7 @@ mTriggerPrice = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Property
 
 Public Property Get TriggerPrice() As Double
@@ -807,7 +807,7 @@ pOrderPlex.Activate
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -958,7 +958,7 @@ ExecuteOrderPlex Buy, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStra
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Cancel() As Boolean
@@ -975,7 +975,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function CancelPending() As Boolean
@@ -992,7 +992,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub CloseOut(ByVal method As String)
@@ -1009,7 +1009,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -1049,7 +1049,7 @@ Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Function CreateOrderPlex(ByVal action As OrderActions, _
@@ -1312,7 +1312,7 @@ GLogOrder "Create order plex: " & _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Function
 
@@ -1352,7 +1352,7 @@ Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Sub ExecuteOrderPlex(ByVal pOrderPlex As orderPlex, _
@@ -1430,7 +1430,7 @@ pOrderPlex.Execute cancelPrice
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function Finish()
@@ -1457,7 +1457,7 @@ Set mOrderSubmitter = Nothing
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function GetAccountBalance() As Double
@@ -1470,7 +1470,7 @@ GetAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function IsAttributeSupported( _
@@ -1552,7 +1552,7 @@ Set NewOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Friend Sub NotifyEndOfTradingSession( _
@@ -1570,7 +1570,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyPositionCloseout( _
@@ -1589,7 +1589,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Function NotifyOrderPlexClosed( _
@@ -1614,7 +1614,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Public Function Sell(ByRef number As Long, _
@@ -1690,7 +1690,7 @@ ExecuteOrderPlex Sell, True, cancelPrice, StopStrategy, ExitStrategy, ScalingStr
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================
@@ -1711,7 +1711,7 @@ Err.Raise ErrorCodes.ErrIllegalArgumentException, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkAttributeSupported( _
@@ -1729,7 +1729,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub checkReady()
@@ -1750,7 +1750,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function nextPlexKey() As String
@@ -1765,6 +1765,6 @@ nextPlexKey = gTB.SessionId & "/" & currID
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 

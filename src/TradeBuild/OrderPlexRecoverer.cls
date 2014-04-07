@@ -69,24 +69,24 @@ Private mOrderContext                               As OrderContext
 ' CollectionChangeListener Interface Members
 '@================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEventData)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEventData)
 Const ProcName As String = "CollectionChangeListener_Change"
 
 On Error GoTo Err
 
-If ev.changeType = CollItemAdded Then processStartedTicker ev.affectedItem
+If ev.changeType = CollItemAdded Then processStartedTicker ev.AffectedItem
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
 ' StateChangeListener Interface Members
 '@================================================================================
 
-Private Sub StateChangeListener_Change(ev As TWUtilities30.StateChangeEventData)
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
 Dim lTicker As Ticker
 Const ProcName As String = "StateChangeListener_Change"
 
@@ -102,7 +102,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -123,7 +123,7 @@ End If
 mTaskContext.suspend -1
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
@@ -165,7 +165,7 @@ mOrderPlex.CheckComplete
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub Initialise( _
@@ -190,7 +190,7 @@ setOrderPlexTicker
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -206,7 +206,7 @@ mOSSC.ExecutionReport pExecutionReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub NotifyOrderReport( _
@@ -249,7 +249,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub UpdateExecution( _
@@ -263,7 +263,7 @@ mOSSC.ExecutionReport pExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub UpdateOrder(ByVal os As OrderSummary)
@@ -325,7 +325,7 @@ lOrder.NeedsRecovery = lOrder.IsActive
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -339,7 +339,7 @@ mOrderPlex.SyncToSummary ops
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -364,7 +364,7 @@ mOrderContext.ActivateOrderPlex mOrderPlex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function createOrder(ByVal Id As String)
@@ -382,7 +382,7 @@ mPositionManager.Orders.Add lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub logMessage( _
@@ -405,7 +405,7 @@ orderIdIsForCloseoutOrder = (pId = mOrderPlex.CloseoutOrder.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function orderIdIsForEntryOrder( _
@@ -420,7 +420,7 @@ orderIdIsForEntryOrder = (pId = mOrderPlex.EntryOrder.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function orderIdIsForStopOrder( _
@@ -435,7 +435,7 @@ orderIdIsForStopOrder = (pId = mOrderPlex.Stoporder.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function orderIdIsForTargetOrder( _
@@ -450,7 +450,7 @@ orderIdIsForTargetOrder = (pId = mOrderPlex.TargetOrder.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function orderPlexActive() As Boolean
@@ -463,7 +463,7 @@ orderPlexActive = (Not mOrderPlex.Ticker Is Nothing)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub processStartedTicker(ByVal pTicker As Ticker)
@@ -484,7 +484,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -523,7 +523,7 @@ mOrderPlex.OrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setUnrecoveredOrderAsCancelled(ByVal pOrder As Order)

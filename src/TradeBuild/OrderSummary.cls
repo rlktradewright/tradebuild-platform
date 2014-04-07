@@ -324,11 +324,11 @@ Public Property Get PercentOffset() As Double
 PercentOffset = mPercentOffset
 End Property
 
-Public Property Let ProviderProperties(ByVal value As TWUtilities30.Parameters)
+Public Property Let ProviderProperties(ByVal value As Parameters)
 Set mProviderProperties = value
 End Property
 
-Public Property Get ProviderProperties() As TWUtilities30.Parameters
+Public Property Get ProviderProperties() As Parameters
 Set ProviderProperties = mProviderProperties
 End Property
 
@@ -538,7 +538,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 '@================================================================================

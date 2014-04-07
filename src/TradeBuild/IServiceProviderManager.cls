@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "IServiceProviderManager"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -63,6 +63,30 @@ Private Const ModuleName                            As String = "IServiceProvide
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub NotifyEvent( _
+                ByVal pEventCode As Long, _
+                ByVal pEventMessage As String, _
+                ByVal pServiceProviderHandle As Long)
+End Sub
+
+'Public Sub NotifyFatalError( _
+'                ByVal pErrorCode As Long, _
+'                ByVal pSource As String, _
+'                ByVal pErrorMessage As String, _
+'                ByVal pServiceProviderHandle As Long)
+'End Sub
+
+Public Sub NotifyRecoverableError( _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMessage As String, _
+                ByVal pServiceProviderHandle As Long)
+End Sub
+
+Public Sub RegisterServiceProvider( _
+                ByVal pHandle As Long, _
+                ByVal pRole As ServiceProviderRoles)
+End Sub
 
 '@================================================================================
 ' Helper Functions

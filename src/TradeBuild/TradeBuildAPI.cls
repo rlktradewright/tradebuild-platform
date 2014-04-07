@@ -23,15 +23,13 @@ Implements ErrorListener
 ' Events
 '@================================================================================
 
-Event Error(ByRef ev As ErrorEventData)
 Event Notification(ByRef ev As NotificationEventData)
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-
-Private Const ModuleName                    As String = "TradeBuildAPI"
+Private Const ModuleName                            As String = "TradeBuildAPI"
 
 '@================================================================================
 ' Enums
@@ -45,34 +43,53 @@ Private Const ModuleName                    As String = "TradeBuildAPI"
 ' Member variables
 '@================================================================================
 
-Private mServiceProviderError           As ServiceProviderError
+Private mTradeBuildConfig                           As ConfigurationSection
+Private mMarketDataSourcesConfig                    As ConfigurationSection
 
-Private mServiceProviders               As ServiceProviders
+Private mMarketDataSourceOptions                    As MarketDataSourceOptions
+Private mNumberOfMarketDepthRows                    As Long
 
-Private mWorkSpaces                     As WorkSpaces
-Private mDefaultWorkSpace               As WorkSpace
-Private mTickers                        As Tickers
-Private mExecutions                     As Executions
-Private mExecutionsSimulated            As Executions
+Private mDefaultStateChangeListener                 As StateChangeListener
+Private mOrderSubmissionListenerLive                As IOrderSubmissionListener
+Private mOrderSubmissionListenerSimulated           As IOrderSubmissionListener
+Private mPositionManagersLive                       As PositionManagers
+Private mPositionManagersSimulated                  As PositionManagers
+Private mOrderSubmitterLive                         As IOrderSubmitter
+Private mOrderSubmitterSimulated                    As IOrderSubmitter
 
-Private WithEvents mClosePositionsTC    As TaskController
+Private mServiceProviderError                       As ServiceProviderError
+
+Private mServiceProviders                           As ServiceProviders
+
+Private mStudyLibraryManager                        As StudyLibraryManager
+
+Private mBarFormatterLibManager                     As BarFormatterLibManager
+
+Private mWorkspaces                                 As WorkSpaces
+
+Private mDefaultWorkSpace                           As WorkSpace
+Private mTickers                                    As Tickers
+Private mExecutions                                 As Executions
+Private mExecutionsSimulated                        As Executions
+
+Private WithEvents mClosePositionsTC                As TaskController
 Attribute mClosePositionsTC.VB_VarHelpID = -1
 
-Private mOrderPlexRecoveryController    As OrderPlexRecoveryCtlr
-
-Private mSessionID                      As String
+Private mSessionName                                As String
+Private mScopeName                                  As String
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-
-InitialiseTWUtilities
-
 UnhandledErrorHandler.AddErrorListener Me
 
-Initialise
+Set mServiceProviders = New ServiceProviders
+mServiceProviders.TradeBuildAPI = Me
+
+Set mStudyLibraryManager = New StudyLibraryManager
+Set mBarFormatterLibManager = New BarFormatterLibManager
 End Sub
 
 Private Sub Class_Terminate()
@@ -81,10 +98,10 @@ Debug.Print "TradeBuildAPI terminated"
 End Sub
 
 '@================================================================================
-' ErrorListener Interface Members
+' ErrorListener Event Handlers
 '@================================================================================
 
-Private Sub ErrorListener_Notify(ev As TWUtilities30.ErrorEventData)
+Private Sub ErrorListener_Notify(ev As ErrorEventData)
 On Error Resume Next
 mServiceProviders.RemoveAll
 End Sub
@@ -93,8 +110,16 @@ End Sub
 ' mClosePositionsTC Event Handlers
 '@================================================================================
 
-Private Sub mClosePositionsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mClosePositionsTC_Completed(ev As TaskCompletionEventData)
+Const ProcName As String = "mClosePositionsTC_Completed"
+On Error GoTo Err
+
 Set mClosePositionsTC = Nothing
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -103,7 +128,6 @@ End Sub
 
 Public Property Get AllOrdersSimulated() As Boolean
 Const ProcName As String = "AllOrdersSimulated"
-
 On Error GoTo Err
 
 AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
@@ -111,12 +135,15 @@ AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get BarFormatterLibManager() As BarFormatterLibManager
+Set BarFormatterLibManager = mBarFormatterLibManager
 End Property
 
 Public Property Get ClosingPositions() As Boolean
 Const ProcName As String = "ClosingPositions"
-
 On Error GoTo Err
 
 ClosingPositions = Not (mClosePositionsTC Is Nothing)
@@ -124,12 +151,87 @@ ClosingPositions = Not (mClosePositionsTC Is Nothing)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get ContractStorePrimary() As IContractStore
+Set ContractStorePrimary = ServiceProviders.ContractStorePrimary
+End Property
+
+Public Property Get ContractStoreSecondary() As IContractStore
+Set ContractStoreSecondary = ServiceProviders.ContractStoreSecondary
+End Property
+
+Public Property Get HistoricalDataStoreInput() As IHistoricalDataStore
+Set HistoricalDataStoreInput = ServiceProviders.HistoricalDataStoreInput
+End Property
+
+Public Property Get HistoricalDataStoreOutput() As IHistoricalDataStore
+Set HistoricalDataStoreOutput = ServiceProviders.HistoricalDataStoreOutput
+End Property
+
+Public Property Get MarketDataManager() As IMarketDataManager
+Set MarketDataManager = ServiceProviders.MarketDataManager
+End Property
+
+Public Property Get OrderSubmitterLive() As IOrderSubmitter
+Set OrderSubmitterLive = mOrderSubmitterLive
+End Property
+
+Public Property Get OrderSubmitterSimulated() As IOrderSubmitter
+Set OrderSubmitterSimulated = mOrderSubmitterSimulated
+End Property
+
+Public Property Get OrderSubmitterFactoryLive() As IOrderSubmitterFactory
+Set OrderSubmitterFactoryLive = ServiceProviders.OrderSubmitterFactoryLive
+End Property
+
+Public Property Get OrderSubmitterFactorySimulated() As IOrderSubmitterFactory
+Set OrderSubmitterFactorySimulated = ServiceProviders.OrderSubmitterFactorySimulated
+End Property
+
+Public Property Get StudyLibraryManager() As StudyLibraryManager
+Set StudyLibraryManager = mStudyLibraryManager
+End Property
+
+Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedInputTickfileFormats"
+On Error GoTo Err
+
+SupportedInputTickfileFormats = ServiceProviders.SupportedInputTickfileFormats
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
+Const ProcName As String = "SupportedOutputTickfileFormats"
+On Error GoTo Err
+
+SupportedOutputTickfileFormats = ServiceProviders.SupportedOutputTickfileFormats
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TickfileStoreInput() As ITickfileStore
+Set TickfileStoreInput = ServiceProviders.TickfileStoreInput
+End Property
+
+Public Property Get TickfileStoreOutput() As ITickfileStore
+Set TickfileStoreOutput = ServiceProviders.TickfileStoreOutput
+End Property
+
+Friend Property Get DefaultStateChangeListener() As StateChangeListener
+Set DefaultStateChangeListener = mDefaultStateChangeListener
 End Property
 
 Public Property Get DefaultWorkSpace() As WorkSpace
-Const ProcName As String = "defaultWorkSpace"
-
+Const ProcName As String = "DefaultWorkSpace"
 On Error GoTo Err
 
 Set DefaultWorkSpace = mDefaultWorkSpace
@@ -137,12 +239,11 @@ Set DefaultWorkSpace = mDefaultWorkSpace
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Executions() As Executions
 Const ProcName As String = "Executions"
-
 On Error GoTo Err
 
 Set Executions = mExecutions
@@ -150,62 +251,39 @@ Set Executions = mExecutions
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExecutionsSimulated() As Executions
 Const ProcName As String = "ExecutionsSimulated"
-
 On Error GoTo Err
 
-Set Executions = mExecutionsSimulated
+Set ExecutionsSimulated = mExecutionsSimulated
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Get OrderPlexRecoveryController() As OrderPlexRecoveryCtlr
-Set OrderPlexRecoveryController = mOrderPlexRecoveryController
+Friend Property Get MarketDataSourceOptions() As MarketDataSourceOptions
+MarketDataSourceOptions = mMarketDataSourceOptions
 End Property
 
-Public Property Let PermittedServiceProviderRoles( _
-                ByVal value As ServiceProviderRoles)
-Const ProcName As String = "PermittedServiceProviderRoles"
-
-On Error GoTo Err
-
-If mServiceProviders.IsAnyServiceProviderConfigured Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Service providers are already configured"
-End If
-
-mServiceProviders.PermittedServiceProviderRoles = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Public Property Get NumberOfMarketDepthRows() As Long
+NumberOfMarketDepthRows = mNumberOfMarketDepthRows
 End Property
 
-Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
-Const ProcName As String = "PermittedServiceProviderRoles"
+Public Property Get PositionManagersLive() As PositionManagers
+Set PositionManagersLive = mPositionManagersLive
+End Property
 
-On Error GoTo Err
-
-PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Public Property Get PositionManagersSimulated() As PositionManagers
+Set PositionManagersSimulated = mPositionManagersSimulated
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
 Const ProcName As String = "ServiceProviders"
-
 On Error GoTo Err
 
 Set ServiceProviders = mServiceProviders
@@ -213,55 +291,19 @@ Set ServiceProviders = mServiceProviders
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get SessionId() As String
-SessionId = mSessionID
+Public Property Get ScopeName() As String
+ScopeName = mScopeName
 End Property
 
-Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
-Const ProcName As String = "SupportedHistoricalDataPeriods"
-
-On Error GoTo Err
-
-SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriods
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
-Const ProcName As String = "SupportedInputTickfileFormats"
-
-On Error GoTo Err
-
-SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
-Const ProcName As String = "SupportedOutputTickfileFormats"
-
-On Error GoTo Err
-
-SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Public Property Get SessionName() As String
+SessionName = mSessionName
 End Property
 
 Public Property Get Tickers() As Tickers
 Const ProcName As String = "Tickers"
-
 On Error GoTo Err
 
 Set Tickers = mTickers
@@ -269,20 +311,19 @@ Set Tickers = mTickers
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get WorkSpaces() As WorkSpaces
 Const ProcName As String = "WorkSpaces"
-
 On Error GoTo Err
 
-Set WorkSpaces = mWorkSpaces
+Set WorkSpaces = mWorkspaces
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -290,344 +331,53 @@ End Property
 '@================================================================================
 
 Public Function CloseAllPositions( _
-                Optional ByVal types As PositionTypes = PositionTypeAll, _
-                Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
+                Optional ByVal pTypes As PositionTypes = PositionTypeAll, _
+                Optional ByVal pFlags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
 Const ProcName As String = "CloseAllPositions"
-
 On Error GoTo Err
 
-If Not mClosePositionsTC Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Positions are already being closed"
-End If
+Assert mClosePositionsTC Is Nothing, "Positions are already being closed"
 
 Dim t As New ClosePositionsTask
-t.Initialise types, flags
+t.Initialise mWorkspaces, pTypes, pFlags
 Set mClosePositionsTC = StartTask(t, PriorityHigh)
 Set CloseAllPositions = mClosePositionsTC
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub ConfigureDefaults( _
-                Optional ByVal twsServer As String, _
-                Optional ByVal twsPort As Long = 7496, _
-                Optional ByVal clientId As Long = -1, _
-                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
-                Optional ByVal twsLogLevel As String = "ERROR", _
-                Optional ByVal tickfilesPath As String)
-Const ProcName As String = "ConfigureDefaults"
-
-On Error GoTo Err
-
-mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
-                                                    twsPort, _
-                                                    clientId, _
-                                                    connectionRetryIntervalSecs, _
-                                                    twsLogLevel, _
-                                                    tickfilesPath
-
-AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
-addbarformatterlibrary "BarFormatters26.BarFormattersLib", True, "Built-in"
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
 Public Sub EndSession()
-
 Const ProcName As String = "EndSession"
-
 On Error GoTo Err
-
-gTB.StopAllTickers
 
 ServiceProviders.RemoveAll
 
-Initialise
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function GenerateTickfileSpecifiers( _
-                ByVal pContracts As Contracts, _
-                ByVal TickfileFormatID As String, _
-                ByVal startDate As Date, _
-                ByVal endDate As Date, _
-                Optional ByVal completeSessionsOnly As Boolean = True, _
-                Optional ByVal useExchangeTimezone As Boolean = True, _
-                Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date) As TickfileSpecifiers
-Dim useCustomSessionTimes As Boolean
-Dim lTickfileSpecifiers As New TickfileSpecifiers
-Dim tfs As TickfileSpecifier
-Dim i As Long
-Dim lContract As Contract
-Dim lSessionBuilder As SessionBuilder
-Dim lSession As Session
-Dim fromSessionTimes As SessionTimes
-Dim toSessionTimes As SessionTimes
-
-Dim lSecType As SecurityTypes
-Dim currContract As Contract
-Dim aContract As Contract
-
-' the from and to dates converted (if necessary) to the contract's timezone
-Dim FromDate As Date
-Dim ToDate As Date
-
-' the from and to dates, Session-oriented if required
-Dim replayFromDate As Date
-Dim replayToDate As Date
-
-
-Const ProcName As String = "GenerateTickfileSpecifiers"
-
+Public Function FetchContracts( _
+                ByVal pContractSpec As ContractSpecifier, _
+                Optional ByVal pListener As IContractFetchListener, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-If (customSessionStartTime = 0 And customSessionEndTime <> 0) Or _
-    (customSessionStartTime <> 0 And customSessionEndTime = 0) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session start and end times must be either both supplied or both omitted"
-    
-If customSessionStartTime <> 0 Then useCustomSessionTimes = True
-
-' get the most recent contract (though they should all have the same
-' info regarding Session times)
-Set lContract = pContracts(pContracts.Count)
-
-If useExchangeTimezone Then
-    FromDate = startDate
-    If endDate <> 0 Then ToDate = endDate
-Else
-    FromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(startDate), lContract.Timezone)
-    If endDate <> 0 Then ToDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(endDate), lContract.Timezone)
-End If
-
-' determine start and end times ---------------------------------------------------
-
-Set lSessionBuilder = New SessionBuilder
-Set lSession = lSessionBuilder.Session
-
-' note that the custom times are in the contract's timezone
-If useCustomSessionTimes Then
-    lSessionBuilder.sessionStartTime = customSessionStartTime
-    lSessionBuilder.sessionEndTime = customSessionEndTime
-Else
-    lSessionBuilder.sessionStartTime = lContract.sessionStartTime
-    lSessionBuilder.sessionEndTime = lContract.sessionEndTime
-End If
-
-' set the Session start and end times for the starting date (in the contract's
-' local timezone)...
-fromSessionTimes = lSession.GetSessionTimes(FromDate)
-If completeSessionsOnly Then
-    replayFromDate = fromSessionTimes.StartTime
-Else
-    replayFromDate = FromDate
-End If
-
-If ToDate <> 0 Then
-    ' set the Session start and end times for the ending date (in the contract's
-    ' local timezone)...
-    toSessionTimes = lSession.GetSessionTimes(ToDate)
-    
-    If completeSessionsOnly Then
-        replayToDate = toSessionTimes.EndTime
-    Else
-        replayToDate = ToDate
-    End If
-Else
-    toSessionTimes.StartTime = fromSessionTimes.StartTime
-    toSessionTimes.EndTime = fromSessionTimes.EndTime
-    replayToDate = toSessionTimes.EndTime
-End If
-
-' find contract for start date ------------------------------------------------------
-
-lSecType = pContracts(1).specifier.SecType
-
-If lSecType <> SecurityTypes.SecTypeFuture And _
-    lSecType <> SecurityTypes.SecTypeOption And _
-    lSecType <> SecurityTypes.SecTypeFuturesOption _
-Then
-    Set currContract = pContracts(1)
-Else
-    For i = 1 To pContracts.Count
-        Set aContract = pContracts(i)
-        If DateValue(FromDate) <= _
-            (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
-        Then
-            Set currContract = aContract
-            Exit For
-        End If
-    Next
-    
-    If currContract Is Nothing Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "No contract for this from date"
-    End If
-End If
-
-If completeSessionsOnly Then
-    If useCustomSessionTimes Then
-        Set currContract = editContractSessionTimes(currContract, customSessionStartTime, customSessionEndTime)
-    End If
-End If
-
-Dim currSessionStart As Date
-Dim thisSessionTimes As SessionTimes
-
-currSessionStart = FromDate
-
-If completeSessionsOnly Then
-    Do While currSessionStart < replayToDate
-        Set tfs = New TickfileSpecifier
-        lTickfileSpecifiers.Add tfs
-        tfs.Contract = currContract
-        tfs.TickfileFormatID = TickfileFormatID
-        
-        If useCustomSessionTimes Then
-            thisSessionTimes = lSession.GetSessionTimes(currSessionStart)
-            tfs.FromDate = thisSessionTimes.StartTime
-            tfs.ToDate = thisSessionTimes.EndTime
-            tfs.EntireSession = False
-            tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
-                                        "-" & _
-                                        FormatDateTime(tfs.ToDate, vbGeneralDate) & _
-                                        " " & _
-                                        Replace(currContract.specifier.ToString, vbCrLf, "; ")
-        Else
-            tfs.FromDate = currSessionStart
-            tfs.EntireSession = True
-            tfs.Filename = "Session " & _
-                            FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
-                            " " & _
-                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
-            
-        End If
-        
-        currSessionStart = currSessionStart + 1
-        
-        If lSecType = SecurityTypes.SecTypeFuture Or _
-            lSecType = SecurityTypes.SecTypeOption Or _
-            lSecType = SecurityTypes.SecTypeFuturesOption _
-        Then
-            If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
-            Then
-                For i = i + 1 To pContracts.Count
-                    Set aContract = pContracts(i)
-                    If DateValue(currSessionStart) <= _
-                        (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
-                    Then
-                        Set currContract = aContract
-                        If useCustomSessionTimes Then
-                            Set currContract = editContractSessionTimes(currContract, _
-                                                                        customSessionStartTime, _
-                                                                        customSessionEndTime)
-                        End If
-                        Exit For
-                    End If
-                Next
-                If currContract Is Nothing Then
-                    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "No contract from " & currSessionStart
-                                    
-                End If
-            End If
-        End If
-        
-        Loop
-    If lTickfileSpecifiers.Count = 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "No trading sessions in specified date range"
-    End If
-Else
-    Set tfs = New TickfileSpecifier
-    lTickfileSpecifiers.Add tfs
-    tfs.Contract = currContract
-    tfs.TickfileFormatID = TickfileFormatID
-
-    tfs.FromDate = FromDate
-    currSessionStart = currSessionStart + 1
-    Do While currSessionStart < replayToDate
-        
-        If lSecType = SecurityTypes.SecTypeFuture Or _
-            lSecType = SecurityTypes.SecTypeOption Or _
-            lSecType = SecurityTypes.SecTypeFuturesOption _
-        Then
-            If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
-            Then
-                For i = i + 1 To pContracts.Count
-                    Set aContract = pContracts(i)
-                    If DateValue(currSessionStart) <= _
-                        (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
-                    Then
-                        tfs.ToDate = currSessionStart
-                        tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
-                                                    "-" & _
-                                                    FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                                    Replace(currContract.specifier.ToString, vbCrLf, "; ")
-                        
-                        Set currContract = aContract
-                        
-                        Set tfs = New TickfileSpecifier
-                        lTickfileSpecifiers.Add tfs
-                        
-                        tfs.Contract = currContract
-                        tfs.TickfileFormatID = TickfileFormatID
-                    
-                        tfs.FromDate = currSessionStart
-                        Exit For
-                    End If
-                Next
-                If currContract Is Nothing Then
-                    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "No contract from " & currSessionStart
-                End If
-            End If
-        End If
-        
-        currSessionStart = currSessionStart + 1
-        
-    Loop
-        
-    tfs.ToDate = replayToDate
-    tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
-                                "-" & _
-                                FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                Replace(currContract.specifier.ToString, vbCrLf, "; ")
-
-End If
-
-Set GenerateTickfileSpecifiers = lTickfileSpecifiers
+Set FetchContracts = ContractUtils27.FetchContracts(pContractSpec, mServiceProviders.ContractStorePrimary, , mServiceProviders.ContractStoreSecondary, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, pCookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetServiceProviderError() As ServiceProviderError
 Const ProcName As String = "GetServiceProviderError"
-
 On Error GoTo Err
 
 Set GetServiceProviderError = mServiceProviderError
@@ -636,201 +386,452 @@ Set GetServiceProviderError = mServiceProviderError
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub Initialise()
+Friend Sub Initialise( _
+                ByVal pScopeName As String, _
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers, _
+                ByVal pMarketDataSourceOptions As MarketDataSourceOptions, _
+                ByVal pNumberOfMarketDepthRows As Long)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
-mSessionID = GenerateGUIDString
+Init
 
-Set mServiceProviders = New ServiceProviders
+logMessage "Initialising TradeBuild", ProcName
 
-Set mWorkSpaces = New WorkSpaces
-GPositionManager.gInitialise
+mScopeName = pScopeName
 
-Set mDefaultWorkSpace = mWorkSpaces.Add("$default")
-Set mTickers = DefaultWorkSpace.Tickers
-Set mExecutions = DefaultWorkSpace.Executions
-Set mExecutionsSimulated = DefaultWorkSpace.ExecutionsSimulated
+mServiceProviders.PermittedServiceProviderRoles = pPermittedServiceProviderRoles
+mMarketDataSourceOptions = pMarketDataSourceOptions
+mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
+Set mDefaultStateChangeListener = pDefaultStateChangeListener
+Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
+Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
 
-Set mOrderPlexRecoveryController = New OrderPlexRecoveryCtlr
+Set mPositionManagersLive = pPositionManagersLive
+If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
+Set mPositionManagersSimulated = pPositionManagersSimulated
+If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function IsSupportedHistoricalDataPeriod( _
-                ByVal period As TimePeriod) As Boolean
-Const ProcName As String = "IsSupportedHistoricalDataPeriod"
-
+Friend Sub InitialiseFromConfig( _
+                ByVal pTradeBuildConfig As ConfigurationSection, _
+                ByVal pScopeName As String, _
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers)
+Const ProcName As String = "InitialiseFromConfig"
 On Error GoTo Err
 
-IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
+AssertArgument Not pTradeBuildConfig Is Nothing, "pTradeBuildConfig is Nothing"
 
-Exit Function
+Set mTradeBuildConfig = pTradeBuildConfig
+
+Init
+
+logMessage "Initialising TradeBuild from config", ProcName, mTradeBuildConfig.Path
+
+mScopeName = pScopeName
+
+mServiceProviders.PermittedServiceProviderRoles = pPermittedServiceProviderRoles
+Set mDefaultStateChangeListener = pDefaultStateChangeListener
+Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
+Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
+
+Set mPositionManagersLive = pPositionManagersLive
+If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
+Set mPositionManagersSimulated = pPositionManagersSimulated
+If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
+
+Dim lInitialisedOk As Boolean
+lInitialisedOk = True
+
+Set mMarketDataSourcesConfig = setupMarketDataInfo(mTradeBuildConfig)
+
+If Not setupServiceProviders(mTradeBuildConfig) Then
+    logMessage "Failed loading service providers from configuration", ProcName
+    lInitialisedOk = False
+End If
+If Not setupStudyLibraries(mTradeBuildConfig) Then
+    logMessage "Failed loading study libraries from configuration", ProcName
+    lInitialisedOk = False
+End If
+If Not setupBarFormatterLibraries(mTradeBuildConfig) Then
+    logMessage "Failed loading bar formatter libraries from configuration", ProcName
+    lInitialisedOk = False
+End If
+
+If lInitialisedOk Then
+    logMessage "Loaded configuration", ProcName
+Else
+    Assert False, "Failed to load configuration"
+End If
+
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Public Function LoadContracts( _
-                ByVal pContractSpec As ContractSpecifier) As TaskController
-Const ProcName As String = "loadContracts"
-
+Friend Sub InitialiseWithDefaultProviders( _
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pScopeName As String, _
+                ByVal pDefaultStateChangeListener As StateChangeListener, _
+                ByVal pOrderSubmissionListenerLive As IOrderSubmissionListener, _
+                ByVal pOrderSubmissionListenerSimulated As IOrderSubmissionListener, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers, _
+                ByVal pTwsServer As String, _
+                ByVal pTwsPort As Long, _
+                ByVal pClientId As Long, _
+                ByVal pConnectionRetryIntervalSecs As Long, _
+                ByVal pTwsLogLevel As String, _
+                ByVal pTickfilesPath As String, _
+                ByVal pOrderPersistenceFilePath As String)
+Const ProcName As String = "InitialiseWithDefaultProviders"
 On Error GoTo Err
 
-GLogLogger.Log "Starting contract load task", ProcName, ModuleName, , pContractSpec.ToString
-Set LoadContracts = StartTask(New ContractLoadTask, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, , pContractSpec)
+Init
 
-Exit Function
+logMessage "Initialising TradeBuild with default providers", ProcName
+
+mScopeName = pScopeName
+
+Set mDefaultStateChangeListener = pDefaultStateChangeListener
+Set mOrderSubmissionListenerLive = pOrderSubmissionListenerLive
+Set mOrderSubmissionListenerSimulated = pOrderSubmissionListenerSimulated
+
+Set mPositionManagersLive = pPositionManagersLive
+If mPositionManagersLive Is Nothing Then Set mPositionManagersLive = New PositionManagers
+Set mPositionManagersSimulated = pPositionManagersSimulated
+If mPositionManagersSimulated Is Nothing Then Set mPositionManagersSimulated = New PositionManagers
+
+mServiceProviders.ConfigureDefaultServiceProviders pPermittedServiceProviderRoles, _
+                                                    pTwsServer, _
+                                                    pTwsPort, _
+                                                    pClientId, _
+                                                    pConnectionRetryIntervalSecs, _
+                                                    pTwsLogLevel, _
+                                                    pTickfilesPath, _
+                                                    pOrderPersistenceFilePath
+
+mStudyLibraryManager.AddStudyLibrary "CmnStudiesLib27.StudyLib", True, "Built-in"
+mBarFormatterLibManager.AddBarFormatterLibrary "BarFormatters27.BarFormattersLib", True, "Built-in"
+
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
-Friend Sub notify(ByRef ev As NotificationEventData)
-Const ProcName As String = "notify"
-
+Friend Sub NotifyEvent(ByRef ev As NotificationEventData)
+Const ProcName As String = "NotifyEvent"
 On Error GoTo Err
 
 logMessage pMsg:="Notification", _
-    pMsgQualifier:="(" & GApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage, _
+    pMsgQualifier:="(" & GApiNotifyCodeToString(ev.EventCode) & "): " & ev.EventMessage, _
     pProcName:=ProcName
 RaiseEvent Notification(ev)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyFatalError( _
-                ByVal ErrorCode As Long, _
-                ByVal errorMessage As String, _
-                ByVal errorSource As String)
-Const ProcName As String = "NotifyFatalError"
-Dim ev As ErrorEventData
+'Friend Sub NotifyFatalError( _
+'                ByVal ErrorCode As Long, _
+'                ByVal ErrorMessage As String, _
+'                ByVal errorSource As String)
+'Const ProcName As String = "NotifyFatalError"
+'On Error Resume Next
+'
+'Dim ev As ErrorEventData
+'
+'logMessage pMsg:="Fatal error " & ErrorCode & vbCrLf & _
+'                                ErrorMessage & vbCrLf & _
+'                                "Occurred at:" & vbCrLf & _
+'                                errorSource, _
+'            pProcName:=ProcName, _
+'            pLogLevel:=LogLevelSevere
+'
+'logMessage pMsg:="Killing program", _
+'            pProcName:=ProcName, _
+'            pLogLevel:=LogLevelSevere
+'
+'TerminateTWUtilities    ' to stop any outstanding tasks and timers
+'
+'Set ev.Source = Me
+'ev.ErrorCode = ErrorCode
+'ev.ErrorMessage = ErrorMessage
+'ev.errorSource = errorSource
+'
+'' don't raise the event if the error indicates that a callee has disappeared - it
+'' might be the one that was supposed to handle the event
+'If (ErrorCode <> &H80010007 And ErrorCode <> &H80010012) Then RaiseEvent Error(ev)
+'
+'' calling END in a dll is not allowed, so we call the Win32 APIs to kill the
+'' process. (Note that it is not feasible to exit back to the caller of this
+'' procedure because another error of some sort will almost certainly occur.)
+'
+'TerminateProcess GetCurrentProcess, 1
+'
+'End Sub
 
-On Error Resume Next
-
-logMessage pMsg:="Fatal error " & ErrorCode & vbCrLf & _
-                                errorMessage & vbCrLf & _
-                                "Occurred at:" & vbCrLf & _
-                                errorSource, _
-            pProcName:=ProcName, _
-            pLogLevel:=LogLevelSevere
-
-logMessage pMsg:="Killing program", _
-            pProcName:=ProcName, _
-            pLogLevel:=LogLevelSevere
-
-TerminateTWUtilities    ' to stop any outstanding tasks and timers
-
-Set ev.source = Me
-ev.ErrorCode = ErrorCode
-ev.errorMessage = errorMessage
-ev.errorSource = errorSource
-
-RaiseEvent Error(ev)
-
-' calling END in a dll is not allowed, so we call the Win32 APIs to kill the
-' process. (Note that it is not feasible to exit back to the caller of this
-' procedure because another error of some sort will almost certainly occur.)
-
-TerminateProcess GetCurrentProcess, 1
-
-End Sub
-
-Public Sub RecoverOrders(ByVal sessionName As String)
-mOrderPlexRecoveryController.RecoverOrders sessionName
-End Sub
-
-Friend Sub SetServiceProviderError( _
-                ByVal ErrorCode As Long, _
-                ByVal errorMessage As String, _
-                ByVal ServiceProviderName As String)
-Dim ev As NotificationEventData
-
-Const ProcName As String = "SetServiceProviderError"
-
+Public Function RecoverOrders( _
+                Optional ByVal pCookie As Object) As TaskController
+Const ProcName As String = "RecoverOrders"
 On Error GoTo Err
 
+Assert Not ServiceProviders.MarketDataManager Is Nothing, "No realtime data service provider is configured"
+Assert Not ServiceProviders.OrderPersistenceDataStore Is Nothing, "No order persistence service provider is configured"
+Assert mScopeName <> "", "No scope name has been supplied"
+Set RecoverOrders = RecoverOrdersFromPreviousSession(mScopeName, _
+                                                    mPositionManagersLive, _
+                                                    ServiceProviders.OrderPersistenceDataStore, _
+                                                    ServiceProviders.OrderRecoveryAgent, _
+                                                    ServiceProviders.MarketDataManager, _
+                                                    ServiceProviders.OrderSubmitterFactoryLive, _
+                                                    pCookie)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Sub SetServiceProviderError( _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMessage As String, _
+                ByVal pServiceProviderName As String)
+Const ProcName As String = "SetServiceProviderError"
+On Error GoTo Err
+
+Dim ev As NotificationEventData
+
 Set mServiceProviderError = New ServiceProviderError
-mServiceProviderError.ErrorCode = ErrorCode
-mServiceProviderError.Message = errorMessage
-mServiceProviderError.ServiceProviderName = ServiceProviderName
+mServiceProviderError.ErrorCode = pErrorCode
+mServiceProviderError.Message = pErrorMessage
+mServiceProviderError.ServiceProviderName = pServiceProviderName
 mServiceProviderError.Timestamp = GetTimestamp
 
-Set ev.source = Me
-ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
-ev.eventMessage = "A Service Provider error has occurred"
-notify ev
+Set ev.Source = Me
+ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
+ev.EventMessage = "A Service Provider error has occurred"
+NotifyEvent ev
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-                    
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub StopAllTickers()
-Dim ws As WorkSpace
-Dim t As Ticker
-
-Const ProcName As String = "StopAllTickers"
-
+Public Function StartServiceProviders() As Boolean
+Const ProcName As String = "StartServiceProviders"
 On Error GoTo Err
 
-For Each ws In mWorkSpaces
+StartServiceProviders = ServiceProviders.StartServiceProviders
+If Not mMarketDataSourcesConfig Is Nothing Then MarketDataManager.LoadFromConfig mMarketDataSourcesConfig
+
+If Not ServiceProviders.OrderSubmitterFactoryLive Is Nothing Then Set mOrderSubmitterLive = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactoryLive, mOrderSubmissionListenerLive)
+If Not ServiceProviders.OrderSubmitterFactorySimulated Is Nothing Then Set mOrderSubmitterSimulated = CreateOrderSubmitter(ServiceProviders.OrderSubmitterFactorySimulated, mOrderSubmissionListenerSimulated)
+
+If Not ServiceProviders.MarketDataManager Is Nothing Then
+    Set mWorkspaces = New WorkSpaces
+    
+    mWorkspaces.Initialise Me, _
+                        mOrderSubmitterLive, _
+                        mOrderSubmitterSimulated, _
+                        mPositionManagersLive, _
+                        mPositionManagersSimulated, _
+                        Nothing
+                        
+    If Not mTradeBuildConfig Is Nothing Then mWorkspaces.LoadFromConfig mTradeBuildConfig.AddPrivateConfigurationSection(ConfigSectionWorkspaces)
+    
+    If mWorkspaces.Contains(DefaultWorkspaceName) Then
+        Set mDefaultWorkSpace = mWorkspaces(DefaultWorkspaceName)
+    Else
+        Set mDefaultWorkSpace = mWorkspaces.Add(DefaultWorkspaceName)
+    End If
+    
+    Set mTickers = DefaultWorkSpace.Tickers
+    Set mExecutions = DefaultWorkSpace.Executions
+    Set mExecutionsSimulated = DefaultWorkSpace.ExecutionsSimulated
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub FinishAllTickers()
+Const ProcName As String = "FinishAllTickers"
+On Error GoTo Err
+
+Dim ws As WorkSpace
+For Each ws In mWorkspaces
+    Dim t As Ticker
     For Each t In ws.Tickers
-        t.StopTicker
+        t.Finish
     Next
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function editContractSessionTimes( _
-                ByVal pContract As Contract, _
-                ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date) As Contract
-Dim lContractBuilder As ContractBuilder
-
-Const ProcName As String = "editContractSessionTimes"
-
+Private Function CreateOrderSubmitter( _
+                ByVal pFactory As IOrderSubmitterFactory, _
+                ByVal pListener As IOrderSubmissionListener) As IOrderSubmitter
+Const ProcName As String = "CreateOrderSubmitter"
 On Error GoTo Err
 
-Set lContractBuilder = CreateContractBuilderFromContract(pContract)
-lContractBuilder.sessionEndTime = sessionEndTime
-lContractBuilder.sessionStartTime = sessionStartTime
-Set editContractSessionTimes = lContractBuilder.Contract
+Dim lOrderSubmitter As IOrderSubmitter
+If Not pFactory Is Nothing Then
+    Set lOrderSubmitter = pFactory.CreateOrderSubmitter(pListener)
+End If
+Set CreateOrderSubmitter = lOrderSubmitter
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub Init()
+Const ProcName As String = "Init"
+On Error GoTo Err
+
+mSessionName = GenerateGUIDString
+If mScopeName <> "" Then StartOrderRecoverySession mSessionName
+
+Set mServiceProviders = New ServiceProviders
+mServiceProviders.TradeBuildAPI = Me
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub logMessage( _
                 ByRef pMsg As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-GLogLogger.Log pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
+
+Private Function setupMarketDataInfo(ByVal pTradeBuilfConfig As ConfigurationSection) As ConfigurationSection
+Const ProcName As String = "setupMarketDataInfo"
+On Error GoTo Err
+
+Dim lMarketDataSourcesConfig As ConfigurationSection
+Set lMarketDataSourcesConfig = pTradeBuilfConfig.AddConfigurationSection(ConfigSectionMarketDataSources)
+
+Dim lOptions As MarketDataSourceOptions
+If CBool(lMarketDataSourcesConfig.GetSetting(ConfigSettingNoImpliedTrades, "False")) Then lOptions = MarketDataSourceOptNoImpliedTrades
+If CBool(lMarketDataSourcesConfig.GetSetting(ConfigSettingNoVolumeAdjustments, "False")) Then lOptions = lOptions Or MarketDataSourceOptNoVolumeAdjustments
+If CBool(lMarketDataSourcesConfig.GetSetting(ConfigSettingUseExchangeTimezone, "True")) Then lOptions = lOptions Or MarketDataSourceOptUseExchangeTimeZone
+
+mMarketDataSourceOptions = lOptions
+
+mNumberOfMarketDepthRows = CLng(lMarketDataSourcesConfig.GetSetting(ConfigSettingNumberOfMarketDepthRows, "20"))
+
+Set setupMarketDataInfo = lMarketDataSourcesConfig
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupServiceProviders( _
+                ByVal pTradeBuildConfig As ConfigurationSection) As Boolean
+Const ProcName As String = "setupServiceProviders"
+On Error GoTo Err
+
+On Error GoTo ConfigErr
+ServiceProviders.ConfigurationSection = pTradeBuildConfig
+ServiceProviders.LoadServiceProvidersFromConfiguration
+setupServiceProviders = True
+
+Exit Function
+
+ConfigErr:
+logMessage "Service provider configuration failed: " & Err.Description & vbCrLf & Err.Source, ProcName, , LogLevelSevere
+setupServiceProviders = False
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupStudyLibraries( _
+                ByVal pTradeBuildConfig As ConfigurationSection) As Boolean
+Const ProcName As String = "setupStudyLibraries"
+On Error GoTo Err
+
+On Error GoTo ConfigErr
+
+mStudyLibraryManager.LoadStudyLibraryConfiguration pTradeBuildConfig
+setupStudyLibraries = True
+
+Exit Function
+
+ConfigErr:
+logMessage "Study library configuration failed: " & Err.Description & vbCrLf & Err.Source, ProcName, , LogLevelSevere
+setupStudyLibraries = False
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupBarFormatterLibraries( _
+                ByVal pTradeBuildConfig As ConfigurationSection) As Boolean
+Const ProcName As String = "setupBarFormatterLibraries"
+On Error GoTo Err
+
+On Error GoTo ConfigErr
+mBarFormatterLibManager.LoadBarFormatterLibraryConfiguration pTradeBuildConfig
+setupBarFormatterLibraries = True
+
+Exit Function
+
+ConfigErr:
+logMessage "Bar formatter library configuration failed: " & Err.Description & vbCrLf & Err.Source, ProcName, , LogLevelSevere
+setupBarFormatterLibraries = False
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 
 

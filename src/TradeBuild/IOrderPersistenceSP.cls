@@ -64,6 +64,9 @@ Private Const ModuleName                            As String = "IOrderPersisten
 ' Methods
 '@================================================================================
 
+Public Function GetOrderPersistenceDataStore() As IOrderPersistenceDataStore
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

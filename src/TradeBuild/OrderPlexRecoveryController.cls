@@ -114,7 +114,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderPersistenceServiceConsumer_PersistedOrderInfoEnd()
@@ -144,14 +144,14 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
 ' IOrderRecoveryServiceConsumer Interface Members
 '@================================================================================
 
-Private Sub IOrderRecoveryServiceConsumer_ExecutionReport(ByVal pExecutionReport As TradeBuildSP.IExecutionReport)
+Private Sub IOrderRecoveryServiceConsumer_ExecutionReport(ByVal pExecutionReport As IExecutionReport)
 
 Const ProcName As String = "IOrderRecoveryServiceConsumer_ExecutionReport"
 
@@ -176,7 +176,7 @@ opr.NotifyExecutionReport pExecutionReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderRecoveryServiceConsumer_ExecutionReportsComplete()
@@ -189,11 +189,11 @@ If mOrderReportsComplete Then FinishRecovery
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderRecoveryServiceConsumer_OrderReport( _
-                ByVal pOrderReport As TradeBuildSP.IOrderReport)
+                ByVal pOrderReport As IOrderReport)
 
 Const ProcName As String = "IOrderRecoveryServiceConsumer_OrderReport"
 
@@ -214,7 +214,7 @@ If Err.number = VBErrorCodes.VbErrInvalidProcedureCall Then
     ' ignore
     Exit Sub
 End If
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub IOrderRecoveryServiceConsumer_OrderReportsComplete()
@@ -227,14 +227,14 @@ If mExecutionReportsComplete Then FinishRecovery
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
 ' TaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEventData)
 Dim opr As OrderPlexRecoverer
 Dim op As orderPlex
 
@@ -282,7 +282,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Friend Sub RecoverOrders(ByVal sessionName As String)
@@ -310,7 +310,7 @@ logMessage "Persisted order info processing completed", pProcName:=ProcName
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 
 End Sub
 
@@ -328,7 +328,7 @@ End If
 
 If Not mOrderPersistenceServiceProvider Is Nothing Then
     Dim opItem As New OrderPersistenceItem
-    opItem.data = info
+    opItem.Data = info
     opItem.ItemType = OrderInfoData
     opItem.Key = pKey
     opItem.Timestamp = GetTimestamp
@@ -338,7 +338,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 '@================================================================================
@@ -370,7 +370,7 @@ Set CreateOrderPlexRecoverer = opr
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub FinishRecovery()
@@ -401,7 +401,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function getNextOrderPersistenceDataGroupEnumerator( _
@@ -425,7 +425,7 @@ getNextOrderPersistenceDataGroupEnumerator = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Function getNextOrderPersistenceItem( _
@@ -451,7 +451,7 @@ getNextOrderPersistenceItem = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub logMessage( _
@@ -476,7 +476,7 @@ opr.UpdateExecution ex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function processOrderPersistenceItem( _
@@ -486,14 +486,14 @@ On Error GoTo Err
 
 processOrderPersistenceItem = True
 
-If TypeOf pOpItem.data Is OrderPlexSummary Then
-    processOrderPlexSummary pOpItem.data
-ElseIf TypeOf pOpItem.data Is OrderSummary Then
-    If Not processOrderSummary(pOpItem.data) Then processOrderPersistenceItem = False
-ElseIf TypeOf pOpItem.data Is Execution Then
-    processExecution pOpItem.data
-ElseIf TypeOf pOpItem.data Is PositionManagerSummary Then
-    processPositionManagerSummary pOpItem.data, pOpItem.Key
+If TypeOf pOpItem.Data Is OrderPlexSummary Then
+    processOrderPlexSummary pOpItem.Data
+ElseIf TypeOf pOpItem.Data Is OrderSummary Then
+    If Not processOrderSummary(pOpItem.Data) Then processOrderPersistenceItem = False
+ElseIf TypeOf pOpItem.Data Is Execution Then
+    processExecution pOpItem.Data
+ElseIf TypeOf pOpItem.Data Is PositionManagerSummary Then
+    processPositionManagerSummary pOpItem.Data, pOpItem.Key
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & ProcName, _
@@ -503,7 +503,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub processOrderPlexSummary(ByVal ops As OrderPlexSummary)
@@ -533,7 +533,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Function processOrderSummary(ByVal os As OrderSummary) As Boolean
@@ -565,7 +565,7 @@ processOrderSummary = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Function
 
 Private Sub processPositionManagerSummary( _
@@ -588,7 +588,7 @@ pm.SyncToSummary pms
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub setupDefaultOrderPersistenceSP()
@@ -603,7 +603,7 @@ gTB.ServiceProviders.Add ProjectName & ".OrderPersistenceSP", _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 Private Sub updateOrderIdToOrderPlexRecovererMap( _
@@ -620,7 +620,7 @@ If Not opr.orderPlex.TargetOrder Is Nothing Then mOrderIdToOrderPlexRecoverer.Ad
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName, pProjectName:=ProjectName
 End Sub
 
 

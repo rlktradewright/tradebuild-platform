@@ -55,16 +55,28 @@ Private Const ModuleName                As String = "WorkSpaces"
 ' Member variables
 '@================================================================================
 
-Private mWorkSpaces As Collection
-Private mChangeListeners As Collection
+Private mWorkspaces                     As EnumerableCollection
+Private mCollectionChangeListeners      As Listeners
+Private mTradeBuildAPIRef               As WeakReference
+Private mOrderSubmitterLive             As IOrderSubmitter
+Private mOrderSubmitterSimulated        As IOrderSubmitter
+
+Private mPositionManagersLive           As PositionManagers
+Private mPositionManagersSimulated      As PositionManagers
+
+Private mMoneyManager                   As IMoneyManager
+
+Private mConfig                         As ConfigurationSection
+
+Private mScopeName                      As String
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mWorkSpaces = New Collection
-Set mChangeListeners = New Collection
+Set mWorkspaces = New EnumerableCollection
+Set mCollectionChangeListeners = New Listeners
 End Sub
 
 '@================================================================================
@@ -80,63 +92,131 @@ End Sub
 '@================================================================================
 
 Public Property Get Count() As Long
-Count = mWorkSpaces.Count
+Count = mWorkspaces.Count
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function Add(ByVal name As String) As WorkSpace
+Public Function Add(ByVal Name As String) As WorkSpace
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 Set Add = New WorkSpace
-Add.name = name
-mWorkSpaces.Add Add, name
-fireChange CollItemAdded, Add
+Add.Initialise Name, _
+                mScopeName, _
+                mTradeBuildAPIRef.Target, _
+                mOrderSubmitterLive, _
+                mOrderSubmitterSimulated, _
+                mPositionManagersLive, _
+                mPositionManagersSimulated, _
+                mMoneyManager
+mWorkspaces.Add Add, Name
+
+If Not mConfig Is Nothing Then Add.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionWorkspace & "(" & Name & ")")
+
+fireCollectionChange CollItemAdded, Add
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add value
+mCollectionChangeListeners.Add pListener
 
-gNotifyExistingCollectionMembers mWorkSpaces, value, Me
+gNotifyExistingCollectionMembers mWorkspaces, pListener, Me
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Item(index As Variant) As WorkSpace
-Attribute Item.VB_UserMemId = 0
+Public Function Contains(ByVal Name As String) As Boolean
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
-Set Item = mWorkSpaces(index)
+Contains = mWorkspaces.Contains(Name)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub Initialise( _
+                ByVal pTradeBuildAPI As TradeBuildAPI, _
+                ByVal pOrderSubmitterLive As IOrderSubmitter, _
+                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers, _
+                ByVal pMoneyManager As IMoneyManager)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mTradeBuildAPIRef = CreateWeakReference(pTradeBuildAPI)
+Set mOrderSubmitterLive = pOrderSubmitterLive
+Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
+Set mPositionManagersLive = pPositionManagersLive
+Set mPositionManagersSimulated = pPositionManagersSimulated
+Set mMoneyManager = pMoneyManager
+mScopeName = pTradeBuildAPI.ScopeName
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Function Item(ByVal Name As String) As WorkSpace
+Attribute Item.VB_UserMemId = 0
+Const ProcName As String = "Item"
+On Error GoTo Err
+
+Set Item = mWorkspaces.Item(Name)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "LoadFromConfig"
+On Error GoTo Err
+
+Assert Not pConfig Is Nothing, "pConfig Is Nothing"
+
+gLogger.Log "Loading workspaces from config", ProcName, ModuleName
+
+Set mConfig = pConfig
+
+Dim lCs As ConfigurationSection
+For Each lCs In mConfig
+    gLogger.Log "Loading workspace: " & lCs.InstanceQualifier, ProcName, ModuleName
+    Dim lWorkspace As WorkSpace
+    Set lWorkspace = Add(lCs.InstanceQualifier)
+Next
+
+gLogger.Log "Workspaces loaded from config", ProcName, ModuleName
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mWorkSpaces.[_NewEnum]
+Set NewEnum = mWorkspaces.Enumerator
 End Function
 
 Public Sub Remove(ByVal pWorkspace As WorkSpace)
@@ -144,48 +224,44 @@ Const ProcName As String = "Remove"
 
 On Error GoTo Err
 
-mWorkSpaces.Remove pWorkspace.name
-fireChange CollItemRemoved, pWorkspace
+mWorkspaces.Remove pWorkspace.Name
+fireCollectionChange CollItemRemoved, pWorkspace
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal value As CollectionChangeListener)
-Dim i As Long
+Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
-Next
+mCollectionChangeListeners.Remove pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub fireChange( _
+Private Sub fireCollectionChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As WorkSpace)
 Dim listener As CollectionChangeListener
 Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
+Const ProcName As String = "fireCollectionChange"
 
 On Error GoTo Err
 
-Set ev.source = Me
+Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
-For Each listener In mChangeListeners
+Set ev.AffectedItem = affectedObject
+For Each listener In mCollectionChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
@@ -193,7 +269,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

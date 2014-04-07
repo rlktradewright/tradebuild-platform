@@ -64,6 +64,12 @@ Private Const ModuleName                            As String = "IOrderSubmissio
 ' Methods
 '@================================================================================
 
+Public Function GetOrderSubmitterFactory() As IOrderSubmitterFactory
+End Function
+
+Public Function GetOrderRecoveryAgent() As IOrderRecoveryAgent
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -64,6 +64,9 @@ Private Const ModuleName                            As String = "ITickfileSP"
 ' Methods
 '@================================================================================
 
+Public Function GetTickfileStore() As ITickfileStore
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

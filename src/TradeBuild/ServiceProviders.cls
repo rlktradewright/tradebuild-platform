@@ -30,14 +30,13 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.ICommonServiceConsumer
+Implements IServiceProviderManager
 
 '@================================================================================
 ' Events
 '@================================================================================
 
-Event CollectionChanged( _
-                ev As CollectionChangeEventData)
+Event CollectionChanged(ev As CollectionChangeEventData)
 
 '@================================================================================
 ' Constants
@@ -45,76 +44,6 @@ Event CollectionChanged( _
 
 
 Private Const ModuleName                            As String = "ServiceProviders"
-
-Private Const AccessModeReadOnly                    As String = "Read only"
-Private Const AccessModeWriteOnly                   As String = "Write only"
-Private Const AccessModeReadWrite                   As String = "Read write"
-
-Private Const AttributeNameEnabled                  As String = "Enabled"
-Private Const AttributeNamePropertyName             As String = "Name"
-Private Const AttributeNamePropertyValue            As String = "Value"
-Private Const AttributeNameServiceProviderEnabled   As String = "Enabled"
-'Private Const AttributeNameServiceProviderName      As String = "Name"
-Private Const AttributeNameServiceProviderProgId    As String = "ProgId"
-
-Private Const ConfigNameProperties                  As String = "Properties"
-Private Const ConfigNameProperty                    As String = "Property"
-Private Const ConfigNameServiceProvider             As String = "ServiceProvider"
-Private Const ConfigNameServiceProviders            As String = "ServiceProviders"
-
-Private Const ProgIdQtBarData                       As String = "QTSP26.QTHistDataServiceProvider"
-Private Const ProgIdQtRealtimeData                  As String = "QTSP26.QTRealtimeDataServiceProvider"
-Private Const ProgIdQtTickData                      As String = "QTSP26.QTTickfileServiceProvider"
-
-Private Const ProgIdTbBarData                       As String = "TBInfoBase26.HistDataServiceProvider"
-Private Const ProgIdTbContractData                  As String = "TBInfoBase26.ContractInfoSrvcProvider"
-Private Const ProgIdTbOrders                        As String = "TB26.OrderSubmissionSrvcProvider"
-Private Const ProgIdTbTickData                      As String = "TBInfoBase26.TickfileServiceProvider"
-
-Private Const ProgIdFileTickData                    As String = "TickfileSP26.TickfileServiceProvider"
-
-Private Const ProgIdTwsBarData                      As String = "IBTWSSP26.HistDataServiceProvider"
-Private Const ProgIdTwsContractData                 As String = "IBTWSSP26.ContractInfoServiceProvider"
-Private Const ProgIdTwsOrders                       As String = "IBTWSSP26.OrderSubmissionSrvcProvider"
-Private Const ProgIdTwsRealtimeData                 As String = "IBTWSSP26.RealtimeDataServiceProvider"
-
-Private Const PropertyNameQtServer                  As String = "Server"
-Private Const PropertyNameQtPort                    As String = "Port"
-Private Const PropertyNameQtPassword                As String = "Password"
-Private Const PropertyNameQtKeepConnection          As String = "Keep Connection"
-Private Const PropertyNameQtConnectionRetryInterval As String = "Connection Retry Interval Secs"
-Private Const PropertyNameQtProviderKey             As String = "Provider Key"
-
-Private Const PropertyNameTbServer                  As String = "Server"
-Private Const PropertyNameTbDbType                  As String = "Database Type"
-Private Const PropertyNameTbDbName                  As String = "Database Name"
-Private Const PropertyNameTbUserName                As String = "User Name"
-Private Const PropertyNameTbPassword                As String = "Password"
-Private Const PropertyNameTbAccessMode              As String = "Access Mode"
-Private Const PropertyNameTbRole                    As String = "Role"
-
-Private Const PropertyNameTfAccessMode              As String = "Access Mode"
-Private Const PropertyNameTfTickfilePath            As String = "Tickfile Path"
-
-Private Const PropertyNameTwsServer                 As String = "Server"
-Private Const PropertyNameTwsPort                   As String = "Port"
-Private Const PropertyNameTwsClientId               As String = "Client Id"
-Private Const PropertyNameTwsKeepConnection         As String = "Keep Connection"
-Private Const PropertyNameTwsConnectionRetryInterval    As String = "Connection Retry Interval Secs"
-Private Const PropertyNameTwsProviderKey            As String = "Provider Key"
-Private Const PropertyNameTwsLogLevel               As String = "TWS Log Level"
-
-Private Const ServiceProvidersRenderer              As String = "TradeBuildUI26.SPConfigurer"
-
-Private Const SrvcProviderNameRealtimeData          As String = "Realtime Data"
-Private Const SrvcProviderNamePrimaryContractData   As String = "Primary contract Data"
-Private Const SrvcProviderNameSecondaryContractData As String = "Secondary contract Data"
-Private Const SrvcProviderNameHistoricalDataInput   As String = "Historical bar Data retrieval"
-Private Const SrvcProviderNameHistoricalDataOutput  As String = "Historical bar Data storage"
-Private Const SrvcProviderNameBrokerLive            As String = "Broker - live orders"
-Private Const SrvcProviderNameBrokerSimulated       As String = "Broker - simulated orders"
-Private Const SrvcProviderNameTickfileInput         As String = "Tickfile replay"
-Private Const SrvcProviderNameTickfileOutput        As String = "Tickfile storage"
 
 '@================================================================================
 ' Enums
@@ -125,24 +54,42 @@ Private Const SrvcProviderNameTickfileOutput        As String = "Tickfile storag
 '@================================================================================
 
 Private Type ServiceProviderTableEntry
-    name        As String
-    SPTypes     As Long
-    SPObject    As TradeBuildSP.ICommonServiceProvider
+    Name        As String
+    SPRoles     As ServiceProviderRoles
+    SPObject    As IServiceProvider
     SpConfig    As ConfigurationSection
+    Params      As Parameters
 End Type
+
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mServiceProviders()         As ServiceProviderTableEntry
-Private mMaxSPIndex                 As Long
+Private mPermittedServiceProviderRoles              As ServiceProviderRoles
 
-Private mChangeListeners            As Collection
+Private mServiceProviders()                         As ServiceProviderTableEntry
+Private mMaxSPIndex                                 As Long
 
-Private mConfig                     As ConfigurationSection
-Private mServiceProviderConfigList  As ConfigurationSection
+Private mCollectionChangeListeners                  As Listeners
 
-Private mPermittedServiceProviderRoles  As ServiceProviderRoles
+Private mConfig                                     As ConfigurationSection
+Private mServiceProviderConfig                      As ConfigurationSection
+
+Private mHistDataStoreInput                         As IHistoricalDataStore
+Private mHistDataStoreOutput                        As IHistoricalDataStore
+Private mMarketDataManager                          As IMarketDataManager
+Private mOrderPersistenceDataStore                  As IOrderPersistenceDataStore
+Private mOrderRecoveryAgent                         As IOrderRecoveryAgent
+Private mOrderSubmitterFactoryLive                  As IOrderSubmitterFactory
+Private mOrderSubmitterFactorySimulated             As IOrderSubmitterFactory
+Private mContractStorePrimary                       As IContractStore
+Private mContractStoreSecondary                     As IContractStore
+Private mTickfileStoreInput                         As ITickfileStore
+Private mTickfileStoreOutput                        As ITickfileStore
+
+Private mServiceProvidersStarted                    As Boolean
+
+Private mTradeBuildAPIRef                           As WeakReference
 
 '@================================================================================
 ' Class Event Handlers
@@ -152,174 +99,104 @@ Private Sub Class_Initialize()
 ReDim mServiceProviders(9) As ServiceProviderTableEntry
 mMaxSPIndex = -1
 
-Set mChangeListeners = New Collection
+Set mCollectionChangeListeners = New Listeners
 
-mPermittedServiceProviderRoles = SPBrokerSimulated + _
-                                SPHistoricalDataInput + _
-                                SPPrimaryContractData + _
-                                SPRealtimeData
 End Sub
 
 '@================================================================================
-' ICommonServiceConsumer Interface Members
+' IServiceProviderManager Interface Members
 '@================================================================================
 
-Private Sub ICommonServiceConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
-                ByVal eventMessage As String, _
-                ByVal serviceProviderHandle As Long)
-
-Const ProcName As String = "ICommonServiceConsumer_NotifyEvent"
-
+Private Sub IServiceProviderManager_NotifyEvent(ByVal pEventCode As Long, ByVal pEventMessage As String, ByVal pServiceProviderHandle As Long)
+Const ProcName As String = "IServiceProviderManager_NotifyEvent"
 On Error GoTo Err
 
-CommonServiceConsumerNotifyEvent eventCode, eventMessage, serviceProviderHandle
+Dim ev As NotificationEventData
+
+ev.EventCode = pEventCode
+If pServiceProviderHandle >= 0 Then Set ev.Source = mServiceProviders(pServiceProviderHandle).SPObject
+ev.EventMessage = NameFromHandle(pServiceProviderHandle) & " (" & _
+                mServiceProviders(pServiceProviderHandle).SPObject.Details.EXEName & ")" & vbCrLf & _
+                pEventMessage
+
+tb.NotifyEvent ev
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub ICommonServiceConsumer_NotifyFatalError( _
-                ByVal ErrorCode As Long, _
-                ByVal source As String, _
-                ByVal errorMessage As String, _
-                ByVal spHandle As Long)
-Dim spName As String
-Const ProcName As String = "ICommonServiceConsumer_NotifyFatalError"
+'Private Sub IServiceProviderManager_NotifyFatalError(ByVal pErrorCode As Long, ByVal pSource As String, ByVal pErrorMessage As String, ByVal pServiceProviderHandle As Long)
+'Const ProcName As String = "IServiceProviderManager_NotifyFatalError"
+'On Error GoTo Err
+'
+'Dim spName As String
+'spName = NameFromHandle(pServiceProviderHandle)
+'
+'tb.NotifyFatalError pErrorCode, _
+'                    pErrorMessage, _
+'                    pSource & IIf(spName <> "", vbCrLf & spName, "")
+'
+'Exit Sub
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Sub
 
+Private Sub IServiceProviderManager_NotifyRecoverableError(ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pServiceProviderHandle As Long)
+Const ProcName As String = "IServiceProviderManager_NotifyRecoverableError"
 On Error GoTo Err
 
-spName = NameFromHandle(spHandle)
-
-gTB.NotifyFatalError ErrorCode, _
-                    errorMessage, _
-                    source & IIf(spName <> "", vbCrLf & spName, "")
+tb.SetServiceProviderError pErrorCode, _
+                pErrorMessage, _
+                NameFromHandle(pServiceProviderHandle)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub ICommonServiceConsumer_NotifyRecoverableError( _
-                            ByVal ErrorCode As Long, _
-                            ByVal errorMessage As String, _
-                            ByVal spHandle As Long)
-Const ProcName As String = "ICommonServiceConsumer_NotifyRecoverableError"
-
+Private Sub IServiceProviderManager_RegisterServiceProvider( _
+                ByVal pHandle As Long, _
+                ByVal pRole As ServiceProviderRoles)
+Const ProcName As String = "IServiceProviderManager_RegisterServiceProvider"
 On Error GoTo Err
 
-gTB.SetServiceProviderError ErrorCode, _
-                errorMessage, _
-                NameFromHandle(spHandle)
+Dim lSPObj As Object
+Set lSPObj = mServiceProviders(pHandle).SPObject
 
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
-                            ByVal Handle As Long, _
-                            ByVal spType As TradeBuildSP.ServiceProviderTypes)
-Dim regOk As Boolean
-Const ProcName As String = "ICommonServiceConsumer_RegisterServiceProvider"
-
-On Error GoTo Err
-
-mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
-Select Case spType
-Case TradeBuildSP.ServiceProviderTypes.ContractInfo
-    Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
-    
-    On Error Resume Next
-    Set contractInfoSP = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not contractInfoSP Is Nothing Then
-        regOk = True
-    End If
-Case TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo
-    Dim secContractInfoSP As TradeBuildSP.IContractInfoServiceProvider
-    
-    On Error Resume Next
-    Set secContractInfoSP = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not secContractInfoSP Is Nothing Then
-        regOk = True
-    End If
-Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
-    Dim exchangeSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-    
-    On Error Resume Next
-    Set exchangeSimulatorSp = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not exchangeSimulatorSp Is Nothing Then
-        regOk = True
-    End If
-Case TradeBuildSP.ServiceProviderTypes.HistoricalData
-    Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
-    
-    On Error Resume Next
-    Set histDataSp = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not histDataSp Is Nothing Then
-        regOk = True
-    End If
-Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
-    Dim liveOrderSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-    
-    On Error Resume Next
-    Set liveOrderSp = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not liveOrderSp Is Nothing Then
-        regOk = True
-    End If
-    
-    gTB.OrderPlexRecoveryController.OrderSubmissionSrvcProvider = liveOrderSp
-Case TradeBuildSP.ServiceProviderTypes.OrderPersistence
-    Dim OrderPersistenceSP As TradeBuildSP.IOrderPersistenceServiceProvider
-    Dim lOrderPlexRecoverer As OrderPlexRecoverer
-    
-    On Error Resume Next
-    Set OrderPersistenceSP = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not OrderPersistenceSP Is Nothing Then regOk = True
-    
-    gTB.OrderPlexRecoveryController.OrderPersistenceServiceProvider = OrderPersistenceSP
-    OrderPersistenceSP.OrderPersistenceServiceConsumer = gTB.OrderPlexRecoveryController
-    
-Case TradeBuildSP.ServiceProviderTypes.RealtimeData
-    Dim realtimeDataSp As TradeBuildSP.IRealtimeDataServiceProvider
-    
-    On Error Resume Next
-    Set realtimeDataSp = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not realtimeDataSp Is Nothing Then
-        regOk = True
-    End If
-Case TradeBuildSP.ServiceProviderTypes.Tickfile
-    Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-    
-    On Error Resume Next
-    Set tickfileSp = mServiceProviders(Handle).SPObject
-    On Error GoTo Err
-    If Not tickfileSp Is Nothing Then regOk = True
+checkSPHasPermittedRole pRole, pHandle
+Select Case pRole
+Case SPRoleRealtimeData
+    If Not TypeOf lSPObj Is IRealtimeDataSP Then handleSPWithUnexpectedType "IRealtimeDataSP", pHandle
+Case SPRoleContractDataPrimary
+    If Not TypeOf lSPObj Is IContractSP Then handleSPWithUnexpectedType "IContractSP", pHandle
+Case SPRoleContractDataSecondary
+    If Not TypeOf lSPObj Is IContractSP Then handleSPWithUnexpectedType "IContractSP", pHandle
+Case SPRoleHistoricalDataInput
+    If Not TypeOf lSPObj Is IHistDataSP Then handleSPWithUnexpectedType "IHistDataSP", pHandle
+Case SPRoleHistoricalDataOutput
+    If Not TypeOf lSPObj Is IHistDataSP Then handleSPWithUnexpectedType "IHistDataSP", pHandle
+Case SPRoleOrderSubmissionSimulated
+    If Not TypeOf lSPObj Is IOrderSubmissionSP Then handleSPWithUnexpectedType "IOrderSubmissionSP", pHandle
+Case SPRoleTickfileInput
+    If Not TypeOf lSPObj Is ITickfileSP Then handleSPWithUnexpectedType "ITickfileSP", pHandle
+Case SPRoleTickfileOutput
+    If Not TypeOf lSPObj Is ITickfileSP Then handleSPWithUnexpectedType "ITickfileSP", pHandle
+Case SPRoleOrderSubmissionLive
+    If Not TypeOf lSPObj Is IOrderSubmissionSP Then handleSPWithUnexpectedType "IOrderSubmissionSP", pHandle
+Case SPRoleOrderPersistence
+    If Not TypeOf lSPObj Is IOrderPersistenceSP Then handleSPWithUnexpectedType "IOrderPersistenceSP", pHandle
 End Select
 
-If Not regOk Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Caller is not a type " & spType & " service provider object"
-End If
-    
-mServiceProviders(Handle).SPTypes = mServiceProviders(Handle).SPTypes Or spType
+mServiceProviders(pHandle).SPRoles = mServiceProviders(pHandle).SPRoles Or pRole
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -330,386 +207,113 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get IsLiveOrderSubmitterConfigured() As Boolean
-Const ProcName As String = "IsLiveOrderSubmitterConfigured"
-
+Friend Property Let ConfigurationSection(ByVal Value As ConfigurationSection)
+Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-IsLiveOrderSubmitterConfigured = (Not getLiveOrderSubmissionSP Is Nothing)
+Assert mConfig Is Nothing, "Configuration section has already been set"
+Set mConfig = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get ContractStorePrimary() As IContractStore
+Set ContractStorePrimary = mContractStorePrimary
+End Property
+
+Friend Property Get ContractStoreSecondary() As IContractStore
+Set ContractStoreSecondary = mContractStoreSecondary
+End Property
+
+Friend Property Get HistoricalDataStoreInput() As IHistoricalDataStore
+Set HistoricalDataStoreInput = mHistDataStoreInput
+End Property
+
+Friend Property Get HistoricalDataStoreOutput() As IHistoricalDataStore
+Set HistoricalDataStoreOutput = mHistDataStoreOutput
+End Property
+
+Friend Property Get IsLiveOrderSubmitterConfigured() As Boolean
+Const ProcName As String = "IsLiveOrderSubmitterConfigured"
+On Error GoTo Err
+
+IsLiveOrderSubmitterConfigured = (Not GetServiceProviderByRole(SPRoleOrderSubmissionLive) Is Nothing)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get IsAnyServiceProviderConfigured() As Boolean
-Const ProcName As String = "IsAnyServiceProviderConfigured"
-
-On Error GoTo Err
-
 IsAnyServiceProviderConfigured = mMaxSPIndex >= 0
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
-Public Property Let PermittedServiceProviderRoles( _
-                ByVal value As ServiceProviderRoles)
-Const ProcName As String = "PermittedServiceProviderRoles"
-
-On Error GoTo Err
-
-If IsAnyServiceProviderConfigured Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Service providers are already configured"
-End If
-
-mPermittedServiceProviderRoles = value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+Friend Property Get MarketDataManager() As IMarketDataManager
+Set MarketDataManager = mMarketDataManager
 End Property
 
-Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
-Const ProcName As String = "PermittedServiceProviderRoles"
+Friend Property Get OrderPersistenceDataStore() As IOrderPersistenceDataStore
+Set OrderPersistenceDataStore = mOrderPersistenceDataStore
+End Property
 
-On Error GoTo Err
+Friend Property Get OrderRecoveryAgent() As IOrderRecoveryAgent
+Set OrderRecoveryAgent = mOrderRecoveryAgent
+End Property
 
+Friend Property Get OrderSubmitterFactoryLive() As IOrderSubmitterFactory
+Set OrderSubmitterFactoryLive = mOrderSubmitterFactoryLive
+End Property
+
+Friend Property Get OrderSubmitterFactorySimulated() As IOrderSubmitterFactory
+Set OrderSubmitterFactorySimulated = mOrderSubmitterFactorySimulated
+End Property
+
+Friend Property Let PermittedServiceProviderRoles(ByVal Value As ServiceProviderRoles)
+mPermittedServiceProviderRoles = Value
+End Property
+
+Friend Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
 PermittedServiceProviderRoles = mPermittedServiceProviderRoles
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameRealtimeData() As String
-Const ProcName As String = "SPNameRealtimeData"
-
-On Error GoTo Err
-
-SPNameRealtimeData = SrvcProviderNameRealtimeData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNamePrimaryContractData() As String
-Const ProcName As String = "SPNamePrimaryContractData"
-
-On Error GoTo Err
-
-SPNamePrimaryContractData = SrvcProviderNamePrimaryContractData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameSecondryContractData() As String
-Const ProcName As String = "SPNameSecondryContractData"
-
-On Error GoTo Err
-
-SPNameSecondryContractData = SrvcProviderNameSecondaryContractData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameHistoricalDataInput() As String
-Const ProcName As String = "SPNameHistoricalDataInput"
-
-On Error GoTo Err
-
-SPNameHistoricalDataInput = SrvcProviderNameHistoricalDataInput
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameHistoricalDataOutput() As String
-Const ProcName As String = "SPNameHistoricalDataOutput"
-
-On Error GoTo Err
-
-SPNameHistoricalDataOutput = SrvcProviderNameHistoricalDataOutput
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameBrokerLive() As String
-Const ProcName As String = "SPNameBrokerLive"
-
-On Error GoTo Err
-
-SPNameBrokerLive = SrvcProviderNameBrokerLive
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameBrokerSimulated() As String
-Const ProcName As String = "SPNameBrokerSimulated"
-
-On Error GoTo Err
-
-SPNameBrokerSimulated = SrvcProviderNameBrokerSimulated
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameTickfileInput() As String
-Const ProcName As String = "SPNameTickfileInput"
-
-On Error GoTo Err
-
-SPNameTickfileInput = SrvcProviderNameTickfileInput
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPNameTickfileOutput() As String
-Const ProcName As String = "SPNameTickfileOutput"
-
-On Error GoTo Err
-
-SPNameTickfileOutput = SrvcProviderNameTickfileOutput
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdQtBarData() As String
-Const ProcName As String = "SPProgIdQtBarData"
-
-On Error GoTo Err
-
-SPProgIdQtBarData = ProgIdQtBarData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdQtRealtimeData() As String
-Const ProcName As String = "SPProgIdQtRealtimeData"
-
-On Error GoTo Err
-
-SPProgIdQtRealtimeData = ProgIdQtRealtimeData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdQtTickData() As String
-Const ProcName As String = "SPProgIdQtTickData"
-
-On Error GoTo Err
-
-SPProgIdQtTickData = ProgIdQtTickData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTbBarData() As String
-Const ProcName As String = "SPProgIdTbBarData"
-
-On Error GoTo Err
-
-SPProgIdTbBarData = ProgIdTbBarData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTbContractData() As String
-Const ProcName As String = "SPProgIdTbContractData"
-
-On Error GoTo Err
-
-SPProgIdTbContractData = ProgIdTbContractData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTbOrders() As String
-Const ProcName As String = "SPProgIdTbOrders"
-
-On Error GoTo Err
-
-SPProgIdTbOrders = ProgIdTbOrders
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTbTickData() As String
-Const ProcName As String = "SPProgIdTbTickData"
-
-On Error GoTo Err
-
-SPProgIdTbTickData = ProgIdTbTickData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdFileTickData() As String
-Const ProcName As String = "SPProgIdFileTickData"
-
-On Error GoTo Err
-
-SPProgIdFileTickData = ProgIdFileTickData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTwsBarData() As String
-Const ProcName As String = "SPProgIdTwsBarData"
-
-On Error GoTo Err
-
-SPProgIdTwsBarData = ProgIdTwsBarData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTwsContractData() As String
-Const ProcName As String = "SPProgIdTwsContractData"
-
-On Error GoTo Err
-
-SPProgIdTwsContractData = ProgIdTwsContractData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTwsOrders() As String
-Const ProcName As String = "SPProgIdTwsOrders"
-
-On Error GoTo Err
-
-SPProgIdTwsOrders = ProgIdTwsOrders
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Public Property Get SPProgIdTwsRealtimeData() As String
-Const ProcName As String = "SPProgIdTwsRealtimeData"
-
-On Error GoTo Err
-
-SPProgIdTwsRealtimeData = ProgIdTwsRealtimeData
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Property
-
-Friend Property Get SupportedHistoricalDataPeriods() As TimePeriod()
-Dim i As Long
-Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
-
-Const ProcName As String = "SupportedHistoricalDataPeriods"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
-            Set histDataSp = mServiceProviders(i).SPObject
-            SupportedHistoricalDataPeriods = histDataSp.SupportedTimePeriods
-        End If
-        Exit For
-    End If
-Next
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
 End Property
 
 Friend Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedInputTickfileFormats"
-
 On Error GoTo Err
 
-SupportedInputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Replay)
+SupportedInputTickfileFormats = GetSupportedTickfileFormats(SPRoleTickfileInput, TickfileStoreCapabilities.TickfileStoreCanReplay)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
 Const ProcName As String = "SupportedOutputTickfileFormats"
-
 On Error GoTo Err
 
-SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
+SupportedOutputTickfileFormats = GetSupportedTickfileFormats(SPRoleTickfileOutput, TickfileStoreCapabilities.TickfileStoreCanRecord)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get TickfileStoreInput() As ITickfileStore
+Set TickfileStoreInput = mTickfileStoreInput
+End Property
+
+Friend Property Get TickfileStoreOutput() As ITickfileStore
+Set TickfileStoreOutput = mTickfileStoreOutput
+End Property
+
+Friend Property Let TradeBuildAPI(ByVal Value As TradeBuildAPI)
+Set mTradeBuildAPIRef = CreateWeakReference(Value)
 End Property
 
 '@================================================================================
@@ -720,679 +324,207 @@ Public Function Add( _
                 ByVal progId As String, _
                 ByVal Enabled As Boolean, _
                 ByVal paramString As String, _
-                Optional ByVal name As String, _
-                Optional ByVal Description As String _
-                ) As TradeBuildSP.ICommonServiceProvider
-Dim params As Parameters
-Dim spindex As Long
-
+                Optional ByVal Name As String, _
+                Optional ByVal Description As String) As IServiceProvider
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
+Dim Params As Parameters
+Dim spIndex As Long
+
+Assert Not mServiceProvidersStarted, "Service providers have already been set up"
+
 Set Add = CreateObject(progId)
-Set params = CreateParametersFromString(Replace(paramString, "\", "\\"))
+Set Params = CreateParametersFromString(Replace(paramString, "\", "\\"))
 
-If Enabled Then
-    spindex = AddSP(Add, params, name)
-    If spindex < 0 Then
-        Set Add = Nothing
-        Exit Function
-    End If
-End If
+If Enabled Then spIndex = AddSP(Add, Params, Name)
 
-Set mServiceProviders(spindex).SpConfig = AddEntryToConfig(progId, _
+Set mServiceProviders(spIndex).SpConfig = AddEntryToConfig(progId, _
                                                         Enabled, _
-                                                        params, _
-                                                        name, _
+                                                        Params, _
+                                                        Name, _
                                                         Description)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add value
-
-'gNotifyExistingCollectionMembers mWorkSpaces, value, Me
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Friend Sub CommonServiceConsumerNotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
-                ByVal eventMessage As String, _
-                ByVal serviceProviderHandle As Long)
-
-Dim ev As NotificationEventData
-
-Const ProcName As String = "CommonServiceConsumerNotifyEvent"
-
-On Error GoTo Err
-
-If serviceProviderHandle >= 0 Then Set ev.source = mServiceProviders(serviceProviderHandle).SPObject
-ev.eventMessage = NameFromHandle(serviceProviderHandle) & vbCrLf & _
-                eventMessage
-
-Select Case eventCode
-Case TFTickfileEmpty
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
-Case TFTickfileInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileInvalid
-Case TFTickfileVersionNotSupported
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileVersionNotSupported
-Case TFContractDetailsInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileContractDetailsInvalid
-Case TFNoContractDetails
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileNoContractDetails
-Case TFTickfileDoesntExist
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDoesntExist
-Case TFCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
-Case TFDataSourceNotResponding
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
-Case TFRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToTickfileDataSource
-Case TFContractSpecifierInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileContractSpecifierInvalid
-Case TFReConnectingDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToTickfileDataSource
-Case TFLostConnectionToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToTickfileDataSource
-Case TFConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToTickfileDataSource
-Case CIConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToContractDataSource
-Case CIContractSpecifierInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-Case CICantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectContractDataSource
-Case CIDisconnectedFromDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromContractDataSource
-Case CILostConnectionToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToContractDataSource
-Case CIReConnectingDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingContractDataSource
-Case CIRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectContractDataSource
-Case HDCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectHistoricDataSource
-Case HDRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToHistoricDataSource
-Case HDLostConnectionToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToHistoricDataSource
-Case HDReConnectingDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToHistoricDataSource
-Case HDRequestInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToHistoricDataStore
-Case HDDisconnectedFromDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromHistoricDataSource
-Case HDRequestFailed
-    ev.eventCode = ApiNotifyCodes.ApiNotifyHistoricDataRequestFailed
-Case HDConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToHistoricDataSource
-Case RTCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource
-Case RTRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
-Case RTLostConnectionToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource
-Case RTReConnectingDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
-Case RTRequestInvalid
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-Case RTRequestFailed
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRealtimeDataRequestFailed
-Case RTMarketDepthRequestFailed
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-Case RTDisconnectedFromDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource
-Case RTDataSourceNotResponding
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRealtimeDataSourceNotResponding
-Case RTConnectedToDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource
-Case LOCantConnectToBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectToBroker
-Case LORetryConnectToBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectToBroker
-Case LOLostConnectionToBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToBroker
-Case LOReConnectingToBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingToBroker
-Case LOUnknownContract
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-Case LONotUniqueContract
-    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidRequest
-Case LODisconnectedFromBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromBroker
-Case LOConnectedToBroker
-    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToBroker
-Case LOOrderDeferred
-    ev.eventCode = ApiNotifyCodes.ApiNotifyOrderDeferred
-Case Else
-    ev.eventCode = ApiNotifyCodes.ApiNotifyNonSpecificNotification
-End Select
-gTB.notify ev
+mCollectionChangeListeners.Add pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ConfigureDefaultServiceProviders( _
-                Optional ByVal twsServer As String, _
-                Optional ByVal twsPort As Long = 7496, _
-                Optional ByVal clientId As Long = -1, _
-                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
-                Optional ByVal twsLogLevel As String = "ERROR", _
-                Optional ByVal tickfilesPath As String)
-
+                ByVal pPermittedServiceProviderRoles As ServiceProviderRoles, _
+                ByVal pTwsServer As String, _
+                ByVal pTwsPort As Long, _
+                ByVal pTwsClientId As Long, _
+                ByVal pTwsConnectionRetryIntervalSecs As Long, _
+                ByVal pTwsLogLevel As String, _
+                ByVal pTickfilesPath As String, _
+                ByVal pOrderPersistenceFilePath As String)
 Const ProcName As String = "ConfigureDefaultServiceProviders"
-
 On Error GoTo Err
 
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
-    Add "IBTWSSP26.RealtimeDataServiceProvider", _
+Assert Not IsAnyServiceProviderConfigured, "Service providers have already been set up"
+
+mPermittedServiceProviderRoles = pPermittedServiceProviderRoles
+
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Then
+    Add "IBTWSSP27.RealtimeDataServiceProvider", _
         True, _
-        "Server=" & twsServer & _
-        ";Port=" & twsPort & _
-        ";Client Id=" & clientId & _
-        ";Connection Retry Interval Secs=" & connectionRetryIntervalSecs & _
+        "Server=" & pTwsServer & _
+        ";Port=" & pTwsPort & _
+        ";Client Id=" & pTwsClientId & _
+        ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & twsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
-    Add "IBTWSSP26.ContractInfoServiceProvider", _
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPrimary Then
+    Add "IBTWSSP27.ContractInfoServiceProvider", _
         True, _
-        "Server=" & twsServer & _
-        ";Port=" & twsPort & _
-        ";Client Id=" & clientId & _
-        ";Connection Retry Interval Secs=" & connectionRetryIntervalSecs & _
+        "Server=" & pTwsServer & _
+        ";Port=" & pTwsPort & _
+        ";Client Id=" & pTwsClientId & _
+        ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & twsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractData Then
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataSecondary Then
     ' not relevant in default scenario
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
-    Add "IBTWSSP26.HistDataServiceProvider", _
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataInput Then
+    Add "IBTWSSP27.HistDataServiceProvider", _
         True, _
-        "Server=" & twsServer & _
-        ";Port=" & twsPort & _
-        ";Client Id=" & clientId & _
-        ";Connection Retry Interval Secs=" & connectionRetryIntervalSecs & _
+        "Server=" & pTwsServer & _
+        ";Port=" & pTwsPort & _
+        ";Client Id=" & pTwsClientId & _
+        ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & twsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutput Then
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataOutput Then
     ' no sensible default for this
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
-    Add "IBTWSSP26.OrderSubmissionSrvcProvider", _
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderPersistence Then
+    Add ProgIdTbOrderPersistence, _
         True, _
-        "Server=" & twsServer & _
-        ";Port=" & twsPort & _
-        ";Client Id=" & clientId & _
-        ";Connection Retry Interval Secs=" & connectionRetryIntervalSecs & _
+        PropertyNameOrderPersistenceFilePath & pOrderPersistenceFilePath
+End If
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionLive Then
+    Add "IBTWSSP27.OrderSubmissionSrvcProvider", _
+        True, _
+        "Server=" & pTwsServer & _
+        ";Port=" & pTwsPort & _
+        ";Client Id=" & pTwsClientId & _
+        ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & twsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
-    AddSP New OrderSimulatorSP, Nothing, ""
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionSimulated Then
+    Dim lOrderSimulatorSP As New OrderSimulatorSP
+    lOrderSimulatorSP.Initialise Me.MarketDataManager, Me.ContractStorePrimary, Me.ContractStoreSecondary
+    AddSP lOrderSimulatorSP, Nothing, ""
+
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
-    Add "TickfileSP26.TickfileServiceProvider", _
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileInput Then
+    Add "TickfileSP27.TickfileServiceProvider", _
         True, _
         "Access Mode=Read only" & _
-        ";Tickfile Path=" & tickfilesPath
+        ";Tickfile Path=" & pTickfilesPath
 End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
-    Add "TickfileSP26.TickfileServiceProvider", _
+If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileOutput Then
+    Add "TickfileSP27.TickfileServiceProvider", _
         True, _
         "Access Mode=Write only" & _
-        ";Tickfile Path=" & tickfilesPath
+        ";Tickfile Path=" & pTickfilesPath
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function CreateHistoricalDataReader( _
-                ByVal dataConsumer As TradeBuildSP.IBarDataConsumer, _
-                ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
-                ) As TradeBuildSP.IBarDataReader
-                            
-Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
-Dim histDataSPReader As TradeBuildSP.IBarDataReader
-Dim i As Long
-
-Const ProcName As String = "CreateHistoricalDataReader"
-
+Friend Function GetServiceProviderByRole( _
+                ByVal pRole As ServiceProviderRoles, _
+                Optional ByVal pInstance As Long = 1) As Object
+Const ProcName As String = "GetServiceProviderByRole"
 On Error GoTo Err
+
+Dim i As Long
+Dim lInstance As Long
+
+AssertArgument pInstance > 0, "pInstance must be > 0"
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
-            Set histDataSp = mServiceProviders(i).SPObject
-            Exit For
-        End If
-    End If
-Next
-
-If histDataSp Is Nothing Then Exit Function
-
-Set histDataSPReader = histDataSp.CreateBarDataReader(dataConsumer, _
-                                                    serviceConsumer)
-
-Set CreateHistoricalDataReader = histDataSPReader
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
-End Function
-                            
-Friend Function CreateHistoricalDataWriter( _
-                ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal pContract As Contract, _
-                ByVal historicDataPath As String _
-                ) As HistoricDataWriter
-                            
-Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
-Dim histDataSPWriter As TradeBuildSP.IBarDataWriter
-Dim histDataWriter As HistoricDataWriter
-Dim i As Long
-
-Const ProcName As String = "CreateHistoricalDataWriter"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
-            Set histDataSp = mServiceProviders(i).SPObject
-            If histDataSp.Supports(TradeBuildSP.HistoricDataServiceProviderCapabilities.HistDataStore) _
-            Then
+        If (mServiceProviders(i).SPRoles And pRole) = pRole Then
+            lInstance = lInstance + 1
+            If lInstance = pInstance Then
+                Set GetServiceProviderByRole = mServiceProviders(i).SPObject
                 Exit For
-            Else
-                Set histDataSp = Nothing
             End If
         End If
     End If
 Next
 
-If histDataSp Is Nothing Then Exit Function
-
-Set histDataSPWriter = histDataSp.CreateBarDataWriter(serviceConsumer, _
-                                                    pContract, _
-                                                    historicDataPath)
-
-Set histDataWriter = New HistoricDataWriter
-histDataWriter.ServiceProviderWriter = histDataSPWriter
-Set CreateHistoricalDataWriter = histDataWriter
-
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function CreateLiveOrderSubmitter( _
-                ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As Contract _
-                ) As TradeBuildSP.IOrderSubmitter
-                            
-Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
-            
-Const ProcName As String = "CreateLiveOrderSubmitter"
-
+Friend Sub LoadServiceProvidersFromConfiguration()
+Const ProcName As String = "LoadServiceProvidersFromConfiguration"
 On Error GoTo Err
 
-Set lOrderSimulatorSp = getLiveOrderSubmissionSP
-If lOrderSimulatorSp Is Nothing Then Exit Function
+Assert Not mConfig Is Nothing, "No configuration has been supplied"
 
-Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
+Set mServiceProviderConfig = mConfig.GetConfigurationSection(ConfigSectionServiceProviders)
 
-Set CreateLiveOrderSubmitter = orderSubmitter
-
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-                            
-End Function
-
-Friend Function CreateRealtimeDataReader( _
-                ByVal pTicker As Ticker, _
-                ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
-Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
-Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
-Dim i As Long
-
-Const ProcName As String = "CreateRealtimeDataReader"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.RealtimeData) <> 0 Then
-            Set realtimeSp = mServiceProviders(i).SPObject
-        End If
-    End If
-Next
-
-If realtimeSp Is Nothing Then Exit Function
-
-Set realtimeSPReader = realtimeSp.CreateRealtimeDataReader(pTicker, _
-                                                    serviceConsumer)
-
-Set CreateRealtimeDataReader = realtimeSPReader
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Friend Function CreateSimulatedOrderSubmitter( _
-                ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
-                            
-Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
-Dim i As Long
-
-Const ProcName As String = "CreateSimulatedOrderSubmitter"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.ExchangeSimulator) <> 0 Then
-            Set lOrderSimulatorSp = mServiceProviders(i).SPObject
-            Exit For
-        End If
-    End If
-Next
-
-If lOrderSimulatorSp Is Nothing Then
-    ' no order simulator sp has been Added, so we will resort
-    ' to using the default built-in simulator
-    Set lOrderSimulatorSp = New OrderSimulatorSP
-    AddSP lOrderSimulatorSp, Nothing, ""
-End If
-
-Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
-
-Set CreateSimulatedOrderSubmitter = orderSubmitter
-
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-                            
-End Function
-
-Friend Function CreateTickfileReader( _
-                ByVal pTicker As Ticker, _
-                ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                ByVal inputTickfileFormatID As String) As TickfileReader
-Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-Dim tickfileSPReader As TradeBuildSP.ITickfileReader
-Dim tfReader As TickfileReader
-Dim i As Long
-
-Const ProcName As String = "CreateTickfileReader"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.Tickfile) <> 0 Then
-            Set tickfileSp = mServiceProviders(i).SPObject
-            If tickfileSp.Supports(TradeBuildSP.TickfileServiceProviderCapabilities.Replay, _
-                                    inputTickfileFormatID) _
-            Then
-                Exit For
-            Else
-                Set tickfileSp = Nothing
-            End If
-        End If
-    End If
-Next
-
-If tickfileSp Is Nothing Then Exit Function
-
-Set tfReader = New TickfileReader
-tfReader.dataConsumer = pTicker
-Set tickfileSPReader = tickfileSp.CreateTickfileReader(tfReader, _
-                                                    serviceConsumer, _
-                                                    inputTickfileFormatID)
-
-tfReader.ServiceProviderReader = tickfileSPReader
-
-Set CreateTickfileReader = tfReader
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Friend Function CreateTickfileWriter( _
-                ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                ByVal pContract As Contract, _
-                ByVal outputTickfileFormatID As String, _
-                ByVal OutputTickfilePath As String) As TickfileWriter
-                            
-Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
-Dim tfWriter As TickfileWriter
-Dim i As Long
-
-Const ProcName As String = "CreateTickfileWriter"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.Tickfile) <> 0 Then
-            Set tickfileSp = mServiceProviders(i).SPObject
-            If tickfileSp.Supports(TradeBuildSP.TickfileServiceProviderCapabilities.Record, _
-                                    outputTickfileFormatID) _
-            Then
-                Exit For
-            Else
-                Set tickfileSp = Nothing
-            End If
-        End If
-    End If
-Next
-
-If tickfileSp Is Nothing Then Exit Function
-
-Set tfWriter = New TickfileWriter
-Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
-                                                    pContract, _
-                                                    outputTickfileFormatID, _
-                                                    OutputTickfilePath)
-
-tfWriter.ServiceProviderWriter = tickfileSPWriter
-
-Set CreateTickfileWriter = tfWriter
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
-End Function
-
-Friend Function IsSupportedHistoricalDataPeriod( _
-                ByRef period As TimePeriod) As Boolean
-Dim i As Long
-Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
-
-Const ProcName As String = "IsSupportedHistoricalDataPeriod"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
-            Set histDataSp = mServiceProviders(i).SPObject
-            IsSupportedHistoricalDataPeriod = histDataSp.IsSupportedTimePeriod(period)
-            Exit For
-        End If
-    End If
-Next
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Friend Function LoadContracts( _
-                ByVal serviceConsumer As IContractInfoServiceConsumer, _
-                ByVal pContractsBuilder As ContractsBuilder) As Boolean
-Dim i As Long
-Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
-
-Const ProcName As String = "loadContracts"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.ContractInfo) <> 0 Then
-            Set contractInfoSP = mServiceProviders(i).SPObject
-            Exit For
-        End If
-    End If
-Next
-
-LoadContracts = True
-
-If contractInfoSP Is Nothing Then
-    ' there doesn't seem to be a primary contract service provider configured,
-    ' so let's try the secondary
-    GLogLogger.Log pMsg:="No primary contract info service provider configured - trying secondary", pProcName:=ProcName, pModName:=ModuleName
-    If Not loadContractsFromSecondarySP(-1, serviceConsumer, pContractsBuilder) Then
-        GLogLogger.Log pMsg:="No secondary contract info service provider configured - can't load contracts", pProcName:=ProcName, pModName:=ModuleName
-        LoadContracts = False
-    End If
+If noServiceProvidersDefinedInConfig(mServiceProviderConfig) Then
+    logMessage "No service providers defined in this configuration"
 Else
-    contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
-End Function
-
-Friend Function loadContractsFromSecondarySP( _
-                            ByVal prevSPIndex As Long, _
-                            ByVal serviceConsumer As IContractInfoServiceConsumer, _
-                            ByVal pContractsBuilder As ContractsBuilder _
-                            ) As Boolean
-Dim i As Long
-Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
-
-Const ProcName As String = "loadContractsFromSecondarySP"
-
-On Error GoTo Err
-
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo) <> 0 Then
-            If i = prevSPIndex Then
-                ' we've already tried the secondary, so nothing more we can do
-            Else
-                Set contractInfoSP = mServiceProviders(i).SPObject
-            End If
-            Exit For
-        End If
-    End If
-Next
-
-If contractInfoSP Is Nothing Then Exit Function
-
-contractInfoSP.RequestContractDetails serviceConsumer, pContractsBuilder
-loadContractsFromSecondarySP = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Function
-
-Public Sub LoadServiceProviderConfiguration( _
-                ByVal config As ConfigurationSection)
-Const ProcName As String = "LoadServiceProviderConfiguration"
-
-On Error GoTo Err
-
-Set mConfig = config
-
-RemoveAll
-
-On Error Resume Next
-Set mServiceProviderConfigList = mConfig.GetConfigurationSection(ConfigNameServiceProviders)
-On Error GoTo Err
-
-If Not mServiceProviderConfigList Is Nothing Then
     loadConfiguration
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function NameFromHandle( _
                 ByVal Handle As Long) As String
 Const ProcName As String = "NameFromHandle"
-
 On Error GoTo Err
 
 If Handle < 0 Then Exit Function
-NameFromHandle = mServiceProviders(Handle).name
+NameFromHandle = mServiceProviders(Handle).Name
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove( _
-                ByVal sp As TradeBuildSP.ICommonServiceProvider)
-Dim i As Long
-
+                ByVal sp As IServiceProvider)
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
+
+Dim i As Long
 
 If sp Is Nothing Then Exit Sub
 
@@ -1407,16 +539,15 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAll()
-Dim i As Long
-Dim sp As TradeBuildSP.ICommonServiceProvider
-
 Const ProcName As String = "RemoveAll"
-
 On Error GoTo Err
+
+Dim i As Long
+Dim sp As IServiceProvider
 
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
@@ -1431,161 +562,72 @@ mMaxSPIndex = -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener( _
-                ByVal value As CollectionChangeListener)
-Dim i As Long
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.Remove i
+mCollectionChangeListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Function StartServiceProviders() As Boolean
+Const ProcName As String = "StartServiceProviders"
+On Error GoTo Err
+
+Assert Not mServiceProvidersStarted, "Service providers have already been started"
+
+gLogger.Log "Starting service providers", ProcName, ModuleName
+
+Dim lErrorOccurred As Boolean
+
+Dim i As Long
+For i = 0 To mMaxSPIndex
+    gLogger.Log "Starting: " & mServiceProviders(i).Name, ProcName, ModuleName
+    Dim lServiceProvider As IServiceProvider
+    Set lServiceProvider = mServiceProviders(i).SPObject
+    
+    On Error Resume Next
+    lServiceProvider.Link Me, i, mServiceProviders(i).Params
+    If Err.Number <> 0 Then lErrorOccurred = True
+    Err.Clear
+    On Error GoTo Err
+    
+    fireCollectionChange CollItemAdded, lServiceProvider
 Next
 
-Exit Sub
+If lErrorOccurred Then
+    gLogger.Log "One or more service providers failed to start", ProcName, ModuleName, LogLevelSevere
+    StartServiceProviders = False
+Else
+    Set mContractStorePrimary = createContractStorePrimary
+    Set mContractStoreSecondary = createContractStoreSecondary
+    Set mHistDataStoreInput = createHistoricalDataStoreInput
+    Set mHistDataStoreOutput = createHistoricalDataStoreOutput
+    Set mOrderPersistenceDataStore = createOrderPersistenceDataStore
+    Set mOrderRecoveryAgent = createOrderRecoveryAgent
+    Set mOrderSubmitterFactoryLive = createOrderSubmitterFactoryLive
+    Set mOrderSubmitterFactorySimulated = createOrderSubmitterFactorySimulated
+    Set mMarketDataManager = createMarketDataManager
+    Set mTickfileStoreInput = createTickfileStoreInput
+    Set mTickfileStoreOutput = createTickfileStoreOutput
+    
+    gLogger.Log "Service providers started successfully", ProcName, ModuleName
+    StartServiceProviders = True
+End If
+
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-Public Sub SetDefaultSPConfig( _
-                ByVal configdata As ConfigurationSection, _
-                Optional ByVal twsServer As String, _
-                Optional ByVal twsPort As Long = 7496, _
-                Optional ByVal clientId As Long = -1, _
-                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
-                Optional ByVal twsLogLevel As String = "ERROR", _
-                Optional ByVal tickfilesPath As String)
-Dim currSPsList As ConfigurationSection
-Dim currSP As ConfigurationSection
-Dim currProps As ConfigurationSection
-
-Const ProcName As String = "SetDefaultSPConfig"
-
-On Error GoTo Err
-
-On Error Resume Next
-Set currSPsList = configdata.GetConfigurationSection(ConfigNameServiceProviders)
-On Error GoTo Err
-
-If Not currSPsList Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Service provider list is not empty"
-End If
-
-Set currSPsList = configdata.AddConfigurationSection(ConfigNameServiceProviders, , ServiceProvidersRenderer)
-
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameRealtimeData & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsRealtimeData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, twsServer
-    setProperty currProps, PropertyNameTwsPort, twsPort
-    setProperty currProps, PropertyNameTwsClientId, clientId
-    setProperty currProps, PropertyNameTwsKeepConnection, "True"
-    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
-    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNamePrimaryContractData & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, twsServer
-    setProperty currProps, PropertyNameTwsPort, twsPort
-    setProperty currProps, PropertyNameTwsClientId, clientId
-    setProperty currProps, PropertyNameTwsKeepConnection, "True"
-    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
-    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractData Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameSecondaryContractData & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "False"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, twsServer
-    setProperty currProps, PropertyNameTwsPort, twsPort
-    setProperty currProps, PropertyNameTwsClientId, clientId
-    setProperty currProps, PropertyNameTwsKeepConnection, "True"
-    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
-    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameHistoricalDataInput & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsBarData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, twsServer
-    setProperty currProps, PropertyNameTwsPort, twsPort
-    setProperty currProps, PropertyNameTwsClientId, clientId
-    setProperty currProps, PropertyNameTwsKeepConnection, "True"
-    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
-    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutput Then
-    ' no sensible default for this
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameBrokerLive & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsOrders
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, twsServer
-    setProperty currProps, PropertyNameTwsPort, twsPort
-    setProperty currProps, PropertyNameTwsClientId, clientId
-    setProperty currProps, PropertyNameTwsKeepConnection, "True"
-    setProperty currProps, PropertyNameTwsConnectionRetryInterval, connectionRetryIntervalSecs
-    setProperty currProps, PropertyNameTwsLogLevel, twsLogLevel
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameBrokerSimulated & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTbOrders
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameTickfileInput & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTfAccessMode, AccessModeReadOnly
-    setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
-End If
-If mPermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
-    Set currSP = currSPsList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                    "(" & SrvcProviderNameTickfileOutput & ")")
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
-
-    Set currProps = currSP.AddConfigurationSection(ConfigNameProperties)
-    setProperty currProps, PropertyNameTfAccessMode, AccessModeWriteOnly
-    setProperty currProps, PropertyNameTfTickfilePath, tickfilesPath
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -1594,39 +636,37 @@ End Sub
 Private Function AddEntryToConfig( _
             ByVal progId As String, _
             ByVal Enabled As Boolean, _
-            ByVal params As Parameters, _
-            ByVal name As String, _
-            ByVal Description As String _
-            ) As ConfigurationSection
+            ByVal Params As Parameters, _
+            ByVal Name As String, _
+            ByVal Description As String) As ConfigurationSection
+Const ProcName As String = "AddEntryToConfig"
+On Error GoTo Err
+
 Dim sp As ConfigurationSection
 Dim props As ConfigurationSection
 Dim prop As ConfigurationSection
 Dim param As Parameter
 
-Const ProcName As String = "AddEntryToConfig"
-
-On Error GoTo Err
-
 If mConfig Is Nothing Then Exit Function
 
-If name = "" Then name = GenerateGUIDString
+If Name = "" Then Name = GenerateGUIDString
 
-If mServiceProviderConfigList Is Nothing Then
-    Set mServiceProviderConfigList = mConfig.AddConfigurationSection(ConfigNameServiceProviders, ServiceProvidersRenderer)
+If mServiceProviderConfig Is Nothing Then
+    Set mServiceProviderConfig = mConfig.AddConfigurationSection(ConfigSectionServiceProviders, ServiceProvidersRenderer)
 End If
 
-Set sp = mServiceProviderConfigList.AddConfigurationSection(ConfigNameServiceProvider & _
-                                                            "(" & name & ")", _
+Set sp = mServiceProviderConfig.AddConfigurationSection(ConfigSectionServiceProvider & _
+                                                            "(" & Name & ")", _
                                                             Description)
 sp.setAttribute AttributeNameServiceProviderEnabled, CStr(Enabled)
 sp.setAttribute AttributeNameServiceProviderProgId, progId
 
-Set props = sp.AddConfigurationSection(ConfigNameProperties)
+Set props = sp.AddConfigurationSection(ConfigSectionProperties)
 
-For Each param In params
-    Set prop = props.AddConfigurationSection(ConfigNameProperty & _
-                                            "(" & param.name & ")")
-    prop.value = param.value
+For Each param In Params
+    Set prop = props.AddConfigurationSection(ConfigSectonProperty & _
+                                            "(" & param.Name & ")")
+    prop.Value = param.Value
 Next
 
 Set AddEntryToConfig = sp
@@ -1634,37 +674,26 @@ Set AddEntryToConfig = sp
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function AddSP( _
-            ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
-            ByVal params As Parameters, _
-            ByVal name As String _
-            ) As Long
-Dim i As Long
-
-
+            ByVal serviceProvider As IServiceProvider, _
+            ByVal Params As Parameters, _
+            ByVal Name As String) As Long
 Const ProcName As String = "AddSP"
-
 On Error GoTo Err
 
-If name <> "" Then serviceProvider.name = name
+Dim i As Long
+
+If Name <> "" Then serviceProvider.Name = Name
 
 ' we don't reuse Removed entries to ensure that service providers Added later are
 ' always later in the table than those Added earlier
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
-        If mServiceProviders(i).SPObject Is serviceProvider Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "This Service Provider object has already been Added"
-        End If
-        If mServiceProviders(i).name = serviceProvider.name Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "A Service Provider with this Name has already been Added"
-        End If
+        AssertArgument Not mServiceProviders(i).SPObject Is serviceProvider, "This Service Provider object has already been Added"
+        AssertArgument mServiceProviders(i).Name <> serviceProvider.Name, "A Service Provider with this Name has already been Added"
     End If
 Next
 
@@ -1673,39 +702,233 @@ If mMaxSPIndex = UBound(mServiceProviders) Then
 End If
 mMaxSPIndex = mMaxSPIndex + 1
 
-mServiceProviders(mMaxSPIndex).name = serviceProvider.name
+mServiceProviders(mMaxSPIndex).Name = serviceProvider.Name
+Set mServiceProviders(mMaxSPIndex).Params = Params
 Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
 
-serviceProvider.Link Me, mMaxSPIndex, params
-
-If mServiceProviders(i).SPObject Is Nothing Then
-    ' a fatal error has occurred while linking the SP - eg, invalid parameter
-    ' has been passed
-    AddSP = -1
-Else
-    fireChange CollItemAdded, serviceProvider
-    AddSP = mMaxSPIndex
-End If
+AddSP = mMaxSPIndex
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub fireChange( _
-                ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As TradeBuildSP.ICommonServiceProvider)
-Dim listener As CollectionChangeListener
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
-
+Private Sub checkSPHasPermittedRole(ByVal pRole As ServiceProviderRoles, ByVal pHandle As Long)
+Const ProcName As String = "checkSPHasPermittedRole"
 On Error GoTo Err
 
-Set ev.source = Me
+If pRole And mPermittedServiceProviderRoles Then Exit Sub
+Dim s As String
+s = "Service provider " & NameFromHandle(pHandle) & " has impermissible role"
+gLogger.Log s, ProcName, ModuleName
+Assert True, s
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function createContractStorePrimary() As IContractStore
+Const ProcName As String = "createContractStorePrimary"
+On Error GoTo Err
+
+Dim lSp As IContractSP
+Set lSp = GetServiceProviderByRole(SPRoleContractDataPrimary)
+
+If lSp Is Nothing Then Exit Function
+
+Set createContractStorePrimary = lSp.GetContractStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createContractStoreSecondary() As IContractStore
+Const ProcName As String = "createContractStoreSecondary"
+On Error GoTo Err
+
+Dim lSp As IContractSP
+
+Set lSp = GetServiceProviderByRole(SPRoleContractDataSecondary)
+If lSp Is Nothing Then Exit Function
+
+Set createContractStoreSecondary = lSp.GetContractStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createHistoricalDataStoreInput() As IHistoricalDataStore
+Const ProcName As String = "createHistoricalDataStore"
+On Error GoTo Err
+
+Dim lSp As IHistDataSP
+Set lSp = GetServiceProviderByRole(SPRoleHistoricalDataInput)
+
+If lSp Is Nothing Then Exit Function
+
+Set createHistoricalDataStoreInput = lSp.GetHistoricalDataStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+                            
+Private Function createHistoricalDataStoreOutput() As IHistoricalDataStore
+Const ProcName As String = "createHistoricalDataStoreOutput"
+On Error GoTo Err
+
+Dim lSp As IHistDataSP
+Set lSp = GetServiceProviderByRole(SPRoleHistoricalDataOutput)
+
+If lSp Is Nothing Then Exit Function
+
+Set createHistoricalDataStoreOutput = lSp.GetHistoricalDataStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+                            
+Private Function createMarketDataManager() As IMarketDataManager
+Const ProcName As String = "createMarketDataManager"
+On Error GoTo Err
+
+Dim lMarketDataFactory As IMarketDataFactory
+Set lMarketDataFactory = GetMarketDataFactory
+If lMarketDataFactory Is Nothing Then Exit Function
+
+Set createMarketDataManager = CreateRealtimeDataManager(GetMarketDataFactory, tb.MarketDataSourceOptions, tb.DefaultStateChangeListener, tb.NumberOfMarketDepthRows)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createOrderPersistenceDataStore() As IOrderPersistenceDataStore
+Const ProcName As String = "createOrderPersistenceDataStore"
+On Error GoTo Err
+
+Dim lSp As IOrderPersistenceSP
+
+Set lSp = GetServiceProviderByRole(SPRoleOrderPersistence)
+If lSp Is Nothing Then Exit Function
+
+Set createOrderPersistenceDataStore = lSp.GetOrderPersistenceDataStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createOrderRecoveryAgent() As IOrderRecoveryAgent
+Const ProcName As String = "createOrderRecoveryAgent"
+On Error GoTo Err
+
+Dim lSp As IOrderSubmissionSP
+
+Set lSp = GetServiceProviderByRole(SPRoleOrderSubmissionLive)
+If lSp Is Nothing Then Exit Function
+
+Set createOrderRecoveryAgent = lSp.GetOrderRecoveryAgent
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createOrderSubmitterFactoryLive() As IOrderSubmitterFactory
+Const ProcName As String = "createOrderSubmitterFactoryLive"
+On Error GoTo Err
+
+Dim lSp As IOrderSubmissionSP
+
+Set lSp = GetServiceProviderByRole(SPRoleOrderSubmissionLive)
+If lSp Is Nothing Then Exit Function
+
+Set createOrderSubmitterFactoryLive = lSp.GetOrderSubmitterFactory
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createOrderSubmitterFactorySimulated() As IOrderSubmitterFactory
+Const ProcName As String = "createOrderSubmitterFactorySimulated"
+On Error GoTo Err
+
+Dim lSp As IOrderSubmissionSP
+
+Set lSp = GetServiceProviderByRole(SPRoleOrderSubmissionSimulated)
+If lSp Is Nothing Then Exit Function
+
+Set createOrderSubmitterFactorySimulated = lSp.GetOrderSubmitterFactory
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createTickfileStoreInput() As ITickfileStore
+Const ProcName As String = "createTickfileStoreInput"
+On Error GoTo Err
+
+Dim lSp As ITickfileSP
+Set lSp = GetServiceProviderByRole(SPRoleTickfileInput)
+
+If lSp Is Nothing Then Exit Function
+
+Set createTickfileStoreInput = lSp.GetTickfileStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+                            
+Private Function createTickfileStoreOutput() As ITickfileStore
+Const ProcName As String = "createTickfileStoreOutput"
+On Error GoTo Err
+
+Dim lSp As ITickfileSP
+Set lSp = GetServiceProviderByRole(SPRoleTickfileOutput)
+
+If lSp Is Nothing Then Exit Function
+
+Set createTickfileStoreOutput = lSp.GetTickfileStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+                            
+Private Sub fireCollectionChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As IServiceProvider)
+Const ProcName As String = "fireCollectionChange"
+On Error GoTo Err
+
+Dim listener As CollectionChangeListener
+Dim ev As CollectionChangeEventData
+
+Set ev.Source = Me
 ev.changeType = changeType
-Set ev.affectedItem = affectedObject
-For Each listener In mChangeListeners
+Set ev.AffectedItem = affectedObject
+For Each listener In mCollectionChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
@@ -1713,59 +936,53 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getLiveOrderSubmissionSP() As TradeBuildSP.IOrderSubmissionSrvcProvider
-Dim i As Long
-
-Const ProcName As String = "getLiveOrderSubmissionSP"
-
+Private Function GetMarketDataFactory() As IMarketDataFactory
+Const ProcName As String = "GetMarketDataFactory"
 On Error GoTo Err
 
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission) <> 0 Then
-            Set getLiveOrderSubmissionSP = mServiceProviders(i).SPObject
-            Exit For
-        End If
-    End If
-Next
+Dim lSp As IRealtimeDataSP
+
+Set lSp = GetServiceProviderByRole(SPRoleRealtimeData)
+If lSp Is Nothing Then Exit Function
+
+Set GetMarketDataFactory = lSp.GetMarketDataFactory
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetSupportedTickfileFormats( _
-                            ByVal capabilities As TradeBuildSP.TickfileServiceProviderCapabilities _
-                            ) As TickfileFormatSpecifier()
+                ByVal pRole As ServiceProviderRoles, _
+                ByVal pCapabilities As TickfileStoreCapabilities) As TickfileFormatSpecifier()
+Const ProcName As String = "GetSupportedTickfileFormats"
+On Error GoTo Err
+
 Dim i As Long
 Dim j As Long
 Dim k As Long
-Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-Dim supportedFormats() As TickfileFormatSpecifier
-Const ProcName As String = "GetSupportedTickfileFormats"
+Dim lTickfileSp As ITickfileSP
+Dim lSupportedFormats() As TickfileFormatSpecifier
 
-On Error GoTo Err
-
-ReDim allSupportedFormats(9) As TickfileFormatSpecifier
+ReDim lAllSupportedFormats(9) As TickfileFormatSpecifier
 
 k = -1
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.Tickfile) <> 0 Then
-            Set tickfileSp = mServiceProviders(i).SPObject
-            supportedFormats = tickfileSp.supportedFormats
-            For j = 0 To UBound(supportedFormats)
-                If (supportedFormats(j).capabilities And capabilities) <> 0 Then
+        If (mServiceProviders(i).SPRoles And pRole) <> 0 Then
+            Set lTickfileSp = mServiceProviders(i).SPObject
+            lSupportedFormats = lTickfileSp.GetTickfileStore.SupportedFormats
+            For j = 0 To UBound(lSupportedFormats)
+                If (lSupportedFormats(j).Capabilities And pCapabilities) <> 0 Then
                     k = k + 1
-                    If k > UBound(allSupportedFormats) Then
-                        ReDim Preserve allSupportedFormats(UBound(allSupportedFormats) + 10) As TickfileFormatSpecifier
+                    If k > UBound(lAllSupportedFormats) Then
+                        ReDim Preserve lAllSupportedFormats(UBound(lAllSupportedFormats) + 10) As TickfileFormatSpecifier
                     End If
-                    allSupportedFormats(k) = supportedFormats(j)
+                    lAllSupportedFormats(k) = lSupportedFormats(j)
                 End If
             Next
         End If
@@ -1773,55 +990,65 @@ For i = 0 To mMaxSPIndex
 Next
 
 If k >= 0 Then
-    ReDim Preserve allSupportedFormats(k) As TickfileFormatSpecifier
-    GetSupportedTickfileFormats = allSupportedFormats
+    ReDim Preserve lAllSupportedFormats(k) As TickfileFormatSpecifier
+    GetSupportedTickfileFormats = lAllSupportedFormats
 Else
-    Erase allSupportedFormats
+    Erase lAllSupportedFormats
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub handleSPWithUnexpectedType(ByVal pExpectedTypeName As String, ByVal pHandle As Long)
+Const ProcName As String = "handleSPWithUnexpectedType"
+On Error GoTo Err
+
+Dim s As String
+s = "Service provider " & NameFromHandle(pHandle) & " is not of type " & pExpectedTypeName
+gLogger.Log s, ProcName, ModuleName, LogLevelSevere
+Assert True, s
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub loadConfiguration()
+Const ProcName As String = "loadConfiguration"
+On Error GoTo Err
+
 Dim sp As ConfigurationSection
 Dim spName As String
 Dim spProgId As String
 Dim props As ConfigurationSection
 Dim prop As ConfigurationSection
 Dim spObj As Object
-Dim spindex As Long
-Dim params As Parameters
+Dim spIndex As Long
+Dim Params As Parameters
 
-Const ProcName As String = "loadConfiguration"
-
-On Error GoTo Err
-
-For Each sp In mServiceProviderConfigList
+For Each sp In mServiceProviderConfig
     If CBool(sp.getAttribute(AttributeNameEnabled, "False")) Then
         
         spName = sp.InstanceQualifier
         
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
-        If spProgId = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                       ProjectName & "." & ModuleName & ":" & ProcName, _
-                                       "Service provider ProgId not specified"
+        AssertArgument spProgId <> "", "Service provider ProgId not specified"
         
-        Set params = New Parameters
+        Set Params = New Parameters
         
         On Error Resume Next
         Set props = Nothing
-        Set props = sp.GetConfigurationSection(ConfigNameProperties)
+        Set props = sp.GetConfigurationSection(ConfigSectionProperties)
         On Error GoTo Err
         
         If Not props Is Nothing Then
             For Each prop In props
-                If prop.InstanceQualifier = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                                                            "Property Name not specified"
-                params.SetParameterValue prop.InstanceQualifier, prop.value
+                AssertArgument prop.InstanceQualifier <> "", "Property Name not specified"
+                Params.SetParameterValue prop.InstanceQualifier, prop.Value
             Next
         End If
         
@@ -1834,74 +1061,70 @@ For Each sp In mServiceProviderConfigList
             Set spObj = CreateObject(spProgId)
         End If
         On Error GoTo Err
-        If spObj Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                       ProjectName & "." & ModuleName & ":" & ProcName, _
-                                       "Can't create service provider with progId " & spProgId
+        AssertArgument Not spObj Is Nothing, "Can't create service provider with progId " & spProgId
         
-        spindex = AddSP(spObj, params, spName)
-        If spindex >= 0 Then
-            Set mServiceProviders(spindex).SpConfig = sp
-        Else
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "Can't Add service provider " & spName
-        End If
+        spIndex = AddSP(spObj, Params, spName)
+        AssertArgument spIndex >= 0, "Can't Add service provider " & spName
+            
+        Set mServiceProviders(spIndex).SpConfig = sp
     End If
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function noServiceProvidersDefinedInConfig(ByVal pConfig As ConfigurationSection) As Boolean
+Const ProcName As String = "noServiceProvidersDefinedInConfig"
+On Error GoTo Err
+
+If pConfig Is Nothing Then
+    noServiceProvidersDefinedInConfig = True
+    Exit Function
+End If
+
+Dim en As Enumerator
+Set en = pConfig.ChildEnumerator
+
+noServiceProvidersDefinedInConfig = Not en.MoveNext
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub RemoveSP( _
                 ByVal Handle As Long, _
                 Optional ByVal RemoveFromConfig As Boolean)
-Dim sp As ICommonServiceProvider
-
 Const ProcName As String = "RemoveSP"
-
 On Error GoTo Err
+
+Dim sp As IServiceProvider
 
 If Handle < 0 Then Exit Sub
 
 Set sp = mServiceProviders(Handle).SPObject
 
 If RemoveFromConfig And Not mServiceProviders(Handle).SpConfig Is Nothing Then
-    mServiceProviderConfigList.RemoveConfigurationSection mServiceProviders(Handle).SpConfig
+    mServiceProviderConfig.RemoveConfigurationSection mServiceProviders(Handle).SpConfig
 End If
 
 Set mServiceProviders(Handle).SPObject = Nothing
 Set mServiceProviders(Handle).SpConfig = Nothing
-mServiceProviders(Handle).SPTypes = 0
-mServiceProviders(Handle).name = ""
-fireChange CollItemRemoved, sp
+mServiceProviders(Handle).SPRoles = 0
+mServiceProviders(Handle).Name = ""
+fireCollectionChange CollItemRemoved, sp
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setProperty( _
-                ByVal props As ConfigurationSection, _
-                ByVal name As String, _
-                ByVal value As String)
-'Dim prop As ConfigurationSection
-Const ProcName As String = "setProperty"
-
-On Error GoTo Err
-
-props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value
-'prop.setAttribute AttributeNamePropertyName, Name
-'prop.setAttribute AttributeNamePropertyValue, value
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
-End Sub
-
-
+Private Function tb() As TradeBuildAPI
+Set tb = mTradeBuildAPIRef.Target
+End Function
 

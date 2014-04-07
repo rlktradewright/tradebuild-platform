@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IHistDataInputSP"
+Attribute VB_Name = "IHistDataSP"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IHistDataInputSP"
+Private Const ModuleName                            As String = "IHistDataSP"
 
 '@================================================================================
 ' Member variables
@@ -60,21 +60,12 @@ Private Const ModuleName                            As String = "IHistDataInputS
 ' Properties
 '@================================================================================
 
-Public Property Get TimePeriodValidator() As ITimePeriodValidator
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
-                Optional ByVal pListener As IBarListener, _
-                Optional ByVal pcookie As Variant) As IFuture
+Public Function GetHistoricalDataStore() As IHistoricalDataStore
 End Function
-
-Public Sub Finish()
-End Sub
 
 '@================================================================================
 ' Helper Functions
