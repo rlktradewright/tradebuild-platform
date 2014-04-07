@@ -67,17 +67,11 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub CancelMarketData(ByVal pStreamId As Long)
-End Sub
+Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+End Function
 
-Public Sub CancelMarketDepth(ByVal pStreamId As Long)
-End Sub
-
-Public Sub RequestMarketData(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
-End Sub
-
-Public Sub RequestMarketDepth(ByVal pStreamId As Long, ByVal pContract As IContract, ByVal pNumberOfRows As Long, ByVal pDataListener As IGenericTickListener, ByVal pErrorListener As IMarketDataErrorListener)
-End Sub
+Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+End Function
 
 '@================================================================================
 ' Helper Functions

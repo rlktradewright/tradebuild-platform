@@ -50,11 +50,11 @@ Private mTaskContext                                    As TaskContext
 
 Private mContractsConfig                                As ConfigurationSection
 
-Private mTickers                                        As Tickers
+Private WithEvents mTickers                             As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
-Private mWriteticks                                     As Boolean
-Private mWritebars                                      As Boolean
+Private mWriteTicks                                     As Boolean
+Private mWriteBars                                      As Boolean
 
 Private mOutputFormat                                   As String
 Private mOutputPath                                     As String
@@ -63,6 +63,23 @@ Private mEnumerator                                     As Enumerator
 
 Private WithEvents mTickersTC                           As TaskController
 Attribute mTickersTC.VB_VarHelpID = -1
+
+Private mPrimaryContractStore                           As IContractStore
+Private mSecondaryContractStore                         As IContractStore
+
+Private mWriteBidAskBars                                As Boolean
+Private mIncludeMarketDepth                             As Boolean
+Private mWriteTradeBars                                 As Boolean
+
+Private mHistDataStore                                  As IHistoricalDataStore
+Private mTickfileStore                                  As ITickfileStore
+
+Private mSaveIntervalSeconds                            As Long
+
+Private mBarOutputMonitor                               As IBarOutputMonitor
+Private mTickfileOutputMonitor                          As ITickfileOutputMonitor
+
+Private mStudyLibraryManager                            As StudyLibraryManager
 
 '@================================================================================
 ' Class Event Handlers
@@ -77,82 +94,45 @@ Private Sub Task_cancel()
 End Sub
 
 Private Sub Task_run()
-Dim contractSpec As ContractSpecifier
-Dim contractConfig As ConfigurationSection
-Dim contractSpecConfig As ConfigurationSection
-
-Dim localSymbol As String
-Dim symbol As String
-Dim exchange As String
-Dim sectype As SecurityTypes
-Dim currencyCode As String
-Dim expiry As String
-Dim strikePrice As Double
-Dim optRight As OptionRights
-
-Dim writeBidAskBars As Boolean
-Dim includeMarketDepth As Boolean
-
-Dim failpoint As String
-
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
+Dim failpoint As String
+
 If Not mEnumerator.MoveNext Then
-    mTaskContext.Finish "Yield count =" & mTaskContext.YieldCount, False
+    mTaskContext.Finish "Yield count = " & mTaskContext.YieldCount, False
     Exit Sub
 End If
 
-Set contractConfig = mEnumerator.Current
+Dim lContractConfig As ConfigurationSection
+Set lContractConfig = mEnumerator.Current
 
 failpoint = 100 '=====================================================
 
-If CBool(contractConfig.GetAttribute(AttributeNameEnabled)) Then
+If CBool(lContractConfig.GetAttribute(AttributeNameEnabled)) Then
 
-    includeMarketDepth = CBool(contractConfig.GetAttribute(AttributeNameIncludeMktDepth, "False"))
-    writeBidAskBars = CBool(contractConfig.GetAttribute(AttributeNameBidAskBars, "False"))
+    mIncludeMarketDepth = CBool(lContractConfig.GetAttribute(AttributeNameIncludeMktDepth, "False"))
+    mWriteBidAskBars = CBool(lContractConfig.GetAttribute(AttributeNameBidAskBars, "False"))
+    mWriteTradeBars = CBool(lContractConfig.GetAttribute(AttributeNameTradeBars, "True"))
 
     failpoint = 200 '=====================================================
     
-    With contractConfig
-        localSymbol = .GetSetting(ConfigSettingContractSpecLocalSYmbol, "")
-        symbol = .GetSetting(ConfigSettingContractSpecSymbol, "")
-        exchange = .GetSetting(ConfigSettingContractSpecExchange, "")
-        sectype = SecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, ""))
-        currencyCode = .GetSetting(ConfigSettingContractSpecCurrency, "")
-        expiry = .GetSetting(ConfigSettingContractSpecExpiry, "")
-        strikePrice = CDbl("0" & .GetSetting(ConfigSettingContractSpecStrikePrice, "0.0"))
-        optRight = OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, ""))
-        
-        Set contractSpec = CreateContractSpecifier(localSymbol, _
-                                                symbol, _
-                                                exchange, _
-                                                sectype, _
-                                                currencyCode, _
-                                                expiry, _
-                                                strikePrice, _
-                                                optRight)
-    End With
+    Dim lContractSpecConfig As ConfigurationSection
+    Set lContractSpecConfig = lContractConfig.AddConfigurationSection(ConfigSectionContractSpecifier)
+    
+    Dim lContractSpec  As IContractSpecifier
+    Set lContractSpec = LoadContractSpecFromConfig(lContractSpecConfig)
     
     failpoint = 400 '=====================================================
     
-    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & contractSpec.ToString
+    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & lContractSpec.ToString
     
-    Set mTickersTC = mTickers.startTickers( _
-                    TickerOptions.TickerOptNoImpliedTrades + _
-                    TickerOptions.TickerOptNoVolumeAdjustments + _
-                    IIf(mWritebars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
-                    IIf(mWritebars And writeBidAskBars, _
-                        TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
-                    IIf(mWritebars, TickerOptions.TickerOptUpdateLatestBar, 0) + _
-                    IIf(mWriteticks, TickerOptions.TickerOptWriteTickData, 0) + _
-                    IIf(mWriteticks And includeMarketDepth, _
-                        TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0), _
-                    contractSpec, _
-                    IIf(mWriteticks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
-                    mOutputFormat, _
-                    mOutputPath, _
-                    1000)
+    Dim lContractsFuture As IFuture
+    Set lContractsFuture = FetchContracts(lContractSpec, mPrimaryContractStore, mSecondaryContractStore)
+    
+    Set mTickersTC = mTickers.startTickers(lContractsFuture, _
+                    True, _
+                    IIf(mIncludeMarketDepth, True, False))
     
     mTaskContext.Suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
     
@@ -161,10 +141,10 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName, pFailpoint:=failpoint
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal value As TaskContext)
 Set mTaskContext = value
 End Property
 
@@ -173,20 +153,60 @@ Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
+' mTickers Event Handlers
+'@================================================================================
+
+Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mTickers_CollectionChanged"
+On Error GoTo Err
+
+If ev.ChangeType <> CollItemAdded Then Exit Sub
+
+Dim lTicker As ticker
+Set lTicker = ev.AffectedItem
+
+If mWriteBars Then
+    Dim lBarWriter As HistDataWriter
+    Set lBarWriter = RecordHistoricalBars( _
+                                    mStudyLibraryManager, _
+                                    lTicker, _
+                                    mHistDataStore, _
+                                    HistDataWriteOptionUpdateLatestBar + _
+                                        IIf(mWriteTradeBars, HistDataWriteOptionWriteTradeBars, 0) + _
+                                        IIf(mWriteBidAskBars, HistDataWriteOptionWriteBidAndAskBars, 0), _
+                                    mSaveIntervalSeconds, _
+                                    mBarOutputMonitor)
+    mTaskContext.Progress 0!, lBarWriter
+End If
+
+If mWriteTicks Then
+    Dim lTickWriter As TickDataWriter
+    Set lTickWriter = RecordTickData(lTicker, mTickfileStore, mTickfileOutputMonitor, mOutputFormat, mOutputPath)
+    mTaskContext.Progress 0!, lTickWriter
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mTickersTC Event Handlers
 '@================================================================================
 
-Private Sub mTickersTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mTickersTC_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mTickersTC_Completed"
 On Error GoTo Err
 
 If ev.ErrorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.ErrorNumber & " starting tickers: " & ev.ErrorMessage
+
 mTaskContext.Continue
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -197,29 +217,45 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
                 ByVal pTickers As Tickers, _
-                ByVal contractsConfig As ConfigurationSection, _
-                ByVal writeBars As Boolean, _
-                ByVal writeTicks As Boolean, _
-                ByVal outputFormat As String, _
-                ByVal outputPath As String)
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pTickfileStore As ITickfileStore, _
+                ByVal pContractsConfig As ConfigurationSection, _
+                ByVal pWriteBars As Boolean, _
+                ByVal pWriteTicks As Boolean, _
+                ByVal pSaveIntervalSeconds As Long, _
+                ByVal pOutputFormat As String, _
+                ByVal pOutputPath As String, _
+                ByVal pBarOutputMonitor As IBarOutputMonitor, _
+                ByVal pTickfileOutputMonitor As ITickfileOutputMonitor)
 Const ProcName As String = "initialise"
 On Error GoTo Err
 
+Set mStudyLibraryManager = pStudyLibraryManager
 Set mTickers = pTickers
-Set mContractsConfig = contractsConfig
-mWritebars = writeBars
-mWriteticks = writeTicks
-mOutputFormat = outputFormat
-mOutputPath = outputPath
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+Set mHistDataStore = pHistDataStore
+Set mTickfileStore = pTickfileStore
+Set mContractsConfig = pContractsConfig
+mWriteBars = pWriteBars
+mWriteTicks = pWriteTicks
+mSaveIntervalSeconds = pSaveIntervalSeconds
+mOutputFormat = pOutputFormat
+mOutputPath = pOutputPath
+Set mBarOutputMonitor = pBarOutputMonitor
+Set mTickfileOutputMonitor = pTickfileOutputMonitor
 
 Set mEnumerator = mContractsConfig.ChildEnumerator
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================

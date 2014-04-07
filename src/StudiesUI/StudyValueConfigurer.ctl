@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.UserControl StudyValueConfigurer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   450
@@ -294,8 +294,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub FontButton_Click()
-Dim aFont As StdFont
-
 Const ProcName As String = "FontButton_Click"
 On Error GoTo Err
 
@@ -309,7 +307,7 @@ CommonDialog1.FontUnderline = mFont.Underline
 CommonDialog1.Color = ColorLabel.BackColor
 CommonDialog1.ShowFont
 
-Set aFont = New StdFont
+Dim aFont As New StdFont
 aFont.Bold = CommonDialog1.FontBold
 aFont.Italic = CommonDialog1.FontItalic
 aFont.name = CommonDialog1.FontName
@@ -599,7 +597,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
@@ -793,7 +791,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -814,11 +812,10 @@ End Select
 End Function
 
 Private Function getParentForm() As Form
-Dim lParent As Object
-
 Const ProcName As String = "getParentForm"
 On Error GoTo Err
 
+Dim lParent As Object
 Set lParent = UserControl.Parent
 
 Do While Not TypeOf lParent Is Form
@@ -835,14 +832,14 @@ Do While Not TypeOf lParent Is Form
         Set fr = lParent
         Set lParent = fr.Parent
     Else
-        Err.Raise ErrorCodes.ErrIllegalStateException, , "No parent form found"
+        Assert False, "No parent form found"
     End If
 Loop
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getRegionName() As String
@@ -857,12 +854,12 @@ Private Sub initialiseBarDisplayModeCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pDisplayMode As BarDisplayModes, _
                 ByVal pSolid As Boolean)
-Dim item As ComboItem
 Const ProcName As String = "initialiseBarDisplayModeCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , BarModeBar)
 If pDisplayMode = BarDisplayModeBar Then item.selected = True
 
@@ -882,21 +879,21 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseBarStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal barWidth As Single)
-Dim item As ComboItem
-Dim selected As Boolean
-
 Const ProcName As String = "initialiseBarStyleCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , BarStyleMedium)
+
+Dim selected As Boolean
 If barWidth = BarWidthMedium Then item.selected = True: selected = True
 
 Set item = combo.ComboItems.Add(, , BarStyleNarrow)
@@ -918,21 +915,21 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseHistogramStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal histBarWidth As Single)
-Dim item As ComboItem
-Dim selected As Boolean
-
 Const ProcName As String = "initialiseHistogramStyleCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , HistogramStyleMedium)
+
+Dim selected As Boolean
 If histBarWidth = HistogramWidthMedium Then item.selected = True: selected = True
 
 Set item = combo.ComboItems.Add(, , HistogramStyleNarrow)
@@ -954,19 +951,19 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseLineDisplayModeCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pArrowStart As Boolean, _
                 ByVal pArrowEnd As Boolean)
-Dim item As ComboItem
 Const ProcName As String = "initialiseLineDisplayModeCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , LineDisplayModePlain)
 If Not pArrowStart And Not pArrowEnd Then item.selected = True
 
@@ -986,19 +983,18 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseLineStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pLineStyle As LineStyles)
-Dim item As ComboItem
-
 Const ProcName As String = "initialiseLineStyleCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , LineStyleSolid)
 If pLineStyle = LineSolid Then item.selected = True
 
@@ -1021,19 +1017,18 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePointDisplayModeCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pDisplayMode As DataPointDisplayModes)
-Dim item As ComboItem
-
 Const ProcName As String = "initialisePointDisplayModeCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , PointDisplayModeLine)
 If pDisplayMode = DataPointDisplayModeLine Then item.selected = True
 
@@ -1051,19 +1046,18 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePointStyleCombo( _
                 ByVal combo As ImageCombo, _
                 ByVal pPointStyle As PointStyles)
-Dim item As ComboItem
-
 Const ProcName As String = "initialisePointStyleCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , PointStyleRound)
 If pPointStyle = PointRound Then item.selected = True
 
@@ -1077,7 +1071,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseTextDisplayModeCombo( _
@@ -1088,15 +1082,15 @@ Private Sub initialiseTextDisplayModeCombo( _
                 ByVal pBoxColor As Long, _
                 ByVal pBoxFillStyle As FillStyles, _
                 ByVal pBoxFillColor As Long)
-Dim item As ComboItem
-Dim selected As Boolean
-
 Const ProcName As String = "initialiseTextDisplayModeCombo"
 On Error GoTo Err
 
 combo.ComboItems.Clear
 
+Dim item As ComboItem
 Set item = combo.ComboItems.Add(, , TextDisplayModePlain)
+
+Dim selected As Boolean
 If Not pBox Then item.selected = True: selected = True
 
 Set item = combo.ComboItems.Add(, , TextDisplayModeWIthBackground)
@@ -1119,7 +1113,7 @@ combo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function useCurrentRegionName() As Boolean

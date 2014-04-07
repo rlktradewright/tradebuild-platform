@@ -18,15 +18,13 @@ Option Explicit
 '@================================================================================
 
 Implements Enumerable
+Implements IMarketDataManager
 
 '@================================================================================
 ' Events
 '@================================================================================
 
-Event CollectionChanged( _
-                ev As CollectionChangeEventData)
-
-Event StateChange(ByRef ev As StateChangeEventData)
+Event CollectionChanged(ev As CollectionChangeEventData)
 
 '@================================================================================
 ' Constants
@@ -34,6 +32,10 @@ Event StateChange(ByRef ev As StateChangeEventData)
 
 
 Private Const ModuleName                    As String = "Tickers"
+
+Private Const ConfigSectionTicker           As String = "Ticker"
+
+Private Const ConfigSettingUseLocalTimeForStudies As String = "&UseLocalTimeForStudies"
 
 '@================================================================================
 ' Enums
@@ -47,25 +49,29 @@ Private Const ModuleName                    As String = "Tickers"
 ' Member variables
 '@================================================================================
 
-''
-'  Used to allocate handles for Tickers. The Handle is not used internally, but
-'  can be used by the application to index quickly into tables or collections
-'  of Tickers. When a Ticker is created, the first entry in this table that is
-'  not set to true is allocated for the new Ticker, and its index becomes the
-'  Ticker's Handle. The Handle is only unique within workspace.
-'@/
-Private mTickerHandleTable()        As Boolean
+Private WithEvents mTickers                 As EnumerableCollection
+Attribute mTickers.VB_VarHelpID = -1
 
-Private WithEvents mTickers         As EnumerableCollection
+Private mStudyLibraryManager                As StudyLibraryManager
+Private mMarketDataManager                  As IMarketDataManager
+Private mHistDataStore                      As IHistoricalDataStore
 
-Private mWorkspaceRef               As WeakReference
+Private mOrderSubmitterLive                 As IOrderSubmitter
+Private mOrderSubmitterSimulated            As IOrderSubmitter
+Private mName                               As String
+Private mScopeName                          As String
+Private mMoneyManager                       As IMoneyManager
+
+Private mPositionManagersLive               As PositionManagers
+Private mPositionManagersSimulated          As PositionManagers
+
+Private mConfig                             As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mTickerHandleTable(3) As Boolean
 Set mTickers = New EnumerableCollection
 End Sub
 
@@ -74,15 +80,7 @@ End Sub
 '@================================================================================
 
 Private Property Get Enumerable_Enumerator() As Enumerator
-Const ProcName As String = "Enumerable_Enumerator"
-On Error GoTo Err
-
 Set Enumerable_Enumerator = GetEnumerator
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function Enumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
@@ -102,6 +100,74 @@ Private Property Get Enumerable_UpdateSequence() As Long
 End Property
 
 '@================================================================================
+' IMarketDataManager Interface Members
+'@================================================================================
+
+Private Function IMarketDataManager_CreateMarketDataSource(ByVal pContractFuture As IFuture, ByVal pIsRecoverable As Boolean, Optional ByVal pkey As String, Optional ByVal pStateChangeListener As StateChangeListener) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager_CreateMarketDataSource"
+On Error GoTo Err
+
+Set IMarketDataManager_CreateMarketDataSource = CreateTicker(pContractFuture, pIsRecoverable, pkey, pStateChangeListener)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
+Set IMarketDataManager_DataSources = Tickers
+End Property
+
+Private Sub IMarketDataManager_Finish()
+Const ProcName As String = "IMarketDataManager_Finish"
+On Error GoTo Err
+
+Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function IMarketDataManager_GetMarketDataSource(ByVal pkey As String) As IMarketDataSource
+Const ProcName As String = "IMarketDataManager_GetMarketDataSource"
+On Error GoTo Err
+
+Set IMarketDataManager_GetMarketDataSource = GetTicker(pkey)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Sub IMarketDataManager_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "IMarketDataManager_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataManager_RemoveFromConfig()
+Const ProcName As String = "IMarketDataManager_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
@@ -109,7 +175,7 @@ Private Sub mTickers_CollectionChanged(ev As CollectionChangeEventData)
 Const ProcName As String = "mTickers_CollectionChanged"
 On Error GoTo Err
 
-Set ev.source = Me
+Set ev.Source = Me
 RaiseEvent CollectionChanged(ev)
 
 Exit Sub
@@ -122,64 +188,66 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get Count() As Long
-Const ProcName As String = "Count"
-
-On Error GoTo Err
-
-Count = mTickers.Count
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Property Get Enumerator() As Enumerator
+Set Enumerator = GetEnumerator
 End Property
 
-Friend Property Let WorkSpace( _
-                ByVal pWorkspace As WorkSpace)
-Const ProcName As String = "Workspace"
-On Error GoTo Err
-
-Set mWorkspaceRef = CreateWeakReference(pWorkspace)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Property Get MoneyManager() As IMoneyManager
+Set MoneyManager = mMoneyManager
 End Property
 
-Public Property Get WorkSpace() As WorkSpace
-Const ProcName As String = "Workspace"
-On Error GoTo Err
+Public Property Get Name() As String
+Name = mName
+End Property
 
-Set WorkSpace = mWorkspaceRef.Target
+Friend Property Get OrderSubmitterLive() As IOrderSubmitter
+Set OrderSubmitterLive = mOrderSubmitterLive
+End Property
 
-Exit Property
+Friend Property Get OrderSubmitterSimulated() As IOrderSubmitter
+Set OrderSubmitterSimulated = mOrderSubmitterSimulated
+End Property
 
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Property Get PositionManagersLive() As PositionManagers
+Set PositionManagersLive = mPositionManagersLive
+End Property
+
+Public Property Get PositionManagersSimulated() As PositionManagers
+Set PositionManagersSimulated = mPositionManagersSimulated
+End Property
+
+Public Property Get ScopeName() As String
+ScopeName = mScopeName
+End Property
+
+Public Property Get Tickers() As EnumerableCollection
+Set Tickers = mTickers
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function Add( _
-                ByVal pTickerOptions As TickerOptions, _
-                Optional ByVal pKey As String, _
-                Optional ByVal pNumberOfMarketDepthRows As Long = 20) As Ticker
-Const ProcName As String = "Add"
+Public Function CreateTicker( _
+                ByVal pContractFuture As IFuture, _
+                Optional ByVal pIsRecoverable As Boolean = True, _
+                Optional ByVal pkey As String, _
+                Optional ByVal pStateChangeListener As StateChangeListener, _
+                Optional ByVal pUseLocalTimeForStudies As Boolean) As Ticker
+Const ProcName As String = "CreateTicker"
 On Error GoTo Err
 
-If pKey = "" Then pKey = GenerateGUIDString
-Set Add = New Ticker
-Add.Initialise AllocateTickerHandle, _
-                Me.WorkSpace, _
-                pKey, _
-                Me, _
-                pTickerOptions, _
-                pNumberOfMarketDepthRows
-mTickers.Add Add, pKey
+If pkey = "" Then pkey = GenerateGUIDString
+
+Dim lDataSource As IMarketDataSource
+Set lDataSource = mMarketDataManager.CreateMarketDataSource(pContractFuture, pIsRecoverable, pkey, pStateChangeListener)
+
+Set CreateTicker = New Ticker
+CreateTicker.Initialise mStudyLibraryManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, pUseLocalTimeForStudies), lDataSource, mHistDataStore, Me, Nothing
+                
+If pIsRecoverable And Not mConfig Is Nothing Then addTickerToConfig pkey, pUseLocalTimeForStudies
+
+mTickers.Add CreateTicker, pkey
 
 Exit Function
 
@@ -187,12 +255,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub AddCollectionChangeListener( _
-                ByVal pListener As CollectionChangeListener)
-Const ProcName As String = "AddCollectionChangeListener"
+Public Sub Finish()
+Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mTickers.AddCollectionChangeListener pListener
+Dim lCurrTickers As New EnumerableCollection
+
+Dim lTicker As Ticker
+For Each lTicker In mTickers
+    lCurrTickers.Add lTicker
+Next
+
+For Each lTicker In lCurrTickers
+    lTicker.FinishAndRemoveFromConfig False
+Next
 
 Exit Sub
 
@@ -200,14 +276,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function CreateTickFileManager( _
-                ByVal pTickerOptions As Long) As TickFileManager
-Const ProcName As String = "CreateTickFileManager"
+Public Function GetEnumerator() As Enumerator
+Attribute GetEnumerator.VB_UserMemId = -4
+Attribute GetEnumerator.VB_MemberFlags = "40"
+Set GetEnumerator = mTickers.Enumerator
+End Function
+
+Public Function GetTicker(ByVal pkey As String) As Ticker
+Const ProcName As String = "GetTicker"
 On Error GoTo Err
 
-Set CreateTickFileManager = New TickFileManager
-CreateTickFileManager.TickerOptions = pTickerOptions
-CreateTickFileManager.Tickers = Me
+Set GetTicker = mTickers.Item(pkey)
 
 Exit Function
 
@@ -215,61 +294,95 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function Item(ByVal pIndex As Variant) As Ticker
-Attribute Item.VB_UserMemId = 0
-Const ProcName As String = "Item"
+Friend Sub Initialise( _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pOrderSubmitterLive As IOrderSubmitter, _
+                ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                ByVal pPositionManagersLive As PositionManagers, _
+                ByVal pPositionManagersSimulated As PositionManagers, _
+                ByVal pName As String, _
+                ByVal pScopeName As String, _
+                ByVal pMoneyManager As IMoneyManager)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set Item = mTickers.Item(pIndex)
+Set mMarketDataManager = pMarketDataManager
+Set mStudyLibraryManager = pStudyLibraryManager
+Set mHistDataStore = pHistDataStore
+Set mOrderSubmitterLive = pOrderSubmitterLive
+Set mOrderSubmitterSimulated = pOrderSubmitterSimulated
+If pPositionManagersLive Is Nothing Then
+    Set mPositionManagersLive = New PositionManagers
+Else
+    Set mPositionManagersLive = pPositionManagersLive
+End If
+If pPositionManagersSimulated Is Nothing Then
+    Set mPositionManagersSimulated = New PositionManagers
+Else
+    Set mPositionManagersSimulated = pPositionManagersSimulated
+End If
 
-Exit Function
+mName = pName
+mScopeName = pScopeName
+Set mMoneyManager = pMoneyManager
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
-Public Function LoadTickersFromContracts( _
-                ByVal pTickerOptions As Long, _
-                ByVal pContracts As Contracts, _
-                Optional ByVal pDOMEventsRequired As DOMEvents, _
-                Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String, _
-                Optional ByVal interval As Long = 50) As TaskController
-Const ProcName As String = "LoadTickersFromContracts"
+Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Dim lTickersStarter As New TickersStarter
+gLogger.Log "Loading tickers from config", ProcName, ModuleName
 
-lTickersStarter.Initialise Me, _
-                            pTickerOptions, _
-                            pDOMEventsRequired, _
-                            poutputTickfileFormat, _
-                            poutputTickfilePath, _
-                            interval, _
-                            True
-Set LoadTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "LoadTickersFromContracts/" & GenerateTextID, , pContracts)
+Set mConfig = pConfig
 
-Exit Function
+Dim lCs As ConfigurationSection
+For Each lCs In mConfig
+    Dim lKey As String
+    lKey = lCs.InstanceQualifier
+    
+    gLogger.Log "Loading ticker: " & lKey, ProcName, ModuleName
+    
+    Dim lPositionManager As PositionManager
+    If mPositionManagersLive.Contains(lKey) Then
+        Set lPositionManager = mPositionManagersLive.Item(lKey)
+        If lPositionManager.IsFinished Then Set lPositionManager = Nothing
+    End If
+    
+    Dim lDataSource As IMarketDataSource
+    Set lDataSource = mMarketDataManager.GetMarketDataSource(lKey)
+    
+    Dim lTicker As Ticker
+    Set lTicker = New Ticker
+    lTicker.Initialise mStudyLibraryManager.CreateStudyManagerWithSessionFuture(lDataSource.SessionFuture, CBool(lCs.GetSetting(ConfigSettingUseLocalTimeForStudies, "False"))), _
+                        lDataSource, mHistDataStore, Me, lPositionManager
+                
+    mTickers.Add lTicker, lKey
+Next
+
+gLogger.Log "Loaded tickers from config", ProcName, ModuleName
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function NewEnum() As IUnknown
-Attribute NewEnum.VB_UserMemId = -4
-Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = GetEnumerator
-End Function
+End Sub
 
 Public Function RefreshPriceChange( _
-                ByVal listener As PriceChangeListener) As TaskController
+                ByVal Listener As IPriceChangeListener) As TaskController
 Const ProcName As String = "RefreshPriceChange"
 On Error GoTo Err
 
 Dim pcrt As New PriceChangeRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
-pcrt.Initialise Me, listener
+pcrt.Initialise mTickers, Listener
 Set RefreshPriceChange = StartTask(pcrt, PriorityNormal)
 
 Exit Function
@@ -279,14 +392,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Public Function RefreshQuotes( _
-                ByVal listener As PriceChangeListener) As TaskController
+                ByVal Listener As IQuoteListener) As TaskController
 Const ProcName As String = "RefreshQuotes"
 On Error GoTo Err
 
 Dim qrt As New QuotesRefreshTask
 
 If mTickers.Count = 0 Then Exit Function
-qrt.Initialise Me, listener
+qrt.Initialise mTickers, Listener
 Set RefreshQuotes = StartTask(qrt, PriorityNormal)
 
 Exit Function
@@ -299,13 +412,7 @@ Public Sub Remove(ByVal pTicker As Ticker)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-If pTicker.State <> TickerStates.TickerStateClosing Then
-    pTicker.StopTicker
-    Exit Sub
-End If
-    
-mTickers.Remove pTicker.Key
-mTickerHandleTable(pTicker.Handle) = False
+pTicker.FinishAndRemoveFromConfig True
 
 Exit Sub
 
@@ -325,12 +432,37 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub StateChange( _
-                ByRef ev As StateChangeEventData)
-Const ProcName As String = "StateChange"
+Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
-RaiseEvent StateChange(ev)
+mConfig.Remove
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub RemoveNoFinish(ByVal pTicker As Ticker)
+Const ProcName As String = "RemoveNoFinish"
+On Error GoTo Err
+
+mTickers.Remove pTicker.Key
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub RemoveTickerFromConfig(ByVal pTicker As Ticker)
+Const ProcName As String = "RemoveTickerFromConfig"
+On Error GoTo Err
+
+If mConfig Is Nothing Then Exit Sub
+
+mConfig.RemoveConfigurationSection ConfigSectionTicker & "(" & pTicker.Key & ")"
 
 Exit Sub
 
@@ -339,52 +471,21 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function StartTickers( _
-                ByVal pTickerOptions As Long, _
-                ByVal pContractSpec As ContractSpecifier, _
-                Optional ByVal pDOMEventsRequired As DOMEvents, _
-                Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String, _
-                Optional ByVal interval As Long = 50) As TaskController
+                ByVal pContractsFuture As IFuture, _
+                Optional ByVal pStartMarketData As Boolean = True, _
+                Optional ByVal pStartMarketDepth As Boolean = False, _
+                Optional ByVal pInterval As Long = 50) As TaskController
 Const ProcName As String = "StartTickers"
 On Error GoTo Err
 
-Dim lTickersStarter As New TickersStarter
+Dim lTickersStarter As New TickersStarterTask
 
-lTickersStarter.Initialise Me, _
-                            pTickerOptions, _
-                            pDOMEventsRequired, _
-                            poutputTickfileFormat, _
-                            poutputTickfilePath, _
-                            interval, _
-                            False
-Set StartTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & pContractSpec.ToString, , pContractSpec)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function StartTickersFromContracts( _
-                ByVal pTickerOptions As Long, _
-                ByVal pContracts As Contracts, _
-                Optional ByVal pDOMEventsRequired As DOMEvents, _
-                Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String, _
-                Optional ByVal interval As Long = 50) As TaskController
-Const ProcName As String = "StartTickersFromContracts"
-On Error GoTo Err
-
-Dim lTickersStarter As New TickersStarter
-
-lTickersStarter.Initialise Me, _
-                            pTickerOptions, _
-                            pDOMEventsRequired, _
-                            poutputTickfileFormat, _
-                            poutputTickfilePath, _
-                            interval, _
-                            False
-Set StartTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "StartTickersFromContracts/" & GenerateTextID, , pContracts)
+lTickersStarter.Initialise pContractsFuture, _
+                            Me, _
+                            pStartMarketData, _
+                            pStartMarketDepth, _
+                            pInterval
+Set StartTickers = StartTask(lTickersStarter, PriorityNormal)
 
 Exit Function
 
@@ -396,45 +497,25 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Function AllocateTickerHandle() As Long
-Const ProcName As String = "AllocateTickerHandle"
+Private Function addTickerToConfig( _
+                ByVal pTickerKey As String, _
+                ByVal pUseLocalTimeForStudies As Boolean) As ConfigurationSection
+Const ProcName As String = "addTickerToConfig"
 On Error GoTo Err
 
-Dim i As Long
+If mConfig Is Nothing Then Exit Function
 
-AllocateTickerHandle = -1
-
-For i = 0 To UBound(mTickerHandleTable)
-    If mTickerHandleTable(i) = False Then
-        AllocateTickerHandle = i
-        Exit For
-    End If
-Next
-
-If AllocateTickerHandle = -1 Then
-    AllocateTickerHandle = UBound(mTickerHandleTable) + 1
-    ReDim Preserve mTickerHandleTable(2 * (UBound(mTickerHandleTable) + 1) - 1) As Boolean
-End If
-
-mTickerHandleTable(AllocateTickerHandle) = True
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-
-End Function
-
-Private Function GetEnumerator() As Enumerator
-Const ProcName As String = "GetEnumerator"
-On Error GoTo Err
-
-GetEnumerator = mTickers.Enumerator
+Dim lCs As ConfigurationSection
+Set lCs = mConfig.AddConfigurationSection(ConfigSectionTicker & "(" & pTickerKey & ")")
+lCs.SetSetting ConfigSettingUseLocalTimeForStudies, CStr(pUseLocalTimeForStudies)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+
+
 
 

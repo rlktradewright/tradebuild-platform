@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl StudyPicker 
    ClientHeight    =   4335
    ClientLeft      =   0
@@ -22,7 +22,7 @@ Begin VB.UserControl StudyPicker
       Appearance      =   0
    End
    Begin VB.ListBox StudyList 
-      Height          =   2595
+      Height          =   2400
       ItemData        =   "StudyPicker.ctx":0000
       Left            =   120
       List            =   "StudyPicker.ctx":0002
@@ -177,19 +177,19 @@ End Sub
 '@================================================================================
 
 Private Sub AddButton_Click()
-Dim slName As String
-Dim defaultStudyConfig As StudyConfiguration
-Dim studyConfig As StudyConfiguration
-
 Const ProcName As String = "AddButton_Click"
 On Error GoTo Err
 
+Dim slName As String
 slName = mAvailableStudies(StudyList.ListIndex).StudyLibrary
-Set defaultStudyConfig = GetDefaultStudyConfiguration(mAvailableStudies(StudyList.ListIndex).name, slName)
+
+Dim defaultStudyConfig As StudyConfiguration
+Set defaultStudyConfig = mChartManager.GetDefaultStudyConfiguration(mAvailableStudies(StudyList.ListIndex).name, slName)
 
 If Not defaultStudyConfig Is Nothing Then
     addStudyToChart defaultStudyConfig
 Else
+    Dim studyConfig As StudyConfiguration
     Set studyConfig = showConfigForm(mAvailableStudies(StudyList.ListIndex).name, _
                 mAvailableStudies(StudyList.ListIndex).StudyLibrary, _
                 defaultStudyConfig)
@@ -204,16 +204,15 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ChangeButton_Click()
-Dim studyConfig As StudyConfiguration
-Dim newStudyConfig As StudyConfiguration
-
 Const ProcName As String = "ChangeButton_Click"
 On Error GoTo Err
 
+Dim studyConfig As StudyConfiguration
 Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
 
 ' NB: the following line displays a modal form, so we can remove the existing
 ' study and deal with any related studies after it
+Dim newStudyConfig As StudyConfiguration
 Set newStudyConfig = showConfigForm(studyConfig.name, _
                 studyConfig.StudyLibraryName, _
                 studyConfig)
@@ -233,9 +232,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ChartStudiesTree_Click()
-Dim studyDef As StudyDefinition
-Dim studyConfig As StudyConfiguration
-
 Const ProcName As String = "ChartStudiesTree_Click"
 On Error GoTo Err
 
@@ -244,8 +240,12 @@ If ChartStudiesTree.SelectedItem Is Nothing Then
     ChangeButton.Enabled = False
 Else
     ChartStudiesTree.SelectedItem.Expanded = True
+    
+    Dim studyConfig As StudyConfiguration
     Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
-    Set studyDef = GetStudyDefinition( _
+    
+    Dim studyDef As StudyDefinition
+    Set studyDef = mChartManager.StudyLibraryManager.GetStudyDefinition( _
                             studyConfig.name, _
                             studyConfig.StudyLibraryName)
     If Not studyDef Is Nothing Then
@@ -266,14 +266,13 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub ConfigureButton_Click()
-Dim studyConfig As StudyConfiguration
-
 Const ProcName As String = "ConfigureButton_Click"
 On Error GoTo Err
 
+Dim studyConfig As StudyConfiguration
 Set studyConfig = showConfigForm(mAvailableStudies(StudyList.ListIndex).name, _
                 mAvailableStudies(StudyList.ListIndex).StudyLibrary, _
-                GetDefaultStudyConfiguration(mAvailableStudies(StudyList.ListIndex).name, _
+                mChartManager.GetDefaultStudyConfiguration(mAvailableStudies(StudyList.ListIndex).name, _
                                             mAvailableStudies(StudyList.ListIndex).StudyLibrary))
 If studyConfig Is Nothing Then Exit Sub
 addStudyToChart studyConfig
@@ -285,10 +284,10 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub RemoveButton_Click()
-Dim studyConfig As StudyConfiguration
 Const ProcName As String = "RemoveButton_Click"
 On Error GoTo Err
 
+Dim studyConfig As StudyConfiguration
 Set studyConfig = mChartManager.GetStudyConfig(ChartStudiesTree.SelectedItem.Key)
 mChartManager.RemoveStudyConfiguration studyConfig
 RemoveButton.Enabled = False
@@ -301,9 +300,6 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub StudyList_Click()
-Dim studyDef As StudyDefinition
-Dim slName As String
-
 Const ProcName As String = "StudyList_Click"
 On Error GoTo Err
 
@@ -315,11 +311,10 @@ If StudyList.ListIndex <> -1 Then
     
     AddButton.Enabled = True
     ConfigureButton.Enabled = True
-    slName = mAvailableStudies(StudyList.ListIndex).StudyLibrary
-    Set studyDef = GetStudyDefinition( _
-                            mAvailableStudies(StudyList.ListIndex).name, _
-                            slName)
-    DescriptionText.text = studyDef.Description
+    
+    DescriptionText.text = mChartManager.StudyLibraryManager.GetStudyDefinition( _
+                                    mAvailableStudies(StudyList.ListIndex).name, _
+                                    mAvailableStudies(StudyList.ListIndex).StudyLibrary).Description
 Else
     AddButton.Enabled = False
     ConfigureButton.Enabled = False
@@ -336,10 +331,11 @@ End Sub
 '@================================================================================
 
 Private Sub mChartManager_StudyAdded( _
-                ByVal studyConfig As ChartUtils26.StudyConfiguration)
-Dim parentNode As Node
+                ByVal studyConfig As ChartUtils27.StudyConfiguration)
 Const ProcName As String = "mChartManager_StudyAdded"
 On Error GoTo Err
+
+Dim parentNode As Node
 
 If Not studyConfig.UnderlyingStudy Is Nothing Then
     On Error Resume Next
@@ -366,7 +362,7 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mChartManager_StudyRemoved( _
-                ByVal studyConfig As ChartUtils26.StudyConfiguration)
+                ByVal studyConfig As ChartUtils27.StudyConfiguration)
 Const ProcName As String = "mChartManager_StudyRemoved"
 On Error GoTo Err
 
@@ -389,9 +385,6 @@ End Sub
 
 Public Sub Initialise( _
                 ByVal pChartManager As ChartManager)
-Dim i As Long
-Dim itemText As String
-
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -406,10 +399,11 @@ ElseIf mChartManager.BaseStudyConfiguration Is Nothing Then
 Else
     addEntryToChartStudiesTree mChartManager.BaseStudyConfiguration, Nothing
     
-    mAvailableStudies = AvailableStudies
+    mAvailableStudies = mChartManager.StudyLibraryManager.GetAvailableStudies
+    
+    Dim i As Long
     For i = 0 To UBound(mAvailableStudies)
-        itemText = mAvailableStudies(i).name & "  (" & mAvailableStudies(i).StudyLibrary & ")"
-        StudyList.AddItem itemText
+        StudyList.AddItem mAvailableStudies(i).name & "  (" & mAvailableStudies(i).StudyLibrary & ")"
     Next
 End If
 
@@ -421,8 +415,7 @@ ChangeButton.Enabled = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -432,14 +425,12 @@ End Sub
 Private Sub addEntryToChartStudiesTree( _
                 ByVal studyConfig As StudyConfiguration, _
                 ByVal parentStudyConfig As StudyConfiguration)
-Dim parentNode As Node
-Dim childStudyConfig As StudyConfiguration
-
 Const ProcName As String = "addEntryToChartStudiesTree"
 On Error GoTo Err
 
 If studyConfig Is Nothing Then Exit Sub
 
+Dim parentNode As Node
 If Not parentStudyConfig Is Nothing Then Set parentNode = ChartStudiesTree.Nodes.item(parentStudyConfig.Study.Id)
 If parentNode Is Nothing Then
     ChartStudiesTree.Nodes.Add , _
@@ -453,6 +444,8 @@ Else
                                 studyConfig.Study.InstanceName
     parentNode.Expanded = True
 End If
+
+Dim childStudyConfig As StudyConfiguration
 For Each childStudyConfig In studyConfig.StudyConfigurations
     addEntryToChartStudiesTree childStudyConfig, studyConfig
 Next
@@ -460,7 +453,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addStudyToChart(ByVal studyConfig As StudyConfiguration)
@@ -469,10 +462,11 @@ On Error GoTo Err
 
 mChartManager.AddStudyConfiguration studyConfig
 mChartManager.StartStudy studyConfig.Study
+
 Exit Sub
 
 Err:
-Initialise Nothing
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '/**
@@ -482,15 +476,12 @@ Private Function showConfigForm( _
                 ByVal studyName As String, _
                 ByVal slName As String, _
                 ByVal defaultConfiguration As StudyConfiguration) As StudyConfiguration
-
-Dim noParameterModification  As Boolean
-
 Const ProcName As String = "showConfigForm"
-
 On Error GoTo Err
 
 If mConfigForm Is Nothing Then Set mConfigForm = New fStudyConfigurer
 
+Dim noParameterModification  As Boolean
 If Not defaultConfiguration Is Nothing Then
     If Not mChartManager.BaseStudy Is Nothing Then
         If defaultConfiguration.Study Is mChartManager.BaseStudy Then noParameterModification = True
@@ -498,12 +489,12 @@ If Not defaultConfiguration Is Nothing Then
 End If
 
 mConfigForm.Initialise mChartManager.Chart, _
-                        GetStudyDefinition(studyName, slName), _
+                        mChartManager.StudyLibraryManager.GetStudyDefinition(studyName, slName), _
                         slName, _
                         mChartManager.regionNames, _
                         mChartManager.BaseStudyConfiguration, _
                         defaultConfiguration, _
-                        GetStudyDefaultParameters(studyName, slName), _
+                        mChartManager.StudyLibraryManager.GetStudyDefaultParameters(studyName, slName), _
                         noParameterModification
 mConfigForm.Show vbModal, UserControl.Parent
 If Not mConfigForm.Cancelled Then Set showConfigForm = mConfigForm.StudyConfiguration
@@ -511,7 +502,7 @@ If Not mConfigForm.Cancelled Then Set showConfigForm = mConfigForm.StudyConfigur
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

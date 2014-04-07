@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "StudyManager"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -44,58 +44,45 @@ Private Const ModuleName                As String = "StudyManager"
 '@================================================================================
 
 Public Type InputDescriptor
-    source              As Study
-    inputName           As String
+    StudyInputHandler   As StudyInputHandler
+    InputName           As String
     Description         As String
     InputType           As StudyInputTypes
     IsDefault           As Boolean
-    tickSize            As Double
-End Type
-
-' The following type is no longer used and is kept only to maintain binary
-' compatibility. It has been superseded by StudyTableEntry
-Public Type studyEntry
-    Study                   As Study
-    studyName               As String
-    libName                 As String
-    studyID                 As String
-    underlyingStudyID       As String
-    inputValueNames()       As String
-    NumberOfCachedValues    As Long
-    studyStarted            As Boolean
+    TickSize            As Double
 End Type
 
 Public Type StudyTableEntry
     ' the study manager responsible
     ' for this study
-    studyMgr                As StudyManager
+    StudyMgr                As StudyManager
     
-    ' the input study underlying this study
-    inpStudy                As InputStudy
+    ' the StudyInputHandler underlying this study
+'    StudyInputHandler       As StudyInputHandler
     
     ' the SessionBuilder used when replaying historicalinput
     ' values to the study
-    sessionBldr             As SessionBuilder
+    SessionBuilderFuture    As IFuture
     
     ' the study itself
-    Study                   As Study
+    Study                   As IStudy
     
     ' Name of the study
-    studyName               As String
+    StudyName               As String
     
     ' study library Name
-    libName                 As String
+    LibName                 As String
     
     ' Id of this study
-    studyID                 As String
+    StudyID                 As String
     
     ' Id of entry for study this study is to be
     ' added to
-    underlyingStudyID       As String
+    UnderlyingStudyID       As String
     
     ' names of values from the underlying study
     ' used as input to this study
-    inputValueNames()       As String
+    InputValueNames()       As String
     
     ' the number of study output values that
     ' should be available for access by higher
@@ -104,7 +91,7 @@ Public Type StudyTableEntry
     
     ' set when this study has been added to the
     ' underlying study
-    studyStarted            As Boolean
+    StudyStarted            As Boolean
 
 End Type
 
@@ -112,19 +99,23 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mInputs()               As InputDescriptor
-Private mNextInputIndex         As Long
+Private mInputs()                                   As InputDescriptor
+Private mNextInputIndex                             As Long
 
-Private mInputStudies           As Collection
-Private mStudyLibraryManager    As StudyLibraryManager
+Private mStudyInputHandlers                         As New Collection
+Private mStudyLibraryManager                        As StudyLibraryManager
 
-Private mSessionStartTime       As Date
-Private mSessionEndTime         As Date
+Private mUseLocalTimeForStudies                     As Boolean
 
-Private mSessionTimesSet        As Boolean
+Private mSessionFuture                              As IFuture
+Private mSession                                    As Session
 
-Private mExchangeTimeZone       As TimeZone
-Private mUseLocalTimeForStudies As Boolean
+Private mSessionBuilder                             As SessionBuilder
+
+Private mStudiesCollection                          As New EnumerableCollection
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -135,9 +126,7 @@ Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
 ReDim mInputs(3) As InputDescriptor
-Set mStudyLibraryManager = Globals.StudyLibraryManager
-Set mInputStudies = New Collection
-Set mExchangeTimeZone = GetTimeZone("")
+Set mFutureWaiter = New FutureWaiter
 
 Exit Sub
 
@@ -146,16 +135,16 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub Class_Terminate()
-Dim lStudy As Study
-Dim i As Long
-
 Const ProcName As String = "Class_Terminate"
 On Error GoTo Err
 
-For i = mInputStudies.Count To 1 Step -1
-    Set lStudy = mInputStudies(i)
-    Globals.StudiesCollection.Remove lStudy.Id
-    mInputStudies.Remove i
+Dim i As Long
+For i = mStudyInputHandlers.Count To 1 Step -1
+    Dim lStudy As IStudy
+    Set lStudy = mStudyInputHandlers(i)
+    
+    mStudiesCollection.Remove lStudy.Id
+    mStudyInputHandlers.Remove i
 Next
 
 Exit Sub
@@ -170,105 +159,127 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEventData)
-Dim tc As TaskController
-Dim result As ValueReplayResult
 Const ProcName As String = "TaskCompletionListener_taskCompleted"
 On Error GoTo Err
 
+Dim result As ValueReplayResult
 Set result = ev.result
-Set tc = ev.source
-Select Case CLng(tc.cookie)
+
+Dim tc As TaskController
+Set tc = ev.Source
+
+Select Case CLng(tc.Cookie)
 Case TaskDiscriminators.TaskAddStudy
-    linkSession result.target
+    linkSession result.Target
 Case TaskDiscriminators.TaskAddStudyValueListener
 End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is Session Then
+    Set mSession = ev.Future.Value
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get SessionFuture() As IFuture
+Set SessionFuture = mSessionFuture
+End Property
+
+Public Property Get StudyLibraryManager() As StudyLibraryManager
+Set StudyLibraryManager = mStudyLibraryManager
+End Property
+
+Public Property Get UsesLocalTimeForStudies() As Boolean
+UsesLocalTimeForStudies = mUseLocalTimeForStudies
+End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Function AddInput( _
-                ByVal source As Study, _
-                ByVal inputName As String, _
+                ByVal pStudyInputHandler As StudyInputHandler, _
+                ByVal InputName As String, _
                 ByVal Description As String, _
                 ByVal InputType As StudyInputTypes, _
                 ByVal IsDefault As Boolean, _
-                ByVal tickSize As Double) As Long
-Dim inpStudy As InputStudy
-
+                ByVal TickSize As Double) As Long
 Const ProcName As String = "AddInput"
 On Error GoTo Err
 
-Set inpStudy = source   ' check the right class
-
-inpStudy.AddInput inputName, Description, InputType, IsDefault, tickSize
+pStudyInputHandler.AddInput InputName, Description, InputType, IsDefault, TickSize
 
 If mNextInputIndex = UBound(mInputs) Then
     ReDim Preserve mInputs(2 * (UBound(mInputs) + 1) - 1) As InputDescriptor
 End If
-Set mInputs(mNextInputIndex).source = source
-mInputs(mNextInputIndex).inputName = inputName
+Set mInputs(mNextInputIndex).StudyInputHandler = pStudyInputHandler
+mInputs(mNextInputIndex).InputName = InputName
 mInputs(mNextInputIndex).Description = Description
 mInputs(mNextInputIndex).InputType = InputType
 mInputs(mNextInputIndex).IsDefault = IsDefault
-mInputs(mNextInputIndex).tickSize = tickSize
+mInputs(mNextInputIndex).TickSize = TickSize
 AddInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function AddSource( _
-                ByVal Name As String) As Study
-Dim inpStudy As InputStudy
-Dim lStudy As Study
-Dim studyEntry As StudyTableEntry
-
-Const ProcName As String = "AddSource"
+Public Function CreateStudyInputHandler( _
+                ByVal pName As String) As StudyInputHandler
+Const ProcName As String = "CreateStudyInputHandler"
 On Error GoTo Err
 
-Set inpStudy = New InputStudy
-inpStudy.initialise Name, _
-                    mSessionStartTime, _
-                    mSessionEndTime, _
-                    mExchangeTimeZone, _
-                    mUseLocalTimeForStudies
-Set AddSource = inpStudy
+Dim lStudyInputHandler As StudyInputHandler
+Set lStudyInputHandler = New StudyInputHandler
+lStudyInputHandler.Initialise pName
+Set CreateStudyInputHandler = lStudyInputHandler
 
-Set lStudy = inpStudy
-studyEntry.studyName = Name
-Set studyEntry.Study = lStudy
+Dim lStudy As IStudy
+Set lStudy = lStudyInputHandler
 
-studyEntry.studyID = lStudy.Id
-Globals.StudiesCollection.Add studyEntry, lStudy.Id
-mInputStudies.Add inpStudy, lStudy.Id
+Dim StudyEntry As StudyTableEntry
+StudyEntry.StudyName = pName
+Set StudyEntry.Study = lStudy
+StudyEntry.StudyID = lStudy.Id
+
+mStudiesCollection.Add StudyEntry, lStudy.Id
+mStudyInputHandlers.Add lStudyInputHandler, lStudy.Id
 
 Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    Globals.StudiesCollection.Remove lStudy.Id
-    mInputStudies.Remove lStudy.Id
+    mStudiesCollection.Remove lStudy.Id
+    mStudyInputHandlers.Remove lStudy.Id
     Resume
 End If
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -287,57 +298,37 @@ End Function
 '
 '@/
 Public Function AddStudy(ByVal Name As String, _
-                ByVal underlyingStudy As Study, _
-                ByRef inputValueNames() As String, _
+                ByVal underlyingStudy As IStudy, _
+                ByRef InputValueNames() As String, _
                 Optional ByVal Parameters As Parameters, _
                 Optional ByVal libraryName As String, _
-                Optional ByVal numberOfValuesToCache As Long) As Study
-
-Dim studyEntry As StudyTableEntry
-Dim underlyingStudyEntry As StudyTableEntry
-Dim lStudy As Study
-Dim inValueNames() As String
-Dim i As Long
-Dim studyInputDefs As StudyInputDefinitions
-Dim se As StudyTableEntry
-Dim inStudy As InputStudy
-Dim params As Parameters
-Dim param As Parameter
-
+                Optional ByVal numberOfValuesToCache As Long) As IStudy
 Const ProcName As String = "AddStudy"
 On Error GoTo Err
 
-If underlyingStudy Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Underlying study must not be nothing"
-End If
+AssertArgument Not underlyingStudy Is Nothing, "Underlying study must not be nothing"
+AssertArgument mStudiesCollection.Contains(underlyingStudy.Id), "Underlying study Id is invalid"
 
-On Error Resume Next
-underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.Id)
-If Err.Number <> 0 Then
-    On Error GoTo Err
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Underlying study Id is invalid"
-End If
-On Error GoTo Err
+Dim params As Parameters
+Set params = mStudyLibraryManager.GetStudyDefaultParameters(Name, libraryName)
 
-Set params = mStudyLibraryManager.FetchStudyDefaultParameters(Name, libraryName)
 If Not Parameters Is Nothing Then
+    Dim param As Parameter
     For Each param In Parameters
-        params.SetParameterValue param.Name, param.value
+        params.SetParameterValue param.Name, param.Value
     Next
 End If
     
-For i = 0 To UBound(inputValueNames)
-    If UCase$(inputValueNames(i)) = DefaultStudyValueNameStr Then inputValueNames(i) = underlyingStudy.StudyDefinition.DefaultValueName
+Dim i As Long
+For i = 0 To UBound(InputValueNames)
+    If UCase$(InputValueNames(i)) = DefaultStudyValueNameStr Then InputValueNames(i) = underlyingStudy.StudyDefinition.DefaultValueName
 Next
 
+Dim lStudy As IStudy
 Set lStudy = findStudy(Name, _
                         libraryName, _
                         underlyingStudy.Id, _
-                        inputValueNames, _
+                        InputValueNames, _
                         numberOfValuesToCache, _
                         Parameters)
 If Not lStudy Is Nothing Then
@@ -346,63 +337,56 @@ If Not lStudy Is Nothing Then
     Exit Function
 End If
 
-Set studyEntry.studyMgr = Me
-studyEntry.studyName = UCase$(Name)
-studyEntry.libName = UCase$(libraryName)
 Set lStudy = mStudyLibraryManager.CreateStudy(Name, libraryName)
 
-If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "Can't create study " & Name
+AssertArgument Not lStudy Is Nothing, "Can't create study " & Name
                                                 
-Set studyEntry.Study = lStudy
-studyEntry.NumberOfCachedValues = numberOfValuesToCache
+Dim StudyEntry As StudyTableEntry
+Set StudyEntry.Study = lStudy
+Set StudyEntry.StudyMgr = Me
+StudyEntry.StudyName = UCase$(Name)
+StudyEntry.LibName = UCase$(libraryName)
+StudyEntry.NumberOfCachedValues = numberOfValuesToCache
 
+Dim studyInputDefs As StudyInputDefinitions
 Set studyInputDefs = lStudy.StudyDefinition.StudyInputDefinitions
 
-ReDim inValueNames(UBound(inputValueNames)) As String
-For i = 0 To UBound(inputValueNames)
-    inValueNames(i) = inputValueNames(i)
+Dim inValueNames() As String
+ReDim inValueNames(UBound(InputValueNames)) As String
+For i = 0 To UBound(InputValueNames)
+    inValueNames(i) = InputValueNames(i)
     lStudy.SetInputTicksize studyInputDefs.Item(i + 1).Name, _
-                            underlyingStudy.GetValueTicksize(inputValueNames(i))
+                            underlyingStudy.GetValueTicksize(InputValueNames(i))
 Next
-studyEntry.inputValueNames = inValueNames
-studyEntry.underlyingStudyID = underlyingStudy.Id
+StudyEntry.InputValueNames = inValueNames
+StudyEntry.UnderlyingStudyID = underlyingStudy.Id
 
-studyEntry.studyID = GenerateGUIDString
+StudyEntry.StudyID = GenerateGUIDString
 
-' find the relevant InputStudy object to get the Session object
-se = underlyingStudyEntry
-Do While Not TypeOf se.Study Is InputStudy
-    se = Globals.StudiesCollection(se.underlyingStudyID)
-Loop
-Set inStudy = se.Study
-
-Set studyEntry.inpStudy = inStudy
-
-'we give the new study its own Session that will be used while replaying
+' find the relevant StudyInputHandler object to get the Session object
+Dim UnderlyingStudyEntry As StudyTableEntry
+UnderlyingStudyEntry = mStudiesCollection(underlyingStudy.Id)
+'
+' we give the new study its own Session that will be used while replaying
 ' historical data. When that is complete and StartStudy is called, we'll
-' link that Session object to the relevant input study object
-Set studyEntry.sessionBldr = New SessionBuilder
-studyEntry.sessionBldr.sessionStartTime = inStudy.Session.sessionStartTime
-studyEntry.sessionBldr.sessionEndTime = inStudy.Session.sessionEndTime
+' link that Session object to the relevant StudyInputHandler object
+Set StudyEntry.SessionBuilderFuture = CreateSessionBuilderFuture(mSessionFuture)
 
-underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.Id)
-
-studyEntry.Study.initialise studyEntry.studyID, _
+StudyEntry.Study.Initialise Me, _
+                            StudyEntry.StudyID, _
                             Parameters, _
                             numberOfValuesToCache, _
-                            inputValueNames, _
-                            underlyingStudyEntry.Study, _
-                            studyEntry.sessionBldr.Session
+                            InputValueNames, _
+                            UnderlyingStudyEntry.Study, _
+                            CreateSessionFuture(StudyEntry.SessionBuilderFuture)
                             
-Globals.StudiesCollection.Add studyEntry, studyEntry.studyID
+mStudiesCollection.Add StudyEntry, StudyEntry.StudyID
 Set AddStudy = lStudy
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetInputDescriptor( _
@@ -415,166 +399,159 @@ GetInputDescriptor = mInputs(inputHandle)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Friend Function GetStudyEntry(ByVal pStudy As IStudy) As StudyTableEntry
+Const ProcName As String = "GetStudyEntry"
+On Error GoTo Err
+
+GetStudyEntry = mStudiesCollection(pStudy.Id)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetUnderlyingStudy( _
-                ByVal pStudy As Study) As Study
-Dim se As StudyTableEntry
-
+                ByVal pStudy As IStudy) As IStudy
 Const ProcName As String = "GetUnderlyingStudy"
 On Error GoTo Err
 
-se = Globals.StudiesCollection(pStudy.Id)
-se = Globals.StudiesCollection(se.underlyingStudyID)
+Dim se As StudyTableEntry
+se = mStudiesCollection(pStudy.Id)
+se = mStudiesCollection(se.UnderlyingStudyID)
 Set GetUnderlyingStudy = se.Study
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub MoveStudy(ByVal studyToMove As BarStudy, _
-                ByVal newInputStudy As InputStudy, _
-                ByRef inputValueNames() As String)
-Dim lStudy As Study
-Dim lStudyEntry As StudyTableEntry
-Dim lInputStudy As Study
-
-Const ProcName As String = "MoveStudy"
+Friend Sub Initialise( _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pSessionStartTime As Date, _
+                ByVal pSessionEndTime As Date, _
+                ByVal pTimeZone As TimeZone, _
+                ByVal pUseLocalTimeForStudies As Boolean)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set lStudy = studyToMove
-lStudyEntry = Globals.StudiesCollection(lStudy.Id)
+Set mStudyLibraryManager = pStudyLibraryManager
 
-Set lInputStudy = newInputStudy
+mUseLocalTimeForStudies = pUseLocalTimeForStudies
 
-lStudyEntry.underlyingStudyID = lInputStudy.Id
-
-lInputStudy.AddStudy studyToMove, inputValueNames, 0
-
-studyToMove.SwitchUnderlyingStudy lInputStudy
-
+Set mSessionBuilder = CreateSessionBuilder(pSessionStartTime, pSessionEndTime, pTimeZone)
+Set mSession = mSessionBuilder.Session
+Set mSessionFuture = CreateFuture(mSession)
+    
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-' Timestamp is in exchange timezone
-Public Sub NotifyInput( _
-                ByVal inputHandle As Long, _
-                ByVal inputValue As Variant, _
-                ByVal Timestamp As Date)
-Dim ev As StudyValueEventData
+Friend Sub InitialiseWithSessionFuture( _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                ByVal pSessionFuture As IFuture, _
+                ByVal pUseLocalTimeForStudies As Boolean)
+Const ProcName As String = "InitialiseWithSessionFuture"
+On Error GoTo Err
 
+Set mStudyLibraryManager = pStudyLibraryManager
+mUseLocalTimeForStudies = pUseLocalTimeForStudies
+
+Set mSessionFuture = pSessionFuture
+If mSessionFuture.IsAvailable Then
+    Set mSession = mSessionFuture.Value
+Else
+    mFutureWaiter.Add mSessionFuture
+End If
+    
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+' pTimestamp must be in exchange timezone
+Public Sub NotifyInput( _
+                ByVal pInputHandle As Long, _
+                ByVal pInputValue As Variant, _
+                ByVal pTimestamp As Date)
 Const ProcName As String = "NotifyInput"
 On Error GoTo Err
 
-ev.sVal.Timestamp = Timestamp
-ev.sVal.value = inputValue
-ev.valueName = mInputs(inputHandle).inputName
-mInputs(inputHandle).source.Notify ev
+Assert Not mSession Is Nothing, "Session is not yet set"
+
+Dim ev As StudyValueEventData
+ev.sVal.Timestamp = pTimestamp
+ev.sVal.Value = pInputValue
+ev.sVal.BarStartTime = 0  ' a higher level study must generate this
+ev.ValueName = mInputs(pInputHandle).InputName
+
+Dim lStudyInputHandler As StudyInputHandler
+Set lStudyInputHandler = mInputs(pInputHandle).StudyInputHandler
+
+If Not mSessionBuilder Is Nothing Then
+    mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
+End If
+If mUseLocalTimeForStudies Then ev.sVal.Timestamp = ConvertDateTzToLocal(ev.sVal.Timestamp, mSession.TimeZone)
+
+Dim lStudy As IStudy
+Set lStudy = lStudyInputHandler
+lStudy.Notify ev
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetInputTicksize( _
-                ByVal inputHandle As Long, _
-                ByVal tickSize As Double)
+                ByVal pInputHandle As Long, _
+                ByVal pTickSize As Double)
 Const ProcName As String = "SetInputTicksize"
 On Error GoTo Err
 
-mInputs(inputHandle).tickSize = tickSize
-mInputs(inputHandle).source.SetInputTicksize mInputs(inputHandle).inputName, tickSize
+mInputs(pInputHandle).TickSize = pTickSize
+mInputs(pInputHandle).StudyInputHandler.SetInputTicksize mInputs(pInputHandle).InputName, pTickSize
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-''
-'
-'   Sets the Session start and end times. Note that this method can only be called once.
-'
-'   Any sources that have already been created have their Session times set accordingly.
-'@/
-Public Sub SetSessionTimes( _
-                ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date, _
-                ByVal exchangeTimeZone As TimeZone, _
-                ByVal useLocalTimeForStudies As Boolean)
-Dim lStudy As InputStudy
-Dim lVar As Variant
-
-Const ProcName As String = "SetSessionTimes"
-On Error GoTo Err
-
-If mSessionTimesSet Then _
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Session times have already been set"
-
-
-If Not exchangeTimeZone Is Nothing Then Set mExchangeTimeZone = exchangeTimeZone
-
-If CDbl(sessionStartTime) > 1 Then sessionStartTime = sessionStartTime - Int(sessionStartTime)
-mSessionStartTime = sessionStartTime
-If CDbl(sessionEndTime) > 1 Then sessionEndTime = sessionEndTime - Int(sessionEndTime)
-mSessionEndTime = sessionEndTime
-
-mUseLocalTimeForStudies = useLocalTimeForStudies
-
-mSessionTimesSet = True
-
-For Each lVar In mInputStudies
-    Set lStudy = lVar
-    lStudy.SetSessionTimes mSessionStartTime, _
-                            mSessionEndTime, _
-                            mExchangeTimeZone, _
-                            useLocalTimeForStudies
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function StartStudy( _
-                ByVal pStudy As Study, _
+                ByVal pStudy As IStudy, _
                 ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
+                Optional ByVal TaskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Dim studyEntry As StudyTableEntry
-Dim underlyingStudyEntry As StudyTableEntry
-
 Const ProcName As String = "StartStudy"
 On Error GoTo Err
 
-studyEntry = Globals.StudiesCollection(pStudy.Id)
-If studyEntry.studyStarted Then
+Dim StudyEntry As StudyTableEntry
+StudyEntry = mStudiesCollection(pStudy.Id)
+If StudyEntry.StudyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
 End If
 
-studyEntry.studyStarted = True
+StudyEntry.StudyStarted = True
 
-Globals.StudiesCollection.Remove pStudy.Id
-Globals.StudiesCollection.Add studyEntry, pStudy.Id
+mStudiesCollection.Remove pStudy.Id
+mStudiesCollection.Add StudyEntry, pStudy.Id
 
-underlyingStudyEntry = Globals.StudiesCollection(studyEntry.underlyingStudyID)
+Dim UnderlyingStudyEntry As StudyTableEntry
+UnderlyingStudyEntry = mStudiesCollection(StudyEntry.UnderlyingStudyID)
 
-Set StartStudy = underlyingStudyEntry.Study.AddStudy(studyEntry.Study, _
-                                                    studyEntry.inputValueNames, _
+Set StartStudy = UnderlyingStudyEntry.Study.AddStudy(StudyEntry.Study, _
+                                                    StudyEntry.InputValueNames, _
                                                     numberOfValuesToReplay, _
-                                                    taskName, _
+                                                    TaskName, _
                                                     taskData)
 If Not StartStudy Is Nothing Then
     StartStudy.AddTaskCompletionListener Me
@@ -585,41 +562,41 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function findStudy(ByVal studyName As String, _
-                ByVal libName As String, _
-                ByVal underlyingStudyID As String, _
-                ByRef inputValueNames() As String, _
+Private Function findStudy(ByVal StudyName As String, _
+                ByVal LibName As String, _
+                ByVal UnderlyingStudyID As String, _
+                ByRef InputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal Parameters As Parameters) As Study
-Dim studyEntry As StudyTableEntry
-Dim var As Variant
-
+                ByVal Parameters As Parameters) As IStudy
 Const ProcName As String = "findStudy"
 On Error GoTo Err
 
 Set findStudy = Nothing
 
-studyName = UCase$(studyName)
-libName = UCase$(libName)
-For Each var In Globals.StudiesCollection
-    studyEntry = var
-    If studyEntry.studyMgr Is Me And _
-        studyName = studyEntry.studyName And _
-        libName = studyEntry.libName And _
-        underlyingStudyID = studyEntry.underlyingStudyID And _
-        numberOfValuesToCache = studyEntry.NumberOfCachedValues And _
-        stringArraysEqual(inputValueNames, studyEntry.inputValueNames) And _
-        Parameters.Equals(studyEntry.Study.Parameters) _
+StudyName = UCase$(StudyName)
+LibName = UCase$(LibName)
+
+Dim var As Variant
+For Each var In mStudiesCollection
+    Dim StudyEntry As StudyTableEntry
+    StudyEntry = var
+    If StudyEntry.StudyMgr Is Me And _
+        StudyName = StudyEntry.StudyName And _
+        LibName = StudyEntry.LibName And _
+        UnderlyingStudyID = StudyEntry.UnderlyingStudyID And _
+        numberOfValuesToCache = StudyEntry.NumberOfCachedValues And _
+        stringArraysEqual(InputValueNames, StudyEntry.InputValueNames) And _
+        Parameters.Equals(StudyEntry.Study.Parameters) _
     Then
         ' this study has already been added
-        Set findStudy = studyEntry.Study
+        Set findStudy = StudyEntry.Study
         Exit For
     End If
 Next
@@ -627,32 +604,26 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub linkSession( _
-                ByVal pStudy As Study)
-Dim studyEntry As StudyTableEntry
-
+                ByVal pStudy As IStudy)
 Const ProcName As String = "linkSession"
 On Error GoTo Err
 
-studyEntry = Globals.StudiesCollection(pStudy.Id)
-
-studyEntry.sessionBldr.SetLinkable
-studyEntry.inpStudy.linkSession studyEntry.sessionBldr.Session
+Dim lSessionLinker As New SessionLinker
+lSessionLinker.Link Me, pStudy
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function stringArraysEqual( _
                 ar1() As String, _
                 ar2() As String) As Boolean
-Dim i As Long
-
 Const ProcName As String = "stringArraysEqual"
 On Error GoTo Err
 
@@ -661,6 +632,7 @@ If UBound(ar1) <> UBound(ar2) Then Exit Function
 If Err.Number <> 0 Then Exit Function
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To UBound(ar1)
     If ar1(i) <> ar2(i) Then Exit Function
 Next
@@ -669,7 +641,6 @@ stringArraysEqual = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
 

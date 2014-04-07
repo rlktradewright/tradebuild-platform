@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#1.0#0"; "TradeBuildUI27.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#196.0#0"; "TradingUI27.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.7"
    ClientHeight    =   7875
@@ -18,7 +18,7 @@ Begin VB.Form MainForm
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   25
+      TabIndex        =   26
       TabStop         =   0   'False
       ToolTipText     =   "Status messages"
       Top             =   6240
@@ -27,7 +27,7 @@ Begin VB.Form MainForm
    Begin TabDlg.SSTab SSTab1 
       Height          =   5895
       Left            =   120
-      TabIndex        =   26
+      TabIndex        =   27
       Top             =   240
       Width           =   11655
       _ExtentX        =   20558
@@ -49,31 +49,44 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Frame4"
-      Tab(1).Control(1)=   "SelectTickfilesButton"
-      Tab(1).Control(2)=   "ClearTickfileListButton"
-      Tab(1).Control(3)=   "TickfileList"
+      Tab(1).Control(0)=   "ReplayProgressLabel"
+      Tab(1).Control(0).Enabled=   0   'False
+      Tab(1).Control(1)=   "ReplayContractLabel"
+      Tab(1).Control(1).Enabled=   0   'False
+      Tab(1).Control(2)=   "ReplayProgressBar"
+      Tab(1).Control(2).Enabled=   0   'False
+      Tab(1).Control(3)=   "ConvertButton"
       Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(5)=   "ConvertButton"
-      Tab(1).Control(6)=   "ReplayProgressBar"
-      Tab(1).Control(7)=   "ReplayContractLabel"
-      Tab(1).Control(8)=   "ReplayProgressLabel"
-      Tab(1).ControlCount=   9
+      Tab(1).Control(4).Enabled=   0   'False
+      Tab(1).Control(5)=   "Frame4"
+      Tab(1).Control(5).Enabled=   0   'False
+      Tab(1).Control(6)=   "TickfileOrganiser1"
+      Tab(1).Control(6).Enabled=   0   'False
+      Tab(1).ControlCount=   7
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ContractSpecBuilder1"
-      Tab(2).Control(1)=   "Frame2"
+      Tab(2).Control(0)=   "Label11"
+      Tab(2).Control(1)=   "ContractDetailsText"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "ContractDetailsText"
-      Tab(2).Control(3).Enabled=   0   'False
-      Tab(2).Control(4)=   "Label11"
+      Tab(2).Control(3)=   "Frame2"
+      Tab(2).Control(4)=   "ContractSpecBuilder1"
       Tab(2).ControlCount=   5
-      Begin TradeBuildUI27.ContractSpecBuilder ContractSpecBuilder1 
+      Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+         Height          =   4215
+         Left            =   -74880
+         TabIndex        =   94
+         Top             =   480
+         Width           =   8055
+         _ExtentX        =   14208
+         _ExtentY        =   7435
+      End
+      Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
          Height          =   2895
          Left            =   -69840
-         TabIndex        =   61
+         TabIndex        =   59
          Top             =   960
          Width           =   2415
          _ExtentX        =   4260
@@ -83,7 +96,7 @@ Begin VB.Form MainForm
          Caption         =   "&Configure"
          Height          =   495
          Left            =   10080
-         TabIndex        =   24
+         TabIndex        =   25
          Top             =   600
          Width           =   1095
       End
@@ -100,14 +113,14 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   4935
             ScaleWidth      =   3255
-            TabIndex        =   81
+            TabIndex        =   78
             Top             =   240
             Width           =   3255
             Begin VB.CheckBox AsyncWritesCheck 
                Caption         =   "Use asynchronous writes"
                Height          =   195
                Left            =   360
-               TabIndex        =   97
+               TabIndex        =   24
                Top             =   4680
                Width           =   2655
             End
@@ -224,7 +237,7 @@ Begin VB.Form MainForm
                Caption         =   "Contract details from this database:"
                Height          =   255
                Left            =   360
-               TabIndex        =   96
+               TabIndex        =   93
                Top             =   360
                Width           =   2535
             End
@@ -232,7 +245,7 @@ Begin VB.Form MainForm
                Caption         =   "Password"
                Height          =   255
                Left            =   360
-               TabIndex        =   95
+               TabIndex        =   92
                Top             =   2160
                Width           =   975
             End
@@ -240,7 +253,7 @@ Begin VB.Form MainForm
                Caption         =   "Username"
                Height          =   255
                Left            =   360
-               TabIndex        =   94
+               TabIndex        =   91
                Top             =   1800
                Width           =   975
             End
@@ -248,7 +261,7 @@ Begin VB.Form MainForm
                Caption         =   "DB Type"
                Height          =   255
                Left            =   360
-               TabIndex        =   93
+               TabIndex        =   90
                Top             =   1080
                Width           =   975
             End
@@ -256,7 +269,7 @@ Begin VB.Form MainForm
                Caption         =   "Server"
                Height          =   255
                Left            =   360
-               TabIndex        =   92
+               TabIndex        =   89
                Top             =   720
                Width           =   975
             End
@@ -264,7 +277,7 @@ Begin VB.Form MainForm
                Caption         =   "Database"
                Height          =   255
                Left            =   360
-               TabIndex        =   91
+               TabIndex        =   88
                Top             =   1440
                Width           =   975
             End
@@ -272,7 +285,7 @@ Begin VB.Form MainForm
                Caption         =   "Database"
                Height          =   255
                Left            =   360
-               TabIndex        =   86
+               TabIndex        =   83
                Top             =   3600
                Width           =   975
             End
@@ -280,7 +293,7 @@ Begin VB.Form MainForm
                Caption         =   "Server"
                Height          =   255
                Left            =   360
-               TabIndex        =   85
+               TabIndex        =   82
                Top             =   2880
                Width           =   975
             End
@@ -288,7 +301,7 @@ Begin VB.Form MainForm
                Caption         =   "DB Type"
                Height          =   255
                Left            =   360
-               TabIndex        =   84
+               TabIndex        =   81
                Top             =   3240
                Width           =   975
             End
@@ -296,7 +309,7 @@ Begin VB.Form MainForm
                Caption         =   "Username"
                Height          =   255
                Left            =   360
-               TabIndex        =   83
+               TabIndex        =   80
                Top             =   3960
                Width           =   975
             End
@@ -304,7 +317,7 @@ Begin VB.Form MainForm
                Caption         =   "Password"
                Height          =   255
                Left            =   360
-               TabIndex        =   82
+               TabIndex        =   79
                Top             =   4320
                Width           =   975
             End
@@ -323,7 +336,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   4935
             ScaleWidth      =   3135
-            TabIndex        =   73
+            TabIndex        =   70
             Top             =   240
             Width           =   3135
             Begin VB.TextBox PasswordInText 
@@ -419,7 +432,7 @@ Begin VB.Form MainForm
                Caption         =   "Password"
                Height          =   255
                Left            =   360
-               TabIndex        =   80
+               TabIndex        =   77
                Top             =   2160
                Width           =   975
             End
@@ -427,7 +440,7 @@ Begin VB.Form MainForm
                Caption         =   "Username"
                Height          =   255
                Left            =   360
-               TabIndex        =   79
+               TabIndex        =   76
                Top             =   1800
                Width           =   975
             End
@@ -435,7 +448,7 @@ Begin VB.Form MainForm
                Caption         =   "DB Type"
                Height          =   255
                Left            =   360
-               TabIndex        =   78
+               TabIndex        =   75
                Top             =   1080
                Width           =   975
             End
@@ -443,7 +456,7 @@ Begin VB.Form MainForm
                Caption         =   "Server"
                Height          =   255
                Left            =   360
-               TabIndex        =   77
+               TabIndex        =   74
                Top             =   720
                Width           =   975
             End
@@ -451,7 +464,7 @@ Begin VB.Form MainForm
                Caption         =   "Database"
                Height          =   255
                Left            =   360
-               TabIndex        =   76
+               TabIndex        =   73
                Top             =   1440
                Width           =   975
             End
@@ -459,7 +472,7 @@ Begin VB.Form MainForm
                Caption         =   "QT Server"
                Height          =   255
                Left            =   360
-               TabIndex        =   75
+               TabIndex        =   72
                Top             =   3000
                Width           =   975
             End
@@ -467,7 +480,7 @@ Begin VB.Form MainForm
                Caption         =   "QT Port"
                Height          =   255
                Left            =   360
-               TabIndex        =   74
+               TabIndex        =   71
                Top             =   3360
                Width           =   975
             End
@@ -477,7 +490,7 @@ Begin VB.Form MainForm
          Caption         =   "Conversion options"
          Height          =   4335
          Left            =   -66480
-         TabIndex        =   67
+         TabIndex        =   64
          Top             =   480
          Width           =   2895
          Begin VB.PictureBox Picture4 
@@ -486,14 +499,14 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   3975
             ScaleWidth      =   2715
-            TabIndex        =   68
+            TabIndex        =   65
             Top             =   240
             Width           =   2715
             Begin VB.TextBox OutputPathText 
                Enabled         =   0   'False
                Height          =   285
                Left            =   120
-               TabIndex        =   33
+               TabIndex        =   32
                ToolTipText     =   "Location of output tickfiles"
                Top             =   2040
                Width           =   2535
@@ -503,7 +516,7 @@ Begin VB.Form MainForm
                Enabled         =   0   'False
                Height          =   375
                Left            =   2160
-               TabIndex        =   32
+               TabIndex        =   31
                ToolTipText     =   "Select output path"
                Top             =   1680
                Width           =   495
@@ -514,7 +527,7 @@ Begin VB.Form MainForm
                ItemData        =   "MainForm.frx":0054
                Left            =   120
                List            =   "MainForm.frx":0056
-               TabIndex        =   31
+               TabIndex        =   30
                ToolTipText     =   "Select output tickfile format"
                Top             =   960
                Width           =   2535
@@ -523,7 +536,7 @@ Begin VB.Form MainForm
                Caption         =   "Timestamps"
                Height          =   1335
                Left            =   120
-               TabIndex        =   69
+               TabIndex        =   66
                Top             =   2520
                Width           =   2535
                Begin VB.PictureBox Picture3 
@@ -534,14 +547,14 @@ Begin VB.Form MainForm
                   Left            =   120
                   ScaleHeight     =   975
                   ScaleWidth      =   2295
-                  TabIndex        =   70
+                  TabIndex        =   67
                   Top             =   240
                   Width           =   2295
                   Begin VB.TextBox AdjustSecondsEndText 
                      Enabled         =   0   'False
                      Height          =   285
                      Left            =   1680
-                     TabIndex        =   36
+                     TabIndex        =   35
                      Text            =   "0"
                      ToolTipText     =   "Timestamp adjustment (seconds) at end of file"
                      Top             =   645
@@ -551,7 +564,7 @@ Begin VB.Form MainForm
                      Enabled         =   0   'False
                      Height          =   285
                      Left            =   1680
-                     TabIndex        =   35
+                     TabIndex        =   34
                      Text            =   "0"
                      ToolTipText     =   "Timestamp adjustment (seconds) at start of file"
                      Top             =   360
@@ -561,7 +574,7 @@ Begin VB.Form MainForm
                      Caption         =   "Adjust timestamps?"
                      Height          =   375
                      Left            =   120
-                     TabIndex        =   34
+                     TabIndex        =   33
                      ToolTipText     =   "Set if timestamps are to be adjusted"
                      Top             =   0
                      Width           =   1695
@@ -570,7 +583,7 @@ Begin VB.Form MainForm
                      Caption         =   "Seconds at end"
                      Height          =   255
                      Left            =   240
-                     TabIndex        =   72
+                     TabIndex        =   69
                      Top             =   645
                      Width           =   1455
                   End
@@ -578,7 +591,7 @@ Begin VB.Form MainForm
                      Caption         =   "Seconds at start"
                      Height          =   255
                      Left            =   240
-                     TabIndex        =   71
+                     TabIndex        =   68
                      Top             =   360
                      Width           =   1455
                   End
@@ -589,7 +602,7 @@ Begin VB.Form MainForm
                Enabled         =   0   'False
                Height          =   255
                Left            =   120
-               TabIndex        =   29
+               TabIndex        =   28
                Top             =   0
                Width           =   1575
             End
@@ -598,7 +611,7 @@ Begin VB.Form MainForm
                Enabled         =   0   'False
                Height          =   255
                Left            =   120
-               TabIndex        =   30
+               TabIndex        =   29
                Top             =   360
                Width           =   1335
             End
@@ -606,7 +619,7 @@ Begin VB.Form MainForm
                Caption         =   "Output format"
                Height          =   255
                Left            =   120
-               TabIndex        =   88
+               TabIndex        =   85
                Top             =   720
                Width           =   1335
             End
@@ -614,48 +627,18 @@ Begin VB.Form MainForm
                Caption         =   "Output path"
                Height          =   255
                Left            =   120
-               TabIndex        =   87
+               TabIndex        =   84
                Top             =   1800
                Width           =   975
             End
          End
-      End
-      Begin VB.CommandButton SelectTickfilesButton 
-         Caption         =   "..."
-         Enabled         =   0   'False
-         Height          =   375
-         Left            =   -67200
-         TabIndex        =   27
-         ToolTipText     =   "Select tickfile(s)"
-         Top             =   600
-         Width           =   495
-      End
-      Begin VB.CommandButton ClearTickfileListButton 
-         Caption         =   "X"
-         Enabled         =   0   'False
-         Height          =   375
-         Left            =   -67200
-         TabIndex        =   28
-         ToolTipText     =   "Clear tickfile list"
-         Top             =   1080
-         Width           =   495
-      End
-      Begin VB.ListBox TickfileList 
-         Height          =   4155
-         ItemData        =   "MainForm.frx":0058
-         Left            =   -74880
-         List            =   "MainForm.frx":005A
-         TabIndex        =   65
-         TabStop         =   0   'False
-         Top             =   480
-         Width           =   7575
       End
       Begin VB.CommandButton StopButton 
          Caption         =   "Stop"
          Enabled         =   0   'False
          Height          =   375
          Left            =   -64800
-         TabIndex        =   37
+         TabIndex        =   36
          ToolTipText     =   "Stop tickfile conversion"
          Top             =   5400
          Width           =   1215
@@ -665,7 +648,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   375
          Left            =   -64800
-         TabIndex        =   38
+         TabIndex        =   37
          ToolTipText     =   "Start tickfile conversion"
          Top             =   4920
          Width           =   1215
@@ -674,7 +657,7 @@ Begin VB.Form MainForm
          Caption         =   "Contract details source"
          Height          =   1095
          Left            =   -74520
-         TabIndex        =   58
+         TabIndex        =   56
          Top             =   840
          Width           =   2535
          Begin VB.PictureBox Picture2 
@@ -685,14 +668,14 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   735
             ScaleWidth      =   2295
-            TabIndex        =   62
+            TabIndex        =   60
             Top             =   240
             Width           =   2295
             Begin VB.OptionButton ContractInTickfileOption 
                Caption         =   "In tickfile"
                Height          =   195
                Left            =   120
-               TabIndex        =   59
+               TabIndex        =   57
                ToolTipText     =   "Tickfile contains contract details"
                Top             =   120
                Value           =   -1  'True
@@ -702,7 +685,7 @@ Begin VB.Form MainForm
                Caption         =   "Service provider"
                Height          =   195
                Left            =   120
-               TabIndex        =   60
+               TabIndex        =   58
                ToolTipText     =   "Get contract details from service provider"
                Top             =   480
                Width           =   1455
@@ -714,7 +697,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   615
          Left            =   -68760
-         TabIndex        =   63
+         TabIndex        =   61
          ToolTipText     =   "Get contract details from specified source"
          Top             =   4080
          Width           =   1335
@@ -725,7 +708,7 @@ Begin VB.Form MainForm
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   2  'Vertical
-         TabIndex        =   57
+         TabIndex        =   55
          TabStop         =   0   'False
          Top             =   2400
          Width           =   3855
@@ -735,7 +718,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   48
+         TabIndex        =   46
          Top             =   420
          Width           =   975
       End
@@ -744,7 +727,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   47
+         TabIndex        =   45
          Top             =   1620
          Width           =   975
       End
@@ -753,25 +736,15 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   46
+         TabIndex        =   44
          Top             =   1020
          Width           =   975
-      End
-      Begin VB.CommandButton PlayTickFileButton 
-         Caption         =   "&Play"
-         Enabled         =   0   'False
-         Height          =   495
-         Left            =   -69840
-         TabIndex        =   45
-         ToolTipText     =   "Start or resume tickfile replay"
-         Top             =   2340
-         Width           =   615
       End
       Begin VB.CommandButton Command2 
          Caption         =   "..."
          Height          =   375
          Left            =   -67680
-         TabIndex        =   44
+         TabIndex        =   43
          ToolTipText     =   "Select tickfile(s)"
          Top             =   1020
          Width           =   495
@@ -781,7 +754,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   375
          Left            =   -67680
-         TabIndex        =   43
+         TabIndex        =   42
          ToolTipText     =   "Clear tickfile list"
          Top             =   1500
          Width           =   495
@@ -791,7 +764,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -69120
-         TabIndex        =   42
+         TabIndex        =   41
          ToolTipText     =   "Pause tickfile replay"
          Top             =   2340
          Width           =   615
@@ -801,7 +774,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68400
-         TabIndex        =   41
+         TabIndex        =   40
          ToolTipText     =   "Stop tickfile replay"
          Top             =   2340
          Width           =   615
@@ -809,18 +782,18 @@ Begin VB.Form MainForm
       Begin VB.ListBox List1 
          Height          =   1230
          Left            =   -74640
-         TabIndex        =   40
+         TabIndex        =   39
          TabStop         =   0   'False
          Top             =   1020
          Width           =   6855
       End
       Begin VB.ComboBox ReplaySpeedCombo 
          Height          =   315
-         ItemData        =   "MainForm.frx":005C
+         ItemData        =   "MainForm.frx":0058
          Left            =   -74040
-         List            =   "MainForm.frx":008B
+         List            =   "MainForm.frx":0087
          Style           =   2  'Dropdown List
-         TabIndex        =   39
+         TabIndex        =   38
          ToolTipText     =   "Adjust tickfile replay speed"
          Top             =   2460
          Width           =   1575
@@ -828,7 +801,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ListView OpenOrdersList 
          Height          =   2175
          Left            =   -74880
-         TabIndex        =   49
+         TabIndex        =   47
          ToolTipText     =   "Open orders"
          Top             =   420
          Width           =   8055
@@ -849,7 +822,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ListView ExecutionsList 
          Height          =   1695
          Left            =   -74880
-         TabIndex        =   50
+         TabIndex        =   48
          ToolTipText     =   "Filled orders"
          Top             =   2580
          Width           =   8055
@@ -869,7 +842,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ProgressBar ProgressBar1 
          Height          =   135
          Left            =   -74640
-         TabIndex        =   51
+         TabIndex        =   49
          Top             =   3180
          Visible         =   0   'False
          Width           =   6855
@@ -882,7 +855,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   255
          Left            =   -74880
-         TabIndex        =   66
+         TabIndex        =   63
          Top             =   5400
          Visible         =   0   'False
          Width           =   7575
@@ -895,14 +868,14 @@ Begin VB.Form MainForm
       Begin VB.Label ReplayContractLabel 
          Height          =   375
          Left            =   -74880
-         TabIndex        =   90
+         TabIndex        =   87
          Top             =   4800
          Width           =   7575
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   -74880
-         TabIndex        =   89
+         TabIndex        =   86
          Top             =   5160
          Width           =   7575
       End
@@ -910,7 +883,7 @@ Begin VB.Form MainForm
          Caption         =   "Current contract details"
          Height          =   255
          Left            =   -74520
-         TabIndex        =   64
+         TabIndex        =   62
          Top             =   2760
          Width           =   1815
       End
@@ -918,7 +891,7 @@ Begin VB.Form MainForm
          Caption         =   "Select tickfile(s)"
          Height          =   255
          Left            =   -74520
-         TabIndex        =   55
+         TabIndex        =   53
          Top             =   780
          Width           =   1455
       End
@@ -926,7 +899,7 @@ Begin VB.Form MainForm
          Caption         =   "Output path"
          Height          =   855
          Left            =   -74640
-         TabIndex        =   54
+         TabIndex        =   52
          Top             =   3420
          Width           =   5655
       End
@@ -934,7 +907,7 @@ Begin VB.Form MainForm
          Caption         =   "qazqazqaz"
          Height          =   255
          Left            =   -74640
-         TabIndex        =   53
+         TabIndex        =   51
          Top             =   2940
          Width           =   5655
       End
@@ -942,7 +915,7 @@ Begin VB.Form MainForm
          Caption         =   "Replay speed"
          Height          =   375
          Left            =   -74640
-         TabIndex        =   52
+         TabIndex        =   50
          Top             =   2460
          Width           =   615
       End
@@ -951,7 +924,7 @@ Begin VB.Form MainForm
       Caption         =   "QT Port"
       Height          =   255
       Left            =   7920
-      TabIndex        =   56
+      TabIndex        =   54
       Top             =   2880
       Width           =   975
    End
@@ -980,6 +953,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IBarOutputMonitor
+Implements ITickfileOutputMonitor
 Implements LogListener
 
 '================================================================================
@@ -990,7 +965,12 @@ Implements LogListener
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "MainForm"
+Private Const ModuleName                            As String = "MainForm"
+
+Private Const ContinuationDataContractStore         As String = "ContractStore"
+Private Const ContinuationDataInputTickfileStore    As String = "InputTickfileStore"
+Private Const ContinuationDataOutputHistDataStore   As String = "OutputHistDataStore"
+Private Const ContinuationDataOutputTickfileStore   As String = "OutputTickfileStore"
 
 '================================================================================
 ' Enums
@@ -1007,53 +987,66 @@ Private Const ModuleName                As String = "MainForm"
 Private WithEvents mUnhandledErrorHandler           As UnhandledErrorHandler
 Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 
-Private WithEvents mTradeBuildAPI As TradeBuildAPI
-Attribute mTradeBuildAPI.VB_VarHelpID = -1
-Private WithEvents mTickfileManager As TradeBuild27.TickFileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
-Private WithEvents mContracts As Contracts
-Attribute mContracts.VB_VarHelpID = -1
-Private mTickers As Tickers
-Private WithEvents mTicker As Ticker
-Attribute mTicker.VB_VarHelpID = -1
+Private mInputTickfileStore                         As ITickfileStore
+Private mOutputTickfileStore                        As ITickfileStore
 
-Private mEt As ElapsedTimer
+Private mContractStore                              As IContractStore
 
-Private mRunningFromComandLine As Boolean
+Private mOutputHistDataStore                        As IHistoricalDataStore
 
-Private mOutputFormat As String
-Private mOutputPath As String
+Private WithEvents mReplayController                As ReplayController
+Attribute mReplayController.VB_VarHelpID = -1
 
-Private mContract As Contract
+Private mEt                                         As ElapsedTimer
 
-Private mSupportedOutputFormats() As TradeBuild27.TickfileFormatSpecifier
+Private mRunningFromComandLine                      As Boolean
 
-Private mArguments As CommandLineParser
-Private mNoUI As Boolean
-Private mRun As Boolean
+Private mOutputFormat                               As String
+Private mOutputPath                                 As String
 
-Private mMonths(12) As String
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mContractFuture                             As IFuture
 
-Private mNoWriteBars As Boolean
-Private mNoWriteTicks As Boolean
+Private mSupportedOutputFormats()                   As TickfileFormatSpecifier
 
-Private WithEvents mTimer As IntervalTimer
+Private mArguments                                  As CommandLineParser
+Private mNoUI                                       As Boolean
+Private mRun                                        As Boolean
+
+Private mMonths(12)                                 As String
+
+Private mNoWriteBars                                As Boolean
+Private mNoWriteTicks                               As Boolean
+
+Private WithEvents mTimer                           As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private mNumberOfSessions As Long
-Private mStartingSession As Long
-Private mFromDate As Date
-Private mFromTime As Date
-Private mToDate As Date
-Private mToTime As Date
-Private mInFormatValue As String
+Private mNumberOfSessions                           As Long
+Private mStartingSession                            As Long
+Private mFromDate                                   As Date
+Private mFromTime                                   As Date
+Private mToDate                                     As Date
+Private mToTime                                     As Date
+Private mInFormatValue                              As String
 
-Private mTickfiles As TickFileSpecifiers
-Private mTickfilesSelected As Boolean
+Private mTickFileSpecifiers                         As TickFileSpecifiers
 
-Private mLogFormatter As LogFormatter
+Private mLogFormatter                               As LogFormatter
 
 Private mIsInDev                                    As Boolean
+
+'Private mProcessingLastTickfile                     As Boolean
+
+Private mSettingUpServiceProviders                  As Boolean
+Private mServiceProviderSetupFailed                 As Boolean
+
+Private mTickDataWriter                             As TickDataWriter
+Private mHistDataWriter                             As HistDataWriter
+
+Private mStudyLibraryManager                        As StudyLibraryManager
+
+Private mTickfileIndex                              As Long
 
 '================================================================================
 ' Form Event Handlers
@@ -1092,42 +1085,33 @@ mMonths(10) = "Oct"
 mMonths(11) = "Nov"
 mMonths(12) = "Dec"
 
+Set mFutureWaiter = New FutureWaiter
+
+Set mStudyLibraryManager = New StudyLibraryManager
+mStudyLibraryManager.AddStudyLibrary "CmnStudiesLib27.StudyLib", True, "Built-in"
+
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Load()
-
 Const ProcName As String = "Form_Load"
 On Error GoTo Err
-
-On Error Resume Next
-Set mTradeBuildAPI = TradeBuildAPI
-On Error GoTo Err
-
-If mTradeBuildAPI Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "The required version of TradeBuild is not installed"
-End If
-
-Set mTickers = mTradeBuildAPI.Tickers
-
-AddStudyLibrary "CmnStudiesLib27.StudyLib", True, "Built-in"
 
 setupDbTypeCombos
 
 QTPortText.Text = "16240"
 
-mOutputPath = App.path
+mOutputPath = GetSpecialFolderPath(FolderIdMyDocuments) & "\Tickfiles"
 OutputPathText = mOutputPath
 
 disableInputDatabaseFields
 disableQtFields
 disableOutputDatabaseFields
 enableOutputFileFields
+enableContractDatabaseFields
 
 WriteTickDataCheck.Value = vbChecked
 WriteBarDataCheck.Value = vbChecked
@@ -1139,7 +1123,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Form_Terminate()
@@ -1147,14 +1131,107 @@ TerminateTWUtilities
 End Sub
 
 '================================================================================
-' InfoListener Interface Members
+' IBarOutputMonitor Interface Members
 '================================================================================
 
-Private Sub LogListener_finish()
+Private Sub IBarOutputMonitor_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "IBarOutputMonitor_NotifyEvent"
+On Error GoTo Err
+
+LogMessage TypeName(ev.Source) & " says: " & ev.EventMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarOutputMonitor_NotifyNotReady(ByVal pSource As Object)
+End Sub
+
+Private Sub IBarOutputMonitor_NotifyOutputFileClosed(ByVal pSource As Object)
+Const ProcName As String = "IBarOutputMonitor_NotifyOutputFileClosed"
+On Error GoTo Err
+
+LogMessage "Closed output barfile"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarOutputMonitor_NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
+Const ProcName As String = "IBarOutputMonitor_NotifyOutputFileCreated"
+On Error GoTo Err
+
+LogMessage "Created output barfile: " & pFilename
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IBarOutputMonitor_NotifyReady(ByVal pSource As Object)
+End Sub
+
+'================================================================================
+' ITickfileOutputMonitor Interface Members
+'================================================================================
+
+Private Sub ITickfileOutputMonitor_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyEvent"
+On Error GoTo Err
+
+LogMessage TypeName(ev.Source) & " says: " & ev.EventMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyNotReady(ByVal pSource As Object)
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Private Sub ITickfileOutputMonitor_NotifyOutputFileClosed(ByVal pSource As Object)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyOutputFileClosed"
+On Error GoTo Err
+
+LogMessage "Closed output tickfile"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
+Const ProcName As String = "ITickfileOutputMonitor_NotifyOutputFileCreated"
+On Error GoTo Err
+
+LogMessage "Created output tickfile: " & pFilename
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickfileOutputMonitor_NotifyReady(ByVal pSource As Object)
+
+End Sub
+
+'================================================================================
+' LogListener Interface Members
+'================================================================================
+
+Private Sub LogListener_finish()
+End Sub
+
+Private Sub LogListener_Notify(ByVal logrec As LogRecord)
 Const ProcName As String = "LogListener_Notify"
 On Error GoTo Err
 
@@ -1166,7 +1243,7 @@ StatusText.SelText = mLogFormatter.FormatRecord(logrec)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1188,50 +1265,37 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub ClearTickfileListButton_Click()
-Const ProcName As String = "ClearTickfileListButton_Click"
-On Error GoTo Err
-
-TickfileList.Clear
-ClearTickfileListButton.Enabled = False
-If Not mTickfileManager Is Nothing Then mTickfileManager.ClearTickfileSpecifiers
-mTickfiles.Clear
-ConvertButton.Enabled = False
-StopButton.Enabled = False
-mTickfilesSelected = False
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ConfigureButton_Click()
 Const ProcName As String = "ConfigureButton_Click"
 On Error GoTo Err
 
-SelectTickfilesButton.Enabled = setupServiceProviders
-TickfileList.Clear
+mSettingUpServiceProviders = True
+mServiceProviderSetupFailed = False
+
+clearServiceProviders
+setupServiceProviders
+TickfileOrganiser1.Clear
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ContractFromServiceProviderOption_Click()
 Const ProcName As String = "ContractFromServiceProviderOption_Click"
 On Error GoTo Err
 
+GetContractButton.Enabled = True
 ContractSpecBuilder1.SetFocus
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ContractInTickfileOption_Click()
@@ -1243,7 +1307,7 @@ GetContractButton.Enabled = False
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
@@ -1255,7 +1319,7 @@ GetContractButton.Enabled = False
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ContractSpecBuilder1_ready()
@@ -1271,7 +1335,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub ConvertButton_Click()
@@ -1279,36 +1343,35 @@ Const ProcName As String = "ConvertButton_Click"
 On Error GoTo Err
 
 If ContractFromServiceProviderOption And _
-    mContract Is Nothing _
+    mContractFuture Is Nothing _
 Then
     LogMessage "Can't convert - no contract details are available"
     Exit Sub
 End If
 
-SelectTickfilesButton.Enabled = False
-ClearTickfileListButton.Enabled = False
+TickfileOrganiser1.Enabled = False
 ConvertButton.Enabled = False
+AdjustTimestampsCheck.Enabled = False
+AdjustSecondsEndText.Enabled = False
+AdjustSecondsStartText.Enabled = False
+
 StopButton.Enabled = True
 ReplayProgressBar.Visible = True
 
-Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
-                                        IIf(WriteTickDataCheck = vbChecked, TickerOptions.TickerOptWriteTickData Or TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0) Or _
-                                        IIf(WriteBarDataCheck = vbChecked, TickerOptions.TickerOptWriteTradeBarData, 0))
-mTickfileManager.TickFileSpecifiers = mTickfiles
-If ContractFromServiceProviderOption Then mTickfileManager.defaultContract = mContract
-mTickfileManager.ReplaySpeed = 0
-If AdjustTimestampsCheck = vbChecked Then
-    mTickfileManager.TimestampAdjustmentStart = AdjustSecondsStartText
-    mTickfileManager.TimestampAdjustmentEnd = AdjustSecondsEndText
-End If
+Set mTickFileSpecifiers = TickfileOrganiser1.TickFileSpecifiers
+
+mTickfileIndex = 1
+
+playTickfile mTickfileIndex
+
+'mProcessingLastTickfile = False
 
 LogMessage "Tickfile conversion started"
-mTickfileManager.StartReplay
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub DatabaseInputOption_Click()
@@ -1322,7 +1385,7 @@ disableContractDatabaseFields
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub DatabaseOutputOption_Click()
@@ -1336,7 +1399,7 @@ disableContractDatabaseFields
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub FileInputOption_Click()
@@ -1354,7 +1417,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub FileOutputOption_Click()
@@ -1372,15 +1435,15 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub FormatList_Click()
-Dim i As Long
 Const ProcName As String = "FormatList_Click"
 On Error GoTo Err
 
 mOutputFormat = ""
+Dim i As Long
 For i = 0 To UBound(mSupportedOutputFormats)
     If FormatList.Text = mSupportedOutputFormats(i).Name Then
         mOutputFormat = mSupportedOutputFormats(i).FormalID
@@ -1391,26 +1454,28 @@ Next
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub GetContractButton_Click()
 Const ProcName As String = "GetContractButton_Click"
 On Error GoTo Err
 
-Set mContracts = mTradeBuildAPI.LoadContracts(ContractSpecBuilder1.ContractSpecifier)
+Set mContractFuture = FetchContract(ContractSpecBuilder1.ContractSpecifier, mContractStore)
+mFutureWaiter.Add mContractFuture, "Contract"
 LogMessage "Requesting contract details"
+
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub OutputPathButton_Click()
-Dim PathChooser As PathChooser
 Const ProcName As String = "OutputPathButton_Click"
 On Error GoTo Err
 
+Dim PathChooser As PathChooser
 Set PathChooser = New PathChooser
 PathChooser.path = OutputPathText.Text
 PathChooser.choose
@@ -1421,7 +1486,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub OutputPathText_Change()
@@ -1433,7 +1498,7 @@ mOutputPath = OutputPathText.Text
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub QtInputOption_Click()
@@ -1451,35 +1516,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub SelectTickfilesButton_Click()
-Dim tfs As TickfileSpecifier
-Dim userCancelled As Boolean
-
-Const ProcName As String = "SelectTickfilesButton_Click"
-On Error GoTo Err
-
-Set mTickfiles = SelectTickfiles(userCancelled)
-
-If userCancelled Then Exit Sub
-
-mTickfilesSelected = True
-
-TickfileList.Clear
-For Each tfs In mTickfiles
-    TickfileList.AddItem tfs.FileName
-Next
-ClearTickfileListButton.Enabled = True
-
-checkOkToConvert
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub StopButton_Click()
@@ -1488,14 +1525,33 @@ On Error GoTo Err
 
 ConvertButton.Enabled = True
 StopButton.Enabled = False
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-mTickfileManager.StopReplay
+
+mReplayController.StopReplay
+
+If Not mTickDataWriter Is Nothing Then mTickDataWriter.Finish
+If Not mHistDataWriter Is Nothing Then mHistDataWriter.Finish
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TickfileOrganiser1_TickfileCountChanged()
+Const ProcName As String = "TickfileOrganiser1_TickfileCountChanged"
+On Error GoTo Err
+
+If TickfileOrganiser1.TickfileCount = 0 Then
+    ConvertButton.Enabled = False
+    StopButton.Enabled = False
+Else
+    checkOkToConvert
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub WriteBarDataCheck_Click()
@@ -1507,7 +1563,7 @@ checkOkToConvert
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub WriteTickDataCheck_Click()
@@ -1519,283 +1575,215 @@ checkOkToConvert
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mContracts Event Handlers
+' mFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
-Const ProcName As String = "mContracts_ContractSpecifierInvalid"
+Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
 On Error GoTo Err
 
-LogMessage "Invalid contract specifier: " & _
-                    Replace(mContracts.ContractSpecifier.ToString, vbCrLf, "; ")
+If Not mSettingUpServiceProviders Then Exit Sub
 
-Exit Sub
+mSettingUpServiceProviders = False
 
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub mContracts_NoMoreContractDetails()
-Dim tfs As TickfileSpecifier
-Dim i As Long
-Dim j As Long
-Dim lSupportedInputTickfileFormats() As TradeBuild27.TickfileFormatSpecifier
-
-Const ProcName As String = "mContracts_NoMoreContractDetails"
-On Error GoTo Err
-
-If mContracts.Count = 0 Then
-    LogMessage "An invalid contract was specified"
+If mServiceProviderSetupFailed Then
+    LogMessage "Service provider configuration failed"
+    WriteTickDataCheck.Enabled = False
+    WriteBarDataCheck.Enabled = False
+    mServiceProviderSetupFailed = False
     Exit Sub
 End If
 
-If mContracts.Count > 1 Then
-    LogMessage "Unique contract not specified"
-    Exit Sub
-End If
-
-Set mContract = mContracts(1)
-ContractDetailsText = mContract.ToString
-
-LogMessage "Contract details received"
-If Not mRunningFromComandLine Then
-    GetContractButton.Enabled = True
-    Exit Sub
-End If
+TickfileOrganiser1.Initialise mInputTickfileStore, mContractStore
+TickfileOrganiser1.Enabled = True
     
-If mArguments.Switch("from") Then mNumberOfSessions = 1
-If mNumberOfSessions > (mStartingSession + 1) Then mNumberOfSessions = mStartingSession + 1
+If Not mOutputTickfileStore Is Nothing Then mSupportedOutputFormats = mOutputTickfileStore.SupportedFormats
 
-For i = 0 To mNumberOfSessions - 1
-    Set tfs = New TickfileSpecifier
-    mTickfiles.Add tfs
-    With tfs
-        Set .Contract = mContract
-        If mArguments.Switch("from") Then
-            .FromDate = mFromDate + mFromTime
-            If mArguments.Switch("to") Then
-                .ToDate = mToDate + mToTime
-            Else
-                .ToDate = DateAdd("n", 1, Now)
-            End If
-        Else
-            .EntireSession = True
-            .FromDate = DateAdd("d", -mStartingSession + i, Now)
-        End If
-            
-        lSupportedInputTickfileFormats = mTradeBuildAPI.SupportedInputTickfileFormats
-        For j = 0 To UBound(lSupportedInputTickfileFormats)
-            If lSupportedInputTickfileFormats(j).Name = mInFormatValue Then
-                .TickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
-                Exit For
-            End If
-        Next
-        
-        If .EntireSession Then
-            .FileName = "Session (" & .FromDate & ") " & _
-                            Replace(mContract.Specifier.ToString, vbCrLf, "; ")
-        Else
-            .FileName = .FromDate & "-" & .ToDate & " " & _
-                            Replace(mContract.Specifier.ToString, vbCrLf, "; ")
-        End If
-        TickfileList.AddItem .FileName
-    End With
+Dim i As Long
+For i = 0 To UBound(mSupportedOutputFormats)
+    FormatList.AddItem mSupportedOutputFormats(i).Name
 Next
 
-Set mTimer = CreateIntervalTimer(10)
-mTimer.StartTimer
+FormatList.ListIndex = 0
+
+LogMessage "Service provider configuration succeeded"
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-'================================================================================
-' mTicker Event Handlers
-'================================================================================
-
-Private Sub mTicker_TickfileWriterNotification(ev As TradeBuild27.WriterEventData)
-Const ProcName As String = "mTicker_TickfileWriterNotification"
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Action = WriterFileCreated Then LogMessage "Created output tickfile: " & ev.FileName
+If ev.ContinuationData = "Contract" Then
+    If ev.Future.IsFaulted Then
+        LogMessage "Contract fetch failed: " & ev.Future.ErrorMessage
+    ElseIf ev.Future.IsCancelled Then
+        LogMessage "Contract fetch cancelled"
+    Else
+        setContract mContractFuture
+    End If
+    Exit Sub
+End If
+
+If ev.ContinuationData = "Replay" Then
+    If Not ev.Future.IsAvailable Then Exit Sub
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    ReplayContractLabel.Caption = lContract.Specifier.ToString
+    Exit Sub
+End If
+
+Dim lDBClient As DBClient
+Dim lSetupFailed
+If ev.ContinuationData = ContinuationDataContractStore Then
+    If ev.Future.IsFaulted Then
+        LogMessage "Contract store setup failed: " & ev.Future.ErrorMessage
+        mServiceProviderSetupFailed = True
+    ElseIf ev.Future.IsCancelled Then
+        LogMessage "Contract store setup cancelled"
+        mServiceProviderSetupFailed = True
+    End If
+ElseIf ev.ContinuationData = ContinuationDataInputTickfileStore Then
+    If ev.Future.IsFaulted Then
+        LogMessage "Input tickfile store setup failed: " & ev.Future.ErrorMessage
+        mServiceProviderSetupFailed = True
+    ElseIf ev.Future.IsCancelled Then
+        LogMessage "Input tickfile store setup cancelled"
+        mServiceProviderSetupFailed = True
+    End If
+ElseIf ev.ContinuationData = ContinuationDataOutputHistDataStore Then
+    If ev.Future.IsFaulted Then
+        LogMessage "Output historical data store setup failed: " & ev.Future.ErrorMessage
+        mServiceProviderSetupFailed = True
+    ElseIf ev.Future.IsCancelled Then
+        LogMessage "Output historical data store setup cancelled"
+        mServiceProviderSetupFailed = True
+    Else
+        WriteBarDataCheck.Enabled = True
+    End If
+ElseIf ev.ContinuationData = ContinuationDataOutputTickfileStore Then
+    If ev.Future.IsFaulted Then
+        LogMessage "Output tickfile store setup failed: " & ev.Future.ErrorMessage
+        mServiceProviderSetupFailed = True
+    ElseIf ev.Future.IsCancelled Then
+        LogMessage "Output tickfile store setup cancelled"
+        mServiceProviderSetupFailed = True
+    Else
+        WriteTickDataCheck.Enabled = True
+    End If
+End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mTickfileManager Event Handlers
+' mReplayController Event Handlers
 '================================================================================
 
-Private Sub mTickfileManager_QueryReplayNextTickfile( _
-                ByVal tickfileIndex As Long, _
-                ByVal tickfileName As String, _
-                ByVal tickfileSizeBytes As Long, _
-                ByVal pContract As Contract, _
-                continueMode As ReplayContinueModes)
-Const ProcName As String = "mTickfileManager_QueryReplayNextTickfile"
+Private Sub mReplayController_NotifyEvent(ev As NotificationEventData)
+Const ProcName As String = "mReplayController_NotifyEvent"
 On Error GoTo Err
 
-ReplayProgressBar.Min = 0
-ReplayProgressBar.Max = 100
-ReplayProgressBar.Value = 0
-TickfileList.ListIndex = tickfileIndex - 1
-LogMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
-ReplayContractLabel.Caption = pContract.Specifier.ToString
-Set mEt = New ElapsedTimer
-mEt.StartTiming
+LogMessage TypeName(ev.Source) & " :" & ev.EventMessage
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mTickfileManager_ReplayCompleted()
-Const ProcName As String = "mTickfileManager_ReplayCompleted"
+Private Sub mReplayController_ReplayProgress( _
+                ByVal pTickfileTimestamp As Date, _
+                ByVal pEventsPlayed As Long, _
+                ByVal pPercentComplete As Long)
+Const ProcName As String = "mReplayController_ReplayProgress"
 On Error GoTo Err
 
-ConvertButton.Enabled = True
-StopButton.Enabled = False
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-ReplayProgressBar.Value = 0
-ReplayProgressBar.Visible = False
-ReplayContractLabel.Caption = ""
-ReplayProgressLabel.Caption = ""
-
-LogMessage "Tickfile conversion completed"
-
-If mRun Then Unload Me
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-
-End Sub
-
-Private Sub mTickfileManager_ReplayProgress( _
-                            ByVal tickfileTimestamp As Date, _
-                            ByVal eventsPlayed As Long, _
-                            ByVal percentComplete As Single)
-
-Const ProcName As String = "mTickfileManager_ReplayProgress"
-On Error GoTo Err
-
-ReplayProgressBar.Value = percentComplete
+ReplayProgressBar.Value = pPercentComplete
 ReplayProgressBar.Refresh
-ReplayProgressLabel.Caption = tickfileTimestamp & _
+ReplayProgressLabel.Caption = pTickfileTimestamp & _
                                 "  Processed " & _
-                                eventsPlayed & _
+                                pEventsPlayed & _
                                 " events" & _
-                                IIf(percentComplete >= 1, Format(percentComplete, " \(0\%\)"), "")
+                                IIf(pPercentComplete >= 1, Format(pPercentComplete, " \(0\%\)"), "")
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
-Const ProcName As String = "mTickfileManager_TickerAllocated"
+Private Sub mReplayController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
+Const ProcName As String = "mReplayController_TickfileCompleted"
 On Error GoTo Err
 
-Set mTicker = pTicker
-mTicker.OutputTickfilePath = mOutputPath
-mTicker.OutputTickfileFormat = mOutputFormat
+If Not mTickDataWriter Is Nothing Then mTickDataWriter.Finish
+If Not mHistDataWriter Is Nothing Then mHistDataWriter.Finish
 
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-Private Sub mTickfileManager_TickfileCompleted( _
-                ByVal tickfileIndex As Long, _
-                ByVal tickfileName As String)
 Dim elapsed As Single
-Const ProcName As String = "mTickfileManager_TickfileCompleted"
-On Error GoTo Err
-
 elapsed = mEt.ElapsedTimeMicroseconds
 
-LogMessage "Processed " & mTicker.TickNumber & " ticks in " & Format(elapsed / 1000000, "0.0") & " seconds"
-LogMessage "Ticks per second: " & CLng(mTicker.TickNumber / (elapsed / 1000000))
+LogMessage "Processed " & pEventsPlayed & " ticks in " & Format(elapsed / 1000000, "0.0") & " seconds"
+LogMessage "Ticks per second: " & CLng(pEventsPlayed / (elapsed / 1000000))
+
+If mTickfileIndex = mTickFileSpecifiers.Count Then
+    replayCompleted
+    TickfileOrganiser1.ListIndex = -1
+    TickfileOrganiser1.Enabled = True
+Else
+    mTickfileIndex = mTickfileIndex + 1
+    playTickfile mTickfileIndex
+End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
 ' mTimer Event Handlers
 '================================================================================
 
-Private Sub mTimer_TimerExpired()
+Private Sub mTimer_TimerExpired(ev As TimerExpiredEventData)
 Const ProcName As String = "mTimer_TimerExpired"
 On Error GoTo Err
 
-Set mTickfileManager = mTickers.CreateTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone Or _
-                                        IIf(mNoWriteTicks, 0, TickerOptions.TickerOptWriteTickData Or TickerOptions.TickerOptIncludeMarketDepthInTickfile) Or _
-                                        IIf(mNoWriteBars, 0, TickerOptions.TickerOptWriteTradeBarData))
-
-mTickfileManager.TickFileSpecifiers = mTickfiles
-mTickfileManager.ReplaySpeed = 0
-
-mTickfileManager.StartReplay
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-'================================================================================
-' mTradeBuildAPI Event Handlers
-'================================================================================
-
-Private Sub mTradeBuildAPI_Error( _
-                ev As ErrorEventData)
-Const ProcName As String = "mTradeBuildAPI_Error"
-On Error Resume Next
-
-handleFatalError
-End Sub
-
-Private Sub mTradeBuildAPI_Notification( _
-                ev As NotificationEventData)
-Dim spe As ServiceProviderError
-Const ProcName As String = "mTradeBuildAPI_Notification"
-On Error GoTo Err
-
-If ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
-    Set spe = mTradeBuildAPI.GetServiceProviderError
-    LogMessage "Service provider error in " & spe.ServiceProviderName & ": error " & spe.ErrorCode & ": " & spe.Message
-Else
-    LogMessage "Notify " & ev.EventCode & ": " & ev.EventMessage
-End If
+'Set lMarketDataManager = CreateTickDataManager(mInputTickfileStore, _
+'                                            mContractStore, _
+'                                            , _
+'                                            MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments, _
+'                                            , _
+'                                            , _
+'                                            0)
+'Set mDataSources = lMarketDataManager.DataSources
+'Set mTickfileManager = lMarketDataManager.TickfileManager
+'mTickfileManager.TickFileSpecifiers = mTickFileSpecifiers
+'
+'mTickfileManager.StartReplay
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' mUnhandledErrorHandler Event Handlers
 '@================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 handleFatalError
 End Sub
 
@@ -1815,7 +1803,7 @@ Private Sub checkOkToConvert()
 Const ProcName As String = "checkOkToConvert"
 On Error GoTo Err
 
-If mTickfilesSelected Then
+If TickfileOrganiser1.TickfileCount <> 0 Then
     If WriteTickDataCheck = vbChecked Or WriteBarDataCheck = vbChecked Then
         ConvertButton.Enabled = True
     Else
@@ -1828,7 +1816,14 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearServiceProviders()
+Set mInputTickfileStore = Nothing
+Set mOutputTickfileStore = Nothing
+Set mContractStore = Nothing
+Set mOutputHistDataStore = Nothing
 End Sub
 
 Public Sub disableContractDatabaseFields()
@@ -1844,7 +1839,7 @@ disableControl ContractPasswordText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableControl( _
@@ -1875,7 +1870,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub disableInputDatabaseFields()
@@ -1891,7 +1886,7 @@ disableControl PasswordInText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub disableOutputDatabaseFields()
@@ -1907,7 +1902,7 @@ disableControl PasswordOutText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub disableOutputFileFields()
@@ -1921,7 +1916,7 @@ disableControl OutputPathButton
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub disableQtFields()
@@ -1934,7 +1929,7 @@ disableControl QTPortText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub enableContractDatabaseFields()
@@ -1950,7 +1945,7 @@ enableControl ContractPasswordText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableControl( _
@@ -1981,7 +1976,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub enableInputDatabaseFields()
@@ -1997,7 +1992,7 @@ enableControl PasswordInText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub enableOutputDatabaseFields()
@@ -2013,7 +2008,7 @@ enableControl PasswordOutText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub enableOutputFileFields()
@@ -2027,7 +2022,7 @@ enableControl OutputPathButton
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub enableQtFields()
@@ -2040,7 +2035,7 @@ enableControl QTPortText
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getAppTitle() As String
@@ -2068,15 +2063,6 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
 ' entire development environment as well which can have undesirable side effects if other
 ' components are also loaded.)
 
-If mIsInDev Then
-    ' this tells TWUtilities that we've now handled this unhandled error. Not actually
-    ' needed here because the End statement will prevent return to TWUtilities
-    UnhandledErrorHandler.Handled = True
-    End
-Else
-    EndProcess
-End If
-
 End Sub
 
 Private Function inDev() As Boolean
@@ -2088,23 +2074,6 @@ inDev = True
 End Function
 
 Private Function ProcessCommandLineArgs() As Boolean
-Dim symbolValue As String
-Dim localSymbolValue As String
-Dim secTypeValue As String
-Dim monthValue As String
-Dim exchangeValue As String
-Dim currencyValue As String
-Dim strikevalue As String
-Dim rightValue As String
-Dim fromValue As String
-Dim toValue As String
-Dim sessionsValue As String
-Dim outFormatValue As String
-Dim QTServerValue As String
-Dim commaPosn As Long
-Dim contractSpec As ContractSpecifier
-
-
 Const ProcName As String = "ProcessCommandLineArgs"
 On Error GoTo Err
 
@@ -2159,14 +2128,11 @@ GetLogger("log").AddLogListener Me
 
 LogMessage "Log file: " & DefaultLogFileName(Command)
 
-If mArguments.Switch("noui") Then
-    mNoUI = True
-End If
+If mArguments.Switch("noui") Then mNoUI = True
 
-If mArguments.Switch("run") Then
-    mRun = True
-End If
+If mArguments.Switch("run") Then mRun = True
 
+Dim symbolValue As String
 symbolValue = mArguments.Arg(0)
 If symbolValue = "" Then
     If mNoUI Then
@@ -2179,23 +2145,31 @@ If symbolValue = "" Then
     End If
 End If
 
+Dim localSymbolValue As String
 localSymbolValue = mArguments.Arg(1)
 If UCase(localSymbolValue) = "NOLOCALSYMBOL" Then localSymbolValue = ""
 
+Dim secTypeValue As String
 secTypeValue = mArguments.Arg(2)
 
+Dim monthValue As String
 monthValue = mArguments.Arg(3)
 If UCase$(monthValue) = "NOMONTH" Then monthValue = ""
 
+Dim exchangeValue As String
 exchangeValue = mArguments.Arg(4)
 
+Dim currencyValue As String
 currencyValue = mArguments.Arg(5)
 
+Dim strikevalue As String
 strikevalue = mArguments.Arg(6)
 
+Dim rightValue As String
 rightValue = mArguments.Arg(7)
 
 If mArguments.Switch("from") Then
+    Dim fromValue As String
     fromValue = mArguments.SwitchValue("from")
     If IsNumeric(fromValue) And _
         (Len(fromValue) = 8 _
@@ -2223,6 +2197,7 @@ If mArguments.Switch("from") Then
 End If
 
 If mArguments.Switch("from") And mArguments.Switch("to") Then
+    Dim toValue As String
     toValue = mArguments.SwitchValue("to")
     If IsNumeric(toValue) And _
         (Len(toValue) = 8 _
@@ -2251,7 +2226,9 @@ End If
 
 mStartingSession = 1
 If mArguments.Switch("sessions") Then
+    Dim sessionsValue As String
     sessionsValue = mArguments.SwitchValue("sessions")
+    
     If Len(sessionsValue) = 0 Then
         MsgBox "Error - sessions should be /sessions:n[,m]"
         ProcessCommandLineArgs = False
@@ -2289,7 +2266,10 @@ If mArguments.Switch("outpath") Then
 End If
 
 If mArguments.Switch("qtserver") Then
+    Dim QTServerValue As String
     QTServerValue = mArguments.SwitchValue("qtserver")
+    
+    Dim commaPosn As Long
     commaPosn = InStr(1, QTServerValue, ",")
     Select Case commaPosn
     Case 0
@@ -2317,6 +2297,7 @@ End If
 
 If mArguments.Switch("informat") Then mInFormatValue = mArguments.SwitchValue("informat")
 
+Dim outFormatValue As String
 If mArguments.Switch("outformat") Then
     outFormatValue = mArguments.SwitchValue("outformat")
     FormatList.Text = outFormatValue
@@ -2337,6 +2318,7 @@ End If
 If symbolValue <> "" Then
     mRunningFromComandLine = True
     
+    Dim contractSpec As ContractSpecifier
     Set contractSpec = CreateContractSpecifier( _
                                 localSymbolValue, _
                                 symbolValue, _
@@ -2346,7 +2328,7 @@ If symbolValue <> "" Then
                                 monthValue, _
                                 IIf(strikevalue = "", 0, strikevalue), _
                                 OptionRightFromString(rightValue))
-    Set mContracts = mTradeBuildAPI.LoadContracts(contractSpec)
+    Set mContractFuture = FetchContract(contractSpec, mContractStore)
 
 End If
 
@@ -2355,37 +2337,184 @@ ProcessCommandLineArgs = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function setupContractDatabaseAsContractSP() As Boolean
-Dim sp As Object
+Private Sub replayCompleted()
+Const ProcName As String = "replayCompleted"
+On Error GoTo Err
+
+ConvertButton.Enabled = True
+StopButton.Enabled = False
+
+AdjustTimestampsCheck.Enabled = True
+AdjustSecondsEndText.Enabled = True
+AdjustSecondsStartText.Enabled = True
+
+ReplayProgressBar.Value = 0
+ReplayProgressBar.Visible = False
+ReplayContractLabel.Caption = ""
+ReplayProgressLabel.Caption = ""
+
+LogMessage "Tickfile conversion completed"
+
+If mRun Then Unload Me
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub playTickfile(ByVal pTickfileIndex As Long)
+Const ProcName As String = "playTickfile"
+On Error GoTo Err
+
+Dim lAdjustSecondsStart As Double
+Dim lAdjustSecondsEnd As Double
+If AdjustTimestampsCheck = vbChecked Then
+    lAdjustSecondsStart = CDbl(AdjustSecondsStartText)
+    lAdjustSecondsEnd = CDbl(AdjustSecondsEndText)
+End If
+
+Dim lTickfileSpec As TickfileSpecifier
+Set lTickfileSpec = mTickFileSpecifiers(pTickfileIndex)
+
+Dim lTickfileSpecs As New TickFileSpecifiers
+lTickfileSpecs.Add lTickfileSpec
+
+LogMessage "Converting " & lTickfileSpec.FileName
+
+ReplayProgressBar.Min = 0
+ReplayProgressBar.Max = 100
+ReplayProgressBar.Value = 0
+TickfileOrganiser1.ListIndex = pTickfileIndex - 1
+
+Set mEt = New ElapsedTimer
+mEt.StartTiming
+
+Dim lMarketDataManager As TickfileDataManager
+Set lMarketDataManager = CreateTickDataManager(lTickfileSpecs, _
+                                            mInputTickfileStore, _
+                                            mContractStore, _
+                                            , _
+                                            MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments, _
+                                            , _
+                                            , _
+                                            0, _
+                                            , _
+                                            lAdjustSecondsStart, _
+                                            lAdjustSecondsEnd)
+Set mReplayController = lMarketDataManager.ReplayController
+mFutureWaiter.Add mReplayController.TickStream(0).ContractFuture, "Replay"
+
+Dim lDataSource As IMarketDataSource
+Set lDataSource = lMarketDataManager.CreateMarketDataSource(mReplayController.TickStream(0).ContractFuture, False)
+lDataSource.StartMarketData
+
+If Not mOutputTickfileStore Is Nothing And WriteTickDataCheck.Value = vbChecked Then
+    Set mTickDataWriter = RecordTickData(lDataSource, mOutputTickfileStore, Me, mOutputFormat, mOutputPath)
+End If
+
+If Not mOutputHistDataStore Is Nothing And WriteBarDataCheck.Value = vbChecked Then
+    Set mHistDataWriter = RecordHistoricalBars(mStudyLibraryManager, lDataSource, mOutputHistDataStore, HistDataWriteOptionWriteTradeBars, 0, Me)
+End If
+
+mReplayController.TickStream(0).Start
+mReplayController.StartReplay
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setContract(ByVal pContractFuture As IFuture)
+'Const ProcName As String = "setContract"
+'On Error GoTo Err
+'
+'LogMessage "Contract details received"
+'
+'Dim lContract As IContract
+'Set lContract = pContractFuture.Value
+'ContractDetailsText = lContract.ToString
+'
+'If Not mRunningFromComandLine Then
+'    GetContractButton.Enabled = True
+'    Exit Sub
+'End If
+'
+'If mArguments.Switch("from") Then mNumberOfSessions = 1
+'If mNumberOfSessions > (mStartingSession + 1) Then mNumberOfSessions = mStartingSession + 1
+'
+'Dim i As Long
+'Dim j As Long
+'Dim lSupportedInputTickfileFormats() As TickfileFormatSpecifier
+'
+'For i = 0 To mNumberOfSessions - 1
+'    Dim tfs As New TickfileSpecifier
+'    mTickFileSpecifiers.Add tfs
+'    With tfs
+'        Set .ContractFuture = pContractFuture
+'        If mArguments.Switch("from") Then
+'            .FromDate = mFromDate + mFromTime
+'            If mArguments.Switch("to") Then
+'                .ToDate = mToDate + mToTime
+'            Else
+'                .ToDate = DateAdd("n", 1, Now)
+'            End If
+'        Else
+'            .EntireSession = True
+'            .FromDate = DateAdd("d", -mStartingSession + i, Now)
+'        End If
+'
+'        lSupportedInputTickfileFormats = mInputTickfileStore.SupportedFormats
+'        For j = 0 To UBound(lSupportedInputTickfileFormats)
+'            If lSupportedInputTickfileFormats(j).Name = mInFormatValue Then
+'                .TickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
+'                Exit For
+'            End If
+'        Next
+'
+'        If .EntireSession Then
+'            .FileName = "Session (" & .FromDate & ") " & _
+'                            Replace(lContract.Specifier.ToString, vbCrLf, "; ")
+'        Else
+'            .FileName = .FromDate & "-" & .ToDate & " " & _
+'                            Replace(lContract.Specifier.ToString, vbCrLf, "; ")
+'        End If
+'        TickfileList.AddItem .FileName
+'    End With
+'Next
+'
+'Set mTimer = CreateIntervalTimer(10)
+'mTimer.StartTimer
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub setupContractDatabaseAsContractSP()
 Const ProcName As String = "setupContractDatabaseAsContractSP"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.ContractInfoSrvcProvider", _
-                            True, _
-                            "Database Name=" & ContractDatabaseText & _
-                            ";Database Type=" & ContractDbTypeCombo & _
-                            ";Server=" & ContractServerText & _
-                            ";User name=" & ContractUsernameText & _
-                            ";Password=" & ContractPasswordText, _
-                            "Contracts database", _
-                            "Contract database")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupContractDatabaseAsContractSP = True
-Else
-    LogMessage "Can't configure Contract Info Service Provider"
-End If
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                                DatabaseTypeFromString(ContractDbTypeCombo), _
+                                ContractServerText, _
+                                ContractDatabaseText, _
+                                ContractUsernameText, _
+                                ContractPasswordText)
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataContractStore
+Set mContractStore = lDBClient.ContractStore
 
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+LogMessage "Can't configure Contract Info Service Provider"
+End Sub
 
 Private Sub setupDbTypeCombos()
 Const ProcName As String = "setupDbTypeCombos"
@@ -2406,337 +2535,212 @@ ContractDbTypeCombo.ListIndex = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setupInDatabase() As Boolean
-Dim sp As Object
 Const ProcName As String = "setupInDatabase"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.TickfileServiceProvider", _
-                            True, _
-                            "Database Name=" & DatabaseInText & _
-                            ";Database Type=" & DbInTypeCombo & _
-                            ";Server=" & DbInServerText & _
-                            ";User name=" & UsernameInText & _
-                            ";Password=" & PasswordInText & _
-                            ";Access mode=ReadOnly", _
-                            "Input tick database", _
-                            "Historical tick data input from database")
-                                                        
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupInDatabase = True
-Else
-    LogMessage "Can't configure Input Database Service Provider"
-End If
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                            DatabaseTypeFromString(DbInTypeCombo), _
+                            DbInServerText, _
+                            DatabaseInText, _
+                            UsernameInText, _
+                            PasswordInText)
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataInputTickfileStore
+Set mInputTickfileStore = lDBClient.TickfileStore
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+LogMessage "Can't configure Input Database Service Provider"
+setupInDatabase = False
 End Function
 
-Private Function setupInDatabaseAsContractSP() As Boolean
-Dim sp As Object
+Private Sub setupInDatabaseAsContractSP()
 Const ProcName As String = "setupInDatabaseAsContractSP"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.ContractInfoSrvcProvider", _
-                            True, _
-                            "Database Name=" & DatabaseInText & _
-                            ";Database Type=" & DbInTypeCombo & _
-                            ";Server=" & DbInServerText & _
-                            ";User name=" & UsernameInText & _
-                            ";Password=" & PasswordInText, _
-                            "Contract database", _
-                            "Contract data from input database")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupInDatabaseAsContractSP = True
-Else
-    LogMessage "Can't configure Contract Info Service Provider"
-End If
-
-Exit Function
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                            DatabaseTypeFromString(DbInTypeCombo), _
+                            DbInServerText, _
+                            DatabaseInText, _
+                            UsernameInText, _
+                            PasswordInText)
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataContractStore
+Set mContractStore = lDBClient.ContractStore
+    
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+LogMessage "Can't configure Contract Info Service Provider"
+End Sub
 
 Private Function setupInFileSP() As Boolean
-Dim sp As Object
 Const ProcName As String = "setupInFileSP"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TickfileSP27.TickfileServiceProvider", _
-                            True, _
-                            "Access mode=ReadOnly", _
-                            "Input tickfiles", _
-                            "Historical tick data input from files")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupInFileSP = True
-Else
-    LogMessage "Can't configure input Tickfile Service Provider"
-End If
+Set mInputTickfileStore = CreateTickfileStore(TickfileReadOnly)
+
+setupInFileSP = True
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+LogMessage "Can't configure input Tickfile Service Provider"
 End Function
 
-Private Function setupOutBarDatabase() As Boolean
-Dim sp As Object
+Private Sub setupOutBarDatabase()
 Const ProcName As String = "setupOutBarDatabase"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.HistDataServiceProvider", _
-                            True, _
-                            "Database Name=" & DatabaseOutText & _
-                            ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & DbOutServerText & _
-                            ";User name=" & UsernameOutText & _
-                            ";Password=" & PasswordOutText & _
-                            ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes"), _
-                            "Output bar database", _
-                            "Historical bar data output to database")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupOutBarDatabase = True
-Else
-    LogMessage "Can't configure Historic Bar Data Service Provider"
-End If
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                                DatabaseTypeFromString(DbOutTypeCombo), _
+                                DbOutServerText, _
+                                DatabaseOutText, _
+                                UsernameOutText, _
+                                PasswordOutText, _
+                                pUseSynchronousReads:=False, _
+                                pUseSynchronousWrites:=IIf(AsyncWritesCheck = vbChecked, False, True))
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataOutputHistDataStore
+Set mOutputHistDataStore = lDBClient.HistoricalDataStore
 
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+LogMessage "Can't configure Historic Bar Data Service Provider"
+End Sub
 
-Private Function setupOutTickDatabase() As Boolean
-Dim sp As Object
+Private Sub setupOutTickDatabase()
 Const ProcName As String = "setupOutTickDatabase"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.TickfileServiceProvider", _
-                            True, _
-                            "Database Name=" & DatabaseOutText & _
-                            ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & DbOutServerText & _
-                            ";User name=" & UsernameOutText & _
-                            ";Password=" & PasswordOutText & _
-                            ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes") & _
-                            ";Access mode=WriteOnly", _
-                            "Output tick database", _
-                            "Historical tick data output to database")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupOutTickDatabase = True
-Else
-    LogMessage "Can't configure Historic Tick Data Service Provider"
-End If
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                                DatabaseTypeFromString(DbOutTypeCombo), _
+                                DbOutServerText, _
+                                DatabaseOutText, _
+                                UsernameOutText, _
+                                PasswordOutText, _
+                                pUseSynchronousReads:=False, _
+                                pUseSynchronousWrites:=IIf(AsyncWritesCheck = vbChecked, False, True))
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataOutputTickfileStore
+Set mOutputTickfileStore = lDBClient.TickfileStore
 
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+LogMessage "Can't configure Historic Tick Data Service Provider"
+End Sub
 
-Private Function setupOutTickDatabaseAsContractSP() As Boolean
-Dim sp As Object
+Private Sub setupOutTickDatabaseAsContractSP()
 Const ProcName As String = "setupOutTickDatabaseAsContractSP"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TBInfoBase27.ContractInfoSrvcProvider", _
-                            True, _
-                            "Database Name=" & DatabaseOutText & _
-                            ";Database Type=" & DbOutTypeCombo & _
-                            ";Server=" & DbOutServerText & _
-                            ";User name=" & UsernameOutText & _
-                            ";Password=" & PasswordOutText, _
-                            "Contract database", _
-                            "Contract data from output database")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupOutTickDatabaseAsContractSP = True
-Else
-    LogMessage "Can't configure Contract Info Service Provider"
-End If
+Dim lDBClient As DBClient
+Set lDBClient = CreateTradingDBClient( _
+                                DatabaseTypeFromString(DbOutTypeCombo), _
+                                DbOutServerText, _
+                                DatabaseOutText, _
+                                UsernameOutText, _
+                                PasswordOutText, _
+                                pUseSynchronousReads:=False, _
+                                pUseSynchronousWrites:=IIf(AsyncWritesCheck = vbChecked, False, True))
+mFutureWaiter.Add lDBClient.TradingDBFuture, ContinuationDataContractStore
+Set mContractStore = lDBClient.ContractStore
 
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+LogMessage "Can't configure Contract Info Service Provider"
+End Sub
 
 Private Function setupOutFileSP() As Boolean
-Dim sp As Object
 Const ProcName As String = "setupOutFileSP"
 On Error GoTo Err
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "TickfileSP27.TickfileServiceProvider", _
-                            True, _
-                            "Access mode=WriteOnly", _
-                            "Output tickfiles", _
-                            "Historical tick data output to files")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupOutFileSP = True
-Else
-    LogMessage "Can't configure output Tickfile Service Provider"
-End If
+Set mOutputTickfileStore = CreateTickfileStore(TickfileWriteOnly)
+
+
+setupOutFileSP = True
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+LogMessage "Can't configure output Tickfile Service Provider"
 End Function
 
-Private Function setupQtSP() As Boolean
-Dim sp As Object
-Const ProcName As String = "setupQtSP"
-On Error GoTo Err
+'Private Function setupQtSP() As Boolean
+'Dim sp As Object
+'Const ProcName As String = "setupQtSP"
+'On Error GoTo Err
+'
+'On Error Resume Next
+'Set sp = mTradeBuildAPI.ServiceProviders.Add( _
+'                            "QTSP27.QTTickfileServiceProvider", _
+'                            True, _
+'                            "Provider Key=QTIB" & _
+'                            ";Server=" & QTServerText & _
+'                            ";Port=" & QTPortText & _
+'                            ";Password=" & _
+'                            ";Connection Retry Interval Secs=10" & _
+'                            ";Keep connection=true", _
+'                            "QuoteTracker input tickdata", _
+'                            "Historical tick data input from QuoteTracker")
+'On Error GoTo Err
+'If Not sp Is Nothing Then
+'    setupQtSP = True
+'Else
+'    LogMessage "Can't configure QuoteTracker Service Provider"
+'End If
+'
+'Exit Function
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Function
 
-On Error Resume Next
-Set sp = mTradeBuildAPI.ServiceProviders.Add( _
-                            "QTSP27.QTTickfileServiceProvider", _
-                            True, _
-                            "Provider Key=QTIB" & _
-                            ";Server=" & QTServerText & _
-                            ";Port=" & QTPortText & _
-                            ";Password=" & _
-                            ";Connection Retry Interval Secs=10" & _
-                            ";Keep connection=true", _
-                            "QuoteTracker input tickdata", _
-                            "Historical tick data input from QuoteTracker")
-On Error GoTo Err
-If Not sp Is Nothing Then
-    setupQtSP = True
-Else
-    LogMessage "Can't configure QuoteTracker Service Provider"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function setupServiceProviders() As Boolean
-Dim i As Long
-
+Private Sub setupServiceProviders()
 Const ProcName As String = "setupServiceProviders"
 On Error GoTo Err
 
-setupServiceProviders = True
-
-mTradeBuildAPI.ServiceProviders.RemoveAll
 FormatList.Clear
 
 WriteTickDataCheck.Enabled = False
 WriteBarDataCheck.Enabled = False
 
-If FileInputOption Then
-    If Not setupInFileSP Then
-        setupServiceProviders = False
-    End If
-End If
-
-If FileOutputOption Then
-    If Not setupOutFileSP Then
-        setupServiceProviders = False
-    End If
-End If
-
-If (FileInputOption Or QtInputOption) And FileOutputOption Then
-    If Not setupContractDatabaseAsContractSP Then
-        setupServiceProviders = False
-    End If
-End If
-
-If DatabaseOutputOption Then
-    If Not setupOutTickDatabaseAsContractSP Then
-        setupServiceProviders = False
-    End If
-End If
+If FileInputOption Then setupInFileSP
+If FileOutputOption Then setupOutFileSP
+If (FileInputOption Or QtInputOption) And FileOutputOption Then setupContractDatabaseAsContractSP
+If DatabaseOutputOption Then setupOutTickDatabaseAsContractSP
 
 If FileOutputOption Then
     WriteTickDataCheck.Enabled = True
     WriteBarDataCheck = vbUnchecked
 End If
 
-If Not (FileInputOption Or QtInputOption) And FileOutputOption Then
-    If Not setupInDatabaseAsContractSP Then
-        setupServiceProviders = False
-    End If
-End If
-
-If DatabaseInputOption Then
-    If Not setupInDatabase Then
-        setupServiceProviders = False
-    End If
-    
-End If
-
+If Not (FileInputOption Or QtInputOption) And FileOutputOption Then setupInDatabaseAsContractSP
+If DatabaseInputOption Then setupInDatabase
 If DatabaseOutputOption Then
-    If Not setupOutTickDatabase Then
-        setupServiceProviders = False
-    Else
-        WriteTickDataCheck.Enabled = True
-        WriteBarDataCheck.Enabled = True
-    End If
-
-    If Not setupOutBarDatabase Then
-        setupServiceProviders = False
-    End If
-    
+    setupOutTickDatabase
+    setupOutBarDatabase
 End If
 
-If QtInputOption Then
-    If Not setupQtSP Then
-        setupServiceProviders = False
-    End If
-End If
+'If QtInputOption Then
+'    If Not setupQtSP Then
+'        setupServiceProviders = False
+'    End If
+'End If
 
-If Not setupServiceProviders Then
-    LogMessage "Service provider configuration failed"
-    WriteTickDataCheck.Enabled = False
-    WriteBarDataCheck.Enabled = False
-    Exit Function
-End If
-
-mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
-
-For i = 0 To UBound(mSupportedOutputFormats)
-    FormatList.AddItem mSupportedOutputFormats(i).Name
-Next
-
-FormatList.ListIndex = 0
-
-LogMessage "Service provider configuration succeeded"
-
-Exit Function
+Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub unpackDateTimeString( _
                             ByVal timestampString As String, _
@@ -2757,7 +2761,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

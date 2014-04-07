@@ -60,6 +60,18 @@ Private Const ModuleName                            As String = "ITickStream"
 ' Properties
 '@================================================================================
 
+Public Property Get ClockFuture() As IFuture
+End Property
+
+Public Property Get ContractFuture() As IFuture
+End Property
+
+Public Property Get State() As TickStreamStates
+End Property
+
+Public Property Get StreamId() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -67,7 +79,19 @@ Private Const ModuleName                            As String = "ITickStream"
 Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
 End Sub
 
+Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+End Sub
+
 Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
+End Sub
+
+Public Sub Finish()
+End Sub
+
+Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+End Sub
+
+Public Sub Start()
 End Sub
 
 '@================================================================================

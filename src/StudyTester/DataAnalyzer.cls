@@ -91,7 +91,7 @@ mDataValues(mDataValuesMaxIndex) = value
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Analyze() As Double
@@ -111,12 +111,12 @@ For i = 0 To mDataValuesMaxIndex - 1
     If diff <> 0 And diff < lMinimumDifference Then lMinimumDifference = diff
 Next
 
-Analyze = lMinimumDifference
+Analyze = Round(lMinimumDifference, 6)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

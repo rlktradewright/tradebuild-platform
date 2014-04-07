@@ -30,10 +30,17 @@ Implements Task
 
 Event NotifyEvent(ev As NotificationEventData)
 
+Event ReplayPaused()
+
 Event ReplayProgress( _
                 ByVal pTickfileTimestamp As Date, _
                 ByVal pEventsPlayed As Long, _
                 ByVal pPercentComplete As Long)
+
+Event ReplayResumed()
+
+Event ReplayStarted()
+Event ReplayStopped()
 
 Event TickfileCompleted( _
                 ByRef ev As TickfileEventData, _
@@ -343,6 +350,8 @@ For i = 0 To UBound(mPlayers)
     If mPlayers(i).State = TickfileStatePlaying Then mPlayers(i).PauseReplay
 Next
 
+RaiseEvent ReplayPaused
+
 Exit Sub
 
 Err:
@@ -376,6 +385,9 @@ For i = 0 To UBound(mPlayers)
 Next
 
 mTickScheduler.ResumeReplay
+
+RaiseEvent ReplayResumed
+
 Exit Sub
 
 Err:
@@ -393,6 +405,8 @@ mReplayInProgress = True
 If mNumberOfPlayersAwaitingReady = 0 Then mTickScheduler.StartScheduling
 
 Set StartReplay = StartTask(Me, PriorityNormal)
+
+RaiseEvent ReplayStarted
 
 Exit Function
 
@@ -414,6 +428,8 @@ Next
 
 mTickScheduler.StopScheduling
 mTaskContext.Finish Empty, True
+
+RaiseEvent ReplayStopped
 
 Exit Sub
 

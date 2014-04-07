@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#1.0#0"; "StudiesUI27.ocx"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#1.0#0"; "ChartSkil27.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#138.0#0"; "StudiesUI27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#167.0#0"; "ChartSkil27.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.7"
@@ -75,32 +75,32 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "&Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ErrorText"
+      Tab(1).Control(0)=   "Label2"
       Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "StudyConfigurer1"
+      Tab(1).Control(1)=   "Label1"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "RemoveLibButton"
+      Tab(1).Control(2)=   "Label19"
       Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "StudyLibraryList"
+      Tab(1).Control(3)=   "StudiesCombo"
       Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "AddLibButton"
+      Tab(1).Control(4)=   "LibToAddText"
       Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "LibToAddText"
+      Tab(1).Control(5)=   "AddLibButton"
       Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "StudiesCombo"
+      Tab(1).Control(6)=   "StudyLibraryList"
       Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "Label19"
+      Tab(1).Control(7)=   "RemoveLibButton"
       Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "Label1"
+      Tab(1).Control(8)=   "StudyConfigurer1"
       Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "Label2"
+      Tab(1).Control(9)=   "ErrorText"
       Tab(1).Control(9).Enabled=   0   'False
       Tab(1).ControlCount=   10
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ChartToolbar1"
-      Tab(2).Control(1)=   "Chart1"
+      Tab(2).Control(0)=   "Chart1"
+      Tab(2).Control(1)=   "ChartToolbar1"
       Tab(2).ControlCount=   2
       Begin VB.TextBox ErrorText 
          BackColor       =   &H8000000F&
@@ -130,7 +130,6 @@ Begin VB.Form StudyTestForm
          Width           =   12375
          _ExtentX        =   21828
          _ExtentY        =   14843
-         ChartBackColor  =   6566450
       End
       Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
          Height          =   5655
@@ -311,11 +310,11 @@ Private Const ModuleName                As String = "StudyTestForm"
 
 Private Const BuiltInStudyLib           As String = "CmnStudiesLib27.StudyLib"
 
-Private Const PriceRegionName As String = "$price"
-Private Const VolumeRegionName As String = "$volume"
+Private Const PriceRegionName           As String = "$price"
+Private Const VolumeRegionName          As String = "$volume"
 
-Private Const InputValuePrice As String = "Price"
-Private Const InputValueVolume As String = "Total volume"
+Private Const InputValuePrice           As String = "Price"
+Private Const InputValueVolume          As String = "Total volume"
 
 '================================================================================
 ' Enums
@@ -342,22 +341,24 @@ End Enum
 Private WithEvents mUnhandledErrorHandler As UnhandledErrorHandler
 Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
 
-Private mIsStudySet As Boolean
+Private mIsStudySet                     As Boolean
 
-Private mChartManager As ChartManager
-Private mStudyManager As StudyManager
-Private mSourceStudy As Study
-Private mBarsStudy As Study
-Private mInitialStudyConfigs As StudyConfigurations
+Private mChartManager                   As ChartManager
+Private mStudyLibraryManager            As New StudyLibraryManager
+Private mBarFormatterLibManager         As New BarFormatterLibManager
+Private mStudyManager                   As StudyManager
+Private mSourceStudy                    As IStudy
+Private mBarsStudy                      As IStudy
+Private mInitialStudyConfigs            As StudyConfigurations
 
-Private mPriceInputHandle As Long
-Private mVolumeInputHandle As Long
+Private mPriceInputHandle               As Long
+Private mVolumeInputHandle              As Long
 
-Private mIsInDev As Boolean
+Private mIsInDev                        As Boolean
 
-Private mBars As Bars
+Private mBars                           As Bars
 
-Private mGrid As GridManager
+Private mGrid                           As GridManager
 
 '================================================================================
 ' Form Event Handlers
@@ -373,6 +374,8 @@ Set mUnhandledErrorHandler = UnhandledErrorHandler
 ApplicationGroupName = "TradeWright"
 ApplicationName = App.Title & "-V" & App.Major & "-" & App.Minor
 SetupDefaultLogging Command
+
+Set mStudyManager = mStudyLibraryManager.CreateStudyManager
 End Sub
 
 Private Sub Form_Load()
@@ -416,7 +419,7 @@ Private Sub LogListener_Finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal Logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal Logrec As LogRecord)
 ErrorText = CStr(Logrec.Data)
 End Sub
 
@@ -465,16 +468,7 @@ TestDataFilenameText = CommonDialog1.FileName
 Exit Sub
 
 Err:
-Dim errNum As Long: errNum = Err.Number
-Dim errDesc As String: errDesc = Err.Description
-
-mGrid.Redraw = True
-Chart1.EnableDrawing
-
-Screen.MousePointer = MousePointerConstants.vbDefault
-
-MsgBox "Can't load data file: " & TestDataFilenameText & vbCrLf & _
-        "Error " & errNum & ": " & errDesc
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub MinimumPriceTickText_KeyPress(KeyAscii As Integer)
@@ -497,7 +491,7 @@ On Error GoTo Err
 StudyLibraryList.RemoveItem StudyLibraryList.ListIndex
 RemoveLibButton.Enabled = False
 
-RemoveAllStudyLibraries
+mStudyLibraryManager.RemoveAllStudyLibraries
 addStudyLibraries
 
 Exit Sub
@@ -554,12 +548,12 @@ regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
 
 StudyConfigurer1.Initialise Chart1.Controller, _
-                            GetStudyDefinition(StudiesCombo), _
+                            mStudyLibraryManager.GetStudyDefinition(StudiesCombo), _
                             "", _
                             regionNames, _
                             mChartManager.BaseStudyConfiguration, _
                             Nothing, _
-                            GetStudyDefaultParameters(StudiesCombo), _
+                            mStudyLibraryManager.GetStudyDefaultParameters(StudiesCombo), _
                             False
 mIsStudySet = True
 If Not mBars Is Nothing Then TestButton.Enabled = True
@@ -575,8 +569,8 @@ Const ProcName As String = "TestButton_Click"
 Dim failPoint As String
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils27.Bar
-Dim studyToTest As Study
+Dim lBar As BarUtils27.Bar
+Dim studyToTest As IStudy
 Dim testStudyConfig As StudyConfiguration
 Dim addTestStudyToSource As Boolean
 Dim regionNames(1) As String
@@ -613,12 +607,12 @@ mChartManager.StartStudy studyToTest
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
 StudyConfigurer1.Initialise Chart1.Controller, _
-                            GetStudyDefinition(StudiesCombo), _
+                            mStudyLibraryManager.GetStudyDefinition(StudiesCombo), _
                             "", _
                             regionNames, _
                             mChartManager.BaseStudyConfiguration, _
                             testStudyConfig, _
-                            GetStudyDefaultParameters(StudiesCombo), _
+                            mStudyLibraryManager.GetStudyDefaultParameters(StudiesCombo), _
                             False
 
 failPoint = "setting up the Study Value grid"
@@ -654,8 +648,7 @@ LoadData
 Exit Sub
 
 Err:
-MsgBox "Can't load data file: " & TestDataFilenameText & vbCrLf & _
-        "Error " & Err.Number & ": " & Err.Description
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub TestDataGrid_DblClick()
@@ -667,7 +660,7 @@ End Sub
 ' mUnhandledErrorHandler Event Handlers
 '================================================================================
 
-Private Sub mUnhandledErrorHandler_UnhandledError(ev As TWUtilities30.ErrorEventData)
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
 On Error Resume Next    ' ignore any further errors that might arise
 
 
@@ -687,12 +680,12 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
 ' development environment as well which can have undesirable side effects if other
 ' components are also loaded.)
 
-If mIsInDev Then
-    mUnhandledErrorHandler.Handled = True
-    End
-Else
-    EndProcess
-End If
+'If mIsInDev Then
+'    mUnhandledErrorHandler.Handled = True
+'    End
+'Else
+'    EndProcess
+'End If
 
 End Sub
 
@@ -724,24 +717,23 @@ addStudyLibToList = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 Private Sub addStudyLibraries()
-Dim i As Long
-Dim lAvailableStudies() As StudyListEntry
-
 Const ProcName As String = "addStudyLibraries"
 On Error GoTo Err
 
-RemoveAllStudyLibraries
+mStudyLibraryManager.RemoveAllStudyLibraries
 
-AddStudyLibrary BuiltInStudyLib, True, "Built-in"
+mStudyLibraryManager.AddStudyLibrary BuiltInStudyLib, True, "Built-in"
 
+Dim i As Long
 For i = 0 To StudyLibraryList.ListCount - 1
-    AddStudyLibrary StudyLibraryList.List(i), True
+    mStudyLibraryManager.AddStudyLibrary StudyLibraryList.List(i), True
 Next
 
-lAvailableStudies = AvailableStudies
+Dim lAvailableStudies() As StudyListEntry
+lAvailableStudies = mStudyLibraryManager.GetAvailableStudies
 For i = 0 To UBound(lAvailableStudies)
     StudiesCombo.AddItem lAvailableStudies(i).Name
 Next
@@ -750,7 +742,7 @@ StudiesCombo.Enabled = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function createBarNumberSeries() As TextSeries
@@ -770,19 +762,19 @@ Dim studyDef As StudyDefinition
 Const ProcName As String = "createBarsStudyConfig"
 On Error GoTo Err
 
-ReDim inputValueNames(1) As String
+ReDim InputValueNames(1) As String
 Dim params As New Parameters
 Dim studyValueConfig As StudyValueConfiguration
 Dim barsStyle As BarStyle
 Dim volumeStyle As DataPointStyle
 
-Set studyDef = GetStudyDefinition("Constant time bars")
+Set studyDef = mStudyLibraryManager.GetStudyDefinition("Constant time bars")
 
 Set createBarsStudyConfig = New StudyConfiguration
 createBarsStudyConfig.ChartRegionName = PriceRegionName
-inputValueNames(0) = InputValuePrice
-inputValueNames(1) = InputValueVolume
-createBarsStudyConfig.inputValueNames = inputValueNames
+InputValueNames(0) = InputValuePrice
+InputValueNames(1) = InputValueVolume
+createBarsStudyConfig.InputValueNames = InputValueNames
 createBarsStudyConfig.Name = studyDef.Name
 params.SetParameterValue "Bar length", 1
 params.SetParameterValue "Time units", "Minutes"
@@ -818,7 +810,7 @@ studyValueConfig.DataPointStyle = volumeStyle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub getBars(ByVal pFilename As String)
@@ -863,10 +855,10 @@ pValueMode = svd.ValueMode
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getVolume(ByVal pBar As TimeframeUtils27.Bar, ByVal pQuarter As Long) As Long
+Private Function getVolume(ByVal pBar As BarUtils27.Bar, ByVal pQuarter As Long) As Long
 Const ProcName As String = "getVolume"
 On Error GoTo Err
 
@@ -884,7 +876,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function inDev() As Boolean
@@ -893,12 +885,6 @@ inDev = True
 End Function
 
 Private Sub initialiseChart()
-Static defaultRegionStyle As ChartRegionStyle
-Static volumeRegionStyle As ChartRegionStyle
-Dim priceRegion As ChartRegion
-Dim volumeRegion As ChartRegion
-
-
 Const ProcName As String = "initialiseChart"
 On Error GoTo Err
 
@@ -909,27 +895,26 @@ Chart1.ChartBackColor = vbWhite
 Chart1.PointerStyle = PointerCrosshairs
 Chart1.HorizontalScrollBarVisible = True
 
-If Not mBars Is Nothing Then Chart1.PeriodLength = mBars.BarTimePeriod
+If Not mBars Is Nothing Then Chart1.TimePeriod = mBars.BarTimePeriod
 
-If defaultRegionStyle Is Nothing Then
-    Set defaultRegionStyle = New ChartRegionStyle
-    defaultRegionStyle.Autoscaling = True
-    defaultRegionStyle.GridlineSpacingY = 1.8
-    defaultRegionStyle.HasGrid = True
-    defaultRegionStyle.CursorSnapsToTickBoundaries = True
-End If
+Static defaultRegionStyle As ChartRegionStyle
+If defaultRegionStyle Is Nothing Then Set defaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
 
+Static volumeRegionStyle As ChartRegionStyle
 If volumeRegionStyle Is Nothing Then
     Set volumeRegionStyle = defaultRegionStyle.Clone
-    volumeRegionStyle.GridlineSpacingY = 0.8
+    volumeRegionStyle.YGridlineSpacing = 0.8
     volumeRegionStyle.MinimumHeight = 10
     volumeRegionStyle.IntegerYScale = True
+    'volumeRegionStyle.YScaleQuantum = 1#
 End If
 
+Dim priceRegion As ChartRegion
 Set priceRegion = Chart1.Regions.Add(100, 25, defaultRegionStyle, , PriceRegionName)
 priceRegion.Title.Text = TestDataFilenameText
 priceRegion.Title.Color = vbBlue
 
+Dim volumeRegion As ChartRegion
 Set volumeRegion = Chart1.Regions.Add(20, , volumeRegionStyle, , VolumeRegionName)
 volumeRegion.Title.Text = "Volume"
 volumeRegion.Title.Color = vbBlue
@@ -939,17 +924,17 @@ Chart1.EnableDrawing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function isValidStudyLibrary(ByVal pProgId As String) As Boolean
-Dim lStudyLibrary As StudyLibrary
+Dim lStudyLibrary As IStudyLibrary
 On Error Resume Next
 Set lStudyLibrary = CreateObject(pProgId)
 isValidStudyLibrary = Not (lStudyLibrary Is Nothing)
 End Function
 
-Private Sub loadBarToChart(ByVal pBar As TimeframeUtils27.Bar)
+Private Sub loadBarToChart(ByVal pBar As BarUtils27.Bar)
 Const ProcName As String = "loadBarToChart"
 Dim failPoint As String
 On Error GoTo Err
@@ -981,10 +966,10 @@ NotifyVolume getVolume(pBar, 4), pBar.TimeStamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub loadBarToGrid(ByVal pBar As TimeframeUtils27.Bar)
+Private Sub loadBarToGrid(ByVal pBar As BarUtils27.Bar)
 Const ProcName As String = "loadBarToGrid"
 On Error GoTo Err
 
@@ -1005,14 +990,14 @@ mGrid.SetCellLong TestDataGridColumns.OpenInterest, CStr(pBar.OpenInterest)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub loadBarsToGrid()
 Const ProcName As String = "loadBarsToGrid"
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils27.Bar
+Dim lBar As BarUtils27.Bar
 
 mGrid.Redraw = False
 mGrid.SetupDataColumns
@@ -1031,12 +1016,10 @@ mGrid.Redraw = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub LoadData()
-Dim lBar As TimeframeUtils27.Bar
-
 Const ProcName As String = "LoadData"
 On Error GoTo Err
 
@@ -1046,11 +1029,11 @@ Screen.MousePointer = MousePointerConstants.vbArrowHourglass
 
 addStudyLibraries
 
+getBars TestDataFilenameText
+
 setupInitialStudies
 
 Chart1.DisableDrawing
-
-getBars TestDataFilenameText
 
 loadBarsToGrid
 
@@ -1066,9 +1049,7 @@ If mIsStudySet Then TestButton.Enabled = True
 Exit Sub
 
 Err:
-Chart1.EnableDrawing
-Screen.MousePointer = MousePointerConstants.vbDefault
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logErrorsToForm()
@@ -1087,7 +1068,7 @@ mStudyManager.NotifyInput _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyVolume(ByVal pVolume As Long, pTimestamp As Date)
@@ -1102,7 +1083,7 @@ mStudyManager.NotifyInput _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function studyValueToString( _
@@ -1126,7 +1107,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processStudyValues( _
@@ -1156,21 +1137,18 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pFailpoint:=failPoint
+gHandleUnexpectedError ProcName, ModuleName, pFailpoint:=failPoint
 End Sub
 
 Private Sub setupInitialStudies()
-Dim studyConfig As StudyConfiguration
-
 Const ProcName As String = "setupInitialStudies"
 On Error GoTo Err
 
 initialiseChart
 
-Set mStudyManager = New StudyManager
-Set mChartManager = CreateChartManager(mStudyManager, Chart1.Controller)
+Set mChartManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager)
 
-Set mSourceStudy = mStudyManager.AddSource(IIf(TestDataFilenameText = "", _
+Set mSourceStudy = mStudyManager.CreateStudyInputHandler(IIf(TestDataFilenameText = "", _
                                                 "Test data", _
                                                 TestDataFilenameText))
 
@@ -1190,9 +1168,10 @@ mVolumeInputHandle = mStudyManager.AddInput(mSourceStudy, _
                         1)
 mChartManager.SetInputRegion mVolumeInputHandle, VolumeRegionName
 
+Dim studyConfig As StudyConfiguration
 Set studyConfig = createBarsStudyConfig
 studyConfig.UnderlyingStudy = mSourceStudy
-Set mBarsStudy = mStudyManager.AddStudy(studyConfig.Name, mSourceStudy, studyConfig.inputValueNames, studyConfig.Parameters, studyConfig.StudyLibraryName)
+Set mBarsStudy = mStudyManager.AddStudy(studyConfig.Name, mSourceStudy, studyConfig.InputValueNames, studyConfig.Parameters, studyConfig.StudyLibraryName)
 studyConfig.Study = mBarsStudy
 mChartManager.StartStudy mBarsStudy
 
@@ -1206,7 +1185,7 @@ ChartToolbar1.Initialise Chart1.Controller, Chart1.Regions(PriceRegionName), mCh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showBarNumber(ByVal pRow As Long)
@@ -1227,7 +1206,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showError(ByVal pProcName As String, ByVal pFailpoint As String)
@@ -1246,7 +1225,7 @@ Const ProcName As String = "testStudy"
 Dim failPoint As String
 On Error GoTo Err
 
-Dim lBar As TimeframeUtils27.Bar
+Dim lBar As BarUtils27.Bar
 
 logErrorsToForm
 
@@ -1266,5 +1245,5 @@ stopLoggingErrorsToForm
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub

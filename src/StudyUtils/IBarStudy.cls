@@ -64,26 +64,17 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-''
-' Sets the initial <code>Bars</code> object containing the Bars created by this
-' <code>BarStudy object.</code>
-'
-' @param value the initial <code>Bars</code> object.
-'
-'@/
-Public Property Let Bars(ByVal Value As Bars)
-
+Public Property Get InitialBarFetchListener() As IBarFetchListener
 End Property
 
 ''
 ' Returns the <code>Bars</code> object containing the Bars created by this
-' <code>BarStudy object.</code>
+' <code>BarStudy</code> object.
 '
 ' @return the<code>Bars</code> object.
 '
 '@/
-Public Property Get Bars() As Bars
-
+Public Property Get BarsFuture() As IFuture
 End Property
 
 ''
@@ -93,7 +84,6 @@ End Property
 '
 '@/
 Public Property Get CloseValueName() As String
-
 End Property
 
 ''
@@ -103,7 +93,27 @@ End Property
 '
 '@/
 Public Property Get HighValueName() As String
+End Property
 
+''
+' Sets the <code>Bars</code> object containing the initial bars for this
+' <code>BarStudy</code> object.
+'
+' @param Value the initial <code>Bars</code> object.
+'
+' @remarks
+'   It is not necessary for all the initial bars to have been loaded into the
+'   supplied <code>Bars</code> object at the time this method is called. However, the
+'   <code>StudyManager</code>'s <code>StartStudy</code> method should not be called for
+'   this <code>BarStudy</code> until loading of initial bars has been completed: if this
+'   rule is not observed, any bars created as a result of values notified by the underlying
+'   study may be interleaved with the initial bars, and hence be in the wrong sequence.
+'
+'   An <code>ErrorCodes.ErrIllegalStateException</code> error is raised if this property
+'   is set after the <code>Bars</code> property has been accessed.
+'
+'@/
+Public Property Let InitialBarsFuture(ByVal Value As IFuture)
 End Property
 
 ''
@@ -113,7 +123,6 @@ End Property
 '
 '@/
 Public Property Get LowValueName() As String
-
 End Property
 
 ''
@@ -123,12 +132,18 @@ End Property
 '
 '@/
 Public Property Get OpenValueName() As String
-
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+'''
+'' Notify each new bar to the <code>BarStudy</code> object as it is created.
+''
+''@/
+'Public Sub NotifyBar(ByVal pBar As Bar)
+'End Sub
 
 '''
 '' Switches the <code>BarStudy</code> from its current <code>InputStudy</code>
@@ -139,7 +154,7 @@ End Property
 ''
 ''@/
 'Public Sub SwitchUnderlyingStudy( _
-'                ByVal newUnderlyingStudy As InputStudy)
+'                ByVal newUnderlyingStudy As StudyInputHandler)
 '
 'End Sub
 

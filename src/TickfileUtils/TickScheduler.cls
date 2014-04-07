@@ -176,7 +176,7 @@ mNumberOfTicksAwaited = mNumberOfTicksAwaited + 1
 
 If mSingleSource Then
     Set mClock = pPlayer.Clock
-Else
+ElseIf mClock Is Nothing Then
     Set mClock = CreateSimulatedClock(mReplaySpeed, "")
     mClockNeedsSetting = True
 End If
@@ -232,6 +232,7 @@ Friend Sub PauseReplay()
 Const ProcName As String = "PauseReplay"
 On Error GoTo Err
 
+mClock.PauseTime
 undispatch
 unProgress
 fireProgress
@@ -268,6 +269,7 @@ Friend Sub ResumeReplay()
     Const ProcName As String = "ResumeReplay"
 On Error GoTo Err
 
+mClock.ResumeTime
 mBaseSimulatedTimeUTC = mClock.TimestampUTC
 mBaseRealTimeUTC = GetTimestampUTC
 'debug.print FormatTimestamp(GetTimestamp, TimestampDateAndTimeISO8601) & "  Resumed: " & FormatTimestamp(mClock.Timestamp, TimestampDateAndTimeISO8601)
@@ -316,8 +318,6 @@ Private Sub dispatchTick(ByVal pIndex As Long)
 Const ProcName As String = "dispatchTick"
 On Error GoTo Err
 
-Dim delayMillisecs As Long
-
 Dim lCurrTime As Date
 lCurrTime = GetTimestampUTC
 
@@ -326,6 +326,7 @@ If mBaseSimulatedTimeUTC = 0 Then
     mBaseRealTimeUTC = lCurrTime
 End If
 
+Dim delayMillisecs As Long
 If mReplaySpeed > 0 Then
     delayMillisecs = CLng(((mPlayers(pIndex).UTCTimestamp - mBaseSimulatedTimeUTC) - _
                 mReplaySpeed * (lCurrTime - mBaseRealTimeUTC)) * 86400# * 1000# / CDbl(mReplaySpeed))
@@ -469,7 +470,7 @@ Const ProcName As String = "unProgress"
 On Error GoTo Err
 
 If Not mProgressTimerListItem Is Nothing Then
-    mTimerList.Remove mProgressTimerListItem
+    mProgressTimerListItem.Cancel
     Set mProgressTimerListItem = Nothing
 End If
 

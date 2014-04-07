@@ -64,6 +64,33 @@ Private Const ModuleName                            As String = "TickerUtils"
 ' Methods
 '@================================================================================
 
+Public Function CreateTickers( _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pStudyLibraryManager As StudyLibraryManager, _
+                Optional ByVal pHistDataStore As IHistoricalDataStore, _
+                Optional ByVal pOrderSubmitterLive As IOrderSubmitter, _
+                Optional ByVal pOrderSubmitterSimulated As IOrderSubmitter, _
+                Optional ByVal pPositionManagersLive As PositionManagers, _
+                Optional ByVal pPositionManagersSimulated As PositionManagers, _
+                Optional ByVal pName As String, _
+                Optional ByVal pScopeName As String, _
+                Optional ByVal pMoneyManager As IMoneyManager) As Tickers
+Const ProcName As String = "CreateTickers"
+On Error GoTo Err
+
+AssertArgument Not pMarketDataManager Is Nothing, "pMarketDataManager is Nothing"
+AssertArgument Not pStudyLibraryManager Is Nothing, "pStudyLibraryManager is Nothing"
+
+If pName = "" Then pName = GenerateGUIDString
+Set CreateTickers = New Tickers
+CreateTickers.Initialise pMarketDataManager, pStudyLibraryManager, pHistDataStore, pOrderSubmitterLive, pOrderSubmitterSimulated, pPositionManagersLive, pPositionManagersSimulated, pName, pScopeName, pMoneyManager
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

@@ -19,22 +19,39 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                        As String = "StudyUtils26"
+Public Const ProjectName                        As String = "StudyUtils27"
 
 Public Const AttributeNameEnabled               As String = "Enabled"
 Public Const AttributeNameStudyLibraryBuiltIn   As String = "BuiltIn"
 Public Const AttributeNameStudyLibraryProgId    As String = "ProgId"
 
-Public Const BuiltInStudyLibProgId              As String = "CmnStudiesLib26.StudyLib"
+Public Const BuiltInStudyLibProgId              As String = "CmnStudiesLib27.StudyLib"
 Public Const BuiltInStudyLibName                As String = "BuiltIn"
 
 Public Const ConfigNameStudyLibraries           As String = "StudyLibraries"
 Public Const ConfigNameStudyLibrary             As String = "StudyLibrary"
 
+Public Const ConstTimeBarsStudyName                As String = "Constant time bars"
+Public Const ConstTimeBarsParamBarLength           As String = "Bar length"
+Public Const ConstTimeBarsParamTimeUnits           As String = "Time units"
+
+Public Const ConstVolumeBarsStudyName              As String = "Constant Volume bars"
+Public Const ConstTimeBarsParamVolPerBar           As String = "Volume per bar"
+
+Public Const ConstMomentumBarsStudyName            As String = "Constant momentum bars"
+Public Const ConstMomentumBarsParamTicksPerBar     As String = "Ticks move per bar"
+
+Public Const AskInputName                           As String = "Ask"
+Public Const BidInputName                           As String = "Bid"
+Public Const OpenInterestInputName                  As String = "Open interest"
+Public Const TickVolumeInputName                    As String = "Tick Volume"
+Public Const TradeInputName                         As String = "Trade"
+Public Const VolumeInputName                        As String = "Total Volume"
+
 Public Const DefaultStudyValueNameStr           As String = "$DEFAULT"
 Public Const MovingAverageStudyValueNameStr     As String = "MA"
 
-Public Const StudyLibrariesRenderer             As String = "StudiesUI26.StudyLibConfigurer"
+Public Const StudyLibrariesRenderer             As String = "StudiesUI27.StudyLibConfigurer"
 
 
 '@================================================================================
@@ -52,10 +69,6 @@ Public Const StudyLibrariesRenderer             As String = "StudiesUI26.StudyLi
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mStudyLibraryManager    As New StudyLibraryManager
-
-Private mStudies                As New Collection
 
 '@================================================================================
 ' Class Event Handlers
@@ -79,18 +92,10 @@ If lLogger Is Nothing Then Set lLogger = GetLogger("error")
 Set gErrorLogger = lLogger
 End Property
 
-Public Property Get gLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("log")
-Set gLogger = lLogger
-End Property
-
-Public Property Get StudyLibraryManager() As StudyLibraryManager
-Set StudyLibraryManager = mStudyLibraryManager
-End Property
-
-Public Property Get StudiesCollection() As Collection
-Set StudiesCollection = mStudies
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("studyutils", ProjectName)
+Set gLogger = sLogger
 End Property
 
 '@================================================================================
@@ -106,7 +111,7 @@ Public Sub gHandleUnexpectedError( _
                 Optional ByVal pErrorNumber As Long, _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
@@ -120,7 +125,7 @@ Public Sub gNotifyUnhandledError( _
                 Optional ByVal pErrorNumber As Long, _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 

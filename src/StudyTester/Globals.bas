@@ -38,7 +38,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "StudyTester26"
+Public Const ProjectName                            As String = "StudyTester27"
 
 Private Const ModuleName                            As String = "Globals"
 

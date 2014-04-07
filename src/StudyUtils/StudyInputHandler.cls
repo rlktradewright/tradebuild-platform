@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Source"
+Attribute VB_Name = "StudyInputHandler"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -33,7 +33,7 @@ Implements IStudy
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "Source"
+Private Const ModuleName                As String = "StudyInputHandler"
 
 '@================================================================================
 ' Enums
@@ -57,7 +57,7 @@ Private mListeners                      As StudyValueListeners
 
 Private mTickSizes                      As Collection
 
-Private mSession                        As Session
+'Private mSessionFuture                  As IFuture
 
 Private mTimestamp                      As Date
 
@@ -89,14 +89,14 @@ End Sub
 
 Private Function IStudy_AddStudy( _
                 ByVal pStudy As IStudy, _
-                ByRef valueNames() As String, _
+                ByRef ValueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal TaskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 Const ProcName As String = "IStudy_AddStudy"
 On Error GoTo Err
 
-mStudies.Add pStudy, valueNames
+mStudies.Add pStudy, ValueNames
 
 Exit Function
 
@@ -106,14 +106,14 @@ End Function
 
 Private Function IStudy_AddStudyValueListener( _
                 ByVal listener As IStudyValueListener, _
-                ByVal valueName As String, _
+                ByVal ValueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal TaskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 Const ProcName As String = "IStudy_AddStudyValueListener"
 On Error GoTo Err
 
-mListeners.Add listener, valueName
+mListeners.Add listener, ValueName
 
 Exit Function
 
@@ -134,7 +134,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IStudy_GetStudyValue( _
-                ByVal valueName As String, _
+                ByVal ValueName As String, _
                 ByVal ref As Long) As SValue
 
 Const ProcName As String = "Study_GetStudyValue"
@@ -149,12 +149,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IStudy_GetValueTicksize( _
-                ByVal valueName As String) As Double
+                ByVal ValueName As String) As Double
 Const ProcName As String = "study_GetValueTicksize"
 On Error GoTo Err
 
 On Error Resume Next
-IStudy_GetValueTicksize = mTickSizes(valueName)
+IStudy_GetValueTicksize = mTickSizes(ValueName)
 
 Exit Function
 
@@ -175,12 +175,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Initialise( _
-               ByVal Id As String, _
+                ByVal StudyManager As StudyManager, _
+                ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                valueNames() As String, _
+                ValueNames() As String, _
                 ByVal underlyingStudy As IStudy, _
-                ByVal pSession As Session)
+                ByVal pSessionFuture As IFuture)
 
 Const ProcName As String = "Study_Initialise"
 On Error GoTo Err
@@ -247,7 +248,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IStudy_NumberOfCachedValues( _
-                Optional ByVal valueName As String) As Long
+                Optional ByVal ValueName As String) As Long
 
 Const ProcName As String = "Study_NumberOfCachedValues"
 On Error GoTo Err
@@ -320,8 +321,8 @@ End Property
 ' Properties
 '@================================================================================
 
-Public Property Let Name(ByVal value As String)
-mName = value
+Public Property Let Name(ByVal Value As String)
+mName = Value
 'mIdent = mName
 mStudyDef.Name = mName
 End Property
@@ -330,13 +331,9 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-Friend Property Let Session(ByVal value As Session)
-Set mSession = value
-End Property
-
-Public Property Get Session() As Session
-Set Session = mSession
-End Property
+'Public Property Get SessionFuture() As IFuture
+'Set SessionFuture = mSessionFuture
+'End Property
 
 Public Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
@@ -360,13 +357,12 @@ Friend Sub AddInput( _
                 ByVal ValueType As StudyInputTypes, _
                 ByVal IsDefault As Boolean, _
                 ByVal TickSize As Double)
-Dim valueDef As StudyValueDefinition
-
-    
 Const ProcName As String = "AddInput"
 On Error GoTo Err
 
+Dim valueDef As StudyValueDefinition
 Set valueDef = mStudyDef.StudyValueDefinitions.Add(Name)
+
 valueDef.Description = Description
 valueDef.IsDefault = IsDefault
 valueDef.ValueMode = ValueModeNone
@@ -393,16 +389,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+'Friend Sub Initialise( _
+'                ByVal Name As String, _
+'                ByVal pSessionFuture As IFuture)
 Friend Sub Initialise( _
-                ByVal Name As String, _
-                ByVal pSession As Session)
+                ByVal Name As String)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mName = Name
 mIdent = GenerateGUIDString
 mStudyDef.Name = mName
-Set mSession = pSession
+'Set mSessionFuture = pSessionFuture
 
 Exit Sub
 

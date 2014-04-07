@@ -93,40 +93,41 @@ End Property
 
 Public Function AddStudy( _
                 ByVal pStudy As IStudy, _
-                ByRef valueNames() As String, _
+                ByRef ValueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
+                Optional ByVal TaskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
                 
 End Function
                 
 Public Function AddStudyValueListener( _
-                ByVal listener As StudyValueListener, _
-                ByVal valueName As String, _
+                ByVal listener As IStudyValueListener, _
+                ByVal ValueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
+                Optional ByVal TaskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
                 
 End Function
 
 Public Function GetStudyValue( _
-                ByVal valueName As String, _
+                ByVal ValueName As String, _
                 ByVal ref As Long) As SValue
 
 End Function
 
 Public Function GetValueTicksize( _
-                ByVal valueName As String) As Double
+                ByVal ValueName As String) As Double
                 
 End Function
      
-Public Sub initialise( _
+Public Sub Initialise( _
+                ByVal StudyManager As StudyManager, _
                 ByVal Id As String, _
                 ByVal params As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByRef valueNames() As String, _
+                ByRef ValueNames() As String, _
                 ByVal underlyingStudy As IStudy, _
-                ByVal pSession As Session)
+                ByVal pSessionFuture As IFuture)
 
 End Sub
 
@@ -136,18 +137,18 @@ Public Sub Notify( _
 End Sub
 
 Public Function NumberOfCachedValues( _
-                Optional ByVal valueName As String) As Long
+                Optional ByVal ValueName As String) As Long
                 
 End Function
 
 Public Sub RemoveStudyValueListener( _
-                ByVal listener As StudyValueListener)
+                ByVal listener As IStudyValueListener)
                 
 End Sub
 
 Public Sub SetInputTicksize( _
-                ByVal inputName As String, _
-                ByVal tickSize As Double)
+                ByVal InputName As String, _
+                ByVal TickSize As Double)
                 
 End Sub
      

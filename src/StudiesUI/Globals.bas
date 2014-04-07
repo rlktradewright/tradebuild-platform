@@ -19,7 +19,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                    As String = "StudiesUI26"
+Public Const ProjectName                                    As String = "StudiesUI27"
 Private Const ModuleName                As String = "Globals"
 
 
@@ -154,7 +154,7 @@ gChooseAColor = lSimpleColorPicker.selectedColor
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _
@@ -251,7 +251,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function isPrice( _
@@ -275,7 +275,7 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Function
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub notImplemented()

@@ -69,24 +69,30 @@ Private Const ModuleName                    As String = "GlobalClass"
 
 Public Function CreateDataCollector( _
                 ByVal pConfigFile As ConfigurationStore, _
-                ByVal configName As String, _
-                ByVal startTimeDescriptor As String, _
-                ByVal endTimeDescriptor As String, _
-                ByVal exitTimeDescriptor As String) As DataCollector
+                ByVal pConfigName As String, _
+                ByVal pStartTimeDescriptor As String, _
+                ByVal pEndTimeDescriptor As String, _
+                ByVal pExitTimeDescriptor As String, _
+                Optional ByVal pSaveIntervalSeconds As Long = 5, _
+                Optional ByVal pBarOutputMonitor As IBarOutputMonitor, _
+                Optional ByVal pTickfileOutputMonitor As ITickfileOutputMonitor) As DataCollector
 Const ProcName As String = "CreateDataCollector"
 On Error GoTo Err
 
 Set CreateDataCollector = New DataCollector
-CreateDataCollector.initialise pConfigFile, _
-                            configName, _
-                            startTimeDescriptor, _
-                            endTimeDescriptor, _
-                            exitTimeDescriptor
+CreateDataCollector.Initialise pConfigFile, _
+                            pConfigName, _
+                            pStartTimeDescriptor, _
+                            pEndTimeDescriptor, _
+                            pExitTimeDescriptor, _
+                            pSaveIntervalSeconds, _
+                            pBarOutputMonitor, _
+                            pTickfileOutputMonitor
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Function
 
 '@================================================================================

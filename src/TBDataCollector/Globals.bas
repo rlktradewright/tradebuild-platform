@@ -26,34 +26,35 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                               As String = "TBDataCollector26"
+Public Const ProjectName                               As String = "TBDataCollector27"
 Private Const ModuleName                                As String = "Globals"
 
 Public Const AttributeNameBidAskBars                    As String = "WriteBidAndAskBars"
 Public Const AttributeNameEnabled                       As String = "Enabled"
 Public Const AttributeNameIncludeMktDepth               As String = "IncludeMarketDepth"
+Public Const AttributeNameTradeBars                     As String = "WriteTradeBars"
 
 Public Const ConfigSectionCollectionControl             As String = "CollectionControl"
 Public Const ConfigSectionContract                      As String = "Contract"
 Public Const ConfigSectionContracts                     As String = "Contracts"
-Public Const ConfigSectionContractspecifier             As String = "ContractSpecifier"
+Public Const ConfigSectionContractSpecifier             As String = "ContractSpecifier"
 Public Const ConfigSectionTickdata                      As String = "TickData"
 
-Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractspecifier & "&Currency"
-Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractspecifier & "&Expiry"
-Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractspecifier & "&Exchange"
-Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractspecifier & "&LocalSymbol"
-Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractspecifier & "&Right"
-Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractspecifier & "&SecType"
-Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractspecifier & "&StrikePrice"
-Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractspecifier & "&Symbol"
+Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractSpecifier & "&Currency"
+Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractSpecifier & "&Expiry"
+Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractSpecifier & "&Exchange"
+Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractSpecifier & "&LocalSymbol"
+Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractSpecifier & "&Right"
+Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractSpecifier & "&SecType"
+Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractSpecifier & "&StrikePrice"
+Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractSpecifier & "&Symbol"
 
 Public Const ConfigFileVersion                          As String = "1.0"
 
-Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & ".WriteBarData"
-Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & ".WriteTickData"
-Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & ".Format"
-Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & ".Path"
+Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & "&WriteBarData"
+Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & "&WriteTickData"
+Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & "&Format"
+Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & "&Path"
 
 '@================================================================================
 ' Member variables
@@ -115,7 +116,7 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
-Sub main()
+Sub Main()
 Set mLogger = GetLogger("")
 End Sub
 

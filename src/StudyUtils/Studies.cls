@@ -49,17 +49,17 @@ Private Const ModuleName                As String = "Studies"
 '@================================================================================
 
 Private Type StudyTableEntry
-    theStudy            As Study
-    studyToNotify       As Study
-    valueName           As String
-    notifyName          As String
+    theStudy            As IStudy
+    studyToNotify       As IStudy
+    ValueName           As String
+    NotifyName          As String
 End Type
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-'Private mUnderlyingStudy As Study
+'Private mUnderlyingStudy As IStudy
 Private mDefaultValuename As String
 
 Private mStudyTable() As StudyTableEntry
@@ -73,10 +73,6 @@ Private Sub Class_Initialize()
 ReDim mStudyTable(3) As StudyTableEntry
 End Sub
 
-Private Sub Class_Terminate()
-Debug.Print "Studies terminated"
-End Sub
-
 '@================================================================================
 ' XXXX Event Handlers
 '@================================================================================
@@ -85,8 +81,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let DefaultValueName(ByVal value As String)
-mDefaultValuename = UCase$(value)
+Public Property Let DefaultValueName(ByVal Value As String)
+mDefaultValuename = UCase$(Value)
 End Property
 
 '@================================================================================
@@ -94,8 +90,8 @@ End Property
 '@================================================================================
 
 Public Sub Add( _
-                ByVal Study As Study, _
-                ByRef valueNames() As String)
+                ByVal Study As IStudy, _
+                ByRef ValueNames() As String)
 Dim tableEntry As StudyTableEntry
 Dim inputDefs As StudyInputDefinitions
 Dim i As Long
@@ -105,15 +101,15 @@ On Error GoTo Err
 
 Set inputDefs = Study.StudyDefinition.StudyInputDefinitions
 
-For i = 0 To UBound(valueNames)
-    If valueNames(i) <> "" Then
+For i = 0 To UBound(ValueNames)
+    If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
         Set tableEntry.theStudy = Study
         Set tableEntry.studyToNotify = Study.BaseStudy
-        tableEntry.valueName = UCase$(valueNames(i))
-        tableEntry.notifyName = UCase$(inputDefs.Item(i + 1).Name)
+        tableEntry.ValueName = UCase$(ValueNames(i))
+        tableEntry.NotifyName = UCase$(inputDefs.Item(i + 1).Name)
         mStudyTable(mNextStudyTableIndex) = tableEntry
         mNextStudyTableIndex = mNextStudyTableIndex + 1
     End If
@@ -122,28 +118,28 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddEx( _
-                ByVal Study As Study, _
-                ByRef valueNames() As String, _
-                ByRef notifyNames() As String)
+                ByVal Study As IStudy, _
+                ByRef ValueNames() As String, _
+                ByRef NotifyNames() As String)
 Dim tableEntry As StudyTableEntry
 Dim i As Long
 
 Const ProcName As String = "AddEx"
 On Error GoTo Err
 
-For i = 0 To UBound(valueNames)
-    If valueNames(i) <> "" Then
+For i = 0 To UBound(ValueNames)
+    If ValueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
             ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
         Set tableEntry.theStudy = Study
         Set tableEntry.studyToNotify = Study.BaseStudy
-        tableEntry.valueName = UCase$(valueNames(i))
-        tableEntry.notifyName = UCase$(notifyNames(i))
+        tableEntry.ValueName = UCase$(ValueNames(i))
+        tableEntry.NotifyName = UCase$(NotifyNames(i))
         mStudyTable(mNextStudyTableIndex) = tableEntry
         mNextStudyTableIndex = mNextStudyTableIndex + 1
     End If
@@ -152,27 +148,28 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Notify(ev As StudyValueEventData)
-Dim i As Long
-Dim evOut As StudyValueEventData
-
 Const ProcName As String = "Notify"
 On Error GoTo Err
 
-ev.valueName = UCase$(ev.valueName)
+ev.ValueName = UCase$(ev.ValueName)
+
+Dim evOut As StudyValueEventData
 evOut = ev
+
+Dim i As Long
 For i = 0 To mNextStudyTableIndex - 1
-    If ev.valueName = mDefaultValuename Then
-        If mStudyTable(i).valueName = DefaultStudyValueNameStr Then
-            evOut.valueName = mStudyTable(i).notifyName
+    If ev.ValueName = mDefaultValuename Then
+        If mStudyTable(i).ValueName = DefaultStudyValueNameStr Then
+            evOut.ValueName = mStudyTable(i).NotifyName
             mStudyTable(i).studyToNotify.Notify evOut
         End If
     End If
-    If mStudyTable(i).valueName = ev.valueName Then
-        evOut.valueName = mStudyTable(i).notifyName
+    If mStudyTable(i).ValueName = ev.ValueName Then
+        evOut.ValueName = mStudyTable(i).NotifyName
         mStudyTable(i).studyToNotify.Notify evOut
     End If
 Next
@@ -180,20 +177,21 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NumberOfBarsRequired() As Long
-Dim num As Long
-Dim numStudy As Long
-Dim Study As Study
-Dim i As Long
-
 Const ProcName As String = "NumberOfBarsRequired"
 On Error GoTo Err
 
+Dim num As Long
+
+Dim i As Long
 For i = 0 To mNextStudyTableIndex - 1
+    Dim Study As IStudy
     Set Study = mStudyTable(i).theStudy
+    
+    Dim numStudy As Long
     numStudy = Study.NumberOfBarsRequired
     If numStudy > num Then num = numStudy
 Next
@@ -202,28 +200,28 @@ NumberOfBarsRequired = num
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub NotifyValueTicksize( _
-                ByVal valueName As String, _
-                ByVal tickSize As Double)
-Dim i As Long
-
+                ByVal ValueName As String, _
+                ByVal TickSize As Double)
 Const ProcName As String = "NotifyValueTicksize"
 On Error GoTo Err
 
-valueName = UCase$(valueName)
+Dim i As Long
+
+ValueName = UCase$(ValueName)
 For i = 0 To mNextStudyTableIndex - 1
-    If mStudyTable(i).valueName = valueName Then
-        mStudyTable(i).theStudy.SetInputTicksize mStudyTable(i).notifyName, tickSize
+    If mStudyTable(i).ValueName = ValueName Then
+        mStudyTable(i).theStudy.SetInputTicksize mStudyTable(i).NotifyName, TickSize
     End If
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

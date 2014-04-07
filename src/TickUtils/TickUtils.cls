@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-' Copyright 2008 Richard L King
+' Copyright 2008-2011 Richard L King
 '
 ' This file is part of TradeBuild Tick Utilities Package.
 '
@@ -36,18 +36,20 @@ Option Explicit
 ' an instance of it to use its methods and properties. Simply call them directly.
 '
 '
-' <h2>About the TickUtils26 component</h2>
+' <h2>About the TickUtils27 component</h2>
 '
-' The TickUtils26 component provides mechanisms for encoding market tick data into a compressed binary
+' The TickUtils27 component provides types and interfaces useful for working with financial
+' market data. It also includes mechanisms for encoding market tick data into a compressed binary
 ' format for storage in files or databases.
-' <p>
+'
+' <h2>Market data encoding and decoding</h2>
+'
 ' The functionality is provided by two interfaces,
 ' <code>TickDataEncoder</code> and <code>TickDataDecoder</code>,
 ' together with a pair of global factory methods that create instances of classes that
 ' implement these interfaces - these methods are
 ' <code>CreateTickEncoder</code> and <code>CreateTickDecoder</code>.
 '
-' <p>
 ' The encoding used places strict limits on the time span covered by an encoder: this
 ' is because tick times are recorded as a number of milliseconds from the start of the
 ' encoding period, and these values are recorded as 16-bit unsigned integers: the maximum
@@ -56,7 +58,7 @@ Option Explicit
 ' then be created.  The expectation is that tick data recording programs will limit
 ' individual stored segments of encoded data to an interval such as 30 seconds or 1 minute,
 ' and that these segments will be stored in a variable length container such as a BLOB
-' (Binary Large Object) column in a database row.
+' (Binary Large Object) column in a database row, or a suitably structured file.
 '
 ' To summarise the use of this component:
 '
@@ -106,7 +108,7 @@ Option Explicit
 ' record encodes a single tick.
 ' <p>
 ' A record consists of an initial byte, called the type byte, followed by zero or more fields
-' containing the tick&#39;s attributes. The fields included in any particular record depend on the
+' containing the tick's attributes. The fields included in any particular record depend on the
 ' type of the tick encoded in the record. The following types of field are defined:
 ' <pre>
 '      Timestamp field
@@ -143,7 +145,7 @@ Option Explicit
 '
 ' <h3>Type byte format</h3>
 '
-' The type byte indicates the tick&#39;s type, and has some additional flags that are used to optimise
+' The type byte indicates the tick's type, and has some additional flags that are used to optimise
 ' the encoding. Its format is:
 ' <pre>
 '      Bit 7       NegativeTicks       If set, indicates that the price for this tick is below
@@ -277,10 +279,58 @@ End Enum
 ' Used to indicate which side of the Depth-of-Market table is to be operated on.
 ' @param DOMAsk Operate on the ask side.
 ' @param DOMBid Operate on the bid side.
+' @param DOMTrade Operate on the last traded price.
 '@/
 Public Enum DOMSides
     DOMAsk
     DOMBid
+    DOMTrade
+End Enum
+
+''
+' Members of this enum govern the operation of a <code>MarketDataSource</code> object.
+'
+' @param MarketDataSourceOptOrdersNone
+'   No options are set for this <code>MarketDataSource</code> .
+' @param MarketDataSourceOptUseExchangeTimeZone
+'   Timestamps for ticks received via this <code>MarketDataSource</code> are to be expressed in the
+'   timezone of the relevant exchange, rather than the computer's local
+'   timezone. Note that this only has effect when the contract service provider
+'   supplies exchange timezone information (the IB contract service provider does not).
+' @param MarketDataSourceOptNoImpliedTrades
+'   If set, the <code>MarketDataSource</code> does not attempt to deduce the existence of unreported trades
+'   which may be indicated by the tick data received from the <code>MarketDataSource</code>. For example,
+'   if Volume is incremented by an amount equal to the last reported trade, but no
+'   trade is reported, then an implied trade exists - setting this option prevents
+'   that implied trade being notified.
+' @param MarketDataSourceOptNoVolumeAdjustments
+'   If set, the <code>MarketDataSource</code> reports all volume ticks exactly as received from the data source.
+'   Otherwise, the <code>MarketDataSource</code> may adjust volume figures to ensure that volume notified by the
+'   <code>MarketDataSource</code> is always increasing (this adjustment is to eliminate the backward movement in
+'   total Volume that occurs sometimes with some data sources).
+'@/
+Public Enum MarketDataSourceOptions
+    MarketDataSourceOptNone = 0
+    MarketDataSourceOptUseExchangeTimeZone = 1
+    MarketDataSourceOptNoImpliedTrades = 2
+    MarketDataSourceOptNoVolumeAdjustments = 4
+End Enum
+
+Public Enum MarketDataSourceStates
+    MarketDataSourceStateCreated
+    MarketDataSourceStateReady
+    MarketDataSourceStateRunning
+    MarketDataSourceStatePaused
+    MarketDataSourceStateStopped
+    MarketDataSourceStateFinished
+    MarketDataSourceStateError
+End Enum
+
+Public Enum TickStreamStates
+    TickStreamStateCreated = 1
+    TickStreamStateReady
+    TickStreamStateRunning
+    TickStreamStateFinished
 End Enum
 
 ''
@@ -311,37 +361,92 @@ Public Enum TickTypes
     TickTypeOpenPrice
 End Enum
 
+Public Enum ValueChanges
+    ValueChangeNone
+    ValueChangeUp
+    ValueChangeDown
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
 
 ''
 ' Represents any sort of tick.
-' @param timestamp The time at which the tick occurred.
-' @param tickType The type of tick.
-' @param price The tick price where relevant.
-' @param size The tick size where relevant.
-' @param position The position in the Depth-of-Market table where relevant.
-' @param operation The operation to be performed on the Depth-of-Market table
+' @param pTimestamp The time at which the tick occurred.
+' @param TickType The type of tick.
+' @param pPrice The tick price where relevant.
+' @param pSize The tick size where relevant.
+' @param Position The position in the Depth-of-Market table where relevant.
+' @param Operation The operation to be performed on the Depth-of-Market table
 '                   where relevant.
-' @param side The side of the Depth-of-Market table affected where relevant.
-' @param marketmaker The marketmaker responsible for the quote where relevant.
+' @param Side The side of the Depth-of-Market table affected where relevant.
+' @param Marketmaker The marketmaker responsible for the quote where relevant.
 Public Type GenericTick
-    timestamp           As Date
-    tickType            As TickTypes
-    price               As Double
-    size                As Long
-    position            As Long
-    operation           As DOMOperations
-    side                As DOMSides
-    marketmaker         As String
+    Timestamp           As Date
+    TickType            As TickTypes
+    Price               As Double
+    Size                As Long
+    Position            As Long
+    Operation           As DOMOperations
+    Side                As DOMSides
+    MarketMaker         As String
+End Type
+
+Public Type GenericTickEventData
+    Source              As Object
+    StreamId            As Long
+    Tick                As GenericTick
+End Type
+
+Public Type MarketDepthEventData
+    Source          As Object
+    Type            As DOMSides
+    Price           As Double
+    Size            As Long
+End Type
+
+Public Type PriceChange
+    Change          As Double
+    ChangeString    As String
+    ChangePercent   As Double
+End Type
+
+Public Type PriceChangeEventData
+    Source          As Object
+    PriceChange     As PriceChange
+End Type
+
+Public Type Quote
+    Timestamp           As Date
+    Price               As Double
+    Size                As Long
+    PriceChange         As ValueChanges
+    SizeChange          As ValueChanges
+    RecentPriceChange   As ValueChanges     ' if PriceChange = ValueChangeNone
+    RecentSizeChange    As ValueChanges     ' if sizeChange = ValueChangeNone
+End Type
+
+Public Type QuoteEventData
+    Source          As Object
+    Quote           As Quote
+End Type
+
+Public Type RawMarketDepthEventData
+    Source          As Object
+    Position        As Long
+    MarketMaker     As String
+    Operation       As DOMOperations
+    Side            As DOMSides
+    Price           As Double
+    Size            As Long
 End Type
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickUtils26"
+
 Private Const ModuleName                    As String = "TickUtils"
 
 '@================================================================================
@@ -383,101 +488,117 @@ End Property
 ''
 ' Returns an object that implements the <code>TickDataEncoder</code> interface.
 '
-' @param periodStartTime The time at the start of the period to which the encoded data segment applies.
-' <p>
+' @param pPeriodStartTime The time at the start of the period to which the encoded data segment applies.
+'
 ' Note that this time is not stored in the encoded data, but all times are encoded relative to
 ' this time. Therefore it is necessary for the application to store this time along with the
 ' encoded data segment to enable it to be subsequently decoded correctly.
-' <p>
-' @param tickSize The minimum tick size for the instrument to which the encoded data segment relates,
+'
+' @param pTickSize The minimum tick size for the instrument to which the encoded data segment relates,
 ' at the time of the encoding.
-' <p>
+'
 ' Note that this value is not stored in the encoded data, but all prices are encoded as
 ' multiples of this value and relative to the base price. Therefore it is necessary for the
 ' application to store this time along with the encoded data segment to enable it to be
 ' subsequently decoded correctly. Note also that tick sizes can and do change from time to time,
-' so it is not sufficient to assume that the instrument&#39;s current tick size is the same as
+' so it is not sufficient to assume that the instrument's current tick size is the same as
 ' the tick size at the time of encoding.
-' <p>
-' @param basePrice The first price recorded during the period to which the encoded data segment applies.
-' <p>
+'
+' @param pasePrice The first price recorded during the period to which the encoded data segment applies.
+'
 ' Note that this price is not stored in the encoded data, but all prices are encoded relative to
 ' this price. Therefore it is necessary for the application to store this price along with the
 ' encoded data segment to enable it to be subsequently decoded correctly. The value to be stored
-' can be obtained using the encoder object&#39;s <code>BasePrice</code> property.
-' <p>
-' @param data An encoded data segment.
-' <p>
-' @param encodingFormat A value uniquely identifying the format of the encoded data (as returned by the encoder object&#39;s
+' can be obtained using the encoder object's <code>BasePrice</code> property.
+'
+' @param pData An encoded data segment.
+'
+' @param pEncodingFormat A value uniquely identifying the format of the encoded data (as returned by the encoder object's
 ' <code>EncodingFormatIdentifier</code> property).
-' <p>
+'
 ' @return An object that implements the <code>TickDataEncoder</code> interface.
-' <p>
+'
 '@/
 Public Function CreateTickDecoder( _
-                ByVal periodStartTime As Date, _
-                ByVal tickSize As Double, _
-                ByVal basePrice As Double, _
-                ByRef data() As Byte, _
-                ByVal encodingFormat As String) As TickDataDecoder
+                ByVal pPeriodStartTime As Date, _
+                ByVal pTickSize As Double, _
+                ByVal pBasePrice As Double, _
+                ByRef pData() As Byte, _
+                ByVal pEncodingFormat As String) As ITickDataDecoder
 
-If tickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
+If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
 
-If encodingFormat = TickfileFormatTradeBuildSQL Then
-    encodingFormat = TickEncodingFormatV1
+If pEncodingFormat = TickfileFormatTradeBuildSQL Then
+    pEncodingFormat = TickEncodingFormatV1
 End If
 
-Select Case encodingFormat
+Select Case pEncodingFormat
 Case TickEncodingFormatV1, TickEncodingFormatV2
     Dim dec1 As New TickDataDecoderA
     Set CreateTickDecoder = dec1
-    dec1.initialise periodStartTime, basePrice, tickSize, encodingFormat, data
+    dec1.Initialise pPeriodStartTime, pBasePrice, pTickSize, pEncodingFormat, pData
 End Select
 End Function
 
 ''
 ' Returns an object that implements the <code>TickDataEncoder </code> interface.
-' @param periodStartTime The start of the time period for which the new encoder will encode tick data.
+' @param pPeriodStartTime The start of the time period for which the new encoder will encode tick data.
 ' <p>
 ' Note that an encoder can only encode ticks for which the timestamp is not more than
 ' 65535 milliseconds from this start time.
-' @param tickSize The minimum tick size for the instrument whose data is to be encoded.
+' @param PickSize The minimum tick size for the instrument whose data is to be encoded.
 ' @return An object that implements the <code>TickDataEncoder </code> interface.
 '@/
 Public Function CreateTickEncoder( _
-                ByVal periodStartTime As Date, _
-                ByVal tickSize As Double) As TickDataEncoder
+                ByVal pPeriodStartTime As Date, _
+                ByVal pTickSize As Double) As ITickDataEncoder
 
 Dim enc As New TickDataEncoderA
 
-If tickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
+If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
 
 Set CreateTickEncoder = enc
-enc.initialise periodStartTime, tickSize, TickEncodingFormatV2
+enc.Initialise pPeriodStartTime, pTickSize, TickEncodingFormatV2
 
 End Function
 
-' This mthod is hidden. because it only exists to enable the test program
+' This method is hidden. because it only exists to enable the test program
 ' to be able to generate Version 1 encodings. No other program should use this
 ' method.
 Public Function CreateTickEncoderByType( _
-                ByVal periodStartTime As Date, _
-                ByVal tickSize As Double, _
-                ByVal encodingFormat As String) As TickDataEncoder
+                ByVal pPeriodStartTime As Date, _
+                ByVal pTickSize As Double, _
+                ByVal pEncodingFormat As String) As ITickDataEncoder
 Attribute CreateTickEncoderByType.VB_MemberFlags = "40"
 
-If tickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
+If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
 
-If encodingFormat = TickfileFormatTradeBuildSQL Then
-    encodingFormat = TickEncodingFormatV1
+If pEncodingFormat = TickfileFormatTradeBuildSQL Then
+    pEncodingFormat = TickEncodingFormatV1
 End If
 
-Select Case encodingFormat
+Select Case pEncodingFormat
 Case TickEncodingFormatV1, TickEncodingFormatV2
     Dim enc1 As New TickDataEncoderA
     Set CreateTickEncoderByType = enc1
-    enc1.initialise periodStartTime, tickSize, encodingFormat
+    enc1.Initialise pPeriodStartTime, pTickSize, pEncodingFormat
 End Select
+End Function
+
+Public Function CreateTickStreamBuilder( _
+                ByVal pStreamId As Long, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture) As TickStreamBuilder
+Const ProcName As String = "CreateTickStreamBuilder"
+On Error GoTo Err
+
+Set CreateTickStreamBuilder = New TickStreamBuilder
+CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -485,44 +606,44 @@ End Function
 '
 ' The string contains each field relevant to the tick type, separated by commas.
 '
-' The tick&#39;s timestamp is in the form:
+' The tick's timestamp is in the form:
 '   yyyy/mm/dd hh:mm:ss.nnn   (where nnn is milliseconds)
 '
 ' @return
 '   The string representation of the supplied tick.
 '
-' @param tick
+' @param pTick
 '   The tick whose string representation is required.
 '@/
 Public Function GenericTickToString( _
-                ByRef tick As GenericTick) As String
+                ByRef pTick As GenericTick) As String
 Dim s As String
 
-s = formatTimestamp(tick.timestamp) & ","
+s = formatTimestamp(pTick.Timestamp) & ","
 
-Select Case tick.tickType
+Select Case pTick.TickType
 Case TickTypes.TickTypeBid
-    s = s & "B" & "," & tick.price & "," & tick.size
+    s = s & "B" & "," & pTick.Price & "," & pTick.Size
 Case TickTypes.TickTypeAsk
-    s = s & "A" & "," & tick.price & "," & tick.size
+    s = s & "A" & "," & pTick.Price & "," & pTick.Size
 Case TickTypes.TickTypeClosePrice
-    s = s & "C" & "," & tick.price
+    s = s & "C" & "," & pTick.Price
 Case TickTypes.TickTypeHighPrice
-    s = s & "H" & "," & tick.price
+    s = s & "H" & "," & pTick.Price
 Case TickTypes.TickTypeLowPrice
-    s = s & "L" & "," & tick.price
+    s = s & "L" & "," & pTick.Price
 Case TickTypes.TickTypeMarketDepth
-    s = s & "D" & "," & tick.position & "," & tick.marketmaker & "," & tick.operation & "," & tick.side & "," & tick.price & "," & tick.size
+    s = s & "D" & "," & pTick.Position & "," & pTick.MarketMaker & "," & pTick.Operation & "," & pTick.Side & "," & pTick.Price & "," & pTick.Size
 Case TickTypes.TickTypeMarketDepthReset
     s = s & "R"
 Case TickTypes.TickTypeTrade
-    s = s & "T" & "," & tick.price & "," & tick.size
+    s = s & "T" & "," & pTick.Price & "," & pTick.Size
 Case TickTypes.TickTypeVolume
-    s = s & "V" & "," & tick.size
+    s = s & "V" & "," & pTick.Size
 Case TickTypes.TickTypeOpenInterest
-    s = s & "I" & "," & tick.size
+    s = s & "I" & "," & pTick.Size
 Case TickTypes.TickTypeOpenPrice
-    s = s & "O" & "," & tick.price
+    s = s & "O" & "," & pTick.Price
 End Select
 
 GenericTickToString = s
@@ -534,25 +655,25 @@ End Function
 '@================================================================================
 
 Private Function formatTimestamp( _
-            ByVal timestamp As Date) As String
-Dim timestampDays  As Long
-Dim timestampSecs  As Double
-Dim timestampAsDate As Date
-Dim Milliseconds As Long
+            ByVal pTimestamp As Date) As String
+Dim lTimestampDays  As Long
+Dim lTimestampSecs  As Double
+Dim lTimestampAsDate As Date
+Dim lMilliseconds As Long
 
-timestampDays = Int(timestamp)
-timestampSecs = Int((timestamp - Int(timestamp)) * 86400) / 86400#
-timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-Milliseconds = CLng((timestamp - timestampAsDate) * 86400# * 1000#)
+lTimestampDays = Int(pTimestamp)
+lTimestampSecs = Int((pTimestamp - Int(pTimestamp)) * 86400) / 86400#
+lTimestampAsDate = CDate(CDbl(lTimestampDays) + lTimestampSecs)
+lMilliseconds = CLng((pTimestamp - lTimestampAsDate) * 86400# * 1000#)
 
-If Milliseconds >= 1000& Then
-    Milliseconds = Milliseconds - 1000&
-    timestampSecs = timestampSecs + (1# / 86400#)
-    timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
+If lMilliseconds >= 1000& Then
+    lMilliseconds = lMilliseconds - 1000&
+    lTimestampSecs = lTimestampSecs + (1# / 86400#)
+    lTimestampAsDate = CDate(CDbl(lTimestampDays) + lTimestampSecs)
 End If
 
-formatTimestamp = Format(timestampAsDate, "yyyy/mm/dd hh:nn:ss") & _
-                        Format(Milliseconds, "\.000")
+formatTimestamp = Format(lTimestampAsDate, "yyyy/mm/dd hh:nn:ss") & _
+                        Format(lMilliseconds, "\.000")
             
 End Function
 

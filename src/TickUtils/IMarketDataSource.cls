@@ -60,19 +60,19 @@ Private Const ModuleName                            As String = "IMarketDataSour
 ' Properties
 '@================================================================================
 
-Public Property Get Clock() As Clock
+Public Property Get ClockFuture() As IFuture
 End Property
 
-Public Property Get Contract() As IContract
-End Property
-
-Public Property Get ContractSpecifier() As IContractSpecifier
+Public Property Get ContractFuture() As IFuture
 End Property
 
 Public Property Get CurrentQuote(ByVal pTickType As TickTypes) As Quote
 End Property
 
 Public Property Get CurrentTick(ByVal pTickType As TickTypes) As GenericTick
+End Property
+
+Public Property Get ErrorMessage() As String
 End Property
 
 Public Property Get Handle() As Long
@@ -99,7 +99,7 @@ End Property
 Public Property Get PriceChange() As PriceChange
 End Property
 
-Public Property Get Session() As Session
+Public Property Get SessionFuture() As IFuture
 End Property
 
 Public Property Get State() As MarketDataSourceStates
@@ -164,6 +164,9 @@ Public Sub RefreshTicks(ByVal pListener As IGenericTickListener)
 End Sub
 
 Public Sub RemoveErrorListener(ByVal pListener As ErrorListener)
+End Sub
+
+Public Sub RemoveFromConfig()
 End Sub
 
 Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)

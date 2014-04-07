@@ -533,12 +533,14 @@ If Not mTaskContext Is Nothing Then mTaskContext.Continue
 If Not mReader Is Nothing Then mReader.CloseInputFile
 Set mReader = Nothing
 
-Dim lTickStreamBuilder As TickStreamBuilder
-Set lTickStreamBuilder = mTickStreamBuilder
-' ignore state change event
-Set mTickStreamBuilder = Nothing
-
-lTickStreamBuilder.Finish
+If Not mTickStreamBuilder Is Nothing Then
+    Dim lTickStreamBuilder As TickStreamBuilder
+    Set lTickStreamBuilder = mTickStreamBuilder
+    ' ignore state change event
+    Set mTickStreamBuilder = Nothing
+    
+    lTickStreamBuilder.Finish
+End If
 
 Exit Sub
 

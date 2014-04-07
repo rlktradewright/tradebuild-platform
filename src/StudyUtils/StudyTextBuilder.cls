@@ -67,28 +67,28 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Position(ByVal value As StudyPoint)
+Public Property Let Position(ByVal Value As StudyPoint)
 Const ProcName As String = "Position"
 On Error GoTo Err
 
-mStudyText.Position = value
+mStudyText.Position = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Text(ByVal value As String)
+Public Property Let Text(ByVal Value As String)
 Const ProcName As String = "Text"
 On Error GoTo Err
 
-mStudyText.Text = value
+mStudyText.Text = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyText() As StudyText
@@ -100,7 +100,7 @@ Set StudyText = mStudyText
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

@@ -51,7 +51,7 @@ Public Const ProjectName                            As String = "TickerUtils27"
 Public Property Get gLogger() As FormattingLogger
 Static sLogger As FormattingLogger
 If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tickerutils", ProjectName)
-gLogger = sLogger
+Set gLogger = sLogger
 End Property
 
 '@================================================================================

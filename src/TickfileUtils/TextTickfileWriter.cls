@@ -155,9 +155,11 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 
-Set mContract = ev.Future.Value
-setupSession
-setReady
+If TypeOf ev.Future.Value Is IContract Then
+    Set mContract = ev.Future.Value
+    setupSession
+    setReady
+End If
 
 Exit Sub
 
@@ -558,13 +560,8 @@ Private Sub setupSession()
 Const ProcName As String = "setupSession"
 On Error GoTo Err
 
-Set mSessionBuilder = New SessionBuilder
-
-mSessionBuilder.sessionEndTime = mContract.sessionEndTime
-mSessionBuilder.sessionStartTime = mContract.sessionStartTime
-mSessionBuilder.CompleteSessionCreation
-
-Set mSession = mSessionBuilder.SessionFuture.Value
+Set mSessionBuilder = CreateSessionBuilder(mContract.sessionStartTime, mContract.sessionEndTime, Nothing)
+Set mSession = mSessionBuilder.Session
 
 Exit Sub
 

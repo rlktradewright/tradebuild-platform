@@ -142,7 +142,7 @@ With mGrid
     .FixedCols = 0
 End With
     
-setupGridColumn TestDataGridColumns.BarNumber, "#", AlignmentSettings.flexAlignLeftCenter
+setupGridColumn TestDataGridColumns.barNumber, "#", AlignmentSettings.flexAlignLeftCenter
 setupGridColumn TestDataGridColumns.TimeStamp, "Timestamp", AlignmentSettings.flexAlignLeftCenter
 setupGridColumn TestDataGridColumns.OpenValue, "Open", AlignmentSettings.flexAlignRightCenter
 setupGridColumn TestDataGridColumns.HighValue, "High", AlignmentSettings.flexAlignRightCenter
@@ -154,7 +154,7 @@ setupGridColumn TestDataGridColumns.OpenInterest, "Open Interest", AlignmentSett
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetupStudyValueColumns( _
@@ -173,7 +173,7 @@ mGrid.Cols = TestDataGridColumns.StudyValue1
 For i = 1 To studyConfig.StudyValueConfigurations.Count
     Set svc = studyConfig.StudyValueConfigurations.Item(i)
     If svc.IncludeInChart Then
-        Set svd = studyConfig.study.StudyDefinition.StudyValueDefinitions.Item(svc.ValueName)
+        Set svd = studyConfig.Study.StudyDefinition.StudyValueDefinitions.Item(svc.ValueName)
         setupGridColumn TestDataGridColumns.StudyValue1 + j, _
                                 svd.Name, _
                                 getAlignment(svd)
@@ -184,7 +184,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -229,7 +229,7 @@ calcTextWidth = mParent.TextWidth(pText) + 6 * Screen.TwipsPerPixelX
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setCellBackColor( _
@@ -244,7 +244,7 @@ mGrid.CellBackColor = IIf(mGrid.Row Mod 2 = 0, CellBackColorEven, CellBackColorO
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupGridColumn( _
@@ -272,7 +272,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 

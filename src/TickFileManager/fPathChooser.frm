@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
 Begin VB.Form fPathChooser 
    Caption         =   "Choose folder"
    ClientHeight    =   2775
@@ -11,7 +11,7 @@ Begin VB.Form fPathChooser
    MinButton       =   0   'False
    ScaleHeight     =   2775
    ScaleWidth      =   6030
-   Begin TWControls10.PathChooser PathChooser1 
+   Begin TWControls40.PathChooser PathChooser1 
       Height          =   2655
       Left            =   120
       TabIndex        =   3
@@ -119,7 +119,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -140,7 +140,7 @@ mCancelled = True
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub NewFolderButton_Click()
@@ -152,7 +152,7 @@ PathChooser1.NewFolder
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub OKButton_Click()
@@ -165,7 +165,7 @@ Me.Hide
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -185,7 +185,7 @@ cancelled = mCancelled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let path(ByVal newvalue As String)
@@ -197,7 +197,7 @@ PathChooser1.path = newvalue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get path() As String
@@ -209,7 +209,7 @@ If Not mCancelled Then path = PathChooser1.path
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-' Copyright 2008 Richard L King
+' Copyright 2008-2011 Richard L King
 '
 ' This file is part of TradeBuild Tick Utilities Package.
 '
@@ -48,7 +48,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TickDataEncoder
+Implements ITickDataEncoder
 
 '@================================================================================
 ' Events
@@ -66,7 +66,7 @@ Implements TickDataEncoder
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickUtils26"
+
 Private Const ModuleName                    As String = "TickDataEncoderv1"
 
 '@================================================================================
@@ -79,6 +79,7 @@ Private mPeriodStartTime As Date   ' timestamp at start of encoding period
 
 Private mData() As Byte
 Private mDataIndex As Long
+Private mDataIndexCheckpoint As Long
 
 Private mTickSize As Double
 
@@ -93,286 +94,285 @@ mBasePrice = MaxDoubleValue
 End Sub
 
 '@================================================================================
-' TickDataEncoder Interface Members
+' ITickDataEncoder Interface Members
 '@================================================================================
 
-Private Property Get TickDataEncoder_basePrice() As Double
-TickDataEncoder_basePrice = mBasePrice
+Private Property Get ITickDataEncoder_basePrice() As Double
+ITickDataEncoder_basePrice = mBasePrice
 End Property
 
-Private Sub TickDataEncoder_encodeAsk( _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
-                ByVal size As Long)
-Dim failpoint As Long
-
+Private Sub ITickDataEncoder_encodeAsk( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeAsk"
 On Error GoTo Err
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+checkpoint
 
-WriteQuoteRecord TickTypes.TickTypeAsk, timestamp, price, size
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeAsk, pTimestamp, pPrice, pSize
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeAsk" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeBid( _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
-                ByVal size As Long)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeBid( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeBid"
 On Error GoTo Err
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+checkpoint
 
-WriteQuoteRecord TickTypes.TickTypeBid, timestamp, price, size
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeBid, pTimestamp, pPrice, pSize
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeBid" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeClose( _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeClose( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double)
+Const ProcName As String = "ITickDataEncoder_encodeClose"
 On Error GoTo Err
 
-WritePriceRecord TickTypes.TickTypeClosePrice, timestamp, price
+checkpoint
+
+WritePriceRecord TickTypes.TickTypeClosePrice, pTimestamp, pPrice
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeClose" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get TickDataEncoder_encodedData() As Byte()
+Private Property Get ITickDataEncoder_encodedData() As Byte()
+Const ProcName As String = "ITickDataEncoder_encodedData"
+On Error GoTo Err
+
+checkpoint
+
 If mDataIndex = 0 Then Exit Property
 
 If UBound(mData) > (mDataIndex - 1) Then
     ReDim Preserve mData(mDataIndex - 1) As Byte
 End If
 
-TickDataEncoder_encodedData = mData
+ITickDataEncoder_encodedData = mData
+
+Exit Property
+
+Err:
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get TickDataEncoder_encodedDataLength() As Long
-TickDataEncoder_encodedDataLength = mDataIndex
+Private Property Get ITickDataEncoder_encodedDataLength() As Long
+ITickDataEncoder_encodedDataLength = mDataIndex
 End Property
 
-Private Sub TickDataEncoder_encodeHigh( _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeHigh( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double)
+Const ProcName As String = "ITickDataEncoder_encodeHigh"
 On Error GoTo Err
 
-WritePriceRecord TickTypes.TickTypeHighPrice, timestamp, price
+checkpoint
+
+WritePriceRecord TickTypes.TickTypeHighPrice, pTimestamp, pPrice
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeHigh" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeLow( _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeLow( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double)
+Const ProcName As String = "ITickDataEncoder_encodeLow"
 On Error GoTo Err
 
-WritePriceRecord TickTypes.TickTypeLowPrice, timestamp, price
+checkpoint
+
+WritePriceRecord TickTypes.TickTypeLowPrice, pTimestamp, pPrice
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeLow" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeMarketDepthData( _
-                ByVal timestamp As Date, _
-                ByVal position As Long, _
-                ByVal marketmaker As String, _
-                ByVal operation As Long, _
-                ByVal side As Long, _
-                ByVal price As Double, _
-                ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
+Private Sub ITickDataEncoder_encodeMarketDepthData( _
+                ByVal pTimestamp As Date, _
+                ByVal pPosition As Long, _
+                ByVal pMarketmaker As String, _
+                ByVal pOperation As Long, _
+                ByVal pSide As Long, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeMarketDepthData"
+On Error GoTo Err
+
+Dim lTypeByte As Byte
+Dim lSizeType As SizeTypes
 Dim sideOperationPositionByte As Byte
 
-Dim failpoint As Long
-On Error GoTo Err
+checkpoint
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
-typeByte = TickTypes.TickTypeMarketDepth
+lTypeByte = TickTypes.TickTypeMarketDepth
 
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
+lSizeType = GetSizeType(pSize)
+lTypeByte = lTypeByte Or (lSizeType * SizeTypeShifter)
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
+If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
+If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
 
-WriteByte typeByte
-WriteTimestamp timestamp
-sideOperationPositionByte = CByte(position)
-sideOperationPositionByte = sideOperationPositionByte Or CByte(operation * OperationShifter)
-sideOperationPositionByte = sideOperationPositionByte Or CByte(side * SideShifter)
+WriteByte lTypeByte
+WriteTimestamp pTimestamp
+sideOperationPositionByte = CByte(pPosition)
+sideOperationPositionByte = sideOperationPositionByte Or CByte(pOperation * OperationShifter)
+sideOperationPositionByte = sideOperationPositionByte Or CByte(pSide * SideShifter)
 WriteByte sideOperationPositionByte
 
-WritePrice price
-WriteSize size, sizeType
-WriteString marketmaker
+WritePrice pPrice
+WriteSize pSize, lSizeType
+WriteString pMarketmaker
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeMarketDepthData" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeMarketDepthReset( _
-                ByVal timestamp As Date)
-Dim typeByte As Byte
-
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeMarketDepthReset( _
+                ByVal pTimestamp As Date)
+Const ProcName As String = "ITickDataEncoder_encodeMarketDepthReset"
 On Error GoTo Err
 
-typeByte = TickTypes.TickTypeMarketDepthReset
+Dim lTypeByte As Byte
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
+checkpoint
 
-WriteByte typeByte
-WriteTimestamp timestamp
+lTypeByte = TickTypes.TickTypeMarketDepthReset
+
+If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
+
+WriteByte lTypeByte
+WriteTimestamp pTimestamp
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeMarketDepthReset" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeOpen(ByVal timestamp As Date, ByVal price As Double)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeOpen(ByVal pTimestamp As Date, ByVal pPrice As Double)
+Const ProcName As String = "ITickDataEncoder_encodeOpen"
 On Error GoTo Err
 
-WritePriceRecord TickTypes.TickTypeOpenPrice, timestamp, price
+checkpoint
+
+WritePriceRecord TickTypes.TickTypeOpenPrice, pTimestamp, pPrice
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeOpen" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeOpenInterest( _
-                ByVal timestamp As Date, ByVal size As Long)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeOpenInterest( _
+                ByVal pTimestamp As Date, ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeOpenInterest"
 On Error GoTo Err
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+checkpoint
 
-WriteSizeRecord TickTypes.TickTypeOpenInterest, timestamp, size
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteSizeRecord TickTypes.TickTypeOpenInterest, pTimestamp, pSize
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeOpenInterest" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeTrade( _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
-                ByVal size As Long)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeTrade( _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeTrade"
 On Error GoTo Err
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+checkpoint
 
-WriteQuoteRecord TickTypes.TickTypeTrade, timestamp, price, size
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeTrade, pTimestamp, pPrice, pSize
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeTrade" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub TickDataEncoder_encodeVolume( _
-                ByVal timestamp As Date, _
-                ByVal size As Long)
-Dim failpoint As Long
+Private Sub ITickDataEncoder_encodeVolume( _
+                ByVal pTimestamp As Date, _
+                ByVal pSize As Long)
+Const ProcName As String = "ITickDataEncoder_encodeVolume"
 On Error GoTo Err
 
-If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+checkpoint
 
-WriteSizeRecord TickTypes.TickTypeVolume, timestamp, size
+If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteSizeRecord TickTypes.TickTypeVolume, pTimestamp, pSize
 
 Exit Sub
 
 Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeVolume" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+rollback
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get TickDataEncoder_encodingFormatIdentifier() As String
+Private Property Get ITickDataEncoder_encodingFormatIdentifier() As String
 If mVersion = 1 Then
-    TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV1
+    ITickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV1
 Else
-    TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV2
+    ITickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV2
 End If
 End Property
 
-Private Property Get TickDataEncoder_periodStartTime() As Date
-TickDataEncoder_periodStartTime = mPeriodStartTime
+Private Property Get ITickDataEncoder_periodStartTime() As Date
+ITickDataEncoder_periodStartTime = mPeriodStartTime
 End Property
 
-Private Property Get TickDataEncoder_tickSize() As Double
-TickDataEncoder_tickSize = mTickSize
+Private Property Get ITickDataEncoder_tickSize() As Double
+ITickDataEncoder_tickSize = mTickSize
 End Property
 
 '@================================================================================
@@ -387,12 +387,12 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal periodStartTime As Date, _
-                ByVal tickSize As Double, _
+Friend Sub Initialise( _
+                ByVal PeriodStartTime As Date, _
+                ByVal TickSize As Double, _
                 ByVal encodingFormat As String)
-mPeriodStartTime = periodStartTime
-mTickSize = tickSize
+mPeriodStartTime = PeriodStartTime
+mTickSize = TickSize
 
 Select Case encodingFormat
 Case TickEncodingFormatV1
@@ -408,30 +408,54 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub checkpoint()
+mDataIndexCheckpoint = mDataIndex
+End Sub
+
 Private Function GetSizeType( _
-                ByVal size As Long) As SizeTypes
-If size < &H100 Then
+                ByVal pSize As Long) As SizeTypes
+If pSize < &H100 Then
     GetSizeType = SizeTypes.ByteSize
-ElseIf size < &H10000 Then
+ElseIf pSize < &H10000 Then
     GetSizeType = SizeTypes.UInt16Size
 Else
     GetSizeType = SizeTypes.UInt32Size
 End If
 End Function
 
+Private Sub rollback()
+mDataIndex = mDataIndexCheckpoint
+End Sub
+
 Private Sub WriteByte( _
                 ByVal theByte As Byte)
+Const ProcName As String = "WriteByte"
+On Error GoTo Err
+
 If mDataIndex > UBound(mData) Then
     ReDim Preserve mData(UBound(mData) + 8192) As Byte
 End If
 mData(mDataIndex) = theByte
 mDataIndex = mDataIndex + 1
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteInt( _
                 ByVal theInt As Integer)
+Const ProcName As String = "WriteInt"
+On Error GoTo Err
+
 WriteByte CByte(theInt And &HFF)
 WriteByte CByte(Int(theInt / &H100) And &HFF)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteLong( _
@@ -443,12 +467,16 @@ WriteByte CByte(Int(theLong / &H1000000) And &HFF)
 End Sub
 
 Private Sub WritePrice( _
-                ByVal price As Double)
+                ByVal pPrice As Double)
+Const ProcName As String = "WritePrice"
+On Error GoTo Err
+
 Dim numticks As Integer
-If price = mBasePrice Then
+
+If pPrice = mBasePrice Then
     WriteByte &H0
 Else
-    numticks = Abs(price - mBasePrice) / mTickSize
+    numticks = Abs(pPrice - mBasePrice) / mTickSize
     If numticks <= 127 Then
         WriteByte CByte(numticks)
     Else
@@ -461,93 +489,133 @@ Else
         WriteByte CByte(numticks And &HFF)
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WritePriceRecord( _
-                ByVal tickType As TickTypes, _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
-Dim typeByte As Byte
+                ByVal pTickType As TickTypes, _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double)
+Const ProcName As String = "WritePriceRecord"
+On Error GoTo Err
 
-typeByte = tickType
+Dim lTypeByte As Byte
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
+lTypeByte = pTickType
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
+If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-WriteByte typeByte
-WriteTimestamp timestamp
-WritePrice price
+If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
+
+WriteByte lTypeByte
+WriteTimestamp pTimestamp
+WritePrice pPrice
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteQuoteRecord( _
-                ByVal tickType As TickTypes, _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
-                ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
+                ByVal pTickType As TickTypes, _
+                ByVal pTimestamp As Date, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+Const ProcName As String = "WriteQuoteRecord"
+On Error GoTo Err
 
-typeByte = tickType
+Dim lTypeByte As Byte
+Dim lSizeType As SizeTypes
 
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
+lTypeByte = pTickType
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
+lSizeType = GetSizeType(pSize)
+lTypeByte = lTypeByte Or (lSizeType * SizeTypeShifter)
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
+If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-WriteByte typeByte
+If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
 
-WriteTimestamp timestamp
+WriteByte lTypeByte
 
-WritePrice price
+WriteTimestamp pTimestamp
 
-WriteSize size, sizeType
+WritePrice pPrice
+
+WriteSize pSize, lSizeType
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteSize( _
-                ByVal size As Long, _
-                ByVal sizeType As SizeTypes)
-Select Case sizeType
+                ByVal pSize As Long, _
+                ByVal pSizeType As SizeTypes)
+Const ProcName As String = "WriteSize"
+On Error GoTo Err
+
+Select Case pSizeType
 Case SizeTypes.ByteSize
-    Debug.Assert size < &H100&
-    WriteByte CByte(size)
+    Debug.Assert pSize < &H100&
+    WriteByte CByte(pSize)
 Case SizeTypes.UInt16Size
-    Debug.Assert size < &H10000
-    If size < &H8000& Then
-        WriteInt size
+    Debug.Assert pSize < &H10000
+    If pSize < &H8000& Then
+        WriteInt pSize
     Else
-        WriteInt CInt(size - &H10000)
+        WriteInt CInt(pSize - &H10000)
     End If
 Case SizeTypes.UInt32Size
-    WriteLong size
+    WriteLong pSize
 End Select
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteSizeRecord( _
-                ByVal tickType As TickTypes, _
-                ByVal timestamp As Date, _
-                ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
+                ByVal TickType As TickTypes, _
+                ByVal pTimestamp As Date, _
+                ByVal pSize As Long)
+Const ProcName As String = "WriteSizeRecord"
+On Error GoTo Err
 
-typeByte = tickType
+Dim lTypeByte As Byte
+Dim lSizeType As SizeTypes
 
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
+lTypeByte = TickType
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
+lSizeType = GetSizeType(pSize)
+lTypeByte = lTypeByte Or (lSizeType * SizeTypeShifter)
 
-WriteByte typeByte
-WriteTimestamp timestamp
-WriteSize size, sizeType
+If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
+
+WriteByte lTypeByte
+WriteTimestamp pTimestamp
+WriteSize pSize, lSizeType
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteString( _
                 ByVal theString As String)
+Const ProcName As String = "WriteString"
+On Error GoTo Err
+
 Dim ar() As Byte
 Dim i As Long
 
@@ -568,21 +636,33 @@ For i = 0 To UBound(ar)
     WriteByte ar(i)
 Next
 
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteTimestamp( _
-                ByVal timestamp As Date)
+                ByVal pTimestamp As Date)
 Dim diff As Long
-If timestamp <> mTimestamp Then
-    diff = (timestamp - mPeriodStartTime) * 86400 * 1000
+Const ProcName As String = "WriteTimestamp"
+On Error GoTo Err
+
+If pTimestamp <> mTimestamp Then
+    diff = (pTimestamp - mPeriodStartTime) * 86400 * 1000
     Debug.Assert diff < &H10000
     If diff < &H8000& Then
         WriteInt diff
     Else
         WriteInt CInt(diff - &H10000)
     End If
-    mTimestamp = timestamp
+    mTimestamp = pTimestamp
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

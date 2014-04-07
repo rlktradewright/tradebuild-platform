@@ -41,7 +41,7 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ModuleName As String = "Timeframes"
+Private Const ModuleName                        As String = "Timeframes"
 
 '@================================================================================
 ' Enums
@@ -60,22 +60,25 @@ Private Type TimeframeTableEntry
     ToTime                  As Date
     IncludeBarsOutsideSession   As Boolean
     ExcludeCurrentbar       As Boolean
-    SaveIntervalSeconds     As Long
-    WriteBidAndAskBars      As Boolean
 End Type
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTimeframeTable() As TimeframeTableEntry
-Private mNextTimeframeTableIndex As Long
+Private mTimeframeTable()                       As TimeframeTableEntry
+Private mNextTimeframeTableIndex                As Long
 
-Private mTicker As Ticker
+Private mStudyBase                              As IStudyBase
+Private mStudyInputHandler                      As StudyInputHandler
+Private mContractFuture                         As IFuture
+Private mHistDataStore                          As IHistoricalDataStore
 
-Private mContract As Contract
+Private mCollectionChangeListeners              As Listeners
 
-Private mChangeListeners As Collection
+Private mClockFuture                            As IFuture
+
+Private mBarType                                As BarTypes
 
 '@================================================================================
 ' Class Event Handlers
@@ -83,16 +86,12 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 ReDim mTimeframeTable(1) As TimeframeTableEntry
-Set mChangeListeners = New Collection
+Set mCollectionChangeListeners = New Listeners
 End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "Timeframes terminated"
 End Sub
-
-'@================================================================================
-' XXXX Interface Members
-'@================================================================================
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -102,32 +101,20 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let Contract(ByVal Value As Contract)
-Dim tte As TimeframeTableEntry
-Dim i As Long
-
-Const ProcName As String = "Contract"
-
-On Error GoTo Err
-
-Set mContract = Value
-For i = 0 To mNextTimeframeTableIndex - 1
-    tte = mTimeframeTable(i)
-    tte.TheTimeFrame.Contract = mContract
-Next
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Public Property Get ContractFuture() As IFuture
+Set ContractFuture = mContractFuture
 End Property
 
 Public Property Get Count() As Long
 Count = mNextTimeframeTableIndex
 End Property
 
-Friend Property Let Ticker(ByVal Value As Ticker)
-Set mTicker = Value
+Public Property Get HistDataFactory() As IHistoricalDataStore
+Set HistDataFactory = mHistDataStore
+End Property
+
+Public Property Get StudyBase() As IStudyBase
+Set StudyBase = mStudyBase
 End Property
 
 '@================================================================================
@@ -138,11 +125,11 @@ Public Function Add( _
                 ByVal BarTimePeriod As TimePeriod, _
                 ByRef Key As String, _
                 ByVal NumberOfBarsToFetch As Long, _
+                Optional ByVal pFromTime As Date, _
+                Optional ByVal pStateChangeListener As StateChangeListener, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean, _
                 Optional ByVal ExcludeCurrentbar As Boolean) As Timeframe
-
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
@@ -156,36 +143,30 @@ Case TimePeriodSecond, _
         TimePeriodVolume, _
         TimePeriodTickMovement
 Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Time period units not supported"
+        AssertArgument False, "Time period units not supported"
 End Select
 
-Set Add = AddTimeframe(BarTimePeriod, _
+Set Add = addTimeframe(BarTimePeriod, _
                     Key, _
                     NumberOfBarsToFetch, _
+                    pFromTime, _
                     0, _
-                    0, _
+                    pStateChangeListener, _
                     IncludeBarsOutsideSession, _
-                    ExcludeCurrentbar, _
-                    Nothing, _
-                    0, _
-                    False)
+                    ExcludeCurrentbar)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 Public Sub AddCollectionChangeListener( _
-                ByVal Value As CollectionChangeListener)
+                ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
-mChangeListeners.Add Value
+mCollectionChangeListeners.Add pListener
 
 'gNotifyExistingCollectionMembers mTimeframes, value, Me
 
@@ -225,10 +206,9 @@ Public Function AddHistorical( _
                 ByVal NumberOfBarsToFetch As Long, _
                 Optional ByVal FromTime As Date, _
                 Optional ByVal ToTime As Date, _
+                Optional ByVal pStateChangeListener As StateChangeListener, _
                 Optional ByVal IncludeBarsOutsideSession As Boolean) As Timeframe
-
 Const ProcName As String = "AddHistorical"
-
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
@@ -242,108 +222,20 @@ Case TimePeriodSecond, _
         TimePeriodVolume, _
         TimePeriodTickMovement
 Case Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Time period units not supported"
+        AssertArgument False, "Time period units not supported"
     
 End Select
 
-If FromTime > ToTime Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "fromTime must be earlier than toTime"
-End If
+AssertArgument FromTime <= ToTime, "fromTime must be earlier than toTime"
 
-Set AddHistorical = AddTimeframe(BarTimePeriod, _
+Set AddHistorical = addTimeframe(BarTimePeriod, _
                     Key, _
                     NumberOfBarsToFetch, _
                     FromTime, _
                     ToTime, _
+                    pStateChangeListener, _
                     IncludeBarsOutsideSession, _
-                    False, _
-                    Nothing, _
-                    0, _
                     False)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-
-End Function
-
-Friend Function AddTimeframe( _
-                ByVal BarTimePeriod As TimePeriod, _
-                ByRef Key As String, _
-                ByVal NumberOfBarsToFetch As Long, _
-                ByVal FromTime As Date, _
-                ByVal ToTime As Date, _
-                ByVal IncludeBarsOutsideSession As Boolean, _
-                ByVal ExcludeCurrentbar As Boolean, _
-                ByVal barWriter As HistoricDataWriter, _
-                ByVal SaveIntervalSeconds As Long, _
-                ByVal WriteBidAndAskBars As Boolean) As Timeframe
-
-Dim tte As TimeframeTableEntry
-Dim timeframeIndex As Long
-
-Const ProcName As String = "AddTimeframe"
-
-On Error GoTo Err
-
-timeframeIndex = getTimeframeIndex(BarTimePeriod, _
-                                NumberOfBarsToFetch, _
-                                FromTime, _
-                                ToTime, _
-                                IncludeBarsOutsideSession, _
-                                SaveIntervalSeconds, _
-                                WriteBidAndAskBars)
-If timeframeIndex >= 0 Then
-    Set AddTimeframe = mTimeframeTable(timeframeIndex).TheTimeFrame
-    Exit Function
-End If
-
-Set AddTimeframe = New Timeframe
-Set tte.TheTimeFrame = AddTimeframe
-Set tte.BarTimePeriod = BarTimePeriod
-tte.NumberOfBarsToFetch = NumberOfBarsToFetch
-tte.FromTime = FromTime
-tte.ToTime = ToTime
-tte.IncludeBarsOutsideSession = IncludeBarsOutsideSession
-tte.WriteBidAndAskBars = WriteBidAndAskBars
-tte.SaveIntervalSeconds = SaveIntervalSeconds
-
-If Key <> "" Then
-    tte.Key = Key
-Else
-    tte.Key = generateKey(BarTimePeriod, _
-                        NumberOfBarsToFetch, _
-                        FromTime, _
-                        ToTime, _
-                        IncludeBarsOutsideSession, _
-                        ExcludeCurrentbar, _
-                        SaveIntervalSeconds, _
-                        WriteBidAndAskBars)
-End If
-tte.TheTimeFrame.Initialise mContract, _
-                            tte.Key, _
-                            mTicker, _
-                            BarTimePeriod, _
-                            NumberOfBarsToFetch, _
-                            FromTime, _
-                            ToTime, _
-                            IncludeBarsOutsideSession, _
-                            ExcludeCurrentbar, _
-                            barWriter, _
-                            SaveIntervalSeconds, _
-                            WriteBidAndAskBars
-
-If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
-    ReDim Preserve mTimeframeTable(2 * (UBound(mTimeframeTable) + 1) - 1) As TimeframeTableEntry
-End If
-mTimeframeTable(mNextTimeframeTableIndex) = tte
-mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
-fireChange CollItemAdded, tte.TheTimeFrame
 
 Exit Function
 
@@ -354,11 +246,36 @@ End Function
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
 RemoveAll
-Set mTicker = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pStudyBase As IStudyBase, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pClockFuture As IFuture, _
+                ByVal pBarType As BarTypes)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+AssertArgument Not pStudyBase Is Nothing, "pStudyBase is Nothing"
+If Not pContractFuture Is Nothing Then AssertArgument Not (pContractFuture.IsCancelled Or pContractFuture.IsFaulted), "pContractFuture is cancelled or faulted"
+If Not pClockFuture Is Nothing Then AssertArgument Not (pClockFuture.IsCancelled Or pClockFuture.IsFaulted), "pClockFuture is cancelled or faulted"
+
+Set mStudyBase = pStudyBase
+Set mContractFuture = pContractFuture
+
+Set mHistDataStore = pHistDataStore
+Set mClockFuture = pClockFuture
+
+mBarType = pBarType
 
 Exit Sub
 
@@ -367,12 +284,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item(Key As String) As Timeframe
-Dim i As Long
-
 Const ProcName As String = "Item"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).Key = Key Then
         Set Item = mTimeframeTable(i).TheTimeFrame
@@ -387,17 +302,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove(Key As String)
-Dim i As Long
-
 Const ProcName As String = "Remove"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).Key = Key Then
         mTimeframeTable(i).TheTimeFrame.Finish
         clearTimeframeTableEntry i
-        fireChange CollItemRemoved, mTimeframeTable(i).TheTimeFrame
+        fireCollectionChange CollItemRemoved, mTimeframeTable(i).TheTimeFrame
         Exit For
     End If
 Next
@@ -409,16 +322,14 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAll()
-Dim i As Long
-
 Const ProcName As String = "RemoveAll"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To mNextTimeframeTableIndex - 1
     mTimeframeTable(i).TheTimeFrame.Finish
     clearTimeframeTableEntry i
-    fireChange CollItemRemoved, mTimeframeTable(i).TheTimeFrame
+    fireCollectionChange CollItemRemoved, mTimeframeTable(i).TheTimeFrame
 Next
 
 Exit Sub
@@ -427,15 +338,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveCollectionChangeListener(ByVal Value As CollectionChangeListener)
-Dim i As Long
+Public Sub RemoveCollectionChangeListener(ByVal pListener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
-For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is Value Then mChangeListeners.Remove i
-Next
+mCollectionChangeListeners.Remove pListener
 
 Exit Sub
 
@@ -447,9 +354,77 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function addTimeframe( _
+                ByVal BarTimePeriod As TimePeriod, _
+                ByRef Key As String, _
+                ByVal NumberOfBarsToFetch As Long, _
+                ByVal FromTime As Date, _
+                ByVal ToTime As Date, _
+                ByVal pStateChangeListener As StateChangeListener, _
+                ByVal IncludeBarsOutsideSession As Boolean, _
+                ByVal ExcludeCurrentbar As Boolean) As Timeframe
+Const ProcName As String = "addTimeframe"
+On Error GoTo Err
+
+Dim timeframeIndex As Long
+timeframeIndex = getTimeframeIndex(BarTimePeriod, _
+                                NumberOfBarsToFetch, _
+                                FromTime, _
+                                ToTime, _
+                                IncludeBarsOutsideSession)
+If timeframeIndex >= 0 Then
+    Set addTimeframe = mTimeframeTable(timeframeIndex).TheTimeFrame
+    Exit Function
+End If
+
+Dim tte As TimeframeTableEntry
+Set addTimeframe = New Timeframe
+Set tte.TheTimeFrame = addTimeframe
+Set tte.BarTimePeriod = BarTimePeriod
+tte.NumberOfBarsToFetch = NumberOfBarsToFetch
+tte.FromTime = FromTime
+tte.ToTime = ToTime
+tte.IncludeBarsOutsideSession = IncludeBarsOutsideSession
+
+If Key <> "" Then
+    tte.Key = Key
+Else
+    tte.Key = generateKey(BarTimePeriod, _
+                        NumberOfBarsToFetch, _
+                        FromTime, _
+                        ToTime, _
+                        IncludeBarsOutsideSession, _
+                        ExcludeCurrentbar)
+End If
+tte.TheTimeFrame.Initialise mStudyBase, _
+                            mContractFuture, _
+                            mHistDataStore, _
+                            tte.Key, _
+                            BarTimePeriod, _
+                            NumberOfBarsToFetch, _
+                            mBarType, _
+                            FromTime, _
+                            ToTime, _
+                            pStateChangeListener, _
+                            IncludeBarsOutsideSession, _
+                            ExcludeCurrentbar, _
+                            mClockFuture
+
+If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
+    ReDim Preserve mTimeframeTable(2 * (UBound(mTimeframeTable) + 1) - 1) As TimeframeTableEntry
+End If
+mTimeframeTable(mNextTimeframeTableIndex) = tte
+mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
+fireCollectionChange CollItemAdded, tte.TheTimeFrame
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
 Const ProcName As String = "clearTimeframeTableEntry"
-
 On Error GoTo Err
 
 mTimeframeTable(index).Key = ""
@@ -463,19 +438,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub fireChange( _
+Private Sub fireCollectionChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Timeframe)
-Dim listener As CollectionChangeListener
-Dim ev As CollectionChangeEventData
-Const ProcName As String = "fireChange"
-
+Const ProcName As String = "fireCollectionChange"
 On Error GoTo Err
 
-Set ev.source = Me
+Dim ev As CollectionChangeEventData
+Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
-For Each listener In mChangeListeners
+
+Dim listener As CollectionChangeListener
+For Each listener In mCollectionChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)
@@ -492,11 +467,8 @@ Private Function generateKey( _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
                 ByVal IncludeBarsOutsideSession As Boolean, _
-                ByVal ExcludeCurrentbar As Boolean, _
-                ByVal SaveIntervalSeconds As Long, _
-                ByVal WriteBidAndAskBars As Boolean) As String
+                ByVal ExcludeCurrentbar As Boolean) As String
 Const ProcName As String = "generateKey"
-
 On Error GoTo Err
 
 generateKey = BarTimePeriod.ToString & _
@@ -505,15 +477,12 @@ generateKey = BarTimePeriod.ToString & _
             IIf(ToTime <> 0, "," & Format(ToTime, "yyyymmddhhnnss"), "") & _
             ")" & _
             IIf(IncludeBarsOutsideSession, "I", "") & _
-            IIf(ExcludeCurrentbar, "X", "") & _
-            IIf(SaveIntervalSeconds > 0, "S" & SaveIntervalSeconds, "") & _
-            IIf(WriteBidAndAskBars, "W", "")
+            IIf(ExcludeCurrentbar, "X", "")
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-            
 End Function
 
 Private Function getTimeframeIndex( _
@@ -521,24 +490,19 @@ Private Function getTimeframeIndex( _
                 ByVal NumberOfBarsToFetch As Long, _
                 ByVal FromTime As Date, _
                 ByVal ToTime As Date, _
-                ByRef IncludeBarsOutsideSession As Boolean, _
-                ByVal SaveIntervalSeconds As Long, _
-                ByVal WriteBidAndAskBars As Boolean) As Long
-Dim i As Long
-
+                ByRef IncludeBarsOutsideSession As Boolean) As Long
 Const ProcName As String = "getTimeframeIndex"
-
 On Error GoTo Err
 
 getTimeframeIndex = -1
+
+Dim i As Long
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).BarTimePeriod Is BarTimePeriod And _
         mTimeframeTable(i).IncludeBarsOutsideSession = IncludeBarsOutsideSession And _
         mTimeframeTable(i).NumberOfBarsToFetch = NumberOfBarsToFetch And _
         mTimeframeTable(i).FromTime = FromTime And _
-        mTimeframeTable(i).ToTime = ToTime And _
-        mTimeframeTable(i).SaveIntervalSeconds = SaveIntervalSeconds And _
-        mTimeframeTable(i).WriteBidAndAskBars = WriteBidAndAskBars _
+        mTimeframeTable(i).ToTime = ToTime _
     Then
         getTimeframeIndex = i
         Exit Function

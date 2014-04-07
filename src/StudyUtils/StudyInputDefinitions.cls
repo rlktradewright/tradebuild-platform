@@ -83,7 +83,7 @@ Count = mStudyInputDefinitions.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -91,19 +91,19 @@ End Property
 '@================================================================================
 
 Public Function Add( _
-                ByVal inputName As String) As StudyInputDefinition
+                ByVal InputName As String) As StudyInputDefinition
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New StudyInputDefinition
-Add.Name = inputName
+Add.Name = InputName
 Add.InputType = InputTypeReal
-mStudyInputDefinitions.Add Add, inputName
+mStudyInputDefinitions.Add Add, InputName
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyInputDefinition
@@ -115,7 +115,7 @@ Set Item = mStudyInputDefinitions(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -129,7 +129,7 @@ Set NewEnum = mStudyInputDefinitions.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

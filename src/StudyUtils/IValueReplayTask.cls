@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ValueReplayTask"
+Attribute VB_Name = "IValueReplayTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -59,37 +59,29 @@ Option Explicit
 ' Properties
 '@================================================================================
 
-Public Property Get discriminator() As Long
-
+Public Property Get Discriminator() As Long
 End Property
 
-Public Property Get notifyName() As String
-
+Public Property Get NotifyName() As String
 End Property
 
-Public Property Get notifyNames() As String()
-
+Public Property Get NotifyNames() As String()
 End Property
 
-Public Property Get sourceStudy() As IStudy
-
+Public Property Get SourceStudy() As IStudy
 End Property
 
-Public Property Get target() As Object
-
+Public Property Get Target() As Object
 End Property
 
-Public Property Get taskName() As String
-
+Public Property Get TaskName() As String
 End Property
 
 ' the same as ValueNames(0) for user convenience
-Public Property Get valueName() As String
-
+Public Property Get ValueName() As String
 End Property
 
-Public Property Get valueNames() As String()
-
+Public Property Get ValueNames() As String()
 End Property
 
 '@================================================================================

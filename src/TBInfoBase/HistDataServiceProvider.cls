@@ -30,8 +30,8 @@ Option Explicit
 ' Interfaces
 '@===============================================================================
 
-Implements ICommonServiceProvider
-Implements IBarDataServiceProvider
+Implements IServiceProvider
+Implements IHistDataSP
 
 '@===============================================================================
 ' Events
@@ -42,7 +42,7 @@ Implements IBarDataServiceProvider
 '@===============================================================================
 
 
-Private Const ModuleName As String = "HistDataServiceProvider"
+Private Const ModuleName                        As String = "HistDataServiceProvider"
 
 '@===============================================================================
 ' Enums
@@ -56,33 +56,28 @@ Private Const ModuleName As String = "HistDataServiceProvider"
 ' Member variables
 '@===============================================================================
 
-Private mName As String
+Private mName                                   As String
 
-Private mMode As AccessModes
+Private mRole                                   As String
 
-Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
+Private mHandle                                 As Long
+Private mServiceProviderManager                 As IServiceProviderManager
 
-Private mConnectionString As String
+Private mHistDataStore                          As IHistoricalDataStore
 
-Private mHistDataReaders As Collection
-Private mHistDataWriters As Collection
-
-Private mDatabaseType As DatabaseTypes
-Private mDatabaseName As String
-Private mServer As String
-Private mUserName As String
-Private mPassword As String
-Private mUseSynchronousWrites As Boolean
+Private mDatabaseType                           As DatabaseTypes
+Private mDatabaseName                           As String
+Private mServer                                 As String
+Private mUserName                               As String
+Private mPassword                               As String
+Private mUseSynchronousReads                    As Boolean
+Private mUseSynchronousWrites                   As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
 
 Private Sub Class_Initialize()
-Set mHistDataReaders = New Collection
-Set mHistDataWriters = New Collection
-
 mName = HistoricDataSPName
 
 mDatabaseType = DbSQLServer2005
@@ -90,142 +85,37 @@ mDatabaseName = "Trading"
 mServer = "localhost"
 mUserName = ""
 mPassword = ""
-mMode = ReadWrite
-End Sub
-
-Private Sub Class_Terminate()
-Debug.Print "TBInfoBase.HistDataServiceProvider terminated"
+Role = "INPUT"
+mUseSynchronousReads = False
+mUseSynchronousWrites = False
 End Sub
 
 '@===============================================================================
 ' IBarDataServiceProvider Interface Members
 '@===============================================================================
 
-Private Function IBarDataServiceProvider_CreateBarDataReader( _
-                            ByVal DataConsumer As TradeBuildSP.IBarDataConsumer, _
-                            ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
-                            ) As TradeBuildSP.IBarDataReader
-Const ProcName As String = "IBarDataServiceProvider_CreateBarDataReader"
-Dim reader As HistDataReader
-Dim connectionString As String
-
+Private Function IHistDataSP_GetHistoricalDataStore() As IHistoricalDataStore
+Const ProcName As String = "IHistDataSP_GetHistoricalDataStore"
 On Error GoTo Err
 
-logMessage pMsg:="Creating bar data reader", pProcName:="IBarDataServiceProvider_CreateBarDataReader", pLogLevel:=LogLevelDetail
+Dim lDbClient As DBClient
+Set lDbClient = CreateTradingDBClient(mDatabaseType, mServer, mDatabaseName, mUserName, mPassword, mUseSynchronousReads, mUseSynchronousWrites)
 
-Set reader = New HistDataReader
-Set IBarDataServiceProvider_CreateBarDataReader = reader
+Set mHistDataStore = lDbClient.HistoricalDataStore
+Set IHistDataSP_GetHistoricalDataStore = mHistDataStore
 
-If mConnectionString <> "" Then
-    connectionString = mConnectionString
-Else
-    connectionString = GenerateConnectionString(mDatabaseType, _
-                                                mServer, _
-                                                mDatabaseName, _
-                                                mUserName, _
-                                                mPassword)
-End If
-
-reader.initialise mName & " (reader)", _
-                mDatabaseType, _
-                connectionString, _
-                mCommonServiceConsumer, _
-                serviceConsumer, _
-                Me, _
-                DataConsumer, _
-                mMode
-mHistDataReaders.Add reader, CStr(ObjPtr(reader))
 Exit Function
+
 Err:
-handleFatalError ProcName
-End Function
-
-Private Function IBarDataServiceProvider_CreateBarDataWriter( _
-                            ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal pContract As Contract, _
-                            Optional ByVal location As String = "" _
-                            ) As TradeBuildSP.IBarDataWriter
-Const ProcName As String = "IBarDataServiceProvider_CreateBarDataWriter"
-Dim writer As HistDataWriter
-Dim connectionString As String
-
-On Error GoTo Err
-
-logMessage pMsg:="Creating bar data writer", pProcName:="IBarDataServiceProvider_CreateBarDataWriter", pLogLevel:=LogLevelDetail
-
-Set writer = New HistDataWriter
-Set IBarDataServiceProvider_CreateBarDataWriter = writer
-
-If mConnectionString <> "" Then
-    connectionString = mConnectionString
-Else
-    connectionString = GenerateConnectionString(mDatabaseType, _
-                                                mServer, _
-                                                mDatabaseName, _
-                                                mUserName, _
-                                                mPassword)
-End If
-
-writer.initialise mName & " (writer)", _
-                mDatabaseType, _
-                connectionString, _
-                mCommonServiceConsumer, _
-                serviceConsumer, _
-                Me, _
-                pContract, _
-                mUseSynchronousWrites
-
-mHistDataWriters.Add writer, CStr(ObjPtr(writer))
-Exit Function
-Err:
-handleFatalError ProcName
-End Function
-
-Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
-                ByVal period As TimePeriod) As Boolean
-Select Case period.Units
-Case TimePeriodMinute, _
-    TimePeriodHour, _
-    TimePeriodDay, _
-    TimePeriodWeek, _
-    TimePeriodMonth, _
-    TimePeriodSecond, _
-    TimePeriodYear, _
-    TimePeriodVolume, _
-    TimePeriodTickMovement
-    IBarDataServiceProvider_IsSupportedTimePeriod = True
-End Select
-
-
-End Function
-
-Private Property Get IBarDataServiceProvider_SupportedTimePeriods() As TimePeriod()
-Dim ar(8) As TimePeriod
-
-Set ar(0) = GetTimePeriod(MaxLong, TimePeriodSecond)
-Set ar(1) = GetTimePeriod(MaxLong, TimePeriodMinute)
-Set ar(2) = GetTimePeriod(MaxLong, TimePeriodHour)
-Set ar(3) = GetTimePeriod(MaxLong, TimePeriodDay)
-Set ar(4) = GetTimePeriod(MaxLong, TimePeriodWeek)
-Set ar(5) = GetTimePeriod(MaxLong, TimePeriodMonth)
-Set ar(6) = GetTimePeriod(MaxLong, TimePeriodYear)
-Set ar(7) = GetTimePeriod(MaxLong, TimePeriodVolume)
-Set ar(8) = GetTimePeriod(MaxLong, TimePeriodTickMovement)
-'set ar(9)=gettimeperiod(maxlong,TimePeriodTickVolume)
-End Property
-
-Private Function IBarDataServiceProvider_Supports( _
-                            ByVal capabilities As Long _
-                            ) As Boolean
-IBarDataServiceProvider_Supports = gHistDataSupports(capabilities, mMode)
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@===============================================================================
-' ICommonServiceProvider Interface Members
+' IServiceProvider Interface Members
 '@===============================================================================
 
-Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
-Dim details As TradeBuildSP.ServiceProviderDetails
+Private Property Get IServiceProvider_Details() As ServiceProviderDetails
+Dim details As ServiceProviderDetails
 With details
     .Comments = App.Comments
     .EXEName = App.EXEName
@@ -239,78 +129,73 @@ With details
     .VersionMinor = App.Minor
     .VersionRevision = App.Revision
 End With
-ICommonServiceProvider_Details = details
+IServiceProvider_Details = details
 End Property
 
-Private Sub ICommonServiceProvider_Link( _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long, _
+Private Sub IServiceProvider_Link( _
+                ByVal ServiceProviderManager As IServiceProviderManager, _
+                ByVal Handle As Long, _
                 ByVal params As Parameters)
-Dim param As Parameter
-
-Const ProcName As String = "ICommonServiceProvider_Link"
+Const ProcName As String = "IServiceProvider_Link"
 On Error GoTo Err
 
-Set mCommonServiceConsumer = CommonServiceConsumer
-mHandle = handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.HistoricalData
+Set mServiceProviderManager = ServiceProviderManager
+mHandle = Handle
 
+Dim param As Parameter
 For Each param In params
     Select Case UCase$(param.Name)
-    Case UCase$(ParamNameConnectionString)
-        connectionString = param.value
     Case UCase$(ParamNameDatabaseType)
-        databaseType = DatabaseTypeFromString(param.value)
+        DatabaseType = DatabaseTypeFromString(param.Value)
     Case UCase$(ParamNameDatabaseName)
-        databaseName = param.value
+        DatabaseName = param.Value
     Case UCase$(ParamNameServer)
-        server = param.value
+        Server = param.Value
     Case UCase$(ParamNameUserName)
-        username = param.value
+        Username = param.Value
     Case UCase$(ParamNamePassword)
-        password = param.value
+        Password = param.Value
     Case UCase$(ParamNameUseSynchronousWrites)
-        useSynchronousWrites = gStringToBool(param.value)
-    Case UCase$(ParamNameAccessMode)
-        Select Case UCase$(param.value)
-        Case "R", "RO", "READ", "READONLY", "READ ONLY"
-            mMode = ReadOnly
-        Case "W", "WO", "WRITE", "WRITEONLY", "WRITE ONLY"
-            mMode = WriteOnly
-        Case "RW", "READWRITE", "READ WRITE", "READ & WRITE"
-            mMode = ReadWrite
-        Case Else
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Invalid access mode parameter"
-        End Select
+        UseSynchronousWrites = gStringToBool(param.Value)
+    Case UCase$(ParamNameUseSynchronousReads)
+        UseSynchronousReads = gStringToBool(param.Value)
+    Case UCase$(ParamNameRole)
+        Role = param.Value
     End Select
 Next
 
+If mRole = "INPUT" Then
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleHistoricalDataInput
+Else
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleHistoricalDataOutput
+End If
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+Private Property Let IServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property
 
-Private Property Get ICommonServiceProvider_Name() As String
-ICommonServiceProvider_Name = Name
+Private Property Get IServiceProvider_Name() As String
+IServiceProvider_Name = Name
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
-Const ProcName As String = "ICommonServiceProvider_Terminate"
+Private Sub IServiceProvider_Terminate()
+Const ProcName As String = "IServiceProvider_Terminate"
 On Error GoTo Err
-finishReaders
-finishWriters
-Set mCommonServiceConsumer = Nothing
+
+mHistDataStore.Finish
+Set mServiceProviderManager = Nothing
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -321,160 +206,79 @@ End Sub
 ' Properties
 '@===============================================================================
 
-Public Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
+Public Property Let DatabaseName( _
+                ByVal Value As String)
+mDatabaseName = Value
 End Property
 
-Public Property Let databaseName( _
-                ByVal value As String)
-mDatabaseName = value
+Public Property Let DatabaseType( _
+                ByVal Value As DatabaseTypes)
+mDatabaseType = Value
 End Property
 
-Public Property Let databaseType( _
-                ByVal value As DatabaseTypes)
-mDatabaseType = value
+Public Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Public Property Get handle() As Long
-handle = mHandle
-End Property
-
-Public Property Let Name(ByVal value As String)
-mName = value
+Public Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let password( _
-                ByVal value As String)
-mPassword = value
+Public Property Let Password( _
+                ByVal Value As String)
+mPassword = Value
 End Property
                 
-Public Property Let server( _
-                ByVal value As String)
-mServer = value
-End Property
-                
-Public Property Let username( _
-                ByVal value As String)
-mUserName = value
+Public Property Let Role(ByVal Value As String)
+Const ProcName As String = "Role"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "I", "IN", "INP", "INPUT"
+    mRole = "INPUT"
+Case "O", "OUT", "OUTPUT"
+    mRole = "OUTPUT"
+Case Else
+    AssertArgument False, "Invalid role parameter"
+End Select
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let useSynchronousWrites( _
-                ByVal value As Boolean)
-mUseSynchronousWrites = value
+Public Property Let Server( _
+                ByVal Value As String)
+mServer = Value
+End Property
+                
+Public Property Let Username( _
+                ByVal Value As String)
+mUserName = Value
+End Property
+
+Public Property Let UseSynchronousReads( _
+                ByVal Value As Boolean)
+mUseSynchronousReads = Value
+End Property
+
+Public Property Let UseSynchronousWrites( _
+                ByVal Value As Boolean)
+mUseSynchronousWrites = Value
 End Property
 
 '@===============================================================================
 ' Methods
 '@===============================================================================
 
-Friend Sub dataReaderFinished( _
-                ByVal dataReader As HistDataReader)
-Const ProcName As String = "dataReaderFinished"
-Dim failpoint As Long
-On Error GoTo Err
-
-mHistDataReaders.Remove CStr(ObjPtr(dataReader))
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Friend Sub dataWriterFinished( _
-                ByVal dataWriter As HistDataWriter)
-Const ProcName As String = "dataWriterFinished"
-Dim failpoint As Long
-On Error GoTo Err
-
-mHistDataWriters.Remove CStr(ObjPtr(dataWriter))
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
-
-Private Sub finishReaders()
-Const ProcName As String = "finishReaders"
-Dim i As Long
-Dim reader As HistDataReader
-Dim failpoint As Long
-On Error GoTo Err
-
-For i = mHistDataReaders.Count To 1 Step -1
-    Set reader = mHistDataReaders(i)
-    reader.finish
-    mHistDataReaders.Remove i
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub finishWriters()
-Const ProcName As String = "finishWriters"
-Dim i As Long
-Dim writer As HistDataWriter
-Dim failpoint As Long
-On Error GoTo Err
-
-For i = mHistDataWriters.Count To 1 Step -1
-    Set writer = mHistDataWriters(i)
-    writer.finish
-    mHistDataWriters.Remove i
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Const ProcName As String = "handleFatalError"
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
-End Sub
-
-Private Sub logMessage( _
-                ByRef pMsg As String, _
-                ByRef pProcName As String, _
-                Optional ByRef pMsgQualifier As String = vbNullString, _
-                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-Const ProcName As String = "logMessage"
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
-End Sub
 
 
 

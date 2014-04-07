@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "TickFileManager26"
+Public Const ProjectName                    As String = "TickFileManager27"
 Private Const ModuleName                    As String = "Globals"
 
 Public Const AppName                        As String = "TickfileManager"

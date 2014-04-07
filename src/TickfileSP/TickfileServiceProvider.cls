@@ -30,8 +30,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ICommonServiceProvider
-Implements ITickfileServiceProvider
+Implements IServiceProvider
+Implements ITickfileSP
 
 '================================================================================
 ' Events
@@ -41,7 +41,7 @@ Implements ITickfileServiceProvider
 ' Constants
 '================================================================================
 
-Private Const ModuleName                As String = "TickfileServiceProvider"
+Private Const ModuleName                        As String = "TickfileServiceProvider"
 
 '================================================================================
 ' Enums
@@ -55,21 +55,21 @@ Private Const ModuleName                As String = "TickfileServiceProvider"
 ' Member variables
 '================================================================================
 
-Private mName As String
+Private mName                                   As String
 
-Private mMode As AccessModes
+Private mRole                                   As String
 
-Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
+Private mHandle                                 As Long
+Private mServiceProviderManager                 As IServiceProviderManager
 
-Private mNextReaderID As Long
+Private mTickfileDataReaders                    As Collection
+Private mTickfileDataWriters                    As Collection
 
-Private mTickfileDataReaders As Collection
-Private mTickfileDataWriters As Collection
+Private mTickfilePath                           As String
 
-Private mTickfilePath As String
+Private mTickfileGranularity                    As TickfileGranularities
 
-Private mTickfileGranularity As TickfileGranularities
+Private mTickfileStore                          As ITickfileStore
 
 '================================================================================
 ' Class Event Handlers
@@ -80,65 +80,51 @@ Set mTickfileDataReaders = New Collection
 Set mTickfileDataWriters = New Collection
 
 mName = App.ProductName
-mMode = ReadWrite
+Role = "INPUT"
+TickfileGranularity = "FILE PER WEEK"
 End Sub
 
 '================================================================================
-' ICommonServiceProvider Interface Members
+' IServiceProvider Interface Members
 '================================================================================
 
-Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
-Dim details As TradeBuildSP.ServiceProviderDetails
+Private Property Get IServiceProvider_Details() As ServiceProviderDetails
+Dim details As ServiceProviderDetails
 With details
     .Comments = App.Comments
     .EXEName = App.EXEName
     .FileDescription = App.FileDescription
     .LegalCopyright = App.LegalCopyright
     .LegalTrademarks = App.LegalTrademarks
-    .path = App.path
+    .Path = App.Path
     .ProductName = App.ProductName
     .Vendor = App.CompanyName
     .VersionMajor = App.Major
     .VersionMinor = App.Minor
     .VersionRevision = App.Revision
 End With
-ICommonServiceProvider_Details = details
+IServiceProvider_Details = details
 End Property
 
-Private Sub ICommonServiceProvider_Link( _
-                            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                            ByVal handle As Long, _
-                            ByVal params As Parameters)
-Const ProcName As String = "ICommonServiceProvider_Link"
-Dim param As Parameter
-
+Private Sub IServiceProvider_Link( _
+                ByVal pServiceProviderManager As IServiceProviderManager, _
+                ByVal pHandle As Long, _
+                ByVal pParams As Parameters)
+Const ProcName As String = "IServiceProvider_Link"
 On Error GoTo Err
 
-Set mCommonServiceConsumer = CommonServiceConsumer
-mHandle = handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+Set mServiceProviderManager = pServiceProviderManager
+mHandle = pHandle
 
-For Each param In params
+Dim param As Parameter
+For Each param In pParams
     Select Case UCase$(param.Name)
     Case UCase$(ParamNameTickfilePath)
-        mTickfilePath = param.value
-    Case UCase$(ParamNameAccessMode)
-        Select Case UCase$(param.value)
-        Case "R", "RO", "READ", "READONLY", "READ ONLY"
-            mMode = ReadOnly
-        Case "W", "WO", "WRITE", "WRITEONLY", "WRITE ONLY"
-            mMode = WriteOnly
-        Case "RW", "READWRITE", "READ WRITE", "READ & WRITE"
-            mMode = ReadWrite
-        Case Else
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "Invalid access mode parameter"
-            Exit Sub
-        End Select
+        mTickfilePath = param.Value
+    Case UCase$(ParamNameRole)
+        Role = param.Value
     Case UCase$(ParamNameTickfileGranularity)
-        Select Case UCase$(param.value)
+        Select Case UCase$(param.Value)
         Case "FILE PER DAY", "DAY"
             mTickfileGranularity = TickfileGranularityDay
         Case "FILE PER WEEK", "WEEK"
@@ -148,147 +134,64 @@ For Each param In params
         Case "FILE PER EXECUTION", "EXECUTION"
             mTickfileGranularity = TickfileGranularityExecution
         Case Else
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    "Invalid tickfile granularity parameter"
+            AssertArgument False, "Invalid tickfile granularity parameter"
             Exit Sub
         End Select
     End Select
 Next
 
+If mRole = "INPUT" Then
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleTickfileInput
+Else
+    mServiceProviderManager.RegisterServiceProvider mHandle, _
+                                ServiceProviderRoles.SPRoleTickfileOutput
+End If
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+Private Property Let IServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property
 
-Private Property Get ICommonServiceProvider_Name() As String
-ICommonServiceProvider_Name = Name
+Private Property Get IServiceProvider_Name() As String
+IServiceProvider_Name = Name
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
-Const ProcName As String = "ICommonServiceProvider_Terminate"
+Private Sub IServiceProvider_Terminate()
+Const ProcName As String = "IServiceProvider_Terminate"
 On Error GoTo Err
-finishReaders
-finishWriters
-Set mCommonServiceConsumer = Nothing
+
+mTickfileStore.Finish
+Set mServiceProviderManager = Nothing
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' ITickfileServiceProvider Interface Members
+' ITickfileSP Interface Members
 '================================================================================
 
-Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                            ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
-Const ProcName As String = "ITickfileServiceProvider_CreateTickfileReader"
-Dim reader As TickfileReader
+Private Function ITickfileSP_GetTickfileStore() As ITickfileStore
+Const ProcName As String = "ITickfileSP_GetTickfileStore"
 On Error GoTo Err
-mNextReaderID = mNextReaderID + 1
-Set reader = New TickfileReader
-Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.Initialise mHandle, _
-                    mName & " (reader)", _
-                    mCommonServiceConsumer, _
-                    serviceConsumer, _
-                    Me, _
-                    dataConsumer
-mTickfileDataReaders.Add reader
-Exit Function
-Err:
-handleFatalError ProcName
-End Function
 
-Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                            ByVal pContract As Contract, _
-                            Optional ByVal FormatIdentifier As String = "", _
-                            Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
-Const ProcName As String = "ITickfileServiceProvider_CreateTickfileWriter"
-Dim formatId As TickfileFormats
-Dim formatVersion As TickFileVersions
-Dim writer As TickfileWriter
-
-On Error GoTo Err
-gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
-If formatId = TickfileFormats.TickfileUnknown Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid format identifier"
+If mRole = "INPUT" Then
+    Set mTickfileStore = CreateTickfileStore(TickfileReadOnly, mTickfilePath, mTickfileGranularity)
+Else
+    Set mTickfileStore = CreateTickfileStore(TickfileWriteOnly, mTickfilePath, mTickfileGranularity)
 End If
+Set ITickfileSP_GetTickfileStore = mTickfileStore
 
-Set writer = New TickfileWriter
-Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.Initialise mHandle, _
-                    mName & " (writer)", _
-                    mCommonServiceConsumer, _
-                    serviceConsumer, _
-                    Me, _
-                    pContract, _
-                    formatId, _
-                    formatVersion, _
-                    IIf(location <> "", location, mTickfilePath), _
-                    mTickfileGranularity
-mTickfileDataWriters.Add writer
 Exit Function
+
 Err:
-handleFatalError ProcName
-End Function
-
-Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
-Dim formats(5) As TickfileFormatSpecifier
-
-formats(0).Name = "TradeBuild V5"
-formats(0).FormalID = TickfileFormatTradeBuildV5
-formats(0).FileExtension = "tck"
-formats(0).FormatType = FileBased
-formats(0).Capabilities = gCapabilitiesTradeBuildV5(mMode)
-
-formats(1).Name = "TradeBuild V4"
-formats(1).FormalID = TickfileFormatTradeBuildV4
-formats(1).FileExtension = "tck"
-formats(1).FormatType = FileBased
-formats(1).Capabilities = gCapabilitiesTradeBuildV4(mMode)
-
-formats(2).Name = "TradeBuild V3"
-formats(2).FormalID = TickfileFormatTradeBuildV3
-formats(2).FileExtension = "tck"
-formats(2).FormatType = FileBased
-formats(2).Capabilities = gCapabilitiesTradeBuildV3(mMode)
-
-formats(5).Name = "Crescendo V1"
-formats(5).FormalID = TickfileFormatCrescendoV1
-formats(5).FileExtension = "csv"
-formats(5).FormatType = FileBased
-formats(5).Capabilities = gCapabilitiesCrescendoV1(mMode)
-
-formats(4).Name = "Crescendo V2"
-formats(4).FormalID = TickfileFormatCrescendoV2
-formats(4).FileExtension = "csv"
-formats(4).FormatType = FileBased
-formats(4).Capabilities = gCapabilitiesCrescendoV2(mMode)
-
-formats(3).Name = "eSignal"
-formats(3).FormalID = TickfileFormatESignal
-formats(3).FileExtension = "epf"
-formats(3).FormatType = FileBased
-formats(3).Capabilities = gCapabilitiesESignal(mMode)
-
-ITickfileServiceProvider_SupportedFormats = formats
-
-End Property
-
-Private Function ITickfileServiceProvider_Supports( _
-                            ByVal Capabilities As Long, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileServiceProvider_Supports = gSupports(Capabilities, mMode, FormatIdentifier)
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '================================================================================
@@ -299,127 +202,66 @@ End Function
 ' Properties
 '================================================================================
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Friend Property Let Name(ByVal value As String)
-mName = value
+Friend Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
+Public Property Let Role(ByVal Value As String)
+Const ProcName As String = "Role"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "I", "IN", "INP", "INPUT"
+    mRole = "INPUT"
+Case "O", "OUT", "OUTPUT"
+    mRole = "OUTPUT"
+Case Else
+    AssertArgument False, "Invalid role parameter"
+End Select
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let TickfileGranularity(ByVal Value As String)
+Const ProcName As String = "TickfileGranularity"
+On Error GoTo Err
+
+Select Case UCase$(Value)
+Case "FILE PER DAY", "DAY"
+    mTickfileGranularity = TickfileGranularityDay
+Case "FILE PER WEEK", "WEEK"
+    mTickfileGranularity = TickfileGranularityWeek
+Case "FILE PER TRADING SESSION", "FILE PER SESSION", "SESSION"
+    mTickfileGranularity = TickfileGranularitySession
+Case "FILE PER EXECUTION", "EXECUTION"
+    mTickfileGranularity = TickfileGranularityExecution
+Case Else
+    AssertArgument False, "Invalid tickfile granularity parameter"
+End Select
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub dataReaderFinished( _
-                ByVal dataReader As TickfileReader)
-Dim i As Long
-Dim reader As TickfileReader
-Const ProcName As String = "dataReaderFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-i = 1
-For Each reader In mTickfileDataReaders
-    If reader Is dataReader Then
-        mTickfileDataReaders.Remove i
-        Exit For
-    End If
-    i = i + 1
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
-Friend Sub dataWriterFinished( _
-                ByVal dataWriter As TickfileWriter)
-Dim i As Long
-Dim writer As TickfileWriter
-Const ProcName As String = "dataWriterFinished"
-Dim failpoint As String
-On Error GoTo Err
-
-i = 1
-For Each writer In mTickfileDataWriters
-    If writer Is dataWriter Then
-        mTickfileDataWriters.Remove i
-        Exit For
-    End If
-    i = i + 1
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-Private Sub finishReaders()
-Dim reader As TickfileReader
-Const ProcName As String = "finishReaders"
-Dim failpoint As String
-On Error GoTo Err
-
-For Each reader In mTickfileDataReaders
-    reader.Finish
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
-Private Sub finishWriters()
-Dim writer As TickfileWriter
-Const ProcName As String = "finishWriters"
-Dim failpoint As String
-On Error GoTo Err
-
-For Each writer In mTickfileDataWriters
-    writer.Finish
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
-End Sub
-
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mHandle
-End Sub
-
 
 

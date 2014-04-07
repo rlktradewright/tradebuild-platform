@@ -9,7 +9,7 @@ Begin VB.Form fStudyConfigurer
    ScaleHeight     =   5805
    ScaleWidth      =   13560
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
+   Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
       Height          =   5655
       Left            =   120
       TabIndex        =   3
@@ -164,25 +164,21 @@ Cancelled = mCancelled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyConfiguration() As StudyConfiguration
 Const ProcName As String = "StudyConfiguration"
 On Error GoTo Err
 
-If mCancelled Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Study configuration was cancelled by the user"
-End If
+Assert Not mCancelled, "Study configuration was cancelled by the user"
 
 Set StudyConfiguration = mStudyConfig
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -220,7 +216,7 @@ StudyConfigurer1.Initialise _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

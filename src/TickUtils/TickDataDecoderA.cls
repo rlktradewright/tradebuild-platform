@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-' Copyright 2008 Richard L King
+' Copyright 2008-2011 Richard L King
 '
 ' This file is part of TradeBuild Tick Utilities Package.
 '
@@ -40,7 +40,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TickDataDecoder
+Implements ITickDataDecoder
 
 '@================================================================================
 ' Events
@@ -58,7 +58,7 @@ Implements TickDataDecoder
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickUtils26"
+
 Private Const ModuleName                    As String = "TickDataDecoderV1"
 
 '@================================================================================
@@ -85,47 +85,54 @@ Private mVersion                    As Long
 ' TickDataDecoder Interface Members
 '@================================================================================
 
-Private Function TickDataDecoder_getNextTick( _
-                ByRef tick As GenericTick) As Boolean
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
+Private Function ITickDataDecoder_getNextTick( _
+                ByRef pTick As GenericTick) As Boolean
+Const ProcName As String = "ITickDataDecoder_getNextTick"
+On Error GoTo Err
+
+Dim lTypeByte As Byte
+Dim lSizeType As SizeTypes
 
 If mDataIndex > UBound(mData) Then Exit Function
 
-typeByte = readByte
+lTypeByte = readByte
 
-tick.timestamp = readTimestamp(typeByte)
+pTick.Timestamp = readTimestamp(lTypeByte)
 
-tick.tickType = typeByte And TickTypeBits
-sizeType = (typeByte And SizeTypeBits) / SizeTypeShifter
+pTick.TickType = lTypeByte And TickTypeBits
+lSizeType = (lTypeByte And SizeTypeBits) / SizeTypeShifter
 
-Select Case tick.tickType
+Select Case pTick.TickType
 Case TickTypes.TickTypeBid
-    readQuoteRecord typeByte, sizeType, tick
+    readQuoteRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeAsk
-    readQuoteRecord typeByte, sizeType, tick
+    readQuoteRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeClosePrice
-    readPriceRecord typeByte, tick
+    readPriceRecord lTypeByte, pTick
 Case TickTypes.TickTypeHighPrice
-    readPriceRecord typeByte, tick
+    readPriceRecord lTypeByte, pTick
 Case TickTypes.TickTypeLowPrice
-    readPriceRecord typeByte, tick
+    readPriceRecord lTypeByte, pTick
 Case TickTypes.TickTypeMarketDepth
-    readMarketDepthRecord typeByte, sizeType, tick
+    readMarketDepthRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeMarketDepthReset
-    readMarketDepthResetRecord typeByte, tick
+    readMarketDepthResetRecord lTypeByte, pTick
 Case TickTypes.TickTypeTrade
-    readQuoteRecord typeByte, sizeType, tick
+    readQuoteRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeVolume
-    readSizeRecord typeByte, sizeType, tick
+    readSizeRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeOpenInterest
-    readSizeRecord typeByte, sizeType, tick
+    readSizeRecord lTypeByte, lSizeType, pTick
 Case TickTypes.TickTypeOpenPrice
-    readPriceRecord typeByte, tick
+    readPriceRecord lTypeByte, pTick
 End Select
 
-TickDataDecoder_getNextTick = True
+ITickDataDecoder_getNextTick = True
 
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -140,25 +147,25 @@ End Function
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal periodStartTime As Date, _
-                ByVal basePrice As Double, _
-                ByVal tickSize As Double, _
-                ByVal encodingFormat As String, _
-                ByRef data() As Byte)
-mPeriodStartTime = periodStartTime
+Friend Sub Initialise( _
+                ByVal pPeriodStartTime As Date, _
+                ByVal pBasePrice As Double, _
+                ByVal pTickSize As Double, _
+                ByVal pEncodingFormat As String, _
+                ByRef pData() As Byte)
+mPeriodStartTime = pPeriodStartTime
 mCurrentTimestamp = mPeriodStartTime
-mBasePrice = basePrice
-mTickSize = tickSize
+mBasePrice = pBasePrice
+mTickSize = pTickSize
 
-Select Case encodingFormat
+Select Case pEncodingFormat
 Case TickEncodingFormatV1
     mVersion = 1
 Case TickEncodingFormatV2
     mVersion = 2
 End Select
 
-mData = data
+mData = pData
 End Sub
 
 '@================================================================================
@@ -184,28 +191,28 @@ readLong = CLng(readByte) + _
 End Function
 
 Private Sub readMarketDepthRecord( _
-                ByVal typeByte As Byte, _
-                ByVal sizeType As SizeTypes, _
-                ByRef tick As GenericTick)
+                ByVal pTypeByte As Byte, _
+                ByVal pSizeType As SizeTypes, _
+                ByRef pTick As GenericTick)
 Dim sideOperationPositionByte As Byte
 
 sideOperationPositionByte = readByte
-tick.position = sideOperationPositionByte And PositionBits
-tick.operation = (sideOperationPositionByte And OperationBits) / OperationShifter
-tick.side = (sideOperationPositionByte And SideBits) / SideShifter
-tick.price = readPrice(typeByte)
-tick.side = readSize(sizeType)
-tick.marketmaker = readString
+pTick.Position = sideOperationPositionByte And PositionBits
+pTick.Operation = (sideOperationPositionByte And OperationBits) / OperationShifter
+pTick.Side = (sideOperationPositionByte And SideBits) / SideShifter
+pTick.Price = readPrice(pTypeByte)
+pTick.Size = readSize(pSizeType)
+pTick.MarketMaker = readString
 End Sub
 
 Private Sub readMarketDepthResetRecord( _
-                ByVal typeByte As Byte, _
-                ByRef tick As GenericTick)
+                ByVal pTypeByte As Byte, _
+                ByRef pTick As GenericTick)
 ' nothing to do
 End Sub
 
 Private Function readPrice( _
-                ByVal typeByte As Byte) As Double
+                ByVal pTypeByte As Byte) As Double
 Dim mostSigByte As Byte
 Dim leastSigByte As Byte
 Dim numticks As Integer
@@ -219,7 +226,7 @@ Else
     numticks = CInt(mostSigByte) * &H100 + CInt(leastSigByte)
 End If
     
-If (typeByte And NegativeTicks) <> 0 Then
+If (pTypeByte And NegativeTicks) <> 0 Then
     readPrice = mBasePrice - mTickSize * numticks
 Else
     readPrice = mBasePrice + mTickSize * numticks
@@ -227,22 +234,22 @@ End If
 End Function
 
 Private Sub readPriceRecord( _
-                ByVal typeByte As Byte, _
-                ByRef tick As GenericTick)
-tick.price = readPrice(typeByte)
+                ByVal pTypeByte As Byte, _
+                ByRef pTick As GenericTick)
+pTick.Price = readPrice(pTypeByte)
 End Sub
 
 Private Sub readQuoteRecord( _
-                ByVal typeByte As Byte, _
-                ByVal sizeType As SizeTypes, _
-                ByRef tick As GenericTick)
-tick.price = readPrice(typeByte)
-tick.size = readSize(sizeType)
+                ByVal pTypeByte As Byte, _
+                ByVal pSizeType As SizeTypes, _
+                ByRef pTick As GenericTick)
+pTick.Price = readPrice(pTypeByte)
+pTick.Size = readSize(pSizeType)
 End Sub
 
 Private Function readSize( _
-                ByVal sizeType As SizeTypes) As Long
-Select Case sizeType
+                ByVal pSizeType As SizeTypes) As Long
+Select Case pSizeType
 Case ByteSize
     readSize = readByte
 Case UInt16Size
@@ -253,27 +260,27 @@ End Select
 End Function
 
 Private Sub readSizeRecord( _
-                ByVal typeByte As Byte, _
-                ByVal sizeType As SizeTypes, _
-                ByRef tick As GenericTick)
-tick.size = readSize(sizeType)
+                ByVal pTypeByte As Byte, _
+                ByVal pSizeType As SizeTypes, _
+                ByRef pTick As GenericTick)
+pTick.Size = readSize(pSizeType)
 End Sub
 
 Private Function readString() As String
 Dim ar() As Byte
-Dim length As Long
+Dim lLength As Long
 Dim i As Long
-Dim startIndex As Long
+Dim lStartIndex As Long
 Dim b0 As Byte
 Dim b1 As Byte
-Dim bigEndian As Boolean
+Dim lIsBigEndian As Boolean
 
-length = readByte
-If length = 0 Then Exit Function
+lLength = readByte
+If lLength = 0 Then Exit Function
 
 If mVersion = 1 Then
-    ' version 1 wrote length of string instead of length of array
-    ReDim ar(2 * length - 1) As Byte
+    ' version 1 wrote lLength of string instead of lLength of array
+    ReDim ar(2 * lLength - 1) As Byte
 Else
 
     b0 = readByte
@@ -281,25 +288,25 @@ Else
     
     ' see RFC 2781 4.3 for details of interpeting the Byte Order Marker (BOM)
     If b0 = &HFE And b1 = &HFF Then
-        bigEndian = True
-        ReDim ar(length - 3) As Byte
+        lIsBigEndian = True
+        ReDim ar(lLength - 3) As Byte
     ElseIf b0 = &HFF And b1 = &HFE Then
-        bigEndian = False
-        ReDim ar(length - 3) As Byte
+        lIsBigEndian = False
+        ReDim ar(lLength - 3) As Byte
     Else
-        bigEndian = True
-        ReDim ar(length - 1) As Byte
+        lIsBigEndian = True
+        ReDim ar(lLength - 1) As Byte
         ar(0) = b0
         ar(1) = b1
-        startIndex = 2
+        lStartIndex = 2
     End If
     
 End If
 
-If bigEndian Then
+If lIsBigEndian Then
     ' we need to change it to little-endian, because that's how
     ' VB stores strings
-    For i = startIndex To UBound(ar)
+    For i = lStartIndex To UBound(ar)
         If i Mod 2 = 0 Then
             ar(i + 1) = readByte
         Else
@@ -307,7 +314,7 @@ If bigEndian Then
         End If
     Next
 Else
-    For i = startIndex To UBound(ar)
+    For i = lStartIndex To UBound(ar)
         ar(i) = readByte
     Next
 End If
@@ -316,9 +323,9 @@ readString = ar
 End Function
 
 Private Function readTimestamp( _
-                ByVal typeByte As Byte) As Date
+                ByVal pTypeByte As Byte) As Date
 Dim diff As Long
-If (typeByte And NoTimestamp) = 0 Then
+If (pTypeByte And NoTimestamp) = 0 Then
     diff = readInt
     readTimestamp = mPeriodStartTime + (diff / (86400 * 1000))
     mCurrentTimestamp = readTimestamp

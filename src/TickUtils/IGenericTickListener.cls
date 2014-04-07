@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IMarketDataConsumer"
+Attribute VB_Name = "IGenericTickListener"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IMarketDataConsumer"
+Private Const ModuleName                            As String = "IGenericTickListener"
 
 '@================================================================================
 ' Member variables
@@ -64,7 +64,7 @@ Private Const ModuleName                            As String = "IMarketDataCons
 ' Methods
 '@================================================================================
 
-Public Sub NotifyTick(ByRef pTick As GenericTick)
+Public Sub NotifyTick(ByRef ev As GenericTickEventData)
 
 End Sub
 

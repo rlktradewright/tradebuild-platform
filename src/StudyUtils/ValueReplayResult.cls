@@ -46,7 +46,7 @@ Private Const ModuleName                    As String = "ValueReplayResult"
 '@================================================================================
 
 Private mTarget As Object
-Private mSourceStudy As Study
+Private mSourceStudy As IStudy
 Private mValueName As String
 Private mValueNames() As String
 Private mNotifyName As String
@@ -68,55 +68,55 @@ Private mNotifyNames() As String
 ' Properties
 '@================================================================================
 
-Public Property Get notifyName() As String
-notifyName = mNotifyName
+Public Property Get NotifyName() As String
+NotifyName = mNotifyName
 End Property
 
-Public Property Get notifyNames() As String()
-notifyNames = mNotifyNames
+Public Property Get NotifyNames() As String()
+NotifyNames = mNotifyNames
 End Property
 
-Public Property Get sourceStudy() As Study
-Set sourceStudy = mSourceStudy
+Public Property Get SourceStudy() As IStudy
+Set SourceStudy = mSourceStudy
 End Property
 
-Public Property Get target() As Object
-Set target = mTarget
+Public Property Get Target() As Object
+Set Target = mTarget
 End Property
 
 ' the same as ValueNames(0) for user convenience
-Public Property Get valueName() As String
-valueName = mValueName
+Public Property Get ValueName() As String
+ValueName = mValueName
 End Property
 
-Public Property Get valueNames() As String()
-valueNames = mValueNames
+Public Property Get ValueNames() As String()
+ValueNames = mValueNames
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal target As Object, _
-                ByVal sourceStudy As Study, _
-                ByRef valueNames() As String, _
-                ByRef notifyNames() As String)
+Friend Sub Initialise( _
+                ByVal Target As Object, _
+                ByVal SourceStudy As IStudy, _
+                ByRef ValueNames() As String, _
+                ByRef NotifyNames() As String)
 
-Const ProcName As String = "initialise"
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mTarget = target
-Set mSourceStudy = sourceStudy
-mValueNames = valueNames
+Set mTarget = Target
+Set mSourceStudy = SourceStudy
+mValueNames = ValueNames
 mValueName = mValueNames(0)
-mNotifyNames = notifyNames
+mNotifyNames = NotifyNames
 mNotifyName = mNotifyNames(0)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -64,17 +64,10 @@ Option Explicit
 ' Methods
 '@================================================================================
 
-Public Sub MarketDepthNotAvailable( _
-                ByVal pReason As String)
-                
-End Sub
-
 Public Sub ResetMarketDepth(ByRef ev As RawMarketDepthEventData)
-                
 End Sub
 
 Public Sub UpdateMarketDepth(ByRef ev As RawMarketDepthEventData)
-                
 End Sub
 
 

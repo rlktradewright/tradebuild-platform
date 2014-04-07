@@ -209,35 +209,23 @@ Public Function GenerateTickfileSpecifiers( _
 Const ProcName As String = "GenerateTickfileSpecifiers"
 On Error GoTo Err
 
-Dim useCustomSessionTimes As Boolean
-Dim lTickfileSpecifiers As New TickFileSpecifiers
-Dim tfs As TickfileSpecifier
-Dim lContract As IContract
+AssertArgument (pCustomSessionStartTime = 0 And pCustomSessionEndTime = 0) Or _
+    (pCustomSessionStartTime <> 0 And pCustomSessionEndTime <> 0), "Session start and end times must be either both supplied or both omitted"
+    
+Dim lUseCustomSessionTimes As Boolean
+lUseCustomSessionTimes = (pCustomSessionStartTime <> 0)
 
-Dim lSecType As SecurityTypes
-Dim currContract As IContract
-Dim aContract As IContract
+' get the most recent contract (though they should all have the same
+' info regarding Session times)
+Dim lContract As IContract
+Set lContract = pContracts.ItemAtIndex(pContracts.Count)
+
 Dim lContractTimezone As TimeZone
+Set lContractTimezone = GetTimeZone(lContract.TimezoneName)
 
 ' the from and to dates converted (if necessary) to the contract's timezone
 Dim FromDate As Date
 Dim ToDate As Date
-
-' the from and to dates, Session-oriented if required
-Dim replayFromDate As Date
-Dim replayToDate As Date
-
-
-AssertArgument (pCustomSessionStartTime = 0 And pCustomSessionEndTime = 0) Or _
-    (pCustomSessionStartTime <> 0 And pCustomSessionEndTime <> 0), "Session start and end times must be either both supplied or both omitted"
-    
-If pCustomSessionStartTime <> 0 Then useCustomSessionTimes = True
-
-' get the most recent contract (though they should all have the same
-' info regarding Session times)
-Set lContract = pContracts.ItemAtIndex(pContracts.Count)
-Set lContractTimezone = GetTimeZone(lContract.TimezoneName)
-
 If pUseExchangeTimezone Then
     FromDate = pStartDate
     If pEndDate <> 0 Then ToDate = pEndDate
@@ -248,26 +236,26 @@ End If
 
 ' determine start and end times ---------------------------------------------------
 
-Dim lSessionBuilder As SessionBuilder
-Set lSessionBuilder = New SessionBuilder
+Dim lSessionStartTime As Date
+Dim lSessionEndTime As Date
 
 ' note that the custom times are in the contract's timezone
-If useCustomSessionTimes Then
-    lSessionBuilder.sessionStartTime = pCustomSessionStartTime
-    lSessionBuilder.sessionEndTime = pCustomSessionEndTime
+If lUseCustomSessionTimes Then
+    lSessionStartTime = pCustomSessionStartTime
+    lSessionEndTime = pCustomSessionEndTime
 Else
-    lSessionBuilder.sessionStartTime = lContract.sessionStartTime
-    lSessionBuilder.sessionEndTime = lContract.sessionEndTime
+    lSessionStartTime = lContract.sessionStartTime
+    lSessionEndTime = lContract.sessionEndTime
 End If
-lSessionBuilder.CompleteSessionCreation
-
-Dim lSession As Session
-Set lSession = lSessionBuilder.SessionFuture.Value
 
 ' set the Session start and end times for the starting date (in the contract's
 ' local timezone)...
 Dim fromSessionTimes As SessionTimes
-fromSessionTimes = lSession.GetSessionTimes(FromDate)
+fromSessionTimes = GetSessionTimes(FromDate, lSessionStartTime, lSessionEndTime)
+
+' the from and to dates, Session-oriented if required
+Dim replayFromDate As Date
+Dim replayToDate As Date
 If pCompleteSessionsOnly Then
     replayFromDate = fromSessionTimes.StartTime
 Else
@@ -278,7 +266,7 @@ Dim toSessionTimes As SessionTimes
 If ToDate <> 0 Then
     ' set the Session start and end times for the ending date (in the contract's
     ' local timezone)...
-    toSessionTimes = lSession.GetSessionTimes(ToDate)
+    toSessionTimes = GetSessionTimes(ToDate, lSessionStartTime, lSessionEndTime)
     
     If pCompleteSessionsOnly Then
         replayToDate = toSessionTimes.EndTime
@@ -296,30 +284,34 @@ End If
 Dim en As Enumerator
 Set en = pContracts.Enumerator
 
+Dim lSecType As SecurityTypes
 lSecType = pContracts.ItemAtIndex(1).Specifier.SecType
+
+Dim lCurrContract As IContract
+Dim aContract As IContract
 
 If lSecType <> SecurityTypes.SecTypeFuture And _
     lSecType <> SecurityTypes.SecTypeOption And _
     lSecType <> SecurityTypes.SecTypeFuturesOption _
 Then
-    Set currContract = pContracts.ItemAtIndex(1)
+    Set lCurrContract = pContracts.ItemAtIndex(1)
 Else
     Do While en.MoveNext
     Set aContract = en.Current
         If DateValue(FromDate) <= _
             (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
         Then
-            Set currContract = aContract
+            Set lCurrContract = aContract
             Exit Do
         End If
     Loop
     
-    AssertArgument Not currContract Is Nothing, "No contract for this from date"
+    AssertArgument Not lCurrContract Is Nothing, "No contract for this from date"
 End If
 
 If pCompleteSessionsOnly Then
-    If useCustomSessionTimes Then
-        Set currContract = editContractSessionTimes(currContract, pCustomSessionStartTime, pCustomSessionEndTime)
+    If lUseCustomSessionTimes Then
+        Set lCurrContract = editContractSessionTimes(lCurrContract, pCustomSessionStartTime, pCustomSessionEndTime)
     End If
 End If
 
@@ -328,15 +320,18 @@ Dim thisSessionTimes As SessionTimes
 
 currSessionStart = FromDate
 
+Dim lTickfileSpecifiers As New TickFileSpecifiers
+Dim tfs As TickfileSpecifier
+
 If pCompleteSessionsOnly Then
     Do While currSessionStart < replayToDate
         Set tfs = New TickfileSpecifier
         lTickfileSpecifiers.Add tfs
-        tfs.ContractFuture = CreateFuture(currContract)
+        tfs.ContractFuture = CreateFuture(lCurrContract)
         tfs.TickfileFormatID = pTickfileFormatID
         
-        If useCustomSessionTimes Then
-            thisSessionTimes = lSession.GetSessionTimes(currSessionStart)
+        If lUseCustomSessionTimes Then
+            thisSessionTimes = GetSessionTimes(currSessionStart, lSessionStartTime, lSessionEndTime)
             tfs.FromDate = thisSessionTimes.StartTime
             tfs.ToDate = thisSessionTimes.EndTime
             tfs.EntireSession = False
@@ -344,14 +339,14 @@ If pCompleteSessionsOnly Then
                                         "-" & _
                                         FormatDateTime(tfs.ToDate, vbGeneralDate) & _
                                         " " & _
-                                        Replace(currContract.Specifier.ToString, vbCrLf, "; ")
+                                        Replace(lCurrContract.Specifier.ToString, vbCrLf, "; ")
         Else
             tfs.FromDate = currSessionStart
             tfs.EntireSession = True
             tfs.Filename = "Session " & _
                             FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
                             " " & _
-                            Replace(currContract.Specifier.ToString, vbCrLf, "; ")
+                            Replace(lCurrContract.Specifier.ToString, vbCrLf, "; ")
             
         End If
         
@@ -362,23 +357,23 @@ If pCompleteSessionsOnly Then
             lSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
+                (lCurrContract.ExpiryDate - lCurrContract.DaysBeforeExpiryToSwitch) _
             Then
                 Do While en.MoveNext
                     Set aContract = en.Current
                     If DateValue(currSessionStart) <= _
                         (aContract.ExpiryDate - aContract.DaysBeforeExpiryToSwitch) _
                     Then
-                        Set currContract = aContract
-                        If useCustomSessionTimes Then
-                            Set currContract = editContractSessionTimes(currContract, _
+                        Set lCurrContract = aContract
+                        If lUseCustomSessionTimes Then
+                            Set lCurrContract = editContractSessionTimes(lCurrContract, _
                                                                         pCustomSessionStartTime, _
                                                                         pCustomSessionEndTime)
                         End If
                         Exit Do
                     End If
                 Loop
-                AssertArgument Not currContract Is Nothing, "No contract from " & currSessionStart
+                AssertArgument Not lCurrContract Is Nothing, "No contract from " & currSessionStart
             End If
         End If
         
@@ -387,7 +382,7 @@ If pCompleteSessionsOnly Then
 Else
     Set tfs = New TickfileSpecifier
     lTickfileSpecifiers.Add tfs
-    tfs.ContractFuture = CreateFuture(currContract)
+    tfs.ContractFuture = CreateFuture(lCurrContract)
     tfs.TickfileFormatID = pTickfileFormatID
 
     tfs.FromDate = FromDate
@@ -399,7 +394,7 @@ Else
             lSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.DaysBeforeExpiryToSwitch) _
+                (lCurrContract.ExpiryDate - lCurrContract.DaysBeforeExpiryToSwitch) _
             Then
                 Do While en.MoveNext
                     Set aContract = en.Current
@@ -410,21 +405,21 @@ Else
                         tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                                     "-" & _
                                                     FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                                    Replace(currContract.Specifier.ToString, vbCrLf, "; ")
+                                                    Replace(lCurrContract.Specifier.ToString, vbCrLf, "; ")
                         
-                        Set currContract = aContract
+                        Set lCurrContract = aContract
                         
                         Set tfs = New TickfileSpecifier
                         lTickfileSpecifiers.Add tfs
                         
-                        tfs.ContractFuture = CreateFuture(currContract)
+                        tfs.ContractFuture = CreateFuture(lCurrContract)
                         tfs.TickfileFormatID = pTickfileFormatID
                     
                         tfs.FromDate = currSessionStart
                         Exit Do
                     End If
                 Loop
-                AssertArgument Not currContract Is Nothing, "No contract from " & currSessionStart
+                AssertArgument Not lCurrContract Is Nothing, "No contract from " & currSessionStart
             End If
         End If
         
@@ -436,7 +431,7 @@ Else
     tfs.Filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                 "-" & _
                                 FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                Replace(currContract.Specifier.ToString, vbCrLf, "; ")
+                                Replace(lCurrContract.Specifier.ToString, vbCrLf, "; ")
 
 End If
 

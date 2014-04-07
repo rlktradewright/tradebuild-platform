@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.UserControl StudyConfigurer 
    ClientHeight    =   5595
    ClientLeft      =   0
@@ -121,7 +121,7 @@ Begin VB.UserControl StudyConfigurer
       TabIndex        =   16
       Top             =   0
       Width           =   7095
-      Begin StudiesUI26.StudyValueConfigurer StudyValueConfigurer 
+      Begin StudiesUI27.StudyValueConfigurer StudyValueConfigurer 
          Height          =   450
          Index           =   0
          Left            =   120
@@ -629,7 +629,7 @@ Set StudyConfiguration = studyConfig
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -646,7 +646,7 @@ initialiseControls
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
@@ -662,11 +662,7 @@ Public Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-If Not defaultConfiguration Is Nothing And defaultParameters Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "DefaultConfiguration and DefaultParameters cannot both be Nothing"
-End If
+AssertArgument Not (defaultConfiguration Is Nothing And defaultParameters Is Nothing), "DefaultConfiguration and DefaultParameters cannot both be Nothing"
 
 initialiseControls
 
@@ -685,7 +681,7 @@ processStudyDefinition defaultParameters, noParameterModification
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -722,7 +718,7 @@ Else
     parentNode.Expanded = True
 End If
 
-If (Not TypeOf studyConfig.Study Is InputStudy Or _
+If (Not TypeOf studyConfig.Study Is StudyInputHandler Or _
     Not mStudyDefinition.NeedsBars) _
 Then
     If studiesCompatible(studyConfig.Study.StudyDefinition, mStudyDefinition) Then
@@ -746,7 +742,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function chooseAColor( _
@@ -771,7 +767,7 @@ Unload simpleColorPicker
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub initialiseControls()
@@ -837,12 +833,12 @@ BaseStudiesTree.Enabled = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseInputValueCombo( _
                 ByVal Index As Long)
-Dim lstudy As Study
+Dim lstudy As IStudy
 Dim studyValueDefs As studyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim inputDef As StudyInputDefinition
@@ -879,7 +875,7 @@ InputValueCombo(Index).Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub loadStudyValueConfigurer(ByVal pIndex As Long)
@@ -896,7 +892,7 @@ StudyValueConfigurer(pIndex).Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function nextTabIndex() As Long
@@ -909,7 +905,7 @@ mNextTabIndex = mNextTabIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processRegionNames( _
@@ -934,7 +930,7 @@ ChartRegionCombo.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processStudyDefinition( _
@@ -984,7 +980,7 @@ If Not mDefaultConfiguration Is Nothing Then
     End If
     
     If Not mDefaultConfiguration.UnderlyingStudy Is Nothing Then
-        If TypeOf mDefaultConfiguration.UnderlyingStudy Is InputStudy Then
+        If TypeOf mDefaultConfiguration.UnderlyingStudy Is StudyInputHandler Then
             noInputModification = True
             mCompatibleStudies.Add mDefaultConfiguration.UnderlyingStudy, mDefaultConfiguration.UnderlyingStudy.Id
             BaseStudiesTree.Nodes.Clear
@@ -1167,7 +1163,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setComboSelection( _
@@ -1187,7 +1183,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBaseStudiesTree()
@@ -1208,7 +1204,7 @@ addBaseStudiesTreeEntry studyConfig, Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1236,7 +1232,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function typesCompatible( _
@@ -1273,7 +1269,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

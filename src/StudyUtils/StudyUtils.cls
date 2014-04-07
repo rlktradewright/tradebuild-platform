@@ -99,8 +99,8 @@ End Enum
 '@================================================================================
 
 Public Type StudyValueEventData
-    source              As Object
-    valueName           As String
+    Source              As Object
+    ValueName           As String
     sVal                As SValue
 End Type
 
@@ -128,62 +128,162 @@ Public Property Get BuiltInStudyLibraryName() As String
 BuiltInStudyLibraryName = BuiltInStudyLibName
 End Property
 
+Public Property Get BuiltInStudyLibraryProgId() As String
+BuiltInStudyLibraryProgId = BuiltInStudyLibProgId
+End Property
+
+Public Property Get ConstTimeBarsStudyName() As String
+ConstTimeBarsStudyName = Globals.ConstTimeBarsStudyName
+End Property
+
+Public Property Get ConstTimeBarsParamBarLength() As String
+ConstTimeBarsParamBarLength = Globals.ConstTimeBarsParamBarLength
+End Property
+
+Public Property Get ConstTimeBarsParamTimeUnits() As String
+ConstTimeBarsParamTimeUnits = Globals.ConstTimeBarsParamTimeUnits
+End Property
+
+Public Property Get ConstVolumeBarsStudyName() As String
+ConstVolumeBarsStudyName = Globals.ConstVolumeBarsStudyName
+End Property
+
+Public Property Get ConstTimeBarsParamVolPerBar() As String
+ConstTimeBarsParamVolPerBar = Globals.ConstTimeBarsParamVolPerBar
+End Property
+
+Public Property Get ConstMomentumBarsStudyName() As String
+ConstMomentumBarsStudyName = Globals.ConstMomentumBarsStudyName
+End Property
+
+Public Property Get ConstMomentumBarsParamTicksPerBar() As String
+ConstMomentumBarsParamTicksPerBar = Globals.ConstMomentumBarsParamTicksPerBar
+End Property
+
+Public Property Get InputNameAsk() As String
+InputNameAsk = Globals.AskInputName
+End Property
+
+Public Property Get InputNameBid() As String
+InputNameBid = Globals.BidInputName
+End Property
+
+Public Property Get InputNameOpenInterest() As String
+InputNameOpenInterest = Globals.OpenInterestInputName
+End Property
+
+Public Property Get InputNameTickVolume() As String
+InputNameTickVolume = Globals.TickVolumeInputName
+End Property
+
+Public Property Get InputNameTrade() As String
+InputNameTrade = Globals.TradeInputName
+End Property
+
+Public Property Get InputNameVolume() As String
+InputNameVolume = Globals.VolumeInputName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function AddStudyLibrary( _
-                ByVal progId As String, _
-                ByVal enabled As Boolean, _
-                Optional ByVal Name As String _
-                ) As StudyLibrary
-Const ProcName As String = "AddStudyLibrary"
+Public Function CreateBarStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "CreateBarStudy"
 On Error GoTo Err
 
-If Name = "" Then Name = GenerateGUIDString
-Set AddStudyLibrary = Globals.StudyLibraryManager.AddStudyLibrary( _
-                                progId, _
-                                enabled, _
-                                Name)
+Select Case pTimePeriod.Units
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    Set CreateBarStudy = setupConstantTimeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+Case TimePeriodTickMovement
+    Set CreateBarStudy = setupConstantMomentumBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+Case TimePeriodTickVolume
+    'setupConstantTickBarsStudies
+Case TimePeriodVolume
+    Set CreateBarStudy = setupConstantVolumeBarsStudy(pTimePeriod, pStudyBase, pInitialBarsFuture)
+End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function AvailableStudies() As StudyListEntry()
-Const ProcName As String = "AvailableStudies"
-On Error GoTo Err
-
-AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateCacheReplayTask( _
-                ByVal valueCache As valueCache, _
-                ByVal target As Object, _
-                ByVal sourceStudy As Study, _
-                ByVal numberOfValuesToReplay As Long, _
-                ByVal discriminator As Long) As CacheReplayTask
+                ByVal pStudyManager As StudyManager, _
+                ByVal pValueCache As valueCache, _
+                ByVal pTarget As Object, _
+                ByVal pSourceStudy As IStudy, _
+                ByVal pNumberOfValuesToReplay As Long, _
+                ByVal pDiscriminator As Long) As CacheReplayTask
 Const ProcName As String = "CreateCacheReplayTask"
 On Error GoTo Err
 
 Set CreateCacheReplayTask = New CacheReplayTask
-CreateCacheReplayTask.initialise valueCache, _
-                            target, _
-                            sourceStudy, _
-                            numberOfValuesToReplay, _
-                            discriminator
+CreateCacheReplayTask.Initialise pStudyManager, _
+                            pValueCache, _
+                            pTarget, _
+                            pSourceStudy, _
+                            pNumberOfValuesToReplay, _
+                            pDiscriminator
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTickDataStudyBase( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pTickStream As ITickStream, _
+                ByVal pContractFuture As IFuture) As IStudyBase
+Const ProcName As String = "CreateTickDataStudyBase"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument Not pTickStream Is Nothing, "pTickStream Is Nothing"
+AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
+
+Dim lStudyBase As New TickDataStudyBase
+lStudyBase.Initialise pStudyManager, pContractFuture
+pTickStream.AddGenericTickListener lStudyBase
+
+Set CreateTickDataStudyBase = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTickDataStudyBaseFromMarketDataSource( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal pDataSource As IMarketDataSource) As IStudyBase
+Const ProcName As String = "CreateTickDataStudyBaseFromMarketDataSource"
+On Error GoTo Err
+
+AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
+AssertArgument Not pDataSource Is Nothing, "pDataSource is nothing"
+
+Dim lStudyBase As New TickDataStudyBase
+lStudyBase.Initialise pStudyManager, pDataSource.ContractFuture
+pDataSource.AddGenericTickListener lStudyBase
+
+Set CreateTickDataStudyBaseFromMarketDataSource = lStudyBase
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyPoint( _
@@ -199,7 +299,7 @@ CreateStudyPoint.Y = Y
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DefaultStudyValueName() As String
@@ -211,51 +311,8 @@ DefaultStudyValueName = DefaultStudyValueNameStr
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Function GetStudyDefaultParameters( _
-                ByVal studyName As String, _
-                Optional ByVal libraryName As String) As Parameters
-Const ProcName As String = "GetStudyDefaultParameters"
-On Error GoTo Err
-
-Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
-                                            studyName, _
-                                            libraryName)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Function GetStudyDefinition( _
-                ByVal Name As String, _
-                Optional ByVal libraryName As String) As StudyDefinition
-Const ProcName As String = "GetStudyDefinition"
-On Error GoTo Err
-
-Set GetStudyDefinition = Globals.StudyLibraryManager.StudyDefinition(Name, libraryName)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Public Sub LoadStudyLibraryConfiguration( _
-                ByVal config As ConfigurationSection)
-Const ProcName As String = "LoadStudyLibraryConfiguration"
-On Error GoTo Err
-
-Globals.StudyLibraryManager.LoadStudyLibraryConfiguration config
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 Public Function MovingAverageStudyValueName() As String
 Const ProcName As String = "MovingAverageStudyValueName"
@@ -266,51 +323,18 @@ MovingAverageStudyValueName = MovingAverageStudyValueNameStr
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Public Sub RemoveStudyLibrary( _
-                ByVal library As StudyLibrary)
-Const ProcName As String = "RemoveStudyLibrary"
-On Error GoTo Err
-
-Globals.StudyLibraryManager.Remove library
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Public Sub RemoveAllStudyLibraries()
-Const ProcName As String = "RemoveAllStudyLibraries"
-On Error GoTo Err
-
-Globals.StudyLibraryManager.RemoveAll
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 Public Sub SetDefaultStudyLibraryConfig( _
                 ByVal configdata As ConfigurationSection)
-Dim currSLsList As ConfigurationSection
-Dim currSL As ConfigurationSection
-
 Const ProcName As String = "SetDefaultStudyLibraryConfig"
 On Error GoTo Err
 
-On Error Resume Next
-Set currSLsList = configdata.GetConfigurationSection(ConfigNameStudyLibraries)
-On Error GoTo Err
+Dim currSLsList As ConfigurationSection
+Dim currSL As ConfigurationSection
 
-If Not currSLsList Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Study libraries list is not empty"
-End If
+Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries)
 
 Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
 
@@ -322,29 +346,95 @@ currSL.SetAttribute AttributeNameStudyLibraryBuiltIn, "True"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Public Function SetStudyDefaultParameters( _
-                ByVal studyName As String, _
-                ByVal libraryName As String, _
-                ByVal params As Parameters) As Boolean
-Const ProcName As String = "SetStudyDefaultParameters"
-On Error GoTo Err
-
-SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameters( _
-                                            studyName, _
-                                            libraryName, _
-                                            params)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function setupBarsStudy( _
+                ByVal pStudyName As String, _
+                ByVal pStudyBase As IStudyBase, _
+                ByVal pParams As Parameters, _
+                ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupBarsStudy"
+On Error GoTo Err
+
+ReDim InputValueNames(3) As String
+InputValueNames(0) = InputNameTrade
+InputValueNames(1) = InputNameVolume
+InputValueNames(2) = InputNameTickVolume
+InputValueNames(3) = InputNameOpenInterest
+
+Dim lBarStudy As IBarStudy
+Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
+                                        pStudyBase.BaseStudy, _
+                                        InputValueNames, _
+                                        pParams)
+If Not pInitialBarsFuture Is Nothing Then lBarStudy.InitialBarsFuture = pInitialBarsFuture
+Set setupBarsStudy = lBarStudy
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupConstantMomentumBarsStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupConstantMomentumBarsStudy"
+On Error GoTo Err
+
+Dim lParams As New Parameters
+lParams.SetParameterValue ConstMomentumBarsParamTicksPerBar, pTimePeriod.Length
+
+Set setupConstantMomentumBarsStudy = setupBarsStudy(ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupConstantTimeBarsStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupConstantTimeBarsStudy"
+On Error GoTo Err
+
+Dim lParams As New Parameters
+lParams.SetParameterValue ConstTimeBarsParamBarLength, pTimePeriod.Length
+lParams.SetParameterValue ConstTimeBarsParamTimeUnits, _
+                        TimePeriodUnitsToString(pTimePeriod.Units)
+
+Set setupConstantTimeBarsStudy = setupBarsStudy(ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function setupConstantVolumeBarsStudy( _
+                ByVal pTimePeriod As TimePeriod, _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pInitialBarsFuture As IFuture) As IBarStudy
+Const ProcName As String = "setupConstantVolumeBarsStudy"
+On Error GoTo Err
+
+Dim lParams As New Parameters
+lParams.SetParameterValue ConstTimeBarsParamVolPerBar, pTimePeriod.Length
+
+Set setupConstantVolumeBarsStudy = setupBarsStudy(ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 

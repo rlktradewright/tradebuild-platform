@@ -87,14 +87,17 @@ End Property
 
 Public Sub ParseData( _
                 ByVal pFilename As String)
-Dim lAnalyzer As DataAnalyzer
-
 Const ProcName As String = "ParseData"
 On Error GoTo Err
 
-Set mBarsBuilder = CreateBarsBuilder(determineTimeframe(getTextStream(pFilename)))
+Dim lSessionBuilder As SessionBuilder
+Set lSessionBuilder = CreateSessionBuilder(0#, 0#, Nothing)
 
+Set mBarsBuilder = CreateBarsBuilder(determineTimeframe(getTextStream(pFilename)), lSessionBuilder.Session)
+
+Dim lAnalyzer As DataAnalyzer
 Set lAnalyzer = New DataAnalyzer
+
 buildBars getTextStream(pFilename), lAnalyzer
 
 mMinimumPriceTick = lAnalyzer.Analyze
@@ -102,7 +105,7 @@ mMinimumPriceTick = lAnalyzer.Analyze
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -114,7 +117,7 @@ Const ProcName As String = "buildBar"
 On Error GoTo Err
 
 Dim lTimestamp As Date
-Dim lBar As New TimeframeUtils26.Bar
+Dim lBar As New BarUtils27.Bar
 
 lBar.Initialise GetTimestamp(pTokens), _
                 getValue(pTokens, OpenValue, pAnalyzer), _
@@ -128,7 +131,7 @@ mBarsBuilder.AddThisBar lBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub buildBars(ByVal pTs As TextStream, ByVal pAnalyzer As DataAnalyzer)
@@ -144,7 +147,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function determineTimeframe(ByVal pTs As TextStream) As TimePeriod
@@ -155,14 +158,11 @@ Dim lTokens() As String
 Const ProcName As String = "determineTimeframe"
 On Error GoTo Err
 
-If Not readLine(pTs, lTokens) Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Not enough data to determine timeframe"
-End If
+Assert readLine(pTs, lTokens), "Not enough data to determine timeframe"
 lTimestamp1 = GetTimestamp(lTokens)
 
-If Not readLine(pTs, lTokens) Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Not enough data to determine timeframe"
-End If
+Assert readLine(pTs, lTokens), "Not enough data to determine timeframe"
+
 lTimestamp2 = GetTimestamp(lTokens)
         
 If DateDiff("s", lTimestamp1, lTimestamp2) < 60 Then
@@ -184,7 +184,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOpenInterest(ByRef pTokens() As String) As Long
@@ -198,7 +198,7 @@ If oi <> "" Then getOpenInterest = CLng(oi)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTextStream(ByVal pFilename As String) As TextStream
@@ -211,7 +211,7 @@ Set getTextStream = fso.OpenTextFile(pFilename, ForReading)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetTimestamp(ByRef pTokens() As String) As Date
@@ -223,7 +223,7 @@ GetTimestamp = CDate(pTokens(TestDataFileColumns.TimeStamp))
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getToken(ByRef pTokens() As String, ByVal pIndex As TestDataFileColumns) As String
@@ -245,7 +245,7 @@ pAnalyzer.AddDataValue getValue
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getVolume(ByRef pTokens() As String) As Long
@@ -259,7 +259,7 @@ If vol <> "" Then getVolume = CLng(vol)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function readLine( _
@@ -282,7 +282,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
                 
 End Function
 

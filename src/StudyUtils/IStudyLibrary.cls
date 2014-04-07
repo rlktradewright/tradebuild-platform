@@ -73,7 +73,7 @@ End Property
 '@================================================================================
 
 Public Function CreateStudy( _
-                ByVal Name As String) As Study
+                ByVal Name As String) As IStudy
                 
 End Function
 
@@ -91,7 +91,7 @@ Public Function GetStudyDefinition( _
     
 End Function
     
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
 

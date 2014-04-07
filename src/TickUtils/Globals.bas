@@ -1,5 +1,5 @@
 Attribute VB_Name = "Globals"
-' Copyright 2008 Richard L King
+' Copyright 2008-2011 Richard L King
 '
 ' This file is part of TradeBuild Tick Utilities Package.
 '
@@ -50,7 +50,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TickUtils26"
+Public Const ProjectName                    As String = "TickUtils27"
 Private Const ModuleName                    As String = "Globals"
 
 Public Const ErrInvalidProcedureCall        As Long = 5
@@ -101,6 +101,32 @@ Public Const TickfileFormatTradeBuildSQL    As String = "urn:tradewright.com:nam
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pNumber As Long, _
+                Optional ByRef pDescription As String, _
+                Optional ByRef pSource As String)
+Dim errSource As String: errSource = IIf(pSource <> "", pSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pDescription <> "", pDescription, Err.Description)
+Dim errNum As Long: errNum = IIf(pNumber <> 0, pNumber, Err.Number)
+
+errSource = IIf(errSource <> "", errSource & vbCrLf, "") & _
+            ProjectName & "." & _
+            IIf(pModuleName <> "", pModuleName & ":", "") & _
+            pProcedureName & _
+            IIf(pFailpoint <> "", " At: " & pFailpoint, "")
+    
+If errNum = 0 Then
+    Err.Raise ErrInvalidProcedureCall, _
+            errSource, _
+            "gHandleUnexpectedError called in non-error context"
+Else
+    Err.Raise errNum, errSource, errDesc
+End If
+End Sub
 
 '@================================================================================
 ' Helper Functions

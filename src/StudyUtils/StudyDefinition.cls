@@ -83,8 +83,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let DefaultRegion(ByVal value As StudyDefaultRegions)
-mDefaultRegion = value
+Public Property Let DefaultRegion(ByVal Value As StudyDefaultRegions)
+mDefaultRegion = Value
 End Property
 
 Public Property Get DefaultRegion() As StudyDefaultRegions
@@ -106,35 +106,35 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Description(ByVal value As String)
-mDescription = value
+Public Property Let Description(ByVal Value As String)
+mDescription = Value
 End Property
 
 Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Public Property Let Name(ByVal value As String)
-mName = value
+Public Property Let Name(ByVal Value As String)
+mName = Value
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let NeedsBars(ByVal value As Boolean)
-mNeedsBars = value
+Public Property Let NeedsBars(ByVal Value As Boolean)
+mNeedsBars = Value
 End Property
 
 Public Property Get NeedsBars() As Boolean
 NeedsBars = mNeedsBars
 End Property
 
-Public Property Let ShortName(ByVal value As String)
-mShortName = value
+Public Property Let ShortName(ByVal Value As String)
+mShortName = Value
 End Property
 
 Public Property Get ShortName() As String
@@ -214,7 +214,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -31,7 +31,7 @@ Option Explicit
 '@================================================================================
 
 Implements Task
-Implements ValueReplayTask
+Implements IValueReplayTask
 
 '@================================================================================
 ' Events
@@ -60,13 +60,10 @@ Private mTaskContext As TaskContext
 Private mTarget As Object
 Private mTargetIsStudy As Boolean
 
-Private mTargetStudy As Study
-Private mStudyToNotify As Study
-Private mTargetListener As StudyValueListener
-Private mSourceStudy As Study
-
-' The following no longer used as the cookie argument to startTask is used instead
-'Private mDiscriminator As Long
+Private mTargetStudy As IStudy
+Private mStudyToNotify As IStudy
+Private mTargetListener As IStudyValueListener
+Private mSourceStudy As IStudy
 
 Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
@@ -84,44 +81,47 @@ Private mSessionBuilder As SessionBuilder
 
 Private mResult As ValueReplayResult
 
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' ValueReplayTask Interface Members
+' IValueReplayTask Interface Members
 '@================================================================================
 
-Private Property Get ValueReplayTask_Discriminator() As Long
-ValueReplayTask_Discriminator = 0
+Private Property Get IValueReplayTask_Discriminator() As Long
+IValueReplayTask_Discriminator = 0
 End Property
 
-Private Property Get ValueReplayTask_NotifyName() As String
-ValueReplayTask_NotifyName = mNotifyName
+Private Property Get IValueReplayTask_NotifyName() As String
+IValueReplayTask_NotifyName = mNotifyName
 End Property
 
-Private Property Get ValueReplayTask_NotifyNames() As String()
-ValueReplayTask_NotifyNames = mNotifyNames
+Private Property Get IValueReplayTask_NotifyNames() As String()
+IValueReplayTask_NotifyNames = mNotifyNames
 End Property
 
-Private Property Get ValueReplayTask_SourceStudy() As Study
-Set ValueReplayTask_SourceStudy = mSourceStudy
+Private Property Get IValueReplayTask_SourceStudy() As IStudy
+Set IValueReplayTask_SourceStudy = mSourceStudy
 End Property
 
-Private Property Get ValueReplayTask_Target() As Object
-Set ValueReplayTask_Target = mTarget
+Private Property Get IValueReplayTask_Target() As Object
+Set IValueReplayTask_Target = mTarget
 End Property
 
-Private Property Get ValueReplayTask_TaskName() As String
-ValueReplayTask_TaskName = mTaskContext.Name
+Private Property Get IValueReplayTask_TaskName() As String
+IValueReplayTask_TaskName = mTaskContext.Name
 End Property
 
-Private Property Get ValueReplayTask_ValueName() As String
-ValueReplayTask_ValueName = mValueName
+Private Property Get IValueReplayTask_ValueName() As String
+IValueReplayTask_ValueName = mValueName
 End Property
 
-Private Property Get ValueReplayTask_ValueNames() As String()
-ValueReplayTask_ValueNames = mValueNames
+Private Property Get IValueReplayTask_ValueNames() As String()
+IValueReplayTask_ValueNames = mValueNames
 End Property
 
 '@================================================================================
@@ -129,7 +129,7 @@ End Property
 '@================================================================================
 
 Private Sub task_cancel()
-mTaskContext.Finish Empty, True
+doCancel
 End Sub
 
 Private Property Get task_TaskName() As String
@@ -137,10 +137,6 @@ task_TaskName = mTaskContext.Name
 End Property
 
 Private Sub Task_run()
-Dim i As Long
-Dim ev As StudyValueEventData
-Dim valueEntry As SValue
-
 Const ProcName As String = "Task_run"
 On Error GoTo Err
 
@@ -152,29 +148,35 @@ If mSourceStudy.NumberOfCachedValues = 0 Then
 End If
 
 If mTaskContext.CancelPending Then
-    mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
-    mTaskContext.Finish mResult, True
-    Set mTaskContext = Nothing
+    doCancel
     Exit Sub
 End If
 
+If mTargetIsStudy And mSessionBuilder Is Nothing Then
+    mTaskContext.Suspend -1
+    Exit Sub
+End If
+
+Dim i As Long
 For i = 0 To UBound(mReplayValueNames)
     
+    Dim valueEntry As SValue
     valueEntry = mSourceStudy.GetStudyValue(mReplayValueNames(i), mNextValueNumber)
      
-    If Not IsEmpty(valueEntry.value) Then
-        Set ev.source = mSourceStudy
+    If Not IsEmpty(valueEntry.Value) Then
+        Dim ev As StudyValueEventData
+        Set ev.Source = mSourceStudy
         ev.sVal = valueEntry
         
         If mTargetIsStudy Then
             
             mSessionBuilder.SetSessionCurrentTime ev.sVal.Timestamp
             
-            ev.valueName = mReplayNotifyNames(i)
+            ev.ValueName = mReplayNotifyNames(i)
             mStudyToNotify.Notify ev
         Else
         
-            ev.valueName = mReplayValueNames(i)
+            ev.ValueName = mReplayValueNames(i)
             mTargetListener.Notify ev
         End If
     End If
@@ -189,10 +191,10 @@ If mValuesNotified Mod 20 = 0 Then
 End If
 
 If mNextValueNumber > mSourceStudy.NumberOfCachedValues Then
-    Debug.Print "Study (" & mSourceStudy.Id & ") " & _
-                mSourceStudy.InstanceName & _
+    gLogger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
                 " replayed " & mValuesNotified & _
-                " values for " & Join(mReplayValueNames(), ",")
+                " values for " & Join(mReplayValueNames(), ","), _
+                ProcName, ModuleName, LogLevelHighDetail
     mTaskContext.Progress 100, Empty
     mTaskContext.Finish mResult, False
     Set mTaskContext = Nothing
@@ -209,80 +211,99 @@ Set mTaskContext = RHS
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Set mSessionBuilder = ev.Future.Value
+mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get discriminator() As Long
-discriminator = 0
+Public Property Get Discriminator() As Long
+Discriminator = 0
 End Property
 
-Public Property Get notifyName() As String
-notifyName = mNotifyName
+Public Property Get NotifyName() As String
+NotifyName = mNotifyName
 End Property
 
-Public Property Get notifyNames() As String()
-notifyNames = notifyNames
+Public Property Get NotifyNames() As String()
+NotifyNames = NotifyNames
 End Property
 
-Public Property Get sourceStudy() As Study
-Set sourceStudy = mSourceStudy
+Public Property Get SourceStudy() As IStudy
+Set SourceStudy = mSourceStudy
 End Property
 
-Public Property Get target() As Object
-Set target = mTarget
+Public Property Get Target() As Object
+Set Target = mTarget
 End Property
 
-Public Property Get valueName() As String
-valueName = mValueName
+Public Property Get ValueName() As String
+ValueName = mValueName
 End Property
 
-Public Property Get valueNames() As String()
-valueNames = mValueNames
+Public Property Get ValueNames() As String()
+ValueNames = mValueNames
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
-                ByVal target As Object, _
-                ByVal sourceStudy As Study, _
+Friend Sub Initialise( _
+                ByVal pStudyManager As StudyManager, _
+                ByVal Target As Object, _
+                ByVal SourceStudy As IStudy, _
                 ByRef replayValueNames() As String, _
                 ByRef replayNotifyNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
-                ByRef valueNames() As String, _
-                ByRef notifyNames() As String, _
-                ByVal discriminator As Long)
-Dim numValuesToNotify As Long
-Dim studyEntry As StudyTableEntry
-
-Const ProcName As String = "initialise"
+                ByRef ValueNames() As String, _
+                ByRef NotifyNames() As String)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mTarget = target
-Set mSourceStudy = sourceStudy
+Set mTarget = Target
+Set mSourceStudy = SourceStudy
 mReplayValueNames = replayValueNames
 mReplayNotifyNames = replayNotifyNames
-mValueNames = valueNames
+mValueNames = ValueNames
 mValueName = mValueNames(0)
-mNotifyNames = notifyNames
+mNotifyNames = NotifyNames
 mNotifyName = mNotifyNames(0)
-'mDiscriminator = Discriminator
 
 Set mResult = New ValueReplayResult
-mResult.initialise target, sourceStudy, valueNames, notifyNames
+mResult.Initialise Target, SourceStudy, ValueNames, NotifyNames
 
-If TypeOf target Is Study Then
+Dim numValuesToNotify As Long
+If TypeOf Target Is IStudy Then
     mTargetIsStudy = True
-    Set mTargetStudy = target
+    Set mTargetStudy = Target
     Set mStudyToNotify = mTargetStudy.BaseStudy
     
-    studyEntry = Globals.StudiesCollection(mTargetStudy.Id)
-    Set mSessionBuilder = studyEntry.sessionBldr
+    Dim lSessionBuilderFuture As IFuture
+    Set lSessionBuilderFuture = pStudyManager.GetStudyEntry(mTargetStudy).SessionBuilderFuture
+    
+    If lSessionBuilderFuture.IsAvailable Then
+        Set mSessionBuilder = lSessionBuilderFuture.Value
+    Else
+        Set mFutureWaiter = New FutureWaiter
+        mFutureWaiter.Add lSessionBuilderFuture
+    End If
     
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
@@ -291,7 +312,7 @@ If TypeOf target Is Study Then
         numValuesToNotify = numberOfValuesToReplay
     End If
 Else
-    Set mTargetListener = target
+    Set mTargetListener = Target
     numValuesToNotify = numberOfValuesToReplay
 End If
 
@@ -304,16 +325,36 @@ End If
 mNextValueNumber = mSourceStudy.NumberOfCachedValues - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
 
+gLogger.Log "Study (" & mSourceStudy.Id & ") " & _
+            mSourceStudy.InstanceName & _
+            " replaying values for " & Join(mReplayValueNames(), ","), _
+            ProcName, ModuleName, LogLevelHighDetail
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Sub doCancel()
+Const ProcName As String = "doCancel"
+On Error GoTo Err
+
+If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
+
+mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
+mTaskContext.Finish mResult, True
+Set mTaskContext = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 
 

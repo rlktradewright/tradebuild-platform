@@ -26,7 +26,7 @@ Option Explicit
 '@================================================================================
 
 Private Type ListenerTableEntry
-    theListener         As StudyValueListener
+    theListener         As IStudyValueListener
     valueName           As String
 End Type
 
@@ -61,8 +61,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let DefaultValueName(ByVal value As String)
-mDefaultValuename = UCase$(value)
+Public Property Let DefaultValueName(ByVal Value As String)
+mDefaultValuename = UCase$(Value)
 End Property
 
 '@================================================================================
@@ -70,7 +70,7 @@ End Property
 '@================================================================================
 
 Public Sub Add( _
-                ByVal listener As StudyValueListener, _
+                ByVal listener As IStudyValueListener, _
                 ByVal valueName As String)
 Dim tableEntry As ListenerTableEntry
 
@@ -88,13 +88,13 @@ mNextListenerTableIndex = mNextListenerTableIndex + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Notify( _
                 ev As StudyValueEventData)
 Dim i As Long
-Dim listener As StudyValueListener
+Dim listener As IStudyValueListener
 
 Const ProcName As String = "Notify"
 On Error GoTo Err
@@ -117,13 +117,13 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Remove( _
-                ByVal listener As StudyValueListener)
+                ByVal listener As IStudyValueListener)
 Dim i As Long
-Dim lListener As StudyValueListener
+Dim lListener As IStudyValueListener
 
 Const ProcName As String = "Remove"
 On Error GoTo Err
@@ -139,7 +139,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

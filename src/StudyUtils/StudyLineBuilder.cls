@@ -67,28 +67,28 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Point1(ByVal value As StudyPoint)
+Public Property Let Point1(ByVal Value As StudyPoint)
 Const ProcName As String = "Point1"
 On Error GoTo Err
 
-mStudyLine.Point1 = value
+mStudyLine.Point1 = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Point2(ByVal value As StudyPoint)
+Public Property Let Point2(ByVal Value As StudyPoint)
 Const ProcName As String = "Point2"
 On Error GoTo Err
 
-mStudyLine.Point2 = value
+mStudyLine.Point2 = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyLine() As StudyLine
@@ -100,7 +100,7 @@ Set StudyLine = mStudyLine
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

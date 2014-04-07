@@ -74,16 +74,16 @@ Private mPermittedValues() As Variant
 ' Properties
 '@================================================================================
 
-Public Property Let Description(ByVal value As String)
+Public Property Let Description(ByVal Value As String)
 Const ProcName As String = "Description"
 On Error GoTo Err
 
-mDescription = value
+mDescription = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Description() As String
@@ -95,19 +95,19 @@ Description = mDescription
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let MaximumValue(ByVal value As Variant)
+Public Property Let MaximumValue(ByVal Value As Variant)
 Const ProcName As String = "MaximumValue"
 On Error GoTo Err
 
-mMaximumValue = value
+mMaximumValue = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaximumValue() As Variant
@@ -119,19 +119,19 @@ MaximumValue = mMaximumValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let MinimumValue(ByVal value As Variant)
+Public Property Let MinimumValue(ByVal Value As Variant)
 Const ProcName As String = "MinimumValue"
 On Error GoTo Err
 
-mMinimumValue = value
+mMinimumValue = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MinimumValue() As Variant
@@ -143,19 +143,19 @@ MinimumValue = mMinimumValue
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let Name(ByVal value As String)
+Friend Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
 On Error GoTo Err
 
-mName = value
+mName = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -167,19 +167,19 @@ Name = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let ParameterType(ByVal value As StudyParameterTypes)
+Public Property Let ParameterType(ByVal Value As StudyParameterTypes)
 Const ProcName As String = "ParameterType"
 On Error GoTo Err
 
-mParameterType = value
+mParameterType = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ParameterType() As StudyParameterTypes
@@ -191,19 +191,19 @@ ParameterType = mParameterType
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let PermittedValues(ByRef value() As Variant)
+Public Property Let PermittedValues(ByRef Value() As Variant)
 Const ProcName As String = "PermittedValues"
 On Error GoTo Err
 
-mPermittedValues = value
+mPermittedValues = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PermittedValues() As Variant()
@@ -215,7 +215,7 @@ PermittedValues = mPermittedValues
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

@@ -179,7 +179,7 @@ If mPendingImpliedVolumeTick Then
     mPendingImpliedVolumeTick = False
     pendingTick.tickType = TickTypeVolume
     pendingTick.timestamp = mCurrentTimestamp
-    pendingTick.size = mVolume
+    pendingTick.Size = mVolume
     mDataConsumer.tick pendingTick
 Else
     Do While ReadNextFilteredTickRecord
@@ -286,13 +286,13 @@ Then
     FirstTickFileTime = mFirstTickFileTime
 Else
     FirstTickFileTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mFirstTickFileTime), _
-                                            mContract.Timezone)
+                                            mContract.TimeZone)
 End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
@@ -317,7 +317,7 @@ Set mDataConsumer = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -353,7 +353,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub getFile(ByVal filename As String, _
@@ -374,7 +374,7 @@ Dim failpoint As String
 On Error GoTo Err
 
 #If trace Then
-    gTracer.EnterProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ProjectName, ModuleName
 #End If
 logMessage "Opening file " & filename
     
@@ -385,7 +385,7 @@ If Err.Number <> 0 Then
                         "Tickfile does not exist: " & filename, _
                         mTickfileServiceProvider.handle
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.EnterProcedure ProcName, ProjectName, ModuleName
     #End If
     Exit Sub
 End If
@@ -402,7 +402,7 @@ If ts.AtEndOfStream Then
                         "Tickfile format cannot be determined: " & filename, _
                         mTickfileServiceProvider.handle
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.EnterProcedure ProcName, ProjectName, ModuleName
     #End If
     Exit Sub
 End If
@@ -413,13 +413,13 @@ If UCase$(dataFields(UBound(dataFields))) = "EPF" Then
     format = TickfileFormats.TickfileESignal
     version = TickFileVersions.ESignal
     Set f = mFileSys.getFile(filename)
-    filesize = f.size
+    filesize = f.Size
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
                         "Connected to tickfile", _
                         mTickfileServiceProvider.handle
     mServiceConsumer.Ready mInputTickfileSpecifier, filesize
     #If trace Then
-        gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+        gTracer.EnterProcedure ProcName, ProjectName, ModuleName
     #End If
     Exit Sub
 End If
@@ -531,18 +531,18 @@ Case Else
 End Select
 
 Set f = mFileSys.getFile(filename)
-filesize = f.size - bytesRead
+filesize = f.Size - bytesRead
 
 mServiceConsumer.Ready mInputTickfileSpecifier, filesize
 
 #If trace Then
-    gTracer.ExitProcedure pInfo:="", pProcedureName:="getFile", pProjectName:=ProjectName, pModuleName:=ModuleName
+    gTracer.EnterProcedure ProcName, ProjectName, ModuleName
 #End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handleFatalError( _
@@ -651,7 +651,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -685,7 +685,7 @@ lookAhead = readRecord(lookAheadRecord)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -699,7 +699,7 @@ On Error GoTo Err
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    FileTickTypes.Ask Then Exit Function
+                    FileTickTypes.ask Then Exit Function
 
 lookAheadRecord = -1
 
@@ -716,7 +716,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -730,7 +730,7 @@ On Error GoTo Err
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    FileTickTypes.Bid Then Exit Function
+                    FileTickTypes.bid Then Exit Function
 
 lookAheadRecord = -1
 
@@ -747,7 +747,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -796,7 +796,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processLastSizeCorrection()
@@ -867,7 +867,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -885,15 +885,15 @@ With mRecordTable(mCurrentRecordTableEntry)
     tick.position = .MDposition
     tick.price = .tickPrice
     tick.side = .MDSide
-    tick.size = .TickSize
+    tick.Size = .TickSize
     tick.timestamp = .timestamp
     Select Case .tickType
-    Case FileTickTypes.Bid
+    Case FileTickTypes.bid
         tick.tickType = TickTypeBid
         If tick.price = 0 Then tick.price = mPrevBid
         If .TickSize = 0 Then
             If Not lookForBidSize Then
-                tick.size = mPrevBidSize
+                tick.Size = mPrevBidSize
                 mDataConsumer.tick tick
                 processTickData = True
             End If
@@ -911,12 +911,12 @@ With mRecordTable(mCurrentRecordTableEntry)
             mPrevBidSize = .TickSize
             processTickData = True
         End If
-    Case FileTickTypes.Ask
+    Case FileTickTypes.ask
         tick.tickType = TickTypeAsk
         If tick.price = 0 Then tick.price = mPrevAsk
         If .TickSize = 0 Then
             If Not lookForAskSize Then
-                tick.size = mPrevAskSize
+                tick.Size = mPrevAskSize
                 mDataConsumer.tick tick
                 processTickData = True
             End If
@@ -947,7 +947,7 @@ With mRecordTable(mCurrentRecordTableEntry)
         ElseIf .TickSize <> 0 Then
             processLastSizeCorrection
             tick.tickType = TickTypeTrade
-            tick.size = .TickSize
+            tick.Size = .TickSize
             If tick.price = 0 Then tick.price = mPrevLast
             mDataConsumer.tick tick
             processDuplicateLast
@@ -1009,7 +1009,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processVolume()
@@ -1044,7 +1044,7 @@ mPendingImpliedVolumeTick = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ReadNextFilteredTickRecord() As Boolean
@@ -1078,7 +1078,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ReadNextTickRecord() As Boolean
@@ -1129,7 +1129,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function readRecord(ByRef index As Long) As Boolean
@@ -1215,7 +1215,7 @@ With mRecordTable(index)
         Else
             ' earlier versions were recorded in local time, so convert to timezone
             .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV3.timestamp))), _
-                                            mContract.Timezone)
+                                            mContract.TimeZone)
         End If
         ticktypeStr = dataFields(TickfileFieldsV3.tickType)
         
@@ -1231,11 +1231,11 @@ With mRecordTable(index)
             .tickPrice = dataFields(TickfileFieldsV3.MDPrice)
             .TickSize = dataFields(TickfileFieldsV3.MDSize)
         Case TICK_BID
-            .tickType = FileTickTypes.Bid
+            .tickType = FileTickTypes.bid
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
             .TickSize = dataFields(TickfileFieldsV3.TickSize)
         Case TICK_ASK
-            .tickType = FileTickTypes.Ask
+            .tickType = FileTickTypes.ask
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
             .TickSize = dataFields(TickfileFieldsV3.TickSize)
         Case TICK_TRADE
@@ -1260,18 +1260,18 @@ With mRecordTable(index)
         End Select
     Case TickFileVersions.CrescendoV2
         .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV2.timestamp))), _
-                                        mContract.Timezone)
+                                        mContract.TimeZone)
         .tickType = dataFields(TickfileFieldsV2.tickType)
         
         Select Case .tickType
-        Case FileTickTypes.Bid
+        Case FileTickTypes.bid
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
             End If
         Case FileTickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case FileTickTypes.Ask
+        Case FileTickTypes.ask
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
@@ -1296,15 +1296,15 @@ With mRecordTable(index)
         End Select
     Case TickFileVersions.CrescendoV1
         .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString))), _
-                                        mContract.Timezone)
+                                        mContract.TimeZone)
         .tickType = dataFields(TickfileFieldsV1.tickType)
         
         Select Case .tickType
-        Case FileTickTypes.Bid
+        Case FileTickTypes.bid
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
         Case FileTickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case FileTickTypes.Ask
+        Case FileTickTypes.ask
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
         Case FileTickTypes.AskSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
@@ -1332,7 +1332,7 @@ With mRecordTable(index)
                                                 TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
                                                         Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
                                                         Right$(dataFields(ESignalTickFileFields.TimestampTime), 2))), _
-                                        mContract.Timezone)
+                                        mContract.TimeZone)
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE
@@ -1349,7 +1349,7 @@ With mRecordTable(index)
             If dataFields(ESignalTickFileFields.bidPrice) <> esPrevBid Or _
                     dataFields(ESignalTickFileFields.bidSize) <> esPrevBidSize _
             Then
-                .tickType = FileTickTypes.Bid
+                .tickType = FileTickTypes.bid
                 .tickPrice = dataFields(ESignalTickFileFields.bidPrice)
                 .TickSize = dataFields(ESignalTickFileFields.bidSize)
                 If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
@@ -1360,7 +1360,7 @@ With mRecordTable(index)
                     mNextFreeRecordTableEntry = (mNextFreeRecordTableEntry + 1) Mod NUM_RECORD_TABLE_ENTRIES
                     With mRecordTable(anotherRecord)
                         .timestamp = mRecordTable(index).timestamp
-                        .tickType = FileTickTypes.Ask
+                        .tickType = FileTickTypes.ask
                         .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
                         .TickSize = dataFields(ESignalTickFileFields.AskSize)
                     End With
@@ -1369,7 +1369,7 @@ With mRecordTable(index)
                 If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
                         dataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
                 Then
-                    .tickType = FileTickTypes.Ask
+                    .tickType = FileTickTypes.ask
                     .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
                     .TickSize = dataFields(ESignalTickFileFields.AskSize)
                 End If
@@ -1389,7 +1389,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function toFilterRecord() As Boolean
@@ -1407,7 +1407,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pProjectName:=ProjectName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

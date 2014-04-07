@@ -28,6 +28,8 @@ Implements ITickStream
 ' Events
 '@================================================================================
 
+Event StateChange(ev As StateChangeEventData)
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -46,9 +48,17 @@ Private Const ModuleName                            As String = "TickStream"
 ' Member variables
 '@================================================================================
 
-Private mListeners                                  As New EnumerableCollection
+Private mBuilder                                    As TickStreamBuilder
+
+Private mContractFuture                             As IFuture
+Private mClockFuture                                As IFuture
+
+Private mGenericTickListeners                       As New Listeners
+Private mStateChangeListeners                       As New Listeners
 
 Private mStreamId                                   As Long
+
+Private mState                                      As TickStreamStates
 
 '@================================================================================
 ' Class Event Handlers
@@ -69,6 +79,26 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Sub ITickStream_AddStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "ITickStream_AddStateChangeListener"
+On Error GoTo Err
+
+AddStateChangeListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Get ITickStream_ClockFuture() As IFuture
+Set ITickStream_ClockFuture = ClockFuture
+End Property
+
+Private Property Get ITickStream_ContractFuture() As IFuture
+Set ITickStream_ContractFuture = ContractFuture
+End Property
 
 Private Sub ITickStream_Finish()
 Const ProcName As String = "ITickStream_Finish"
@@ -94,6 +124,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub ITickStream_RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "ITickStream_RemoveStateChangeListener"
+On Error GoTo Err
+
+RemoveStateChangeListener pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub ITickStream_Start()
+Const ProcName As String = "ITickStream_Start"
+On Error GoTo Err
+
+Start
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Property Get ITickStream_State() As TickStreamStates
+ITickStream_State = State
+End Property
+
 Private Property Get ITickStream_StreamId() As Long
 ITickStream_StreamId = StreamId
 End Property
@@ -105,6 +163,47 @@ End Property
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get ClockFuture() As IFuture
+Set ClockFuture = mClockFuture
+End Property
+
+Public Property Get ContractFuture() As IFuture
+Set ContractFuture = mContractFuture
+End Property
+
+Friend Property Let State(ByVal Value As TickStreamStates)
+Const ProcName As String = "State"
+On Error GoTo Err
+
+If Value = mState Then Exit Property
+mState = Value
+
+Dim ev As StateChangeEventData
+Set ev.Source = Me
+ev.State = mState
+
+Dim lListener As StateChangeListener
+For Each lListener In mStateChangeListeners.CurrentListeners
+    lListener.Change ev
+Next
+
+RaiseEvent StateChange(ev)
+
+If mState = TickStreamStateFinished Then
+    mStateChangeListeners.Clear
+    mGenericTickListeners.Clear
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get State() As TickStreamStates
+State = mState
+End Property
 
 Public Property Get StreamId() As Long
 StreamId = mStreamId
@@ -118,7 +217,19 @@ Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "AddGenericTickListener"
 On Error GoTo Err
 
-mListeners.Add pListener
+mGenericTickListeners.Add pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub AddStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "AddStateChangeListener"
+On Error GoTo Err
+
+mStateChangeListeners.Add pListener
 
 Exit Sub
 
@@ -127,17 +238,32 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
+Const ProcName As String = "Finish"
+On Error GoTo Err
 
+If mState = TickStreamStateFinished Then Exit Sub
+mBuilder.NotifyFinished
+Set mBuilder = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
+                ByVal pBuilder As TickStreamBuilder, _
                 ByVal pStreamId As Long, _
-                ByVal pListener As IGenericTickListener)
+                ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
+mState = TickStreamStateCreated
+Set mBuilder = pBuilder
 mStreamId = pStreamId
-mListeners.Add pListener
+Set mContractFuture = pContractFuture
+Set mClockFuture = pClockFuture
 
 Exit Sub
 
@@ -149,15 +275,15 @@ Friend Sub NotifyTick(ByRef pTick As GenericTick)
 Const ProcName As String = "NotifyTick"
 On Error GoTo Err
 
-Dim ev As GenericTickEventData
+If mState = TickStreamStateFinished Then Exit Sub
 
+Dim ev As GenericTickEventData
 ev.StreamId = StreamId
 ev.Tick = pTick
-
 Set ev.Source = Me
 
 Dim lListener As IGenericTickListener
-For Each lListener In mListeners
+For Each lListener In mGenericTickListeners.CurrentListeners
     lListener.NotifyTick ev
 Next
 
@@ -171,7 +297,7 @@ Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
 Const ProcName As String = "RemoveGenericTickListener"
 On Error GoTo Err
 
-mListeners.Remove pListener
+mGenericTickListeners.Remove pListener
 
 Exit Sub
 
@@ -179,6 +305,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub RemoveStateChangeListener(ByVal pListener As StateChangeListener)
+Const ProcName As String = "RemoveStateChangeListener"
+On Error GoTo Err
+
+mStateChangeListeners.Remove pListener
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub Start()
+Const ProcName As String = "Start"
+On Error GoTo Err
+
+Assert mState = TickStreamStateReady, "Tick stream is already started or is finished"
+mBuilder.NotifyStart
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
