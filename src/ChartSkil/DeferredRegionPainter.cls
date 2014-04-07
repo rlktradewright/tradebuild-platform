@@ -34,11 +34,11 @@ Implements DeferredAction
 
 Public Enum DeferredPaintActions
     DeferredPaintRepaintNone
-    DeferredPaintRepaintChangedAreas
-    DeferredPaintRepaintRegion
-    DeferredPaintChangeGaugeandRepaint
-    DeferredPaintScaleAndRepaint
-    DeferredPaintCalculateAndRepaint
+    DeferredPaintPaintAreas
+    DeferredPaintPaint
+    DeferredPaintChangeGaugeAndPaint
+    DeferredPaintScaleAndPaint
+    DeferredPaintCalculateAndPaint
 End Enum
 
 '@================================================================================
@@ -69,11 +69,6 @@ Private mDeferredPaintAction As DeferredPaintActions
 Private mAreasToRedraw() As TRectangle
 Private mAreasToRedrawIndex As Long
 
-'Private mAreasToUndraw() As TRectangle
-'Private mAreasToUndrawIndex As Long
-'
-'Private mRedrawObjects() As RedrawObjectsTableEntry
-'Private mRedrawObjectsIndex As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -105,16 +100,16 @@ End If
 Select Case mDeferredPaintAction
 Case DeferredPaintRepaintNone
 
-Case DeferredPaintRepaintChangedAreas
-    regionObj.RepaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
-Case DeferredPaintRepaintRegion
-    regionObj.RepaintRegion
-Case DeferredPaintChangeGaugeandRepaint
-    regionObj.ChangeGaugeAndRepaint
-Case DeferredPaintScaleAndRepaint
-    regionObj.ScaleAndRepaint
-Case DeferredPaintCalculateAndRepaint
-    regionObj.CalculateAndRepaint
+Case DeferredPaintPaintAreas
+    regionObj.PaintAreas mAreasToRedraw, mAreasToRedrawIndex + 1
+Case DeferredPaintPaint
+    regionObj.PaintSync
+Case DeferredPaintChangeGaugeAndPaint
+    regionObj.ChangeGaugeAndPaint
+Case DeferredPaintScaleAndPaint
+    regionObj.ScaleAndPaintSync
+Case DeferredPaintCalculateAndPaint
+    regionObj.CalculateAndPaintSync
 End Select
 
 
@@ -129,7 +124,7 @@ doDeferredPaint DeferredPaintRepaintNone
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -143,36 +138,6 @@ End Sub
 '@================================================================================
 ' Methods
 '@================================================================================
-
-'Friend Sub AddAreaToUndraw( _
-'                ByRef areaToUndraw As TRectangle)
-'Const ProcName As String = "AddAreaToUndraw"
-'
-'On Error GoTo Err
-'
-'Dim i As Long
-'Dim handled As Boolean
-'For i = 0 To mAreasToUndrawIndex
-'    If RectOverlaps(areaToUndraw, mAreasToUndraw(i)) Then
-'         mAreasToUndraw(i) = RectUnion(areaToUndraw, mAreasToUndraw(i))
-'         handled = True
-'    End If
-'Next
-'If Not handled Then
-'    mAreasToUndrawIndex = mAreasToUndrawIndex + 1
-'    If mAreasToUndrawIndex > UBound(mAreasToUndraw) Then
-'        ReDim Preserve mAreasToUndraw(2 * (UBound(mAreasToUndraw) + 1) - 1) As TRectangle
-'    End If
-'    mAreasToUndraw(mAreasToUndrawIndex) = areaToUndraw
-'End If
-'doDeferredPaint DeferredPaintRepaintChangedAreas
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-'
-'End Sub
 
 Friend Sub AddAreaToRedraw( _
                 ByRef areaToRedraw As TRectangle)
@@ -205,39 +170,39 @@ If Not handled Then
     mAreasToRedraw(mAreasToRedrawIndex) = areaToRedraw
 End If
 
-doDeferredPaint DeferredPaintRepaintChangedAreas
+doDeferredPaint DeferredPaintPaintAreas
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Friend Sub CalculateAndRepaint()
-Const ProcName As String = "CalculateAndRepaint"
+Friend Sub CalculateAndPaint()
+Const ProcName As String = "CalculateAndPaint"
 
 On Error GoTo Err
 
-doDeferredPaint DeferredPaintCalculateAndRepaint
+doDeferredPaint DeferredPaintCalculateAndPaint
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ChangeGaugeAndRepaint()
-Const ProcName As String = "ChangeGaugeAndRepaint"
+Friend Sub ChangeGaugeAndPaint()
+Const ProcName As String = "ChangeGaugeAndPaint"
 
 On Error GoTo Err
 
-doDeferredPaint DeferredPaintChangeGaugeandRepaint
+doDeferredPaint DeferredPaintChangeGaugeAndPaint
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -252,33 +217,33 @@ doDeferredPaint DeferredPaintRepaintNone
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub RepaintRegion()
-Const ProcName As String = "RepaintRegion"
+Friend Sub Paint()
+Const ProcName As String = "Paint"
 
 On Error GoTo Err
 
-doDeferredPaint DeferredPaintRepaintRegion
+doDeferredPaint DeferredPaintPaint
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub ScaleAndRepaint()
-Const ProcName As String = "ScaleAndRepaint"
+Friend Sub ScaleAndPaint()
+Const ProcName As String = "ScaleAndPaint"
 
 On Error GoTo Err
 
-doDeferredPaint DeferredPaintScaleAndRepaint
+doDeferredPaint DeferredPaintScaleAndPaint
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -297,24 +262,24 @@ Else
     Select Case mDeferredPaintAction
     Case DeferredPaintRepaintNone
         mDeferredPaintAction = action
-    Case DeferredPaintRepaintChangedAreas
-        If action = DeferredPaintRepaintRegion Or _
-            action = DeferredPaintChangeGaugeandRepaint Or _
-            action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
+    Case DeferredPaintPaintAreas
+        If action = DeferredPaintPaint Or _
+            action = DeferredPaintChangeGaugeAndPaint Or _
+            action = DeferredPaintScaleAndPaint Or _
+            action = DeferredPaintCalculateAndPaint _
         Then mDeferredPaintAction = action
-    Case DeferredPaintRepaintRegion
-        If action = DeferredPaintChangeGaugeandRepaint Or _
-            action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
+    Case DeferredPaintPaint
+        If action = DeferredPaintChangeGaugeAndPaint Or _
+            action = DeferredPaintScaleAndPaint Or _
+            action = DeferredPaintCalculateAndPaint _
         Then mDeferredPaintAction = action
-    Case DeferredPaintChangeGaugeandRepaint
-        If action = DeferredPaintScaleAndRepaint Or _
-            action = DeferredPaintCalculateAndRepaint _
+    Case DeferredPaintChangeGaugeAndPaint
+        If action = DeferredPaintScaleAndPaint Or _
+            action = DeferredPaintCalculateAndPaint _
         Then mDeferredPaintAction = action
-    Case DeferredPaintScaleAndRepaint
-        If action = DeferredPaintCalculateAndRepaint Then mDeferredPaintAction = action
-    Case DeferredPaintCalculateAndRepaint
+    Case DeferredPaintScaleAndPaint
+        If action = DeferredPaintCalculateAndPaint Then mDeferredPaintAction = action
+    Case DeferredPaintCalculateAndPaint
         
     End Select
     If Not mDeferredPaintPending Then
@@ -323,7 +288,7 @@ Else
     End If
 End If
 
-If action <> DeferredPaintRepaintChangedAreas Then
+If action <> DeferredPaintPaintAreas Then
     ReDim mAreasToRedraw(3) As TRectangle
     mAreasToRedrawIndex = -1
 End If
@@ -331,8 +296,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function regionObj() As ChartRegion
@@ -345,5 +309,5 @@ Set regionObj = mRegionRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function

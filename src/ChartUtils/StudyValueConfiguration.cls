@@ -90,7 +90,7 @@ Private mConfig As ConfigurationSection
 
 Private Sub Class_Initialize()
 
-'mLayer = LayerNumbers.LayerHighestUser
+mLayer = LayerNumbers.LayerHighestUser
 End Sub
 
 '@================================================================================
@@ -115,7 +115,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BarFormatterFactoryName() As String
@@ -127,7 +127,7 @@ BarFormatterFactoryName = mBarFormatterFactoryName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let BarFormatterLibraryName(ByVal Value As String)
@@ -140,7 +140,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BarFormatterLibraryName() As String
@@ -152,7 +152,7 @@ BarFormatterLibraryName = mBarFormatterLibraryName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let BarStyle(ByVal Value As BarStyle)
@@ -165,7 +165,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BarStyle() As BarStyle
@@ -177,7 +177,7 @@ Set BarStyle = mBarStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ChartRegionName(ByVal Value As String)
@@ -190,7 +190,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartRegionName() As String
@@ -202,7 +202,7 @@ ChartRegionName = mChartRegionName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let ConfigurationSection( _
@@ -217,7 +217,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DataPointStyle(ByVal Value As DataPointStyle)
@@ -230,7 +230,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DataPointStyle() As DataPointStyle
@@ -242,7 +242,7 @@ Set DataPointStyle = mDataPointStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInChart(ByVal Value As Boolean)
@@ -255,7 +255,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IncludeInChart() As Boolean
@@ -267,7 +267,7 @@ IncludeInChart = mIncludeInChart
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Layer(ByVal Value As Long)
@@ -280,7 +280,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Layer() As Long
@@ -292,7 +292,7 @@ Layer = mLayer
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyle)
@@ -305,7 +305,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LineStyle() As LineStyle
@@ -317,7 +317,7 @@ Set LineStyle = mLineStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OffsetX(ByVal Value As Double)
@@ -330,7 +330,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OffsetX() As Double
@@ -342,7 +342,7 @@ OffsetX = mOffsetX
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OffsetY(ByVal Value As Double)
@@ -355,7 +355,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OffsetY() As Double
@@ -367,7 +367,7 @@ OffsetY = mOffsetY
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TextStyle(ByVal Value As TextStyle)
@@ -380,7 +380,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TextStyle() As TextStyle
@@ -392,7 +392,7 @@ Set TextStyle = mTextStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let ValueName(ByVal Value As String)
@@ -405,7 +405,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ValueName() As String
@@ -417,7 +417,7 @@ ValueName = mValueName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -433,18 +433,19 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
-Dim cs As ConfigurationSection
-
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
 Set mConfig = config
 
+gLogger.Log "Loading StudyValueConfiguration: " & mConfig.Path, ProcName, ModuleName
+
+Dim cs As ConfigurationSection
 Set cs = mConfig.GetConfigurationSection(ConfigSectionBarStyle)
 If Not cs Is Nothing Then
     Set mBarStyle = New BarStyle
@@ -481,7 +482,7 @@ mOffsetY = mConfig.GetSetting(ConfigSettingOffsetY)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -511,7 +512,7 @@ mConfig.SetSetting ConfigSettingOffsetY, mOffsetY
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

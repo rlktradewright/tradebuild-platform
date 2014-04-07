@@ -49,9 +49,13 @@ Private mYGridLines                                 As LineSeries
 
 Private mHidden                                     As Boolean
 
-Private mRegionRef                                  As WeakReference
-
 Private mPriceFormatter                             As IPriceFormatter
+Private mViewport                                   As ViewPort
+
+Private mHasGrid                                    As Boolean
+Private mHasGridText                                As Boolean
+
+Private mGridTextPosition                           As YGridTextPositions
 
 '@================================================================================
 ' Class Event Handlers
@@ -73,6 +77,58 @@ Friend Property Let GridLineStyle(ByVal Value As LineStyle)
 mYGridLines.Style = Value
 End Property
 
+Friend Property Let GridTextPosition(ByVal Value As YGridTextPositions)
+mGridTextPosition = Value
+Select Case mGridTextPosition
+Case YGridTextPositionCentre
+    mYGridTexts.Align = AlignBoxCentreCentre
+Case YGridTextPositionLeft
+    mYGridTexts.Align = AlignBoxCentreLeft
+Case YGridTextPositionRight
+    mYGridTexts.Align = AlignCentreRight
+End Select
+End Property
+
+Friend Property Let GridTextStyle( _
+                ByVal Value As TextStyle)
+Const ProcName As String = "TextStyle"
+
+On Error GoTo Err
+
+If Not mYGridTexts Is Nothing Then mYGridTexts.Style = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Let HasGrid(ByVal Value As Boolean)
+Const ProcName As String = "HasGrid"
+On Error GoTo Err
+
+mHasGrid = Value
+If Not mHasGrid Then clearLinesFrom 1
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Let HasGridText(ByVal Value As Boolean)
+Const ProcName As String = "HasGridText"
+On Error GoTo Err
+
+mHasGridText = Value
+If Not mHasGridText Then clearTextsFrom 1
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Friend Property Let Hidden(ByVal Value As Boolean)
 Const ProcName As String = "Hidden"
 
@@ -80,12 +136,15 @@ On Error GoTo Err
 
 mHidden = Value
 
-If mHidden Then removeLines
+If mHidden Then
+    clearLinesFrom 1
+    clearTextsFrom 1
+End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Hidden() As Boolean
@@ -100,20 +159,6 @@ Friend Property Get PriceFormatter() As IPriceFormatter
 Set PriceFormatter = mPriceFormatter
 End Property
 
-Friend Property Let TextStyle( _
-                ByVal Value As TextStyle)
-Const ProcName As String = "TextStyle"
-
-On Error GoTo Err
-
-If Not mYGridTexts Is Nothing Then mYGridTexts.Style = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 Friend Property Let YAxisRegion(ByVal Value As ChartRegion)
 Const ProcName As String = "YAxisRegion"
 
@@ -122,13 +167,12 @@ On Error GoTo Err
 If Value Is Nothing Then Exit Property
 
 Set mYGridTexts = Value.AddGraphicObjectSeries(New TextSeries, LayerNumbers.LayerGridText)
-mYGridTexts.Style = Value.YAxisTextStyle
 mYGridTexts.Align = AlignBoxCentreLeft
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -137,7 +181,6 @@ End Property
 
 Friend Sub Finish()
 Const ProcName As String = "Finish"
-
 On Error GoTo Err
 
 removeLines
@@ -148,46 +191,87 @@ Set mYGridLines = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function Generate( _
-                ByVal pBottom As Double, _
-                ByVal pTop As Double, _
-                ByVal pGridlineSpacing As Double)
+Friend Function Generate(ByVal pGridlineSpacing As Double)
 Const ProcName As String = "Generate"
 
 On Error GoTo Err
 
-setHorizontalGridLines pBottom, pTop, pGridlineSpacing
-setHorizontalGridTexts pBottom, pTop, pGridlineSpacing
+setHorizontalGridLines mViewport.Bottom, mViewport.Top, pGridlineSpacing
+setHorizontalGridTexts mViewport.Bottom, mViewport.Top, pGridlineSpacing
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal pRegion As ChartRegion)
+                ByVal pLines As LineSeries, _
+                ByVal pTexts As TextSeries, _
+                ByVal pViewport As ViewPort)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
-Set mRegionRef = CreateWeakReference(pRegion)
+Set mYGridLines = pLines
+mYGridLines.layer = LayerNumbers.LayerGrid
+'mYGridLines.Extended = True
 
-Set mYGridLines = regionObj.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid)
-mYGridLines.Extended = True
+Set mYGridTexts = pTexts
+mYGridTexts.layer = LayerNumbers.LayerGridText
+mYGridTexts.Align = AlignBoxCentreLeft
+mYGridTexts.HideIfBlank = True
+
+Set mViewport = pViewport
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub clearLinesFrom(ByVal pIndex As Long)
+Const ProcName As String = "clearLinesFrom"
+On Error GoTo Err
+
+Dim i As Long
+Dim aLine As ChartSkil27.Line
+
+For i = pIndex To mYGridLines.Count
+    Set aLine = mYGridLines.Item(i)
+    aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
+                        gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearTextsFrom(ByVal pIndex As Long)
+Const ProcName As String = "clearTextsFrom"
+On Error GoTo Err
+
+Dim i As Long
+Dim aText As Text
+
+For i = pIndex To mYGridTexts.Count
+    Set aText = mYGridTexts.Item(i)
+    aText.Text = ""
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Function FormatYValue(ByVal Y As Double) As String
 Const ProcName As String = "FormatYValue"
@@ -198,15 +282,11 @@ FormatYValue = mPriceFormatter.FormatPrice(Y)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Private Function regionObj() As ChartRegion
-Set regionObj = mRegionRef.Target
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub removeLines()
-Dim ln As Line
+Dim ln As ChartSkil27.Line
 Const ProcName As String = "removeLines"
 
 On Error GoTo Err
@@ -218,7 +298,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeTexts()
@@ -234,22 +314,21 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setHorizontalGridLines( _
                 ByVal pBottom As Double, _
                 ByVal pTop As Double, _
                 ByVal pGridlineSpacing As Double)
-Dim Y As Double
-Dim i As Long
-Dim aLine As Line
-
 Const ProcName As String = "setHorizontalGridLines"
-
 On Error GoTo Err
 
-If Not regionObj.HasGrid Then Exit Sub
+Dim Y As Double
+Dim i As Long
+Dim aLine As ChartSkil27.Line
+
+If Not mHasGrid Then Exit Sub
 If mHidden Then Exit Sub
 
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
@@ -264,31 +343,31 @@ Do While Y < pTop
                         gNewPoint(100, Y, CoordsRelative, CoordsLogical)
     Y = Y + pGridlineSpacing
 Loop
-For i = i + 1 To mYGridLines.Count
-    Set aLine = mYGridLines.Item(i)
-    aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
-                        gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
-Next
+
+clearLinesFrom i + 1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrOverflow Then
+    gLogger.Log "Overflow: Y=" & CStr(Y) & "; pBottom=" & CStr(pBottom) & "; pTop=" & CStr(pTop), ProcName, ModuleName, LogLevelSevere
+    Resume Next
+End If
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setHorizontalGridTexts( _
                 ByVal pBottom As Double, _
                 ByVal pTop As Double, _
                 ByVal pGridlineSpacing As Double)
+Const ProcName As String = "setHorizontalGridTexts"
+On Error GoTo Err
+
 Dim Y As Double
 Dim i As Long
 Dim aText As Text
 
-Const ProcName As String = "setHorizontalGridTexts"
-
-On Error GoTo Err
-
-If mYGridTexts Is Nothing Then Exit Sub
+If Not mHasGridText Then Exit Sub
 
 Y = Int(pBottom / pGridlineSpacing) * pGridlineSpacing
 Do While Y < pTop
@@ -299,18 +378,25 @@ Do While Y < pTop
         Set aText = mYGridTexts.Item(i)
     End If
     aText.Text = FormatYValue(Y)
-    aText.Position = gNewPoint(15, Y, CoordsLogical, CoordsLogical)
+    
+    Select Case mGridTextPosition
+    Case YGridTextPositionCentre
+        aText.Position = gNewPoint(50, Y, CoordsRelative, CoordsLogical)
+    Case YGridTextPositionLeft
+        aText.Position = gNewPoint(0.2, Y, CoordsDistance, CoordsLogical)
+    Case YGridTextPositionRight
+        aText.Position = gNewPoint(0.2, Y, CoordsCounterDistance, CoordsLogical)
+    End Select
+    
     Y = Y + pGridlineSpacing
 Loop
-For i = i + 1 To mYGridTexts.Count
-    Set aText = mYGridTexts.Item(i)
-    aText.Text = ""
-Next
+
+clearTextsFrom i + 1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

@@ -63,11 +63,24 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Enums
 '================================================================================
 
+Public Type PeriodLabels
+    Label As String
+    CoarseLabel As String
+End Type
+
 Public Enum RegionTypes
     RegionTypeData
     RegionTypeXAxis
     RegionTypeYAxis
     RegionTypeBackground
+End Enum
+
+Public Enum VerticalGridlineTypes
+    VerticalGridlineTypeNone
+    VerticalGridlineTypePeriodBoundary
+    VerticalGridlineTypeSessionEnd
+    VerticalGridlineTypeSessionStart
+    VerticalGridlineTypeDateChange
 End Enum
 
 '================================================================================
@@ -99,7 +112,7 @@ If lStyle Is Nothing Then
     lStyle.DisplayMode = BarDisplayModeCandlestick
     lStyle.DownColor = vbBlack
     lStyle.IncludeInAutoscale = True
-    lStyle.Layer = LayerLowestUser
+    lStyle.layer = LayerLowestUser
     lStyle.OutlineThickness = 1
     lStyle.SolidUpBody = False
     lStyle.TailThickness = 1
@@ -110,85 +123,214 @@ End If
 Set gDefaultBarStyle = lStyle
 End Property
 
-Public Property Get gDefaultChartRegionStyle() As ChartRegionStyle
+Public Property Get gDefaultChartDataRegionStyle() As ChartRegionStyle
+Static lStyle As ChartRegionStyle
+
+Const DefaultGridlineColor As Long = &HF0F0F0
+
+If lStyle Is Nothing Then
+    Set lStyle = New ChartRegionStyle
+    lStyle.Autoscaling = True
+    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.CursorSnapsToTickBoundaries = True
+    lStyle.CursorTextMode = CursorTextModeNone
+    lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
+    lStyle.CursorTextStyle = Nothing
+    lStyle.HasXGrid = True
+    lStyle.HasYGrid = True
+    lStyle.HasXGridText = False
+    lStyle.HasYGridText = False
+    lStyle.IntegerYScale = False
+    lStyle.MinimumHeight = 0.015625
+    
+    lStyle.SessionEndGridLineStyle = New LineStyle
+    lStyle.SessionEndGridLineStyle.Color = DefaultGridlineColor
+    lStyle.SessionEndGridLineStyle.LineStyle = LineDash
+    
+    lStyle.SessionStartGridLineStyle = New LineStyle
+    lStyle.SessionStartGridLineStyle.Color = DefaultGridlineColor
+    lStyle.SessionStartGridLineStyle.Thickness = 3
+    
+    lStyle.XCursorTextPosition = CursorTextPositionBottom
+    lStyle.XCursorTextStyle = Nothing
+    
+    lStyle.XGridLineStyle = New LineStyle
+    lStyle.XGridLineStyle.Color = DefaultGridlineColor
+    
+    lStyle.XGridTextPosition = XGridTextPositionBottom
+    lStyle.XGridTextStyle = Nothing
+    
+    lStyle.YCursorTextPosition = CursorTextPositionLeft
+    lStyle.YCursorTextStyle = Nothing
+    lStyle.YGridlineSpacing = 1.8
+    
+    lStyle.YGridLineStyle = New LineStyle
+    lStyle.YGridLineStyle.Color = DefaultGridlineColor
+    
+    lStyle.YGridTextPosition = YGridTextPositionLeft
+    lStyle.YGridTextStyle = Nothing
+    
+    lStyle.YScaleQuantum = 0.015625
+    
+End If
+Set gDefaultChartDataRegionStyle = lStyle
+End Property
+
+Public Property Get gDefaultChartXAxisRegionStyle() As ChartRegionStyle
 Static lStyle As ChartRegionStyle
 
 Dim afont As StdFont
 
 If lStyle Is Nothing Then
     Set lStyle = New ChartRegionStyle
-    lStyle.HasGrid = True
-    lStyle.HasGridText = False
     lStyle.Autoscaling = True
+    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.CursorSnapsToTickBoundaries = False
+    lStyle.CursorTextMode = CursorTextModeXOnly
+    lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
+    lStyle.CursorTextStyle = Nothing
+    lStyle.HasXGrid = False
+    lStyle.HasYGrid = False
+    lStyle.HasXGridText = True
+    lStyle.HasYGridText = False
     lStyle.IntegerYScale = False
-    lStyle.YScaleQuantum = 0.01
-    lStyle.GridlineSpacingY = 1.8
-    lStyle.MinimumHeight = 0
+    
+    lStyle.SessionEndGridLineStyle = Nothing
+    
+    lStyle.SessionStartGridLineStyle = Nothing
+    
+    lStyle.XCursorTextPosition = CursorTextPositionTop
+    lStyle.XCursorTextStyle = New TextStyle
+    lStyle.XCursorTextStyle.Box = True
+    lStyle.XCursorTextStyle.BoxFillColor = vbWhite
+    'lStyle.XCursorTextStyle.Offset = gNewSize(0, -0.1, CoordsDistance, CoordsDistance)
+    
+    lStyle.XGridLineStyle = Nothing
+    
+    lStyle.XGridTextPosition = XGridTextPositionBottom
+    lStyle.XGridTextStyle = New TextStyle
+    lStyle.XGridTextStyle.Box = True
+    lStyle.XGridTextStyle.BoxFillWithBackgroundColor = True
+    lStyle.XGridTextStyle.BoxStyle = LineInvisible
+    'lStyle.XGridTextStyle.Offset = gNewSize(0#, 0.1, CoordsDistance, CoordsDistance)
+    
+    lStyle.YCursorTextPosition = CursorTextPositionLeft
+    lStyle.YCursorTextStyle = Nothing
+    
+    lStyle.YGridlineSpacing = 1.8
+    
+    lStyle.YGridLineStyle = Nothing
+    
+    lStyle.YGridTextPosition = YGridTextPositionLeft
+    lStyle.YGridTextStyle = Nothing
+    
+End If
+Set gDefaultChartXAxisRegionStyle = lStyle
+End Property
+
+Public Property Get gDefaultChartYAxisRegionStyle() As ChartRegionStyle
+Static lStyle As ChartRegionStyle
+
+Dim afont As StdFont
+
+If lStyle Is Nothing Then
+    Set lStyle = New ChartRegionStyle
+    lStyle.Autoscaling = False
+    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
     lStyle.CursorSnapsToTickBoundaries = True
-    ReDim mBackGradientFillColors(0) As Long
-    mBackGradientFillColors(0) = vbWhite
-    lStyle.BackGradientFillColors = mBackGradientFillColors
+    lStyle.CursorTextMode = CursorTextModeYOnly
+    lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
+    lStyle.CursorTextStyle = Nothing
+    lStyle.HasXGrid = False
+    lStyle.HasYGrid = False
+    lStyle.HasXGridText = False
+    lStyle.HasYGridText = True
+    lStyle.IntegerYScale = False
     
-    lStyle.GridLineStyle = gDefaultLineStyle.clone
-    lStyle.GridLineStyle.Color = &HC0C0C0
+    lStyle.SessionEndGridLineStyle = Nothing
     
-    lStyle.GridTextStyle = gDefaultTextStyle.clone
-    lStyle.GridTextStyle.Box = True
-    lStyle.GridTextStyle.BoxFillWithBackgroundColor = True
-    lStyle.GridTextStyle.BoxStyle = LineInvisible
-    lStyle.GridTextStyle.Color = vbBlack
-        
-    Set afont = New StdFont
-    afont.Italic = False
-    afont.Name = "Arial"
-    afont.Size = 8
-    afont.Underline = False
-    afont.Bold = False
-    lStyle.GridTextStyle.Font = afont
+    lStyle.SessionStartGridLineStyle = Nothing
     
-    lStyle.SessionEndGridLineStyle = gDefaultLineStyle.clone
+    lStyle.XCursorTextPosition = CursorTextPositionTop
+    lStyle.XCursorTextStyle = Nothing
+    
+    lStyle.XGridLineStyle = Nothing
+    
+    lStyle.XGridTextPosition = XGridTextPositionBottom
+    lStyle.XGridTextStyle = Nothing
+    
+    lStyle.YCursorTextPosition = CursorTextPositionLeft
+    lStyle.YCursorTextStyle = New TextStyle
+    lStyle.YCursorTextStyle.Box = True
+    lStyle.YCursorTextStyle.BoxFillColor = vbWhite
+    lStyle.YCursorTextStyle.Offset = gNewSize(0.1, 0#, CoordsDistance, CoordsDistance)
+    
+    lStyle.YGridlineSpacing = 1.8
+    
+    lStyle.YGridLineStyle = Nothing
+    
+    lStyle.YGridTextPosition = YGridTextPositionLeft
+    lStyle.YGridTextStyle = New TextStyle
+    lStyle.YGridTextStyle.Box = True
+    lStyle.YGridTextStyle.BoxFillWithBackgroundColor = True
+    lStyle.YGridTextStyle.BoxStyle = LineInvisible
+    lStyle.YGridTextStyle.Offset = gNewSize(0.2, 0#, CoordsDistance, CoordsDistance)
+    
+End If
+Set gDefaultChartYAxisRegionStyle = lStyle
+End Property
+
+Public Property Get gDefaultChartStudyRegionStyle() As ChartRegionStyle
+Static lStyle As ChartRegionStyle
+
+Dim afont As StdFont
+
+If lStyle Is Nothing Then
+    Set lStyle = New ChartRegionStyle
+    lStyle.Autoscaling = True
+    lStyle.BackGradientFillColors = gCreateColorArray(vbWhite, vbWhite)
+    lStyle.CursorSnapsToTickBoundaries = False
+    lStyle.CursorTextMode = CursorTextModeNone
+    lStyle.CursorTextPosition = CursorTextPositionBelowLeftCursor
+    lStyle.CursorTextStyle = Nothing
+    lStyle.HasXGrid = True
+    lStyle.HasYGrid = True
+    lStyle.HasXGridText = False
+    lStyle.HasYGridText = False
+    lStyle.IntegerYScale = False
+    lStyle.MinimumHeight = 0.0001
+    
+    lStyle.SessionEndGridLineStyle = New LineStyle
     lStyle.SessionEndGridLineStyle.Color = &HC0C0C0
     lStyle.SessionEndGridLineStyle.LineStyle = LineDash
     
-    lStyle.SessionStartGridLineStyle = gDefaultLineStyle.clone
+    lStyle.SessionStartGridLineStyle = New LineStyle
     lStyle.SessionStartGridLineStyle.Color = &HC0C0C0
     lStyle.SessionStartGridLineStyle.Thickness = 3
     
-    lStyle.YAxisTextStyle = gDefaultTextStyle.clone
-    lStyle.YAxisTextStyle.Box = True
-    lStyle.YAxisTextStyle.BoxFillWithBackgroundColor = True
-    lStyle.YAxisTextStyle.BoxStyle = LineInvisible
-    lStyle.YAxisTextStyle.Color = vbBlack
-        
-    Set afont = New StdFont
-    afont.Italic = False
-    afont.Name = "Arial"
-    afont.Size = 8
-    afont.Underline = False
-    afont.Bold = False
-    lStyle.YAxisTextStyle.Font = afont
+    lStyle.XCursorTextPosition = CursorTextPositionBottom
+    lStyle.XCursorTextStyle = Nothing
     
-    lStyle.YCursorTextStyle = gDefaultTextStyle.clone
-    lStyle.YCursorTextStyle.Box = True
-    lStyle.YCursorTextStyle.BoxColor = vbBlack
-    lStyle.YCursorTextStyle.BoxFillColor = vbWhite
-    lStyle.YCursorTextStyle.BoxFillStyle = FillSolid
-    lStyle.YCursorTextStyle.BoxThickness = 1
-    lStyle.YCursorTextStyle.Color = vbBlack
-    lStyle.YCursorTextStyle.PaddingX = 1
-    lStyle.YCursorTextStyle.PaddingY = 0
-    lStyle.YCursorTextStyle.Justification = JustifyCentre
-        
-    Set afont = New StdFont
-    afont.Italic = False
-    afont.Name = "Arial"
-    afont.Size = 8
-    afont.Underline = False
-    afont.Bold = False
-    lStyle.YCursorTextStyle.Font = afont
-
+    lStyle.XGridLineStyle = New LineStyle
+    lStyle.XGridLineStyle.Color = &HC0C0C0
+    
+    lStyle.XGridTextPosition = XGridTextPositionBottom
+    lStyle.XGridTextStyle = Nothing
+    
+    lStyle.YCursorTextPosition = CursorTextPositionLeft
+    lStyle.YCursorTextStyle = Nothing
+    lStyle.YGridlineSpacing = 0.9
+    
+    lStyle.YGridLineStyle = New LineStyle
+    lStyle.YGridLineStyle.Color = &HC0C0C0
+    
+    lStyle.YGridTextPosition = YGridTextPositionLeft
+    lStyle.YGridTextStyle = Nothing
+    
+    lStyle.YScaleQuantum = 0.0001
+    
 End If
-Set gDefaultChartRegionStyle = lStyle
+Set gDefaultChartStudyRegionStyle = lStyle
 End Property
 
 Public Property Get gDefaultDataPointStyle() As DataPointStyle
@@ -200,7 +342,7 @@ If lStyle Is Nothing Then
     lStyle.DownColor = -1
     lStyle.HistogramBarWidth = 0.6
     lStyle.IncludeInAutoscale = True
-    lStyle.Layer = LayerLowestUser + 1
+    lStyle.layer = LayerLowestUser + 1
     lStyle.LineStyle = LineStyles.LineSolid
     lStyle.LineThickness = 1
     lStyle.PointStyle = PointRound
@@ -232,7 +374,7 @@ If lStyle Is Nothing Then
     lStyle.FixedX = False
     lStyle.FixedY = False
     lStyle.IncludeInAutoscale = False
-    lStyle.Layer = LayerHighestUser
+    lStyle.layer = LayerHighestUser
     lStyle.LineStyle = LineStyles.LineSolid
     lStyle.Thickness = 1
 End If
@@ -271,9 +413,9 @@ If lStyle Is Nothing Then
     lStyle.HideIfBlank = True
     lStyle.IncludeInAutoscale = False
     lStyle.Justification = TextJustifyModes.JustifyLeft
-    lStyle.Layer = LayerHighestUser
+    lStyle.layer = LayerHighestUser
     lStyle.MultiLine = False
-    lStyle.PaddingX = 1
+    lStyle.PaddingX = 0.3
     lStyle.PaddingY = 0#
     lStyle.TabWidth = 8
     lStyle.WordWrap = True
@@ -293,40 +435,6 @@ If gosm Is Nothing Then Set gosm = New GraphicObjectStyleManager
 Set gGraphicObjectStyleManager = gosm
 End Property
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
-
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
-
-Public Function gLongToHexString(ByVal Value As Long) As String
-gLongToHexString = "&h" & Hex$(Value)
-End Function
-
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
-
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
-
 Public Property Get gLogger() As FormattingLogger
 Static lLogger As FormattingLogger
 If lLogger Is Nothing Then Set lLogger = CreateFormattingLogger("chartskil.log", ProjectName)
@@ -345,8 +453,7 @@ End Property
 
 Public Function gCloneFont( _
                 ByVal pFont As StdFont) As StdFont
-Dim afont As StdFont
-Set afont = New StdFont
+Dim afont As New StdFont
 afont.Bold = pFont.Bold
 afont.Charset = pFont.Charset
 afont.Italic = pFont.Italic
@@ -358,10 +465,40 @@ afont.Weight = pFont.Weight
 Set gCloneFont = afont
 End Function
 
+Public Function gCreateColorArray(ParamArray pColors()) As Long()
+ReDim lcolors(UBound(pColors)) As Long
+Dim i As Long
+For i = 0 To UBound(lcolors)
+    lcolors(i) = CLng(pColors(i))
+Next
+gCreateColorArray = lcolors
+End Function
+
 Public Function gDegreesToRadians( _
                 ByVal degrees As Double) As Double
 gDegreesToRadians = degrees * Pi / 180
 End Function
+
+Public Function gGraphicObjectsOverlap(ByVal pObj1 As IGraphicObject, ByVal pObj2 As IGraphicObject) As Boolean
+If pObj1 Is Nothing Or pObj2 Is Nothing Then Exit Function
+gGraphicObjectsOverlap = RectOverlaps(pObj1.BoundingRectangle, pObj2.BoundingRectangle)
+End Function
+
+Public Sub gHandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
 
 Public Sub gIsPositiveLong(ByVal pThis As Object, ByVal pValue As Variant)
 Dim lValue As Long
@@ -393,6 +530,24 @@ If Not gIsValidColor(pValue) Then
 End If
 End Sub
 
+Public Function gLongToHexString(ByVal Value As Long) As String
+gLongToHexString = "&h" & Hex$(Value)
+End Function
+
+Public Sub gNotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
+
 Public Function gRadiansToDegrees( _
                 ByVal radians As Double) As Double
 gRadiansToDegrees = radians * 180 / Pi
@@ -417,17 +572,17 @@ Public Function gSetProperty( _
                 ByVal pExtProp As ExtendedProperty, _
                 ByVal pNewValue As Variant, _
                 Optional ByRef pPrevValue As Variant) As Boolean
-Const ProcName As String = "setProperty"
+Const ProcName As String = "gSetProperty"
 On Error GoTo Err
 
-If Not IsMissing(pPrevValue) Then gSetVariant pPrevValue, pExtHost.GetLocalValue(pExtProp)
+If Not IsMissing(pPrevValue) Then gSetVariant pPrevValue, pExtHost.getLocalValue(pExtProp)
 
 gSetProperty = pExtHost.SetValue(pExtProp, pNewValue)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)

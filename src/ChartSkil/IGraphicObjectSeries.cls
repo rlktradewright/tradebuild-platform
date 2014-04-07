@@ -89,6 +89,10 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function Add() As IGraphicObject
+
+End Function
+
 Public Sub Click()
 
 End Sub
@@ -103,9 +107,9 @@ End Sub
 
 Public Sub Initialise( _
                 ByVal pName As String, _
-                ByVal pViewport As Viewport, _
+                ByVal pViewport As ViewPort, _
                 ByVal pLayer As LayerNumbers, _
-                ByVal pChart As Chart, _
+                ByVal pPeriods As Periods, _
                 ByVal pSeriesID As Long, _
                 ByVal pGOSP As GraphObjServiceProvider)
 

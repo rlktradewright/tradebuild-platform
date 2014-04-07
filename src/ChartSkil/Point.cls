@@ -92,15 +92,15 @@ If pCoordSystemX = Me.CoordinateSystemX And pCoordSystemY = Me.CoordinateSystemY
     Exit Function
 End If
 
-newX = gTransformCoordX(Me.X, Me.CoordinateSystemX, pCoordSystemX, pRegion.Viewport)
-newY = gTransformCoordY(Me.Y, Me.CoordinateSystemY, pCoordSystemY, pRegion.Viewport)
+newX = gTransformCoordX(Me.X, Me.CoordinateSystemX, pCoordSystemX, pRegion.ViewPort)
+newY = gTransformCoordY(Me.Y, Me.CoordinateSystemY, pCoordSystemY, pRegion.ViewPort)
 
 Set ChangeCoordinateSystem = gNewPoint(newX, newY, pCoordSystemX, pCoordSystemY)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Equals(ByVal aPoint As Point) As Boolean
@@ -124,7 +124,7 @@ Equals = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -150,19 +150,19 @@ Select Case Me.CoordinateSystemX
 Case CoordsLogical
     XLogical = Me.X
 Case CoordsRelative
-    XLogical = pRegion.Viewport.ConvertRelativeToLogicalX(Me.X) + pRegion.Viewport.Boundary.Left
+    XLogical = pRegion.ViewPort.ConvertRelativeToLogicalX(Me.X) + pRegion.ViewPort.Boundary.Left
 Case CoordsDistance
-    XLogical = pRegion.Viewport.ConvertDistanceToLogicalX(Me.X) + pRegion.Viewport.Boundary.Left
+    XLogical = pRegion.ViewPort.ConvertDistanceToLogicalX(Me.X) + pRegion.ViewPort.Boundary.Left
 Case CoordsCounterDistance
-    XLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(Me.X) + pRegion.Viewport.Boundary.Left
+    XLogical = pRegion.ViewPort.ConvertCounterDistanceToLogicalX(Me.X) + pRegion.ViewPort.Boundary.Left
 End Select
 
-If Not Me.Offset Is Nothing Then XLogical = XLogical + Me.Offset.WidthLogical(pRegion.Viewport)
+If Not Me.Offset Is Nothing Then XLogical = XLogical + Me.Offset.WidthLogical(pRegion)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Property Get yLogical( _
@@ -175,19 +175,19 @@ Select Case Me.CoordinateSystemY
 Case CoordsLogical
     yLogical = Me.Y
 Case CoordsRelative
-    yLogical = pRegion.Viewport.ConvertRelativeToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
+    yLogical = pRegion.ViewPort.ConvertRelativeToLogicalY(Me.Y) + pRegion.ViewPort.Boundary.Bottom
 Case CoordsDistance
-    yLogical = pRegion.Viewport.ConvertDistanceToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
+    yLogical = pRegion.ViewPort.ConvertDistanceToLogicalY(Me.Y) + pRegion.ViewPort.Boundary.Bottom
 Case CoordsCounterDistance
-    yLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(Me.Y) + pRegion.Viewport.Boundary.Bottom
+    yLogical = pRegion.ViewPort.ConvertCounterDistanceToLogicalY(Me.Y) + pRegion.ViewPort.Boundary.Bottom
 End Select
 
-If Not Me.Offset Is Nothing Then yLogical = yLogical + Me.Offset.HeightLogical(pRegion.Viewport)
+If Not Me.Offset Is Nothing Then yLogical = yLogical + Me.Offset.HeightLogical(pRegion)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================

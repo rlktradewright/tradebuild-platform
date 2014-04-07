@@ -34,7 +34,7 @@ Public Const ConfigSettingChartBackColor                As String = "&ChartBackC
 Public Const ConfigSettingHorizontalMouseScrollingAllowed    As String = "&HorizontalMouseScrollingAllowed"
 Public Const ConfigSettingHorizontalScrollBarVisible    As String = "&HorizontalScrollBarVisible"
 Public Const ConfigSettingStyle                         As String = "&Style"
-Public Const ConfigSettingTwipsPerPeriod                As String = "&TwipsPerPeriod"
+Public Const ConfigSettingPeriodWidth                   As String = "&PeriodWidth"
 Public Const ConfigSettingVerticalMouseScrollingAllowed    As String = "&MouseScrollingAllowed"
 Public Const ConfigSettingXAxisVisible                  As String = "&XAxisVisible"
 Public Const ConfigSettingYAxisVisible                  As String = "&YAxisVisible"
@@ -47,7 +47,10 @@ Public Const ConfigSectionDefaultYAxisRegionStyle       As String = "DefaultYAxi
 Public Const ConfigSectionXAxisRegionStyle              As String = "XAxisRegionStyle"
 Public Const ConfigSectionXCursorTextStyle              As String = "XCursorTextStyle"
 
-Public Const DefaultStyleName                       As String = "Platform Default"
+Public Const DefaultStyleName                           As String = "Platform Default"
+
+Public Const DefaultPeriodWidth                         As Long = 7
+Public Const DefaultYAxisWidthCm                        As Single = 1.8
 
 '@================================================================================
 ' Member variables
@@ -57,7 +60,7 @@ Public gAutoscrollingProperty                       As ExtendedProperty
 Public gChartBackColorProperty                      As ExtendedProperty
 Public gHorizontalMouseScrollingAllowedProperty     As ExtendedProperty
 Public gHorizontalScrollBarVisibleProperty          As ExtendedProperty
-Public gTwipsPerPeriodProperty                      As ExtendedProperty
+Public gPeriodWidthProperty                         As ExtendedProperty
 Public gVerticalMouseScrollingAllowedProperty       As ExtendedProperty
 Public gXAxisVisibleProperty                        As ExtendedProperty
 Public gYAxisVisibleProperty                        As ExtendedProperty
@@ -68,7 +71,6 @@ Public gCrosshairLineStyleProperty                  As ExtendedProperty
 Public gDefaultRegionStyleProperty                  As ExtendedProperty
 Public gDefaultYAxisRegionStyleProperty             As ExtendedProperty
 Public gXAxisRegionStyleProperty                    As ExtendedProperty
-Public gXCursorTextStyleProperty                    As ExtendedProperty
 
 '@================================================================================
 ' Class Event Handlers
@@ -98,68 +100,45 @@ Set gChartStylesManager = lChartStylesManager
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get gDefaultChartStyle() As ChartStyle
 Const ProcName As String = "gDefaultChartStyle"
 On Error GoTo Err
 
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lxAxisRegionStyle As ChartRegionStyle
-Dim lDefaultYAxisRegionStyle As ChartRegionStyle
 Dim lCrosshairsLineStyle As LineStyle
-Dim lXCursorTextStyle As TextStyle
 
-On Error GoTo Err
+gLogger.Log "Generating default chart style: " & DefaultStyleName, ProcName, ModuleName
 
-Set lDefaultRegionStyle = gDefaultChartRegionStyle.clone
-    
-Set lxAxisRegionStyle = lDefaultRegionStyle.clone
-lxAxisRegionStyle.HasGrid = False
-lxAxisRegionStyle.HasGridText = True
-    
-Set lDefaultYAxisRegionStyle = lDefaultRegionStyle.clone
-lDefaultYAxisRegionStyle.HasGrid = False
-    
-Set lCrosshairsLineStyle = gDefaultLineStyle.clone
+Set lCrosshairsLineStyle = New LineStyle
 lCrosshairsLineStyle.Color = vbRed
-lCrosshairsLineStyle.Layer = LayerPointer
-
-Set lXCursorTextStyle = gDefaultStyle.clone
-lXCursorTextStyle.Align = AlignBoxTopCentre
-lXCursorTextStyle.HideIfBlank = True
-lXCursorTextStyle.Color = vbBlack
-lXCursorTextStyle.Box = True
-lXCursorTextStyle.BoxFillColor = vbWhite
-lXCursorTextStyle.BoxStyle = LineSolid
-lXCursorTextStyle.BoxColor = vbBlack
-lXCursorTextStyle.BoxThickness = 1
+lCrosshairsLineStyle.LineStyle = LineSolid
+lCrosshairsLineStyle.Thickness = 1
 
 Set gDefaultChartStyle = New ChartStyle
     
 gDefaultChartStyle.Initialise DefaultStyleName, _
                             Nothing, _
-                            lDefaultRegionStyle, _
-                            lxAxisRegionStyle, _
-                            lDefaultYAxisRegionStyle, _
-                            lCrosshairsLineStyle, _
-                            lXCursorTextStyle
+                            gDefaultChartDataRegionStyle.clone, _
+                            gDefaultChartXAxisRegionStyle.clone, _
+                            gDefaultChartYAxisRegionStyle.clone, _
+                            lCrosshairsLineStyle
 
 gDefaultChartStyle.Autoscrolling = True
 gDefaultChartStyle.ChartBackColor = vbWhite
 gDefaultChartStyle.HorizontalMouseScrollingAllowed = True
 gDefaultChartStyle.HorizontalScrollBarVisible = True
-gDefaultChartStyle.TwipsPerPeriod = 120
+gDefaultChartStyle.PeriodWidth = DefaultPeriodWidth
 gDefaultChartStyle.VerticalMouseScrollingAllowed = True
 gDefaultChartStyle.XAxisVisible = True
 gDefaultChartStyle.YAxisVisible = True
-gDefaultChartStyle.YAxisWidthCm = 1.8
+gDefaultChartStyle.YAxisWidthCm = DefaultYAxisWidthCm
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -193,10 +172,10 @@ Set gHorizontalScrollBarVisibleProperty = RegisterExtendedProperty("HorizontalSc
                                     TypeName(True), _
                                     True)
                 
-Set gTwipsPerPeriodProperty = RegisterExtendedProperty("TwipsPerPeriod", _
+Set gPeriodWidthProperty = RegisterExtendedProperty("PeriodWidth", _
                                     vbLong, _
                                     TypeName(1), _
-                                    120, _
+                                    DefaultPeriodWidth, _
                                     , _
                                     AddressOf gIsPositiveLong)
                 
@@ -218,29 +197,29 @@ Set gYAxisVisibleProperty = RegisterExtendedProperty("YAxisVisible", _
 Set gYAxisWidthCmProperty = RegisterExtendedProperty("YAxisWidthCm", _
                                     vbSingle, _
                                     TypeName(1!), _
-                                    1.5, _
+                                    DefaultYAxisWidthCm, _
                                     , _
                                     AddressOf gIsPositiveSingle)
                 
 Set gDefaultRegionStyleProperty = RegisterExtendedProperty("DefaultRegionStyle", _
                                     vbObject, _
-                                    "ChartRegionStyle")
+                                    "ChartRegionStyle", _
+                                    gDefaultChartDataRegionStyle.clone)
                 
 Set gDefaultYAxisRegionStyleProperty = RegisterExtendedProperty("DefaultYAxisRegionStyle", _
                                     vbObject, _
-                                    "ChartRegionStyle")
+                                    "ChartRegionStyle", _
+                                    gDefaultChartYAxisRegionStyle.clone)
                 
 Set gXAxisRegionStyleProperty = RegisterExtendedProperty("XAxisRegionStyle", _
                                     vbObject, _
-                                    "ChartRegionStyle")
+                                    "ChartRegionStyle", _
+                                    gDefaultChartXAxisRegionStyle.clone)
                 
 Set gCrosshairLineStyleProperty = RegisterExtendedProperty("CrosshairLineStyle", _
                                     vbObject, _
-                                    "LineStyle")
-                
-Set gXCursorTextStyleProperty = RegisterExtendedProperty("XCursorTextStyle", _
-                                    vbObject, _
-                                    "TextStyle")
+                                    "LineStyle", _
+                                    gDefaultLineStyle.clone)
                 
 lRegistered = True
 End Sub

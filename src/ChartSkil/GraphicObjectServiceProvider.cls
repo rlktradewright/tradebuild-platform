@@ -31,7 +31,8 @@ Private Const ModuleName                As String = "GraphObjServiceProvider"
 ' Member variables
 '================================================================================
 
-Private mRegionRef As WeakReference
+Private mRegionRef                          As WeakReference
+Private mData                               As ChartRegionData
 
 '================================================================================
 ' Enums
@@ -53,11 +54,6 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let Region( _
-                ByVal Value As ChartRegion)
-Set mRegionRef = CreateWeakReference(Value)
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
@@ -68,30 +64,63 @@ Const ProcName As String = "AddGraphicObject"
 
 On Error GoTo Err
 
-regionObj.GOSP_AddGraphicObject graphObj
+mData.AddGraphicObject graphObj
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
 Set mRegionRef = Nothing
 End Sub
 
+Friend Sub Initialise(ByVal pRegion As ChartRegion, ByVal pData As ChartRegionData)
+Set mRegionRef = CreateWeakReference(pRegion)
+Set mData = pData
+End Sub
+
 Friend Sub ObjectChanged(ByVal handle As Long, _
                 ByRef areaToRedraw As TRectangle)
 Const ProcName As String = "ObjectChanged"
-
 On Error GoTo Err
 
-regionObj.GOSP_ObjectChanged handle, areaToRedraw
+Dim graphObj As IGraphicObject
+Dim RedrawArea As TRectangle
+
+Set graphObj = mData.GetGraphicObject(handle)
+If Not mData.UpdateGraphicObject(graphObj) Then Exit Sub
+
+If Not regionObj.IsDrawingEnabled Then Exit Sub
+
+If Not graphObj.BoundingRectangle.isValid Then Exit Sub
+If graphObj.NoDraw Then Exit Sub
+
+If regionObj.PaintingInProgress Then Exit Sub
+
+RedrawArea = RectIntersection(areaToRedraw, regionObj.ViewPort.Boundary)
+
+' check if the vertical bounds have changed, and redraw if so
+If regionObj.Autoscaling And graphObj.IncludeInAutoscale Then
+    Dim verticalRangeInViewport As TInterval
+    verticalRangeInViewport = graphObj.VerticalRangeInXinterval(RectGetXInterval(regionObj.ViewPort.Boundary))
+    
+    If verticalRangeInViewport.isValid And _
+        regionObj.Autoscaling And _
+        (verticalRangeInViewport.endValue > regionObj.ViewPort.Boundary.Top Or _
+            verticalRangeInViewport.startValue < (regionObj.ViewPort.Boundary.Bottom)) Then
+        regionObj.ScaleAndPaint
+        Exit Sub
+    End If
+End If
+
+regionObj.RedrawObject graphObj, RedrawArea
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ObjectUndrawn(ByVal handle As Long, _
@@ -100,12 +129,12 @@ Const ProcName As String = "ObjectUndrawn"
 
 On Error GoTo Err
 
-regionObj.GOSP_ObjectUndrawn handle, undrawnArea
+regionObj.UndrawArea undrawnArea, mData.GetGraphicObject(handle)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PaintRegion( _
@@ -114,12 +143,16 @@ Const ProcName As String = "PaintRegion"
 
 On Error GoTo Err
 
-regionObj.GOSP_PaintRegion recalculate
+If recalculate Then
+    regionObj.CalculateAndPaint
+Else
+    regionObj.Paint
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RecalcBoundary( _
@@ -128,12 +161,12 @@ Const ProcName As String = "RecalcBoundary"
 
 On Error GoTo Err
 
-regionObj.GOSP_RecalcBoundary SeriesID
+mData.RecalcBoundaryForObjectsInSeries SeriesID
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveObject( _
@@ -142,12 +175,12 @@ Const ProcName As String = "RemoveObject"
 
 On Error GoTo Err
 
-regionObj.GOSP_RemoveObject handle
+regionObj.RemoveGraphicObjectEx mData.GetGraphicObject(handle), True, False
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================

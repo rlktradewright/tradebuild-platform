@@ -62,7 +62,7 @@ Private Const ModuleName                    As String = "IChartTool"
 '@================================================================================
 
 Public Property Let Region( _
-                ByVal value As ChartRegion)
+                ByVal Value As ChartRegion)
                 
 End Property
 

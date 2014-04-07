@@ -25,6 +25,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Configurable
 Implements IGraphicObjectStyle
 
 '@================================================================================
@@ -96,6 +97,46 @@ mStyleType = "Bar Styles"
 End Sub
 
 '@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IGraphicObjectStyle Interface Members
 '@================================================================================
 
@@ -132,17 +173,14 @@ Const ProcName As String = "Color"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) And Value <> -1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color or -1"
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 setLongProperty mColor, BarPropertyColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -155,7 +193,7 @@ Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -198,7 +236,7 @@ If IsPropertySet(BarPropertyWidth) Then mConfig.SetSetting ConfigSettingWidth, m
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -212,7 +250,7 @@ setLongProperty mDisplayMode, BarPropertyDisplayMode, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
@@ -225,7 +263,7 @@ DisplayMode = mDisplayMode
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DownColor(ByVal Value As Long)
@@ -233,17 +271,14 @@ Const ProcName As String = "DownColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) And Value <> -1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color or -1"
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 setLongProperty mDownColor, BarPropertyDownColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DownColor() As Long
@@ -256,7 +291,7 @@ DownColor = mDownColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -269,7 +304,7 @@ setBooleanProperty mIncludeInAutoscale, BarPropertyIncludeInAutoscale, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
@@ -282,49 +317,42 @@ IncludeInAutoscale = mIncludeInAutoscale
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Layer(ByVal Value As LayerNumbers)
+Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
 
 setLongProperty mLayer, BarPropertyLayer, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Layer() As LayerNumbers
+Public Property Get layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
 checkPropertySet BarPropertyLayer
-Layer = mLayer
+layer = mLayer
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
 On Error GoTo Err
 
-If Value = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Name cannot be blank"
-End If
+If Value = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Name cannot be blank"
 
 mName = Value
 If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
@@ -332,7 +360,7 @@ If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
@@ -345,7 +373,7 @@ setLongProperty mOutlineThickness, BarPropertyOutlineThickness, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OutlineThickness() As Long
@@ -358,7 +386,7 @@ OutlineThickness = mOutlineThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
@@ -371,7 +399,7 @@ setBooleanProperty mSolidUpBody, BarPropertySolidUpBody, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SolidUpBody() As Boolean
@@ -384,7 +412,7 @@ SolidUpBody = mSolidUpBody
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
@@ -397,7 +425,7 @@ setLongProperty mTailThickness, BarPropertyTailThickness, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TailThickness() As Long
@@ -410,7 +438,7 @@ TailThickness = mTailThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Thickness(ByVal Value As Long)
@@ -423,7 +451,7 @@ setLongProperty mThickness, BarPropertyThickness, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Thickness() As Long
@@ -436,7 +464,7 @@ Thickness = mThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let UpColor(ByVal Value As Long)
@@ -444,17 +472,14 @@ Const ProcName As String = "UpColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mUpColor, BarPropertyUpColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get UpColor() As Long
@@ -467,7 +492,7 @@ UpColor = mUpColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Width(ByVal Value As Single)
@@ -480,7 +505,7 @@ setSingleProperty mWidth, BarPropertyWidth, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Width() As Single
@@ -493,7 +518,7 @@ Width = mWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -513,7 +538,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function clone() As BarStyle
@@ -526,7 +551,7 @@ If IsPropertySet(BarPropertyColor) Then clone.Color = mColor
 If IsPropertySet(BarPropertyDisplayMode) Then clone.DisplayMode = mDisplayMode
 If IsPropertySet(BarPropertyDownColor) Then clone.DownColor = mDownColor
 If IsPropertySet(BarPropertyIncludeInAutoscale) Then clone.IncludeInAutoscale = mIncludeInAutoscale
-If IsPropertySet(BarPropertyLayer) Then clone.Layer = mLayer
+If IsPropertySet(BarPropertyLayer) Then clone.layer = mLayer
 If IsPropertySet(BarPropertyOutlineThickness) Then clone.OutlineThickness = mOutlineThickness
 If IsPropertySet(BarPropertySolidUpBody) Then clone.SolidUpBody = mSolidUpBody
 If IsPropertySet(BarPropertyTailThickness) Then clone.TailThickness = mTailThickness
@@ -537,7 +562,7 @@ If IsPropertySet(BarPropertyWidth) Then clone.Width = mWidth
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsPropertySet( _
@@ -564,7 +589,7 @@ If mConfig.GetSetting(ConfigSettingDownColor) <> "" Then DownColor = mConfig.Get
 
 If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
 
 If mConfig.GetSetting(ConfigSettingOutlineThickness) <> "" Then OutlineThickness = mConfig.GetSetting(ConfigSettingOutlineThickness)
 
@@ -579,7 +604,7 @@ If mConfig.GetSetting(ConfigSettingWidth) <> "" Then Width = mConfig.GetSetting(
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
                 
 End Sub
 
@@ -593,7 +618,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -605,16 +630,12 @@ Private Sub checkPropertySet( _
 Const ProcName As String = "checkPropertySet"
 On Error GoTo Err
 
-If Not IsPropertySet(pPropFlag) Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Property is not set"
-End If
+If Not IsPropertySet(pPropFlag) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Property is not set"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
@@ -632,7 +653,7 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function propertyFlagToConfigSetting( _
@@ -670,7 +691,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setBooleanProperty( _
@@ -689,7 +710,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLongProperty( _
@@ -708,7 +729,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSingleProperty( _
@@ -727,7 +748,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -741,7 +762,7 @@ mPropertyFlags = gSetFlag(mPropertyFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

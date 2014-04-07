@@ -13,6 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+Implements Configurable
+
 '================================================================================
 ' Events
 '================================================================================
@@ -52,6 +54,46 @@ Private mConfig As ConfigurationSection
 ' Class Event Handlers
 '================================================================================
 
+'@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '================================================================================
 ' xxxx Event Handlers
 '================================================================================
@@ -84,7 +126,7 @@ mConfig.SetSetting ConfigSettingCoordSystemHeight, mCoordSystemHeight
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -129,7 +171,7 @@ Equals = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -159,7 +201,7 @@ mCoordSystemWidth = mConfig.GetSetting(ConfigSettingCoordSystemWidth, "0")
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -172,7 +214,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function WidthLogical( _
@@ -185,17 +227,17 @@ Select Case mCoordSystemWidth
 Case CoordsLogical
     WidthLogical = mWidth
 Case CoordsRelative
-    WidthLogical = pRegion.Viewport.ConvertRelativeToLogicalX(mWidth)
+    WidthLogical = pRegion.ViewPort.ConvertRelativeToLogicalX(mWidth)
 Case CoordsDistance
-    WidthLogical = pRegion.Viewport.ConvertDistanceToLogicalX(mWidth)
+    WidthLogical = pRegion.ViewPort.ConvertDistanceToLogicalX(mWidth)
 Case CoordsCounterDistance
-    WidthLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalX(mWidth)
+    WidthLogical = pRegion.ViewPort.ConvertCounterDistanceToLogicalX(mWidth)
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function HeightLogical( _
@@ -208,17 +250,17 @@ Select Case mCoordSystemHeight
 Case CoordsLogical
     HeightLogical = mHeight
 Case CoordsRelative
-    HeightLogical = pRegion.Viewport.ConvertRelativeToLogicalY(mHeight)
+    HeightLogical = pRegion.ViewPort.ConvertRelativeToLogicalY(mHeight)
 Case CoordsDistance
-    HeightLogical = pRegion.Viewport.ConvertDistanceToLogicalY(mHeight)
+    HeightLogical = pRegion.ViewPort.ConvertDistanceToLogicalY(mHeight)
 Case CoordsCounterDistance
-    HeightLogical = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mHeight)
+    HeightLogical = pRegion.ViewPort.ConvertCounterDistanceToLogicalY(mHeight)
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '================================================================================

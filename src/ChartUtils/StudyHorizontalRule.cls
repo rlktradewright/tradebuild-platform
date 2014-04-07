@@ -79,17 +79,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal Value As Long)
 Const ProcName As String = "Color"
 On Error GoTo Err
 
-mColor = value
+mColor = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -101,35 +101,35 @@ Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Style(ByVal value As LineStyles)
+Public Property Let Style(ByVal Value As LineStyles)
 Const ProcName As String = "Style"
 On Error GoTo Err
 
-mStyle = value
+mStyle = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Style() As LineStyles
@@ -141,20 +141,20 @@ Style = mStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Thickness(ByVal value As Long)
+Public Property Let Thickness(ByVal Value As Long)
 Const ProcName As String = "Thickness"
 On Error GoTo Err
 
-mThickness = value
+mThickness = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Thickness() As Long
@@ -166,20 +166,20 @@ Thickness = mThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Y(ByVal value As Double)
+Public Property Let Y(ByVal Value As Double)
 Const ProcName As String = "Y"
 On Error GoTo Err
 
-mY = value
+mY = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Y() As Double
@@ -192,7 +192,7 @@ storeSettings
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -213,7 +213,7 @@ mStyle = mConfig.GetSetting(ConfigSettingStyle)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveFromConfig()
@@ -225,7 +225,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -246,6 +246,6 @@ mConfig.SetSetting ConfigSettingStyle, mStyle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

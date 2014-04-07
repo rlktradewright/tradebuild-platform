@@ -71,37 +71,34 @@ End Type
 ' Member variables
 '================================================================================
 
-Private mChartRef As WeakReference
-Private mRegionRef As WeakReference
+Private mPeriodTable()                  As PeriodTableEntry
 
-Private mPeriodTable() As PeriodTableEntry
+Private mGraphicObjects()               As GraphicObjectTableEntry
+Private mFirstGraphicObjectIndex        As Long ' the index of the first table entry
+                                                ' that actually points to a graphic
+                                                ' object - all prior entries are
+                                                ' merely list start and end entries
+Private mNextGraphicObjectIndex         As Long
 
-Private mGraphicObjects() As GraphicObjectTableEntry
-Private mFirstGraphicObjectIndex As Long    ' the index of the first table entry
-                                            ' that actually points to a graphic
-                                            ' object - all prior entries are
-                                            ' merely list start and end entries
-Private mNextGraphicObjectIndex As Long
+Private mNumberOfObjects                As Long
 
-Private mNumberOfObjects As Long
+Private mGraphObjSeriesCollection       As GraphObjSeriesCollection
 
-Private mGraphObjSeriesCollection As GraphObjSeriesCollection
+Private mMaxPeriodNumber                As Long
 
-Private mMaxPeriodNumber As Long
+Private mViewport                       As ViewPort
 
-Private mViewportRect As TRectangle
+Private mInScopeCycle                   As Long
+Private mFirstInScopeIndex              As Long
+Private mLastInScopeIndex               As Long
 
-Private mInScopeCycle As Long
-Private mFirstInScopeIndex As Long
-Private mLastInScopeIndex As Long
-
-Private mVisibleCycle As Long
+Private mVisibleCycle                   As Long
 Private mVisibleTable(LayerMin To LayerMax) As VisibleTableEntry
 
-Private mFirstExtendedIndex As Long
-Private mLastExtendedIndex As Long
+Private mFirstExtendedIndex             As Long
+Private mLastExtendedIndex              As Long
 
-Private mTaskContext As TaskContext
+Private mTaskContext                    As TaskContext
 
 '================================================================================
 ' Class Event Handlers
@@ -143,32 +140,26 @@ mTaskContext.Finish Empty, True
 End Sub
 
 Private Sub Task_run()
-Static i As Long
-Dim j As Long
-
 Const ProcName As String = "Task_run"
-
 On Error GoTo Err
 
-Do While i < mNextGraphicObjectIndex
+Static i As Long
+
+If i < mNextGraphicObjectIndex Then
     If Not mGraphicObjects(i).graphObj Is Nothing Then
         Set mGraphicObjects(i).graphObj = Nothing
         mNumberOfObjects = mNumberOfObjects + 1
     End If
     i = i + 1
-    j = j + 1
-    If j = 100 Then Exit Sub
-Loop
-
-Erase mGraphicObjects
-
-mTaskContext.Finish 0, False
+Else
+    Erase mGraphicObjects
+    mTaskContext.Finish 0, False
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
@@ -207,7 +198,7 @@ mPeriodTable(PeriodNumber).BackColor = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get PeriodBackColor( _
@@ -221,7 +212,7 @@ PeriodBackColor = mPeriodTable(PeriodNumber).BackColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -266,12 +257,11 @@ AddGraphicObject = handle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub AddPeriod( _
-                ByVal pPeriodNumber As Long, _
-                ByVal pTimestamp As Date)
+                ByVal pPeriodNumber As Long)
 Const ProcName As String = "AddPeriod"
 
 On Error GoTo Err
@@ -281,7 +271,7 @@ addNewPeriod pPeriodNumber
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function CalculateInscopeGaugeDependentObjects()
@@ -307,7 +297,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -334,8 +324,8 @@ Do While index <> mLastInScopeIndex
             'boundingRect = .graphObj.BoundingRectangle
 
             calculateObjectHighAndLowInPeriodRange index, _
-                                            mViewportRect.Left, _
-                                            mViewportRect.Right, _
+                                            mViewport.Boundary.Left, _
+                                            mViewport.Boundary.Right, _
                                             objMax, _
                                             objMin
             If objMax > scaleMax Then
@@ -353,7 +343,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function CalcVerticalBoundsForNonGaugeDependentObjects( _
@@ -379,8 +369,8 @@ Do While index <> mLastInScopeIndex
             Else
 
                 calculateObjectHighAndLowInPeriodRange index, _
-                                                        mViewportRect.Left, _
-                                                        mViewportRect.Right, _
+                                                        mViewport.Boundary.Left, _
+                                                        mViewport.Boundary.Right, _
                                                         objMax, _
                                                         objMin
                 If objMax > scaleMax Then
@@ -388,6 +378,10 @@ Do While index <> mLastInScopeIndex
                 End If
                 If objMin < scaleMin Then
                     scaleMin = objMin
+'                    Assert scaleMin >= -20000, "objMin=" & CStr(objMin) & _
+'                                            "; objMax=" & CStr(objMax) & _
+'                                            "; obj type is " & TypeName(mGraphicObjects(index).graphObj) & _
+'                                            "; period number=" & mGraphicObjects(index).graphObj.PeriodNumber
                 End If
             End If
         End If
@@ -399,7 +393,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Clear()
@@ -407,14 +401,12 @@ Const ProcName As String = "Clear"
 
 On Error GoTo Err
 
-Set mChartRef = Nothing
-Set mRegionRef = Nothing
 StartTask Me, PriorityLow
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DetermineInScopeObjects()
@@ -433,12 +425,12 @@ et.StartTiming
 
 clearInScopeObjectList
 
-For i = Int(IIf(mViewportRect.Left < LBound(mPeriodTable), _
+For i = Int(IIf(mViewport.Boundary.Left < LBound(mPeriodTable), _
                 LBound(mPeriodTable), _
-                Int(mViewportRect.Left))) _
-    To Int(IIf(mViewportRect.Right > mMaxPeriodNumber, _
+                Int(mViewport.Boundary.Left))) _
+    To Int(IIf(mViewport.Boundary.Right > mMaxPeriodNumber, _
                 mMaxPeriodNumber, _
-                Int(mViewportRect.Right)))
+                Int(mViewport.Boundary.Right)))
     index = mGraphicObjects(mPeriodTable(i).firstIndex).nextPeriodIndex
     Do While index <> mPeriodTable(i).lastindex
         numberExamined = numberExamined + 1
@@ -475,7 +467,7 @@ Debug.Print "DetermineInScopeObjects: total=" & numberExamined & " in-scope=" & 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DetermineVisibleObjects()
@@ -511,7 +503,7 @@ Debug.Print "DetermineVisibleObjects: total=" & numberExamined & " visible=" & n
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetGraphicObject( _
@@ -525,7 +517,7 @@ Set GetGraphicObject = mGraphicObjects(handle).graphObj
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetNextSelectableObjectOrSeriesAtPoint( _
@@ -546,7 +538,7 @@ Dim currObjStillSelectable As Boolean
 If currObject Is Nothing Then
     startLayer = LayerMax
 Else
-    startLayer = currObject.Layer
+    startLayer = currObject.layer
 End If
 
 For i = 1 To NumberOfLayers
@@ -587,59 +579,54 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function GetNextUserLayer(Optional ByVal Layer As Long = -1) As Long
-Static lNextLayer As Long
-
+Friend Function GetNextUserLayer(Optional ByVal layer As Long = -1) As Long
 Const ProcName As String = "GetNextUserLayer"
-
 On Error GoTo Err
 
-If lNextLayer = 0 Then lNextLayer = LayerNumbers.LayerLowestUser
+Static sNextLayer As Long
 
-If Layer = -1 Then
-    GetNextUserLayer = lNextLayer
-    If lNextLayer <> LayerNumbers.LayerHighestUser Then
-        lNextLayer = lNextLayer + 1
+If sNextLayer = 0 Then sNextLayer = LayerNumbers.LayerLowestUser
+
+If layer < LayerNumbers.LayerLowestUser Or _
+    layer > LayerNumbers.LayerHighestUser _
+Then
+    GetNextUserLayer = sNextLayer
+    If sNextLayer <> LayerNumbers.LayerHighestUser Then
+        sNextLayer = sNextLayer + 1
     End If
 Else
-    If Layer < LayerMin Or Layer > LayerMax Then
-        GetNextUserLayer = GetNextUserLayer(-1)
-    Else
-        GetNextUserLayer = Layer
-    End If
+    GetNextUserLayer = layer
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal pChart As Chart, _
-                ByVal pRegion As ChartRegion, _
+                ByVal pViewport As ViewPort, _
                 ByVal pGraphObjSeriesCollection As GraphObjSeriesCollection)
 Const ProcName As String = "Initialise"
 
 On Error GoTo Err
 
-Set mChartRef = CreateWeakReference(pChart)
-Set mRegionRef = CreateWeakReference(pRegion)
 Set mGraphObjSeriesCollection = pGraphObjSeriesCollection
+Set mViewport = pViewport
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub MarkObjectsForRedraw( _
                 ByRef areasToRedraw() As TRectangle, _
                 ByVal pCount As Long)
-Dim Layer As Long
+Dim layer As Long
 Dim index As Long
 Dim i As Long
 Dim br As TRectangle
@@ -650,9 +637,9 @@ On Error GoTo Err
 
 ' mark objects that overlap the redraw area
 
-For Layer = LayerMinVisible To LayerMax
-    index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
-    Do While index <> mVisibleTable(Layer).lastindex
+For layer = LayerMinVisible To LayerMax
+    index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(layer).lastindex
         With mGraphicObjects(index)
             br = .graphObj.BoundingRectangle
             
@@ -673,7 +660,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function PaintAllVisibleObjects() As Long
@@ -705,7 +692,7 @@ PaintAllVisibleObjects = counter
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function PaintMarkedObjects() As Long
@@ -738,7 +725,7 @@ PaintMarkedObjects = counter
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub RecalcBoundaryForObjectsInSeries( _
@@ -767,14 +754,14 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RedrawArea( _
                 ByRef areaToRedraw As TRectangle, _
                 ByVal startLayer As Long, _
                 Optional ByVal objToExclude As IGraphicObject)
-Dim Layer As Long
+Dim layer As Long
 Dim index As Long
 
 Const ProcName As String = "RedrawArea"
@@ -785,9 +772,9 @@ On Error GoTo Err
 
 Dim rects(0) As TRectangle
 
-For Layer = startLayer To LayerMax
-    index = mGraphicObjects(mVisibleTable(Layer).firstIndex).nextVisibleIndex
-    Do While index <> mVisibleTable(Layer).lastindex
+For layer = startLayer To LayerMax
+    index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(layer).lastindex
         With mGraphicObjects(index)
             If Not .graphObj Is objToExclude Then
                 rects(0) = RectIntersection(areaToRedraw, .graphObj.BoundingRectangle)
@@ -804,7 +791,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveGraphicObject( _
@@ -838,14 +825,9 @@ mNumberOfObjects = mNumberOfObjects - 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub SetViewport( _
-                ByRef viewportRect As TRectangle)
-mViewportRect = viewportRect
-End Sub
-                
 ' returns true if the object is in scope
 Friend Function UpdateGraphicObject( _
                 ByVal graphObj As IGraphicObject) As Boolean
@@ -873,7 +855,7 @@ Else
     ' The following call to addEntryToPeriodList must not be in a With block
     ' involving mGraphicObjects because in rare circumstances it can result
     ' in mGraphicObjects being ReDim'd which leads to an error 10
-    addEntryToPeriodList (handle)
+    addEntryToPeriodList handle
 End If
 
 If graphicObjectIsInScope(handle) Then
@@ -890,7 +872,7 @@ UpdateGraphicObject = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -914,7 +896,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addEntryToInScopeList(ByVal index As Long)
@@ -936,7 +918,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function addEntryToPeriodList( _
@@ -958,8 +940,7 @@ If newPeriodNumber <> mGraphicObjects(index).PeriodNumber Then
     ' NB: the following call to AddPeriod must not be within a 'With' block
     ' that refers to mGraphicObjects, because in rare circumstances it can
     ' cause mGraphicObjects to be ReDim'd which causes an error 10
-    AddPeriod newPeriodNumber, _
-            mGraphicObjects(index).graphObj.Timestamp ' in case the period hasn't been added yet
+    AddPeriod newPeriodNumber ' in case the period hasn't been added yet
 
     lastindex = mPeriodTable(newPeriodNumber).lastindex
     With mGraphicObjects(index)
@@ -976,7 +957,7 @@ addEntryToPeriodList = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -990,7 +971,7 @@ With mGraphicObjects(index)
     If .visibleCycle <> mVisibleCycle Then
         .graphObj.Visible = True
         .visibleCycle = mVisibleCycle
-        lastindex = mVisibleTable(.graphObj.Layer).lastindex
+        lastindex = mVisibleTable(.graphObj.layer).lastindex
         .nextVisibleIndex = lastindex
         .prevVisibleIndex = mGraphicObjects(lastindex).prevVisibleIndex
         mGraphicObjects(.prevVisibleIndex).nextVisibleIndex = index
@@ -1001,7 +982,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addNewPeriod(ByVal PeriodNumber As Long)
@@ -1026,7 +1007,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1046,7 +1027,7 @@ mGraphicObjects(allocateGraphicObjectTableEntry).PeriodNumber = &H80000000
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub calculateObjectHighAndLowInPeriodRange( _
@@ -1110,21 +1091,8 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function chartObj() As Chart
-Const ProcName As String = "chartObj"
-
-On Error GoTo Err
-
-Set chartObj = mChartRef.Target
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
 
 Private Sub clearInScopeObjectList()
 Dim index As Long
@@ -1146,7 +1114,7 @@ initialiseInScopeObjectList
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearVisibleObjectList()
@@ -1172,7 +1140,7 @@ initialiseVisibleObjectList
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getObjectOverlaps(ByVal index1 As Long, _
@@ -1333,7 +1301,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -1345,17 +1313,17 @@ On Error GoTo Err
 With mGraphicObjects(index)
     If Not .graphObj.BoundingRectangle.isValid Then Exit Function
     If .graphObj.ExtendedObject Then
-        graphicObjectIsInScope = IntOverlaps(RectGetXInterval(mViewportRect), RectGetXInterval(.graphObj.BoundingRectangle))
+        graphicObjectIsInScope = IntOverlaps(RectGetXInterval(mViewport.Boundary), RectGetXInterval(.graphObj.BoundingRectangle))
     Else
-        graphicObjectIsInScope = (.PeriodNumber >= Int(mViewportRect.Left) And _
-                                .PeriodNumber <= Int(mViewportRect.Right))
+        graphicObjectIsInScope = (.PeriodNumber >= Int(mViewport.Boundary.Left) And _
+                                .PeriodNumber <= Int(mViewport.Boundary.Right))
     End If
 End With
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function graphicObjectIsVisible(ByVal index As Long) As Boolean
@@ -1372,7 +1340,7 @@ On Error GoTo Err
 With mGraphicObjects(index).graphObj
     If Not .BoundingRectangle.isValid Or .NoDraw Then Exit Function
     If .ExtendedObject And (.Capabilities And GraphicObjectCapabilities.ComplexBounding) Then
-        overlapXInterval = IntIntersection(RectGetXInterval(mViewportRect), RectGetXInterval(.BoundingRectangle))
+        overlapXInterval = IntIntersection(RectGetXInterval(mViewport.Boundary), RectGetXInterval(.BoundingRectangle))
         For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
             boundingRects = .BoundingRectanglesAt(i)
@@ -1382,7 +1350,7 @@ With mGraphicObjects(index).graphObj
             On Error GoTo Err
             If numrects >= 0 Then
                 For j = 0 To numrects
-                    If RectOverlaps(boundingRects(j), mViewportRect) Then
+                    If RectOverlaps(boundingRects(j), mViewport.Boundary) Then
                         graphicObjectIsVisible = True
                         Exit Function
                     End If
@@ -1390,14 +1358,14 @@ With mGraphicObjects(index).graphObj
             End If
         Next
     Else
-        graphicObjectIsVisible = RectIntersection(mGraphicObjects(index).graphObj.BoundingRectangleInViewport, mViewportRect).isValid
+        graphicObjectIsVisible = RectIntersection(mGraphicObjects(index).graphObj.BoundingRectangleInViewport, mViewport.Boundary).isValid
     End If
 End With
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub initialiseInScopeObjectList()
@@ -1412,7 +1380,7 @@ mGraphicObjects(mLastInScopeIndex).prevInScopeIndex = mFirstInScopeIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePeriodTableEntry( _
@@ -1433,7 +1401,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialiseVisibleObjectList()
@@ -1453,7 +1421,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1473,7 +1441,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
@@ -1492,7 +1460,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeEntryFromInScopeList(ByVal index As Long)
@@ -1513,7 +1481,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeEntryFromPeriodList(ByVal index As Long)
@@ -1532,7 +1500,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeEntryFromVisibleList(ByVal index As Long)
@@ -1553,7 +1521,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

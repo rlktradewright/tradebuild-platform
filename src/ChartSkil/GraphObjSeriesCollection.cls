@@ -76,8 +76,8 @@ Friend Function Add( _
                 ByVal pGraphObjSeries As IGraphicObjectSeries, _
                 ByVal pLayer As Long, _
                 ByVal pName As String, _
-                ByVal pViewport As Viewport, _
-                ByVal pChart As Chart, _
+                ByVal pViewport As ViewPort, _
+                ByVal pPeriods As Periods, _
                 ByVal pGOSP As GraphObjServiceProvider) As IGraphicObjectSeries
 Const ProcName As String = "Add"
 
@@ -96,7 +96,7 @@ If pName = "" Then pName = "Series" & mGraphObjSeriesIndex
 pGraphObjSeries.Initialise pName, _
                         pViewport, _
                         pLayer, _
-                        pChart, _
+                        pPeriods, _
                         mGraphObjSeriesIndex, _
                         pGOSP
 
@@ -105,7 +105,7 @@ mGraphObjSeriesIndex = mGraphObjSeriesIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Finish()
@@ -134,7 +134,7 @@ Erase mGraphObjSeriesTable
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -148,7 +148,7 @@ Set mRegionRef = CreateWeakReference(pRegion)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Item( _
@@ -162,7 +162,7 @@ Set Item = mGraphObjSeriesTable(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Remove( _
@@ -179,7 +179,7 @@ Set mGraphObjSeriesTable(pSeries.SeriesID) = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -196,5 +196,5 @@ Set regionObj = mRegionRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function

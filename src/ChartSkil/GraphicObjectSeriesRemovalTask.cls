@@ -40,8 +40,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-
-Private Const ModuleName                    As String = "GraphicObjectSeriesRemovalTask"
+Private Const ModuleName                    As String = "GraphObjSeriesRemovalTask"
 
 '@================================================================================
 ' Member variables
@@ -71,35 +70,28 @@ mTaskContext.Finish Empty, True
 End Sub
 
 Private Sub Task_run()
-Dim i As Long
-
 Const ProcName As String = "Task_run"
-
 On Error GoTo Err
 
-Do While mGraphObjSeries.Count <> 0
+If mGraphObjSeries.Count <> 0 Then
     ' we remove the latest object first, since later objects may have references to earlier
     ' objects, so that removing the earliest first would mean they can't actually be
     ' terminated
     If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx mGraphObjSeries.Item(mGraphObjSeries.Count), False, False
     
     mGraphObjSeries.Remove mGraphObjSeries.Count
-    i = i + 1
-    If i = 100 Then
-        Exit Sub
-    End If
-Loop
-
-mGraphObjSeries.Finish
-Set mGraphObjSeries = Nothing
-Set mRegion = Nothing
-
-mTaskContext.Finish Empty, False
+Else
+    mGraphObjSeries.Finish
+    Set mGraphObjSeries = Nothing
+    Set mRegion = Nothing
+    
+    mTaskContext.Finish Empty, False
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)

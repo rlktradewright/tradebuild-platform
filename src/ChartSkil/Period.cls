@@ -25,8 +25,10 @@ Option Explicit
 ' Member variables and constants
 '================================================================================
 
-Private mPeriodNumber As Long
-Private mTimestamp As Date
+Private mPeriodNumber                               As Long
+Private mTimestamp                                  As Date
+Private mVerticalGridLineType                       As VerticalGridlineTypes
+Private mLabels                                     As PeriodLabels
 
 '================================================================================
 ' Enums
@@ -44,22 +46,37 @@ Private mTimestamp As Date
 ' Properties
 '================================================================================
 
+Friend Property Get Labels() As PeriodLabels
+Labels = mLabels
+End Property
+
+Friend Property Let Labels(ByRef Value As PeriodLabels)
+mLabels = Value
+End Property
+
 Public Property Get PeriodNumber() As Long
 PeriodNumber = mPeriodNumber
 End Property
 
-Friend Property Let PeriodNumber(ByVal value As Long)
-mPeriodNumber = value
+Friend Property Let PeriodNumber(ByVal Value As Long)
+mPeriodNumber = Value
 End Property
 
 Public Property Get Timestamp() As Date
 Timestamp = mTimestamp
 End Property
 
-Friend Property Let Timestamp(ByVal value As Date)
-mTimestamp = value
+Friend Property Let Timestamp(ByVal Value As Date)
+mTimestamp = Value
 End Property
 
+Friend Property Let VerticalGridLineType(ByVal Value As VerticalGridlineTypes)
+mVerticalGridLineType = Value
+End Property
+
+Friend Property Get VerticalGridLineType() As VerticalGridlineTypes
+VerticalGridLineType = mVerticalGridLineType
+End Property
 
 '================================================================================
 ' Methods

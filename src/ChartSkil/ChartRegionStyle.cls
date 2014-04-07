@@ -25,6 +25,9 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Configurable
+'Implements IGraphicObjectStyle
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -39,22 +42,33 @@ Event PropertyChanged( _
 
 Private Const ModuleName                As String = "ChartRegionStyle"
 
-Private Const ConfigSectionGridlineStyle                As String = "GridlineStyle"
-Private Const ConfigSectionGridTextStyle                As String = "GridTextStyle"
+Private Const ConfigSectionCursorTextStyle              As String = "CursorTextStyle"
+Private Const ConfigSectionXGridlineStyle               As String = "XGridlineStyle"
+Private Const ConfigSectionXGridTextStyle               As String = "XGridTextStyle"
+Private Const ConfigSectionYGridlineStyle               As String = "YGridlineStyle"
+Private Const ConfigSectionYGridTextStyle               As String = "YGridTextStyle"
+Private Const ConfigSectionXCursorTextStyle             As String = "XCursorTextStyle"
+Private Const ConfigSectionYCursorTextStyle             As String = "YCursorTextStyle"
 Private Const ConfigSectionSessionEndGridlineStyle      As String = "SessionEndGridlineStyle"
 Private Const ConfigSectionSessionStartGridlineStyle    As String = "SessionStartGridlineStyle"
-Private Const ConfigSectionYAxisTextStyle               As String = "YAxisTextStyle"
-Private Const ConfigSectionYCursorTextStyle             As String = "YCursorTextStyle"
 
-Private Const ConfigSettingHasGrid                      As String = "&HasGrid"
-Private Const ConfigSettingHasGridText                  As String = "&HasGridText"
+Private Const ConfigSettingCursorTextMode               As String = "&CursorTextMode"
+Private Const ConfigSettingCursorTextPosition           As String = "&CursorTextPosition"
+Private Const ConfigSettingHasXGrid                     As String = "&HasXGrid"
+Private Const ConfigSettingHasXGridText                 As String = "&HasXGridText"
+Private Const ConfigSettingHasYGrid                     As String = "&HasYGrid"
+Private Const ConfigSettingHasYGridText                 As String = "&HasYGridText"
 Private Const ConfigSettingAutoscaling                  As String = "&Autoscale"
 Private Const ConfigSettingIntegerYScale                As String = "&IntegerYScale"
 Private Const ConfigSettingYScaleQuantum                As String = "&YScaleQuantum"
-Private Const ConfigSettingGridlineSpacingY             As String = "&GridlineSpacingY"
+Private Const ConfigSettingYGridlineSpacing             As String = "&YGridlineSpacing"
 Private Const ConfigSettingMinimumHeight                As String = "&MinimumHeight"
 Private Const ConfigSettingCursorSnapsToTickBoundaries  As String = "&CursorSnapsToTickBoundaries"
 Private Const ConfigSettingBackGradientFillColors       As String = "&BackGradientFillColors"
+Private Const ConfigSettingXGridTextPosition            As String = "&XGridTextPosition"
+Private Const ConfigSettingYGridTextPosition            As String = "&YGridTextPosition"
+Private Const ConfigSettingXCursorTextPosition          As String = "&XCursorTextPosition"
+Private Const ConfigSettingYCursorTextPosition          As String = "&YCursorTextPosition"
 
 '@================================================================================
 ' Enums
@@ -75,28 +89,46 @@ Private mConfig As ConfigurationSection
 ' indicates whether there is a grid, not whether it
 ' is currently visible. Visibility is controlled through
 ' the GridLineStyle's Thickness property.
-Private mHasGrid As Boolean
-Private mHasGridText As Boolean
+Private mHasXGrid As Boolean
+Private mHasYGrid As Boolean
+Private mHasXGridText As Boolean
+Private mHasYGridText As Boolean
+
+Private mXGridTextPosition As XGridTextPositions
+Private mYGridTextPosition As YGridTextPositions
+
+Private mCursorTextMode As CursorTextModes
+Private mCursorTextPosition As CursorTextPositions
+
+Private mXCursorTextPosition As CursorTextPositions
+
+Private mYCursorTextPosition As CursorTextPositions
 
 Private mAutoscaling As Boolean
 Private mIntegerYScale As Boolean
 Private mYScaleQuantum As Double
-Private mGridlineSpacingY As Double
+Private mYGridlineSpacing As Double
 Private mMinimumHeight As Double
 Private mCursorSnapsToTickBoundaries As Boolean
 
 Private mBackGradientFillColors() As Long
 
-Private WithEvents mGridLineStyle As LineStyle
-Attribute mGridLineStyle.VB_VarHelpID = -1
-Private WithEvents mGridTextStyle As TextStyle
-Attribute mGridTextStyle.VB_VarHelpID = -1
-Private WithEvents mSessionEndGridlineStyle As LineStyle
-Attribute mSessionEndGridlineStyle.VB_VarHelpID = -1
-Private WithEvents mSessionStartGridlineStyle As LineStyle
-Attribute mSessionStartGridlineStyle.VB_VarHelpID = -1
-Private WithEvents mYAxisTextStyle As TextStyle
-Attribute mYAxisTextStyle.VB_VarHelpID = -1
+Private WithEvents mXGridLineStyle As LineStyle
+Attribute mXGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mXGridTextStyle As TextStyle
+Attribute mXGridTextStyle.VB_VarHelpID = -1
+Private WithEvents mYGridLineStyle As LineStyle
+Attribute mYGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mYGridTextStyle As TextStyle
+Attribute mYGridTextStyle.VB_VarHelpID = -1
+Private WithEvents mSessionEndGridLineStyle As LineStyle
+Attribute mSessionEndGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mSessionStartGridLineStyle As LineStyle
+Attribute mSessionStartGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mCursorTextStyle As TextStyle
+Attribute mCursorTextStyle.VB_VarHelpID = -1
+Private WithEvents mXCursorTextStyle As TextStyle
+Attribute mXCursorTextStyle.VB_VarHelpID = -1
 Private WithEvents mYCursorTextStyle As TextStyle
 Attribute mYCursorTextStyle.VB_VarHelpID = -1
 
@@ -108,23 +140,78 @@ Private Sub Class_Initialize()
 mName = GenerateGUIDString
 mStyleType = "Chart Region Styles"
 
-setInitialGridLineStyle
-setInitialGridTextStyle
-setInitialSessionEndGridLineStyle
-setInitialSessionStartGridLineStyle
-setInitialYAxisTextStyle
-setInitialYCursorTextStyle
+'setInitialXGridLineStyle
+'setInitialXGridTextStyle
+'setInitialYGridLineStyle
+'setInitialYGridTextStyle
+'setInitialSessionEndGridLineStyle
+'setInitialSessionStartGridLineStyle
+'setInitialCursorTextStyle
+'setInitialXCursorTextStyle
+'setInitialYCursorTextStyle
 
-mHasGrid = True
-mHasGridText = False
+mHasXGrid = False
+mHasXGridText = False
+mHasYGrid = False
+mHasYGridText = False
+
+mXGridTextPosition = XGridTextPositionBottom
+mYGridTextPosition = YGridTextPositionCentre
+
+mCursorTextMode = CursorTextModeNone
+mCursorTextPosition = CursorTextPositionLeftCursor
+
+mXCursorTextPosition = CursorTextPositionBottomLeftFixed
+mYCursorTextPosition = CursorTextPositionTopLeftFixed
+
 mAutoscaling = True
 mIntegerYScale = False
-mYScaleQuantum = 0.01
-mGridlineSpacingY = 1.8
-mMinimumHeight = 0
+mYScaleQuantum = 0.0001
+mYGridlineSpacing = 1.8
+mMinimumHeight = 0.0001
 mCursorSnapsToTickBoundaries = True
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = vbWhite
+End Sub
+
+'@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -152,30 +239,14 @@ IGraphicObjectStyle_StyleType = mStyleType
 End Property
 
 '@================================================================================
-' mGridLineStyle Event Handlers
+' mCursorTextStyle Event Handlers
 '@================================================================================
 
-Private Sub mGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
-Const ProcName As String = "mGridLineStyle_PropertyChanged"
+Private Sub mCursorTextStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mCursorTextStyle_PropertyChanged"
 On Error GoTo Err
 
-firePropertyChanged "GridLineStyle"
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
-End Sub
-
-'@================================================================================
-' mGridTextStyle Event Handlers
-'@================================================================================
-
-Private Sub mGridTextStyle_PropertyChanged(ev As PropertyChangedEventData)
-Const ProcName As String = "mGridTextStyle_PropertyChanged"
-On Error GoTo Err
-
-firePropertyChanged "GridTextStyle"
+firePropertyChanged "CursorTextStyle"
 
 Exit Sub
 
@@ -216,14 +287,46 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
-' mYAxisTextStyle Event Handlers
+' mXCursorTextStyle Event Handlers
 '@================================================================================
 
-Private Sub mYAxisTextStyle_PropertyChanged(ev As PropertyChangedEventData)
-Const ProcName As String = "mYAxisTextStyle_PropertyChanged"
+Private Sub mXCursorTextStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mXCursorTextStyle_PropertyChanged"
 On Error GoTo Err
 
-firePropertyChanged "YAxisTextStyle"
+firePropertyChanged "XCursorTextStyle"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mXGridLineStyle Event Handlers
+'@================================================================================
+
+Private Sub mXGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mXGridLineStyle_PropertyChanged"
+On Error GoTo Err
+
+firePropertyChanged "XGridLineStyle"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mXGridTextStyle Event Handlers
+'@================================================================================
+
+Private Sub mXGridTextStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mXGridTextStyle_PropertyChanged"
+On Error GoTo Err
+
+firePropertyChanged "XGridTextStyle"
 
 Exit Sub
 
@@ -240,6 +343,38 @@ Const ProcName As String = "mYCursorTextStyle_PropertyChanged"
 On Error GoTo Err
 
 firePropertyChanged "YCursorTextStyle"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mYGridLineStyle Event Handlers
+'@================================================================================
+
+Private Sub mYXGridLineStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mYGridLineStyle_PropertyChanged"
+On Error GoTo Err
+
+firePropertyChanged "YGridLineStyle"
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName, ProjectName
+End Sub
+
+'@================================================================================
+' mYGridTextStyle Event Handlers
+'@================================================================================
+
+Private Sub mYGridTextStyle_PropertyChanged(ev As PropertyChangedEventData)
+Const ProcName As String = "mYGridTextStyle_PropertyChanged"
+On Error GoTo Err
+
+firePropertyChanged "YGridTextStyle"
 
 Exit Sub
 
@@ -267,27 +402,7 @@ firePropertyChanged "Autoscaling"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get BackColor() As Long
-BackColor = mBackGradientFillColors(0)
-End Property
-
-Public Property Let BackColor(ByVal Value As Long)
-Const ProcName As String = "BackColor"
-
-On Error GoTo Err
-
-ReDim mBackGradientFillColors(0) As Long
-mBackGradientFillColors(0) = Value
-If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
-firePropertyChanged "BackColor"
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BackGradientFillColors() As Long()
@@ -310,17 +425,9 @@ If numColors = 0 Then
     Exit Property
 End If
 
-If numColors < 1 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "At least 1 background gradient fill Color must be supplied"
-End If
+If numColors < 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "At least 1 background gradient fill Color must be supplied"
 
-If numColors > 5 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "At most 5 background gradient fill colors may be supplied"
-End If
+If numColors > 5 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "At most 5 background gradient fill colors may be supplied"
 
 mBackGradientFillColors = Value
 
@@ -331,7 +438,7 @@ firePropertyChanged "BackGradientFillColors"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -352,18 +459,30 @@ Set mConfig = Value
 mConfig.SetSetting ConfigSettingName, mName
 mConfig.SetSetting ConfigSettingStyleType, mStyleType
 
-mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
-mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
-mSessionEndGridlineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
-mSessionStartGridlineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
-mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
-mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
-mConfig.SetSetting ConfigSettingHasGrid, mHasGrid
-mConfig.SetSetting ConfigSettingHasGridText, mHasGridText
+If Not mXGridLineStyle Is Nothing Then mXGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXGridlineStyle)
+If Not mXGridTextStyle Is Nothing Then mXGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXGridTextStyle)
+If Not mYGridLineStyle Is Nothing Then mYGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYGridlineStyle)
+If Not mYGridTextStyle Is Nothing Then mYGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYGridTextStyle)
+If Not mSessionEndGridLineStyle Is Nothing Then mSessionEndGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+If Not mSessionStartGridLineStyle Is Nothing Then mSessionStartGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
+If Not mCursorTextStyle Is Nothing Then mCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCursorTextStyle)
+If Not mXCursorTextStyle Is Nothing Then mXCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
+If Not mYCursorTextStyle Is Nothing Then mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
+
+mConfig.SetSetting ConfigSettingHasXGrid, mHasXGrid
+mConfig.SetSetting ConfigSettingHasXGridText, mHasXGridText
+mConfig.SetSetting ConfigSettingHasYGrid, mHasYGrid
+mConfig.SetSetting ConfigSettingHasYGridText, mHasYGridText
+mConfig.SetSetting ConfigSettingCursorTextMode, mCursorTextMode
+mConfig.SetSetting ConfigSettingCursorTextPosition, mCursorTextPosition
+mConfig.SetSetting ConfigSettingXCursorTextPosition, mXCursorTextPosition
+mConfig.SetSetting ConfigSettingYCursorTextPosition, mYCursorTextPosition
+mConfig.SetSetting ConfigSettingXGridTextPosition, mXGridTextPosition
+mConfig.SetSetting ConfigSettingYGridTextPosition, mYGridTextPosition
 mConfig.SetSetting ConfigSettingAutoscaling, mAutoscaling
 mConfig.SetSetting ConfigSettingIntegerYScale, mIntegerYScale
 mConfig.SetSetting ConfigSettingYScaleQuantum, mYScaleQuantum
-mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
+mConfig.SetSetting ConfigSettingYGridlineSpacing, mYGridlineSpacing
 mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
 mConfig.SetSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
 
@@ -372,7 +491,7 @@ setBackGradientFillColorsConfig
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let CursorSnapsToTickBoundaries(ByVal Value As Boolean)
@@ -387,106 +506,163 @@ firePropertyChanged "CursorSnapsToTickBoundaries"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CursorSnapsToTickBoundaries() As Boolean
 CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
 End Property
 
-Public Property Get GridlineSpacingY() As Double
-GridlineSpacingY = mGridlineSpacingY
+Public Property Get CursorTextMode() As CursorTextModes
+CursorTextMode = mCursorTextMode
 End Property
 
-Public Property Let GridlineSpacingY(ByVal Value As Double)
-Const ProcName As String = "GridlineSpacingY"
+Public Property Let CursorTextMode(ByVal val As CursorTextModes)
+Const ProcName As String = "CursorTextMode"
 
 On Error GoTo Err
 
-mGridlineSpacingY = Value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
-firePropertyChanged "GridlineSpacingY"
+mCursorTextMode = val
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCursorTextMode, mCursorTextMode
+firePropertyChanged "CursorTextMode"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get GridLineStyle() As LineStyle
-Set GridLineStyle = mGridLineStyle
+Public Property Get CursorTextPosition() As CursorTextPositions
+CursorTextPosition = mCursorTextPosition
 End Property
 
-Public Property Let GridLineStyle(ByVal Value As LineStyle)
-Const ProcName As String = "GridLineStyle"
+Public Property Let CursorTextPosition(ByVal val As CursorTextPositions)
+Const ProcName As String = "CursorTextPosition"
 
 On Error GoTo Err
 
-Set mGridLineStyle = Value
-If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
-firePropertyChanged "GridLineStyle"
+mCursorTextPosition = val
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCursorTextPosition, mCursorTextPosition
+firePropertyChanged "CursorTextPosition"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get GridTextStyle() As TextStyle
-Set GridTextStyle = mGridTextStyle
+Public Property Get CursorTextStyle() As TextStyle
+Set CursorTextStyle = mCursorTextStyle
 End Property
 
-Public Property Let GridTextStyle(ByVal Value As TextStyle)
-Const ProcName As String = "GridTextStyle"
+Public Property Let CursorTextStyle(ByVal Value As TextStyle)
+Const ProcName As String = "CursorTextStyle"
 
 On Error GoTo Err
 
-Set mGridTextStyle = Value
-If Not mConfig Is Nothing Then mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
-firePropertyChanged "GridTextStyle"
+Set mCursorTextStyle = Value
+If Not mConfig Is Nothing Then mCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCursorTextStyle)
+firePropertyChanged "CursorTextStyle"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get HasGrid() As Boolean
-HasGrid = mHasGrid
+Public Property Get YGridlineSpacing() As Double
+YGridlineSpacing = mYGridlineSpacing
 End Property
 
-Public Property Let HasGrid(ByVal val As Boolean)
-Const ProcName As String = "HasGrid"
+Public Property Let YGridlineSpacing(ByVal Value As Double)
+Const ProcName As String = "YGridlineSpacing"
 
 On Error GoTo Err
 
-mHasGrid = val
-If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGrid, mHasGrid
-firePropertyChanged "HasGrid"
+mYGridlineSpacing = Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYGridlineSpacing, mYGridlineSpacing
+firePropertyChanged "YGridlineSpacing"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get HasGridText() As Boolean
-HasGridText = mHasGridText
+Public Property Get HasXGrid() As Boolean
+HasXGrid = mHasXGrid
 End Property
 
-Public Property Let HasGridText(ByVal val As Boolean)
-Const ProcName As String = "HasGridText"
+Public Property Let HasXGrid(ByVal val As Boolean)
+Const ProcName As String = "HasXGrid"
 
 On Error GoTo Err
 
-mHasGridText = val
-If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGridText, mHasGridText
-firePropertyChanged "HasGridText"
+mHasXGrid = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasXGrid, mHasXGrid
+firePropertyChanged "HasXGrid"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get HasXGridText() As Boolean
+HasXGridText = mHasXGridText
+End Property
+
+Public Property Let HasXGridText(ByVal val As Boolean)
+Const ProcName As String = "HasXGridText"
+
+On Error GoTo Err
+
+mHasXGridText = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasXGridText, mHasXGridText
+firePropertyChanged "HasXGridText"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get HasYGrid() As Boolean
+HasYGrid = mHasYGrid
+End Property
+
+Public Property Let HasYGrid(ByVal val As Boolean)
+Const ProcName As String = "HasYGrid"
+
+On Error GoTo Err
+
+mHasYGrid = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasYGrid, mHasYGrid
+firePropertyChanged "HasYGrid"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get HasYGridText() As Boolean
+HasYGridText = mHasYGridText
+End Property
+
+Public Property Let HasYGridText(ByVal val As Boolean)
+Const ProcName As String = "HasYGridText"
+
+On Error GoTo Err
+
+mHasYGridText = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasYGridText, mHasYGridText
+firePropertyChanged "HasYGridText"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IntegerYScale() As Boolean
@@ -505,7 +681,7 @@ firePropertyChanged "IntegerYScale"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MinimumHeight() As Double
@@ -524,18 +700,14 @@ firePropertyChanged "MinimumHeight"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
 On Error GoTo Err
 
-If Value = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Name cannot be blank"
-End If
+If Value = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Name cannot be blank"
 
 mName = Value
 If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
@@ -543,11 +715,15 @@ If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Name() As String
+Name = mName
 End Property
 
 Public Property Get SessionEndGridLineStyle() As LineStyle
-Set SessionEndGridLineStyle = mSessionEndGridlineStyle
+Set SessionEndGridLineStyle = mSessionEndGridLineStyle
 End Property
 
 Public Property Let SessionEndGridLineStyle(ByVal Value As LineStyle)
@@ -555,18 +731,18 @@ Const ProcName As String = "SessionEndGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionEndGridlineStyle = Value
-If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
+Set mSessionEndGridLineStyle = Value
+If Not mConfig Is Nothing Then mSessionEndGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionEndGridlineStyle)
 firePropertyChanged "SessionEndGridLineStyle"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionStartGridLineStyle() As LineStyle
-Set SessionStartGridLineStyle = mSessionStartGridlineStyle
+Set SessionStartGridLineStyle = mSessionStartGridLineStyle
 End Property
 
 Public Property Let SessionStartGridLineStyle(ByVal Value As LineStyle)
@@ -574,33 +750,128 @@ Const ProcName As String = "SessionStartGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionStartGridlineStyle = Value
-If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
+Set mSessionStartGridLineStyle = Value
+If Not mConfig Is Nothing Then mSessionStartGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 firePropertyChanged "SessionStartGridLineStyle"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get YAxisTextStyle() As TextStyle
-Set YAxisTextStyle = mYAxisTextStyle
+Public Property Get XCursorTextPosition() As CursorTextPositions
+XCursorTextPosition = mXCursorTextPosition
 End Property
 
-Public Property Let YAxisTextStyle(ByVal Value As TextStyle)
-Const ProcName As String = "YAxisTextStyle"
+Public Property Let XCursorTextPosition(ByVal Value As CursorTextPositions)
+Const ProcName As String = "XCursorTextPosition"
 
 On Error GoTo Err
 
-Set mYAxisTextStyle = Value
-If Not mConfig Is Nothing Then mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
-firePropertyChanged "YAxisTextStyle"
+mXCursorTextPosition = Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingXCursorTextPosition, mXCursorTextPosition
+firePropertyChanged "XCursorTextPosition"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get XCursorTextStyle() As TextStyle
+Set XCursorTextStyle = mXCursorTextStyle
+End Property
+
+Public Property Let XCursorTextStyle(ByVal Value As TextStyle)
+Const ProcName As String = "XCursorTextStyle"
+
+On Error GoTo Err
+
+Set mXCursorTextStyle = Value
+If Not mConfig Is Nothing Then mXCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
+firePropertyChanged "XCursorTextStyle"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get XGridLineStyle() As LineStyle
+Set XGridLineStyle = mXGridLineStyle
+End Property
+
+Public Property Let XGridLineStyle(ByVal Value As LineStyle)
+Const ProcName As String = "XGridLineStyle"
+
+On Error GoTo Err
+
+Set mXGridLineStyle = Value
+If Not mConfig Is Nothing Then mXGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXGridlineStyle)
+firePropertyChanged "XGridLineStyle"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get XGridTextPosition() As XGridTextPositions
+XGridTextPosition = mXGridTextPosition
+End Property
+
+Public Property Let XGridTextPosition(ByVal Value As XGridTextPositions)
+Const ProcName As String = "XGridTextPosition"
+
+On Error GoTo Err
+
+mXGridTextPosition = Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingXGridTextPosition, mXGridTextPosition
+firePropertyChanged "XGridTextPosition"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get XGridTextStyle() As TextStyle
+Set XGridTextStyle = mXGridTextStyle
+End Property
+
+Public Property Let XGridTextStyle(ByVal Value As TextStyle)
+Const ProcName As String = "XGridTextStyle"
+
+On Error GoTo Err
+
+Set mXGridTextStyle = Value
+If Not mConfig Is Nothing Then mXGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXGridTextStyle)
+firePropertyChanged "XGridTextStyle"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get YCursorTextPosition() As CursorTextPositions
+YCursorTextPosition = mYCursorTextPosition
+End Property
+
+Public Property Let YCursorTextPosition(ByVal Value As CursorTextPositions)
+Const ProcName As String = "YCursorTextPosition"
+
+On Error GoTo Err
+
+mYCursorTextPosition = Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYCursorTextPosition, mYCursorTextPosition
+firePropertyChanged "YCursorTextPosition"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YCursorTextStyle() As TextStyle
@@ -619,7 +890,64 @@ firePropertyChanged "YCursorTextStyle"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get YGridLineStyle() As LineStyle
+Set YGridLineStyle = mYGridLineStyle
+End Property
+
+Public Property Let YGridLineStyle(ByVal Value As LineStyle)
+Const ProcName As String = "YGridLineStyle"
+
+On Error GoTo Err
+
+Set mYGridLineStyle = Value
+If Not mConfig Is Nothing Then mYGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYGridlineStyle)
+firePropertyChanged "YGridLineStyle"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get YGridTextPosition() As YGridTextPositions
+YGridTextPosition = mYGridTextPosition
+End Property
+
+Public Property Let YGridTextPosition(ByVal Value As YGridTextPositions)
+Const ProcName As String = "YGridTextPosition"
+
+On Error GoTo Err
+
+mYGridTextPosition = Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYGridTextPosition, mYGridTextPosition
+firePropertyChanged "YGridTextPosition"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get YGridTextStyle() As TextStyle
+Set YGridTextStyle = mYGridTextStyle
+End Property
+
+Public Property Let YGridTextStyle(ByVal Value As TextStyle)
+Const ProcName As String = "YGridTextStyle"
+
+On Error GoTo Err
+
+Set mYGridTextStyle = Value
+If Not mConfig Is Nothing Then mYGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYGridTextStyle)
+firePropertyChanged "YGridTextStyle"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YScaleQuantum() As Double
@@ -638,7 +966,7 @@ firePropertyChanged "YScaleQuantum"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -653,24 +981,35 @@ On Error GoTo Err
 Set clone = New ChartRegionStyle
 clone.Autoscaling = mAutoscaling
 clone.BackGradientFillColors = mBackGradientFillColors
-clone.GridlineSpacingY = mGridlineSpacingY
-clone.GridLineStyle = mGridLineStyle.clone
-clone.GridTextStyle = mGridTextStyle
+clone.CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+clone.CursorTextMode = mCursorTextMode
+clone.CursorTextPosition = mCursorTextPosition
+If Not mCursorTextStyle Is Nothing Then clone.CursorTextStyle = mCursorTextStyle.clone
+clone.HasXGrid = mHasXGrid
+clone.HasXGridText = mHasXGridText
+clone.HasYGrid = mHasYGrid
+clone.HasYGridText = mHasYGridText
 clone.IntegerYScale = mIntegerYScale
 clone.MinimumHeight = mMinimumHeight
-clone.HasGrid = mHasGrid
-clone.HasGridText = mHasGridText
-clone.CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
-clone.SessionEndGridLineStyle = mSessionEndGridlineStyle
-clone.SessionStartGridLineStyle = mSessionStartGridlineStyle
-clone.YAxisTextStyle = mYAxisTextStyle
-clone.YCursorTextStyle = mYCursorTextStyle
+If Not mSessionEndGridLineStyle Is Nothing Then clone.SessionEndGridLineStyle = mSessionEndGridLineStyle.clone
+If Not mSessionStartGridLineStyle Is Nothing Then clone.SessionStartGridLineStyle = mSessionStartGridLineStyle.clone
+clone.XCursorTextPosition = mXCursorTextPosition
+If Not mXCursorTextStyle Is Nothing Then clone.XCursorTextStyle = mXCursorTextStyle.clone
+If Not mXGridLineStyle Is Nothing Then clone.XGridLineStyle = mXGridLineStyle.clone
+clone.XGridTextPosition = mXGridTextPosition
+If Not mXGridTextStyle Is Nothing Then clone.XGridTextStyle = mXGridTextStyle.clone
+clone.YCursorTextPosition = mYCursorTextPosition
+If Not mYCursorTextStyle Is Nothing Then clone.YCursorTextStyle = mYCursorTextStyle.clone
+clone.YGridlineSpacing = mYGridlineSpacing
+If Not mYGridLineStyle Is Nothing Then clone.YGridLineStyle = mYGridLineStyle.clone
+clone.YGridTextPosition = mYGridTextPosition
+If Not mYGridTextStyle Is Nothing Then clone.YGridTextStyle = mYGridTextStyle.clone
 clone.YScaleQuantum = mYScaleQuantum
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub LoadFromConfig( _
@@ -684,21 +1023,32 @@ On Error GoTo Err
 
 Set mConfig = pConfig
 
-getGridLineStyleFromConfig
-getGridTextStyleFromConfig
+getXGridLineStyleFromConfig
+getXGridTextStyleFromConfig
+getYGridLineStyleFromConfig
+getYGridTextStyleFromConfig
 getSessionEndGridLineStyleFromConfig
 getSessionStartGridLineStyleFromConfig
-getYAxisTextStyleFromConfig
+getCursorTextStyleFromConfig
+getXCursorTextStyleFromConfig
 getYCursorTextStyleFromConfig
 
 mName = mConfig.GetSetting(ConfigSettingName)
 mStyleType = mConfig.GetSetting(ConfigSettingStyleType)
-HasGrid = CBool(mConfig.GetSetting(ConfigSettingHasGrid, "True"))
-HasGridText = CBool(mConfig.GetSetting(ConfigSettingHasGridText, "False"))
+HasXGrid = CBool(mConfig.GetSetting(ConfigSettingHasXGrid, "True"))
+HasXGridText = CBool(mConfig.GetSetting(ConfigSettingHasXGridText, "False"))
+CursorTextMode = CInt(mConfig.GetSetting(ConfigSettingCursorTextMode, CStr(CursorTextModes.CursorTextModeNone)))
+CursorTextPosition = CInt(mConfig.GetSetting(ConfigSettingCursorTextPosition, CStr(CursorTextPositions.CursorTextPositionLeftCursor)))
+HasYGrid = CBool(mConfig.GetSetting(ConfigSettingHasYGrid, "True"))
+HasYGridText = CBool(mConfig.GetSetting(ConfigSettingHasYGridText, "False"))
+XGridTextPosition = CLng(mConfig.GetSetting(ConfigSettingXGridTextPosition, CStr(XGridTextPositions.XGridTextPositionBottom)))
+YGridTextPosition = CLng(mConfig.GetSetting(ConfigSettingYGridTextPosition, CStr(YGridTextPositions.YGridTextPositionCentre)))
+XCursorTextPosition = CLng(mConfig.GetSetting(ConfigSettingXCursorTextPosition, CStr(CursorTextPositions.CursorTextPositionBottomLeftFixed)))
+YCursorTextPosition = CLng(mConfig.GetSetting(ConfigSettingYCursorTextPosition, CStr(CursorTextPositions.CursorTextPositionTopLeftFixed)))
 Autoscaling = CBool(mConfig.GetSetting(ConfigSettingAutoscaling, "True"))
 IntegerYScale = CBool(mConfig.GetSetting(ConfigSettingIntegerYScale, "False"))
 YScaleQuantum = CDbl(mConfig.GetSetting(ConfigSettingYScaleQuantum, "0.01"))
-GridlineSpacingY = CDbl(mConfig.GetSetting(ConfigSettingGridlineSpacingY, "1.8"))
+YGridlineSpacing = CDbl(mConfig.GetSetting(ConfigSettingYGridlineSpacing, "1.8"))
 MinimumHeight = CDbl(mConfig.GetSetting(ConfigSettingMinimumHeight, "0"))
 CursorSnapsToTickBoundaries = CBool(mConfig.GetSetting(ConfigSettingCursorSnapsToTickBoundaries, "True"))
 
@@ -711,7 +1061,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
                 
 End Sub
 
@@ -725,47 +1075,31 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub getGridLineStyleFromConfig()
+Private Sub getCursorTextStyleFromConfig()
 Dim cs As ConfigurationSection
-Const ProcName As String = "getGridLineStyleFromConfig"
+Const ProcName As String = "getCursorTextStyleFromConfig"
 
 On Error GoTo Err
 
-Set cs = mConfig.GetConfigurationSection(ConfigSectionGridlineStyle)
+Set cs = mConfig.GetConfigurationSection(ConfigSectionCursorTextStyle)
 If Not cs Is Nothing Then
-    Set mGridLineStyle = New LineStyle
-    mGridLineStyle.LoadFromConfig cs
+    Set mCursorTextStyle = New TextStyle
+    mCursorTextStyle.LoadFromConfig cs
+Else
+    Set mCursorTextStyle = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub getGridTextStyleFromConfig()
-Dim cs As ConfigurationSection
-Const ProcName As String = "getGridTextStyleFromConfig"
-
-On Error GoTo Err
-
-Set cs = mConfig.GetConfigurationSection(ConfigSectionGridTextStyle)
-If Not cs Is Nothing Then
-    Set mGridTextStyle = New TextStyle
-    mGridTextStyle.LoadFromConfig cs
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getSessionEndGridLineStyleFromConfig()
@@ -776,14 +1110,16 @@ On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionEndGridlineStyle)
 If Not cs Is Nothing Then
-    Set mSessionEndGridlineStyle = New LineStyle
-    mSessionEndGridlineStyle.LoadFromConfig cs
+    Set mSessionEndGridLineStyle = New LineStyle
+    mSessionEndGridLineStyle.LoadFromConfig cs
+Else
+    Set mSessionEndGridLineStyle = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getSessionStartGridLineStyleFromConfig()
@@ -794,32 +1130,76 @@ On Error GoTo Err
 
 Set cs = mConfig.GetConfigurationSection(ConfigSectionSessionStartGridlineStyle)
 If Not cs Is Nothing Then
-    Set mSessionStartGridlineStyle = New LineStyle
-    mSessionStartGridlineStyle.LoadFromConfig cs
+    Set mSessionStartGridLineStyle = New LineStyle
+    mSessionStartGridLineStyle.LoadFromConfig cs
+Else
+    Set mSessionStartGridLineStyle = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub getYAxisTextStyleFromConfig()
+Private Sub getXCursorTextStyleFromConfig()
 Dim cs As ConfigurationSection
-Const ProcName As String = "getYAxisTextStyleFromConfig"
+Const ProcName As String = "getXCursorTextStyleFromConfig"
 
 On Error GoTo Err
 
-Set cs = mConfig.GetConfigurationSection(ConfigSectionYAxisTextStyle)
+Set cs = mConfig.GetConfigurationSection(ConfigSectionXCursorTextStyle)
 If Not cs Is Nothing Then
-    Set mYAxisTextStyle = New TextStyle
-    mYAxisTextStyle.LoadFromConfig cs
+    Set mXCursorTextStyle = New TextStyle
+    mXCursorTextStyle.LoadFromConfig cs
+Else
+    Set mXCursorTextStyle = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub getXGridLineStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getXGridLineStyleFromConfig"
+
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionXGridlineStyle)
+If Not cs Is Nothing Then
+    Set mXGridLineStyle = New LineStyle
+    mXGridLineStyle.LoadFromConfig cs
+Else
+    Set mXGridLineStyle = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub getXGridTextStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getXGridTextStyleFromConfig"
+
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionXGridTextStyle)
+If Not cs Is Nothing Then
+    Set mXGridTextStyle = New TextStyle
+    mXGridTextStyle.LoadFromConfig cs
+Else
+    Set mXGridTextStyle = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getYCursorTextStyleFromConfig()
@@ -832,12 +1212,54 @@ Set cs = mConfig.GetConfigurationSection(ConfigSectionYCursorTextStyle)
 If Not cs Is Nothing Then
     Set mYCursorTextStyle = New TextStyle
     mYCursorTextStyle.LoadFromConfig cs
+Else
+    Set mYCursorTextStyle = Nothing
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub getYGridLineStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getYGridLineStyleFromConfig"
+
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionYGridlineStyle)
+If Not cs Is Nothing Then
+    Set mYGridLineStyle = New LineStyle
+    mYGridLineStyle.LoadFromConfig cs
+Else
+    Set mYGridLineStyle = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub getYGridTextStyleFromConfig()
+Dim cs As ConfigurationSection
+Const ProcName As String = "getYGridTextStyleFromConfig"
+
+On Error GoTo Err
+
+Set cs = mConfig.GetConfigurationSection(ConfigSectionYGridTextStyle)
+If Not cs Is Nothing Then
+    Set mYGridTextStyle = New TextStyle
+    mYGridTextStyle.LoadFromConfig cs
+Else
+    Set mYGridTextStyle = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
@@ -855,7 +1277,7 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setBackGradientFillColorsConfig()
@@ -874,48 +1296,91 @@ mConfig.SetSetting ConfigSettingBackGradientFillColors, s
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setInitialGridLineStyle()
-Const ProcName As String = "setInitialGridLineStyle"
-
+Private Sub setInitialCursorTextStyle()
+Const ProcName As String = "setInitialCursorTextStyle"
 On Error GoTo Err
 
-Set mGridLineStyle = New LineStyle
-mGridLineStyle.Color = &HD0D0D0
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub setInitialGridTextStyle()
-Dim afont As StdFont
-
-Const ProcName As String = "setInitialGridTextStyle"
-
-On Error GoTo Err
-
-Set mGridTextStyle = New TextStyle
-mGridTextStyle.Box = True
-mGridTextStyle.BoxFillWithBackgroundColor = True
-mGridTextStyle.BoxStyle = LineInvisible
-mGridTextStyle.Color = vbBlack
+Set mCursorTextStyle = gDefaultTextStyle.clone
+mCursorTextStyle.Box = True
+mCursorTextStyle.BoxColor = vbBlack
+mCursorTextStyle.BoxFillColor = vbWhite
+mCursorTextStyle.BoxFillStyle = FillSolid
+mCursorTextStyle.BoxThickness = 1
+mCursorTextStyle.Color = vbBlack
+mCursorTextStyle.PaddingX = 1
+mCursorTextStyle.PaddingY = 0
+mCursorTextStyle.Justification = JustifyCentre
     
-Set afont = New StdFont
-afont.Italic = False
-afont.Name = "Arial"
-afont.Size = 8
-afont.Underline = False
-afont.Bold = False
-mGridTextStyle.Font = afont
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setInitialXGridLineStyle()
+Const ProcName As String = "setInitialXGridLineStyle"
+
+On Error GoTo Err
+
+Set mXGridLineStyle = gDefaultLineStyle.clone
+mXGridLineStyle.Color = &HD0D0D0
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setInitialXGridTextStyle()
+Const ProcName As String = "setInitialXGridTextStyle"
+
+On Error GoTo Err
+
+Set mXGridTextStyle = gDefaultTextStyle.clone
+mXGridTextStyle.Box = True
+mXGridTextStyle.BoxFillWithBackgroundColor = True
+mXGridTextStyle.BoxStyle = LineInvisible
+mXGridTextStyle.Color = vbBlack
+    
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+
+End Sub
+
+Private Sub setInitialYGridLineStyle()
+Const ProcName As String = "setInitialYGridLineStyle"
+
+On Error GoTo Err
+
+Set mYGridLineStyle = gDefaultLineStyle.clone
+mYGridLineStyle.Color = &HD0D0D0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setInitialYGridTextStyle()
+Const ProcName As String = "setInitialYGridTextStyle"
+
+On Error GoTo Err
+
+Set mYGridTextStyle = gDefaultTextStyle.clone
+mYGridTextStyle.Box = True
+mYGridTextStyle.BoxFillWithBackgroundColor = True
+mYGridTextStyle.BoxStyle = LineInvisible
+mYGridTextStyle.Color = vbBlack
+    
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -924,14 +1389,14 @@ Const ProcName As String = "setInitialSessionEndGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionEndGridlineStyle = New LineStyle
-mSessionEndGridlineStyle.Color = &HD0D0D0
-mSessionEndGridlineStyle.LineStyle = LineDash
+Set mSessionEndGridLineStyle = gDefaultLineStyle.clone
+mSessionEndGridLineStyle.Color = &HD0D0D0
+mSessionEndGridLineStyle.LineStyle = LineDash
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setInitialSessionStartGridLineStyle()
@@ -939,52 +1404,42 @@ Const ProcName As String = "setInitialSessionStartGridLineStyle"
 
 On Error GoTo Err
 
-Set mSessionStartGridlineStyle = New LineStyle
-mSessionStartGridlineStyle.Color = &HD0D0D0
-mSessionStartGridlineStyle.Thickness = 3
+Set mSessionStartGridLineStyle = gDefaultLineStyle.clone
+mSessionStartGridLineStyle.Color = &HD0D0D0
+mSessionStartGridLineStyle.Thickness = 3
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setInitialYAxisTextStyle()
-Dim afont As StdFont
-
-Const ProcName As String = "setInitialYAxisTextStyle"
-
+Private Sub setInitialXCursorTextStyle()
+Const ProcName As String = "setInitialXCursorTextStyle"
 On Error GoTo Err
 
-Set mYAxisTextStyle = New TextStyle
-mYAxisTextStyle.Box = True
-mYAxisTextStyle.BoxFillWithBackgroundColor = True
-mYAxisTextStyle.BoxStyle = LineInvisible
-mYAxisTextStyle.Color = vbBlack
+Set mXCursorTextStyle = gDefaultTextStyle.clone
+mXCursorTextStyle.Box = True
+mXCursorTextStyle.BoxColor = vbBlack
+mXCursorTextStyle.BoxFillColor = vbWhite
+mXCursorTextStyle.BoxFillStyle = FillSolid
+mXCursorTextStyle.BoxThickness = 1
+mXCursorTextStyle.Color = vbBlack
+mXCursorTextStyle.PaddingX = 1
+mXCursorTextStyle.PaddingY = 0
+mXCursorTextStyle.Justification = JustifyCentre
     
-Set afont = New StdFont
-afont.Italic = False
-afont.Name = "Arial"
-afont.Size = 8
-afont.Underline = False
-afont.Bold = False
-mYAxisTextStyle.Font = afont
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setInitialYCursorTextStyle()
-Dim afont As StdFont
-
 Const ProcName As String = "setInitialYCursorTextStyle"
-
 On Error GoTo Err
 
-Set mYCursorTextStyle = New TextStyle
+Set mYCursorTextStyle = gDefaultTextStyle.clone
 mYCursorTextStyle.Box = True
 mYCursorTextStyle.BoxColor = vbBlack
 mYCursorTextStyle.BoxFillColor = vbWhite
@@ -995,18 +1450,10 @@ mYCursorTextStyle.PaddingX = 1
 mYCursorTextStyle.PaddingY = 0
 mYCursorTextStyle.Justification = JustifyCentre
     
-Set afont = New StdFont
-afont.Italic = False
-afont.Name = "Arial"
-afont.Size = 8
-afont.Underline = False
-afont.Bold = False
-mYCursorTextStyle.Font = afont
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 

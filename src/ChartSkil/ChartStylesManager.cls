@@ -22,6 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Configurable
 Implements Enumerable
 
 '@================================================================================
@@ -68,7 +69,47 @@ Set mDefaultStyle = addDefaultStyle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -104,13 +145,12 @@ Public Property Let ConfigurationSection( _
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-Dim lStyle As ChartStyle
-
 If Value Is mConfig Then Exit Property
 Set mConfig = Value
 
 If mConfig Is Nothing Then Exit Property
 
+Dim lStyle As ChartStyle
 For Each lStyle In mChartStyles
     addToConfig lStyle
 Next
@@ -118,7 +158,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DefaultStyle() As ChartStyle
@@ -136,7 +176,6 @@ Public Function Add( _
                 Optional ByVal pXAxisRegionStyle As ChartRegionStyle, _
                 Optional ByVal pDefaultYAxisRegionStyle As ChartRegionStyle, _
                 Optional ByVal pCrosshairLineStyle As LineStyle, _
-                Optional ByVal pXCursorTextStyle As TextStyle, _
                 Optional ByVal pTemporary As Boolean = False) As ChartStyle
 Const ProcName As String = "Add"
 On Error GoTo Err
@@ -144,7 +183,7 @@ On Error GoTo Err
 If pBasedOn Is Nothing Then Set pBasedOn = DefaultStyle
 
 Set Add = New ChartStyle
-Add.Initialise pName, pBasedOn, pDefaultRegionStyle, pXAxisRegionStyle, pDefaultYAxisRegionStyle, pCrosshairLineStyle, pXCursorTextStyle
+Add.Initialise pName, pBasedOn, pDefaultRegionStyle, pXAxisRegionStyle, pDefaultYAxisRegionStyle, pCrosshairLineStyle
 
 If Not pTemporary Then
     addChartStyle Add
@@ -154,7 +193,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -167,7 +206,7 @@ Contains = mChartStyles.Contains(pName)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Count() As Long
@@ -179,7 +218,7 @@ Count = mChartStyles.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal pName As String) As ChartStyle
@@ -192,7 +231,7 @@ Set Item = mChartStyles.Item(pName)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub LoadFromConfig( _
@@ -200,31 +239,35 @@ Public Sub LoadFromConfig( _
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Dim cs As ConfigurationSection
-Dim lStyle As ChartStyle
-
-mChartStyles.Remove DefaultStyleName
-Set mDefaultStyle = Nothing
-
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
 
+gLogger.Log "Removing chart style: " & DefaultStyleName, ProcName, ModuleName
+mChartStyles.Remove DefaultStyleName
+Set mDefaultStyle = Nothing
+
+gLogger.Log "Loading chart styles from config: " & mConfig.Path, ProcName, ModuleName
+
+Dim cs As ConfigurationSection
 For Each cs In mConfig
+    Dim lStyle As ChartStyle
     Set lStyle = New ChartStyle
     lStyle.LoadFromConfig cs
+    gLogger.Log "Loading chart style: " & lStyle.Name, ProcName, ModuleName
     addChartStyle lStyle
 Next
 
 If Contains(DefaultStyleName) Then
     Set mDefaultStyle = Item(DefaultStyleName)
 Else
+    gLogger.Log "Creating chart style: " & DefaultStyleName, ProcName, ModuleName
     Set mDefaultStyle = addDefaultStyle
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -234,7 +277,6 @@ Set NewEnum = getEnumerator
 End Function
 
 Public Sub Remove(ByVal pName As String)
-Dim lStyle As ChartStyle
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
@@ -242,6 +284,7 @@ If pName = DefaultStyleName Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Default chart style cannot be removed"
 End If
 
+Dim lStyle As ChartStyle
 Set lStyle = Item(pName)
 lStyle.RemoveFromConfig
 mChartStyles.Remove pName
@@ -249,7 +292,19 @@ mChartStyles.Remove pName
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub RemoveFromConfig()
+Const ProcName As String = "RemoveFromConfig"
+On Error GoTo Err
+
+mConfig.Remove
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -267,7 +322,7 @@ mChartStyles.Add pStyle, pStyle.Name
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function addDefaultStyle() As ChartStyle
@@ -280,7 +335,7 @@ addToConfig addDefaultStyle
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub addToConfig(ByVal pStyle As ChartStyle)
@@ -289,12 +344,14 @@ On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
+gLogger.Log "Adding chart style to config: " & pStyle.Name, ProcName, ModuleName
+
 pStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartStyle & "(" & pStyle.Name & ")")
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Private Function getEnumerator() As Enumerator
@@ -306,7 +363,7 @@ Set getEnumerator = mChartStyles.Enumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements StudyValueListener
+Implements IStudyValueListener
 
 '@================================================================================
 ' Events
@@ -100,7 +100,7 @@ End Enum
 
 Private mChartManagerRef    As WeakReference
 
-Private mStudy              As Study
+Private mStudy              As IStudy
 
 Private mValueMode As StudyValueModes
 Private mValueType As StudyValueTypes
@@ -134,7 +134,7 @@ Private mRegion             As ChartRegion
 
 Private mUpdatePerTick      As Boolean
 
-Private mBarFormatter       As BarFormatter
+Private mBarFormatter       As IBarFormatter
 
 Private mValueName          As String
 
@@ -148,18 +148,22 @@ mConditionalActionsIndex = -1
 End Sub
 
 Private Sub Class_Terminate()
-gLogger.Log LogLevelHighDetail, "StudyValueHandler terminated"
+Const ProcName As String = "Class_Terminate"
+On Error Resume Next
+
+gLogger.Log "StudyValueHandler terminated", ProcName, ModuleName, LogLevelHighDetail
 Debug.Print "StudyValueHandler terminated"
+
 End Sub
 
 '@================================================================================
-' StudyValueListener Interface Members
+' IStudyValueListener Interface Members
 '@================================================================================
 
-Private Sub StudyValueListener_notify( _
+Private Sub IStudyValueListener_notify( _
                 ByRef ev As StudyValueEventData)
 
-If IsEmpty(ev.sVal.value) Then Exit Sub
+If IsEmpty(ev.sVal.Value) Then Exit Sub
 
 If mUpdatePerTick Then
     Select Case mValueMode
@@ -199,8 +203,8 @@ Public Property Get Region() As ChartRegion
 Set Region = mRegion
 End Property
 
-Public Property Let UpdatePerTick(ByVal value As Boolean)
-mUpdatePerTick = value
+Public Property Let UpdatePerTick(ByVal Value As Boolean)
+mUpdatePerTick = Value
 End Property
 
 Public Property Get ValueName() As String
@@ -231,18 +235,17 @@ mConditionalActions(mConditionalActionsIndex) = pConditionalAction
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pChartMgr As ChartManager, _
                 ByVal pRegion As ChartRegion, _
-                ByVal pStudy As Study, _
+                ByVal pStudy As IStudy, _
                 ByVal pStudyValueConfig As StudyValueConfiguration, _
                 ByVal pStudyValueDef As StudyValueDefinition, _
                 ByVal pUpdatePerTick As Boolean)
-
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -259,6 +262,10 @@ Then
     pRegion.Autoscaling = False
     pRegion.SetVerticalScale CSng(pStudyValueDef.MinimumValue), _
                             CSng(pStudyValueDef.MaximumValue)
+End If
+
+If mStudy.GetValueTicksize(pStudyValueDef.Name) <> 0# Then
+    If mStudy.GetValueTicksize(pStudyValueDef.Name) < mRegion.YScaleQuantum Then mRegion.YScaleQuantum = mStudy.GetValueTicksize(pStudyValueDef.Name)
 End If
 
 mValueMode = pStudyValueDef.ValueMode
@@ -290,8 +297,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub UpdatePreviousBar(ByVal timestamp As Date)
@@ -306,7 +312,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -326,7 +332,7 @@ Set mCurrentBar = mBarSeries.Add(timestamp)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub AddDataPointToChart( _
@@ -343,7 +349,7 @@ If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.DataValue = mLatestValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub AddLineToChart()
@@ -358,7 +364,7 @@ Set mCurrentLine = mLineSeries.Add
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub AddTextToChart()
@@ -372,7 +378,7 @@ Set mCurrentText = mTextSeries.Add
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function chartMgr() As ChartManager
@@ -384,20 +390,20 @@ Set chartMgr = mChartManagerRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processBar( _
                 ByRef ev As StudyValueEventData)
 Static prevBarNumber As Long
-Dim lBar As TimeframeUtils27.Bar
+Dim lBar As BarUtils27.Bar
 
 Const ProcName As String = "processBar"
 On Error GoTo Err
 
-If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
+If TypeName(ev.sVal.Value) = "Nothing" Then Exit Sub
 
-Set lBar = ev.sVal.value
+Set lBar = ev.sVal.Value
 
 If mCurrentBar Is Nothing Or _
     ev.sVal.BarNumber <> prevBarNumber _
@@ -417,7 +423,9 @@ Else
     If Not lBar.Blank Then mCurrentBar.Tick lBar.CloseValue
 End If
 
-If Not lBar.Blank Then
+If lBar.Blank Then
+    If Not mBarFormatter Is Nothing Then gLogger.Log "Bar number " & ev.sVal.BarNumber & " is blank: no bar formatting performed", ProcName, ModuleName
+Else
     If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
     If Not mBarFormatter Is Nothing Then mBarFormatter.FormatBar lBar, mCurrentBar
 End If
@@ -427,7 +435,7 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processConditionalAction( _
@@ -505,7 +513,7 @@ processConditionalAction = conditionSatisfied
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processConditionalActions( _
@@ -528,7 +536,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processDataPoint( _
@@ -542,15 +550,15 @@ If mCurrentDataPoint Is Nothing Or _
 Then
     AddDataPointToChart ev.sVal.BarStartTime
 End If
-mCurrentDataPoint.DataValue = ev.sVal.value
+mCurrentDataPoint.DataValue = ev.sVal.Value
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
 prevBarNumber = ev.sVal.BarNumber
-mLatestValue = ev.sVal.value
+mLatestValue = ev.sVal.Value
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processLine( _
@@ -561,7 +569,7 @@ Dim studyLine As studyLine
 Const ProcName As String = "processLine"
 On Error GoTo Err
 
-If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
+If TypeName(ev.sVal.Value) = "Nothing" Then Exit Sub
 
 If mCurrentLine Is Nothing Or _
     ev.sVal.BarNumber <> prevBarNumber _
@@ -569,7 +577,7 @@ Then
     AddLineToChart
 End If
 
-Set studyLine = ev.sVal.value
+Set studyLine = ev.sVal.Value
 mCurrentLine.SetPosition NewPoint( _
                                 chartMgr.GetPeriod(studyLine.Point1.X).periodNumber, _
                                 studyLine.Point1.Y), _
@@ -582,7 +590,7 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processString( _
@@ -601,14 +609,14 @@ End If
 mCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(ev.sVal.BarStartTime).periodNumber, _
                                 0, CoordsCounterDistance, CoordsRelative)
-mCurrentText.Text = ev.sVal.value
+mCurrentText.Text = ev.sVal.Value
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
 prevBarNumber = ev.sVal.BarNumber
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processText( _
@@ -625,7 +633,7 @@ Then
     AddTextToChart
 End If
 
-Set studyText = ev.sVal.value
+Set studyText = ev.sVal.Value
 mCurrentText.Position = NewPoint( _
                                 chartMgr.GetPeriod(studyText.Position.X).periodNumber, _
                                 studyText.Position.Y)
@@ -637,7 +645,7 @@ prevBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupBarSeries( _
@@ -652,16 +660,17 @@ If studyValueConfig.BarStyle Is Nothing Then studyValueConfig.BarStyle = studyVa
 mBarSeries.Style = studyValueConfig.BarStyle
 
 If studyValueConfig.BarFormatterFactoryName <> "" Then
-    Dim lBarStudy As BarStudy
+    Dim lBarStudy As IBarStudy
     Set lBarStudy = mStudy
-    Set mBarFormatter = CreateBarFormatterFactory(studyValueConfig.BarFormatterFactoryName, _
-                                                studyValueConfig.BarFormatterLibraryName).CreateBarFormatter(lBarStudy.Bars)
+    gLogger.Log "Creating bar formatter: " & studyValueConfig.BarFormatterLibraryName & "/" & studyValueConfig.BarFormatterFactoryName, ProcName, ModuleName
+    Set mBarFormatter = chartMgr.BarFormatterLibManager.CreateBarFormatterFactory(studyValueConfig.BarFormatterFactoryName, _
+                                                studyValueConfig.BarFormatterLibraryName).CreateBarFormatter(lBarStudy.BarsFuture)
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupDataSeries( _
@@ -678,7 +687,7 @@ mDataSeries.Style = studyValueConfig.DataPointStyle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupLineSeries( _
@@ -695,7 +704,7 @@ mLineSeries.Style = studyValueConfig.LineStyle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTextSeries( _
@@ -713,6 +722,6 @@ Set mTextOffset = NewSize(studyValueConfig.OffsetX, studyValueConfig.OffsetY)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

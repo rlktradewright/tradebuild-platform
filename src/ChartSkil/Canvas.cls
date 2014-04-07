@@ -62,7 +62,7 @@ Private Const NoClipRegion              As Long = -1
 
 Private mSurface As PictureBox
 Attribute mSurface.VB_VarHelpID = -1
-Private mViewport As Viewport
+Private mViewport As ViewPort
 
 ' pen attributes
 Private mPenColor As Long
@@ -86,6 +86,9 @@ Private mSavedClippingRegionHandle As Long
 '================================================================================
 ' Class Event Handlers
 '================================================================================
+
+Private Sub Class_Initialize()
+End Sub
 
 Private Sub Class_Terminate()
 'gLogger.Log LogLevels.LogLevelHighDetail, "Canvas terminated (" & gRegionTypeToString(mRegionType) & ")"
@@ -114,7 +117,7 @@ hDC = mSurface.hDC
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Height() As Double
@@ -127,7 +130,7 @@ Height = mSurface.Height
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
@@ -140,7 +143,7 @@ mSurface.MouseIcon = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
@@ -153,7 +156,7 @@ mSurface.MousePointer = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MousePointer() As VBRUN.MousePointerConstants
@@ -166,7 +169,7 @@ MousePointer = mSurface.MousePointer
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let RegionType(ByVal Value As RegionTypes)
@@ -179,7 +182,7 @@ mRegionType = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Surface(ByVal Value As PictureBox)
@@ -188,12 +191,13 @@ Const ProcName As String = "Surface"
 On Error GoTo Err
 
 Set mSurface = Value
+mSurface.MousePointer = MousePointerConstants.vbDefault
 SetGraphicsMode mSurface.hDC, GM_ADVANCED
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Surface() As PictureBox
@@ -206,10 +210,10 @@ Set Surface = mSurface
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Friend Property Let Viewport(ByVal Value As Viewport)
+Friend Property Let ViewPort(ByVal Value As ViewPort)
 Set mViewport = Value
 End Property
 
@@ -223,7 +227,7 @@ Width = mSurface.Width
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -243,11 +247,8 @@ lRegionHandle = CreateRectRgn(clipArea.Left, _
                         clipArea.Top, _
                         clipArea.Right, _
                         clipArea.Bottom)
-If lRegionHandle = 0 Then
-    Err.Raise ErrorCodes.ErrRuntimeException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Failed to create GDI region"
-End If
+
+If lRegionHandle = 0 Then Err.Raise ErrorCodes.ErrRuntimeException, , "Failed to create GDI region"
 
 res = ExtSelectClipRgn(mSurface.hDC, lRegionHandle, RGN_OR)
 
@@ -256,7 +257,7 @@ DeleteObject lRegionHandle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Clear()
@@ -269,7 +270,7 @@ mSurface.Cls
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ClearClippingRegion()
@@ -282,7 +283,7 @@ SelectClipRgn mSurface.hDC, 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawCircle( _
@@ -300,7 +301,7 @@ mSurface.Circle (centre.XLogical(mViewport.Region), centre.yLogical(mViewport.Re
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawLine( _
@@ -319,7 +320,7 @@ mSurface.Line (x1, y1)-(x2, y2)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawPoint( _
@@ -335,7 +336,7 @@ mSurface.PSet (p.XLogical(mViewport.Region), p.yLogical(mViewport.Region))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawPolygon( _
@@ -352,7 +353,7 @@ Polygon mSurface.hDC, VarPtr(points(0)), UBound(points) + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawRectangle( _
@@ -376,7 +377,7 @@ DrawRectangleFromTRectangle lTRect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawRectangleFromPoints( _
@@ -398,7 +399,7 @@ DrawRectangleFromTRectangle lTRect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawRectangleFromRect( _
@@ -415,7 +416,7 @@ Rectangle mSurface.hDC, pRect.Left, pRect.Top, pRect.Right, pRect.Bottom
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawRectangleFromTRectangle( _
@@ -424,18 +425,14 @@ Const ProcName As String = "DrawRectangleFromTRectangle"
 
 On Error GoTo Err
 
-If Not pRect.isValid Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Argument is not a valid TRectangle"
-End If
+If Not pRect.isValid Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Argument is not a valid TRectangle"
 
 DrawRectangleFromRect mViewport.ConvertTRectangleToRect(pRect)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DrawText( _
@@ -486,7 +483,7 @@ res = User32.DrawTextEx(mSurface.hDC, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -504,8 +501,14 @@ Set mViewport = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Public Function GetColorAtPoint(ByVal X As Double, ByVal Y As Double) As Long
+GetColorAtPoint = GetPixel(mSurface.hDC, _
+                        mViewport.ConvertCoordsLogicalToPixelsX(X), _
+                        mViewport.ConvertCoordsLogicalToPixelsY(Y))
+End Function
 
 Public Function GetTextSize( _
                 ByVal pText As String, _
@@ -575,7 +578,7 @@ Set GetTextSize = gNewSize(mViewport.ConvertPixelsToLogicalX(clipRect.Right), _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub IntersectClippingRegion( _
@@ -591,11 +594,8 @@ lRegionHandle = CreateRectRgn(clipArea.Left, _
                         clipArea.Top, _
                         clipArea.Right, _
                         clipArea.Bottom)
-If lRegionHandle = 0 Then
-    Err.Raise ErrorCodes.ErrRuntimeException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Failed to create GDI region"
-End If
+
+If lRegionHandle = 0 Then Err.Raise ErrorCodes.ErrRuntimeException, , "Failed to create GDI region"
 
 res = ExtSelectClipRgn(mSurface.hDC, lRegionHandle, RGN_AND)
 
@@ -604,7 +604,7 @@ DeleteObject lRegionHandle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RestoreClippingRegion()
@@ -625,7 +625,7 @@ mSavedClippingRegionHandle = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SaveClippingRegion()
@@ -636,20 +636,14 @@ On Error GoTo Err
 
 Dim res As Long
 
-If mSavedClippingRegionHandle <> 0 Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Clipping region has already been saved and not yet restored"
-End If
+If mSavedClippingRegionHandle <> 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Clipping region has already been saved and not yet restored"
 
 mSavedClippingRegionHandle = CreateRectRgn(0, 0, 2, 2)
 res = GetClipRgn(mSurface.hDC, mSavedClippingRegionHandle)
 
-If res = -1 Then
-    Err.Raise ErrorCodes.ErrRuntimeException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Failed to get current GDI clipping region"
-ElseIf res = 0 Then
+If res = -1 Then Err.Raise ErrorCodes.ErrRuntimeException, , "Failed to get current GDI clipping region"
+
+If res = 0 Then
     ' means there is no current clipping region - see documentation for GetClipRgn
     DeleteObject mSavedClippingRegionHandle
     mSavedClippingRegionHandle = NoClipRegion
@@ -658,7 +652,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetBrushAttributes( _
@@ -674,7 +668,7 @@ mBrushStyle = Style
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetClippingRegion( _
@@ -690,11 +684,7 @@ lRegionHandle = CreateRectRgn(clipArea.Left, _
                         clipArea.Top, _
                         clipArea.Right, _
                         clipArea.Bottom)
-If lRegionHandle = 0 Then
-    Err.Raise ErrorCodes.ErrRuntimeException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Failed to create GDI region"
-End If
+If lRegionHandle = 0 Then Err.Raise ErrorCodes.ErrRuntimeException, , "Failed to create GDI region"
 
 res = SelectClipRgn(mSurface.hDC, lRegionHandle)
 
@@ -703,7 +693,7 @@ DeleteObject lRegionHandle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetScale(ByRef pBoundary As TRectangle)
@@ -725,7 +715,7 @@ pBoundary.Right = mSurface.ScaleWidth + pBoundary.Left
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPenAttributes( _
@@ -745,7 +735,7 @@ mPenMode = mode
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetTextAttributes( _
@@ -763,7 +753,7 @@ mTextTransparent = transparent
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function TextHeight(ByVal Value As String) As Double
@@ -777,7 +767,7 @@ TextHeight = Abs(mSurface.TextHeight(Value))
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function TextWidth(ByVal Value As String) As Double
@@ -791,7 +781,7 @@ TextWidth = mSurface.TextWidth(Value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub ZOrder( _
@@ -805,7 +795,7 @@ mSurface.ZOrder Position
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -823,7 +813,7 @@ mSurface.FillStyle = mBrushStyle
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub applyPenSettings()
@@ -832,14 +822,17 @@ Const ProcName As String = "applyPenSettings"
 On Error GoTo Err
 
 mSurface.ForeColor = mPenColor
-mSurface.DrawWidth = mPenWidth
+
+' must set DrawStyle before DrawWidth, otherwise DrawWidth may be forced to be 1
+' if existing DrawStyle does not allow thick lines
 mSurface.DrawStyle = mPenStyle
+mSurface.DrawWidth = mPenWidth
 mSurface.DrawMode = mPenMode
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setfont()
@@ -864,6 +857,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

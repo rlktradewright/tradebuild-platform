@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "HorizontalGridS
 ' Member variables
 '@================================================================================
 
-Private mGridlineSpacingY                           As Double
+Private mYGridlineSpacing                           As Double
 Private mYScaleQuantum                              As Double
 
 Private mYScaleGridSpacing                        As Double
@@ -65,9 +65,9 @@ Private mYScaleGridSpacing                        As Double
 ' Properties
 '@================================================================================
 
-Friend Property Let GridlineSpacingY(ByVal Value As Double)
-If Value = 0 Then Stop
-mGridlineSpacingY = Value
+Friend Property Let YGridlineSpacing(ByVal Value As Double)
+Assert Value <> 0, "Value is 0"
+mYGridlineSpacing = Value
 End Property
 
 Friend Property Get YScaleGridSpacing() As Single
@@ -85,7 +85,7 @@ End Property
 Friend Function Calculate( _
                 ByVal pHeight As Double, _
                 ByVal pHeightCm As Double) As Double
-Dim numGridDivisions As Double
+Dim numGridDivisions As Long
 Dim gridSpacing As Double
 Dim logSpacing As Double
 Dim exp As Long
@@ -95,7 +95,8 @@ Const ProcName As String = "Calculate"
 
 On Error GoTo Err
 
-numGridDivisions = pHeightCm / mGridlineSpacingY
+numGridDivisions = Round(pHeightCm / mYGridlineSpacing, 0)
+If numGridDivisions = 0 Then numGridDivisions = 1
 gridSpacing = pHeight / numGridDivisions
 
 logSpacing = Log(gridSpacing) / Log10
@@ -111,13 +112,15 @@ Then
     ' Tick size is 1/32 or a fraction thereof, which influences where we put
     ' the horizontal grid lines
     If exp >= -1 Then
-        If mantissa >= 5 Then
+        If mantissa >= 5.25 Then
+            mYScaleGridSpacing = 32 * 0.03125
+        ElseIf mantissa >= 2.75 Then
             mYScaleGridSpacing = 16 * 0.03125
-        ElseIf mantissa >= 2.5 Then
+        ElseIf mantissa >= 1.5 Then
             mYScaleGridSpacing = 8 * 0.03125
-        ElseIf mantissa >= 1.25 Then
+        ElseIf mantissa >= 0.65 Then
             mYScaleGridSpacing = 4 * 0.03125
-        ElseIf mantissa >= 0.625 Then
+        ElseIf mantissa >= 0.325 Then
             mYScaleGridSpacing = 2 * 0.03125
         Else
             mYScaleGridSpacing = 0.03125
@@ -126,11 +129,13 @@ Then
         mYScaleGridSpacing = 0.03125
     End If
 Else
-    If mantissa >= 5 Then
+    If mantissa > 5.25 Then
+        mYScaleGridSpacing = 1 * 10 ^ (exp + 1)
+    ElseIf mantissa >= 2.75 Then
         mYScaleGridSpacing = 5 * 10 ^ exp
-    ElseIf mantissa >= 2.5 Then
+    ElseIf mantissa >= 2.25 And 10 ^ exp <> mYScaleQuantum Then
         mYScaleGridSpacing = 2.5 * 10 ^ exp
-    ElseIf mantissa >= 2# Then
+    ElseIf mantissa >= 1.25 Then
         mYScaleGridSpacing = 2 * 10 ^ exp
     Else
         mYScaleGridSpacing = 1 * 10 ^ exp
@@ -144,7 +149,7 @@ Calculate = mYScaleGridSpacing
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 

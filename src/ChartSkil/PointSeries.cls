@@ -50,7 +50,7 @@ Event SelectionStateChanged()
 
 Private Const ModuleName                As String = "DataPointSeries"
 
-Private mChartRef           As WeakReference
+Private mPeriods                        As Periods
 Private mSeriesID           As Long
 Private mSeriesUpdateNumber As Long
 
@@ -61,7 +61,7 @@ Private mFinished           As Boolean
 
 Private mDataPoints         As Collection
 
-Private mViewport As Viewport
+Private mViewport As ViewPort
 Private mLayer              As Long
 
 Private mGOSP               As GraphObjServiceProvider
@@ -98,13 +98,17 @@ Set mStyle = New DataPointStyle
 End Sub
 
 Private Sub Class_Terminate()
-'gLogger.Log LogLevelHighDetail, "DataPointSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="DataPointSeries terminated"
 Debug.Print "DataPointSeries terminated"
 End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
+
+Private Function IGraphicObjectSeries_Add() As IGraphicObject
+Set IGraphicObjectSeries_Add = Add
+End Function
 
 Private Property Let IGraphicObjectSeries_Canvas(ByVal Value As Canvas)
 Set mViewport = Value
@@ -128,12 +132,12 @@ IGraphicObjectSeries_count = mDataPoints.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
-Set mChartRef = Nothing
+Set mPeriods = Nothing
 Set mPrevDataPointRef = Nothing
 Set mGOSP = Nothing
 Set mViewport = Nothing
@@ -141,9 +145,9 @@ End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
                 ByVal pName As String, _
-                ByVal pViewport As Viewport, _
+                ByVal pViewport As ViewPort, _
                 ByVal pLayer As LayerNumbers, _
-                ByVal pChart As Chart, _
+                ByVal pPeriods As Periods, _
                 ByVal pSeriesID As Long, _
                 ByVal pGOSP As GraphObjServiceProvider)
 Const ProcName As String = "IGraphicObjectSeries_Initialise"
@@ -153,14 +157,14 @@ On Error GoTo Err
 mName = pName
 mSeriesID = pSeriesID
 Set mGOSP = pGOSP
-Layer = pLayer
+layer = pLayer
 Set mViewport = pViewport
-Set mChartRef = CreateWeakReference(pChart)
+Set mPeriods = pPeriods
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -177,7 +181,7 @@ Set IGraphicObjectSeries_item = mDataPoints.Item(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IGraphicObjectSeries_Name() As String
@@ -197,11 +201,11 @@ mDataPoints.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim dp As DataPoint
+Dim dp As ChartSkil27.DataPoint
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -215,7 +219,7 @@ mDataPoints.Remove dp.Key
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
@@ -232,7 +236,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObjectSeries_Selected() As Boolean
@@ -274,9 +278,7 @@ Case "POINTSTYLE"
 Case "UPCOLOR"
     RepaintRegion False
 Case Else
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Unhandled property change"
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Unhandled property change"
 End Select
 
 firePropertyChanged ev.PropertyName
@@ -303,7 +305,7 @@ If IsPropertySet(DataPointPropertyColor) Then Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Color(ByVal Value As Long)
@@ -311,10 +313,7 @@ Const ProcName As String = "Color"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mColor, DataPointPropertyColor, Value
 RepaintRegion False
@@ -322,7 +321,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Count() As Long
@@ -335,7 +334,7 @@ Count = mDataPoints.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DisplayMode() As DataPointDisplayModes
@@ -350,7 +349,7 @@ If IsPropertySet(DataPointPropertyDisplayMode) Then DisplayMode = mDisplayMode
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DisplayMode(ByVal Value As DataPointDisplayModes)
@@ -364,7 +363,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DownColor() As Long
@@ -379,7 +378,7 @@ If IsPropertySet(DataPointPropertyDownColor) Then DownColor = mDownColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DownColor(ByVal Value As Long)
@@ -387,10 +386,7 @@ Const ProcName As String = "DownColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) And Value <> -1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color or -1"
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 setLongProperty mDownColor, DataPointPropertyDownColor, Value
 RepaintRegion False
@@ -398,7 +394,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HistogramBarWidth() As Single
@@ -413,7 +409,7 @@ If IsPropertySet(DataPointPropertyHistWidth) Then HistogramBarWidth = mHistWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HistogramBarWidth(ByVal Value As Single)
@@ -421,10 +417,7 @@ Const ProcName As String = "HistogramBarWidth"
 
 On Error GoTo Err
 
-If Value <= 0 Or Value > 1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "HistogramBarWidth must be greater than zero but not greater than 1"
+If Value <= 0 Or Value > 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "HistogramBarWidth must be greater than zero but not greater than 1"
 
 setSingleProperty mHistWidth, DataPointPropertyHistWidth, Value
 RepaintRegion True
@@ -432,7 +425,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Id() As Long
@@ -451,7 +444,7 @@ If IsPropertySet(DataPointPropertyIncludeInAutoscale) Then IncludeInAutoscale = 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -465,7 +458,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
@@ -479,7 +472,7 @@ firePropertyChanged "IsSelectable"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -490,7 +483,7 @@ Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Let Layer(ByVal Value As LayerNumbers)
+Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -501,21 +494,21 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Layer() As LayerNumbers
+Public Property Get layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-Layer = mBaseStyle.Layer
-If Not mStyle Is Nothing Then If mStyle.IsPropertySet(DataPointPropertyLayer) Then Layer = mStyle.Layer
-If IsPropertySet(DataPointPropertyLayer) Then Layer = mLayer
+layer = mBaseStyle.layer
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(DataPointPropertyLayer) Then layer = mStyle.layer
+If IsPropertySet(DataPointPropertyLayer) Then layer = mLayer
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LineStyle() As LineStyles
@@ -530,7 +523,7 @@ If IsPropertySet(DataPointPropertyLineStyle) Then LineStyle = mLineStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
@@ -544,7 +537,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LineThickness() As Long
@@ -559,7 +552,7 @@ If IsPropertySet(DataPointPropertyLineThickness) Then LineThickness = mLineThick
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LineThickness(ByVal Value As Long)
@@ -573,7 +566,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -591,7 +584,7 @@ firePropertyChanged "Name"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointStyle() As PointStyles
@@ -606,7 +599,7 @@ If IsPropertySet(DataPointPropertyPointStyle) Then PointStyle = mPointStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PointStyle(ByVal Value As PointStyles)
@@ -620,7 +613,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SeriesUpdateNumber() As Long
@@ -637,12 +630,6 @@ Const ProcName As String = "Style"
 
 On Error GoTo Err
 
-If Value Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Style is null reference"
-End If
-
 Set mStyle = Value
 RepaintRegion True
 
@@ -651,7 +638,7 @@ firePropertyChanged "Style"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get UpColor() As Long
@@ -666,7 +653,7 @@ If IsPropertySet(DataPointPropertyUpColor) Then UpColor = mUpColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let UpColor(ByVal Value As Long)
@@ -674,10 +661,7 @@ Const ProcName As String = "UpColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mUpColor, DataPointPropertyUpColor, Value
 RepaintRegion False
@@ -685,7 +669,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -693,20 +677,19 @@ End Property
 '================================================================================
 
 Public Function Add( _
-                ByVal Timestamp As Date, _
+                Optional ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As DataPointStyle) As DataPoint
-Const ProcName As String = "Add"
-On Error GoTo Err
-
 Static duplicateCount As Long       ' counts the number of successive adds with
                                     ' the same Timestamp
 Static prevTimestamp As Date
 Dim dp As DataPoint
 
-If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "DataPoint series is finished"
+Const ProcName As String = "Add"
+
+On Error GoTo Err
+
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "DataPoint series is finished"
 
 If Not mPrevDataPointRef Is Nothing Then
     If Timestamp = prevTimestamp Then
@@ -717,8 +700,7 @@ If Not mPrevDataPointRef Is Nothing Then
 End If
 
 Set dp = New DataPoint
-If CDbl(Timestamp) <> 0 Then dp.X = chartObj.GetXFromTimestamp(Timestamp, False, duplicateCount)
-
+If CDbl(Timestamp) <> 0# Then dp.X = mPeriods.GetXFromTimestamp(Timestamp, False, duplicateCount)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
@@ -736,7 +718,7 @@ Set Add = dp
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub ClearOverrides()
@@ -750,7 +732,7 @@ RepaintRegion True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -769,10 +751,10 @@ Set Item = mDataPoints(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As DataPoint)
+Public Sub RemoveObject(ByVal Value As ChartSkil27.DataPoint)
 On Error GoTo Err
 mDataPoints.Remove Value.Key
 mGOSP.RemoveObject Value.handle
@@ -792,19 +774,6 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Private Function chartObj() As Chart
-Const ProcName As String = "chartObj"
-
-On Error GoTo Err
-
-Set chartObj = mChartRef.Target
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
 Private Sub ClearProperty( _
                 ByVal flag As DataPointPropertyFlags)
 Const ProcName As String = "ClearProperty"
@@ -816,7 +785,7 @@ mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
@@ -834,7 +803,7 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IsPropertySet( _
@@ -848,7 +817,7 @@ IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function prevDataPointObj() As DataPoint
@@ -861,7 +830,7 @@ Set prevDataPointObj = mPrevDataPointRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub RepaintRegion( _
@@ -883,7 +852,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setBooleanProperty( _
@@ -901,7 +870,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLongProperty( _
@@ -919,7 +888,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSingleProperty( _
@@ -937,7 +906,7 @@ firePropertyChanged gDataPointPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -951,7 +920,7 @@ mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

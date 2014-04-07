@@ -83,16 +83,16 @@ Friend Property Get DataPoint() As DataPoint
 Set DataPoint = mdp
 End Property
 
-Friend Property Let X(ByVal value As Double)
-mdp.X = value
+Friend Property Let X(ByVal Value As Double)
+mdp.X = Value
 End Property
 
 Public Property Get X() As Double
 X = mdp.X
 End Property
 
-Friend Property Let Y(ByVal value As Double)
-mdp.DataValue = value
+Friend Property Let Y(ByVal Value As Double)
+mdp.DataValue = Value
 End Property
 
 Public Property Get Y() As Double
@@ -115,7 +115,7 @@ HitTest = mGraphObj.HitTest(X, Y)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -133,7 +133,7 @@ mAllowYMove = AllowYMove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StartMove()
@@ -146,7 +146,7 @@ mStartY = Y
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub UndoMove()
@@ -159,7 +159,7 @@ Y = mStartY
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

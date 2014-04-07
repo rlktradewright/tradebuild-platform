@@ -73,16 +73,14 @@ Private mHorizontalRulesLineSeries          As LineSeries
 Private mName                               As String
 Private mStudyLibraryName                   As String
 Private mInstanceFullyQualifiedName         As String
-Private mStudy                              As Study
-Private mUnderlyingStudy                    As Study
+Private mStudy                              As IStudy
+Private mUnderlyingStudy                    As IStudy
 Private mInputValueNames()                  As String
 Private mChartRegionName                    As String
 
 Private mConfig                             As ConfigurationSection
 
 Private mIdent                              As String
-
-Private mBars                               As Bars
 
 '@================================================================================
 ' Class Event Handlers
@@ -110,18 +108,17 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let ChartRegionName(ByVal value As String)
+Public Property Let ChartRegionName(ByVal Value As String)
 Const ProcName As String = "ChartRegionName"
-Dim failpoint As String
 On Error GoTo Err
 
-mChartRegionName = value
+mChartRegionName = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartRegionName() As String
@@ -129,24 +126,23 @@ ChartRegionName = mChartRegionName
 End Property
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalRulesLineSeries( _
-                ByVal value As LineSeries)
-Set mHorizontalRulesLineSeries = value
+                ByVal Value As LineSeries)
+Set mHorizontalRulesLineSeries = Value
 End Property
 
 Public Property Get HorizontalRulesLineSeries() As LineSeries
@@ -157,101 +153,93 @@ Friend Property Get ID() As String
 ID = mIdent
 End Property
 
-Public Property Let InputValueNames(ByRef value() As String)
+Public Property Let InputValueNames(ByRef Value() As String)
 Const ProcName As String = "InputValueNames"
-Dim failpoint As String
 On Error GoTo Err
 
-mInputValueNames = value
+mInputValueNames = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InputValueNames() As String()
 InputValueNames = mInputValueNames
 End Property
 
-Friend Property Let InstanceFullyQualifiedName(ByVal value As String)
+Friend Property Let InstanceFullyQualifiedName(ByVal Value As String)
 Const ProcName As String = "InstanceFullyQualifiedName"
-Dim failpoint As String
 On Error GoTo Err
 
-mInstanceFullyQualifiedName = value
+mInstanceFullyQualifiedName = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstanceFullyQualifiedName() As String
 InstanceFullyQualifiedName = mInstanceFullyQualifiedName
 End Property
 
-Public Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
-Dim failpoint As String
 On Error GoTo Err
 
-mName = value
+mName = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let Parameters(ByVal value As Parameters)
+Public Property Let Parameters(ByVal Value As Parameters)
 Const ProcName As String = "Parameters"
-Dim failpoint As String
 On Error GoTo Err
 
-Set mParameters = value
+Set mParameters = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Parameters() As Parameters
 Set Parameters = mParameters
 End Property
 
-Public Property Let Study(ByVal value As Study)
-Dim lBarStudy As BarStudy
-
+Public Property Let Study(ByVal Value As IStudy)
 Const ProcName As String = "Study"
-Dim failpoint As String
 On Error GoTo Err
 
-Set mStudy = value
+Set mStudy = Value
 If mStudy Is Nothing Then Exit Property
 
-If TypeOf mStudy Is BarStudy Then
+If TypeOf mStudy Is IBarStudy Then
+    Dim lBarStudy As IBarStudy
     Set lBarStudy = mStudy
-    Set mBars = lBarStudy.Bars
 End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-    
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Study() As Study
+Public Property Get Study() As IStudy
 Set Study = mStudy
 End Property
 
@@ -263,18 +251,17 @@ Public Property Get StudyHorizontalRules() As StudyHorizontalRules
 Set StudyHorizontalRules = mStudyHorizontalRules
 End Property
 
-Public Property Let StudyLibraryName(ByVal value As String)
+Public Property Let StudyLibraryName(ByVal Value As String)
 Const ProcName As String = "StudyLibraryName"
-Dim failpoint As String
 On Error GoTo Err
 
-mStudyLibraryName = value
+mStudyLibraryName = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyLibraryName() As String
@@ -285,33 +272,32 @@ Public Property Get StudyValueConfigurations() As StudyValueConfigurations
 Set StudyValueConfigurations = mStudyValueConfigurations
 End Property
 
-Friend Property Let StudyValueHandlers(ByVal value As StudyValueHandlers)
-Set mStudyValueHandlers = value
+Friend Property Let StudyValueHandlers(ByVal Value As StudyValueHandlers)
+Set mStudyValueHandlers = Value
 End Property
 
 Friend Property Get StudyValueHandlers() As StudyValueHandlers
 Set StudyValueHandlers = mStudyValueHandlers
 End Property
 
-Public Property Let UnderlyingStudy(ByVal value As Study)
-Set mUnderlyingStudy = value
+Public Property Let UnderlyingStudy(ByVal Value As IStudy)
+Set mUnderlyingStudy = Value
 End Property
 
-Public Property Get UnderlyingStudy() As Study
+Public Property Get UnderlyingStudy() As IStudy
 Set UnderlyingStudy = mUnderlyingStudy
 End Property
 
-Public Property Get ValueSeries(ByVal value As String) As IGraphicObjectSeries
+Public Property Get ValueSeries(ByVal Value As String) As IGraphicObjectSeries
 Const ProcName As String = "ValueSeries"
-Dim failpoint As String
 On Error GoTo Err
 
-Set ValueSeries = mStudyValueHandlers.Item(value).ValueSeries
+Set ValueSeries = mStudyValueHandlers.Item(Value).ValueSeries
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -328,7 +314,6 @@ End Sub
 
 Public Function Clone() As StudyConfiguration
 Const ProcName As String = "Clone"
-Dim failpoint As String
 On Error GoTo Err
 
 Set Clone = New StudyConfiguration
@@ -338,11 +323,12 @@ Clone.Name = mName
 Clone.Parameters = mParameters.Clone
 Clone.StudyLibraryName = mStudyLibraryName
 
-Dim hr As StudyHorizontalRule
-Dim newHr As StudyHorizontalRule
 Dim newHrs As StudyHorizontalRules
 Set newHrs = Clone.StudyHorizontalRules
+
+Dim hr As StudyHorizontalRule
 For Each hr In mStudyHorizontalRules
+    Dim newHr As StudyHorizontalRule
     Set newHr = newHrs.Add
     newHr.Color = hr.Color
     newHr.Style = hr.Style
@@ -352,13 +338,12 @@ Next
 
 Clone.Study = mStudy
 
-Dim svc As StudyValueConfiguration
-Dim newSvc As StudyValueConfiguration
 Dim newSvcs As StudyValueConfigurations
-
 Set newSvcs = Clone.StudyValueConfigurations
 
+Dim svc As StudyValueConfiguration
 For Each svc In mStudyValueConfigurations
+    Dim newSvc As StudyValueConfiguration
     Set newSvc = newSvcs.Add(svc.ValueName)
     newSvc.BarFormatterFactoryName = svc.BarFormatterFactoryName
     newSvc.BarFormatterLibraryName = svc.BarFormatterLibraryName
@@ -373,12 +358,12 @@ Next
 
 Clone.UnderlyingStudy = mUnderlyingStudy
 
-Dim sc As StudyConfiguration
-Dim newSc As StudyConfiguration
 Dim newScs As StudyConfigurations
-
 Set newScs = Clone.StudyConfigurations
+
+Dim sc As StudyConfiguration
 For Each sc In mStudyConfigs
+    Dim newSc As StudyConfiguration
     Set newSc = sc.Clone
     newScs.Add newSc
 Next
@@ -390,26 +375,24 @@ Clone.StudyValueHandlers = mStudyValueHandlers
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ' Only called when a chart has been cleared, so no need to worry about whether regions are
 ' still in use etc
 Friend Sub Finish()
-Dim svh As StudyValueHandler
-Dim sc As StudyConfiguration
-
 Const ProcName As String = "Finish"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mStudyValueHandlers Is Nothing Then
+    Dim svh As StudyValueHandler
     For Each svh In mStudyValueHandlers
         mStudy.RemoveStudyValueListener svh
     Next
     mStudyValueHandlers.Clear
 End If
 
+Dim sc As StudyConfiguration
 For Each sc In mStudyConfigs
     sc.Finish
 Next
@@ -417,13 +400,12 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub LoadFromConfig( _
                 ByVal config As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
 On Error GoTo Err
 
 Set mConfig = config
@@ -440,7 +422,7 @@ mChartRegionName = mConfig.GetSetting(ConfigSettingChartRegionName)
 Set mParameters = LoadParametersFromConfig(mConfig.GetConfigurationSection(ConfigSectionParameters))
 
 Set mStudyValueConfigurations = New StudyValueConfigurations
-mStudyValueConfigurations.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionStudyValueConfigurations), mBars
+mStudyValueConfigurations.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionStudyValueConfigurations)
 
 Set mStudyHorizontalRules = New StudyHorizontalRules
 mStudyHorizontalRules.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudyHorizontalRules)
@@ -451,12 +433,11 @@ mStudyConfigs.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudyC
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -464,7 +445,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -473,7 +454,6 @@ End Sub
 
 Private Sub storeSettings()
 Const ProcName As String = "storeSettings"
-Dim failpoint As String
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
@@ -493,5 +473,5 @@ mStudyConfigs.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSecti
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub

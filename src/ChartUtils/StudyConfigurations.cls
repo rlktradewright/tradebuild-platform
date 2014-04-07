@@ -80,32 +80,32 @@ End Sub
 '@================================================================================
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get count() As Long
-Const ProcName As String = "count"
-Dim failpoint As String
+Public Property Get Count() As Long
+Const ProcName As String = "Count"
+
 On Error GoTo Err
 
-count = mStudyConfigurations.count
+Count = mStudyConfigurations.Count
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -126,7 +126,7 @@ End Sub
 Friend Sub Finish()
 Dim studyConfig As StudyConfiguration
 Const ProcName As String = "Finish"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each studyConfig In mStudyConfigurations
@@ -136,14 +136,14 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item( _
                 ByVal index As Variant) As StudyConfiguration
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mStudyConfigurations.Item(index)
@@ -151,7 +151,7 @@ Set Item = mStudyConfigurations.Item(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub LoadFromConfig( _
@@ -160,7 +160,7 @@ Dim scSect As ConfigurationSection
 Dim sc As StudyConfiguration
 
 Const ProcName As String = "LoadFromConfig"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set mConfig = config
@@ -175,7 +175,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -187,7 +187,7 @@ End Function
 Public Sub Remove( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mStudyConfigurations.Remove studyConfig.ID
@@ -196,7 +196,7 @@ studyConfig.RemoveFromConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -206,7 +206,7 @@ End Sub
 Private Sub storeSettings()
 Dim sc As StudyConfiguration
 Const ProcName As String = "storeSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each sc In mStudyConfigurations
@@ -216,13 +216,13 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub storeStudyConfigSettings( _
                 ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "storeStudyConfigSettings"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then
@@ -232,7 +232,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

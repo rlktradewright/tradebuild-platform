@@ -74,6 +74,7 @@ Private Const ModuleName                            As String = "ChartRegions"
 '@================================================================================
 
 Private mChartRef                                   As WeakReference
+Private mPeriods                                    As Periods
 
 Private mRegions()                                  As RegionTableEntry
 Private mRegionsIndex                               As Long
@@ -86,6 +87,7 @@ Private mDefaultYAxisRegionStyle                    As ChartRegionStyle
 
 Private mRegionHeightReductionFactor                As Double
 
+Private mFinished                                   As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -128,9 +130,14 @@ End Sub
 
 Private Function Enumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
 Const ProcName As String = "Enumerable_Skip"
-Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-        ProjectName & "." & ModuleName & ":" & ProcName, _
-        "Skip not supported"
+On Error GoTo Err
+
+Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get Enumerable_UpdateSequence() As Long
@@ -145,20 +152,9 @@ End Property
 ' Properties
 '@================================================================================
 
-Friend Property Let Chart(ByVal Value As Chart)
-Const ProcName As String = "Chart"
-
-On Error GoTo Err
-
-Set mChartRef = CreateWeakReference(Value)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 Public Property Get Count() As Long
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Count = mNumRegionsInUse
 End Property
 
@@ -168,6 +164,8 @@ Dim lregion As ChartRegion
 Const ProcName As String = "DefaultDataRegionStyle"
 On Error GoTo Err
 
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Set mDefaultDataRegionStyle = Value
 For Each lregion In Me
     lregion.BaseStyle = mDefaultDataRegionStyle
@@ -176,7 +174,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let DefaultYAxisRegionStyle( _
@@ -184,6 +182,8 @@ Friend Property Let DefaultYAxisRegionStyle( _
 Dim lregion As ChartRegion
 Const ProcName As String = "DefaultYAxisRegionStyle"
 On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set mDefaultYAxisRegionStyle = Value
 For Each lregion In Me
@@ -193,7 +193,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 ''
@@ -204,28 +204,35 @@ End Property
 '   An <code>Enumerator</code> object.
 '@/
 Public Property Get Enumerator() As Enumerator
+Const ProcName As String = "Enumerator"
+On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Set Enumerator = getEnumerator
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Item(ByVal Name As String) As ChartRegion
 Attribute Item.VB_UserMemId = 0
 Attribute Item.VB_MemberFlags = "400"
 Const ProcName As String = "Item"
-
 On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set Item = findRegion(Name)
 
-If Item Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Item does not exist"
-End If
+If Item Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Item does not exist"
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -236,7 +243,7 @@ Public Function Add( _
                 Optional ByVal PercentHeight As Double = 100#, _
                 Optional ByVal MinimumPercentHeight As Double, _
                 Optional ByVal Style As ChartRegionStyle, _
-                Optional ByVal yAxisStyle As ChartRegionStyle, _
+                Optional ByVal YAxisStyle As ChartRegionStyle, _
                 Optional ByVal Name As String) As ChartRegion
 
 Dim YAxisRegion As ChartRegion
@@ -253,14 +260,12 @@ Const ProcName As String = "Add"
 
 On Error GoTo Err
 
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Availableheight = chartObj.Availableheight
 
 If Name <> "" Then
-    If Contains(Name) Then
-        Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Region " & Name & " already exists"
-    End If
+    If Contains(Name) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Region " & Name & " already exists"
 Else
     Name = GenerateGUIDString
 End If
@@ -270,11 +275,19 @@ mRegionsIndex = mRegionsIndex + 1
 Set lregion = New ChartRegion
 lregion.handle = mRegionsIndex
 
-lregion.Initialise Name, chartObj, chartObj.CreateDataRegionCanvas(lregion.handle), RegionTypeData
+lregion.Initialise Name, mPeriods, chartObj.CreateViewport(lregion, RegionTypeData), RegionTypeData
 
 lregion.MinimumPercentHeight = MinimumPercentHeight
 lregion.PercentHeight = PercentHeight
+
+If Style Is Nothing Then
+    gLogger.Log "Style applied", ProcName, ModuleName, , "none"
+Else
+    gLogger.Log "Style applied", ProcName, ModuleName, , Style.Name
+End If
 lregion.Style = Style
+
+gLogger.Log "Base style applied", ProcName, ModuleName, , mDefaultDataRegionStyle.Name
 lregion.BaseStyle = mDefaultDataRegionStyle
 
 Set mRegions(mRegionsIndex).Region = lregion
@@ -292,9 +305,12 @@ End If
 Set YAxisRegion = New ChartRegion
 YAxisRegion.handle = mRegionsIndex
 
-YAxisRegion.Initialise "", chartObj, chartObj.CreateYAxisRegionCanvas(lregion.handle), RegionTypeYAxis
+YAxisRegion.Initialise "", mPeriods, chartObj.CreateViewport(YAxisRegion, RegionTypeYAxis), RegionTypeYAxis
+YAxisRegion.Bottom = 0
+YAxisRegion.Top = 1
+YAxisRegion.SetPeriodsInView 0, 99
 
-YAxisRegion.Style = yAxisStyle
+YAxisRegion.Style = YAxisStyle
 YAxisRegion.BaseStyle = mDefaultYAxisRegionStyle
 lregion.YAxisRegion = YAxisRegion
 
@@ -321,7 +337,7 @@ Set Add = lregion
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Contains(ByVal Name As String) As Boolean
@@ -331,37 +347,48 @@ Const ProcName As String = "Contains"
 
 On Error GoTo Err
 
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Set lregion = findRegion(Name)
 If Not lregion Is Nothing Then Contains = True
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
 Friend Sub Finish()
 Set mChartRef = Nothing
+mFinished = True
 End Sub
+
+Friend Sub Initialise( _
+                ByVal pChart As Chart, _
+                ByVal pPeriods As Periods)
+Set mChartRef = CreateWeakReference(pChart)
+Set mPeriods = pPeriods
+End Sub
+
+Friend Function IsFinished() As Boolean
+IsFinished = mFinished
+End Function
 
 Friend Function ItemFromHandle(ByVal pHandle As Long) As ChartRegion
 Const ProcName As String = "ItemFromHandle"
-
 On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 Set ItemFromHandle = mRegions(pHandle).Region
 
-If ItemFromHandle Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Invalid Handle"
-End If
+If ItemFromHandle Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid Handle"
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -372,12 +399,14 @@ Const ProcName As String = "NewEnum"
 
 On Error GoTo Err
 
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
+
 Set NewEnum = getEnumerator
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove( _
@@ -386,20 +415,12 @@ Const ProcName As String = "Remove"
 
 On Error GoTo Err
 
-If pRegion.IsXAxisRegion Or pRegion.IsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Cannot remove an axis region"
-End If
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
-If mRegions(pRegion.handle).Region Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Region has already been removed"
-End If
+If pRegion.IsXAxisRegion Or pRegion.IsYAxisRegion Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Cannot remove an axis region"
 
-pRegion.ClearRegion
-'pRegion.YAxisRegion.ClearRegion
+If mRegions(pRegion.handle).Region Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Region has already been removed"
+
 Set mRegions(pRegion.handle).Region = Nothing
 Set mRegions(pRegion.handle + 1).Region = Nothing
 
@@ -408,10 +429,14 @@ mNumRegionsInUse = mNumRegionsInUse - 1
 changed
 fireChange CollItemRemoved, pRegion
 
+' don't clear the region until after the CollectionChange event has been fired,
+' in case the event listener needs some information from the region
+pRegion.ClearRegion
+
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ResizeRegion( _
@@ -425,6 +450,8 @@ Dim Availableheight As Long
 Const ProcName As String = "ResizeRegion"
 
 On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 handle = pRegion.handle
 Availableheight = chartObj.Availableheight
@@ -455,7 +482,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -476,6 +503,8 @@ Dim Availableheight As Long
 Const ProcName As String = "ResizeY"
 
 On Error GoTo Err
+
+If IsFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "ChartRegions object is finished"
 
 availableSpacePercent = 100
 nonFixedAvailableSpacePercent = 100
@@ -596,7 +625,7 @@ ResizeY = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -617,7 +646,7 @@ Set chartObj = mChartRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireChange( _
@@ -636,7 +665,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getEnumerator() As Enumerator
@@ -649,7 +678,7 @@ Set getEnumerator = CreateEnumerator(Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function findRegion( _
@@ -676,5 +705,5 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function

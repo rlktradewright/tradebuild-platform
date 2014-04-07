@@ -63,7 +63,7 @@ gLoadDimensionFromConfig.LoadFromConfig pConfig
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gLoadSizeFromConfig( _
@@ -77,7 +77,7 @@ gLoadSizeFromConfig.LoadFromConfig pConfig
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gNewDimension( _
@@ -92,7 +92,7 @@ gNewDimension.Initialise pLength, pCoordSystem
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gNewPoint( _
@@ -111,7 +111,7 @@ gNewPoint.Initialise X, Y, coordSystemX, coordSystemY, Offset
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gNewSize( _
@@ -128,14 +128,21 @@ gNewSize.Initialise X, Y, coordSystemX, coordSystemY
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gPointsAreEqual(ByVal pPoint1 As Point, ByVal pPoint2 As Point) As Boolean
+If pPoint1 Is Nothing Then Exit Function
+If Not pPoint1.Equals(pPoint2) Then Exit Function
+If pPoint1.CoordinateSystemX <> CoordsLogical Or pPoint1.CoordinateSystemY <> CoordsLogical Then Exit Function
+gPointsAreEqual = True
 End Function
 
 Public Function gTransformCoordX( _
                 ByVal pValue As Double, _
                 ByVal pFromCoordSys As CoordinateSystems, _
                 ByVal pToCoordSys As CoordinateSystems, _
-                ByVal pViewport As Viewport) As Double
+                ByVal pViewport As ViewPort) As Double
 Const ProcName As String = "gTransformCoordX"
 
 On Error GoTo Err
@@ -172,7 +179,7 @@ Case CoordsDistance
     End If
 Case CoordsCounterDistance
     If pToCoordSys = CoordsLogical Then
-        gTransformCoordX = pViewport.ConvertCounterDistanceToLogicalY(pValue) + pViewport.Boundary.Left
+        gTransformCoordX = pViewport.ConvertCounterDistanceToLogicalX(pValue) + pViewport.Boundary.Left
     ElseIf pToCoordSys = CoordsDistance Then
         gTransformCoordX = pViewport.ConvertCounterDistanceToDistanceX(pValue)
     ElseIf pToCoordSys = CoordsRelative Then
@@ -183,14 +190,14 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gTransformCoordY( _
                 ByVal pValue As Double, _
                 ByVal pFromCoordSys As CoordinateSystems, _
                 ByVal pToCoordSys As CoordinateSystems, _
-                ByVal pViewport As Viewport) As Double
+                ByVal pViewport As ViewPort) As Double
 Const ProcName As String = "gTransformCoordY"
 
 On Error GoTo Err
@@ -238,7 +245,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

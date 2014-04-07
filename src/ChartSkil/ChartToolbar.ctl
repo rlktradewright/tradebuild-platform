@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl ChartToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -373,13 +373,17 @@ Attribute mBarSeries.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub UserControl_Initialize()
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar created"
+End Sub
+
 Private Sub UserControl_Resize()
 UserControl.Height = Toolbar1.Height
 UserControl.Width = Toolbar1.Width
 End Sub
 
 Private Sub UserControl_Terminate()
-'gLogger.Log LogLevelDetail, "ChartToolbar terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartToolbar terminated"
 Debug.Print "ChartToolbar terminated"
 End Sub
 
@@ -438,14 +442,14 @@ Case ChartNavCommandThickerBars
     End Select
     Toolbar1.Buttons(ChartNavCommandThinnerBars).Enabled = True
 Case ChartNavCommandReduceSpacing
-    If mController.TwipsPerPeriod >= 50 Then
-        mController.TwipsPerPeriod = mController.TwipsPerPeriod - 25
+    If mController.PeriodWidth > 4 Then
+        mController.PeriodWidth = mController.PeriodWidth - 1
     End If
-    If mController.TwipsPerPeriod < 50 Then
+    If mController.PeriodWidth <= 3 Then
         Button.Enabled = False
     End If
 Case ChartNavCommandIncreaseSpacing
-    mController.TwipsPerPeriod = mController.TwipsPerPeriod + 25
+    mController.PeriodWidth = mController.PeriodWidth + 1
     Toolbar1.Buttons(ChartNavCommandReduceSpacing).Enabled = True
 Case ChartNavCommandScaleDown
     mRegion.ScaleUp -0.09091
@@ -527,7 +531,7 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
@@ -550,7 +554,7 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -585,7 +589,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -615,7 +619,7 @@ Toolbar1.Buttons(ChartNavCommandAutoScale).Value = IIf(mRegion.Autoscaling, tbrP
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -644,6 +648,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

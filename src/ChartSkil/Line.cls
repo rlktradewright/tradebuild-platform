@@ -51,7 +51,7 @@ Private Const ModuleName                    As String = "Line"
 Private mSeries As LineSeries
 Private mSeriesUpdateNumber As Long
 
-Private mViewport As Viewport
+Private mViewport As ViewPort
 Private mCanvas  As Canvas
 Private mLayer As Long
 Private mHandle As Long
@@ -176,7 +176,7 @@ mArrowEndFillStyle = FillStyles.FillSolid
 End Sub
 
 Private Sub Class_Terminate()
-'gLogger.Log LogLevelHighDetail, "Line terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="Line terminated"
 Debug.Print "Line terminated"
 End Sub
 
@@ -220,7 +220,7 @@ IGraphicObject_boundingRectangle = mBoundingRect
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObject_BoundingRectangleInViewport() As TRectangle
@@ -233,7 +233,7 @@ IGraphicObject_BoundingRectangleInViewport = mBoundingRectInViewport
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
@@ -348,7 +348,7 @@ IGraphicObject_BoundingRectanglesAt = rects
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
@@ -363,7 +363,7 @@ IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IGraphicObject_Click()
@@ -406,7 +406,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -457,7 +457,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -474,7 +474,7 @@ IGraphicObject_IsSelectable = mIsSelectable
 End Property
 
 Private Property Get IGraphicObject_layer() As Long
-IGraphicObject_layer = Layer
+IGraphicObject_layer = layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
@@ -485,7 +485,11 @@ Private Property Get IGraphicObject_PeriodNumber() As Long
 IGraphicObject_PeriodNumber = &H80000000
 If isExtended Then Exit Sub
 If mPoint1 Is Nothing Then Exit Sub
-IGraphicObject_PeriodNumber = Int(mX1)
+If mX1 < 0# Then
+    IGraphicObject_PeriodNumber = 0#
+Else
+    IGraphicObject_PeriodNumber = Int(mX1)
+End If
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
@@ -514,7 +518,7 @@ IGraphicObject_SeriesID = mSeries.Id
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObject_Timestamp() As Date
@@ -588,9 +592,7 @@ Case "OFFSET2"
 Case "THICKNESS"
     initiateRedraw True, True
 Case Else
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Unhandled property change"
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Unhandled property change"
 End Select
 
 Exit Sub
@@ -615,7 +617,7 @@ If IsPropertySet(LinePropertyArrowEndColor) Then ArrowEndColor = mArrowEndColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndColor(ByVal Value As Long)
@@ -631,7 +633,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndFillColor() As Long
@@ -646,7 +648,7 @@ If IsPropertySet(LinePropertyArrowEndFillColor) Then ArrowEndFillColor = mArrowE
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
@@ -662,7 +664,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
@@ -677,7 +679,7 @@ If IsPropertySet(LinePropertyArrowEndFillStyle) Then ArrowEndFillStyle = mArrowE
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
@@ -693,7 +695,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndLength() As Long
@@ -708,7 +710,7 @@ If IsPropertySet(LinePropertyArrowEndLength) Then ArrowEndLength = mArrowEndLeng
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndLength(ByVal Value As Long)
@@ -724,7 +726,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
@@ -739,7 +741,7 @@ If IsPropertySet(LinePropertyArrowEndStyle) Then ArrowEndStyle = mArrowEndStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
@@ -755,7 +757,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndWidth() As Long
@@ -770,7 +772,7 @@ If IsPropertySet(LinePropertyArrowEndWidth) Then ArrowEndWidth = mArrowEndWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndWidth(ByVal Value As Long)
@@ -786,7 +788,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartColor() As Long
@@ -801,7 +803,7 @@ If IsPropertySet(LinePropertyArrowStartColor) Then ArrowStartColor = mArrowStart
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
@@ -817,7 +819,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartFillColor() As Long
@@ -832,7 +834,7 @@ If IsPropertySet(LinePropertyArrowStartFillColor) Then ArrowStartFillColor = mAr
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
@@ -848,7 +850,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
@@ -863,7 +865,7 @@ If IsPropertySet(LinePropertyArrowStartFillStyle) Then ArrowStartFillStyle = mAr
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
@@ -879,7 +881,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartLength() As Long
@@ -894,7 +896,7 @@ If IsPropertySet(LinePropertyArrowStartLength) Then ArrowStartLength = mArrowSta
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartLength(ByVal Value As Long)
@@ -910,7 +912,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
@@ -925,7 +927,7 @@ If IsPropertySet(LinePropertyArrowStartStyle) Then ArrowStartStyle = mArrowStart
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
@@ -941,7 +943,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartWidth() As Long
@@ -956,7 +958,7 @@ If IsPropertySet(LinePropertyArrowStartWidth) Then ArrowStartWidth = mArrowStart
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartWidth(ByVal Value As Long)
@@ -972,7 +974,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -987,7 +989,7 @@ If IsPropertySet(LinePropertyColor) Then Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Color(ByVal Value As Long)
@@ -1003,7 +1005,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Direction() As Quadrants
@@ -1022,7 +1024,7 @@ If IsPropertySet(LinePropertyExtendAfter) Then ExtendAfter = mExtendAfter
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExtendAfter(ByVal Value As Boolean)
@@ -1038,7 +1040,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExtendBefore() As Boolean
@@ -1053,7 +1055,7 @@ If IsPropertySet(LinePropertyExtendBefore) Then ExtendBefore = mExtendBefore
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExtendBefore(ByVal Value As Boolean)
@@ -1069,7 +1071,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Extended() As Boolean
@@ -1084,7 +1086,7 @@ If IsPropertySet(LinePropertyExtended) Then Extended = mExtended
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
@@ -1100,7 +1102,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FixedX() As Boolean
@@ -1115,7 +1117,7 @@ If IsPropertySet(LinePropertyFixedX) Then FixedX = mFixedX
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
@@ -1131,7 +1133,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FixedY() As Boolean
@@ -1146,7 +1148,7 @@ If IsPropertySet(LinePropertyFixedY) Then FixedY = mFixedY
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
@@ -1162,7 +1164,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get handle() As Long
@@ -1185,7 +1187,7 @@ initiateRedraw IIf(mHidden, True, False), False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
@@ -1200,7 +1202,7 @@ If IsPropertySet(LinePropertyIncludeInAutoscale) Then IncludeInAutoscale = mIncl
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -1216,7 +1218,7 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InScope() As Boolean
@@ -1239,7 +1241,7 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let Layer(ByVal Value As LayerNumbers)
+Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -1252,22 +1254,22 @@ initiateRedraw False, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Layer() As LayerNumbers
+Public Property Get layer() As LayerNumbers
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-Layer = mSeries.Layer
-If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyLayer) Then Layer = mLocalStyle.Layer
-If IsPropertySet(LinePropertyLayer) Then Layer = mLayer
+layer = mSeries.layer
+If Not mLocalStyle Is Nothing Then If mLocalStyle.IsPropertySet(LinePropertyLayer) Then layer = mLocalStyle.layer
+If IsPropertySet(LinePropertyLayer) Then layer = mLayer
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LineStyle() As LineStyles
@@ -1282,7 +1284,7 @@ If IsPropertySet(LinePropertyLineStyle) Then LineStyle = mLineStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
@@ -1298,7 +1300,7 @@ initiateRedraw True, False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LocalStyle() As LineStyle
@@ -1318,7 +1320,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Offset1() As Size
@@ -1332,7 +1334,7 @@ If IsPropertySet(LinePropertyOffset1) Then Set Offset1 = mOffset1
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Offset1(ByVal Value As Size)
@@ -1353,7 +1355,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Offset2() As Size
@@ -1367,7 +1369,7 @@ If IsPropertySet(LinePropertyOffset2) Then Set Offset2 = mOffset2
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Offset2(ByVal Value As Size)
@@ -1388,7 +1390,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Point1() As Point
@@ -1404,13 +1406,11 @@ If Value Is Nothing Then
     mBlank = True
     initiateRedraw True, True
     Exit Property
-ElseIf Not mPoint1 Is Nothing Then
-    If Value.Equals(mPoint1) Then
-        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical Then
-            Exit Property
-        End If
-    End If
 End If
+
+Set Value = convertPoint(Value)
+
+If gPointsAreEqual(mPoint1, Value) Then Exit Property
 
 Set mPoint1 = Value
 
@@ -1421,7 +1421,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Point2() As Point
@@ -1437,13 +1437,11 @@ If Value Is Nothing Then
     mBlank = True
     initiateRedraw True, True
     Exit Property
-ElseIf Not mPoint2 Is Nothing Then
-    If Value.Equals(mPoint2) Then
-        If mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then
-            Exit Property
-        End If
-    End If
 End If
+
+Set Value = convertPoint(Value)
+
+If gPointsAreEqual(mPoint2, Value) Then Exit Property
 
 Set mPoint2 = Value
 
@@ -1454,7 +1452,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Thickness() As Long
@@ -1469,7 +1467,7 @@ If IsPropertySet(LinePropertyThickness) Then Thickness = mThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Thickness(ByVal Value As Long)
@@ -1485,7 +1483,7 @@ initiateRedraw True, True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Vertical() As Verticals
@@ -1511,14 +1509,27 @@ initiateRedraw True, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ClearProperty( _
+                ByVal flag As LinePropertyFlags)
+Const ProcName As String = "ClearProperty"
+On Error GoTo Err
+
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
                 ByVal pSeries As LineSeries, _
                 ByVal pKey As String, _
                 ByVal pGOSP As GraphObjServiceProvider, _
-                ByVal pViewport As Viewport, _
+                ByVal pViewport As ViewPort, _
                 ByVal pLocalStyle As LineStyle)
                 
 Const ProcName As String = "Initialise"
@@ -1537,7 +1548,7 @@ calcCurrentBoundingRect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPosition( _
@@ -1556,16 +1567,13 @@ If pPoint1 Is Nothing Or pPoint2 Is Nothing Then
     Set mPoint2 = pPoint2
     mBlank = True
     initiateRedraw True, True
-    
     Exit Sub
-    
-ElseIf (Not mPoint1 Is Nothing) And (Not mPoint2 Is Nothing) Then
-    If pPoint1.Equals(mPoint1) And pPoint2.Equals(mPoint2) Then
-        If mPoint1.CoordinateSystemX = CoordsLogical And mPoint1.CoordinateSystemY = CoordsLogical And mPoint2.CoordinateSystemX = CoordsLogical And mPoint2.CoordinateSystemY = CoordsLogical Then
-            Exit Sub
-        End If
-    End If
 End If
+
+Set pPoint1 = convertPoint(pPoint1)
+Set pPoint2 = convertPoint(pPoint2)
+
+If gPointsAreEqual(mPoint1, pPoint1) And gPointsAreEqual(mPoint2, pPoint2) Then Exit Sub
 
 Set mPoint1 = pPoint1
 Set mPoint2 = pPoint2
@@ -1577,7 +1585,7 @@ initiateRedraw True, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1608,7 +1616,7 @@ RectSetXInterval pTRect, IntIntersection(pXInterval, RectGetXInterval(pTRect))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcBoundingRectInViewport()
@@ -1621,7 +1629,7 @@ RectSetYInterval mBoundingRectInViewport, IntIntersection(RectGetYInterval(mBoun
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function calcBoundingRectForXInterval( _
@@ -1644,7 +1652,7 @@ If ArrowStartStyle <> ArrowNone Then calcBoundingRectForXInterval = RectUnion(ca
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -1667,7 +1675,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -1713,7 +1721,7 @@ mLineAngleCos = Cos(mLineAngle)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1732,7 +1740,7 @@ mBoundingRect = calcBoundingRectForXInterval(lTInt)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1787,7 +1795,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcStartArrowConstants()
@@ -1842,37 +1850,23 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub ClearProperty( _
-                ByVal flag As LinePropertyFlags)
-Const ProcName As String = "ClearProperty"
-
-On Error GoTo Err
-
-mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Function convertPosition(ByVal pPoint As Point) As Point
-Const ProcName As String = "convertPosition"
+Private Function convertPoint(ByVal pPoint As Point) As Point
+Const ProcName As String = "convertPoint"
 On Error GoTo Err
 
 If pPoint Is Nothing Then Exit Function
-Set convertPosition = pPoint.ChangeCoordinateSystem( _
-                                            IIf(FixedX, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
-                                            IIf(FixedY, CoordinateSystems.CoordsRelative, CoordinateSystems.CoordsLogical), _
+Set convertPoint = pPoint.ChangeCoordinateSystem( _
+                                            IIf(FixedX And pPoint.CoordinateSystemX = CoordsLogical, CoordinateSystems.CoordsRelative, pPoint.CoordinateSystemX), _
+                                            IIf(FixedY And pPoint.CoordinateSystemY = CoordsLogical, CoordinateSystems.CoordsRelative, pPoint.CoordinateSystemY), _
                                             mViewport.Region)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub Draw(ByRef Area As TRectangle)
@@ -1914,7 +1908,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub drawArrowEnd(ByRef Area As TRectangle)
@@ -1970,7 +1964,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2027,7 +2021,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2094,20 +2088,19 @@ mViewport.Canvas.DrawLine x1, mapPoint(x1), _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub DrawLine()
-Dim x1 As Double
-Dim x2 As Double
-
 Const ProcName As String = "DrawLine"
-
 On Error GoTo Err
 
 setDrawingAttributes
 
+Dim x1 As Double
 x1 = getStartX
+
+Dim x2 As Double
 x2 = getEndX
 
 mViewport.Canvas.DrawLine x1, mapPoint(x1), _
@@ -2116,21 +2109,18 @@ mViewport.Canvas.DrawLine x1, mapPoint(x1), _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub drawVerticalLine()
-Dim y1 As Double
-Dim y2 As Double
-
 Const ProcName As String = "drawVerticalLine"
-
 On Error GoTo Err
 
 If Not IntContains(RectGetXInterval(mTruncatedViewportBoundary), mX1) Then Exit Sub
 
 setDrawingAttributes
 
+Dim y1 As Double
 If ExtendBefore Then
     If mVertical = VerticalUp Then
         y1 = mTruncatedViewportBoundary.Bottom
@@ -2141,6 +2131,7 @@ Else
     y1 = Point1.yLogical(mViewport.Region)
 End If
 
+Dim y2 As Double
 If ExtendAfter Then
     If mVertical = VerticalUp Then
         y2 = mTruncatedViewportBoundary.Top
@@ -2157,7 +2148,7 @@ mViewport.Canvas.DrawLine mX1, y1, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getCoordinatesLogical1()
@@ -2176,7 +2167,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getCoordinatesLogical2()
@@ -2195,7 +2186,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getDomainInViewport( _
@@ -2221,7 +2212,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getEndX() As Double
@@ -2246,7 +2237,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getHorizontalTInterval() As TInterval
@@ -2285,7 +2276,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getStartX() As Double
@@ -2310,7 +2301,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTruncatedViewportBoundary() As TRectangle
@@ -2324,7 +2315,7 @@ getTruncatedViewportBoundary.Right = Int(getTruncatedViewportBoundary.Right)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getVerticalTInterval() As TInterval
@@ -2362,7 +2353,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getXIntervalInViewport() As TInterval
@@ -2376,7 +2367,7 @@ getXIntervalInViewport = IntIntersection(RectGetXInterval(mTruncatedViewportBoun
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getYIntervalInViewport() As TInterval
@@ -2390,7 +2381,7 @@ getYIntervalInViewport = IntIntersection(RectGetYInterval(mTruncatedViewportBoun
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isHorizontal() As Boolean
@@ -2417,8 +2408,8 @@ If undrawCurrentImage Then undraw
 If mBlank Then Exit Sub
 
 If recalcBoundaries Then
-    Set mPoint1 = convertPosition(mPoint1)
-    Set mPoint2 = convertPosition(mPoint2)
+    Set mPoint1 = convertPoint(mPoint1)
+    Set mPoint2 = convertPoint(mPoint2)
     getCoordinatesLogical1
     getCoordinatesLogical2
     
@@ -2434,7 +2425,7 @@ mGOSP.ObjectChanged mHandle, mBoundingRect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function InverseMapPoint( _
@@ -2443,16 +2434,14 @@ Const ProcName As String = "InverseMapPoint"
 
 On Error GoTo Err
 
-If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Invalid for vertical line"
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid for vertical line"
                  
 InverseMapPoint = (Y - mB) / mA
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function inverseMapRangeInterval( _
@@ -2461,9 +2450,7 @@ Const ProcName As String = "inverseMapRangeInterval"
 
 On Error GoTo Err
 
-If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Invalid for vertical line"
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid for vertical line"
                  
 inverseMapRangeInterval.startValue = InverseMapPoint(yRange.startValue)
 inverseMapRangeInterval.endValue = InverseMapPoint(yRange.endValue)
@@ -2471,7 +2458,7 @@ inverseMapRangeInterval.endValue = InverseMapPoint(yRange.endValue)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isExtended() As Boolean
@@ -2489,7 +2476,7 @@ IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function mapDomainInterval( _
@@ -2498,9 +2485,7 @@ Const ProcName As String = "mapDomainInterval"
 
 On Error GoTo Err
 
-If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Invalid for vertical line"
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid for vertical line"
                  
 mapDomainInterval.startValue = mapPoint(xDomain.startValue)
 mapDomainInterval.endValue = mapPoint(xDomain.endValue)
@@ -2509,7 +2494,7 @@ mapDomainInterval.isValid = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function mapPoint( _
@@ -2518,9 +2503,7 @@ Const ProcName As String = "mapPoint"
 
 On Error GoTo Err
 
-If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Invalid for vertical line"
+If Vertical Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid for vertical line"
                  
 If X = MinusInfinityDouble Then
     If mA > 0 Then
@@ -2545,7 +2528,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setDrawingAttributes()
@@ -2568,7 +2551,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setDirection()
@@ -2610,7 +2593,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -2624,7 +2607,7 @@ mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub undraw()
@@ -2639,7 +2622,7 @@ mGOSP.ObjectUndrawn mHandle, mBoundingRectInViewport
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 

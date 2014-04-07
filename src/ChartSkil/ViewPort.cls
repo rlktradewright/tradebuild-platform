@@ -34,8 +34,6 @@ Option Explicit
 ' Events
 '================================================================================
 
-Event BoundaryChanged()
-
 '================================================================================
 ' Constants
 '================================================================================
@@ -82,7 +80,7 @@ Set mGradientFill = New GradientFill
 End Sub
 
 Private Sub Class_Terminate()
-'gLogger.Log LogLevelHighDetail, "Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
 Debug.Print "Viewport terminated (" & gRegionTypeToString(mRegionType) & ")"
 End Sub
 
@@ -94,41 +92,6 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let BackColor(ByVal Value As Long)
-mGradientFill.Color = Value
-End Property
-
-Public Property Get BackColor() As Long
-Const ProcName As String = "BackColor"
-
-On Error GoTo Err
-
-BackColor = mGradientFill.Color
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Friend Property Let Bottom(ByVal Value As Double)
-Const ProcName As String = "Bottom"
-
-On Error GoTo Err
-
-mBoundary.Bottom = Value
-checkValidDimensions
-If Not mBoundary.isValid Then Exit Property
-
-SetScale
-RaiseEvent BoundaryChanged
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
 Public Property Get Bottom() As Double
 Const ProcName As String = "Bottom"
 
@@ -139,26 +102,11 @@ Bottom = mBoundary.Bottom
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Boundary() As TRectangle
 Boundary = mBoundary
-End Property
-
-Friend Property Let Canvas(ByRef Value As Canvas)
-Const ProcName As String = "Canvas"
-
-On Error GoTo Err
-
-Set mCanvas = Value
-mCanvas.Viewport = Me
-setGradientFillArea
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Property
 
 Public Property Get Canvas() As Canvas
@@ -183,7 +131,7 @@ GradientFillColors = mGradientFill.Colors
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let GradientFillColors(ByRef Value() As Long)
@@ -198,7 +146,7 @@ mGradientFill.Colors = ar
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Height(ByVal Value As Double)
@@ -214,7 +162,7 @@ SetScale
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Height() As Double
@@ -233,7 +181,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HeightCm() As Double
@@ -246,7 +194,7 @@ HeightCm = mCanvas.Height / TwipsPerCm
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Left(ByVal Value As Double)
@@ -258,12 +206,11 @@ mBoundary.Left = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
-RaiseEvent BoundaryChanged
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Left() As Double
@@ -276,7 +223,7 @@ Left = mBoundary.Left
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let MouseIcon(ByVal Value As IPictureDisp)
@@ -289,7 +236,7 @@ mCanvas.MouseIcon = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let MousePointer(ByVal Value As VBRUN.MousePointerConstants)
@@ -302,7 +249,7 @@ mCanvas.MousePointer = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MousePointer() As VBRUN.MousePointerConstants
@@ -315,11 +262,7 @@ MousePointer = mCanvas.MousePointer
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Friend Property Let Region(ByVal Value As ChartRegion)
-Set mRegionRef = CreateWeakReference(Value)
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Region() As ChartRegion
@@ -339,12 +282,11 @@ mBoundary.Right = Value
 checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 SetScale
-RaiseEvent BoundaryChanged
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Right() As Double
@@ -357,24 +299,7 @@ Right = mBoundary.Right
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Friend Property Let Top(ByVal Value As Double)
-Const ProcName As String = "Top"
-
-On Error GoTo Err
-
-mBoundary.Top = Value
-checkValidDimensions
-If Not mBoundary.isValid Then Exit Property
-SetScale
-RaiseEvent BoundaryChanged
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Top() As Double
@@ -397,7 +322,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Width(ByVal Value As Double)
@@ -413,7 +338,7 @@ SetScale
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get WidthCm() As Double
@@ -426,7 +351,7 @@ WidthCm = mCanvas.Width / TwipsPerCm
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -443,7 +368,7 @@ mCanvas.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function CompareTo( _
@@ -478,7 +403,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCoordsLogicalToPixelsX(ByVal Value As Double) As Long
@@ -491,7 +416,7 @@ ConvertCoordsLogicalToPixelsX = ConvertCoordsLogicalToPixelsX - mTransform.eDx
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCoordsLogicalToPixelsY(ByVal Value As Double) As Long
@@ -505,7 +430,7 @@ ConvertCoordsLogicalToPixelsY = ConvertCoordsLogicalToPixelsY - mTransform.eDy
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToDistanceX(ByVal Value As Double) As Double
@@ -524,7 +449,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToDistanceY(ByVal Value As Double) As Double
@@ -543,7 +468,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToLogicalX(ByVal Value As Double) As Double
@@ -562,7 +487,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToLogicalY(ByVal Value As Double) As Double
@@ -581,7 +506,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToRelativeX(ByVal Value As Double) As Double
@@ -600,7 +525,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertCounterDistanceToRelativeY(ByVal Value As Double) As Double
@@ -619,7 +544,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToCounterDistanceX(ByVal Value As Double) As Double
@@ -638,7 +563,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToCounterDistanceY(ByVal Value As Double) As Double
@@ -657,7 +582,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToLogicalX(ByVal Value As Double) As Double
@@ -676,7 +601,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToLogicalY(ByVal Value As Double) As Double
@@ -695,7 +620,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToPixelsX(ByVal Value As Double) As Long
@@ -714,7 +639,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToPixelsY(ByVal Value As Double) As Long
@@ -733,7 +658,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToRelativeX(ByVal Value As Double) As Double
@@ -752,7 +677,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertDistanceToRelativeY(ByVal Value As Double) As Double
@@ -770,7 +695,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToCounterDistanceX(ByVal Value As Double) As Double
@@ -789,7 +714,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToCounterDistanceY(ByVal Value As Double) As Double
@@ -808,7 +733,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToDistanceX(ByVal Value As Double) As Double
@@ -827,7 +752,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToDistanceY(ByVal Value As Double) As Double
@@ -846,7 +771,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToPixelsX(ByVal Value As Double) As Long
@@ -865,7 +790,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
     End Function
 
 Public Function ConvertLogicalToPixelsY(ByVal Value As Double) As Long
@@ -883,7 +808,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToRelativeX(ByVal Value As Double) As Double
@@ -902,7 +827,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertLogicalToRelativeY(ByVal Value As Double) As Double
@@ -921,7 +846,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertPixelsToDistanceX(ByVal Value As Long) As Double
@@ -940,7 +865,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertPixelsToDistanceY(ByVal Value As Long) As Double
@@ -959,7 +884,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertPixelsToLogicalX(ByVal Value As Long) As Double
@@ -979,7 +904,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertPixelsToLogicalY(ByVal Value As Long) As Double
@@ -999,7 +924,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertPointsToWin32Points( _
@@ -1022,7 +947,7 @@ ConvertPointsToWin32Points = GDI_POINTs
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRectToTRectangle( _
@@ -1064,7 +989,7 @@ ConvertRectToTRectangle = lTRect
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToCounterDistanceX(ByVal Value As Double) As Double
@@ -1083,7 +1008,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToCounterDistanceY(ByVal Value As Double) As Double
@@ -1102,7 +1027,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToDistanceX(ByVal Value As Double) As Double
@@ -1120,7 +1045,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToDistanceY(ByVal Value As Double) As Double
@@ -1139,7 +1064,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToLogicalX(ByVal Value As Double) As Double
@@ -1159,7 +1084,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertRelativeToLogicalY(ByVal Value As Double) As Double
@@ -1179,7 +1104,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ConvertTRectangleToRect( _
@@ -1219,7 +1144,7 @@ ConvertTRectangleToRect = lRect
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Finish()
@@ -1234,7 +1159,28 @@ Set mCanvas = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub Initialise( _
+                ByVal pCanvas As Canvas, _
+                ByVal pRegion As ChartRegion, _
+                ByVal pRegionType As RegionTypes)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mCanvas = pCanvas
+mCanvas.ViewPort = Me
+
+Set mRegionRef = CreateWeakReference(pRegion)
+mRegionType = pRegionType
+
+setGradientFillArea
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyResizedY()
@@ -1249,7 +1195,7 @@ SetScale
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub PaintBackground()
@@ -1262,7 +1208,7 @@ mGradientFill.Fill mCanvas.hDC
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Reset()
@@ -1291,6 +1237,26 @@ SetGraphicsMode mCanvas.hDC, GM_ADVANCED
 SetWorldTransform mCanvas.hDC, mTransform
 End Sub
 
+Friend Sub SetVerticalBounds( _
+                ByVal pBottom As Double, _
+                ByVal pTop As Double)
+Const ProcName As String = "SetVerticalBounds"
+On Error GoTo Err
+
+Assert pTop <> 65535, "pTop is 65535"
+mBoundary.Bottom = pBottom
+mBoundary.Top = pTop
+
+checkValidDimensions
+If Not mBoundary.isValid Then Exit Sub
+SetScale
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub ZOrder( _
                 ByVal Position As Integer)
 Const ProcName As String = "ZOrder"
@@ -1302,7 +1268,7 @@ mCanvas.ZOrder Position
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub UndrawArea( _
@@ -1318,7 +1284,7 @@ Canvas.ClearClippingRegion
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1327,15 +1293,13 @@ End Sub
 '================================================================================
 
 Private Sub checkValidDimensions()
-Dim midPoint As Double
-Dim range As Double
-
 Const ProcName As String = "checkValidDimensions"
-
 On Error GoTo Err
 
 RectValidate mBoundary
 If mBoundary.isValid Then
+    Dim midPoint As Double
+    Dim range As Double
     Do While CSng(mBoundary.Top) - CSng(mBoundary.Bottom) = 0
         range = mBoundary.Top - mBoundary.Bottom
         midPoint = mBoundary.Bottom + range / 2
@@ -1353,7 +1317,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setGradientFillArea()
@@ -1369,7 +1333,7 @@ mGradientFill.Area = lRect
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub SetScale()
@@ -1387,7 +1351,7 @@ setGradientFillArea
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

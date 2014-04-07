@@ -182,6 +182,7 @@ Public Function gSetFlag( _
                 ByVal flags As Long, _
                 ByVal flag As Long) As Long
 gSetFlag = flags Or flag
+If gSetFlag < 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid flag"
 End Function
 
 Public Function gTextPropertyFlagToString( _

@@ -13,6 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+Implements Configurable
+
 '================================================================================
 ' Events
 '================================================================================
@@ -44,6 +46,46 @@ Private mCoordSystem As CoordinateSystems
 
 Private mConfig As ConfigurationSection
 
+'@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -55,6 +97,10 @@ Private mConfig As ConfigurationSection
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get CoordinateSystem() As CoordinateSystems
+CoordinateSystem = mCoordSystem
+End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
@@ -78,7 +124,7 @@ mConfig.SetSetting ConfigSettingCoordSystem, mCoordSystem
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -106,13 +152,13 @@ Equals = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
                 ByVal pLength As Double, _
                 ByVal pCoordSystem As CoordinateSystems)
-mLength = Length
+mLength = pLength
 mCoordSystem = pCoordSystem
 End Sub
 
@@ -126,17 +172,17 @@ Select Case mCoordSystem
 Case CoordsLogical
     LengthLogicalX = mLength
 Case CoordsRelative
-    LengthLogicalX = pRegion.Viewport.ConvertRelativeToLogicalX(mLength)
+    LengthLogicalX = pRegion.ViewPort.ConvertRelativeToLogicalX(mLength)
 Case CoordsDistance
-    LengthLogicalX = pRegion.Viewport.ConvertDistanceToLogicalX(mLength)
+    LengthLogicalX = pRegion.ViewPort.ConvertDistanceToLogicalX(mLength)
 Case CoordsCounterDistance
-    LengthLogicalX = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mLength)
+    LengthLogicalX = pRegion.ViewPort.ConvertCounterDistanceToLogicalY(mLength)
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LengthLogicalY( _
@@ -149,17 +195,17 @@ Select Case mCoordSystem
 Case CoordsLogical
     LengthLogicalY = mLength
 Case CoordsRelative
-    LengthLogicalY = pRegion.Viewport.ConvertRelativeToLogicalY(mLength)
+    LengthLogicalY = pRegion.ViewPort.ConvertRelativeToLogicalY(mLength)
 Case CoordsDistance
-    LengthLogicalY = pRegion.Viewport.ConvertDistanceToLogicalY(mLength)
+    LengthLogicalY = pRegion.ViewPort.ConvertDistanceToLogicalY(mLength)
 Case CoordsCounterDistance
-    LengthLogicalY = pRegion.Viewport.ConvertCounterDistanceToLogicalY(mLength)
+    LengthLogicalY = pRegion.ViewPort.ConvertCounterDistanceToLogicalY(mLength)
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub LoadFromConfig( _
@@ -176,7 +222,7 @@ mCoordSystem = mConfig.GetSetting(ConfigSettingCoordSystem, "0")
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -189,7 +235,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================

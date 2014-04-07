@@ -58,8 +58,6 @@ Private mStudyValueConfigurations As Collection
 
 Private mConfig As ConfigurationSection
 
-Private mBars As Bars
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -81,31 +79,31 @@ End Sub
 '@================================================================================
 
 Friend Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
-Public Property Get count() As Long
-Const ProcName As String = "count"
+Public Property Get Count() As Long
+Const ProcName As String = "Count"
 On Error GoTo Err
 
-count = mStudyValueConfigurations.count
+Count = mStudyValueConfigurations.Count
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -125,7 +123,7 @@ storeStudyValueSettings Add
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Clone() As StudyValueConfigurations
@@ -151,7 +149,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item( _
@@ -165,19 +163,17 @@ Set Item = mStudyValueConfigurations.Item(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub LoadFromConfig( _
-                ByVal config As ConfigurationSection, _
-                ByVal pBars As Bars)
+                ByVal config As ConfigurationSection)
 Dim svcSect As ConfigurationSection
 Dim svc As StudyValueConfiguration
 
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mBars = pBars
 Set mConfig = config
 If mConfig Is Nothing Then Exit Sub
 
@@ -190,7 +186,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -204,7 +200,7 @@ Set NewEnum = mStudyValueConfigurations.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -223,7 +219,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub storeStudyValueSettings( _
@@ -238,7 +234,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

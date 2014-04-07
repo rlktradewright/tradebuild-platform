@@ -49,10 +49,10 @@ Public Enum BarDisplayModes
 End Enum
 
 Public Enum BarPropertyFlags
-    BarPropertyColor = 1
-    BarPropertyUpColor = 2
-    BarPropertyDownColor = 4
-    BarPropertyDisplayMode = 8
+    BarPropertyColor = &H1&
+    BarPropertyUpColor = &H2&
+    BarPropertyDownColor = &H4&
+    BarPropertyDisplayMode = &H8&
     BarPropertySolidUpBody = &H10&
     BarPropertyThickness = &H20&
     BarPropertyWidth = &H40&
@@ -75,6 +75,39 @@ Public Enum CoordinateSystems
     CoordsCounterDistance ' Measured from Right or Top of region
 End Enum
 
+Public Enum CursorTextModes
+    CursorTextModeNone
+    CursorTextModeXOnly
+    CursorTextModeYOnly
+    CursorTextModeBoth
+    CursorTextModeCombined
+End Enum
+
+Public Enum CursorTextPositions
+    CursorTextPositionLeft
+    CursorTextPositionTop
+    CursorTextPositionBottom
+    CursorTextPositionRight
+    CursorTextPositionCentre
+    CursorTextPositionAboveLeftCursor
+    CursorTextPositionAboveCursor
+    CursorTextPositionAboveRightCursor
+    CursorTextPositionRightCursor
+    CursorTextPositionBelowRightCursor
+    CursorTextPositionBelowCursor
+    CursorTextPositionBelowLeftCursor
+    CursorTextPositionLeftCursor
+    CursorTextPositionTopLeftFixed
+    CursorTextPositionTopCentreFixed
+    CursorTextPositionTopRightFixed
+    CursorTextPositionCentreRightFixed
+    CursorTextPositionBottomRightFixed
+    CursorTextPositionBottomCentreFixed
+    CursorTextPositionBottomLeftFixed
+    CursorTextPositionCentreLeftFixed
+    CursorTextPositionCentreFixed
+End Enum
+
 Public Enum DataPointDisplayModes
     DataPointDisplayModePoint = 1
     DataPointDisplayModeLine
@@ -83,10 +116,10 @@ Public Enum DataPointDisplayModes
 End Enum
 
 Public Enum DataPointPropertyFlags
-    DataPointPropertyLineThickness = 1
-    DataPointPropertyColor = 2
-    DataPointPropertyUpColor = 4
-    DataPointPropertyDownColor = 8
+    DataPointPropertyLineThickness = &H1&
+    DataPointPropertyColor = &H2&
+    DataPointPropertyUpColor = &H4&
+    DataPointPropertyDownColor = &H8&
     DataPointPropertyLineStyle = &H10&
     DataPointPropertyPointStyle = &H20&
     DataPointPropertyDisplayMode = &H40&
@@ -148,10 +181,10 @@ Public Enum LayerNumbers
 End Enum
 
 Public Enum LinePropertyFlags
-    LinePropertyColor = 1
-    LinePropertyThickness = 2
-    LinePropertyLineStyle = 4
-    LinePropertyExtendBefore = 8
+    LinePropertyColor = &H1&
+    LinePropertyThickness = &H2&
+    LinePropertyLineStyle = &H4&
+    LinePropertyExtendBefore = &H8&
     LinePropertyExtendAfter = &H10&
     LinePropertyArrowStartStyle = &H20&
     LinePropertyArrowStartLength = &H40&
@@ -243,10 +276,10 @@ Public Enum TextJustifyModes
 End Enum
 
 Public Enum TextPropertyFlags
-    TextPropertyColor = 1
-    TextPropertyBox = 2
-    TextPropertyBoxColor = 4
-    TextPropertyBoxStyle = 8
+    TextPropertyColor = &H1&
+    TextPropertyBox = &H2&
+    TextPropertyBoxColor = &H4&
+    TextPropertyBoxStyle = &H8&
     TextPropertyBoxThickness = &H10&
     TextPropertyBoxFillColor = &H20&
     TextPropertyBoxFillStyle = &H40&
@@ -255,10 +288,10 @@ Public Enum TextPropertyFlags
     TextPropertyPaddingY = &H200&
     TextPropertyFont = &H400&
     TextPropertyBoxFillWithBackgroundColor = &H800&
-    TextPropertyFixedX = &H1000
-    TextPropertyFixedY = &H2000
-    TextPropertyIncludeInAutoscale = &H4000
-    TextPropertyExtended = &H8000
+    TextPropertyFixedX = &H1000&
+    TextPropertyFixedY = &H2000&
+    TextPropertyIncludeInAutoscale = &H4000&
+    TextPropertyExtended = &H8000&
     TextPropertyLayer = &H10000
     TextPropertySize = &H20000
     TextPropertyAngle = &H40000
@@ -274,25 +307,6 @@ Public Enum TextPropertyFlags
     TextPropertyHideIfBlank = &H10000000
 End Enum
 
-'Public Enum ToolTypes
-'    ToolPointer
-'    ToolLine
-'    ToolLineExtended
-'    ToolLineRay
-'    ToolLineHorizontal
-'    ToolLineVertical
-'    ToolFibonacciRetracement
-'    ToolFibonacciExtension
-'    ToolFibonacciCircle
-'    ToolFibonacciTime
-'    ToolRegressionChannel
-'    ToolRegressionEnvelope
-'    ToolText
-'    ToolPitchfork
-'    ToolCircle
-'    ToolRectangle
-'End Enum
-
 Public Enum Verticals
     VerticalNot
     VerticalUp
@@ -305,6 +319,18 @@ Public Enum ViewportComparisonCodes
     GaugeChangedY = 4
     BoundsChangedX = 8
     BoundsChangedY = 16
+End Enum
+
+Public Enum XGridTextPositions
+    XGridTextPositionCentre
+    XGridTextPositionBottom
+    XGridTextPositionTop
+End Enum
+
+Public Enum YGridTextPositions
+    YGridTextPositionCentre
+    YGridTextPositionLeft
+    YGridTextPositionRight
 End Enum
 
 '@================================================================================
@@ -344,6 +370,10 @@ Private Const ModuleName                    As String = "ChartSkil"
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+GChart.gRegisterProperties
+End Sub
+
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
@@ -365,7 +395,7 @@ Set ChartStylesManager = gChartStylesManager
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GraphicObjectStyleManager() As GraphicObjectStyleManager
@@ -385,8 +415,20 @@ Public Function GetDefaultBarStyle() As BarStyle
 Set GetDefaultBarStyle = gDefaultBarStyle
 End Function
 
-Public Function GetDefaultChartRegionStyle() As ChartRegionStyle
-Set GetDefaultChartRegionStyle = gDefaultChartRegionStyle
+Public Function GetDefaultChartDataRegionStyle() As ChartRegionStyle
+Set GetDefaultChartDataRegionStyle = gDefaultChartDataRegionStyle
+End Function
+
+Public Function GetDefaultChartStudyRegionStyle() As ChartRegionStyle
+Set GetDefaultChartStudyRegionStyle = gDefaultChartStudyRegionStyle
+End Function
+
+Public Function GetDefaultChartXAxisRegionStyle() As ChartRegionStyle
+Set GetDefaultChartXAxisRegionStyle = gDefaultChartXAxisRegionStyle
+End Function
+
+Public Function GetDefaultChartYAxisRegionStyle() As ChartRegionStyle
+Set GetDefaultChartYAxisRegionStyle = gDefaultChartYAxisRegionStyle
 End Function
 
 Public Function GetDefaultDataPointStyle() As DataPointStyle
@@ -411,7 +453,7 @@ Set LoadDimensionFromConfig = gLoadDimensionFromConfig(pConfig)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadSizeFromConfig( _
@@ -424,7 +466,7 @@ Set LoadSizeFromConfig = gLoadSizeFromConfig(pConfig)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewDimension( _
@@ -438,7 +480,7 @@ Set NewDimension = gNewDimension(pLength, pCoordSystem)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewPoint( _
@@ -455,7 +497,7 @@ Set NewPoint = gNewPoint(X, Y, pCoordSystemX, pCoordSystemY)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewSize( _
@@ -471,7 +513,7 @@ Set NewSize = gNewSize(X, Y, coordSystemX, coordSystemY)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RadiansToDegrees( _

@@ -74,16 +74,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get count() As Long
-Const ProcName As String = "count"
+Public Property Get Count() As Long
+Const ProcName As String = "Count"
 On Error GoTo Err
 
-count = mStudyValueHandlers.count
+Count = mStudyValueHandlers.Count
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -93,7 +93,7 @@ End Property
 Friend Function Add( _
                 ByVal chartMgr As ChartManager, _
                 ByVal Region As ChartRegion, _
-                ByVal pStudy As Study, _
+                ByVal pStudy As IStudy, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
                 ByVal UpdatePerTick As Boolean) As StudyValueHandler
@@ -112,7 +112,7 @@ mStudyValueHandlers.Add Add, studyValueConfig.ValueName
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Clear()
@@ -124,7 +124,7 @@ Set mStudyValueHandlers = New Collection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item( _
@@ -138,7 +138,7 @@ Set Item = mStudyValueHandlers.Item(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -151,7 +151,7 @@ Set NewEnum = mStudyValueHandlers.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

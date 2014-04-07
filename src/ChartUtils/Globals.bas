@@ -71,9 +71,9 @@ Private mConfig                             As ConfigurationSection
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As Logger
-Static lLogger As Logger
-If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Public Property Get gLogger() As FormattingLogger
+Static lLogger As FormattingLogger
+If lLogger Is Nothing Then Set lLogger = CreateFormattingLogger("chartutils", ProjectName)
 Set gLogger = lLogger
 End Property
 
@@ -83,26 +83,24 @@ End Property
 
 Public Function gGetDefaultStudyConfiguration( _
                 ByVal Name As String, _
+                ByVal StudyLibManager As StudyLibraryManager, _
                 ByVal studyLibName As String) As StudyConfiguration
-Dim studyConfig As StudyConfiguration
 Const ProcName As String = "gGetDefaultStudyConfiguration"
-Dim failpoint As String
 On Error GoTo Err
 
-If mDefaultStudyConfigurations Is Nothing Then
-    Set mDefaultStudyConfigurations = New Collection
-End If
+If mDefaultStudyConfigurations Is Nothing Then Set mDefaultStudyConfigurations = New Collection
+
 On Error Resume Next
+Dim studyConfig As StudyConfiguration
 Set studyConfig = mDefaultStudyConfigurations.Item(calcDefaultStudyKey(Name, studyLibName))
 On Error GoTo Err
 
 If Not studyConfig Is Nothing Then
     Set gGetDefaultStudyConfiguration = studyConfig.Clone
-    gGetDefaultStudyConfiguration.StudyValueHandlers = New StudyValueHandlers
 Else
     'no default Study config currently exists so we'll create one from the Study definition
     Dim sd As StudyDefinition
-    Set sd = GetStudyDefinition(Name, studyLibName)
+    Set sd = StudyLibManager.GetStudyDefinition(Name, studyLibName)
 
     Set studyConfig = New StudyConfiguration
     studyConfig.Name = Name
@@ -119,15 +117,15 @@ Else
             studyConfig.ChartRegionName = RegionNameUnderlying
     End Select
 
-    studyConfig.Parameters = GetStudyDefaultParameters(Name, studyLibName)
+    studyConfig.Parameters = StudyLibManager.GetStudyDefaultParameters(Name, studyLibName)
     
     Dim InputValueNames() As String
-    ReDim InputValueNames(sd.StudyInputDefinitions.count - 1) As String
+    ReDim InputValueNames(sd.StudyInputDefinitions.Count - 1) As String
     
     InputValueNames(0) = DefaultStudyValueName
-    If sd.StudyInputDefinitions.count > 1 Then
+    If sd.StudyInputDefinitions.Count > 1 Then
         Dim i As Long
-        For i = 2 To sd.StudyInputDefinitions.count
+        For i = 2 To sd.StudyInputDefinitions.Count
             InputValueNames(i - 1) = sd.StudyInputDefinitions.Item(i).Name
         Next
     End If
@@ -174,7 +172,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _
@@ -186,7 +184,7 @@ Public Sub gHandleUnexpectedError( _
                 Optional ByVal pErrorNumber As Long, _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
@@ -200,7 +198,7 @@ Public Sub gNotifyUnhandledError( _
                 Optional ByVal pErrorNumber As Long, _
                 Optional ByRef pErrorDesc As String, _
                 Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.source)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
@@ -213,7 +211,7 @@ Dim sc As StudyConfiguration
 Dim scSect As ConfigurationSection
 
 Const ProcName As String = "gLoadDefaultStudyConfigurationsFromConfig"
-Dim failpoint As String
+
 
 On Error GoTo Err
 
@@ -231,26 +229,26 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    gLogger.Log LogLevelNormal, "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")"
+    gLogger.Log "Config file contains more than one default configuration for Study " & sc.Name & "(" & sc.StudyLibraryName & ")", ProcName, ModuleName
     Resume Next
 End If
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gSetDefaultStudyConfiguration( _
-                ByVal value As StudyConfiguration)
+                ByVal Value As StudyConfiguration)
 Dim sc As StudyConfiguration
 Dim key As String
 
 Const ProcName As String = "gSetDefaultStudyConfiguration"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 
-key = calcDefaultStudyKey(value.Name, value.StudyLibraryName)
+key = calcDefaultStudyKey(Value.Name, Value.StudyLibraryName)
 
 On Error Resume Next
 Set sc = mDefaultStudyConfigurations(key)
@@ -261,7 +259,7 @@ If Not sc Is Nothing Then
     mDefaultStudyConfigurations.Remove key
 End If
 
-Set sc = value.Clone
+Set sc = Value.Clone
 sc.UnderlyingStudy = Nothing
 mDefaultStudyConfigurations.Add sc, key
 sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultStudyConfig & "(" & sc.ID & ")")
@@ -269,7 +267,7 @@ sc.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultSt
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

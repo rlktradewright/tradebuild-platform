@@ -25,6 +25,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Configurable
 Implements IGraphicObjectStyle
 
 '@================================================================================
@@ -119,6 +120,46 @@ mStyleType = "Line Styles"
 End Sub
 
 '@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IGraphicObjectStyle Interface Members
 '@================================================================================
 
@@ -155,17 +196,14 @@ Const ProcName As String = "ArrowEndColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mArrowEndColor, LinePropertyArrowEndColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndColor() As Long
@@ -178,7 +216,7 @@ ArrowEndColor = mArrowEndColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndFillColor(ByVal Value As Long)
@@ -186,17 +224,14 @@ Const ProcName As String = "ArrowEndFillColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mArrowEndFillColor, LinePropertyArrowEndFillColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndFillColor() As Long
@@ -209,7 +244,7 @@ ArrowEndFillColor = mArrowEndFillColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndFillStyle(ByVal Value As FillStyles)
@@ -222,7 +257,7 @@ setLongProperty mArrowEndFillStyle, LinePropertyArrowEndFillStyle, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndFillStyle() As FillStyles
@@ -235,7 +270,7 @@ ArrowEndFillStyle = mArrowEndFillStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndLength(ByVal Value As Long)
@@ -248,7 +283,7 @@ setLongProperty mArrowEndLength, LinePropertyArrowEndLength, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndLength() As Long
@@ -261,7 +296,7 @@ ArrowEndLength = mArrowEndLength
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndStyle(ByVal Value As ArrowStyles)
@@ -274,7 +309,7 @@ setLongProperty mArrowEndStyle, LinePropertyArrowEndStyle, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndStyle() As ArrowStyles
@@ -287,7 +322,7 @@ ArrowEndStyle = mArrowEndStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowEndWidth(ByVal Value As Long)
@@ -300,7 +335,7 @@ setLongProperty mArrowEndWidth, LinePropertyArrowEndWidth, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowEndWidth() As Long
@@ -313,7 +348,7 @@ ArrowEndWidth = mArrowEndWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartColor(ByVal Value As Long)
@@ -321,17 +356,14 @@ Const ProcName As String = "ArrowStartColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mArrowStartColor, LinePropertyArrowStartColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartColor() As Long
@@ -344,7 +376,7 @@ ArrowStartColor = mArrowStartColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartFillColor(ByVal Value As Long)
@@ -352,17 +384,14 @@ Const ProcName As String = "ArrowStartFillColor"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mArrowStartFillColor, LinePropertyArrowStartFillColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartFillColor() As Long
@@ -375,7 +404,7 @@ ArrowStartFillColor = mArrowStartFillColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartFillStyle(ByVal Value As FillStyles)
@@ -388,7 +417,7 @@ setLongProperty mArrowStartfillStyle, LinePropertyArrowStartFillStyle, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartFillStyle() As FillStyles
@@ -401,7 +430,7 @@ ArrowStartFillStyle = mArrowStartfillStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartLength(ByVal Value As Long)
@@ -414,7 +443,7 @@ setLongProperty mArrowStartLength, LinePropertyArrowStartLength, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartLength() As Long
@@ -427,7 +456,7 @@ ArrowStartLength = mArrowStartLength
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartStyle(ByVal Value As ArrowStyles)
@@ -440,7 +469,7 @@ setLongProperty mArrowStartStyle, LinePropertyArrowStartStyle, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartStyle() As ArrowStyles
@@ -453,7 +482,7 @@ ArrowStartStyle = mArrowStartStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ArrowStartWidth(ByVal Value As Long)
@@ -466,7 +495,7 @@ setLongProperty mArrowStartWidth, LinePropertyArrowStartWidth, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ArrowStartWidth() As Long
@@ -479,7 +508,7 @@ ArrowStartWidth = mArrowStartWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Color(ByVal Value As Long)
@@ -487,17 +516,14 @@ Const ProcName As String = "Color"
 
 On Error GoTo Err
 
-If Not gIsValidColor(Value) Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color"
+If Not gIsValidColor(Value) Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color"
 
 setLongProperty mColor, LinePropertyColor, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Color() As Long
@@ -510,7 +536,7 @@ Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -567,7 +593,7 @@ If Not mOffset2 Is Nothing Then mOffset2.ConfigurationSection = mConfig.AddConfi
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -581,7 +607,7 @@ setBooleanProperty mExtendAfter, LinePropertyExtendAfter, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExtendAfter() As Boolean
@@ -594,7 +620,7 @@ ExtendAfter = mExtendAfter
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExtendBefore(ByVal Value As Boolean)
@@ -607,7 +633,7 @@ setBooleanProperty mExtendBefore, LinePropertyExtendBefore, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExtendBefore() As Boolean
@@ -620,7 +646,7 @@ ExtendBefore = mExtendBefore
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Extended(ByVal Value As Boolean)
@@ -633,7 +659,7 @@ setBooleanProperty mExtended, LinePropertyExtended, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Extended() As Boolean
@@ -646,7 +672,7 @@ Extended = mExtended
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedX(ByVal Value As Boolean)
@@ -659,7 +685,7 @@ setBooleanProperty mFixedX, LinePropertyFixedX, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FixedX() As Boolean
@@ -672,7 +698,7 @@ FixedX = mFixedX
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedY(ByVal Value As Boolean)
@@ -685,7 +711,7 @@ setBooleanProperty mFixedY, LinePropertyFixedY, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FixedY() As Boolean
@@ -698,7 +724,7 @@ FixedY = mFixedY
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -711,7 +737,7 @@ setBooleanProperty mIncludeInAutoscale, LinePropertyIncludeInAutoscale, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IncludeInAutoscale() As Boolean
@@ -724,38 +750,35 @@ IncludeInAutoscale = mIncludeInAutoscale
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let Layer(ByVal Value As LayerNumbers)
+Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
 
-If Value < LayerMin Or Value > LayerMax Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid layer number"
+If Value < LayerMin Or Value > LayerMax Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid layer number"
 
-setLongProperty mLayer, BarPropertyLayer, Value
+setLongProperty mLayer, LinePropertyLayer, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Layer() As LayerNumbers
+Public Property Get layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-checkPropertySet BarPropertyLayer
-Layer = mLayer
+checkPropertySet LinePropertyLayer
+layer = mLayer
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LineStyle(ByVal Value As LineStyles)
@@ -768,7 +791,7 @@ setLongProperty mLineStyle, LinePropertyLineStyle, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LineStyle() As LineStyles
@@ -781,18 +804,14 @@ LineStyle = mLineStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Name(ByVal Value As String)
 Const ProcName As String = "Name"
 On Error GoTo Err
 
-If Value = "" Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Name cannot be blank"
-End If
+If Value = "" Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Name cannot be blank"
 
 mName = Value
 If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
@@ -800,7 +819,7 @@ If Not mConfig Is Nothing Then mConfig.InstanceQualifier = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Offset1(ByVal Value As Size)
@@ -813,7 +832,7 @@ setSizeProperty mOffset1, LinePropertyOffset1, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -826,7 +845,7 @@ Set Offset1 = mOffset1
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Offset2(ByVal Value As Size)
@@ -839,7 +858,7 @@ setSizeProperty mOffset2, LinePropertyOffset2, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -852,7 +871,7 @@ Set Offset2 = mOffset2
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Thickness(ByVal Value As Long)
@@ -865,7 +884,7 @@ setLongProperty mThickness, LinePropertyThickness, Value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Thickness() As Long
@@ -878,7 +897,7 @@ Thickness = mThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -888,7 +907,6 @@ End Property
 Public Sub ClearProperty( _
                 ByVal pPropFlag As LinePropertyFlags)
 Const ProcName As String = "ClearProperty"
-
 On Error GoTo Err
 
 mPropertyFlags = gClearFlag(mPropertyFlags, pPropFlag)
@@ -898,21 +916,20 @@ firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Function Clone() As LineStyle
+Public Function clone() As LineStyle
 Const ProcName As String = "clone"
-
 On Error GoTo Err
 
-Set Clone = New LineStyle
-SyncTo Clone
+Set clone = New LineStyle
+SyncTo clone
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsPropertySet( _
@@ -924,9 +941,7 @@ End Function
 
 Public Sub LoadFromConfig( _
                 ByVal pConfig As ConfigurationSection)
-
 Const ProcName As String = "LoadFromConfig"
-
 On Error GoTo Err
 
 Set mConfig = pConfig
@@ -958,7 +973,7 @@ If mConfig.GetSetting(ConfigSettingFixedY) <> "" Then FixedY = mConfig.GetSettin
 
 If mConfig.GetSetting(ConfigSettingIncludeInAutoscale) <> "" Then IncludeInAutoscale = mConfig.GetSetting(ConfigSettingIncludeInAutoscale)
 
-If mConfig.GetSetting(ConfigSettingLayer) <> "" Then Layer = mConfig.GetSetting(ConfigSettingLayer)
+If mConfig.GetSetting(ConfigSettingLayer) <> "" Then layer = mConfig.GetSetting(ConfigSettingLayer)
 If mConfig.GetSetting(ConfigSettingLineStyle) <> "" Then LineStyle = mConfig.GetSetting(ConfigSettingLineStyle)
 
 If mConfig.GetSetting(ConfigSettingThickness) <> "" Then Thickness = mConfig.GetSetting(ConfigSettingThickness)
@@ -969,12 +984,11 @@ If Not mConfig.GetConfigurationSection(ConfigSectionOffset2) Is Nothing Then Off
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-
 On Error GoTo Err
 
 If Not mConfig Is Nothing Then mConfig.Remove
@@ -982,7 +996,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SyncTo(ByVal pDest As LineStyle)
@@ -1009,7 +1023,7 @@ If IsPropertySet(LinePropertyExtended) Then pDest.Extended = mExtended Else pDes
 If IsPropertySet(LinePropertyFixedX) Then pDest.FixedX = mFixedX Else pDest.ClearProperty LinePropertyFixedX
 If IsPropertySet(LinePropertyFixedY) Then pDest.FixedY = mFixedY Else pDest.ClearProperty LinePropertyFixedY
 If IsPropertySet(LinePropertyIncludeInAutoscale) Then pDest.IncludeInAutoscale = mIncludeInAutoscale Else pDest.ClearProperty LinePropertyIncludeInAutoscale
-If IsPropertySet(LinePropertyLayer) Then pDest.Layer = mLayer Else pDest.ClearProperty LinePropertyLayer
+If IsPropertySet(LinePropertyLayer) Then pDest.layer = mLayer Else pDest.ClearProperty LinePropertyLayer
 If IsPropertySet(LinePropertyLineStyle) Then pDest.LineStyle = mLineStyle Else pDest.ClearProperty LinePropertyLineStyle
 If IsPropertySet(LinePropertyOffset1) Then pDest.Offset1 = mOffset1 Else pDest.ClearProperty LinePropertyOffset1
 If IsPropertySet(LinePropertyOffset2) Then pDest.Offset2 = mOffset2 Else pDest.ClearProperty LinePropertyOffset1
@@ -1018,7 +1032,7 @@ If IsPropertySet(LinePropertyThickness) Then pDest.Thickness = mThickness Else p
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1030,16 +1044,12 @@ Private Sub checkPropertySet( _
 Const ProcName As String = "checkPropertySet"
 On Error GoTo Err
 
-If Not IsPropertySet(pPropFlag) Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Property is not set"
-End If
+If Not IsPropertySet(pPropFlag) Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Property is not set"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
@@ -1057,8 +1067,28 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function propertyFlagToConfigSection( _
+            ByVal pPropFlag As LinePropertyFlags) As String
+Const ProcName As String = "propertyFlagToConfigSection"
+On Error GoTo Err
+
+Select Case pPropFlag
+Case LinePropertyOffset1
+    propertyFlagToConfigSection = ConfigSectionOffset1
+Case LinePropertyOffset2
+    propertyFlagToConfigSection = ConfigSectionOffset2
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function propertyFlagToConfigSetting( _
             ByVal pPropFlag As LinePropertyFlags) As String
@@ -1111,9 +1141,9 @@ Case LinePropertyExtended
 Case LinePropertyLayer
     propertyFlagToConfigSetting = ConfigSettingLayer
 Case LinePropertyOffset1
-    propertyFlagToConfigSetting = ConfigSectionOffset1
+    propertyFlagToConfigSetting = "." & ConfigSectionOffset1
 Case LinePropertyOffset2
-    propertyFlagToConfigSetting = ConfigSectionOffset2
+    propertyFlagToConfigSetting = "." & ConfigSectionOffset2
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid property flag value"
 End Select
@@ -1121,7 +1151,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setBooleanProperty( _
@@ -1140,7 +1170,7 @@ firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLongProperty( _
@@ -1159,7 +1189,7 @@ firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSingleProperty( _
@@ -1178,7 +1208,7 @@ firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSizeProperty( _
@@ -1195,14 +1225,14 @@ If pProp Is Nothing Then
     ClearProperty pPropFlag
 Else
     setPropertyFlag pPropFlag
-    If Not mConfig Is Nothing Then pProp.ConfigurationSection = mConfig.AddConfigurationSection(propertyFlagToConfigSetting(pPropFlag))
+    If Not mConfig Is Nothing Then pProp.ConfigurationSection = mConfig.AddConfigurationSection(propertyFlagToConfigSection(pPropFlag))
+    firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 End If
-firePropertyChanged gLinePropertyFlagToString(pPropFlag)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -1216,7 +1246,7 @@ mPropertyFlags = gSetFlag(mPropertyFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

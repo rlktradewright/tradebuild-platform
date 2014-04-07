@@ -68,7 +68,9 @@ Private Function IPriceFormatter_FormatPrice( _
 Const ProcName As String = "IPriceFormatter_FormatPrice"
 On Error GoTo Err
 
-If (Value - Int(Value / mYScaleQuantum) * mYScaleQuantum) = 0 Then
+If mIntegerYScale Then
+    IPriceFormatter_FormatPrice = FormatPrice(Value, "0")
+ElseIf (Value - Int((Value + 0.99999999 * mYScaleQuantum) / mYScaleQuantum) * mYScaleQuantum) < mYScaleQuantum / 1000 Then
     IPriceFormatter_FormatPrice = FormatPrice(Value, mYScaleFormatStr)
 Else
     IPriceFormatter_FormatPrice = FormatPrice(Value, mYScaleSubFormatStr)
@@ -77,12 +79,12 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Let IPriceFormatter_IntegerYScale(ByVal Value As Boolean)
 mIntegerYScale = Value
-generateYScaleFormatStr
+If mIntegerYScale Then IPriceFormatter_YScaleQuantum = 1
 End Property
 
 Private Property Let IPriceFormatter_YScaleGridSpacing(ByVal Value As Double)
@@ -91,6 +93,7 @@ generateYScaleSubFormatStr
 End Property
 
 Private Property Let IPriceFormatter_YScaleQuantum(ByVal Value As Double)
+If mIntegerYScale Then Value = 1
 mYScaleQuantum = Value
 generateYScaleFormatStr
 generateYScaleSubFormatStr
@@ -115,12 +118,11 @@ End Property
 Private Function FormatPrice( _
                 ByVal Value As Double, _
                 ByRef pFormatString As String) As String
+Const ProcName As String = "FormatPrice"
+On Error GoTo Err
+
 Dim fract As Single
 Dim numerator As Long
-
-Const ProcName As String = "ormatPrice"
-
-On Error GoTo Err
 
 If mYScaleQuantum = 0.03125 Then
     fract = Value - Int(Value)
@@ -147,7 +149,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -171,7 +173,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub generateYScaleSubFormatStr()
@@ -193,6 +195,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub

@@ -74,12 +74,12 @@ Private mConfig                             As ConfigurationSection
 '@================================================================================
 
 Public Property Let ConfigurationSection( _
-                ByVal value As ConfigurationSection)
+                ByVal Value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
-Set mConfig = value
+If Value Is mConfig Then Exit Property
+Set mConfig = Value
 If mConfig Is Nothing Then Exit Property
 
 mConfig.SetSetting ConfigSettingFromTime, FormatTimestamp(mFromTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
@@ -90,7 +90,7 @@ mConfig.SetBooleanSetting ConfigSettingIncludeBarsOutsideSession, mIncludeBarsOu
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FromTime() As Date
@@ -110,7 +110,7 @@ InitialNumberOfBars = mInitialNumberOfBars
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IncludeBarsOutsideSession() As Boolean
@@ -122,7 +122,7 @@ IncludeBarsOutsideSession = mIncludeBarsOutsideSession
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -144,7 +144,7 @@ mToTime = pTotime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -167,7 +167,7 @@ mToTime = CDate(mConfig.GetSetting(ConfigSettingToTime, CDate(0)))
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 

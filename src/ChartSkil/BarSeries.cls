@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-    Option Explicit
+Option Explicit
 
 '================================================================================
 ' Interfaces
@@ -50,7 +50,7 @@ Private Const ModuleName                As String = "BarSeries"
 ' Member variables
 '================================================================================
 
-Private mChartRef As WeakReference
+Private mPeriods As Periods
 Private mSeriesID As Long
 Private mSeriesUpdateNumber As Long
 
@@ -61,7 +61,7 @@ Private mFinished As Boolean
 
 Private mBars As Collection
 
-Private mViewport As Viewport
+Private mViewport As ViewPort
 Private mLayer As Long
 
 Private mGOSP As GraphObjServiceProvider
@@ -100,13 +100,17 @@ Set mStyle = New BarStyle
 End Sub
 
 Private Sub Class_Terminate()
-'gLogger.Log LogLevelHighDetail, "BarSeries terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="BarSeries terminated"
 Debug.Print "BarSeries terminated"
 End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
+
+Private Function IGraphicObjectSeries_Add() As IGraphicObject
+Set IGraphicObjectSeries_Add = Add
+End Function
 
 Private Sub IGraphicObjectSeries_Click()
 RaiseEvent Click
@@ -122,7 +126,7 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
-Set mChartRef = Nothing
+Set mPeriods = Nothing
 Set mPrevBarRef = Nothing
 Set mGOSP = Nothing
 Set mViewport = Nothing
@@ -130,9 +134,9 @@ End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
                 ByVal pName As String, _
-                ByVal pViewport As Viewport, _
+                ByVal pViewport As ViewPort, _
                 ByVal pLayer As LayerNumbers, _
-                ByVal pChart As Chart, _
+                ByVal pPeriods As Periods, _
                 ByVal pSeriesID As Long, _
                 ByVal pGOSP As GraphObjServiceProvider)
 Const ProcName As String = "IGraphicObjectSeries_Initialise"
@@ -142,14 +146,14 @@ On Error GoTo Err
 mName = pName
 mSeriesID = pSeriesID
 Set mGOSP = pGOSP
-Layer = pLayer
+layer = pLayer
 Set mViewport = pViewport
-Set mChartRef = CreateWeakReference(pChart)
+Set mPeriods = pPeriods
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -166,7 +170,7 @@ Set IGraphicObjectSeries_item = mBars.Item(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IGraphicObjectSeries_Name() As String
@@ -183,11 +187,11 @@ mBars.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal Value As IGraphicObject)
-Dim lBar As Bar
+Dim lBar As ChartSkil27.Bar
 
 Const ProcName As String = "IGraphicObjectSeries_RemoveObject"
 
@@ -201,7 +205,7 @@ mBars.Remove lBar.Key
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
@@ -218,7 +222,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IGraphicObjectSeries_Selected() As Boolean
@@ -262,9 +266,7 @@ Case "THICKNESS"
 Case "UPCOLOR"
     RepaintRegion False
 Case Else
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Unhandled property change"
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Unhandled property change"
 End Select
 
 firePropertyChanged ev.PropertyName
@@ -291,7 +293,7 @@ If IsPropertySet(BarPropertyColor) Then Color = mColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Color(ByVal Value As Long)
@@ -300,10 +302,7 @@ Const ProcName As String = "Color"
 On Error GoTo Err
 
 
-If Not gIsValidColor(Value) And Value <> -1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Value is not a valid Color or -1"
+If Not gIsValidColor(Value) And Value <> -1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Color or -1"
 
 setLongProperty mColor, BarPropertyColor, Value
 RepaintRegion False
@@ -311,7 +310,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Count() As Long
@@ -324,7 +323,7 @@ Count = mBars.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DisplayMode() As BarDisplayModes
@@ -339,7 +338,7 @@ If IsPropertySet(BarPropertyDisplayMode) Then DisplayMode = mDisplayMode
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DisplayMode(ByVal Value As BarDisplayModes)
@@ -353,7 +352,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DownColor() As Long
@@ -368,7 +367,7 @@ If IsPropertySet(BarPropertyDownColor) Then DownColor = mDownColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DownColor(ByVal Value As Long)
@@ -382,7 +381,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Id() As Long
@@ -401,7 +400,7 @@ If IsPropertySet(BarPropertyIncludeInAutoscale) Then IncludeInAutoscale = mInclu
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IncludeInAutoscale(ByVal Value As Boolean)
@@ -415,7 +414,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let IsSelectable(ByVal Value As Boolean)
@@ -429,7 +428,7 @@ firePropertyChanged "IsSelectable"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsSelectable() As Boolean
@@ -440,7 +439,7 @@ Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Let Layer(ByVal Value As LayerNumbers)
+Public Property Let layer(ByVal Value As LayerNumbers)
 Const ProcName As String = "Layer"
 
 On Error GoTo Err
@@ -451,21 +450,21 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Layer() As LayerNumbers
+Public Property Get layer() As LayerNumbers
 Const ProcName As String = "Layer"
 On Error GoTo Err
 
-Layer = mBaseStyle.Layer
-If Not mStyle Is Nothing Then If mStyle.IsPropertySet(BarPropertyLayer) Then Layer = mStyle.Layer
-If IsPropertySet(BarPropertyLayer) Then Layer = mLayer
+layer = mBaseStyle.layer
+If Not mStyle Is Nothing Then If mStyle.IsPropertySet(BarPropertyLayer) Then layer = mStyle.layer
+If IsPropertySet(BarPropertyLayer) Then layer = mLayer
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -483,7 +482,7 @@ firePropertyChanged "Name"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OutlineThickness() As Long
@@ -498,7 +497,7 @@ If IsPropertySet(BarPropertyOutlineThickness) Then OutlineThickness = mOutlineTh
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OutlineThickness(ByVal Value As Long)
@@ -512,7 +511,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SeriesUpdateNumber() As Long
@@ -531,7 +530,7 @@ If IsPropertySet(BarPropertySolidUpBody) Then SolidUpBody = mSolidUpBody
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let SolidUpBody(ByVal Value As Boolean)
@@ -545,7 +544,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Style() As BarStyle
@@ -558,12 +557,6 @@ Const ProcName As String = "Style"
 
 On Error GoTo Err
 
-If Value Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Style is null reference"
-End If
-
 Set mStyle = Value
 RepaintRegion True
 
@@ -572,7 +565,7 @@ firePropertyChanged "Style"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TailThickness() As Long
@@ -587,7 +580,7 @@ If IsPropertySet(BarPropertyTailThickness) Then TailThickness = mTailThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TailThickness(ByVal Value As Long)
@@ -601,7 +594,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Thickness() As Long
@@ -616,7 +609,7 @@ If IsPropertySet(BarPropertyThickness) Then Thickness = mThickness
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Thickness(ByVal Value As Long)
@@ -630,7 +623,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get UpColor() As Long
@@ -645,7 +638,7 @@ If IsPropertySet(BarPropertyUpColor) Then UpColor = mUpColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let UpColor(ByVal Value As Long)
@@ -659,7 +652,7 @@ RepaintRegion False
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Width() As Single
@@ -674,7 +667,7 @@ If IsPropertySet(BarPropertyWidth) Then Width = mWidth
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Width(ByVal Value As Single)
@@ -688,7 +681,7 @@ RepaintRegion True
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -696,42 +689,30 @@ End Property
 '================================================================================
 
 Public Function Add( _
-                ByVal Timestamp As Date, _
+                Optional ByVal Timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As BarStyle) As Bar
-Const ProcName As String = "Add"
-On Error GoTo Err
 
-Static duplicateCount As Long       ' counts the number of successive adds with
-                                    ' the same Timestamp
-Static prevTimestamp As Date
+Const ProcName As String = "Add"
 Dim lBar As Bar
 
-If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-                            "Bar series is finished"
 
-If Not mPrevBarRef Is Nothing Then
-    If Timestamp = prevTimestamp Then
-        duplicateCount = duplicateCount + 1
-    Else
-        duplicateCount = 0
-    End If
-End If
+On Error GoTo Err
+
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Bar series is finished"
 
 Set lBar = New Bar
-If CDbl(Timestamp) <> 0 Then lBar.X = chartObj.GetXFromTimestamp(Timestamp, False, duplicateCount)
 
 If Key = "" Then
     Key = GenerateGUIDString
 End If
 lBar.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
-If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
+If CDbl(Timestamp) <> 0# Then lBar.X = mPeriods.GetXFromTimestamp(Timestamp, False)
 
+If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
 mBars.Add lBar, Key
 Set mPrevBarRef = CreateWeakReference(lBar)
-prevTimestamp = Timestamp
 mGOSP.AddGraphicObject lBar
 
 Set Add = lBar
@@ -739,7 +720,7 @@ Set Add = lBar
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub ClearOverrides()
@@ -753,7 +734,7 @@ RepaintRegion True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -771,10 +752,10 @@ Set Item = mBars(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As Bar)
+Public Sub RemoveObject(ByVal Value As ChartSkil27.Bar)
 On Error GoTo Err
 mBars.Remove Value.Key
 mGOSP.RemoveObject Value.handle
@@ -794,19 +775,6 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Private Function chartObj() As Chart
-Const ProcName As String = "chartObj"
-
-On Error GoTo Err
-
-Set chartObj = mChartRef.Target
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
 Private Sub ClearProperty( _
                 ByVal flag As BarPropertyFlags)
 Const ProcName As String = "ClearProperty"
@@ -818,7 +786,7 @@ mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePropertyChanged( _
@@ -836,7 +804,7 @@ RaiseEvent PropertyChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IsPropertySet( _
@@ -850,7 +818,7 @@ IsPropertySet = gIsFlagSet(mPropertyOverrideFlags, flag)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function prevBarObj() As Bar
@@ -863,7 +831,7 @@ Set prevBarObj = mPrevBarRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub RepaintRegion( _
@@ -885,7 +853,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setBooleanProperty( _
@@ -903,7 +871,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLongProperty( _
@@ -921,7 +889,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSingleProperty( _
@@ -939,7 +907,7 @@ firePropertyChanged gBarPropertyFlagToString(pPropFlag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPropertyFlag( _
@@ -953,7 +921,7 @@ mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

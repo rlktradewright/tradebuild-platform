@@ -130,11 +130,19 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+Implements Configurable
+
 '================================================================================
 ' Events
 '================================================================================
 
 Event ChartCleared()
+Event Click()
+Event DblCLick()
 Event KeyDown(KeyCode As Integer, Shift As Integer)
 Attribute KeyDown.VB_UserMemId = -602
 Event KeyPress(KeyAscii As Integer)
@@ -182,8 +190,8 @@ Private Const PropNameHorizontalMouseScrollingAllowed   As String = "HorizontalM
 Private Const PropNameVerticalMouseScrollingAllowed     As String = "VerticalMouseScrollingAllowed"
 Private Const PropNameAutoscrolling                     As String = "Autoscrolling"
 Private Const PropNameChartBackColor                    As String = "ChartBackColor"
-Private Const PropNamePeriodLength                      As String = "PeriodLength"
-Private Const PropNamePeriodUnits                       As String = "PeriodUnits"
+'Private Const PropNamePeriodLength                      As String = "PeriodLength"
+'Private Const PropNamePeriodUnits                       As String = "PeriodUnits"
 Private Const PropNamePointerDiscColor                  As String = "PointerDiscColor"
 Private Const PropNamePointerCrosshairsColor            As String = "PointerCrosshairsColor"
 Private Const PropNamePointerStyle                      As String = "PointerStyle"
@@ -199,18 +207,18 @@ Private Const PropDfltHorizontalMouseScrollingAllowed   As Boolean = True
 Private Const PropDfltVerticalMouseScrollingAllowed     As Boolean = True
 Private Const PropDfltAutoscrolling                     As Boolean = True
 Private Const PropDfltChartBackColor                    As Long = &H643232
-Private Const PropDfltPeriodLength                      As Long = 5
-Private Const PropDfltPeriodUnits                       As Long = TimePeriodMinute
+'Private Const PropDfltPeriodLength                      As Long = 5
+'Private Const PropDfltPeriodUnits                       As Long = TimePeriodMinute
 Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
 Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
 Private Const PropDfltHorizontalScrollBarVisible        As Boolean = True
-Private Const PropDfltTwipsPerPeriod                    As Long = 150
+Private Const PropDfltPeriodWidth                       As Long = DefaultPeriodWidth
 Private Const PropDfltVerticalGridSpacing               As Long = 1
 Private Const PropDfltVerticalGridUnits                 As Long = TimePeriodHour
 Private Const PropDfltXAxisVisible                      As Boolean = True
 Private Const PropDfltYAxisVisible                      As Boolean = True
-Private Const PropDfltYAxisWidthCm                      As Single = 1.5
+Private Const PropDfltYAxisWidthCm                      As Single = DefaultYAxisWidthCm
 
 '================================================================================
 ' Member variables
@@ -243,19 +251,8 @@ Private mPrevHeight As Single
 Private mPrevWidth As Single
 
 Private mXAxisRegion As ChartRegion
-Private mXCursorText As Text
 
 Private mYAxisPosition As Long
-
-Private mSessionBuilder As SessionBuilder
-Private mSession As Session
-Attribute mSession.VB_VarHelpID = -1
-
-Private mPeriodLength As TimePeriod
-Private mPeriodLengthSet As Boolean
-
-Private mVerticalGridTimePeriod As TimePeriod
-Private mVerticalGridTimePeriodSet As Boolean
 
 ' indicates whether grids in regions are currently
 ' hidden. Note that a region's hasGrid property
@@ -281,28 +278,31 @@ Private mMouseScrollingInProgress As Boolean
 
 Private mReferenceTime As Date
 
-Private mBackGroundViewport As Viewport
+Private mBackGroundViewport As ViewPort
 
 '================================================================================
 ' User Control Event Handlers
 '================================================================================
 
+Private Sub UserControl_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub UserControl_DblClick()
+RaiseEvent DblCLick
+End Sub
+
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
+On Error Resume Next
+
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart created"
 
 On Error GoTo Err
 
-Set mRegions = New ChartRegions
-mRegions.Chart = Me
+GChart.gRegisterProperties
 
 Set mRegionMap = New ChartRegionMap
-
-GChart.gRegisterProperties
-Set mEPhost = New ExtendedPropertyHost
-mEPhost.Style = gChartStylesManager.DefaultStyle.ExtendedPropertyHost
-
-' set a (possibly) temporary style for the saved properties to be applied to
-Style = gDefaultChartStyle
 
 Set gBlankCursor = BlankPicture.Picture
 Set gSelectorCursor = SelectorPicture.Picture
@@ -312,8 +312,6 @@ mChartBackGradientFillColors(0) = PropDfltChartBackColor
 
 Set mController = New ChartController
 mController.Chart = Me
-
-createXAxisRegion
 
 Exit Sub
 
@@ -326,21 +324,21 @@ Const ProcName As String = "UserControl_InitProperties"
 
 On Error GoTo Err
 
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart initialising properties"
+
 Initialise
 
-Style.HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-Style.VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-Style.Autoscrolling = PropDfltAutoscrolling
-Set mPeriodLength = GetTimePeriod(PropDfltPeriodLength, PropDfltPeriodUnits)
-PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-PointerDiscColor = PropDfltPointerDiscColor
-PointerStyle = PropDfltPointerStyle
-Style.HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
-Style.TwipsPerPeriod = PropDfltTwipsPerPeriod
-Set mVerticalGridTimePeriod = GetTimePeriod(PropDfltVerticalGridSpacing, PropDfltVerticalGridUnits)
-Style.XAxisVisible = PropDfltXAxisVisible
-Style.YAxisWidthCm = PropDfltYAxisWidthCm
-Style.YAxisVisible = PropDfltYAxisVisible
+'HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+'VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+'Autoscrolling = PropDfltAutoscrolling
+'PointerCrosshairsColor = PropDfltPointerCrosshairsColor
+'PointerDiscColor = PropDfltPointerDiscColor
+'PointerStyle = PropDfltPointerStyle
+'HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
+''TwipsPerPeriod = PropDfltTwipsPerPeriod
+'XAxisVisible = PropDfltXAxisVisible
+'YAxisWidthCm = PropDfltYAxisWidthCm
+'YAxisVisible = PropDfltYAxisVisible
 
 Exit Sub
 
@@ -440,39 +438,34 @@ Const ProcName As String = "UserControl_ReadProperties"
 
 On Error GoTo Err
 
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart reading properties"
+
 Initialise
 
-Style.Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
+'Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
+'ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
+'HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
+'HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameHorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible)
+'PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
+'PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
+'PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
+'TwipsPerPeriod = PropBag.ReadProperty(PropNameTwipsPerPeriod, PropDfltTwipsPerPeriod)
+'VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
+'XAxisVisible = PropBag.ReadProperty(PropNameXAxisVisible, PropDfltXAxisVisible)
+'YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
+'YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
 
-Set mPeriodLength = GetTimePeriod(PropBag.ReadProperty(PropNamePeriodLength, PropDfltPeriodLength), _
-                                    PropBag.ReadProperty(PropNamePeriodUnits, PropDfltPeriodUnits))
-
-
-Style.ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
-
-Style.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
-
-Style.HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameHorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible)
-
-
-PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
-
-PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
-
-PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
-
-Style.TwipsPerPeriod = PropBag.ReadProperty(PropNameTwipsPerPeriod, PropDfltTwipsPerPeriod)
-
-Set mVerticalGridTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNameVerticalGridSpacing, PropDfltVerticalGridSpacing), _
-                        PropBag.ReadProperty(PropNameVerticalGridUnits, PropDfltVerticalGridUnits))
-
-Style.VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
-
-Style.XAxisVisible = PropBag.ReadProperty(PropNameXAxisVisible, PropDfltXAxisVisible)
-
-Style.YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
-
-Style.YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
+HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+Autoscrolling = PropDfltAutoscrolling
+PointerCrosshairsColor = PropDfltPointerCrosshairsColor
+PointerDiscColor = PropDfltPointerDiscColor
+PointerStyle = PropDfltPointerStyle
+HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
+'TwipsPerPeriod = PropDfltTwipsPerPeriod
+XAxisVisible = PropDfltXAxisVisible
+YAxisWidthCm = PropDfltYAxisWidthCm
+YAxisVisible = PropDfltYAxisVisible
 
 Exit Sub
 
@@ -505,30 +498,68 @@ gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub UserControl_Terminate()
-'gLogger.Log LogLevelDetail, "ChartSkil chart terminated"
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart terminated"
 Debug.Print "ChartSkil chart terminated"
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
 
-PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, Style.HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
-PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, Style.VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
-PropBag.WriteProperty PropNameAutoscrolling, Style.Autoscrolling, PropDfltAutoscrolling
-PropBag.WriteProperty PropNameChartBackColor, Style.ChartBackColor
-PropBag.WriteProperty PropNamePeriodLength, mPeriodLength.Length, PropDfltPeriodLength
-PropBag.WriteProperty PropNamePeriodUnits, mPeriodLength.Units, PropDfltPeriodUnits
-PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
-PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
-PropBag.WriteProperty PropNamePointerStyle, mPointerStyle, PropDfltPointerStyle
-PropBag.WriteProperty PropNameHorizontalScrollBarVisible, Style.HorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible
-PropBag.WriteProperty PropNameTwipsPerPeriod, Style.TwipsPerPeriod, PropDfltTwipsPerPeriod
-PropBag.WriteProperty PropNameVerticalGridSpacing, mVerticalGridTimePeriod.Length, PropDfltVerticalGridSpacing
-PropBag.WriteProperty PropNameVerticalGridUnits, mVerticalGridTimePeriod.Units, PropDfltVerticalGridUnits
-PropBag.WriteProperty PropNameXAxisVisible, Style.XAxisVisible, PropDfltXAxisVisible
-PropBag.WriteProperty PropNameYAxisVisible, Style.YAxisVisible, PropDfltYAxisVisible
-PropBag.WriteProperty PropNameYAxisWidthCm, Style.YAxisWidthCm, PropDfltYAxisWidthCm
+gLogger.Log pLogLevel:=LogLevelHighDetail, pProcName:="Proc", pModName:=ModuleName, pMsg:="ChartSkil chart writing properties"
 
+'PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
+'PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
+'PropBag.WriteProperty PropNameAutoscrolling, Autoscrolling, PropDfltAutoscrolling
+'PropBag.WriteProperty PropNameChartBackColor, ChartBackColor
+'PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
+'PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
+'PropBag.WriteProperty PropNamePointerStyle, mPointerStyle, PropDfltPointerStyle
+'PropBag.WriteProperty PropNameHorizontalScrollBarVisible, HorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible
+'PropBag.WriteProperty PropNameTwipsPerPeriod, TwipsPerPeriod, PropDfltTwipsPerPeriod
+'PropBag.WriteProperty PropNameXAxisVisible, XAxisVisible, PropDfltXAxisVisible
+'PropBag.WriteProperty PropNameYAxisVisible, YAxisVisible, PropDfltYAxisVisible
+'PropBag.WriteProperty PropNameYAxisWidthCm, YAxisWidthCm, PropDfltYAxisWidthCm
+
+End Sub
+
+'@================================================================================
+' Configurable Interface Members
+'@================================================================================
+
+Private Property Let Configurable_ConfigurationSection(ByVal RHS As ConfigurationSection)
+Const ProcName As String = "Configurable_ConfigurationSection"
+On Error GoTo Err
+
+ConfigurationSection = RHS
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Sub Configurable_LoadFromConfig(ByVal pConfig As ConfigurationSection)
+Const ProcName As String = "Configurable_LoadFromConfig"
+On Error GoTo Err
+
+LoadFromConfig pConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub Configurable_RemoveFromConfig()
+Const ProcName As String = "Configurable_RemoveFromConfig"
+On Error GoTo Err
+
+RemoveFromConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -544,6 +575,8 @@ If index = 0 Then Exit Sub
 
 getDataRegionFromPictureIndex(index).Click
 
+RaiseEvent Click
+
 Exit Sub
 
 Err:
@@ -558,6 +591,8 @@ On Error GoTo Err
 If index = 0 Then Exit Sub
 
 getDataRegionFromPictureIndex(index).DblCLick
+
+RaiseEvent DblCLick
 
 Exit Sub
 
@@ -722,6 +757,14 @@ End Sub
 ' RegionDividerPicture Event Handlers
 '================================================================================
 
+Private Sub RegionDividerPicture_Click(index As Integer)
+RaiseEvent Click
+End Sub
+
+Private Sub RegionDividerPicture_DblClick(index As Integer)
+RaiseEvent DblCLick
+End Sub
+
 Private Sub RegionDividerPicture_MouseDown( _
                             index As Integer, _
                             Button As Integer, _
@@ -813,6 +856,8 @@ On Error GoTo Err
 If mXAxisRegion Is Nothing Then Exit Sub
 mXAxisRegion.Click
 
+RaiseEvent Click
+
 Exit Sub
 
 Err:
@@ -826,6 +871,8 @@ On Error GoTo Err
 
 If mXAxisRegion Is Nothing Then Exit Sub
 mXAxisRegion.DblCLick
+
+RaiseEvent DblCLick
 
 Exit Sub
 
@@ -901,6 +948,8 @@ On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).Click
 
+RaiseEvent Click
+
 Exit Sub
 
 Err:
@@ -913,6 +962,8 @@ Const ProcName As String = "YAxisPicture_DblClick"
 On Error GoTo Err
 
 getYAxisRegionFromPictureIndex(index).DblCLick
+
+RaiseEvent DblCLick
 
 Exit Sub
 
@@ -982,30 +1033,30 @@ Private Sub mEPhost_Change(pEv As ChangeEventData)
 Const ProcName As String = "mEPhost_Change"
 On Error GoTo Err
 
-If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.BackColor = ChartBackColor
+If Not mBackGroundViewport Is Nothing Then mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
 
 HScroll.Visible = HorizontalScrollBarVisible
 
 XAxisPicture.Visible = XAxisVisible
 
 Dim lregion As ChartRegion
-For Each lregion In mRegions
-    lregion.CrosshairLineStyle = CrosshairLineStyle
-Next
-
-mRegions.DefaultDataRegionStyle = DefaultRegionStyle
-mRegions.DefaultYAxisRegionStyle = DefaultYAxisRegionStyle
+If Not mRegions Is Nothing Then
+    For Each lregion In mRegions
+        lregion.CrosshairLineStyle = CrosshairLineStyle
+    Next
+    
+    mRegions.DefaultDataRegionStyle = DefaultRegionStyle
+    mRegions.DefaultYAxisRegionStyle = DefaultYAxisRegionStyle
+End If
 
 If Not mXAxisRegion Is Nothing Then mXAxisRegion.BaseStyle = XAxisRegionStyle
 
-If Not mXCursorText Is Nothing Then mXCursorText.LocalStyle = XCursorTextStyle
-
-Resize True, True
+If Not mRegions Is Nothing Then Resize True, True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mEPhost_ExtendedPropertyChanged(pEv As ExtendedPropertyChangedEventData)
@@ -1015,15 +1066,17 @@ On Error GoTo Err
 Dim lregion As ChartRegion
 
 If pEv.ExtendedProperty Is gChartBackColorProperty Then
-    mBackGroundViewport.BackColor = ChartBackColor
+    mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
+    mBackGroundViewport.PaintBackground
 ElseIf pEv.ExtendedProperty Is gHorizontalScrollBarVisibleProperty Then
     HScroll.Visible = HorizontalScrollBarVisible
     Resize False, True
-ElseIf pEv.ExtendedProperty Is gTwipsPerPeriodProperty Then
+ElseIf pEv.ExtendedProperty Is gPeriodWidthProperty Then
     resizeX
 ElseIf pEv.ExtendedProperty Is gXAxisVisibleProperty Then
     mRegions.ResizeY mUserResizingRegions
     XAxisPicture.Visible = XAxisVisible
+    setRegionViewSizes
 ElseIf pEv.ExtendedProperty Is gYAxisVisibleProperty Then
     resizeX
 ElseIf pEv.ExtendedProperty Is gYAxisWidthCmProperty Then
@@ -1038,8 +1091,6 @@ ElseIf pEv.ExtendedProperty Is gDefaultYAxisRegionStyleProperty Then
     mRegions.DefaultYAxisRegionStyle = DefaultYAxisRegionStyle
 ElseIf pEv.ExtendedProperty Is gXAxisRegionStyleProperty Then
     mXAxisRegion.BaseStyle = XAxisRegionStyle
-ElseIf pEv.ExtendedProperty Is gXCursorTextStyleProperty Then
-    mXCursorText.LocalStyle = XCursorTextStyle
 End If
 
 Exit Sub
@@ -1083,6 +1134,8 @@ End Sub
 '================================================================================
 
 Public Property Get Autoscrolling() As Boolean
+Attribute Autoscrolling.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute Autoscrolling.VB_MemberFlags = "400"
 Const ProcName As String = "Autoscrolling"
 On Error GoTo Err
 
@@ -1091,7 +1144,7 @@ Autoscrolling = mEPhost.GetValue(GChart.gAutoscrollingProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Autoscrolling(ByVal Value As Boolean)
@@ -1105,7 +1158,7 @@ PropertyChanged PropNameAutoscrolling
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Availableheight() As Long
@@ -1113,18 +1166,19 @@ Const ProcName As String = "Availableheight"
 
 On Error GoTo Err
 
-Availableheight = IIf(XAxisVisible, XAxisPicture.Top, UserControl.ScaleHeight) - _
+Availableheight = IIf(XAxisVisible, XAxisPicture.Top, IIf(HorizontalScrollBarVisible, HScroll.Top, UserControl.ScaleHeight)) - _
                     (mRegions.Count - 1) * RegionDividerPicture(0).Height
 If Availableheight < 1 Then Availableheight = 1
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
 Attribute ChartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute ChartBackColor.VB_MemberFlags = "400"
 Const ProcName As String = "ChartBackColor"
 On Error GoTo Err
 
@@ -1133,7 +1187,7 @@ ChartBackColor = mEPhost.GetValue(GChart.gChartBackColorProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ChartBackColor(ByVal Value As OLE_COLOR)
@@ -1149,7 +1203,7 @@ PropertyChanged PropNameChartBackColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartLeft() As Double
@@ -1168,11 +1222,12 @@ ChartWidth = YAxisPosition - mScaleLeft
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal Value As ConfigurationSection)
+Attribute ConfigurationSection.VB_MemberFlags = "400"
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
@@ -1185,30 +1240,32 @@ End If
 If Value Is mConfig Then Exit Property
 Set mConfig = Value
 
-If isLocalValueSet(GChart.gTwipsPerPeriodProperty) Then mConfig.SetSetting ConfigSettingTwipsPerPeriod, mEPhost.GetLocalValue(GChart.gTwipsPerPeriodProperty)
+mConfig.SetSetting ConfigSettingStyle, mStyle.Name
 
-If isLocalValueSet(GChart.gAutoscrollingProperty) Then mConfig.SetSetting ConfigSettingAutoscrolling, mEPhost.GetLocalValue(GChart.gAutoscrollingProperty)
-If isLocalValueSet(GChart.gChartBackColorProperty) Then mConfig.SetSetting ConfigSettingChartBackColor, mEPhost.GetLocalValue(GChart.gChartBackColorProperty)
-If isLocalValueSet(GChart.gHorizontalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingHorizontalMouseScrollingAllowed, mEPhost.GetLocalValue(GChart.gHorizontalMouseScrollingAllowedProperty)
-If isLocalValueSet(GChart.gHorizontalScrollBarVisibleProperty) Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, mEPhost.GetLocalValue(GChart.gHorizontalScrollBarVisibleProperty)
-If isLocalValueSet(GChart.gVerticalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingVerticalMouseScrollingAllowed, mEPhost.GetLocalValue(GChart.gVerticalMouseScrollingAllowedProperty)
-If isLocalValueSet(GChart.gXAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingXAxisVisible, mEPhost.GetLocalValue(GChart.gXAxisVisibleProperty)
-If isLocalValueSet(GChart.gYAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingYAxisVisible, mEPhost.GetLocalValue(GChart.gYAxisVisibleProperty)
-If isLocalValueSet(GChart.gYAxisWidthCmProperty) Then mConfig.SetSetting ConfigSettingYAxisWidthCm, mEPhost.GetLocalValue(GChart.gYAxisWidthCmProperty)
+If isLocalValueSet(GChart.gPeriodWidthProperty) Then mConfig.SetSetting ConfigSettingPeriodWidth, mEPhost.getLocalValue(GChart.gPeriodWidthProperty)
 
-If isLocalValueSet(GChart.gCrosshairLineStyleProperty) Then mEPhost.GetLocalValue(GChart.gCrosshairLineStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCrosshairLineStyle)
-If isLocalValueSet(GChart.gDefaultRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gDefaultRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
-If isLocalValueSet(GChart.gDefaultYAxisRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gDefaultYAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
-If isLocalValueSet(GChart.gXAxisRegionStyleProperty) Then mEPhost.GetLocalValue(GChart.gXAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
-If isLocalValueSet(GChart.gXCursorTextStyleProperty) Then mEPhost.GetLocalValue(GChart.gXCursorTextStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
+If isLocalValueSet(GChart.gAutoscrollingProperty) Then mConfig.SetSetting ConfigSettingAutoscrolling, mEPhost.getLocalValue(GChart.gAutoscrollingProperty)
+If isLocalValueSet(GChart.gChartBackColorProperty) Then mConfig.SetSetting ConfigSettingChartBackColor, mEPhost.getLocalValue(GChart.gChartBackColorProperty)
+If isLocalValueSet(GChart.gHorizontalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingHorizontalMouseScrollingAllowed, mEPhost.getLocalValue(GChart.gHorizontalMouseScrollingAllowedProperty)
+If isLocalValueSet(GChart.gHorizontalScrollBarVisibleProperty) Then mConfig.SetSetting ConfigSettingHorizontalScrollBarVisible, mEPhost.getLocalValue(GChart.gHorizontalScrollBarVisibleProperty)
+If isLocalValueSet(GChart.gVerticalMouseScrollingAllowedProperty) Then mConfig.SetSetting ConfigSettingVerticalMouseScrollingAllowed, mEPhost.getLocalValue(GChart.gVerticalMouseScrollingAllowedProperty)
+If isLocalValueSet(GChart.gXAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingXAxisVisible, mEPhost.getLocalValue(GChart.gXAxisVisibleProperty)
+If isLocalValueSet(GChart.gYAxisVisibleProperty) Then mConfig.SetSetting ConfigSettingYAxisVisible, mEPhost.getLocalValue(GChart.gYAxisVisibleProperty)
+If isLocalValueSet(GChart.gYAxisWidthCmProperty) Then mConfig.SetSetting ConfigSettingYAxisWidthCm, mEPhost.getLocalValue(GChart.gYAxisWidthCmProperty)
+
+If isLocalValueSet(GChart.gCrosshairLineStyleProperty) Then mEPhost.getLocalValue(GChart.gCrosshairLineStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionCrosshairLineStyle)
+If isLocalValueSet(GChart.gDefaultRegionStyleProperty) Then mEPhost.getLocalValue(GChart.gDefaultRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultRegionStyle)
+If isLocalValueSet(GChart.gDefaultYAxisRegionStyleProperty) Then mEPhost.getLocalValue(GChart.gDefaultYAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionDefaultYAxisRegionStyle)
+If isLocalValueSet(GChart.gXAxisRegionStyleProperty) Then mEPhost.getLocalValue(GChart.gXAxisRegionStyleProperty).ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXAxisRegionStyle)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Controller() As ChartController
+Attribute Controller.VB_MemberFlags = "400"
 Set Controller = mController
 End Property
 
@@ -1228,10 +1285,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CrosshairLineStyle() As LineStyle
+Attribute CrosshairLineStyle.VB_MemberFlags = "400"
 Const ProcName As String = "CrosshairLineStyle"
 On Error GoTo Err
 
@@ -1240,7 +1298,7 @@ Set CrosshairLineStyle = mEPhost.GetValue(GChart.gCrosshairLineStyleProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentPeriodNumber() As Long
@@ -1254,17 +1312,17 @@ CurrentPeriodNumber = mPeriods.CurrentPeriodNumber
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentSessionEndTime() As Date
 Attribute CurrentSessionEndTime.VB_MemberFlags = "400"
-CurrentSessionEndTime = mSession.CurrentSessionEndTime
+CurrentSessionEndTime = mPeriods.CurrentSessionEndTime
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
 Attribute CurrentSessionStartTime.VB_MemberFlags = "400"
-CurrentSessionStartTime = mSession.CurrentSessionStartTime
+CurrentSessionStartTime = mPeriods.CurrentSessionStartTime
 End Property
 
 Public Property Let DefaultRegionStyle(ByVal Value As ChartRegionStyle)
@@ -1283,10 +1341,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DefaultRegionStyle() As ChartRegionStyle
+Attribute DefaultRegionStyle.VB_MemberFlags = "400"
 Const ProcName As String = "DefaultRegionStyle"
 On Error GoTo Err
 
@@ -1295,7 +1354,7 @@ Set DefaultRegionStyle = mEPhost.GetValue(GChart.gDefaultRegionStyleProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let DefaultYAxisRegionStyle(ByVal Value As ChartRegionStyle)
@@ -1314,10 +1373,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
+Attribute DefaultYAxisRegionStyle.VB_MemberFlags = "400"
 Const ProcName As String = "DefaultYAxisRegionStyle"
 On Error GoTo Err
 
@@ -1326,7 +1386,7 @@ Set DefaultYAxisRegionStyle = mEPhost.GetValue(GChart.gDefaultYAxisRegionStylePr
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FirstVisiblePeriod() As Long
@@ -1344,10 +1404,12 @@ ScrollX Value - mScaleLeft + 1
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+Attribute HorizontalMouseScrollingAllowed.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute HorizontalMouseScrollingAllowed.VB_MemberFlags = "400"
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 On Error GoTo Err
 
@@ -1356,12 +1418,11 @@ HorizontalMouseScrollingAllowed = mEPhost.GetValue(GChart.gHorizontalMouseScroll
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalMouseScrollingAllowed(ByVal Value As Boolean)
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
-
 On Error GoTo Err
 
 setProperty GChart.gHorizontalMouseScrollingAllowedProperty, Value
@@ -1371,10 +1432,12 @@ PropertyChanged PropNameHorizontalMouseScrollingAllowed
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
+Attribute HorizontalScrollBarVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute HorizontalScrollBarVisible.VB_MemberFlags = "400"
 Const ProcName As String = "HorizontalScrollBarVisible"
 
 On Error GoTo Err
@@ -1384,7 +1447,7 @@ HorizontalScrollBarVisible = mEPhost.GetValue(GChart.gHorizontalScrollBarVisible
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let HorizontalScrollBarVisible(ByVal Value As Boolean)
@@ -1399,14 +1462,17 @@ PropertyChanged PropNameHorizontalScrollBarVisible
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDrawingEnabled() As Boolean
+Attribute IsDrawingEnabled.VB_MemberFlags = "400"
 IsDrawingEnabled = (mSuppressDrawingCount = 0)
 End Property
 
 Public Property Get IsGridHidden() As Boolean
+Attribute IsGridHidden.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute IsGridHidden.VB_MemberFlags = "400"
 IsGridHidden = mHideGrid
 End Property
 
@@ -1425,40 +1491,39 @@ ScrollX Value - mYAxisPosition + 1
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Let PeriodLength( _
-                ByVal Value As TimePeriod)
-Const ProcName As String = "PeriodLength"
-
-On Error GoTo Err
-
-If mPeriodLengthSet Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "PeriodLength has already been set"
-
-Set mPeriodLength = Value
-
-mPeriodLengthSet = True
-
-If Not mVerticalGridTimePeriodSet Then calcVerticalGridParams
-setRegionVerticalGridTimePeriod
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
-End Property
-
-Public Property Get PeriodLength() As TimePeriod
-Set PeriodLength = mPeriodLength
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Periods() As Periods
 Attribute Periods.VB_MemberFlags = "400"
 Set Periods = mPeriods
+End Property
+
+Public Property Let PeriodWidth(ByVal Value As Long)
+Const ProcName As String = "PeriodWidth"
+On Error GoTo Err
+
+setProperty GChart.gPeriodWidthProperty, Value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingPeriodWidth, Value
+PropertyChanged PropNameTwipsPerPeriod
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get PeriodWidth() As Long
+Attribute PeriodWidth.VB_MemberFlags = "400"
+Const ProcName As String = "PeriodWidth"
+On Error GoTo Err
+
+PeriodWidth = mEPhost.GetValue(GChart.gPeriodWidthProperty)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerCrosshairsColor() As OLE_COLOR
@@ -1467,6 +1532,7 @@ End Property
 
 Public Property Let PointerCrosshairsColor(ByVal Value As OLE_COLOR)
 Attribute PointerCrosshairsColor.VB_ProcData.VB_Invoke_PropertyPut = ";Appearance"
+Attribute PointerCrosshairsColor.VB_MemberFlags = "400"
 Const ProcName As String = "PointerCrosshairsColor"
 
 On Error GoTo Err
@@ -1476,11 +1542,12 @@ PropertyChanged PropNamePointerCrosshairsColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
 Attribute PointerDiscColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute PointerDiscColor.VB_MemberFlags = "400"
 PointerDiscColor = mPointerDiscColor
 End Property
 
@@ -1499,7 +1566,7 @@ PropertyChanged PropNamePointerDiscColor
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerIcon() As IPictureDisp
@@ -1528,7 +1595,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerMode() As PointerModes
@@ -1538,14 +1605,12 @@ End Property
 
 Public Property Get PointerStyle() As PointerStyles
 Attribute PointerStyle.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute PointerStyle.VB_MemberFlags = "400"
 PointerStyle = mPointerStyle
 End Property
 
 Public Property Let PointerStyle(ByVal Value As PointerStyles)
-Dim Region As ChartRegion
-
 Const ProcName As String = "PointerStyle"
-
 On Error GoTo Err
 
 If Value = mPointerStyle Then Exit Property
@@ -1557,6 +1622,7 @@ If mPointerStyle = PointerCustom And mPointerIcon Is Nothing Then
     Exit Property
 End If
 
+Dim Region As ChartRegion
 For Each Region In mRegions
     If mPointerStyle = PointerCustom Then Region.PointerIcon = mPointerIcon
     Region.PointerStyle = mPointerStyle
@@ -1566,16 +1632,17 @@ PropertyChanged PropNamePointerStyle
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Regions() As ChartRegions
+Attribute Regions.VB_MemberFlags = "400"
 Set Regions = mRegions
 End Property
 
 Public Property Get SessionEndTime() As Date
 Attribute SessionEndTime.VB_MemberFlags = "400"
-SessionEndTime = mSession.SessionEndTime
+SessionEndTime = mPeriods.SessionEndTime
 End Property
 
 Public Property Let SessionEndTime(ByVal val As Date)
@@ -1583,44 +1650,29 @@ Const ProcName As String = "SessionEndTime"
 
 On Error GoTo Err
 
-If CDbl(val) >= 1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Value must be a time only"
-mSessionBuilder.SessionEndTime = val
+mPeriods.SessionEndTime = val
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionStartTime() As Date
 Attribute SessionStartTime.VB_MemberFlags = "400"
-SessionStartTime = mSession.SessionStartTime
+SessionStartTime = mPeriods.SessionStartTime
 End Property
 
-Public Property Let SessionStartTime(ByVal val As Date)
+Public Property Let SessionStartTime(ByVal Value As Date)
 Const ProcName As String = "SessionStartTime"
-
 On Error GoTo Err
 
-If CDbl(val) >= 1 Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Value must be a time only"
-mSessionBuilder.SessionStartTime = val
+mPeriods.SessionStartTime = Value
 
-Dim Region As ChartRegion
-For Each Region In mRegions
-    Region.SessionStartTime = val
-Next
-
-mXAxisRegion.SessionStartTime = val
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Style(ByVal Value As ChartStyle)
@@ -1629,93 +1681,72 @@ On Error GoTo Err
 
 Set mStyle = Value
 If mStyle Is Nothing Then Set mStyle = gChartStylesManager.DefaultStyle
+gLogger.Log "Using chart style", ProcName, ModuleName, , mStyle.Name
 mEPhost.Style = mStyle.ExtendedPropertyHost
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingStyle, mStyle.Name
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Style() As ChartStyle
+Attribute Style.VB_MemberFlags = "400"
 Set Style = mStyle
 End Property
 
-Public Property Get TwipsPerPeriod() As Long
-Const ProcName As String = "TwipsPerPeriod"
-
+Public Property Let TimePeriod( _
+                ByVal Value As TimePeriod)
+Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-TwipsPerPeriod = mEPhost.GetValue(GChart.gTwipsPerPeriodProperty)
+mPeriods.TimePeriod = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let TwipsPerPeriod(ByVal Value As Long)
-Attribute TwipsPerPeriod.VB_ProcData.VB_Invoke_PropertyPut = ";Appearance"
-Const ProcName As String = "TwipsPerPeriod"
+Public Property Get TimePeriod() As TimePeriod
+Set TimePeriod = mPeriods.TimePeriod
+End Property
 
+Friend Property Get TwipsPerPeriod() As Long
+Const ProcName As String = "TwipsPerPeriod"
 On Error GoTo Err
 
-setProperty GChart.gTwipsPerPeriodProperty, Value
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingTwipsPerPeriod, Value
-PropertyChanged PropNameTwipsPerPeriod
+TwipsPerPeriod = PeriodWidth * Screen.TwipsPerPixelX
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Set VerticalGridTimePeriod( _
+Public Property Let VerticalGridTimePeriod( _
                 ByVal Value As TimePeriod)
 Const ProcName As String = "VerticalGridTimePeriod"
 
 On Error GoTo Err
 
-If mVerticalGridTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "verticalGridTimePeriod has already been set"
-
-If Value.Length <= 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                                    "verticalGridTimePeriod length must be >0"
-Select Case Value.Units
-Case TimePeriodSecond
-Case TimePeriodMinute
-Case TimePeriodHour
-Case TimePeriodDay
-Case TimePeriodWeek
-Case TimePeriodMonth
-Case TimePeriodYear
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "verticalGridTimePeriod Units must be a member of the TimePeriodUnits enum"
-End Select
-
-Set mVerticalGridTimePeriod = Value
-mVerticalGridTimePeriodSet = True
-
-setRegionVerticalGridTimePeriod
+mPeriods.VerticalGridTimePeriod = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VerticalGridTimePeriod() As TimePeriod
 Attribute VerticalGridTimePeriod.VB_MemberFlags = "400"
-Set VerticalGridTimePeriod = mVerticalGridTimePeriod
+Set VerticalGridTimePeriod = mPeriods.VerticalGridTimePeriod
 End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
+Attribute VerticalMouseScrollingAllowed.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute VerticalMouseScrollingAllowed.VB_MemberFlags = "400"
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
@@ -1724,7 +1755,7 @@ VerticalMouseScrollingAllowed = mEPhost.GetValue(GChart.gVerticalMouseScrollingA
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let VerticalMouseScrollingAllowed(ByVal Value As Boolean)
@@ -1738,7 +1769,7 @@ PropertyChanged PropNameVerticalMouseScrollingAllowed
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get XAxisRegion() As ChartRegion
@@ -1762,10 +1793,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get XAxisRegionStyle() As ChartRegionStyle
+Attribute XAxisRegionStyle.VB_MemberFlags = "400"
 Const ProcName As String = "XAxisRegionStyle"
 On Error GoTo Err
 
@@ -1774,11 +1806,12 @@ Set XAxisRegionStyle = mEPhost.GetValue(GChart.gXAxisRegionStyleProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get XAxisVisible() As Boolean
 Attribute XAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute XAxisVisible.VB_MemberFlags = "400"
 Const ProcName As String = "XAxisVisible"
 On Error GoTo Err
 
@@ -1787,7 +1820,7 @@ XAxisVisible = mEPhost.GetValue(GChart.gXAxisVisibleProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let XAxisVisible(ByVal Value As Boolean)
@@ -1802,38 +1835,7 @@ PropertyChanged PropNameXAxisVisible
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Let XCursorTextStyle(ByVal Value As TextStyle)
-Const ProcName As String = "XCursorTextStyle"
-
-On Error GoTo Err
-
-Dim prevValue As TextStyle
-If setProperty(GChart.gXCursorTextStyleProperty, Value, prevValue) Then
-    If Not mConfig Is Nothing Then
-        Value.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionXCursorTextStyle)
-        If Not prevValue Is Nothing Then prevValue.RemoveFromConfig
-    End If
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get XCursorTextStyle() As TextStyle
-Const ProcName As String = "XCursorTextStyle"
-On Error GoTo Err
-
-Set XCursorTextStyle = mEPhost.GetValue(GChart.gXCursorTextStyleProperty)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -1843,6 +1845,7 @@ End Property
 
 Public Property Get YAxisVisible() As Boolean
 Attribute YAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute YAxisVisible.VB_MemberFlags = "400"
 Const ProcName As String = "YAxisVisible"
 On Error GoTo Err
 
@@ -1851,7 +1854,7 @@ YAxisVisible = mEPhost.GetValue(GChart.gYAxisVisibleProperty)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let YAxisVisible(ByVal Value As Boolean)
@@ -1866,11 +1869,12 @@ PropertyChanged PropNameYAxisVisible
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YAxisWidthCm() As Single
 Attribute YAxisWidthCm.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute YAxisWidthCm.VB_MemberFlags = "400"
 YAxisWidthCm = mEPhost.GetValue(GChart.gYAxisWidthCmProperty)
 End Property
 
@@ -1886,7 +1890,7 @@ PropertyChanged PropNameYAxisWidthCm
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
@@ -1894,57 +1898,37 @@ End Property
 '================================================================================
 
 Friend Sub AddPeriod( _
-                ByVal pPeriodNumber As Long, _
-                ByVal pTimestamp As Date)
-Dim Region As ChartRegion
-Dim ev As SessionEventData
-
+                ByVal pPeriod As Period)
 Const ProcName As String = "AddPeriod"
-
 On Error GoTo Err
 
-ev = mSessionBuilder.SetSessionCurrentTime(pTimestamp)
+Dim Region As ChartRegion
 
 For Each Region In mRegions
-    Region.AddPeriod pPeriodNumber, pTimestamp
-    Select Case mPeriodLength.Units
-    Case TimePeriodSecond, _
-            TimePeriodMinute, _
-            TimePeriodHour, _
-            TimePeriodTickMovement, _
-            TimePeriodTickVolume, _
-            TimePeriodVolume
-        If ev.changeType = SessionChangeEnd Then
-            Region.AddSessionEndGridline pPeriodNumber, ev.Timestamp
-        ElseIf ev.changeType = SessionChangeStart Then
-            Region.AddSessionStartGridline pPeriodNumber, ev.Timestamp
-        End If
-    End Select
+    Region.AddPeriod pPeriod
 Next
 
-mXAxisRegion.AddPeriod pPeriodNumber, pTimestamp
+mXAxisRegion.AddPeriod pPeriod
 If IsDrawingEnabled Then setHorizontalScrollBar
 If Autoscrolling Then ScrollX 1
     
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ClearChart()
-
 Const ProcName As String = "ClearChart"
-
 On Error GoTo Err
 
+gLogger.Log "Clearing chart", ProcName, ModuleName
 DisableDrawing
 
 Clear
 
 Initialise
 mYAxisPosition = 1
-createXAxisRegion
 
 EnableDrawing
 
@@ -1952,43 +1936,41 @@ RaiseEvent ChartCleared
 mController.fireChartCleared
 Debug.Print "Chart cleared"
 
+gLogger.Log "Chart cleared", ProcName, ModuleName
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Function CreateDataRegionCanvas(ByVal index As Long) As Canvas
-Const ProcName As String = "CreateDataRegionCanvas"
-
+Friend Function CreateViewport(ByVal pRegion As ChartRegion, ByVal pRegionType As RegionTypes) As ViewPort
+Const ProcName As String = "CreateViewport"
 On Error GoTo Err
 
-Load ChartRegionPicture(index)
-Set CreateDataRegionCanvas = CreateCanvas(ChartRegionPicture(index), RegionTypeData)
+Dim lCanvas As Canvas
+
+Select Case pRegionType
+Case RegionTypeData
+    Set lCanvas = createDataRegionCanvas(pRegion.handle)
+Case RegionTypeXAxis
+    Set lCanvas = createXAxisRegionCanvas
+Case RegionTypeYAxis
+    Set lCanvas = createYAxisRegionCanvas(pRegion.handle)
+Case RegionTypeBackground
+    Set lCanvas = createBackgroundRegionCanvas
+End Select
+
+Set CreateViewport = New ViewPort
+CreateViewport.Initialise lCanvas, pRegion, pRegionType
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Function
-
-Friend Function CreateYAxisRegionCanvas(ByVal index As Long) As Canvas
-Const ProcName As String = "CreateYAxisRegionCanvas"
-
-On Error GoTo Err
-
-Load YAxisPicture(index)
-Set CreateYAxisRegionCanvas = CreateCanvas(YAxisPicture(index), RegionTypeYAxis)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub DisableDrawing()
 Const ProcName As String = "DisableDrawing"
-
 On Error GoTo Err
 
 SuppressDrawing True
@@ -1996,12 +1978,11 @@ SuppressDrawing True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub EnableDrawing()
 Const ProcName As String = "EnableDrawing"
-
 On Error GoTo Err
 
 SuppressDrawing False
@@ -2009,7 +1990,7 @@ SuppressDrawing False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -2025,7 +2006,7 @@ mRegions.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetXFromTimestamp( _
@@ -2039,7 +2020,7 @@ Const ProcName As String = "GetXFromTimestamp"
 
 On Error GoTo Err
 
-Select Case PeriodLength.Units
+Select Case TimePeriod.Units
 Case TimePeriodNone, _
         TimePeriodSecond, _
         TimePeriodMinute, _
@@ -2065,7 +2046,7 @@ Case TimePeriodNone, _
     End If
     
     periodEndtime = BarEndTime(lPeriod.Timestamp, _
-                            PeriodLength, _
+                            TimePeriod, _
                             SessionStartTime)
     GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
     
@@ -2088,7 +2069,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -2109,7 +2090,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -2118,12 +2099,12 @@ Const ProcName As String = "IsTimeInSession"
 
 On Error GoTo Err
 
-IsTimeInSession = mSession.IsTimeInSession(Timestamp)
+IsTimeInSession = mPeriods.IsTimeInSession(Timestamp)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub LoadFromConfig( _
@@ -2144,11 +2125,11 @@ If mConfig.GetSetting(ConfigSettingAutoscrolling) <> "" Then Autoscrolling = mCo
 If mConfig.GetSetting(ConfigSettingChartBackColor) <> "" Then ChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(vbWhite))
 If mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed) <> "" Then HorizontalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed, "true")
 If mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible) <> "" Then HorizontalScrollBarVisible = mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible, "true")
-If mConfig.GetSetting(ConfigSettingTwipsPerPeriod) <> "" Then TwipsPerPeriod = mConfig.GetSetting(ConfigSettingTwipsPerPeriod, "120")
+If mConfig.GetSetting(ConfigSettingPeriodWidth) <> "" Then PeriodWidth = mConfig.GetSetting(ConfigSettingPeriodWidth, DefaultPeriodWidth)
 If mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed) <> "" Then VerticalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed, "true")
 If mConfig.GetSetting(ConfigSettingXAxisVisible) <> "" Then XAxisVisible = mConfig.GetSetting(ConfigSettingXAxisVisible, "true")
 If mConfig.GetSetting(ConfigSettingYAxisVisible) <> "" Then YAxisVisible = mConfig.GetSetting(ConfigSettingYAxisVisible, "true")
-If mConfig.GetSetting(ConfigSettingYAxisWidthCm) <> "" Then YAxisWidthCm = mConfig.GetSetting(ConfigSettingYAxisWidthCm, "1.8")
+If mConfig.GetSetting(ConfigSettingYAxisWidthCm) <> "" Then YAxisWidthCm = mConfig.GetSetting(ConfigSettingYAxisWidthCm, DefaultYAxisWidthCm)
 
 Dim ls As LineStyle
 If Not mConfig.GetConfigurationSection(ConfigSectionCrosshairLineStyle) Is Nothing Then
@@ -2176,17 +2157,10 @@ If Not mConfig.GetConfigurationSection(ConfigSectionXAxisRegionStyle) Is Nothing
     XAxisRegionStyle = crs
 End If
 
-Dim ts As TextStyle
-If Not mConfig.GetConfigurationSection(ConfigSectionXCursorTextStyle) Is Nothing Then
-    Set ts = New TextStyle
-    ts.LoadFromConfig mConfig.GetConfigurationSection(ConfigSectionXCursorTextStyle)
-    XCursorTextStyle = ts
-End If
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -2199,7 +2173,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ScrollX(ByVal Value As Long)
@@ -2250,7 +2224,7 @@ setHorizontalScrollBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPointerModeDefault()
@@ -2271,7 +2245,7 @@ mController.firePointerModeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPointerModeSelection()
@@ -2293,7 +2267,7 @@ mController.firePointerModeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetPointerModeTool( _
@@ -2316,9 +2290,7 @@ Case PointerDisc
 Case PointerTool
 Case PointerCustom
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "toolPointerStyle must be a member of the PointerStyles enum"
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "toolPointerStyle must be a member of the PointerStyles enum"
 End Select
 For Each Region In mRegions
     Region.SetPointerModeTool toolPointerStyle, icon
@@ -2330,7 +2302,7 @@ mController.firePointerModeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowGrid()
@@ -2350,7 +2322,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -2369,130 +2341,38 @@ calcScaleLeft = mYAxisPosition + _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub calcVerticalGridParams()
-
-Const ProcName As String = "calcVerticalGridParams"
-
-On Error GoTo Err
-
-Select Case mPeriodLength.Units
-Case TimePeriodNone
-    Set mVerticalGridTimePeriod = Nothing
-Case TimePeriodSecond
-    Select Case mPeriodLength.Length
-    Case 1
-        Set mVerticalGridTimePeriod = GetTimePeriod(15, TimePeriodSecond)
-    Case 2
-        Set mVerticalGridTimePeriod = GetTimePeriod(30, TimePeriodSecond)
-    Case 3
-        Set mVerticalGridTimePeriod = GetTimePeriod(20, TimePeriodSecond)
-    Case 4
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodMinute)
-    Case 5
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodMinute)
-    Case 6
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case 10
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case 12
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case 15
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case 20
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case 30
-        Set mVerticalGridTimePeriod = GetTimePeriod(5, TimePeriodMinute)
-    Case Else
-        Set mVerticalGridTimePeriod = Nothing
-    End Select
-Case TimePeriodMinute
-    Select Case mPeriodLength.Length
-    Case 1
-        Set mVerticalGridTimePeriod = GetTimePeriod(15, TimePeriodMinute)
-    Case 2
-        Set mVerticalGridTimePeriod = GetTimePeriod(30, TimePeriodMinute)
-    Case 3
-        Set mVerticalGridTimePeriod = GetTimePeriod(30, TimePeriodMinute)
-    Case 4
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodHour)
-    Case 5
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodHour)
-    Case 6
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodHour)
-    Case 10
-        Set mVerticalGridTimePeriod = GetTimePeriod(2, TimePeriodHour)
-    Case 12
-        Set mVerticalGridTimePeriod = GetTimePeriod(2, TimePeriodHour)
-    Case 15
-        Set mVerticalGridTimePeriod = GetTimePeriod(2, TimePeriodHour)
-    Case 20
-        Set mVerticalGridTimePeriod = GetTimePeriod(4, TimePeriodHour)
-    Case 30
-        Set mVerticalGridTimePeriod = GetTimePeriod(4, TimePeriodHour)
-    Case 60
-        Set mVerticalGridTimePeriod = GetTimePeriod(6, TimePeriodHour)
-    Case Else
-        Set mVerticalGridTimePeriod = Nothing
-    End Select
-Case TimePeriodHour
-        Set mVerticalGridTimePeriod = GetTimePeriod(6, TimePeriodHour)
-Case TimePeriodDay
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodWeek)
-Case TimePeriodWeek
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodMonth)
-Case TimePeriodMonth
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodYear)
-Case TimePeriodYear
-        Set mVerticalGridTimePeriod = GetTimePeriod(10, TimePeriodYear)
-Case TimePeriodVolume
-        Set mVerticalGridTimePeriod = GetTimePeriod(10, TimePeriodVolume)
-Case TimePeriodTickVolume
-        Set mVerticalGridTimePeriod = GetTimePeriod(10, TimePeriodTickVolume)
-Case TimePeriodTickMovement
-        Set mVerticalGridTimePeriod = GetTimePeriod(10, TimePeriodTickMovement)
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-  
-End Sub
-
 Private Sub Clear()
-Dim lregion As ChartRegion
-Dim en As Enumerator
-
 Const ProcName As String = "Clear"
-
 On Error GoTo Err
 
+Dim en As Enumerator
 Set en = mRegions.Enumerator
 
 Do While en.MoveNext
-    Set lregion = en.Current
-    lregion.ClearRegion
     en.Remove
 Loop
 
 If Not mXAxisRegion Is Nothing Then mXAxisRegion.ClearRegion
 XAxisPicture.Cls
 Set mXAxisRegion = Nothing
-Set mXCursorText = Nothing
 If Not mPeriods Is Nothing Then mPeriods.Finish
 Set mPeriods = Nothing
 
 finishBackgroundCanvas
+
+mRegions.Finish
+
+mSuppressDrawingCount = 0
 
 mInitialised = False
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function convertChartRegionPictureMouseXtoContainerCoords( _
@@ -2508,7 +2388,7 @@ convertChartRegionPictureMouseXtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertChartRegionPictureMouseYtoContainerCoords( _
@@ -2524,7 +2404,7 @@ convertChartRegionPictureMouseYtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertPictureMouseXtoContainerCoords( _
@@ -2545,7 +2425,7 @@ convertPictureMouseXtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertPictureMouseYtoContainerCoords( _
@@ -2566,7 +2446,7 @@ convertPictureMouseYtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertRegionDividerPictureMouseXtoContainerCoords( _
@@ -2589,7 +2469,7 @@ convertRegionDividerPictureMouseYtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertXAxisPictureMouseXtoContainerCoords( _
@@ -2604,7 +2484,7 @@ convertXAxisPictureMouseXtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertXAxisPictureMouseYtoContainerCoords( _
@@ -2619,7 +2499,7 @@ convertXAxisPictureMouseYtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertYAxisPictureMouseXtoContainerCoords( _
@@ -2635,7 +2515,7 @@ convertYAxisPictureMouseXtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function convertYAxisPictureMouseYtoContainerCoords( _
@@ -2651,95 +2531,98 @@ convertYAxisPictureMouseYtoContainerCoords = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function CreateCanvas( _
-                ByVal Surface As PictureBox, _
-                ByVal pRegionType As RegionTypes) As Canvas
-Const ProcName As String = "CreateCanvas"
+Private Function createBackgroundRegionCanvas() As Canvas
+Const ProcName As String = "createBackgroundRegionCanvas"
 
 On Error GoTo Err
 
-Set CreateCanvas = New Canvas
-CreateCanvas.Surface = Surface
-CreateCanvas.RegionType = pRegionType
+Set createBackgroundRegionCanvas = createCanvas(ChartRegionPicture(0), RegionTypeBackground)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createCanvas( _
+                ByVal Surface As PictureBox, _
+                ByVal pRegionType As RegionTypes) As Canvas
+Const ProcName As String = "createCanvas"
+
+On Error GoTo Err
+
+Set createCanvas = New Canvas
+createCanvas.Surface = Surface
+createCanvas.RegionType = pRegionType
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createDataRegionCanvas(ByVal pIndex As Long) As Canvas
+Const ProcName As String = "createDataRegionCanvas"
+
+On Error GoTo Err
+
+Load ChartRegionPicture(pIndex)
+Set createDataRegionCanvas = createCanvas(ChartRegionPicture(pIndex), RegionTypeData)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createXAxisRegionCanvas() As Canvas
+Const ProcName As String = "createXAxisRegionCanvas"
+
+On Error GoTo Err
+
+Set createXAxisRegionCanvas = createCanvas(XAxisPicture, RegionTypeXAxis)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createYAxisRegionCanvas(ByVal pIndex As Long) As Canvas
+Const ProcName As String = "createYAxisRegionCanvas"
+
+On Error GoTo Err
+
+Load YAxisPicture(pIndex)
+Set createYAxisRegionCanvas = createCanvas(YAxisPicture(pIndex), RegionTypeYAxis)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub createXAxisRegion()
-Dim afont As StdFont
-
 Const ProcName As String = "createXAxisRegion"
-
 On Error GoTo Err
+
+Dim afont As StdFont
 
 Set mXAxisRegion = New ChartRegion
 
-mXAxisRegion.Initialise "", Me, CreateCanvas(XAxisPicture, RegionTypeXAxis), RegionTypeXAxis
-                        
-mXAxisRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
+mXAxisRegion.Initialise "", mPeriods, CreateViewport(mXAxisRegion, RegionTypeXAxis), RegionTypeXAxis
+mXAxisRegion.BaseStyle = XAxisRegionStyle
+
 mXAxisRegion.Bottom = 0
 mXAxisRegion.Top = 1
 
-Set mXCursorText = mXAxisRegion.AddText(LayerNumbers.LayerPointer)
-mXCursorText.LocalStyle = XCursorTextStyle
-
-
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub displayXAxisLabel(ByVal X As Single)
-Dim thisPeriod As Period
-Dim PeriodNumber As Long
-
-Const ProcName As String = "displayXAxisLabel"
-
-On Error GoTo Err
-
-If Round(X) >= mYAxisPosition Then Exit Sub
-If mPeriods.Count = 0 Then Exit Sub
-
-On Error Resume Next
-PeriodNumber = Round(X)
-Set thisPeriod = mPeriods(PeriodNumber)
-On Error GoTo Err
-If thisPeriod Is Nothing Then
-    mXCursorText.Text = ""
-    Exit Sub
-End If
-
-mXCursorText.Position = gNewPoint( _
-                            PeriodNumber, _
-                            0, _
-                            CoordsLogical, _
-                            CoordsCounterDistance)
-
-Select Case mPeriodLength.Units
-Case TimePeriodNone, TimePeriodMinute, TimePeriodHour
-    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate) & _
-                        " " & _
-                        FormatDateTime(thisPeriod.Timestamp, vbShortTime)
-Case TimePeriodSecond, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate) & _
-                        " " & _
-                        FormatDateTime(thisPeriod.Timestamp, vbLongTime)
-Case Else
-    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate)
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub finishBackgroundCanvas()
@@ -2754,7 +2637,7 @@ Set mBackGroundViewport = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getDataRegionFromPictureIndex( _
@@ -2768,7 +2651,7 @@ Set getDataRegionFromPictureIndex = mRegionMap.Item(CLng(ChartRegionPicture(inde
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getYAxisRegionFromPictureIndex( _
@@ -2782,28 +2665,44 @@ Set getYAxisRegionFromPictureIndex = mRegions.ItemFromHandle(CLng(YAxisPicture(i
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub Initialise()
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
+
+Static sNotFirstTime As Boolean
 
 Dim btn As Button
 
-mPrevHeight = UserControl.Height
+gLogger.Log "Initialising chart", ProcName, ModuleName
 
 Set mPeriods = New Periods
 mPeriods.Chart = Me
 
-Set mSessionBuilder = New SessionBuilder
-Set mSession = mSessionBuilder.Session
+Set mRegions = New ChartRegions
+mRegions.Initialise Me, mPeriods
 
-setupBackgroundViewport
+If Not sNotFirstTime Then
+    Set mEPhost = New ExtendedPropertyHost
+    If mStyle Is Nothing Then
+        gLogger.Log "No chart style currently defined", ProcName, ModuleName
+        Style = gChartStylesManager.DefaultStyle
+    Else
+        gLogger.Log "Using chart style", ProcName, ModuleName, , mStyle.Name
+    End If
+    sNotFirstTime = True
+End If
 
-mPeriodLengthSet = False
-mVerticalGridTimePeriodSet = False
+mRegions.DefaultDataRegionStyle = DefaultRegionStyle
+mRegions.DefaultYAxisRegionStyle = DefaultYAxisRegionStyle
+
+createXAxisRegion
+
+mPrevHeight = UserControl.Height
+
+Set mBackGroundViewport = CreateViewport(Nothing, RegionTypeBackground)
 
 mPointerMode = PointerModes.PointerModeDefault
 
@@ -2815,14 +2714,23 @@ mScaleTop = 100
 
 HScroll.Value = 0
 
-mInitialised = True
+'If Style Is Nothing Then
+'    ' set a (possibly) temporary style for the saved properties to be applied to. Note that
+'    ' this style is not added to the chart style manager, so it cannot be added by the application
+'    ' (or the user) to any other chart. And modifying this style only affects this particular
+'    ' chart.
+'    Style = gDefaultChartStyle
+'End If
 
 Resize True, True
+
+mInitialised = True
+gLogger.Log "Chart initialised", ProcName, ModuleName
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2835,11 +2743,12 @@ isLocalValueSet = mEPhost.IsPropertySet(pExtProp)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub mapRegion(pRegion As ChartRegion)
 Dim index As Long
+Dim yIndex As Long
 Dim mapHandle As Long
 Dim btn As Button
 
@@ -2876,8 +2785,6 @@ pRegion.Left = mScaleLeft
 pRegion.Bottom = 0
 pRegion.Top = 1
 pRegion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
-pRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
-pRegion.SessionStartTime = mSession.SessionStartTime
 
 If mHideGrid Then pRegion.HideGrid
 
@@ -2887,24 +2794,26 @@ RegionDividerPicture(index).ZOrder 0
 RegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
 pRegion.Divider = RegionDividerPicture(index)
 
-Load YRegionDividerPicture(index)
-YRegionDividerPicture(index).Tag = mapHandle
-YRegionDividerPicture(index).ZOrder 0
-YRegionDividerPicture(index).Visible = (Not mRegionMap.IsFirst(mapHandle))
-pRegion.YAxisRegion.Divider = YRegionDividerPicture(index)
+yIndex = pRegion.YAxisRegion.handle
 
-YAxisPicture(index).Tag = pRegion.YAxisRegion.handle
-YAxisPicture(index).Align = vbAlignNone
-YAxisPicture(index).Left = ChartRegionPicture(index).Width
-YAxisPicture(index).Width = YAxisWidthCm * TwipsPerCm
-YAxisPicture(index).Visible = YAxisVisible
+Load YRegionDividerPicture(yIndex)
+YRegionDividerPicture(yIndex).Tag = mapHandle
+YRegionDividerPicture(yIndex).ZOrder 0
+YRegionDividerPicture(yIndex).Visible = (Not mRegionMap.IsFirst(mapHandle))
+pRegion.YAxisRegion.Divider = YRegionDividerPicture(yIndex)
+
+YAxisPicture(yIndex).Tag = yIndex
+YAxisPicture(yIndex).Visible = True
+YAxisPicture(yIndex).Align = vbAlignNone
+YAxisPicture(yIndex).Left = ChartRegionPicture(index).Width
+YAxisPicture(yIndex).Width = YAxisWidthCm * TwipsPerCm
 
 XAxisPicture.Visible = XAxisVisible
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -2914,47 +2823,45 @@ Private Sub MouseMove( _
                 ByVal Shift As Long, _
                 ByRef X As Single, _
                 ByRef Y As Single)
-Dim Region As ChartRegion
-
-
 Const ProcName As String = "MouseMove"
-
 On Error GoTo Err
 
-For Each Region In mRegions
-    If Region Is targetRegion Then
+Dim lregion As ChartRegion
+
+For Each lregion In mRegions
+    If lregion Is targetRegion Then
         'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & X & " y=" & Y
         If (mPointerMode = PointerModeDefault And _
-                ((Region.CursorSnapsToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
-                (Not Region.CursorSnapsToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+                ((lregion.CursorSnapsToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+                (Not lregion.CursorSnapsToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
             (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
         Then
             Dim YScaleQuantum As Double
-            YScaleQuantum = Region.YScaleQuantum
+            YScaleQuantum = lregion.YScaleQuantum
             If YScaleQuantum <> 0 Then Y = YScaleQuantum * Int((Y + YScaleQuantum / 10000) / YScaleQuantum)
         End If
-        Region.DrawCursor Button, Shift, X, Y
+        lregion.DrawCursor Button, Shift, X, Y, True
+        If Not lregion.YAxisRegion Is Nothing Then lregion.YAxisRegion.DrawCursor Button, Shift, 0!, Y, True
         
     Else
         'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & X & " y=" & MinusInfinitySingle
-        Region.DrawCursor Button, Shift, X, MinusInfinitySingle
+        lregion.DrawCursor Button, Shift, X, 0!, False
+        If Not lregion.YAxisRegion Is Nothing Then lregion.YAxisRegion.DrawCursor Button, Shift, 0!, 0!, False
     End If
 Next
-displayXAxisLabel Round(X)
+XAxisRegion.DrawCursor Button, Shift, X, 0!, True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mouseScroll( _
                 ByVal targetRegion As ChartRegion, _
                 ByRef X As Single, _
                 ByRef Y As Single)
-
 Const ProcName As String = "mouseScroll"
-
 On Error GoTo Err
 
 If HorizontalMouseScrollingAllowed Then
@@ -2982,14 +2889,13 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Resize( _
     ByVal resizeWidth As Boolean, _
     ByVal resizeHeight As Boolean)
 Const ProcName As String = "Resize"
-
 On Error GoTo Err
 
 If Not mInitialised Then Exit Sub
@@ -3012,7 +2918,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub resizeBackground()
@@ -3020,15 +2926,15 @@ Const ProcName As String = "resizeBackground"
 
 On Error GoTo Err
 
+If mRegions Is Nothing Then Exit Sub
 If mRegions.Count > 0 Then Exit Sub
 XAxisPicture.Visible = False
 ChartRegionPicture(0).Visible = False
 ChartRegionPicture(0).Move 0, 0, UserControl.Width, UserControl.Height
-mBackGroundViewport.BackColor = ChartBackColor
+mBackGroundViewport.GradientFillColors = gCreateColorArray(ChartBackColor, ChartBackColor)
 mBackGroundViewport.Left = 0
 mBackGroundViewport.Right = 1
-mBackGroundViewport.Bottom = 0
-mBackGroundViewport.Top = 1
+mBackGroundViewport.SetVerticalBounds 0#, 1#
 mBackGroundViewport.PaintBackground
 mBackGroundViewport.Canvas.ZOrder 1
 ChartRegionPicture(0).Visible = True
@@ -3036,34 +2942,40 @@ ChartRegionPicture(0).Visible = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub resizeX()
-Dim Region As ChartRegion
-
 Const ProcName As String = "resizeX"
-
 On Error GoTo Err
+
+Dim lregion As ChartRegion
+Dim lYAxisPicture As PictureBox
 
 If Not mInitialised Then Exit Sub
 
 mScaleWidth = CSng(XAxisPicture.Width) / CSng(TwipsPerPeriod)
 mScaleLeft = calcScaleLeft
 
-For Each Region In mRegionMap
-    If (UserControl.Width - YAxisPicture(Region.handle).Width) > 0 Then
-        YAxisPicture(Region.handle).Left = UserControl.Width - IIf(YAxisVisible, YAxisPicture(Region.handle).Width, 0)
-        ChartRegionPicture(Region.handle).Width = YAxisPicture(Region.handle).Left
+For Each lregion In mRegionMap
+    Set lYAxisPicture = YAxisPicture(lregion.YAxisRegion.handle)
+    lYAxisPicture.Width = YAxisWidthCm * TwipsPerCm
+    
+    If YAxisVisible Then
+        If (UserControl.Width - lYAxisPicture.Width) > 0 Then lYAxisPicture.Left = UserControl.Width - lYAxisPicture.Width
+    Else
+        lYAxisPicture.Left = UserControl.Width
     End If
-    RegionDividerPicture(Region.handle).Width = YAxisPicture(Region.handle).Left
-    YRegionDividerPicture(Region.handle).Width = YAxisPicture(Region.handle).Width
-    YRegionDividerPicture(Region.handle).Left = YAxisPicture(Region.handle).Left
+    ChartRegionPicture(lregion.handle).Width = lYAxisPicture.Left
+    
+    RegionDividerPicture(lregion.handle).Width = lYAxisPicture.Left
+    YRegionDividerPicture(lregion.YAxisRegion.handle).Width = lYAxisPicture.Width
+    YRegionDividerPicture(lregion.YAxisRegion.handle).Left = lYAxisPicture.Left
 Next
 
-For Each Region In mRegionMap
-    Region.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
-    Region.PaintDivider
+For Each lregion In mRegionMap
+    lregion.SetPeriodsInView mScaleLeft, mYAxisPosition - 1
+    lregion.PaintDivider
 Next
 
 If Not mXAxisRegion Is Nothing Then
@@ -3075,7 +2987,7 @@ setHorizontalScrollBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setHorizontalScrollBar()
@@ -3114,7 +3026,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setProperty( _
@@ -3129,7 +3041,7 @@ setProperty = gSetProperty(mEPhost, pExtProp, pNewValue, pPrevValue)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function setRegionDividerLocation( _
@@ -3140,39 +3052,22 @@ Const ProcName As String = "setRegionDividerLocation"
 On Error GoTo Err
 
 RegionDividerPicture(pRegion.handle).Top = currTop
-YRegionDividerPicture(pRegion.handle).Top = currTop
+YRegionDividerPicture(pRegion.YAxisRegion.handle).Top = currTop
 If mRegionMap.IsFirst(CLng(RegionDividerPicture(pRegion.handle).Tag)) Then
     RegionDividerPicture(pRegion.handle).Visible = False
-    YRegionDividerPicture(pRegion.handle).Visible = False
+    YRegionDividerPicture(pRegion.YAxisRegion.handle).Visible = False
     setRegionDividerLocation = 0
 Else
     RegionDividerPicture(pRegion.handle).Visible = True
-    YRegionDividerPicture(pRegion.handle).Visible = True
+    YRegionDividerPicture(pRegion.YAxisRegion.handle).Visible = True
     setRegionDividerLocation = RegionDividerPicture(pRegion.handle).Height
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Private Sub setRegionVerticalGridTimePeriod()
-Dim Region As ChartRegion
-Const ProcName As String = "setRegionVerticalGridTimePeriod"
-
-On Error GoTo Err
-
-mXAxisRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
-For Each Region In mRegions
-    Region.VerticalGridTimePeriod = mVerticalGridTimePeriod
-Next
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
 
 Private Function setRegionViewSizeAndLocation( _
                 ByVal pRegion As ChartRegion, _
@@ -3182,16 +3077,16 @@ Const ProcName As String = "setRegionViewSizeAndLocation"
 On Error GoTo Err
 
 ChartRegionPicture(pRegion.handle).Height = pRegion.ActualHeight
-YAxisPicture(pRegion.handle).Height = pRegion.ActualHeight
+YAxisPicture(pRegion.YAxisRegion.handle).Height = pRegion.ActualHeight
 ChartRegionPicture(pRegion.handle).Top = currTop
-YAxisPicture(pRegion.handle).Top = currTop
+YAxisPicture(pRegion.YAxisRegion.handle).Top = currTop
 pRegion.NotifyResizedY
 setRegionViewSizeAndLocation = pRegion.ActualHeight
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setRegionViewSizes()
@@ -3214,71 +3109,61 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub setupBackgroundViewport()
-Dim lcanvas As New Canvas
-Const ProcName As String = "setupBackgroundViewport"
-
-On Error GoTo Err
-
-lcanvas.Surface = ChartRegionPicture(0)
-lcanvas.RegionType = RegionTypeBackground
-lcanvas.MousePointer = vbDefault
-Set mBackGroundViewport = New Viewport
-mBackGroundViewport.Canvas = lcanvas
-mBackGroundViewport.RegionType = RegionTypeBackground
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub SuppressDrawing(ByVal suppress As Boolean)
-Dim Region As ChartRegion
 Const ProcName As String = "SuppressDrawing"
-
 On Error GoTo Err
+
+Dim lChange As Boolean
 
 If suppress Then
     mSuppressDrawingCount = mSuppressDrawingCount + 1
+    If mSuppressDrawingCount = 1 Then lChange = True
+ElseIf mSuppressDrawingCount = 0 Then
+    lChange = False
 Else
-    If mSuppressDrawingCount > 0 Then
-        mSuppressDrawingCount = mSuppressDrawingCount - 1
+    mSuppressDrawingCount = mSuppressDrawingCount - 1
+    If mSuppressDrawingCount = 0 Then
+        Resize True, True
+        lChange = True
+    Else
+        lChange = False
     End If
 End If
 
-If mSuppressDrawingCount = 0 Then
-    Resize True, True
-End If
+gLogger.Log "Suppress drawing count = " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelHighDetail
 
-For Each Region In mRegions
-    Region.IsDrawingEnabled = IsDrawingEnabled
-Next
-If Not mXAxisRegion Is Nothing Then mXAxisRegion.IsDrawingEnabled = IsDrawingEnabled
+If lChange Then
+    Dim Region As ChartRegion
+    For Each Region In mRegions
+        Region.IsDrawingEnabled = IsDrawingEnabled
+    Next
+    If Not mXAxisRegion Is Nothing Then mXAxisRegion.IsDrawingEnabled = IsDrawingEnabled
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unmapRegion( _
                     ByVal Region As ChartRegion)
 Const ProcName As String = "unmapRegion"
-
 On Error GoTo Err
 
 mRegionMap.Remove CLng(ChartRegionPicture(Region.handle).Tag)
 Unload ChartRegionPicture(Region.handle)
 Unload RegionDividerPicture(Region.handle)
-Unload YRegionDividerPicture(Region.handle)
-Unload YAxisPicture(Region.handle)
+If Not Region.YAxisRegion Is Nothing Then
+    Unload YRegionDividerPicture(Region.YAxisRegion.handle)
+    Unload YAxisPicture(Region.YAxisRegion.handle)
+End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
