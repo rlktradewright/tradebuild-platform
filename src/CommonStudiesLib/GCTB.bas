@@ -53,17 +53,17 @@ Private mStudyDefinition As StudyDefinition
 '@================================================================================
 
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -83,7 +83,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -132,28 +132,28 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpen)
-    valueDef.Description = "Bar open value"
+    valueDef.Description = "Bar open Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&H8000&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHigh)
-    valueDef.Description = "Bar high value"
+    valueDef.Description = "Bar high Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlue)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueLow)
-    valueDef.Description = "Bar low value"
+    valueDef.Description = "Bar low Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbRed)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueClose)
-    valueDef.Description = "Bar close value"
+    valueDef.Description = "Bar close Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IsDefault = True
     valueDef.ValueMode = ValueModeNone
@@ -182,21 +182,21 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeInteger
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
-    valueDef.Description = "Bar H+L/2 value"
+    valueDef.Description = "Bar H+L/2 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHLC3)
-    valueDef.Description = "Bar H+L+C/3 value"
+    valueDef.Description = "Bar H+L+C/3 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF00&)
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOHLC4)
-    valueDef.Description = "Bar O+H+L+C/4 value"
+    valueDef.Description = "Bar O+H+L+C/4 Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(&HFF0000)
@@ -225,7 +225,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

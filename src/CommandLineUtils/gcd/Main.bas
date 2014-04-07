@@ -37,8 +37,10 @@ Private Const EchoCommand                   As String = "$ECHO"
 ' Member variables
 '@================================================================================
 
-Public gCon As Console
-Private mCp As New ContractProcessor
+Public gCon                                         As Console
+Private mCp                                         As ContractProcessor
+
+Private mTB                                         As TradeBuildAPI
 
 '@================================================================================
 ' Class Event Handlers
@@ -76,7 +78,14 @@ If clp.Switch("?") Or _
     clp.NumberOfSwitches = 0 _
 Then
     showUsage
-ElseIf clp.Switch("fromdb") Then
+    Exit Sub
+End If
+
+Set mTB = CreateTradeBuildAPI(SPRoleContractDataPrimary)
+Set mCp = New ContractProcessor
+mCp.initialise mTB
+
+If clp.Switch("fromdb") Then
     If setupDbServiceProvider(clp.switchValue("fromdb")) Then
         process
     End If
@@ -88,14 +97,14 @@ Else
     showUsage
 End If
 
-TradeBuildAPI.ServiceProviders.RemoveAll
+mTB.ServiceProviders.RemoveAll
 TerminateTWUtilities
 
 Exit Sub
 
 Err:
 If Not gCon Is Nothing Then gCon.WriteErrorLine Err.Description & " (" & Err.Source & ")"
-TradeBuildAPI.ServiceProviders.RemoveAll
+mTB.ServiceProviders.RemoveAll
 TerminateTWUtilities
 
     
@@ -267,16 +276,17 @@ If username <> "" And password = "" Then
 End If
     
 If setupDbServiceProvider Then
-    TradeBuildAPI.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
                         Enabled:=True, _
-                        ParamString:="Database Name=" & database & _
+                        ParamString:="Role=PRIMARY" & _
+                                    ";Database Name=" & database & _
                                     ";Database Type=" & dbtypeStr & _
                                     ";Server=" & server & _
                                     ";user name=" & username & _
                                     ";password=" & password, _
                         Description:="Enable contract data from TradeBuild's database"
-    
+    mTB.StartServiceProviders
 End If
 
 Exit Function
@@ -324,14 +334,16 @@ If clientId <> "" Then
 End If
     
 If setupTwsServiceProvider Then
-    TradeBuildAPI.ServiceProviders.Add _
+    mTB.ServiceProviders.Add _
                         ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
                         Enabled:=True, _
-                        ParamString:="Server=" & server & _
+                        ParamString:="Role=PRIMARY" & _
+                                    ";Server=" & server & _
                                     ";Port=" & port & _
                                     ";Client Id=" & clientId & _
                                     ";Provider Key=IB;Keep Connection=True", _
                         Description:="Enable contract data from TWS"
+    mTB.StartServiceProviders
 End If
 
 Exit Function

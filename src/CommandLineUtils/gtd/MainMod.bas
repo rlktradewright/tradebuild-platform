@@ -46,8 +46,10 @@ Private Const RawCommand                    As String = "RAW"
 
 Public gCon As Console
 
+Private mDBClient As DBClient
+
 Private mLineNumber As Long
-Private mContractSpec As ContractSpecifier
+Private mContractSpec As IContractSpecifier
 Private mFrom As Date
 Private mTo As Date
 
@@ -81,14 +83,19 @@ Public gProcessor As Processor
 '@================================================================================
 
 Public Sub Main()
-Dim clp As CommandLineParser
 
 On Error GoTo Err
 
 InitialiseTWUtilities
 
+ApplicationGroupName = "TradeWright"
+ApplicationName = "GTD v" & App.Major & "." & App.Minor
+SetupDefaultLogging command
+
 Set gCon = GetConsole
 
+
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(command)
 
 If clp.Switch("?") Or _
@@ -99,12 +106,12 @@ ElseIf Not clp.Switch("fromdb") Then
     showUsage
 ElseIf Not setupServiceProviders(clp.switchValue("fromdb")) Then
 
-ElseIf Not clp.Switch("speed") Then
+ElseIf Not clp.Switch("Speed") Then
     process
-ElseIf Not IsInteger(clp.switchValue("speed")) Then
+ElseIf Not IsInteger(clp.switchValue("Speed")) Then
     gCon.WriteErrorLine "Speed must be an integer"
 Else
-    mSpeed = CLng(clp.switchValue("speed"))
+    mSpeed = CLng(clp.switchValue("Speed"))
     process
 End If
 
@@ -264,11 +271,10 @@ End Sub
 Private Sub processPauseCommand()
 If gProcessor Is Nothing Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot pause - not started"
-ElseIf gProcessor.tickerState <> TickerStatePaused Then
+ElseIf gProcessor.IsPaused Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Already paused"
 Else
-    gProcessor.stopData
-    Set gProcessor = Nothing
+    gProcessor.pauseData
 End If
 End Sub
 
@@ -291,10 +297,10 @@ Private Sub processSpeedCommand( _
 If IsInteger(params) Then
     mSpeed = CLng(params)
     If Not gProcessor Is Nothing Then
-        gProcessor.speed = mSpeed
+        gProcessor.Speed = mSpeed
     End If
 Else
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid speed factor '" & params & "'"
+    gCon.WriteErrorLine "Line " & mLineNumber & ": Invalid Speed factor '" & params & "'"
 End If
 End Sub
 
@@ -306,8 +312,8 @@ ElseIf mFrom = 0 Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - from time not specified"
 ElseIf gProcessor Is Nothing Then
     Set gProcessor = New Processor
-    gProcessor.startData mContractSpec, mFrom, mTo, mSpeed, mRaw
-ElseIf gProcessor.tickerState = TickerStatePaused Then
+    gProcessor.startData mDBClient, mContractSpec, mFrom, mTo, mSpeed, mRaw
+ElseIf gProcessor.IsPaused Then
     gProcessor.resumeData
 Else
     gCon.WriteErrorLine "Line " & mLineNumber & ": Cannot start - already running"
@@ -334,66 +340,48 @@ End Sub
 
 Private Function setupServiceProviders( _
                 ByVal switchValue As String) As Boolean
-Dim clp As CommandLineParser
-Dim server As String
-Dim dbtypeStr As String
-Dim dbtype As DatabaseTypes
-Dim database As String
-Dim username As String
-Dim password As String
-
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(switchValue, ",")
 
 setupServiceProviders = True
 
 On Error Resume Next
+
+Dim server As String
 server = clp.Arg(0)
+
+Dim dbtypeStr As String
 dbtypeStr = clp.Arg(1)
+
+Dim database As String
 database = clp.Arg(2)
+
+Dim username As String
 username = clp.Arg(3)
+
+Dim password As String
 password = clp.Arg(4)
+
 On Error GoTo 0
 
 If username <> "" And password = "" Then
     password = gCon.ReadLineFromConsole("Password:", "*")
 End If
     
+Dim dbtype As DatabaseTypes
 dbtype = DatabaseTypeFromString(dbtypeStr)
+
 If dbtype = DbNone Then
     gCon.WriteErrorLine "Error: invalid dbtype"
     setupServiceProviders = False
 End If
     
 If setupServiceProviders Then
-    Dim sp As Object
-    On Error Resume Next
-    Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                    ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
-                    Enabled:=True, _
-                    ParamString:="Database Name=" & database & _
-                                ";Database Type=" & dbtypeStr & _
-                                ";Server=" & server & _
-                                ";User name=" & username & _
-                                ";Password=" & password, _
-                    Description:="Enable contract data from TradeBuild's database")
-    If sp Is Nothing Then
-        gCon.WriteErrorLine "Required contract info service provider is not installed"
-        setupServiceProviders = False
-    End If
-    Set sp = TradeBuildAPI.ServiceProviders.Add( _
-                    ProgId:="TBInfoBase27.TickfileServiceProvider", _
-                    Enabled:=True, _
-                    ParamString:="Database Name=" & database & _
-                                ";Database Type=" & dbtypeStr & _
-                                ";Server=" & server & _
-                                ";User name=" & username & _
-                                ";Password=" & password, _
-                    Description:="Enable historical tick data storage/retrieval to/from TradeBuild's database")
-    If sp Is Nothing Then
-        gCon.WriteErrorLine "Required tickfile service provider is not installed"
+    Set mDBClient = CreateTradingDBClient(dbtype, server, database, username, password, True)
+    If mDBClient Is Nothing Then
+        gCon.WriteErrorLine "Error: can't access database"
         setupServiceProviders = False
     End If
 End If
@@ -403,13 +391,12 @@ Exit Function
 Err:
 gCon.WriteErrorLine Err.Description
 setupServiceProviders = False
-
 End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
 gCon.WriteErrorLine "gtd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.WriteErrorLine "    -speed:n"
+gCon.WriteErrorLine "    -Speed:n"
 gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"
 gCon.WriteErrorLine "#comment"

@@ -196,12 +196,11 @@ If dbtype = DbNone Then
 End If
     
 If setupDb Then
-    Set gDb = CreateTradingDB(GenerateConnectionString(dbtype, _
+    Set gDb = CreateTradingDB(CreateConnectionParams(dbtype, _
                                                         server, _
                                                         database, _
                                                         username, _
-                                                        password), _
-                            dbtype)
+                                                        password))
 End If
 
 Exit Function

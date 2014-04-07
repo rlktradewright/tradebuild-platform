@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Study
+Implements IStudy
 
 '@================================================================================
 ' Events
@@ -51,7 +51,7 @@ Private Const ModuleName                As String = "BollingerBands"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-
+Private mStudyManager As StudyManager
 
 
 Private mPeriods As Long
@@ -60,9 +60,9 @@ Private mEdgeBandWidth As Double
 Private mSlopeThreshold As Double
 
 Private mSD As StandardDeviation
-Private mSDStudy As Study
+Private mSDStudy As IStudy
 
-Private mMAStudy As Study
+Private mMAStudy As IStudy
 
 Private mDevs As Double
 
@@ -107,13 +107,12 @@ End Sub
 '@================================================================================
 
 Private Sub customInitialise( _
-                ByVal id As String, _
+                ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
-
+                ByVal underlyingStudy As IStudy, _
+                ByVal pSessionFuture As IFuture)
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
@@ -124,41 +123,41 @@ customProcessParameters Parameters
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
                 ev As StudyValueEventData)
-Static sPrevVal As Variant
-Dim ma As Variant
-
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
+Static sPrevVal As Variant
+
 If Not mStudyFoundation.IsNewBar Then
-    If ev.sVal.value = sPrevVal Then Exit Sub
+    If ev.sVal.Value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.sVal.value
+sPrevVal = ev.sVal.Value
 
 mSDStudy.Notify ev
 mMAStudy.Notify ev
 
-ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
-If IsEmpty(ma) Or IsEmpty(mSD.SD.value) Then Exit Sub
+Dim ma As Variant
+ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).Value
+If IsEmpty(ma) Or IsEmpty(mSD.SD.Value) Then Exit Sub
 
-notifyValue ma, BBValueCentre, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-notifyValue ma + mDevs * mSD.SD.value, BBValueTop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-notifyValue ma - mDevs * mSD.SD.value, BBValueBottom, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
-notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+notifyValue ma, BBValueCentre, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
+notifyValue ma + mDevs * mSD.SD.Value, BBValueTop, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
+notifyValue ma - mDevs * mSD.SD.Value, BBValueBottom, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
+notifyValue 2 * mDevs * mSD.SD.Value, BBValueSpread, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
-Dim lStudy As Study
+Dim lStudy As IStudy
 Const ProcName As String = "customNumberOfBarsRequired"
 On Error GoTo Err
 
@@ -168,46 +167,46 @@ customNumberOfBarsRequired = lStudy.NumberOfBarsRequired
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
-Dim param As Parameter
-Dim lparams As Parameters
-Dim maType As String
-Dim lStudy As Study
-Dim valueNames(0) As String
-
 Const ProcName As String = "customProcessParameters"
 On Error GoTo Err
 
-valueNames(0) = "in"
+Dim maType As String
 
+Dim param As Parameter
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(BBParamCentreBandWidth)
-        mCentreBandWidth = param.value
+        mCentreBandWidth = param.Value
     Case UCase$(BBParamDeviations)
-        mDevs = param.value
+        mDevs = param.Value
     Case UCase$(BBParamEdgeBandWidth)
-        mEdgeBandWidth = param.value
+        mEdgeBandWidth = param.Value
     Case UCase$(BBParamPeriods)
-        mPeriods = param.value
+        mPeriods = param.Value
     Case UCase$(BBParamSlopeThreshold)
-        mSlopeThreshold = param.value
+        mSlopeThreshold = param.Value
     Case UCase$(BBParamMAType)
-        maType = param.value
+        maType = param.Value
     End Select
 Next
 
-Set mMAStudy = gCreateMA(maType, _
-                    mPeriods, _
-                    0)
+Set mMAStudy = gCreateMA(mStudyManager, maType, mPeriods, 0)
 
+Dim lparams As Parameters
 Set lparams = GStandardDeviation.defaultParameters
 lparams.SetParameterValue ParamPeriods, mPeriods
+
+Dim valueNames(0) As String
+valueNames(0) = "in"
+
+Dim lStudy As IStudy
 Set lStudy = mSD
-lStudy.initialise GenerateGUIDString, _
+lStudy.Initialise mStudyManager, _
+                    GenerateGUIDString, _
                     lparams, _
                     mNumberOfValuesToCache, _
                     valueNames, _
@@ -217,7 +216,7 @@ lStudy.initialise GenerateGUIDString, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition
@@ -229,7 +228,7 @@ Set customStudyDefinition = GBollingerBands.StudyDefinition
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -240,176 +239,176 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get bottom(Optional ByVal ref As Long) As SValue
+Public Property Get Bottom(Optional ByVal ref As Long) As SValue
 Dim sv As SValue
-Const ProcName As String = "bottom"
+Const ProcName As String = "Bottom"
 On Error GoTo Err
 
-bottom = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
+Bottom = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
-If IsEmpty(bottom.value) Or IsEmpty(sv.value) Then Exit Property
-bottom.value = bottom.value - mDevs * sv.value
+If IsEmpty(Bottom.Value) Or IsEmpty(sv.Value) Then Exit Property
+Bottom.Value = Bottom.Value - mDevs * sv.Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get bottomFalling(Optional ByVal ref As Long, _
+Public Property Get BottomFalling(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "bottomFalling"
+Const ProcName As String = "BottomFalling"
 On Error GoTo Err
 
-bottomFalling = bottomSlope(ref, periods)
-If IsEmpty(bottomFalling.value) Then Exit Property
-bottomFalling.value = (bottomFalling.value <= (-1 * mSlopeThreshold))
+BottomFalling = BottomSlope(ref, periods)
+If IsEmpty(BottomFalling.Value) Then Exit Property
+BottomFalling.Value = (BottomFalling.Value <= (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get bottomFlat(Optional ByVal ref As Long, _
+Public Property Get BottomFlat(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "bottomFlat"
+Const ProcName As String = "BottomFlat"
 On Error GoTo Err
 
-bottomFlat = bottomSlope(ref, periods)
-If IsEmpty(bottomFlat.value) Then Exit Property
-bottomFlat.value = (bottomFlat.value < mSlopeThreshold And _
-                    bottomFlat.value > (-1 * mSlopeThreshold))
+BottomFlat = BottomSlope(ref, periods)
+If IsEmpty(BottomFlat.Value) Then Exit Property
+BottomFlat.Value = (BottomFlat.Value < mSlopeThreshold And _
+                    BottomFlat.Value > (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get bottomRising(Optional ByVal ref As Long, _
+Public Property Get BottomRising(Optional ByVal ref As Long, _
                             Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "bottomRising"
+Const ProcName As String = "BottomRising"
 On Error GoTo Err
 
-bottomRising = bottomSlope(ref, periods)
-If IsEmpty(bottomRising.value) Then Exit Property
-bottomRising.value = (bottomRising.value >= mSlopeThreshold)
+BottomRising = BottomSlope(ref, periods)
+If IsEmpty(BottomRising.Value) Then Exit Property
+BottomRising.Value = (BottomRising.Value >= mSlopeThreshold)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get bottomSlope(Optional ByVal ref As Long, _
+Public Property Get BottomSlope(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
 Dim sv As SValue
-Const ProcName As String = "bottomSlope"
+Const ProcName As String = "BottomSlope"
 On Error GoTo Err
 
-bottomSlope = bottom(ref)
-sv = bottom(ref - periods + 1)
-If IsEmpty(bottomSlope.value) Or IsEmpty(sv.value) Then Exit Property
-bottomSlope.value = (bottomSlope.value - sv.value) / periods
+BottomSlope = Bottom(ref)
+sv = Bottom(ref - periods + 1)
+If IsEmpty(BottomSlope.Value) Or IsEmpty(sv.Value) Then Exit Property
+BottomSlope.Value = (BottomSlope.Value - sv.Value) / periods
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get centre(Optional ByVal ref As Long) As SValue
-Const ProcName As String = "centre"
+Public Property Get Centre(Optional ByVal ref As Long) As SValue
+Const ProcName As String = "Centre"
 On Error GoTo Err
 
-centre = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
+Centre = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get centreFalling(Optional ByVal ref As Long, _
+Public Property Get CentreFalling(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "centreFalling"
+Const ProcName As String = "CentreFalling"
 On Error GoTo Err
 
-centreFalling = centreSlope(ref, periods)
-If IsEmpty(centreFalling.value) Then Exit Property
-centreFalling.value = (centreFalling.value <= (-1 * mSlopeThreshold))
+CentreFalling = CentreSlope(ref, periods)
+If IsEmpty(CentreFalling.Value) Then Exit Property
+CentreFalling.Value = (CentreFalling.Value <= (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get centreFlat(Optional ByVal ref As Long, _
+Public Property Get CentreFlat(Optional ByVal ref As Long, _
                             Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "centreFlat"
+Const ProcName As String = "CentreFlat"
 On Error GoTo Err
 
-centreFlat = centreSlope(ref, periods)
-If IsEmpty(centreFlat.value) Then Exit Property
-centreFlat.value = (centreFlat.value < mSlopeThreshold And _
-    centreFlat.value > (-1 * mSlopeThreshold))
+CentreFlat = CentreSlope(ref, periods)
+If IsEmpty(CentreFlat.Value) Then Exit Property
+CentreFlat.Value = (CentreFlat.Value < mSlopeThreshold And _
+    CentreFlat.Value > (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get centreRising(Optional ByVal ref As Long, _
+Public Property Get CentreRising(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
-Const ProcName As String = "centreRising"
+Const ProcName As String = "CentreRising"
 On Error GoTo Err
 
-centreRising = centreSlope(ref, periods)
-If IsEmpty(centreRising.value) Then Exit Property
-centreRising.value = (centreRising.value >= mSlopeThreshold)
+CentreRising = CentreSlope(ref, periods)
+If IsEmpty(CentreRising.Value) Then Exit Property
+CentreRising.Value = (CentreRising.Value >= mSlopeThreshold)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get centreSlope(Optional ByVal ref As Long, _
+Public Property Get CentreSlope(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
 Dim sv As SValue
-Const ProcName As String = "centreSlope"
+Const ProcName As String = "CentreSlope"
 On Error GoTo Err
 
-centreSlope = centre(ref)
-sv = centre(ref - periods + 1)
-If IsEmpty(centreSlope.value) Or IsEmpty(sv.value) Then Exit Property
-centreSlope.value = (centreSlope.value - sv.value) / periods
+CentreSlope = Centre(ref)
+sv = Centre(ref - periods + 1)
+If IsEmpty(CentreSlope.Value) Or IsEmpty(sv.Value) Then Exit Property
+CentreSlope.Value = (CentreSlope.Value - sv.Value) / periods
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get inBottomBand(ByVal value As Double, _
+Public Property Get InBottomBand(ByVal Value As Double, _
                                 Optional ByVal ref As Long) As SValue
 Const ProcName As String = "inBottomBand"
 On Error GoTo Err
 
-inBottomBand = bottom(ref)
-If IsEmpty(inBottomBand.value) Then Exit Property
-inBottomBand.value = (value <= (inBottomBand.value + mEdgeBandWidth))
+InBottomBand = Bottom(ref)
+If IsEmpty(InBottomBand.Value) Then Exit Property
+InBottomBand.Value = (Value <= (InBottomBand.Value + mEdgeBandWidth))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get inCentreBand(ByVal value As Double, _
+Public Property Get InCentreBand(ByVal Value As Double, _
                                 Optional ByVal ref As Long) As SValue
 Dim bandUpper As Double
 Dim bandLower As Double
@@ -417,161 +416,161 @@ Dim bandLower As Double
 Const ProcName As String = "inCentreBand"
 On Error GoTo Err
 
-inCentreBand = centre(ref)
-If IsEmpty(inCentreBand.value) Then Exit Property
-bandUpper = inCentreBand.value + (mCentreBandWidth / 2)
+InCentreBand = Centre(ref)
+If IsEmpty(InCentreBand.Value) Then Exit Property
+bandUpper = InCentreBand.Value + (mCentreBandWidth / 2)
 bandLower = bandUpper - mCentreBandWidth
 
-inCentreBand.value = (value <= bandUpper _
+InCentreBand.Value = (Value <= bandUpper _
                     And _
-                    value >= bandLower)
+                    Value >= bandLower)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get inTopBand(ByVal value As Double, _
+Public Property Get InTopBand(ByVal Value As Double, _
                             Optional ByVal ref As Long) As SValue
 Const ProcName As String = "inTopBand"
 On Error GoTo Err
 
-inTopBand = top(ref)
-If IsEmpty(inTopBand.value) Then Exit Property
-inTopBand.value = (value >= (inTopBand.value - mEdgeBandWidth))
+InTopBand = Top(ref)
+If IsEmpty(InTopBand.Value) Then Exit Property
+InTopBand.Value = (Value >= (InTopBand.Value - mEdgeBandWidth))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get rangeIntersectsCentreBand( _
+Public Property Get RangeIntersectsCentreBand( _
                     ByVal lowValue As Double, _
                     ByVal highValue As Double, _
                     Optional ByVal ref As Long) As SValue
 Dim bandUpper As Double
 Dim bandLower As Double
 
-Const ProcName As String = "rangeIntersectsCentreBand"
+Const ProcName As String = "RangeIntersectsCentreBand"
 On Error GoTo Err
 
-rangeIntersectsCentreBand = centre(ref)
-If IsEmpty(rangeIntersectsCentreBand.value) Then Exit Property
+RangeIntersectsCentreBand = Centre(ref)
+If IsEmpty(RangeIntersectsCentreBand.Value) Then Exit Property
 
-bandUpper = rangeIntersectsCentreBand.value + (mCentreBandWidth / 2)
+bandUpper = RangeIntersectsCentreBand.Value + (mCentreBandWidth / 2)
 bandLower = bandUpper - mCentreBandWidth
 
 If highValue >= bandLower And highValue <= bandUpper Then
-    rangeIntersectsCentreBand.value = True
+    RangeIntersectsCentreBand.Value = True
 ElseIf lowValue >= bandLower And lowValue <= bandUpper Then
-    rangeIntersectsCentreBand.value = True
+    RangeIntersectsCentreBand.Value = True
 ElseIf lowValue < bandLower And highValue > bandUpper Then
-    rangeIntersectsCentreBand.value = True
+    RangeIntersectsCentreBand.Value = True
 Else
-    rangeIntersectsCentreBand.value = False
+    RangeIntersectsCentreBand.Value = False
 End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get spread(Optional ByVal ref As Long) As SValue
+Public Property Get Spread(Optional ByVal ref As Long) As SValue
 Dim sv As SValue
-Const ProcName As String = "spread"
+Const ProcName As String = "Spread"
 On Error GoTo Err
 
-spread = top(ref)
-sv = bottom(ref)
-If IsEmpty(spread.value) Or IsEmpty(sv.value) Then Exit Property
-spread.value = spread.value - sv.value
+Spread = Top(ref)
+sv = Bottom(ref)
+If IsEmpty(Spread.Value) Or IsEmpty(sv.Value) Then Exit Property
+Spread.Value = Spread.Value - sv.Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get top(Optional ByVal ref As Long) As SValue
+Public Property Get Top(Optional ByVal ref As Long) As SValue
 Dim sv As SValue
 Const ProcName As String = "top"
 On Error GoTo Err
 
-top = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
+Top = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
-If IsEmpty(top.value) Or IsEmpty(sv.value) Then Exit Property
-top.value = top.value + mDevs * sv.value
+If IsEmpty(Top.Value) Or IsEmpty(sv.Value) Then Exit Property
+Top.Value = Top.Value + mDevs * sv.Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get topFalling(Optional ByVal ref As Long, _
+Public Property Get TopFalling(Optional ByVal ref As Long, _
                                 Optional ByVal periods As Long = 1) As SValue
 Const ProcName As String = "topFalling"
 On Error GoTo Err
 
-topFalling = topSlope(ref, periods)
-If IsEmpty(topFalling.value) Then Exit Property
-topFalling.value = (topFalling.value <= (-1 * mSlopeThreshold))
+TopFalling = TopSlope(ref, periods)
+If IsEmpty(TopFalling.Value) Then Exit Property
+TopFalling.Value = (TopFalling.Value <= (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get topFlat(Optional ByVal ref As Long, _
+Public Property Get TopFlat(Optional ByVal ref As Long, _
                             Optional ByVal periods As Long = 1) As SValue
 Const ProcName As String = "topFlat"
 On Error GoTo Err
 
-topFlat = topSlope(ref, periods)
-If IsEmpty(topFlat.value) Then Exit Property
-topFlat.value = (topFlat.value < mSlopeThreshold And _
-    topFlat.value > (-1 * mSlopeThreshold))
+TopFlat = TopSlope(ref, periods)
+If IsEmpty(TopFlat.Value) Then Exit Property
+TopFlat.Value = (TopFlat.Value < mSlopeThreshold And _
+    TopFlat.Value > (-1 * mSlopeThreshold))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get topRising(Optional ByVal ref As Long, _
+Public Property Get TopRising(Optional ByVal ref As Long, _
                             Optional ByVal periods As Long = 1) As SValue
 Const ProcName As String = "topRising"
 On Error GoTo Err
 
-topRising = topSlope(ref, periods)
-If IsEmpty(topRising.value) Then Exit Property
-topRising.value = (topRising.value >= mSlopeThreshold)
+TopRising = TopSlope(ref, periods)
+If IsEmpty(TopRising.Value) Then Exit Property
+TopRising.Value = (TopRising.Value >= mSlopeThreshold)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get topSlope(Optional ByVal ref As Long, _
+Public Property Get TopSlope(Optional ByVal ref As Long, _
                             Optional ByVal periods As Long = 1) As SValue
 Dim sv As SValue
 Const ProcName As String = "topSlope"
 On Error GoTo Err
 
-topSlope = top(ref)
-sv = top(ref - periods + 1)
-If IsEmpty(topSlope.value) Or IsEmpty(sv.value) Then Exit Property
-topSlope.value = (topSlope.value - sv.value) / periods
+TopSlope = Top(ref)
+sv = Top(ref - periods + 1)
+If IsEmpty(TopSlope.Value) Or IsEmpty(sv.Value) Then Exit Property
+TopSlope.Value = (TopSlope.Value - sv.Value) / periods
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -590,45 +589,45 @@ On Error GoTo Err
 
 Select Case UCase$(valueName)
 Case UCase$(BBValueBottom)
-    getStudyValue = Me.bottom(ref)
+    getStudyValue = Me.Bottom(ref)
 Case UCase$(BBValueCentre)
-    getStudyValue = Me.centre(ref)
+    getStudyValue = Me.Centre(ref)
 Case UCase$(BBValueSpread)
-    getStudyValue = Me.spread(ref)
+    getStudyValue = Me.Spread(ref)
 Case UCase$(BBValueTop)
-    getStudyValue = Me.top(ref)
+    getStudyValue = Me.Top(ref)
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub notifyValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal valueName As String, _
-                ByVal barNumber As Long, _
-                ByVal barStartTime As Date, _
-                ByVal timestamp As Date)
+                ByVal BarNumber As Long, _
+                ByVal BarStartTime As Date, _
+                ByVal Timestamp As Date)
 Dim ev As StudyValueEventData
 Const ProcName As String = "notifyValue"
 On Error GoTo Err
 
-If Not IsEmpty(value) Then
-    ev.sVal.value = value
+If Not IsEmpty(Value) Then
+    ev.sVal.Value = Value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.sVal.barNumber = barNumber
-    ev.sVal.barStartTime = barStartTime
-    ev.sVal.timestamp = timestamp
+    ev.sVal.BarNumber = BarNumber
+    ev.sVal.BarStartTime = BarStartTime
+    ev.sVal.Timestamp = Timestamp
     mStudyFoundation.notifyValue ev
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -642,7 +641,7 @@ numberOfCachedValues = mMAStudy.numberOfCachedValues("")
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -651,20 +650,20 @@ End Function
 
 
 '@================================================================================
-' Study Interface Members
+' IStudy Interface Members
 '@================================================================================
 
-Private Function Study_addStudy( _
-                ByVal Study As Study, _
+Private Function IStudy_AddStudy( _
+                ByVal Study As IStudy, _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Const ProcName As String = "Study_addStudy"
+Const ProcName As String = "IStudy_AddStudy"
 On Error GoTo Err
 
-Set Study_addStudy = mStudyFoundation.AddStudy( _
+Set IStudy_AddStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -674,19 +673,19 @@ Set Study_addStudy = mStudyFoundation.AddStudy( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function Study_addStudyValueListener( _
-                ByVal listener As StudyValueListener, _
+Private Function IStudy_AddStudyValueListener( _
+                ByVal listener As IStudyValueListener, _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Const ProcName As String = "Study_addStudyValueListener"
+Const ProcName As String = "IStudy_AddStudyValueListener"
 On Error GoTo Err
 
-Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
+Set IStudy_AddStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -696,40 +695,40 @@ Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_baseStudy() As Study
-Const ProcName As String = "Study_baseStudy"
+Private Property Get IStudy_BaseStudy() As IStudy
+Const ProcName As String = "IStudy_BaseStudy"
 On Error GoTo Err
 
-Set Study_baseStudy = Me
+Set IStudy_BaseStudy = Me
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Study_getStudyValue( _
+Private Function IStudy_GetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-'Study_getStudyValue = mStudyFoundation.getStudyValue(ValueName, ref)
-Const ProcName As String = "Study_getStudyValue"
+'IStudy_GetStudyValue = mStudyFoundation.getStudyValue(ValueName, ref)
+Const ProcName As String = "IStudy_GetStudyValue"
 On Error GoTo Err
 
-Study_getStudyValue = getStudyValue(valueName, ref)
+IStudy_GetStudyValue = getStudyValue(valueName, ref)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function Study_getValueTicksize( _
+Private Function IStudy_GetValueTicksize( _
                 ByVal valueName As String) As Double
 
-Const ProcName As String = "Study_getValueTicksize"
+Const ProcName As String = "IStudy_GetValueTicksize"
 On Error GoTo Err
 
 
@@ -737,80 +736,83 @@ On Error GoTo Err
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_id() As String
-Const ProcName As String = "Study_id"
+Private Property Get IStudy_id() As String
+Const ProcName As String = "IStudy_id"
 On Error GoTo Err
 
-Study_id = mStudyFoundation.id
+IStudy_id = mStudyFoundation.Id
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_initialise( _
-                ByVal id As String, _
+Private Sub IStudy_Initialise( _
+                ByVal StudyManager As StudyManager, _
+                ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
-Const ProcName As String = "Study_initialise"
+                ByVal underlyingStudy As IStudy, _
+                ByVal pSessionFuture As IFuture)
+Const ProcName As String = "IStudy_Initialise"
 On Error GoTo Err
 
+Set mStudyManager = StudyManager
 Set mStudyFoundation = New StudyFoundation
-mStudyFoundation.initialise Me, _
-                            id, _
+mStudyFoundation.Initialise StudyManager, _
+                            Me, _
+                            Id, _
                             Parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
                             underlyingStudy
                             
 
-customInitialise id, _
+customInitialise Id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
                 underlyingStudy, _
-                pSession
+                pSessionFuture
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_instanceName() As String
-Const ProcName As String = "Study_instanceName"
+Private Property Get IStudy_InstanceName() As String
+Const ProcName As String = "IStudy_InstanceName"
 On Error GoTo Err
 
-Study_instanceName = mStudyFoundation.InstanceName
+IStudy_InstanceName = mStudyFoundation.InstanceName
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get Study_instancePath() As String
-Const ProcName As String = "Study_instancePath"
+Private Property Get IStudy_InstancePath() As String
+Const ProcName As String = "IStudy_InstancePath"
 On Error GoTo Err
 
-Study_instancePath = mStudyFoundation.InstancePath
+IStudy_InstancePath = mStudyFoundation.InstancePath
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_Notify( _
+Private Sub IStudy_Notify( _
                 ev As StudyValueEventData)
-Const ProcName As String = "Study_Notify"
+Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 
 mStudyFoundation.NotifyInput ev
@@ -819,49 +821,49 @@ customNotify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_numberOfBarsRequired() As Long
-Const ProcName As String = "Study_numberOfBarsRequired"
+Private Property Get IStudy_NumberOfBarsRequired() As Long
+Const ProcName As String = "IStudy_NumberOfBarsRequired"
 On Error GoTo Err
 
-Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
+IStudy_NumberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Study_numberOfCachedValues( _
+Private Function IStudy_NumberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
-Const ProcName As String = "Study_numberOfCachedValues"
+Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-Study_numberOfCachedValues = numberOfCachedValues(valueName)
+IStudy_NumberOfCachedValues = numberOfCachedValues(valueName)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_parameters() As Parameters
-Const ProcName As String = "Study_parameters"
+Private Property Get IStudy_Parameters() As Parameters
+Const ProcName As String = "IStudy_Parameters"
 On Error GoTo Err
 
-Set Study_parameters = mStudyFoundation.Parameters
+Set IStudy_Parameters = mStudyFoundation.Parameters
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_removeStudyValueListener( _
-                ByVal listener As StudyValueListener)
-Const ProcName As String = "Study_removeStudyValueListener"
+Private Sub IStudy_RemoveStudyValueListener( _
+                ByVal listener As IStudyValueListener)
+Const ProcName As String = "IStudy_RemoveStudyValueListener"
 On Error GoTo Err
 
 mStudyFoundation.RemoveStudyValueListener listener
@@ -869,14 +871,14 @@ mStudyFoundation.RemoveStudyValueListener listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Study_setInputTicksize( _
+Private Sub IStudy_SetInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
 
-Const ProcName As String = "Study_setInputTicksize"
+Const ProcName As String = "IStudy_SetInputTicksize"
 On Error GoTo Err
 
 
@@ -884,19 +886,19 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_studyDefinition() As StudyDefinition
-Const ProcName As String = "Study_studyDefinition"
+Private Property Get IStudy_StudyDefinition() As StudyDefinition
+Const ProcName As String = "IStudy_StudyDefinition"
 On Error GoTo Err
 
-Set Study_studyDefinition = customStudyDefinition
+Set IStudy_StudyDefinition = customStudyDefinition
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 

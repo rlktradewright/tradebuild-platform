@@ -50,17 +50,17 @@ Private mStudyDefinition As StudyDefinition
 ' Procedures
 '@================================================================================
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -81,7 +81,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -100,7 +100,7 @@ If mStudyDefinition Is Nothing Then
                         "calculates the difference between two moving averages of " & _
                         "different periods. A further moving average is applied " & _
                         "to this difference to give a signal line. Finally the " & _
-                        "difference between the MACD and the signal value gives " & _
+                        "difference between the MACD and the signal Value gives " & _
                         "another indicator that is usually plotted as a " & _
                         "histogram."
     mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
@@ -108,10 +108,10 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(MACDInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input value"
+    inputDef.Description = "Input Value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACD)
-    valueDef.Description = "The MACD value"
+    valueDef.Description = "The MACD Value"
     valueDef.IsDefault = True
     valueDef.IncludeInChart = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -120,7 +120,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDSignal)
-    valueDef.Description = "The MACD signal value"
+    valueDef.Description = "The MACD signal Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
@@ -128,7 +128,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDHist)
-    valueDef.Description = "The MACD histogram value"
+    valueDef.Description = "The MACD histogram Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.ValueMode = ValueModeNone
@@ -137,7 +137,7 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrengthCount)
     valueDef.Description = "The number of consecutive bars for which the current " & _
-                            "strength value has not changed"
+                            "strength Value has not changed"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.ValueMode = ValueModeNone
     valueDef.ValueStyle = gCreateDataPointStyle(vbBlack, DisplayMode:=DataPointDisplayModeHistogram)
@@ -174,7 +174,7 @@ If mStudyDefinition Is Nothing Then
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamSmoothingPeriods)
     paramDef.Description = "The number of periods for smoothing the MACD to " & _
-                            "produce the MACD signal value"
+                            "produce the MACD signal Value"
     paramDef.ParameterType = ParameterTypeInteger
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamMAType)
@@ -189,7 +189,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

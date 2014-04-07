@@ -42,7 +42,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements Study
+Implements IStudy
 
 '@================================================================================
 ' Events
@@ -70,8 +70,9 @@ Private Const ModuleName                As String = "RSI"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
+Private mStudyManager As StudyManager
 
-Private mSession As Session
+Private mSessionFuture As IFuture
 Private mRsiCache As ValueCache
 
 Private mPeriods As Long
@@ -82,8 +83,8 @@ Private mMovingAverageType As String
 ' Since we don't know the default types of these objects (because that will
 ' vary depending on whether they are simple, exponential or whatever), we
 ' will access them only through their IStudy interfaces
-Private mMaGains As Study
-Private mMaLosses As Study
+Private mMaGains As IStudy
+Private mMaLosses As IStudy
 
 ' it's easy to calculate the open and close for each bar ourselves, but we'll
 ' illustrate the use of the Bars class provided by Timeframe Utilities which
@@ -91,6 +92,9 @@ Private mMaLosses As Study
 ' a BarsBuilder object.
 Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
+
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -105,33 +109,41 @@ End Sub
 '@================================================================================
 
 Private Sub customInitialise( _
-                ByVal id As String, _
+                ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal underlyingStudy As IStudy, _
+                ByVal pSessionFuture As IFuture)
 
 Const ProcName As String = "customInitialise"
 On Error GoTo Err
 
-Set mSession = pSession
+Set mSessionFuture = pSessionFuture
 customProcessParameters Parameters
 
 Set mRsiCache = mStudyFoundation.FindValueCache(RsiValueRsi)
 
 ' create the Bars object. We only need it to cache the latest bar, so
 ' set the numberOfValuesToCache argument to 1
-Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
-                                mSession, _
-                                0, _
-                                1)
-Set mBars = mBarsBuilder.Bars
+If mSessionFuture.IsAvailable Then
+    Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
+                                    mSessionFuture.Value, _
+                                    0, _
+                                    1)
+    Set mBars = mBarsBuilder.Bars
+Else
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add CreateBarsBuilderFuture(GetTimePeriod(0, TimePeriodNone), _
+                                    mSessionFuture, _
+                                    0, _
+                                    1)
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub customNotify( _
@@ -146,11 +158,11 @@ Const ProcName As String = "customNotify"
 On Error GoTo Err
 
 If Not mStudyFoundation.IsNewBar Then
-    ' if this input value is the same as the previous one in this bar, no
-    ' need to do anything as it won't change the study value
-    If ev.sVal.value = sPrevVal Then Exit Sub
+    ' if this input Value is the same as the previous one in this bar, no
+    ' need to do anything as it won't change the study Value
+    If ev.sVal.Value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.sVal.value
+sPrevVal = ev.sVal.Value
 
 ' update the bars
 mBarsBuilder.notifyValue ev.sVal
@@ -159,47 +171,47 @@ mBarsBuilder.notifyValue ev.sVal
 ' average object
 
 evMa = ev
-evMa.sVal.value = mBars.Gain(0)  ' NB: parameter value of 0 means current bar,
+evMa.sVal.Value = mBars.Gain(0)  ' NB: parameter Value of 0 means current bar,
                             ' -1 is previous bar etc
 mMaGains.Notify evMa        ' update the gains moving average
 
-evMa.sVal.value = mBars.Loss(0)
+evMa.sVal.Value = mBars.Loss(0)
 mMaLosses.Notify evMa        ' update the losses moving average
 
 ' now get the updated gain and loss moving averages. Note that we don't actually
 ' need to know the name of the moving average study values, because we can use
 ' the standard name $DEFAULT (defined in constant DefaultStudyValueName)
-' which always refers to a study's default output value.
+' which always refers to a study's default output Value.
 gainsAvg = mMaGains.getStudyValue(DefaultStudyValueName, 0)
 lossesAvg = mMaLosses.getStudyValue(DefaultStudyValueName, 0)
 
 ' now we can calculate the RSI. If any of the inputs to this calculation are
 ' Empty (for example because we haven't yet got far enough to get genuine values
-' from the moving averages), then we will store an Empty value in the RSI cache.
+' from the moving averages), then we will store an Empty Value in the RSI cache.
 ' This is so that any user of this study doesn't have to bother to work out whether
-' a value for this bar exists or not.
-If IsEmpty(gainsAvg.value) Or IsEmpty(lossesAvg.value) Then
+' a Value for this bar exists or not.
+If IsEmpty(gainsAvg.Value) Or IsEmpty(lossesAvg.Value) Then
     RSI = Empty
 Else
-    If lossesAvg.value = 0 Then
+    If lossesAvg.Value = 0 Then
         RSI = 100
     Else
-        RSI = 100 - 100 / (1 + (gainsAvg.value / lossesAvg.value))
+        RSI = 100 - 100 / (1 + (gainsAvg.Value / lossesAvg.Value))
     End If
 End If
 
 If mStudyFoundation.IsNewBar Then
-    mRsiCache.AddValue RSI, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mRsiCache.AddValue RSI, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
 Else
-    mRsiCache.UpdateValue RSI, ev.sVal.barNumber, ev.sVal.timestamp
+    mRsiCache.UpdateValue RSI, ev.sVal.BarNumber, ev.sVal.Timestamp
 End If
 
-notifyValue RSI, RsiValueRsi, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+notifyValue RSI, RsiValueRsi, ev.sVal.BarNumber, ev.sVal.Timestamp, ev.sVal.BarStartTime
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -211,7 +223,7 @@ customNumberOfBarsRequired = mPeriods
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
@@ -226,25 +238,21 @@ On Error GoTo Err
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(RsiParamPeriods)
-        mPeriods = param.value
+        mPeriods = param.Value
     Case UCase$(RsiParamMovingAverageType)
-        mMovingAverageType = param.value
+        mMovingAverageType = param.Value
     End Select
 Next
 
 ' Now we know what we need to create the two moving average study objects. Note
-' that we only need these studies to cache the latest moving average value.
-Set mMaGains = gCreateMA(mMovingAverageType, _
-                        mPeriods, _
-                        1)
-Set mMaLosses = gCreateMA(mMovingAverageType, _
-                        mPeriods, _
-                        1)
+' that we only need these studies to cache the latest moving average Value.
+Set mMaGains = gCreateMA(mStudyManager, mMovingAverageType, mPeriods, 1)
+Set mMaLosses = gCreateMA(mStudyManager, mMovingAverageType, mPeriods, 1)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -257,12 +265,27 @@ Set customStudyDefinition = GRSI.StudyDefinition
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
-' xxxx Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Set mBarsBuilder = ev.Future.Value
+Set mBars = mBarsBuilder.Bars
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -277,31 +300,30 @@ End Function
 '@================================================================================
 
 Private Sub notifyValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal valueName As String, _
-                ByVal barNumber As Long, _
-                ByVal barStartTime As Date, _
-                ByVal timestamp As Date)
+                ByVal BarNumber As Long, _
+                ByVal BarStartTime As Date, _
+                ByVal Timestamp As Date)
 Dim ev As StudyValueEventData
 Const ProcName As String = "notifyValue"
 On Error GoTo Err
 
-If Not IsEmpty(value) Then
-    ev.sVal.value = value
+If Not IsEmpty(Value) Then
+    ev.sVal.Value = Value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.sVal.barNumber = barNumber
-    ev.sVal.barStartTime = barStartTime
-    ev.sVal.timestamp = timestamp
+    ev.sVal.BarNumber = BarNumber
+    ev.sVal.BarStartTime = BarStartTime
+    ev.sVal.Timestamp = Timestamp
     mStudyFoundation.notifyValue ev
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
 
 '@================================================================================
 ' From this point on the code is identical for all studies - do not change unless
@@ -310,20 +332,20 @@ End Sub
 
 
 '@================================================================================
-' Study Interface Members
+' IStudy Interface Members
 '@================================================================================
 
-Private Function Study_addStudy( _
-                ByVal Study As Study, _
+Private Function IStudy_AddStudy( _
+                ByVal Study As IStudy, _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
 
-Const ProcName As String = "Study_addStudy"
+Const ProcName As String = "IStudy_AddStudy"
 On Error GoTo Err
 
-Set Study_addStudy = mStudyFoundation.AddStudy( _
+Set IStudy_AddStudy = mStudyFoundation.AddStudy( _
                             Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
@@ -333,19 +355,19 @@ Set Study_addStudy = mStudyFoundation.AddStudy( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function Study_addStudyValueListener( _
-                ByVal listener As StudyValueListener, _
+Private Function IStudy_AddStudyValueListener( _
+                ByVal listener As IStudyValueListener, _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskController
-Const ProcName As String = "Study_addStudyValueListener"
+Const ProcName As String = "IStudy_AddStudyValueListener"
 On Error GoTo Err
 
-Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
+Set IStudy_AddStudyValueListener = mStudyFoundation.AddStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -355,39 +377,39 @@ Set Study_addStudyValueListener = mStudyFoundation.AddStudyValueListener( _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_baseStudy() As Study
-Const ProcName As String = "Study_baseStudy"
+Private Property Get IStudy_BaseStudy() As IStudy
+Const ProcName As String = "IStudy_BaseStudy"
 On Error GoTo Err
 
-Set Study_baseStudy = Me
+Set IStudy_BaseStudy = Me
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Study_getStudyValue( _
+Private Function IStudy_GetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-Const ProcName As String = "Study_getStudyValue"
+Const ProcName As String = "IStudy_GetStudyValue"
 On Error GoTo Err
 
-Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
+IStudy_GetStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function Study_getValueTicksize( _
+Private Function IStudy_GetValueTicksize( _
                 ByVal valueName As String) As Double
 
-Const ProcName As String = "Study_getValueTicksize"
+Const ProcName As String = "IStudy_GetValueTicksize"
 On Error GoTo Err
 
 
@@ -395,81 +417,84 @@ On Error GoTo Err
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_id() As String
-Const ProcName As String = "Study_id"
+Private Property Get IStudy_id() As String
+Const ProcName As String = "IStudy_id"
 On Error GoTo Err
 
-Study_id = mStudyFoundation.id
+IStudy_id = mStudyFoundation.Id
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_initialise( _
-                ByVal id As String, _
+Private Sub IStudy_Initialise( _
+                ByVal StudyManager As StudyManager, _
+                ByVal Id As String, _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal underlyingStudy As IStudy, _
+                ByVal pSessionFuture As IFuture)
 
-Const ProcName As String = "Study_initialise"
+Const ProcName As String = "IStudy_Initialise"
 On Error GoTo Err
 
+Set mStudyManager = StudyManager
 Set mStudyFoundation = New StudyFoundation
-mStudyFoundation.initialise Me, _
-                            id, _
+mStudyFoundation.Initialise StudyManager, _
+                            Me, _
+                            Id, _
                             Parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
                             underlyingStudy
                             
 
-customInitialise id, _
+customInitialise Id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
                 underlyingStudy, _
-                pSession
+                pSessionFuture
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_instanceName() As String
-Const ProcName As String = "Study_instanceName"
+Private Property Get IStudy_InstanceName() As String
+Const ProcName As String = "IStudy_InstanceName"
 On Error GoTo Err
 
-Study_instanceName = mStudyFoundation.InstanceName
+IStudy_InstanceName = mStudyFoundation.InstanceName
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get Study_instancePath() As String
-Const ProcName As String = "Study_instancePath"
+Private Property Get IStudy_InstancePath() As String
+Const ProcName As String = "IStudy_InstancePath"
 On Error GoTo Err
 
-Study_instancePath = mStudyFoundation.InstancePath
+IStudy_InstancePath = mStudyFoundation.InstancePath
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_Notify( _
+Private Sub IStudy_Notify( _
                 ev As StudyValueEventData)
-Const ProcName As String = "Study_Notify"
+Const ProcName As String = "IStudy_Notify"
 On Error GoTo Err
 
 mStudyFoundation.NotifyInput ev
@@ -478,49 +503,49 @@ customNotify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_numberOfBarsRequired() As Long
-Const ProcName As String = "Study_numberOfBarsRequired"
+Private Property Get IStudy_NumberOfBarsRequired() As Long
+Const ProcName As String = "IStudy_NumberOfBarsRequired"
 On Error GoTo Err
 
-Study_numberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
+IStudy_NumberOfBarsRequired = mStudyFoundation.NumberOfBarsRequired(customNumberOfBarsRequired)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function Study_numberOfCachedValues( _
+Private Function IStudy_NumberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
-Const ProcName As String = "Study_numberOfCachedValues"
+Const ProcName As String = "IStudy_NumberOfCachedValues"
 On Error GoTo Err
 
-Study_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+IStudy_NumberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get Study_parameters() As Parameters
-Const ProcName As String = "Study_parameters"
+Private Property Get IStudy_Parameters() As Parameters
+Const ProcName As String = "IStudy_Parameters"
 On Error GoTo Err
 
-Set Study_parameters = mStudyFoundation.Parameters
+Set IStudy_Parameters = mStudyFoundation.Parameters
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Sub Study_removeStudyValueListener( _
-                ByVal listener As StudyValueListener)
-Const ProcName As String = "Study_removeStudyValueListener"
+Private Sub IStudy_RemoveStudyValueListener( _
+                ByVal listener As IStudyValueListener)
+Const ProcName As String = "IStudy_RemoveStudyValueListener"
 On Error GoTo Err
 
 mStudyFoundation.RemoveStudyValueListener listener
@@ -528,14 +553,14 @@ mStudyFoundation.RemoveStudyValueListener listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub Study_setInputTicksize( _
+Private Sub IStudy_SetInputTicksize( _
                 ByVal inputName As String, _
                 ByVal tickSize As Double)
 
-Const ProcName As String = "Study_setInputTicksize"
+Const ProcName As String = "IStudy_SetInputTicksize"
 On Error GoTo Err
 
 
@@ -543,19 +568,19 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get Study_studyDefinition() As StudyDefinition
-Const ProcName As String = "Study_studyDefinition"
+Private Property Get IStudy_StudyDefinition() As StudyDefinition
+Const ProcName As String = "IStudy_StudyDefinition"
 On Error GoTo Err
 
-Set Study_studyDefinition = customStudyDefinition
+Set IStudy_StudyDefinition = customStudyDefinition
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 

@@ -75,7 +75,7 @@ Public Const SwingShortName As String = "Swing"
 Public Const ParamMovingAverageType As String = "Mov avg type"
 Public Const ParamPeriods As String = "Periods"
 
-' sub-value names for study values in bar mode
+' sub-Value names for study values in bar mode
 Public Const BarValueOpen As String = "Open"
 Public Const BarValueHigh As String = "High"
 Public Const BarValueLow As String = "Low"
@@ -106,8 +106,6 @@ Public Const BarValueOHLC4 As String = "(O+H+L+C)/4"
 '@================================================================================
 ' Variables
 '@================================================================================
-
-Public gLibraryManager As StudyLibraryManager
 
 '@================================================================================
 ' Properties
@@ -180,7 +178,7 @@ Set gCreateDataPointStyle = style
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Property Get gCreateLineStyle( _
@@ -234,17 +232,18 @@ Set gCreateLineStyle = lStyle
 End Property
 
 Public Function gCreateMA( _
+                ByVal StudyManager As StudyManager, _
                 ByVal maType As String, _
                 ByVal periods As Long, _
-                ByVal numberOfValuesToCache As Long) As Study
-Dim lparams As Parameters
-Dim lStudy As Study
-Dim valueNames(0) As String
-
+                ByVal numberOfValuesToCache As Long) As IStudy
 Const ProcName As String = "gCreateMA"
 On Error GoTo Err
 
+Dim valueNames(0) As String
 valueNames(0) = "in"
+
+Dim lparams As Parameters
+Dim lStudy As IStudy
 
 Select Case UCase$(maType)
 Case UCase$(EmaShortName)
@@ -253,7 +252,8 @@ Case UCase$(EmaShortName)
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.Initialise GenerateGUIDString, _
+    lStudy.Initialise StudyManager, _
+                    GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
@@ -267,7 +267,8 @@ Case Else
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
     lparams.SetParameterValue ParamPeriods, periods
-    lStudy.Initialise GenerateGUIDString, _
+    lStudy.Initialise StudyManager, _
+                    GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
@@ -279,7 +280,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCreateTextStyle(Optional ByVal Angle = 0, _
@@ -391,7 +392,7 @@ gMaTypes = ar
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

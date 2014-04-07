@@ -43,17 +43,17 @@ Private mStudyDefinition As StudyDefinition
 '@================================================================================
 
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -72,7 +72,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -100,7 +100,7 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AtrValueATR)
-    valueDef.Description = "The Average True Range value"
+    valueDef.Description = "The Average True Range Value"
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
@@ -124,7 +124,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

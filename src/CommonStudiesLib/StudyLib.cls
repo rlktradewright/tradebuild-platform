@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements StudyLibrary
+Implements IStudyLibrary
 
 '@================================================================================
 ' Events
@@ -55,7 +55,6 @@ Private Const ModuleName                As String = "StudyLib"
 '@================================================================================
 
 Private mName As String
-Private mHandle As Long
 
 Private mStudyNames() As String
 
@@ -87,183 +86,182 @@ addStudyName SwingName
 End Sub
 
 '@================================================================================
-' StudyLibrary Interface Members
+' IStudyLibrary Interface Members
 '@================================================================================
 
-Private Function StudyLibrary_createStudy( _
-                ByVal name As String) As Study
-Const ProcName As String = "StudyLibrary_createStudy"
+Private Function IStudyLibrary_createStudy( _
+                ByVal name As String) As IStudy
+Const ProcName As String = "IStudyLibrary_createStudy"
 On Error GoTo Err
 
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
-    Set StudyLibrary_createStudy = New accDist
+    Set IStudyLibrary_createStudy = New accDist
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Set StudyLibrary_createStudy = New ATR
+    Set IStudyLibrary_createStudy = New ATR
 Case UCase$(BbName), UCase$(BbShortName)
-    Set StudyLibrary_createStudy = New BollingerBands
+    Set IStudyLibrary_createStudy = New BollingerBands
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
-    Set StudyLibrary_createStudy = New ConstMomentumBars
+    Set IStudyLibrary_createStudy = New ConstMomentumBars
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
-    Set StudyLibrary_createStudy = New ConstTimeBars
+    Set IStudyLibrary_createStudy = New ConstTimeBars
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
-    Set StudyLibrary_createStudy = New ConstVolumeBars
+    Set IStudyLibrary_createStudy = New ConstVolumeBars
 Case UCase$(DoncName), UCase$(DoncName)
-    Set StudyLibrary_createStudy = New DonchianChannels
+    Set IStudyLibrary_createStudy = New DonchianChannels
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Set StudyLibrary_createStudy = New EMA
+    Set IStudyLibrary_createStudy = New EMA
 Case UCase$(FIName), UCase$(FIShortName)
-    Set StudyLibrary_createStudy = New ForceIndex
+    Set IStudyLibrary_createStudy = New ForceIndex
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Set StudyLibrary_createStudy = New MACD
+    Set IStudyLibrary_createStudy = New MACD
 Case UCase$(PsName), UCase$(PsShortName)
-    Set StudyLibrary_createStudy = New ParabolicStop
+    Set IStudyLibrary_createStudy = New ParabolicStop
 Case UCase$(RsiName), UCase$(RsiShortName)
-    Set StudyLibrary_createStudy = New RSI
+    Set IStudyLibrary_createStudy = New RSI
 Case UCase$(SmaName), UCase$(SmaShortName)
-    Set StudyLibrary_createStudy = New SMA
+    Set IStudyLibrary_createStudy = New SMA
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Set StudyLibrary_createStudy = New SlowStochastic
+    Set IStudyLibrary_createStudy = New SlowStochastic
 Case UCase$(SdName), UCase$(SdShortName)
-    Set StudyLibrary_createStudy = New StandardDeviation
+    Set IStudyLibrary_createStudy = New StandardDeviation
 Case UCase$(StochName), UCase$(StochShortName)
-    Set StudyLibrary_createStudy = New Stochastic
+    Set IStudyLibrary_createStudy = New Stochastic
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Set StudyLibrary_createStudy = New Swing
+    Set IStudyLibrary_createStudy = New Swing
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function StudyLibrary_getImplementedStudyNames() As String()
-Const ProcName As String = "StudyLibrary_getImplementedStudyNames"
+Private Function IStudyLibrary_getImplementedStudyNames() As String()
+Const ProcName As String = "IStudyLibrary_getImplementedStudyNames"
 On Error GoTo Err
 
-StudyLibrary_getImplementedStudyNames = mStudyNames
+IStudyLibrary_getImplementedStudyNames = mStudyNames
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function StudyLibrary_getStudyDefaultParameters( _
+Private Function IStudyLibrary_getStudyDefaultParameters( _
                 ByVal name As String) As Parameters
-Const ProcName As String = "StudyLibrary_getStudyDefaultParameters"
+Const ProcName As String = "IStudyLibrary_getStudyDefaultParameters"
 On Error GoTo Err
 
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GAccDist.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GAccDist.defaultParameters
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GATR.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GATR.defaultParameters
 Case UCase$(BbName), UCase$(BbShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GBollingerBands.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GBollingerBands.defaultParameters
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GConstMomentumBars.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GConstMomentumBars.defaultParameters
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GConstTimeBars.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GConstTimeBars.defaultParameters
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GConstVolumeBars.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GConstVolumeBars.defaultParameters
 Case UCase$(DoncName), UCase$(DoncName)
-    Set StudyLibrary_getStudyDefaultParameters = GDonchianChannels.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GDonchianChannels.defaultParameters
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GEMA.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GEMA.defaultParameters
 Case UCase$(FIName), UCase$(FIShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GForceIndex.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GForceIndex.defaultParameters
 Case UCase$(RsiName), UCase$(RsiShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GRSI.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GRSI.defaultParameters
 Case UCase$(SmaName), UCase$(SmaShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GSMA.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GSMA.defaultParameters
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GMACD.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GMACD.defaultParameters
 Case UCase$(PsName), UCase$(PsShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GParabolicStop.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GParabolicStop.defaultParameters
 Case UCase$(SdName), UCase$(SdShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GStandardDeviation.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GStandardDeviation.defaultParameters
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GSlowStochastic.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GSlowStochastic.defaultParameters
 Case UCase$(StochName), UCase$(StochShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GStochastic.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GStochastic.defaultParameters
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Set StudyLibrary_getStudyDefaultParameters = GSwing.defaultParameters
+    Set IStudyLibrary_getStudyDefaultParameters = GSwing.defaultParameters
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function StudyLibrary_getStudyDefinition( _
+Private Function IStudyLibrary_getStudyDefinition( _
                 ByVal name As String) As StudyDefinition
-Const ProcName As String = "StudyLibrary_getStudyDefinition"
+Const ProcName As String = "IStudyLibrary_getStudyDefinition"
 On Error GoTo Err
 
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
-    Set StudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Set StudyLibrary_getStudyDefinition = GATR.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GATR.StudyDefinition
 Case UCase$(BbName), UCase$(BbShortName)
-    Set StudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
 Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
-    Set StudyLibrary_getStudyDefinition = GConstMomentumBars.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GConstMomentumBars.StudyDefinition
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
-    Set StudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
 Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
-    Set StudyLibrary_getStudyDefinition = GConstVolumeBars.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GConstVolumeBars.StudyDefinition
 Case UCase$(DoncName), UCase$(DoncName)
-    Set StudyLibrary_getStudyDefinition = GDonchianChannels.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GDonchianChannels.StudyDefinition
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Set StudyLibrary_getStudyDefinition = GEMA.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GEMA.StudyDefinition
 Case UCase$(FIName), UCase$(FIShortName)
-    Set StudyLibrary_getStudyDefinition = GForceIndex.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GForceIndex.StudyDefinition
 Case UCase$(RsiName), UCase$(RsiShortName)
-    Set StudyLibrary_getStudyDefinition = GRSI.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GRSI.StudyDefinition
 Case UCase$(SmaName), UCase$(SmaShortName)
-    Set StudyLibrary_getStudyDefinition = GSMA.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GSMA.StudyDefinition
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Set StudyLibrary_getStudyDefinition = GMACD.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GMACD.StudyDefinition
 Case UCase$(PsName), UCase$(PsShortName)
-    Set StudyLibrary_getStudyDefinition = GParabolicStop.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GParabolicStop.StudyDefinition
 Case UCase$(SdName), UCase$(SdShortName)
-    Set StudyLibrary_getStudyDefinition = GStandardDeviation.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GStandardDeviation.StudyDefinition
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Set StudyLibrary_getStudyDefinition = GSlowStochastic.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GSlowStochastic.StudyDefinition
 Case UCase$(StochName), UCase$(StochShortName)
-    Set StudyLibrary_getStudyDefinition = GStochastic.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GStochastic.StudyDefinition
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Set StudyLibrary_getStudyDefinition = GSwing.StudyDefinition
+    Set IStudyLibrary_getStudyDefinition = GSwing.StudyDefinition
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub StudyLibrary_initialise( _
+Private Sub IStudyLibrary_initialise( _
                 ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
-Const ProcName As String = "StudyLibrary_initialise"
+Const ProcName As String = "IStudyLibrary_initialise"
 On Error GoTo Err
 
-Set gLibraryManager = libManager
-mHandle = handle
+' nothing to do
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let StudyLibrary_name( _
+Private Property Let IStudyLibrary_name( _
                 ByVal RHS As String)
-Const ProcName As String = "StudyLibrary_name"
+Const ProcName As String = "IStudyLibrary_name"
 On Error GoTo Err
 
 mName = RHS
@@ -271,29 +269,29 @@ mName = RHS
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get StudyLibrary_name() As String
-Const ProcName As String = "StudyLibrary_name"
+Private Property Get IStudyLibrary_name() As String
+Const ProcName As String = "IStudyLibrary_name"
 On Error GoTo Err
 
-StudyLibrary_name = mName
+IStudyLibrary_name = mName
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Function StudyLibrary_setStudyDefaultParameters( _
+Private Function IStudyLibrary_setStudyDefaultParameters( _
                 ByVal name As String, _
                 ByVal params As Parameters) As Boolean
 
-Const ProcName As String = "StudyLibrary_setStudyDefaultParameters"
+Const ProcName As String = "IStudyLibrary_setStudyDefaultParameters"
 On Error GoTo Err
 
-StudyLibrary_setStudyDefaultParameters = True
+IStudyLibrary_setStudyDefaultParameters = True
 
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
@@ -331,19 +329,19 @@ Case UCase$(StochName), UCase$(StochShortName)
 Case UCase$(SwingName), UCase$(SwingShortName)
     GSwing.defaultParameters = params
 Case Else
-    StudyLibrary_setStudyDefaultParameters = False
+    IStudyLibrary_setStudyDefaultParameters = False
 End Select
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Private Sub StudyLibrary_terminate()
+Private Sub IStudyLibrary_terminate()
 ' nothing to do
-Const ProcName As String = "StudyLibrary_terminate"
+Const ProcName As String = "IStudyLibrary_terminate"
 On Error GoTo Err
 
 
@@ -351,7 +349,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -362,16 +360,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let name(ByVal value As String)
+Public Property Let name(ByVal Value As String)
 Const ProcName As String = "name"
 On Error GoTo Err
 
-mName = value
+mName = Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get name() As String
@@ -383,7 +381,7 @@ name = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -406,6 +404,6 @@ mStudyNames(UBound(mStudyNames)) = name
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

@@ -173,7 +173,7 @@ If validInput Then
     End If
     
     ex.name = name
-    ex.TimeZoneName = timezone
+    ex.TimezoneName = timezone
     ex.notes = notes
     
     If ex.IsValid Then
@@ -238,12 +238,11 @@ If dbtype = DbNone Then
 End If
     
 If setupDb Then
-    Set gDb = CreateTradingDB(GenerateConnectionString(dbtype, _
+    Set gDb = CreateTradingDB(CreateConnectionParams(dbtype, _
                                                     server, _
                                                     database, _
                                                     username, _
-                                                    password), _
-                            dbtype)
+                                                    password))
 End If
 
 Exit Function

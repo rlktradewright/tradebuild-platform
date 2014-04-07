@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements QuoteListener
+Implements IQuoteListener
 
 '@================================================================================
 ' Events
@@ -48,130 +48,109 @@ Private Const PriceUp                       As String = "+"
 
 Private Const SizeDown                      As String = "-"
 Private Const SizeSame                      As String = "="
-Private Const SIzeUp                        As String = "+"
+Private Const SizeUp                        As String = "+"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTB As TradeBuildAPI
-Attribute mTB.VB_VarHelpID = -1
+Private mDataManager                        As TickfileDataManager
+Private WithEvents mController              As ReplayController
+Attribute mController.VB_VarHelpID = -1
 
-Private WithEvents mTFManager As TickFileManager
-Attribute mTFManager.VB_VarHelpID = -1
+Private mDataSource                         As IMarketDataSource
+Attribute mDataSource.VB_VarHelpID = -1
 
-Private WithEvents mTicker As Ticker
-Attribute mTicker.VB_VarHelpID = -1
+Private mPaused                             As Boolean
+
+Private mTickfileStore                      As ITickfileStore
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mTB = TradeBuildAPI
-End Sub
-
 '@================================================================================
 ' QuoteListener Interface Members
 '@================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_Ask(ev As QuoteEventData)
 outputPriceAndSize ev, "A"
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_bid(ev As QuoteEventData)
 outputPriceAndSize ev, "B"
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_high(ev As QuoteEventData)
 outputPrice ev, "H"
 End Sub
 
-Private Sub QuoteListener_low(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_low(ev As QuoteEventData)
 outputPrice ev, "L"
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_openInterest(ev As QuoteEventData)
 outputSize ev, "I"
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_previousClose(ev As QuoteEventData)
 outputPrice ev, "C"
 End Sub
 
-Private Sub QuoteListener_sessionOpen(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_sessionOpen(ev As QuoteEventData)
 outputPrice ev, "O"
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_trade(ev As QuoteEventData)
 outputPriceAndSize ev, "T"
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild27.QuoteEventData)
+Private Sub IQuoteListener_volume(ev As QuoteEventData)
 outputSize ev, "V"
 End Sub
 
 '@================================================================================
-' mTicker Event Handlers
+' mController Event Handlers
 '@================================================================================
 
-Private Sub mTicker_Notification(ev As TWUtilities30.NotificationEventData)
-gCon.WriteLineToConsole "Notification " & ev.eventCode & _
-                        ": " & ev.eventMessage
+Private Sub mController_NotifyEvent(ev As NotificationEventData)
+gCon.WriteLineToConsole "Notification " & ev.EventCode & _
+                        ": " & ev.EventMessage
 End Sub
 
-'@================================================================================
-' mTB Event Handlers
-'@================================================================================
-
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
-gCon.WriteLineToConsole "Error " & ev.errorCode & _
-                        ": " & ev.ErrorMessage
+Private Sub mController_ReplayPaused()
+mPaused = True
 End Sub
 
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
-If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
-    Dim spe As ServiceProviderError
-    Set spe = mTB.GetServiceProviderError
-    gCon.WriteLineToConsole "Service provider error " & spe.errorCode & _
-                            ": " & spe.Message & _
-                            " (" & spe.ServiceProviderName & ")"
-Else
-    gCon.WriteLineToConsole "Notification " & ev.eventCode & _
-                            ": " & ev.eventMessage
-End If
+Private Sub mController_ReplayResumed()
+mPaused = False
 End Sub
 
-'@================================================================================
-' mTFManager Event Handlers
-'@================================================================================
-
-Private Sub mTFManager_Notification(ev As TWUtilities30.NotificationEventData)
-gCon.WriteLineToConsole "Notification " & ev.eventCode & _
-                        ": " & ev.eventMessage
+Private Sub mController_ReplayStarted()
+mPaused = False
 End Sub
 
-Private Sub mTFManager_ReplayCompleted()
+Private Sub mController_ReplayStopped()
+mPaused = False
+End Sub
+
+Private Sub mController_TickfileCompleted(ev As TickfileEventData, ByVal pEventsPlayed As Long)
 gCon.WriteLineToConsole "Replay completed"
-mTicker.RemoveQuoteListener Me
+mDataSource.RemoveGenericTickListener Me
 Set gProcessor = Nothing
 End Sub
 
-Private Sub mTFManager_TickerAllocated(ByVal pTicker As TradeBuild27.Ticker)
-Set mTicker = pTicker
-mTicker.AddQuoteListener Me
-End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Friend Property Get tickerState() As TickerStates
-tickerState = mTFManager.Ticker.state
+Friend Property Get IsPaused() As Boolean
+IsPaused = mPaused
 End Property
 
-Friend Property Let speed( _
+Friend Property Let Speed( _
                 ByVal value As Long)
-mTFManager.ReplaySpeed = value
+mController.ReplaySpeed = value
 End Property
 
 '@================================================================================
@@ -179,44 +158,49 @@ End Property
 '@================================================================================
 
 Friend Sub pauseData()
-mTFManager.PauseReplay
+mController.PauseReplay
 End Sub
 
 Friend Sub resumeData()
-If mTFManager.Ticker.state = TickerStatePaused Then mTFManager.StartReplay
+If mPaused Then mController.ResumeReplay
 End Sub
 
 Friend Sub startData( _
-                ByVal spec As ContractSpecifier, _
+                ByVal client As DBClient, _
+                ByVal spec As IContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
-                ByVal speed As Long, _
+                ByVal Speed As Long, _
                 ByVal raw As Boolean)
-Dim tfSpecs As New TickFileSpecifiers
+Set mTickfileStore = client.TickfileStore
+
 Dim tfs As New TickfileSpecifier
-Dim inFormats() As TickfileFormatSpecifier
-                
-tfSpecs.Add tfs
-tfs.Contract = CreateContractBuilder(spec).Contract
+tfs.ContractFuture = FetchContract(spec, client.ContractStore)
 If fromDate < 1 Then fromDate = Date + fromDate
 tfs.fromDate = fromDate
 If toDate = 0 Then toDate = Now
 If toDate < 1 Then toDate = Date + toDate
 tfs.toDate = toDate
-inFormats = mTB.SupportedInputTickfileFormats
+
+Dim inFormats() As TickfileFormatSpecifier
+inFormats = mTickfileStore.SupportedFormats
 tfs.TickfileFormatID = inFormats(0).FormalID
-Set mTFManager = TradeBuildAPI.Tickers.CreateTickFileManager( _
-                                TickerOptions.TickerOptUseExchangeTimeZone + _
-                                IIf(raw, TickerOptions.TickerOptNoImpliedTrades + _
-                                    TickerOptions.TickerOptNoVolumeAdjustments, _
-                                    0))
-mTFManager.TickFileSpecifiers = tfSpecs
-mTFManager.ReplaySpeed = speed
-mTFManager.StartReplay
+
+Dim tfSpecs As New TickFileSpecifiers
+tfSpecs.Add tfs
+
+Set mDataManager = CreateTickDataManager(tfSpecs, mTickfileStore, client.ContractStore, , MarketDataSourceOptNoImpliedTrades + MarketDataSourceOptNoVolumeAdjustments + MarketDataSourceOptUseExchangeTimeZone, , , Speed)
+Set mController = mDataManager.ReplayController
+
+Set mDataSource = mDataManager.CreateMarketDataSource(mController.TickStream(0).ContractFuture, False)
+mDataSource.AddQuoteListener Me
+mDataSource.StartMarketData
+
+mController.StartReplay
 End Sub
 
 Friend Sub stopData()
-mTFManager.StopReplay
+mController.StopReplay
 End Sub
 
 
@@ -227,14 +211,14 @@ End Sub
 Private Sub outputPrice( _
         ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString FormatTimestamp(mDataSource.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.WriteString ","
 gCon.WriteString tickType
 gCon.WriteString ","
 gCon.WriteString GetFormattedPriceFromQuoteEvent(ev)
 gCon.WriteString ","
 
-Select Case ev.PriceChange
+Select Case ev.Quote.PriceChange
 Case ValueChanges.ValueChangeDown
     gCon.WriteString PriceDown
 Case ValueChanges.ValueChangeUp
@@ -249,16 +233,16 @@ End Sub
 Private Sub outputPriceAndSize( _
         ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString FormatTimestamp(mDataSource.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.WriteString ","
 gCon.WriteString tickType
 gCon.WriteString ","
 gCon.WriteString GetFormattedPriceFromQuoteEvent(ev)
 gCon.WriteString ","
-gCon.WriteString CStr(ev.Size)
+gCon.WriteString CStr(ev.Quote.Size)
 gCon.WriteString ","
 
-Select Case ev.PriceChange
+Select Case ev.Quote.PriceChange
 Case ValueChanges.ValueChangeDown
     gCon.WriteString PriceDown
 Case ValueChanges.ValueChangeUp
@@ -269,11 +253,11 @@ End Select
 
 gCon.WriteString ","
 
-Select Case ev.sizeChange
+Select Case ev.Quote.SizeChange
 Case ValueChanges.ValueChangeDown
     gCon.WriteString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.WriteString SIzeUp
+    gCon.WriteString SizeUp
 Case ValueChanges.ValueChangeNone
     gCon.WriteString SizeSame
 End Select
@@ -284,18 +268,18 @@ End Sub
 Private Sub outputSize( _
         ByRef ev As QuoteEventData, _
         ByVal tickType As String)
-gCon.WriteString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
+gCon.WriteString FormatTimestamp(mDataSource.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.WriteString ","
 gCon.WriteString tickType
 gCon.WriteString ","
-gCon.WriteString CStr(ev.Size)
+gCon.WriteString CStr(ev.Quote.Size)
 gCon.WriteString ","
 
-Select Case ev.sizeChange
+Select Case ev.Quote.SizeChange
 Case ValueChanges.ValueChangeDown
     gCon.WriteString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.WriteString SIzeUp
+    gCon.WriteString SizeUp
 Case ValueChanges.ValueChangeNone
     gCon.WriteString SizeSame
 End Select

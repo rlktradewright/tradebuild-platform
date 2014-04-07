@@ -44,17 +44,17 @@ Private mStudyDefinition As StudyDefinition
 '@================================================================================
 
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -73,7 +73,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -89,8 +89,8 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.name = StochName
     mStudyDefinition.ShortName = StochShortName
     mStudyDefinition.Description = "Stochastic compares the latest price to the " & _
-                                "recent trading range, giving a value called %K. " & _
-                                "It also has another value, called %D, which is " & _
+                                "recent trading range, giving a Value called %K. " & _
+                                "It also has another Value, called %D, which is " & _
                                 "calculated by smoothing %K."
                                 
     mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
@@ -98,10 +98,10 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(StochInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input value"
+    inputDef.Description = "Input Value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(StochValueK)
-    valueDef.Description = "The stochastic value (%K)"
+    valueDef.Description = "The stochastic Value (%K)"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -128,7 +128,7 @@ If mStudyDefinition Is Nothing Then
     paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(StochParamDPeriods)
-    paramDef.Description = "The number of periods used to smooth the %K value " & _
+    paramDef.Description = "The number of periods used to smooth the %K Value " & _
                             "to obtain %D"
     paramDef.ParameterType = ParameterTypeInteger
 
@@ -139,7 +139,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

@@ -41,17 +41,17 @@ Private mStudyDefinition As StudyDefinition
 '@================================================================================
 
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -70,7 +70,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -91,10 +91,10 @@ If mStudyDefinition Is Nothing Then
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(EmaInputValue)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Input value"
+    inputDef.Description = "Input Value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MovingAverageStudyValueName)
-    valueDef.Description = "The moving average value"
+    valueDef.Description = "The moving average Value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -107,7 +107,7 @@ If mStudyDefinition Is Nothing Then
     paramDef.ParameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(EMAParamSlopeThreshold)
-    paramDef.Description = "The smallest slope value that is not to be considered flat"
+    paramDef.Description = "The smallest slope Value that is not to be considered flat"
     paramDef.ParameterType = ParameterTypeReal
     
 End If
@@ -117,7 +117,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

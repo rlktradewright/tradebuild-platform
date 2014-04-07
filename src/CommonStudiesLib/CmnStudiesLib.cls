@@ -69,11 +69,11 @@ End Enum
 'End Type
 
 Public Type SwingPoint
-    value           As Variant
-    barNumber       As Long
-    barStartTime    As Date
+    Value           As Variant
+    BarNumber       As Long
+    BarStartTime    As Date
     SwingType       As SwingPointTypes
-    timestamp       As Date
+    Timestamp       As Date
     Implied         As Boolean
     SequenceNumber  As Long
 End Type

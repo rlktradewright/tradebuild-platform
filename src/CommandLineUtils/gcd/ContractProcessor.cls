@@ -49,8 +49,6 @@ Private Const OutputSep                     As String = ","
 '@================================================================================
 
 Private mContractSpec As ContractSpecifier
-Private WithEvents mContractsTC As TaskController
-Attribute mContractsTC.VB_VarHelpID = -1
 Private WithEvents mTB As TradeBuildAPI
 Attribute mTB.VB_VarHelpID = -1
 
@@ -60,14 +58,17 @@ Attribute mContracts.VB_VarHelpID = -1
 Private mDone As Boolean
 Private mLineNumber As Long
 
+Private WithEvents mFutureWaiter As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mTB = TradeBuildAPI
 GetLogger("log").AddLogListener Me
 GetLogger("log").LogLevel = LogLevelNormal
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@================================================================================
@@ -78,7 +79,7 @@ Private Sub LogListener_finish()
 
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal logrec As LogRecord)
 gCon.WriteErrorLine VariantToString(logrec.Data)
 End Sub
 
@@ -95,23 +96,24 @@ Private Sub mContracts_NoMoreContractDetails()
 mDone = True
 End Sub
 
-Private Sub mContracts_Notification(ev As TWUtilities30.NotificationEventData)
-gCon.WriteErrorLine "Line " & mLineNumber & ": Notification: " & ev.eventMessage
+Private Sub mContracts_Notification(ev As NotificationEventData)
+gCon.WriteErrorLine "Line " & mLineNumber & ": Notification: " & ev.EventMessage
 mDone = True
 End Sub
 
-Private Sub mContracts_TryLater(ByVal reason As String, ByVal serviceProviderName As String)
-gCon.WriteErrorLine "Line " & mLineNumber & ": Try later: " & reason
-mDone = True
-End Sub
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
 
-Private Sub mContractsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
-If ev.Cancelled Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Contract fetch cancelled"
-ElseIf ev.ErrorNumber <> 0 Then
-    gCon.WriteErrorLine "Line " & mLineNumber & ": Error " & ev.ErrorNumber & ": " & ev.ErrorMessage
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+If ev.Future.IsPending Then Exit Sub
+If ev.Future.IsCancelled Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": contract fetch cancelled: " & mContractSpec.ToString
+ElseIf ev.Future.IsFaulted Then
+    gCon.WriteErrorLine "Line " & mLineNumber & ": contract fetch error: " & mContractSpec.ToString
 Else
-    If Not IsEmpty(ev.result) Then Set mContracts = ev.result
+    Set mContracts = ev.Future.value
+    If mContracts.Count = 0 Then gCon.WriteErrorLine "Line " & mLineNumber & ": no contracts: " & mContractSpec.ToString
 End If
 mDone = True
 End Sub
@@ -120,17 +122,13 @@ End Sub
 ' mTB Event Handlers
 '@================================================================================
 
-Private Sub mTB_Error(ev As TWUtilities30.ErrorEventData)
-gCon.WriteErrorLine "TradeBuild error: " & ev.ErrorMessage
-End Sub
-
-Private Sub mTB_Notification(ev As TWUtilities30.NotificationEventData)
+Private Sub mTB_Notification(ev As NotificationEventData)
 Dim spe As ServiceProviderError
-If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
+If ev.EventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spe = mTB.GetServiceProviderError
     gCon.WriteErrorLine "Service provider error: " & spe.Message
 Else
-    gCon.WriteErrorLine "TradeBuild notification: " & ev.eventMessage
+    gCon.WriteErrorLine "TradeBuild notification: " & ev.EventMessage
 End If
 End Sub
 
@@ -141,6 +139,10 @@ End Sub
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub initialise(ByVal pTB As TradeBuildAPI)
+Set mTB = pTB
+End Sub
 
 Public Sub process( _
                 ByVal contractSpec As ContractSpecifier, _
@@ -153,7 +155,7 @@ mDone = False
 Set mContracts = Nothing
 Set mContractSpec = contractSpec
 mLineNumber = lineNumber
-Set mContractsTC = TradeBuildAPI.LoadContracts(contractSpec)
+mFutureWaiter.Add mTB.ContractStorePrimary.FetchContracts(contractSpec)
 
 ' now hang around until we've got the info, but don't exit this proc
 ' because we don't want to process the next line of input till this one's done
@@ -177,7 +179,7 @@ If mContracts.Count <> 0 Then
                         lContract.TickValue & OutputSep & _
                         Format(lContract.SessionStartTime, "hh:mm") & OutputSep & _
                         Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
-                        lContract.Timezone.StandardName & OutputSep & _
+                        lContract.TimezoneName & OutputSep & _
                         lContract.DaysBeforeExpiryToSwitch & OutputSep & _
                         lContract.NumberOfDecimals & OutputSep & _
                         lContract.Multiplier

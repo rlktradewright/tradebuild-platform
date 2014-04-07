@@ -49,17 +49,17 @@ Private mStudyDefinition As StudyDefinition
 ' Procedures
 '@================================================================================
 
-Public Property Let defaultParameters(ByVal value As Parameters)
+Public Property Let defaultParameters(ByVal Value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Const ProcName As String = "defaultParameters"
 On Error GoTo Err
 
-Set mDefaultParameters = value.Clone
+Set mDefaultParameters = Value.Clone
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get defaultParameters() As Parameters
@@ -79,7 +79,7 @@ Set defaultParameters = mDefaultParameters.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyDefinition() As StudyDefinition
@@ -117,7 +117,7 @@ If mStudyDefinition Is Nothing Then
     paramDef.ParameterType = ParameterTypeInteger
 
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndex)
-    valueDef.Description = "The Force Index value"
+    valueDef.Description = "The Force Index Value"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = True
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -125,7 +125,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexShort)
-    valueDef.Description = "The Force Index value smoothed by the short EMA"
+    valueDef.Description = "The Force Index Value smoothed by the short EMA"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -133,7 +133,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.ValueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(FiValueForceIndexLong)
-    valueDef.Description = "The Force Index value smoothed by the long EMA"
+    valueDef.Description = "The Force Index Value smoothed by the long EMA"
     valueDef.IncludeInChart = True
     valueDef.IsDefault = False
     valueDef.DefaultRegion = StudyValueDefaultRegionDefault
@@ -149,7 +149,7 @@ Set StudyDefinition = mStudyDefinition.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
