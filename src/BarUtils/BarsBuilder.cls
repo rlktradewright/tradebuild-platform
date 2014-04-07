@@ -15,7 +15,7 @@ Option Explicit
 
 ''
 ' Description here
-'
+'.
 '@/
 
 '@================================================================================
@@ -46,24 +46,28 @@ Private Const ModuleName                    As String = "BarsBuilder"
 ' Member variables
 '@================================================================================
 
-Private mBars                               As Bars
+Private WithEvents mBars                    As Bars
+Attribute mBars.VB_VarHelpID = -1
 
 Private mCurrentBar                         As Bar
 Private mCurrentBarNumber                   As Long
 
-Private WithEvents mSession                 As Session
-Attribute mSession.VB_VarHelpID = -1
+Private WithEvents mMainSession             As Session
+Attribute mMainSession.VB_VarHelpID = -1
+Private mInitialBarsSession                 As Session
 
 Private mBarTimePeriod                      As TimePeriod
 
-Private mTicksize                           As Double
+Private mTickSize                           As Double
 Private mMaxBarRange                        As Double
 
 Private mBarEndTime                         As Date
 
-Private mVolParser                          As VolumeParser
+Private mVolumeParser                       As VolumeParser
 
-Private mOIParser                           As VolumeParser
+Private mOpenInterestParser                 As VolumeParser
+
+Private mCacheSize                          As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -74,16 +78,37 @@ Private mOIParser                           As VolumeParser
 '@================================================================================
 
 '@================================================================================
-' mSession Event Handlers
+' mBars Event Handlers
 '@================================================================================
 
-Private Sub mSession_SessionStarted(ev As SessionEventData)
-
-Const ProcName As String = "mSession_SessionStarted"
+Private Sub mBars_CollectionChanged(ev As CollectionChangeEventData)
+Const ProcName As String = "mBars_CollectionChanged"
 On Error GoTo Err
 
-If mBarEndTime <> 0 And _
-    mSession.SessionCurrentTime < mBarEndTime Then Exit Sub
+If Not ev.changeType = CollItemAdded Then Exit Sub
+
+Set mCurrentBar = ev.AffectedItem
+mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+                            mBarTimePeriod, _
+                            mMainSession.SessionStartTime, _
+                            mMainSession.SessionEndTime)
+
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mMainSession Event Handlers
+'@================================================================================
+
+Private Sub mMainSession_SessionStarted(ev As SessionEventData)
+Const ProcName As String = "mMainSession_SessionStarted"
+On Error GoTo Err
+
+If mBarEndTime <> 0 And mMainSession.SessionCurrentTime < mBarEndTime Then Exit Sub
     
 Set mCurrentBar = Nothing
 
@@ -101,30 +126,38 @@ Public Property Get Bars() As Bars
 Set Bars = mBars
 End Property
 
+Public Property Get BarTimePeriod() As TimePeriod
+Set BarTimePeriod = mBarTimePeriod
+End Property
+
+Public Property Get CacheSize() As Long
+CacheSize = mCacheSize
+End Property
+
+Friend Property Get OpenInterestParser() As VolumeParser
+Set OpenInterestParser = mOpenInterestParser
+End Property
+
 ' allows the TickSize to be set after the BarsBuilder object is created but
 ' before any Bars have been built.
 Public Property Let TickSize( _
                 ByVal Value As Double)
 Const ProcName As String = "TickSize"
-
 On Error GoTo Err
 
-If mCurrentBarNumber <> 0 Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Can only set TickSize before any Bars have been created"
-End If
+Assert mCurrentBarNumber = 0, "Can only set TickSize before any Bars have been created"
+AssertArgument (mBarTimePeriod.Units <> TimePeriodTickMovement) Or (Value > 0), "Ticksize must be > 0 if TimePeriod.Units is TimePeriodTickMovement"
 
-If Value <= 0 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Ticksize must be > 0 if TimePeriod.Units is TimePeriodTickMovement"
-End If
-
-mTicksize = Value
-mMaxBarRange = mBarTimePeriod.Length * mTicksize
+setTickSize Value
 
 Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
+End Property
+
+Friend Property Get VolumeParser() As VolumeParser
+Set VolumeParser = mVolumeParser
 End Property
 
 '@================================================================================
@@ -141,21 +174,22 @@ Public Sub AddBar( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Const ProcName As String = "AddBar"
-
 On Error GoTo Err
 
-Set mCurrentBar = New Bar
-mCurrentBar.Initialise Timestamp, _
-                    OpenValue, _
-                    HighValue, _
-                    LowValue, _
-                    CloseValue, _
-                    Volume, _
-                    TickVolume, _
-                    OpenInterest
+Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+
+Dim lBar As New Bar
+lBar.Initialise Timestamp, _
+                OpenValue, _
+                HighValue, _
+                LowValue, _
+                CloseValue, _
+                Volume, _
+                TickVolume, _
+                OpenInterest
 mCurrentBarNumber = mCurrentBarNumber + 1
-If Not mBars Is Nothing Then mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
-fireBarAdded mCurrentBar
+If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
+FireBarAdded lBar
 
 Exit Sub
 
@@ -166,14 +200,16 @@ End Sub
 Public Sub AddThisBar( _
                 ByVal pBar As Bar)
 Const ProcName As String = "AddThisBar"
-
 On Error GoTo Err
 
-Set mCurrentBar = pBar
+Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+AssertArgument Not pBar Is Nothing, "pBar is nothing"
+
 mCurrentBarNumber = mCurrentBarNumber + 1
 pBar.BarNumber = mCurrentBarNumber
+pBar.SetBarChanged
 If Not mBars Is Nothing Then mBars.Add pBar, mCurrentBarNumber, pBar.Timestamp
-fireBarAdded mCurrentBar
+FireBarAdded pBar
 
 Exit Sub
 
@@ -183,13 +219,15 @@ End Sub
 
 Public Sub AppendBars( _
                 ByVal pBars As Bars, _
-                Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF)
+                Optional ByVal pMaxNumberToAppend As Long = &H7FFFFFFF)
 Const ProcName As String = "AppendBars"
-
 On Error GoTo Err
 
-If mBars Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Can't append bars - no saved bars"
-mBars.AppendBars pBars, maxNumberToAppend
+Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert Not mBars Is Nothing, "Can't append bars - no saved bars"
+AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
+
+mBars.AppendBars pBars, pMaxNumberToAppend, Me
 
 Exit Sub
 
@@ -201,11 +239,13 @@ Public Function AppendBarsAsync( _
                 ByVal pBars As Bars, _
                 Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF) As TaskController
 Const ProcName As String = "AppendBarsAsync"
-
 On Error GoTo Err
 
-If mBars Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Can't append bars - no saved bars"
-Set AppendBarsAsync = mBars.AppendBarsAsync(pBars, maxNumberToAppend)
+Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+Assert Not mBars Is Nothing, "Can't append bars - no saved bars"
+AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
+
+Set AppendBarsAsync = mBars.AppendBarsAsync(pBars, maxNumberToAppend, Me)
 
 Exit Function
 
@@ -213,27 +253,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub ChangeSession( _
-                ByVal newSession As Session)
-Const ProcName As String = "ChangeSession"
-
-On Error GoTo Err
-
-Set mSession = newSession
-mVolParser.ChangeSession mSession
-mOIParser.ChangeSession mSession
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+Friend Sub FireBarAdded(ByVal pBar As Bar)
+RaiseEvent BarAdded(pBar)
 End Sub
 
 ''
 ' <p>Increments the Tick Volume for the current Bar.</p>
 '
 ' <p>This should only be used to set the TickVolume for historical Bars, where
-' the Ticks cannot be Counted in the normal way.</p>
+' the Ticks cannot be counted in the normal way.</p>
 '
 ' <p>Successive calls to this procedure during a single Bar cause the Tick Volume
 ' to be accumulated.</p>
@@ -244,7 +272,6 @@ End Sub
 Public Sub IncrementTickVolume( _
                 ByVal increment As Long)
 Const ProcName As String = "IncrementTickVolume"
-
 On Error GoTo Err
 
 If mCurrentBar Is Nothing Then
@@ -265,34 +292,61 @@ Friend Sub Initialise( _
                 ByVal pTickSize As Double, _
                 ByVal pNumberOfBarsToCache As Long, _
                 ByVal pSave As Boolean)
-               
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 Set mBarTimePeriod = pBarTimePeriod
-Set mSession = pSession
-mTicksize = pTickSize
-If pBarTimePeriod.Units = TimePeriodTickMovement Then
-    ' note that the Ticksize may not be known at the time
-    ' this object is created, so we don't check for a zero
-    ' Value here. Since a zero Value will cause a loop in NotifyValue
-    ' for TimePeriodTickMovement, we'll make a check for Ticksize 0
-    ' in the first call to NotifyValue
-    
-    mMaxBarRange = pBarTimePeriod.Length * mTicksize
-End If
+setTickSize pTickSize
+mCacheSize = pNumberOfBarsToCache
+
+createVolumeAndOpenInterestParsers pSession
+
+Set mMainSession = pSession
 
 If pSave Then
     Set mBars = New Bars
-    mBars.Initialise pBarTimePeriod, pNumberOfBarsToCache
+    mBars.Initialise pBarTimePeriod, mCacheSize, pSession, mTickSize
 End If
 
-Set mVolParser = New VolumeParser
-mVolParser.Initialise mSession
+Exit Sub
 
-Set mOIParser = New VolumeParser
-mOIParser.Initialise mSession
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub InitialiseWithInitialBars( _
+                ByVal pInitialBars As Bars, _
+                ByVal pSession As Session, _
+                ByVal pTickSize As Double)
+Const ProcName As String = "InitialiseWithInitialBars"
+On Error GoTo Err
+
+Set mBars = pInitialBars
+Set mBarTimePeriod = mBars.BarTimePeriod
+mCacheSize = mBars.BarsCache.CyclicSize
+
+setTickSize pTickSize
+
+createVolumeAndOpenInterestParsers pSession
+
+Set mMainSession = pSession
+
+Set mInitialBarsSession = mBars.Session
+
+If mBars.Count > 0 Then
+    Set mCurrentBar = mBars.Bar(0)
+    
+    Assert Not mInitialBarsSession Is Nothing, "mInitialBarsSession is nothing"
+    
+    mBarEndTime = gBarEndTime(mCurrentBar.Timestamp, _
+                                mBarTimePeriod, _
+                                mInitialBarsSession.SessionStartTime, _
+                                mInitialBarsSession.SessionEndTime)
+    
+    mCurrentBarNumber = mCurrentBar.BarNumber
+End If
+    
+checkLinkSessions
 
 Exit Sub
 
@@ -302,10 +356,7 @@ End Sub
 
 Public Sub NotifyOpenInterest( _
                 oi As SValue)
-Dim oiIncrement As Long
-
 Const ProcName As String = "NotifyOpenInterest"
-
 On Error GoTo Err
 
 If IsEmpty(oi.Value) Then Exit Sub
@@ -317,9 +368,9 @@ If mBarTimePeriod.Length = 0 Then
         Exit Sub
     End If
     If newBar(oi.BarNumber) Then
-        createNewBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOIParser.Notify(oi.Value)
+        createNewBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOpenInterestParser.Notify(oi.Value)
     Else
-        mCurrentBar.NotifyOpenInterest mOIParser.Notify(oi.Value)
+        mCurrentBar.NotifyOpenInterest mOpenInterestParser.Notify(oi.Value)
     End If
 ElseIf mCurrentBar Is Nothing Then
         ' a Bar with no price causes all sorts of problems so do nothing
@@ -328,21 +379,18 @@ Else
     ' we assume that an Open interest notification belongs to the same Bar as the
     ' preceding price notification, so we don't check the Timestamp
     
-    mCurrentBar.NotifyOpenInterest mOIParser.Notify(oi.Value)
+    mCurrentBar.NotifyOpenInterest mOpenInterestParser.Notify(oi.Value)
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
 End Sub
 
 Public Sub NotifyValue( _
                 Value As SValue)
-
 Const ProcName As String = "NotifyValue"
-
 On Error GoTo Err
 
 If IsEmpty(Value.Value) Then Exit Sub
@@ -359,22 +407,20 @@ ElseIf mCurrentBar Is Nothing Then
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
     mCurrentBar.NotifyValue Value.Value
 ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
-    If mTicksize = 0 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Ticksize cannot be 0 if TimePeriod.Units is TimePeriodTickMovement"
-    End If
+    AssertArgument mTickSize <> 0, "Ticksize cannot be 0 if TimePeriod.Units is TimePeriodTickMovement"
     
     If (Value.Value - mCurrentBar.LowValue) > mMaxBarRange Then
         Dim newHigh As Double
         newHigh = mCurrentBar.LowValue + mMaxBarRange
         mCurrentBar.NotifyValue newHigh
         
-        createNewBar Value.Timestamp, newHigh + mTicksize, 0, 0
+        createNewBar Value.Timestamp, newHigh + mTickSize, 0, 0
         
         Do While (Value.Value - mCurrentBar.LowValue) > mMaxBarRange
             newHigh = mCurrentBar.LowValue + mMaxBarRange
             mCurrentBar.NotifyValue newHigh
             
-            createNewBar Value.Timestamp, newHigh + mTicksize, 0, 0
+            createNewBar Value.Timestamp, newHigh + mTickSize, 0, 0
         Loop
         
     ElseIf (mCurrentBar.HighValue - Value.Value) > mMaxBarRange Then
@@ -382,13 +428,13 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
         newLow = mCurrentBar.HighValue - mMaxBarRange
         mCurrentBar.NotifyValue newLow
         
-        createNewBar Value.Timestamp, newLow - mTicksize, 0, 0
+        createNewBar Value.Timestamp, newLow - mTickSize, 0, 0
         
         Do While (mCurrentBar.HighValue - Value.Value) > mMaxBarRange
             newLow = mCurrentBar.HighValue - mMaxBarRange
             mCurrentBar.NotifyValue newLow
             
-            createNewBar Value.Timestamp, newLow - mTicksize, 0, 0
+            createNewBar Value.Timestamp, newLow - mTickSize, 0, 0
         Loop
         
     End If
@@ -407,38 +453,31 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-    
 End Sub
 
 Public Sub NotifyVolume( _
                 vol As SValue)
-Dim volIncrement As Long
-
 Const ProcName As String = "NotifyVolume"
-
 On Error GoTo Err
 
 If IsEmpty(vol.Value) Then Exit Sub
 
-volIncrement = mVolParser.Notify(vol.Value)
+Dim volIncrement As Long
+volIncrement = mVolumeParser.Notify(vol.Value)
+
+If mCurrentBar Is Nothing Then
+    ' a Bar with no price causes all sorts of problems so do nothing
+    Exit Sub
+End If
 
 If mBarTimePeriod.Length = 0 Then
     ' the caller will sUpply Bar numbers
-    If mCurrentBar Is Nothing Then
-        ' a Bar with no price causes all sorts of problems so do nothing
-        Exit Sub
-    End If
     If newBar(vol.BarNumber) Then
         createNewBar vol.BarStartTime, mCurrentBar.CloseValue, volIncrement, 0
     Else
         mCurrentBar.NotifyVolume mCurrentBar.Volume + volIncrement
     End If
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
-    
-    If mCurrentBar Is Nothing Then
-        ' a Bar with no price causes all sorts of problems so do nothing
-        Exit Sub
-    End If
     
     If volIncrement + mCurrentBar.Volume >= mBarTimePeriod.Length Then
         
@@ -463,9 +502,6 @@ ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
     End If
     
 
-ElseIf mCurrentBar Is Nothing Then
-        ' a Bar with no price causes all sorts of problems so do nothing
-        Exit Sub
 Else
     ' we assume that a Volume notification belongs to the same Bar as the
     ' preceding price notification, so we don't check the Timestamp
@@ -478,12 +514,25 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-                
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub checkLinkSessions()
+Const ProcName As String = "checkLinkSessions"
+On Error GoTo Err
+
+If mMainSession Is Nothing Or mInitialBarsSession Is Nothing Then Exit Sub
+mMainSession.LinkToSession mInitialBarsSession
+'mInitialBarsSession.LinkToSession mMainSession
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub createNewBar( _
                 ByVal Timestamp As Date, _
@@ -491,44 +540,55 @@ Private Sub createNewBar( _
                 ByVal initialVolume As Long, _
                 ByVal initialOpenInterest As Long)
 Const ProcName As String = "createNewBar"
-
 On Error GoTo Err
 
-Set mCurrentBar = New Bar
+Assert Not mBarTimePeriod Is Nothing, "mBarTimePeriod is nothing"
+Assert Not mMainSession Is Nothing, "mMainSession is nothing"
+
+Dim lBar As New Bar
 
 If mBarTimePeriod.Length = 0 Then
     ' the caller supplies Bar numbers
-    mCurrentBar.Timestamp = Timestamp
-    If Not mBars Is Nothing Then mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
-    fireBarAdded mCurrentBar
+    lBar.Timestamp = Timestamp
 Else
     mCurrentBarNumber = mCurrentBarNumber + 1
-    mBarEndTime = mSession.BarEndTime(Timestamp, _
-                                mBarTimePeriod)
-    mCurrentBar.Timestamp = mSession.BarStartTime(Timestamp, _
-                                    mBarTimePeriod)
-    If Not mBars Is Nothing Then mBars.Add mCurrentBar, mCurrentBarNumber, Timestamp
-    fireBarAdded mCurrentBar
+    lBar.BarNumber = mCurrentBarNumber
+    lBar.Timestamp = gBarStartTime(Timestamp, _
+                                    mBarTimePeriod, _
+                                    mMainSession.SessionStartTime)
 End If
-mCurrentBar.BarNumber = mCurrentBarNumber
-If initialValue <> MaxDouble Then mCurrentBar.NotifyValue initialValue
-If initialVolume <> 0 Then mCurrentBar.NotifyVolume initialVolume
-If initialOpenInterest <> 0 Then mCurrentBar.NotifyOpenInterest initialOpenInterest
+
+If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
+FireBarAdded lBar
+
+If initialValue <> MaxDouble Then lBar.NotifyValue initialValue
+If initialVolume <> 0 Then lBar.NotifyVolume initialVolume
+If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
-Private Sub fireBarAdded(ByVal pBar As Bar)
-RaiseEvent BarAdded(pBar)
+Private Sub createVolumeAndOpenInterestParsers(ByVal pSession As Session)
+Const ProcName As String = "createVolumeAndOpenInterestParsers"
+On Error GoTo Err
+
+Set mVolumeParser = New VolumeParser
+mVolumeParser.Initialise pSession
+
+Set mOpenInterestParser = New VolumeParser
+mOpenInterestParser.Initialise pSession
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function newBar(BarNumber As Long) As Boolean
 Const ProcName As String = "newBar"
-
 On Error GoTo Err
 
 If BarNumber <> mCurrentBarNumber Then
@@ -543,5 +603,27 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub setTickSize(ByVal pTickSize As Double)
+Const ProcName As String = "setTickSize"
+On Error GoTo Err
+
+mTickSize = pTickSize
+
+If mBarTimePeriod.Units = TimePeriodTickMovement Then
+    ' note that the Ticksize may not be known at the time
+    ' this object is created, so we don't check for a zero
+    ' Value here. Since a zero Value will cause a loop in NotifyValue
+    ' for TimePeriodTickMovement, we'll make a check for Ticksize 0
+    ' in the first call to NotifyValue
+    
+    mMaxBarRange = mBarTimePeriod.Length * mTickSize
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 

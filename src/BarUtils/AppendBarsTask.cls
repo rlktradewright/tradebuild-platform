@@ -50,8 +50,9 @@ Private mTaskContext                        As TaskContext
 Private mDestBars                           As Bars
 Private mSourceBars                         As Bars
 Private mIndex                              As Long
-Private mProgressModulus                    As Long
 Private mNumberToAppend                     As Long
+Private mBarsBuilder                        As BarsBuilder
+Private mEt                                 As New ElapsedTimer
 
 '@================================================================================
 ' Class Event Handlers
@@ -66,24 +67,20 @@ Private Sub Task_cancel()
 End Sub
 
 Private Sub Task_run()
-Dim i As Long
-
 Const ProcName As String = "Task_run"
-
 On Error GoTo Err
 
-Do While mIndex <= mNumberToAppend And i < 100
-    mDestBars.Add mSourceBars.Bar(mIndex), _
-                    mDestBars.CurrentBarNumber + 1, _
-                    mSourceBars.Bar(mIndex).Timestamp
-    
-    If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.Progress 100 * mIndex / mNumberToAppend, Empty
-    End If
-    
-    mIndex = mIndex + 1
-    i = i + 1
-Loop
+mDestBars.Add mSourceBars.Bar(mIndex), _
+                mDestBars.CurrentBarNumber + 1, _
+                mSourceBars.Bar(mIndex).Timestamp
+mBarsBuilder.FireBarAdded mSourceBars.Bar(mIndex)
+
+If mEt.ElapsedTimeMicroseconds > 50000 Then
+    mTaskContext.Progress 100 * mIndex / mNumberToAppend, Empty
+    mEt.StartTiming
+End If
+
+mIndex = mIndex + 1
 
 If mIndex > mNumberToAppend Then
     mTaskContext.Progress 100, Empty
@@ -95,7 +92,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-    
 End Sub
 
 Private Property Let Task_TaskContext(ByVal Value As TaskContext)
@@ -121,13 +117,15 @@ End Property
 Friend Sub Initialise( _
                 ByVal destBars As Bars, _
                 ByVal sourceBars As Bars, _
-                ByVal numberToAppend As Long)
+                ByVal numberToAppend As Long, _
+                ByVal pBarsBuilder As BarsBuilder)
 Set mSourceBars = sourceBars
 Set mDestBars = destBars
 mNumberToAppend = numberToAppend
-If mNumberToAppend / 20 >= 200 Then mProgressModulus = mNumberToAppend / 20
+Set mBarsBuilder = pBarsBuilder
 
 mIndex = 1
+mEt.StartTiming
 
 End Sub
 

@@ -82,9 +82,7 @@ Public Sub AddValue( _
                 ByVal BarNumber As Long, _
                 ByVal Timestamp As Date, _
                 ByVal BarStartTime As Date)
-
 Const ProcName As String = "AddValue"
-
 On Error GoTo Err
 
 If mCyclicSize > 0 Then
@@ -115,14 +113,12 @@ End Sub
 
 Public Sub AppendValues( _
                 ByVal pValueCache As ValueCache)
-Dim i As Long
-Dim val As SValue
-
 Const ProcName As String = "AppendValues"
-
 On Error GoTo Err
 
+Dim i As Long
 For i = 1 To pValueCache.Count
+    Dim val As SValue
     val = pValueCache.GetSValue(i)
     AddValue val.Value, val.BarNumber, val.Timestamp, val.BarStartTime
 Next
@@ -135,12 +131,10 @@ End Sub
 
 Public Function AppendValuesAsync( _
                 ByVal pValueCache As ValueCache) As TaskController
-Dim avt As New AppendValuesTask
-
 Const ProcName As String = "AppendValuesAsync"
-
 On Error GoTo Err
 
+Dim avt As New AppendValuesTask
 avt.Initialise Me, pValueCache
 
 Set AppendValuesAsync = StartTask(avt, PriorityNormal)
@@ -152,12 +146,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSValue(Optional ByVal ref As Long) As SValue
-Dim valueEntry As SValue
-
 Const ProcName As String = "GetSValue"
-
 On Error GoTo Err
 
+Dim valueEntry As SValue
 valueEntry = mValues(refToIndex(ref))
 GetSValue.BarNumber = valueEntry.BarNumber
 GetSValue.Timestamp = valueEntry.Timestamp
@@ -171,12 +163,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetValue(Optional ByVal ref As Long) As Variant
-Dim index As Long
-
 Const ProcName As String = "GetValue"
-
 On Error GoTo Err
 
+Dim index As Long
 index = refToIndex(ref)
 gSetVariant GetValue, mValues(index).Value
 
@@ -190,7 +180,6 @@ Friend Sub Initialise( _
                 ByVal CyclicSize As Long, _
                 ByVal ValueName As String)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 If CyclicSize > 0 Then
@@ -216,11 +205,10 @@ Public Sub UpdateValue( _
                 Optional ByVal Timestamp As Date, _
                 Optional ByVal BarStartTime As Date, _
                 Optional ByVal ref As Long)
-Dim i As Long
 Const ProcName As String = "UpdateValue"
-
 On Error GoTo Err
 
+Dim i As Long
 i = refToIndex(ref)
 gSetVariant mValues(i).Value, Value
 If BarNumber > 0 Then mValues(i).BarNumber = BarNumber
@@ -239,14 +227,9 @@ End Sub
 
 Private Function refToIndex(ByVal ref As Long) As Long
 Const ProcName As String = "refToIndex"
-
 On Error GoTo Err
 
-If ref > mNumValues Or _
-    ref < (1 - mNumValues) _
-Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "<ref> out of bounds"
-End If
+AssertArgument ref <= mNumValues And ref >= (1 - mNumValues), "<ref> out of bounds"
     
 If mCyclicSize <> 0 Then
     If ref > 0 Then
@@ -270,7 +253,6 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Function
 
 

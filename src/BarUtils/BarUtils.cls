@@ -45,33 +45,9 @@ Public Enum BarChangeTypes
                             ' BarPriceChanged implicitly includes BarTickVolumeChanged
 End Enum
 
-Public Enum BarTypes
-    BarTypeTrade = 0
-    BarTypeBid = 1
-    BarTypeAsk = 2
-End Enum
-
-Public Enum SessionChangeTypes
-    SessionChangeNone
-    SessionChangeEnd
-    SessionChangeStart
-    SessionChangeDateChange
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
-
-Public Type SessionEventData
-    Source              As Object
-    Timestamp           As Date
-    changeType          As SessionChangeTypes
-End Type
-
-Public Type SessionTimes
-    startTime       As Date
-    endTime         As Date
-End Type
 
 Public Type SValue
     Value           As Variant
@@ -136,7 +112,7 @@ Case TimePeriodMinute
 Case TimePeriodHour
 Case TimePeriodDay
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Can't calculate Bar length for this time unit"
+    AssertArgument False, "Can't calculate Bar length for this time unit"
 End Select
 BarLength = gCalcBarLength(BarTimePeriod)
 
@@ -174,7 +150,6 @@ Public Function CreateBar( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long) As Bar
 Const ProcName As String = "CreateBar"
-
 On Error GoTo Err
 
 Set CreateBar = New Bar
@@ -195,23 +170,92 @@ End Function
 
 Public Function CreateBarsBuilder( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                Optional ByVal pSession As Session, _
+                ByVal pSession As Session, _
                 Optional ByVal pTickSize As Double, _
                 Optional ByVal pNumberOfBarsToCache As Long, _
                 Optional ByVal pSave As Boolean = True) As BarsBuilder
-Set CreateBarsBuilder = New BarsBuilder
-If pSession Is Nothing Then
-    Dim lSB As New SessionBuilder
-    Set pSession = lSB.Session
-End If
-CreateBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
+Const ProcName As String = "CreateBarsBuilder"
+On Error GoTo Err
+
+AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
+AssertArgument Not pSession Is Nothing, "pSession is Nothing"
+
+Dim lBarsBuilder As New BarsBuilder
+lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pSave
+Set CreateBarsBuilder = lBarsBuilder
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateBarsBuilderFuture( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pSessionFuture As IFuture, _
+                Optional ByVal pTickSize As Double, _
+                Optional ByVal pNumberOfBarsToCache As Long, _
+                Optional ByVal pSave As Boolean = True) As IFuture
+Const ProcName As String = "CreateBarsBuilderFuture"
+On Error GoTo Err
+
+AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
+AssertArgument Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
+
+Dim lFutureBuilder As New BarsBuilderFutureBuilder
+lFutureBuilder.Initialise pBarTimePeriod, pSessionFuture, pTickSize, pNumberOfBarsToCache, pSave
+Set CreateBarsBuilderFuture = lFutureBuilder.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateBarsBuilderWithInitialBars( _
+                ByVal pBars As Bars, _
+                ByVal pSession As Session, _
+                Optional ByVal pTickSize As Double) As IFuture
+Const ProcName As String = "CreateBarsBuilderWithInitialBars"
+On Error GoTo Err
+
+AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
+AssertArgument Not pSession Is Nothing, "pSession is Nothing"
+    
+Dim lBarsBuilder As New BarsBuilder
+lBarsBuilder.InitialiseWithInitialBars pBars, pSession, pTickSize
+Set CreateBarsBuilderWithInitialBars = lBarsBuilder
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateBarsBuilderWithInitialBarsFuture( _
+                ByVal pBarsFuture As IFuture, _
+                ByVal pSessionFuture As IFuture, _
+                Optional ByVal pTickSize As Double) As IFuture
+Const ProcName As String = "CreateBarsBuilderWithInitialBarsFuture"
+On Error GoTo Err
+
+AssertArgument Not pBarsFuture Is Nothing, "pBarsFuture Is Nothing"
+AssertArgument Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
+    
+Dim lFutureBuilder As New BarsBuilderFutureBuilder
+lFutureBuilder.InitialiseWithInitialBars pBarsFuture, pSessionFuture, pTickSize
+Set CreateBarsBuilderWithInitialBarsFuture = lFutureBuilder.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateValueCache( _
                 ByVal CyclicSize As Long, _
                 ByVal ValueName As String) As ValueCache
 Const ProcName As String = "CreateValueCache"
-
 On Error GoTo Err
 
 Set CreateValueCache = New ValueCache
@@ -224,13 +268,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateVolumeParser( _
-                ByVal pSession As Session) As VolumeParser
+                ByVal pSessionFuture As IFuture) As VolumeParser
 Const ProcName As String = "CreateVolumeParser"
-
 On Error GoTo Err
 
 Set CreateVolumeParser = New VolumeParser
-CreateVolumeParser.Initialise pSession
+CreateVolumeParser.Initialise pSessionFuture
 
 Exit Function
 
@@ -238,37 +281,46 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetSessionTimes( _
-                ByVal Timestamp As Date, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date) As SessionTimes
-Const ProcName As String = "GetSessionTimes"
-
+Public Function MaxNumberOfBarsInTimespan( _
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pStartTime As Date, _
+                Optional ByVal pEndTime As Date, _
+                Optional ByVal pSessionStartTime As Date, _
+                Optional ByVal pSessionEndTime As Date) As Long
+Const ProcName As String = "MaxNumberOfBarsInTimespan"
 On Error GoTo Err
 
-GetSessionTimes = gCalcSessionTimes(Timestamp, _
-                            gNormaliseTime(startTime), _
-                            gNormaliseTime(endTime))
+AssertArgument pStartTime <> 0, "pStartTime must be supplied"
 
-Exit Function
+Select Case pBarTimePeriod.Units
+    Case TimePeriodNone, TimePeriodTickMovement, TimePeriodTickVolume, TimePeriodVolume
+        AssertArgument False, "Must be a fixed time period"
+End Select
+        
+If pEndTime = 0 Then pEndTime = Now
 
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
+Dim lStartTime As Date
+lStartTime = BarStartTime(pStartTime, pBarTimePeriod, pSessionStartTime)
 
-Public Function GetOffsetSessionTimes( _
-                ByVal Timestamp As Date, _
-                ByVal offset As Long, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date) As SessionTimes
-Const ProcName As String = "GetOffsetSessionTimes"
+Dim lEndTime As Date
+lEndTime = OffsetBarStartTime(pEndTime, pBarTimePeriod, 1, pSessionStartTime, pSessionEndTime)
 
-On Error GoTo Err
-
-GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
-                            offset, _
-                            gNormaliseTime(startTime), _
-                            gNormaliseTime(endTime))
+Select Case pBarTimePeriod.Units
+    Case TimePeriodSecond
+        MaxNumberOfBarsInTimespan = Int((86400# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodMinute
+        MaxNumberOfBarsInTimespan = Int((1440# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodHour
+        MaxNumberOfBarsInTimespan = Int((24# * (lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodDay
+        MaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodWeek
+        MaxNumberOfBarsInTimespan = Int(((lEndTime - lStartTime) / 7 + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodMonth
+        MaxNumberOfBarsInTimespan = Int(((Month(lEndTime) - Month(lStartTime)) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+    Case TimePeriodYear
+        MaxNumberOfBarsInTimespan = Int(((Year(lEndTime) - Year(lStartTime)) + pBarTimePeriod.Length - 1) / pBarTimePeriod.Length)
+End Select
 
 Exit Function
 
@@ -281,7 +333,6 @@ Public Function NumberOfBarsInSession( _
                 ByVal SessionStartTime As Date, _
                 ByVal SessionEndTime As Date) As Long
 Const ProcName As String = "NumberOfBarsInSession"
-
 On Error GoTo Err
 
 Select Case BarTimePeriod.Units
@@ -289,7 +340,7 @@ Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Can't calculate number of Bars in session for this time unit"
+    AssertArgument False, "Can't calculate number of Bars in session for this time unit"
 End Select
 
 NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
@@ -310,12 +361,10 @@ Public Function OffsetBarStartTime( _
                 Optional ByVal SessionStartTime As Date, _
                 Optional ByVal SessionEndTime As Date) As Date
 Const ProcName As String = "OffsetBarStartTime"
-
 On Error GoTo Err
 
-If BarTimePeriod.Units = TimePeriodNone Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Invalid time Units argument"
-End If
+AssertArgument BarTimePeriod.Units <> TimePeriodNone, "Invalid time Units argument"
+
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                                 Timestamp, _
                                                 BarTimePeriod, _

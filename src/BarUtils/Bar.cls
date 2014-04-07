@@ -226,7 +226,6 @@ End Property
 Friend Sub IncrementTickVolume( _
                 ByVal increment As Long)
 Const ProcName As String = "IncrementTickVolume"
-
 On Error GoTo Err
 
 mTickVolume = mTickVolume + increment
@@ -248,7 +247,6 @@ Public Sub Initialise( _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
 mTimestamp = Timestamp
@@ -260,7 +258,7 @@ mVolume = Volume
 mTickVolume = TickVolume
 mOpenInterest = OpenInterest
 
-mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or CloseChanged)
+mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or BarChangeCloseChanged)
 If mVolume <> 0 Then mBarChanges = (mBarChanges Or BarChangeVolumeChanged)
 If mOpenInterest <> 0 Then mBarChanges = (mBarChanges Or BarChangeOpenInterestChanged)
 
@@ -278,7 +276,6 @@ End Sub
 Friend Sub NotifyOpenInterest( _
                 ByVal OpenInterest As Long)
 Const ProcName As String = "NotifyOpenInterest"
-
 On Error GoTo Err
 
 ' note that we don't set mBlank to false because the Bar is blank until
@@ -295,7 +292,6 @@ End Sub
 
 Friend Sub NotifyValue(ByVal Value As Double)
 Const ProcName As String = "NotifyValue"
-
 On Error GoTo Err
 
 mBarChanges = 0
@@ -332,7 +328,6 @@ End Sub
 Friend Sub NotifyVolume( _
                 ByVal Volume As Long)
 Const ProcName As String = "NotifyVolume"
-
 On Error GoTo Err
 
 ' note that we don't set mBlank to false because the Bar is blank until
@@ -345,6 +340,10 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetBarChanged()
+mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or BarChangeCloseChanged Or BarChangeVolumeChanged Or BarChangeOpenInterestChanged)
 End Sub
 
 Public Function ToString() As String
@@ -364,12 +363,10 @@ End Function
 
 Private Sub fireChange( _
                 ByVal changeType As BarChangeTypes)
-Dim ev As ChangeEventData
-
 Const ProcName As String = "fireChange"
-
 On Error GoTo Err
 
+Dim ev As ChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 RaiseEvent Changed(ev)

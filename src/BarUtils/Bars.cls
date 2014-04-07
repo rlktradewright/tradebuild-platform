@@ -75,6 +75,9 @@ Private mChangeListeners            As Collection
 
 Private mUpdateSequence             As Long
 
+Private mSession                    As Session
+Private mTickSize                   As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -98,6 +101,9 @@ End Property
 Private Function Enumerable_nextItem( _
                 item As Variant, _
                 cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_nextItem"
+On Error GoTo Err
+
 If IsEmpty(cookie) Then
     cookie = 1
 End If
@@ -110,6 +116,11 @@ End If
 Set item = mBarsCache.GetValue(CLng(cookie))
 cookie = cookie + 1
 Enumerable_nextItem = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub Enumerable_remove(cookie As Variant)
@@ -127,6 +138,9 @@ End Sub
 Private Function Enumerable_skip( _
                 ByVal numToSkip As Long, _
                 cookie As Variant) As Boolean
+Const ProcName As String = "Enumerable_skip"
+On Error GoTo Err
+
 If IsEmpty(cookie) Then
     cookie = 1
 End If
@@ -141,6 +155,11 @@ If cookie > mBarsCache.Count Then
 End If
 
 Enumerable_skip = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get Enumerable_UpdateSequence() As Long
@@ -157,7 +176,6 @@ End Property
 
 Public Property Get Bar(Optional ByVal ref As Long) As Bar
 Const ProcName As String = "Bar"
-
 On Error GoTo Err
 
 Set Bar = mBarsCache.GetValue(ref)
@@ -178,7 +196,6 @@ End Property
 
 Public Property Get CloseValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "CloseValue"
-
 On Error GoTo Err
 
 CloseValue = Bar(ref).CloseValue
@@ -195,7 +212,6 @@ End Property
 
 Public Property Get Down(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Down"
-
 On Error GoTo Err
 
 Down = Bar(ref).IsDownBar
@@ -219,7 +235,6 @@ End Property
 
 Public Property Get Gain(Optional ByVal ref As Long) As Double
 Const ProcName As String = "Gain"
-
 On Error GoTo Err
 
 Gain = Bar(ref).Gain
@@ -233,16 +248,16 @@ End Property
 Public Property Get HigherHighValue( _
                 ByVal rank As Long, _
                 Optional ByVal ref As Long) As Double
-Dim valueToCompare As Double
-Dim currentHigh As Double
-Dim i As Long
-Dim numHighsFound As Long
-
 Const ProcName As String = "HigherHighValue"
-
 On Error GoTo Err
 
+Dim currentHigh As Double
+
+Dim valueToCompare As Double
 valueToCompare = HighValue(ref)
+
+Dim numHighsFound As Long
+Dim i As Long
 i = 1
 Do
     currentHigh = HighValue(ref - i)
@@ -262,42 +277,41 @@ End Property
 
 Public Property Get HighestCloseValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Double
-Dim i                   As Long
-Dim High                As Double
-Static lastPeriods      As Long
-Static lastBarNumber    As Long
-Static lastValue        As Variant
-Static lastRef          As Long
-
 Const ProcName As String = "HighestCloseValue"
-
 On Error GoTo Err
 
-If mCurrentBarNumber = lastBarNumber And _
-    periods = lastPeriods And _
-    ref = lastRef _
+Static sLastPeriods      As Long
+Static sLastBarNumber    As Long
+Static sLastValue        As Variant
+Static sLastRef          As Long
+
+If mCurrentBarNumber = sLastBarNumber And _
+    periods = sLastPeriods And _
+    ref = sLastRef _
 Then
-    If CloseValue <= lastValue Then
-        HighestCloseValue = lastValue
+    If CloseValue <= sLastValue Then
+        HighestCloseValue = sLastValue
         Exit Property
     Else
         HighestCloseValue = CloseValue
-        lastValue = HighestCloseValue
+        sLastValue = HighestCloseValue
         Exit Property
     End If
 End If
 
+Dim i As Long
 For i = 0 To periods - 1
-    High = CloseValue(ref - i)
-    If High > HighestCloseValue Then
-        HighestCloseValue = High
+    Dim lHigh As Double
+    lHigh = CloseValue(ref - i)
+    If lHigh > HighestCloseValue Then
+        HighestCloseValue = lHigh
     End If
 Next
 
-lastBarNumber = mCurrentBarNumber
-lastPeriods = periods
-lastRef = ref
-lastValue = HighestCloseValue
+sLastBarNumber = mCurrentBarNumber
+sLastPeriods = periods
+sLastRef = ref
+sLastValue = HighestCloseValue
 
 Exit Property
 
@@ -307,16 +321,14 @@ End Property
 
 Public Property Get HighestHighValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Variant
-Dim i                   As Long
+Const ProcName As String = "HighestHighValue"
+On Error GoTo Err
+
 Dim High                As Double
 Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
-
-Const ProcName As String = "HighestHighValue"
-
-On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -333,6 +345,7 @@ Then
 End If
 
 HighestHighValue = MinDouble
+Dim i As Long
 For i = 0 To periods - 1
     High = HighValue(ref - i)
     If High > HighestHighValue Then
@@ -353,7 +366,6 @@ End Property
 
 Public Property Get HighValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "HighValue"
-
 On Error GoTo Err
 
 HighValue = Bar(ref).HighValue
@@ -366,7 +378,6 @@ End Property
 
 Public Property Get Inside(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "Inside"
-
 On Error GoTo Err
 
 Inside = (HighValue(ref) <= HighValue(ref - 1)) And (LowValue(ref) >= LowValue(ref - 1))
@@ -379,7 +390,6 @@ End Property
 
 Public Property Get Loss(Optional ByVal ref As Long) As Double
 Const ProcName As String = "Loss"
-
 On Error GoTo Err
 
 Loss = Bar(ref).Loss
@@ -393,14 +403,13 @@ End Property
 Public Property Get LowerLowValue( _
                 ByVal rank As Long, _
                 Optional ByVal ref As Long) As Double
+Const ProcName As String = "LowerLowValue"
+On Error GoTo Err
+
 Dim valueToCompare As Double
 Dim currentLow As Double
 Dim i As Long
 Dim numLowsFound As Long
-
-Const ProcName As String = "LowerLowValue"
-
-On Error GoTo Err
 
 valueToCompare = LowValue(ref)
 i = 1
@@ -422,16 +431,15 @@ End Property
 
 Public Property Get LowestCloseValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Double
+Const ProcName As String = "LowestCloseValue"
+On Error GoTo Err
+
 Dim i As Long
 Dim Low As Double
 Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
-
-Const ProcName As String = "LowestCloseValue"
-
-On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -467,16 +475,15 @@ End Property
 
 Public Property Get LowestLowValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Variant
+Const ProcName As String = "LowestLowValue"
+On Error GoTo Err
+
 Dim i As Long
 Dim Low As Double
 Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
 Static lastRef          As Long
-
-Const ProcName As String = "LowestLowValue"
-
-On Error GoTo Err
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -514,7 +521,6 @@ End Property
 
 Public Property Get LowValue(Optional ByVal ref As Long) As Double
 Const ProcName As String = "LowValue"
-
 On Error GoTo Err
 
 LowValue = Bar(ref).LowValue
@@ -527,7 +533,6 @@ End Property
 
 Public Property Get OpenValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "OpenValue"
-
 On Error GoTo Err
 
 OpenValue = Bar(ref).OpenValue
@@ -540,7 +545,6 @@ End Property
 
 Public Property Get Outside(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Outside"
-
 On Error GoTo Err
 
 Outside = (HighValue(ref) > HighValue(ref - 1)) And (LowValue(ref) < LowValue(ref - 1))
@@ -551,9 +555,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get Session() As Session
+Set Session = mSession
+End Property
+
+Public Property Get TickSize() As Double
+TickSize = mTickSize
+End Property
+
 Public Property Get TickVolume(Optional ByVal ref As Long) As Long
 Const ProcName As String = "TickVolume"
-
 On Error GoTo Err
 
 TickVolume = Bar(ref).TickVolume
@@ -566,7 +577,6 @@ End Property
 
 Public Property Get Up(Optional ByVal ref As Long) As Boolean
 Const ProcName As String = "Up"
-
 On Error GoTo Err
 
 Up = Bar(ref).IsUpBar
@@ -586,7 +596,6 @@ Friend Sub Add( _
                 ByVal BarNumber As Long, _
                 ByVal Timestamp As Date)
 Const ProcName As String = "Add"
-
 On Error GoTo Err
 
 change
@@ -606,17 +615,18 @@ End Sub
 
 Friend Sub AppendBars( _
                 ByVal pBars As Bars, _
-                ByVal maxNumberToAppend As Long)
-Dim i As Long
-Dim max As Long
-
+                ByVal maxNumberToAppend As Long, _
+                ByVal pBarsBuilder As BarsBuilder)
 Const ProcName As String = "AppendBars"
-
 On Error GoTo Err
 
+Dim max As Long
 max = IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
+
+Dim i As Long
 For i = 1 To max
     Add pBars.Bar(i), mCurrentBarNumber + 1, pBars.Bar(i).Timestamp
+    pBarsBuilder.FireBarAdded pBars.Bar(i)
 Next
 
 Exit Sub
@@ -627,13 +637,13 @@ End Sub
 
 Friend Function AppendBarsAsync( _
                 ByVal pBars As Bars, _
-                ByVal maxNumberToAppend As Long) As TaskController
-Dim abt As New AppendBarsTask
+                ByVal maxNumberToAppend As Long, _
+                ByVal pBarsBuilder As BarsBuilder) As TaskController
 Const ProcName As String = "AppendBarsAsync"
-
 On Error GoTo Err
 
-abt.Initialise Me, pBars, IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count)
+Dim abt As New AppendBarsTask
+abt.Initialise Me, pBars, IIf(maxNumberToAppend < pBars.Count, maxNumberToAppend, pBars.Count), pBarsBuilder
 Set AppendBarsAsync = StartTask(abt, PriorityNormal)
 
 Exit Function
@@ -654,7 +664,6 @@ End Function
 Public Sub AddCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
 Const ProcName As String = "AddCollectionChangeListener"
-
 On Error GoTo Err
 
 mChangeListeners.Add listener, CStr(ObjPtr(listener))
@@ -673,7 +682,6 @@ End Sub
 '@/
 Public Function Count() As Long
 Const ProcName As String = "Count"
-
 On Error GoTo Err
 
 Count = mBarsCache.Count
@@ -685,15 +693,18 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
-                ByVal BarTimePeriod As TimePeriod, _
-                ByVal numberOfBarsToCache As Long)
+                ByVal pBarTimePeriod As TimePeriod, _
+                ByVal pNumberOfBarsToCache As Long, _
+                ByVal pSession As Session, _
+                ByVal pTickSize As Double)
 Const ProcName As String = "Initialise"
-
 On Error GoTo Err
 
-Set mBarTimePeriod = BarTimePeriod
+Set mBarTimePeriod = pBarTimePeriod
 Set mBarsCache = New ValueCache
-mBarsCache.Initialise numberOfBarsToCache, "Bar"
+mBarsCache.Initialise pNumberOfBarsToCache, "Bar"
+Set mSession = pSession
+mTickSize = pTickSize
 
 Exit Sub
 
@@ -716,7 +727,6 @@ End Function
 Public Sub RemoveCollectionChangeListener( _
                 ByVal listener As CollectionChangeListener)
 Const ProcName As String = "RemoveCollectionChangeListener"
-
 On Error GoTo Err
 
 mChangeListeners.Remove CStr(ObjPtr(listener))
@@ -726,19 +736,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'Friend Sub ResetBarChangeIndicators()
-'Const ProcName As String = "ResetBarChangeIndicators"
-'
-'On Error GoTo Err
-'
-'mCurrentBar.ResetChangeIndicators
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -751,18 +748,17 @@ End Sub
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Bar)
-Dim listener As CollectionChangeListener
-Dim i As Long
-Dim ev As CollectionChangeEventData
-
 Const ProcName As String = "fireChange"
-
 On Error GoTo Err
 
+Dim ev As CollectionChangeEventData
 Set ev.Source = Me
 ev.changeType = changeType
 Set ev.AffectedItem = affectedObject
+
+Dim i As Long
 For i = 1 To mChangeListeners.Count
+    Dim listener As CollectionChangeListener
     Set listener = mChangeListeners(i)
     listener.change ev
 Next

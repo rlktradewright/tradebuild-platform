@@ -67,6 +67,9 @@ Private Const ModuleName                            As String = "ITimePeriodVali
 Public Function IsValidTimePeriod(ByVal pTimePeriod As TimePeriod) As Boolean
 End Function
 
+Public Function IsSupportedTimePeriodUnit(ByVal pUnit As TimePeriodUnits) As Boolean
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
