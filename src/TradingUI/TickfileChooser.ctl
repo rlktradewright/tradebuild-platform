@@ -62,6 +62,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                        As String = "TickfileChooser"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -74,7 +76,7 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mSupportedTickfileFormats() As TickfileFormatSpecifier
+Private mTickfileStore As ITickfileStore
 
 Private mFilterString As String
 
@@ -83,10 +85,6 @@ Private mCancelled As Boolean
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub UserControl_Initialize()
-getSupportedTickfileFormats
-End Sub
 
 Private Sub UserControl_Resize()
 UserControl.Width = ChooserLabel.Width
@@ -109,12 +107,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function chooseTickfiles() As String()
+Public Function ChooseTickfiles() As String()
+Const ProcName As String = "ChooseTickfiles"
+On Error GoTo Err
+
 Dim fileNames() As String
 Dim outFileNames() As String
 Dim filePath As String
 Dim i As Long
-
 
 CommonDialogs.CancelError = True
 On Error GoTo Err
@@ -153,32 +153,52 @@ Else
     Next
 End If
 
-chooseTickfiles = outFileNames
+ChooseTickfiles = outFileNames
 
 Exit Function
 
 Err:
-mCancelled = True
-
+If Err.Number = cdlCancel Then
+    mCancelled = True
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Function
+
+
+Public Sub Initialise(ByVal pTickfileStore As ITickfileStore)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+Set mTickfileStore = pTickfileStore
+getSupportedTickfileFormats
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
 Private Sub getSupportedTickfileFormats()
-Dim i As Long
+Const ProcName As String = "getSupportedTickfileFormats"
+On Error GoTo Err
 
-mSupportedTickfileFormats = TradeBuildAPI.SupportedInputTickfileFormats
+Dim lSupportedTickfileFormats() As TickfileFormatSpecifier
+lSupportedTickfileFormats = mTickfileStore.SupportedFormats
 
 On Error GoTo Err
 
-For i = 0 To UBound(mSupportedTickfileFormats)
-    If mSupportedTickfileFormats(i).FormatType = FileBased Then
+Dim i As Long
+For i = 0 To UBound(lSupportedTickfileFormats)
+    If lSupportedTickfileFormats(i).FormatType = TickfileModeFileBased Then
         mFilterString = mFilterString & IIf(Len(mFilterString) = 0, "", "|") & _
-                    mSupportedTickfileFormats(i).name & _
-                    " tick files(*." & mSupportedTickfileFormats(i).FileExtension & _
-                    ")|*." & mSupportedTickfileFormats(i).FileExtension
+                    lSupportedTickfileFormats(i).Name & _
+                    " tick files(*." & lSupportedTickfileFormats(i).FileExtension & _
+                    ")|*." & lSupportedTickfileFormats(i).FileExtension
     End If
 Next
 
@@ -189,7 +209,7 @@ End If
 Exit Sub
 
 Err:
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

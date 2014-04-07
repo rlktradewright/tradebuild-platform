@@ -51,7 +51,10 @@ Private mTaskContext                        As TaskContext
 
 Private mDB                                 As TradingDB
 
-Private mBuilder                            As ContractsBuilder
+Private mListener                           As IContractFetchListener
+Private mContractSpec                       As IContractSpecifier
+
+Private mBuilder                            As New ContractsBuilder
 
 Private WithEvents mFetchInstrumentsTC      As TaskController
 Attribute mFetchInstrumentsTC.VB_VarHelpID = -1
@@ -60,9 +63,16 @@ Private mInstrEnumerator                    As Enumerator
 
 Private mHandle                             As Long
 
+Private WithEvents mFutureBuilder           As FutureBuilder
+Attribute mFutureBuilder.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mFutureBuilder = New FutureBuilder
+End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "ContractsRetrievalTask terminated"
@@ -74,36 +84,47 @@ End Sub
 
 Private Sub Task_Cancel()
 Const ProcName As String = "Task_Cancel"
-Dim failpoint As String
 On Error GoTo Err
 
-If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.CancelTask
+doCancel
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-Dim instrument As BusinessDataObject
-
-
 On Error GoTo Err
+
+If mTaskContext.CancelPending Then
+    doCancel
+    Exit Sub
+End If
 
 If mInstrEnumerator Is Nothing Then
     Set mFetchInstrumentsTC = mDB.InstrumentFactory.QueryObjectsBySpecAsync( _
-                                                mBuilder.Contracts.ContractSpecifier, _
+                                                mContractSpec, _
                                                 , _
-                                                "LoadBySpecifier/" & mBuilder.Contracts.ContractSpecifier.ToString & "(" & gGetSequenceNumber & ")")
+                                                "LoadBySpecifier/" & mContractSpec.ToString & "(" & gGetSequenceNumber & ")")
     mTaskContext.Suspend -1
 Else
     If Not mInstrEnumerator.MoveNext Then
-        mTaskContext.Finish mBuilder.Contracts, False
+        mFutureBuilder.value = mBuilder.Contracts
+        mFutureBuilder.Complete
+        
+        If Not mListener Is Nothing Then mListener.FetchCompleted mFutureBuilder.cookie
+        mTaskContext.Finish Empty, False
     Else
-        Set instrument = mInstrEnumerator.Current
-        mBuilder.AddContract gContractFromInstrument(instrument)
+        Dim lInstrument As BusinessDataObject
+        Set lInstrument = mInstrEnumerator.Current
+        
+        Dim lContract As IContract
+        Set lContract = gContractFromInstrument(lInstrument)
+        
+        mBuilder.Add lContract
+        If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.cookie, lContract
     End If
 End If
 
@@ -126,11 +147,11 @@ If Err.Number = 3265 Then
     Exit Sub
 End If
     
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let Task_TaskContext( _
-                ByVal value As TWUtilities30.TaskContext)
+                ByVal value As TaskContext)
 Const ProcName As String = "Task_TaskContext"
 Set mTaskContext = value
 End Property
@@ -140,23 +161,39 @@ Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
+' mFutureBuilder Event Handlers
+'@================================================================================
+
+Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
+Const ProcName As String = "mFutureBuilder_Cancelled"
+On Error GoTo Err
+
+doCancel
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' mFetchInstrumentsTC Event Handlers
 '@================================================================================
 
 Private Sub mFetchInstrumentsTC_Completed( _
-                ev As TWUtilities30.TaskCompletionEventData)
+                ev As TaskCompletionEventData)
 Const ProcName As String = "mFetchInstrumentsTC_Completed"
-Dim instruments As DataObjects
-
-
 On Error GoTo Err
 
 If ev.Cancelled Then
-    mTaskContext.Finish Empty, True
+    doCancel
 ElseIf ev.ErrorNumber <> 0 Then
-    mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+    mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+    If Not mListener Is Nothing Then mListener.FetchFailed mFutureBuilder.cookie, ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
+    mTaskContext.Finish Empty, True
 Else
-    Set instruments = ev.result
+    Dim instruments As DataObjects
+    Set instruments = ev.Result
     Set mInstrEnumerator = instruments.Enumerator
     
     mTaskContext.Continue
@@ -172,21 +209,45 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get ContractsFuture() As IFuture
+Set ContractsFuture = mFutureBuilder.Future
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
-                ByVal specifier As ContractSpecifier)
+                ByVal Specifier As IContractSpecifier, _
+                ByVal pListener As IContractFetchListener, _
+                ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 Set mDB = db
-Set mBuilder = CreateContractsBuilder(specifier)
+Set mListener = pListener
+Set mContractSpec = Specifier
+mFutureBuilder.cookie = pCookie
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub doCancel()
+Const ProcName As String = "doCancel"
+On Error GoTo Err
+
+If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.CancelTask
+mFutureBuilder.Cancel
+If Not mListener Is Nothing Then mListener.FetchCancelled mFutureBuilder.cookie
+
+mTaskContext.Finish Empty, True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub logMessage( _
                 ByRef pMsg As String, _
@@ -194,7 +255,7 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 

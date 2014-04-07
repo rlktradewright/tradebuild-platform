@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#37.0#0"; "ChartSkil27.ocx"
-Begin VB.UserControl StyledChart 
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#189.0#0"; "ChartSkil27.ocx"
+Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
    ClientLeft      =   0
@@ -9,7 +9,7 @@ Begin VB.UserControl StyledChart
    ClientWidth     =   7740
    ScaleHeight     =   5475
    ScaleWidth      =   7740
-   ToolboxBitmap   =   "TradeBuildChart.ctx":0000
+   ToolboxBitmap   =   "MarketChart.ctx":0000
    Begin ChartSkil27.Chart Chart1 
       Align           =   1  'Align Top
       Height          =   1695
@@ -19,7 +19,6 @@ Begin VB.UserControl StyledChart
       Width           =   7740
       _ExtentX        =   13653
       _ExtentY        =   2990
-      ChartBackColor  =   16777215
    End
    Begin MSComctlLib.ProgressBar LoadingProgressBar 
       Height          =   255
@@ -35,7 +34,7 @@ Begin VB.UserControl StyledChart
       Scrolling       =   1
    End
 End
-Attribute VB_Name = "StyledChart"
+Attribute VB_Name = "MarketChart"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -59,8 +58,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements StateChangeListener
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -76,7 +73,7 @@ Attribute KeyUp.VB_UserMemId = -604
 
 Event StateChange(ev As StateChangeEventData)
 
-Event PeriodLengthChange()
+Event TimePeriodChange()
 
 '@================================================================================
 ' Enums
@@ -90,7 +87,7 @@ Event PeriodLengthChange()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                                As String = "StyledChart"
+Private Const ModuleName                                As String = "MarketChart"
 
 Private Const ConfigSectionChartControl                 As String = "ChartControl"
 Private Const ConfigSectionChartSpecifier               As String = "ChartSpecifier"
@@ -99,8 +96,8 @@ Private Const ConfigSectionStudies                      As String = "Studies"
 Private Const ConfigSettingBarFormatterFactoryName      As String = "&BarFormatterFactoryName"
 Private Const ConfigSettingBarFormatterLibraryName      As String = "&BarFormatterLibraryName"
 Private Const ConfigSettingIsHistoricChart              As String = "&IsHistoricChart"
-Private Const ConfigSettingPeriodLength                 As String = "&PeriodLength"
-Private Const ConfigSettingDataSourceKey                    As String = "&DataSourceKey"
+Private Const ConfigSettingTimePeriod                   As String = "&TimePeriod"
+Private Const ConfigSettingDataSourceKey                As String = "&DataSourceKey"
 
 Private Const PropNameHorizontalMouseScrollingAllowed   As String = "HorizontalMouseScrollingAllowed"
 Private Const PropNameVerticalMouseScrollingAllowed     As String = "VerticalMouseScrollingAllowed"
@@ -110,7 +107,7 @@ Private Const PropNamePointerDiscColor                  As String = "PointerDisc
 Private Const PropNamePointerCrosshairsColor            As String = "PointerCrosshairsColor"
 Private Const PropNamePointerStyle                      As String = "PointerStyle"
 Private Const PropNameShowHorizontalScrollBar           As String = "HorizontalScrollBarVisible"
-Private Const PropNameTwipsPerPeriod                    As String = "TwipsPerPeriod"
+Private Const PropNamePeriodWidth                       As String = "PeriodWidth"
 Private Const PropNameYAxisWidthCm                      As String = "YAxisWidthCm"
 
 Private Const PropDfltHorizontalMouseScrollingAllowed   As Boolean = True
@@ -121,8 +118,11 @@ Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
 Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
 Private Const PropDfltShowHorizontalScrollBar           As Boolean = True
-Private Const PropDfltTwipsPerPeriod                    As Long = 150
-Private Const PropDfltYAxisWidthCm                      As Single = 1.5
+Private Const PropDfltPeriodWidth                       As Long = 100
+Private Const PropDfltYAxisWidthCm                      As Single = 1.8
+
+Private Const StudyValueConfigNameBar                   As String = "Bar"
+Private Const StudyValueConfigNameVolume                As String = "Volume"
 
 '@================================================================================
 ' Member variables
@@ -130,13 +130,11 @@ Private Const PropDfltYAxisWidthCm                      As Single = 1.5
 
 Private mManager                                        As ChartManager
 
-Private mDataSource                                     As IMarketDataSource
-
 Private mTimeframes                                     As Timeframes
 Private WithEvents mTimeframe                           As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
 
-Private mPeriodLength                                   As TimePeriod
+Private mTimePeriod                                     As TimePeriod
 
 Private mUpdatePerTick                                  As Boolean
 
@@ -147,7 +145,7 @@ Private mIsHistoricChart                                As Boolean
 Private mChartSpec                                      As ChartSpecifier
 Private mChartStyle                                     As ChartStyle
 
-Private mcontract                                       As Contract
+Private mContract                                       As Contract
 
 Private mPriceRegion                                    As ChartRegion
 
@@ -157,6 +155,9 @@ Private mPrevWidth                                      As Single
 Private mPrevHeight                                     As Single
 
 Private mLoadingText                                    As Text
+
+Private mStudyManager                                   As StudyManager
+Private mBarFormatterLibManager                         As BarFormatterLibManager
 
 Private mBarFormatterFactoryName                        As String
 Private mBarFormatterLibraryName                        As String
@@ -168,10 +169,17 @@ Private mDeferStart                                     As Boolean
 
 Private mMinimumTicksHeight                             As Long
 
-' this is a temporary style that is used initially to apply property bag settings.
-' This prevents the property bag settings from overriding any style that is later
-' applied.
-Private mInitialStyle                                   As ChartStyle
+'' this is a temporary style that is used initially to apply property bag settings.
+'' This prevents the property bag settings from overriding any style that is later
+'' applied.
+'Private mInitialStyle                                   As ChartStyle
+
+Private mInitialised                                    As Boolean
+
+Private mExcludeCurrentBar                              As Boolean
+
+Private WithEvents mFutureWaiter                        As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -184,41 +192,41 @@ mPrevHeight = UserControl.Height
 
 mUpdatePerTick = True
 
-Set mInitialStyle = ChartStylesManager.Add(GenerateGUIDString, ChartStylesManager.DefaultStyle, pTemporary:=True)
+'Set mInitialStyle = ChartStylesManager.Add(GenerateGUIDString, ChartStylesManager.DefaultStyle, pTemporary:=True)
 
 End Sub
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
-mInitialStyle.HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
-mInitialStyle.VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
-mInitialStyle.Autoscrolling = PropDfltAutoscroll
-mInitialStyle.ChartBackColor = PropDfltChartBackColor
-PointerStyle = PropDfltPointerStyle
-PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-PointerDiscColor = PropDfltPointerDiscColor
-mInitialStyle.HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
-mInitialStyle.TwipsPerPeriod = PropDfltTwipsPerPeriod
-mInitialStyle.YAxisWidthCm = PropDfltYAxisWidthCm
+'mInitialStyle.HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+'mInitialStyle.VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+'mInitialStyle.Autoscrolling = PropDfltAutoscroll
+'mInitialStyle.ChartBackColor = PropDfltChartBackColor
+'PointerStyle = PropDfltPointerStyle
+'PointerCrosshairsColor = PropDfltPointerCrosshairsColor
+'PointerDiscColor = PropDfltPointerDiscColor
+'mInitialStyle.HorizontalScrollBarVisible = PropDfltShowHorizontalScrollBar
+'mInitialStyle.PeriodWidth = PropDfltPeriodWidth
+'mInitialStyle.YAxisWidthCm = PropDfltYAxisWidthCm
 
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 On Error Resume Next
 
-mInitialStyle.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
-mInitialStyle.VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
-mInitialStyle.Autoscrolling = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
-mInitialStyle.ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor)
-' if no ChartBackColor has been set, we'll just use the ChartSkil default
-
-PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
-PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
-PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
-mInitialStyle.HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
-mInitialStyle.TwipsPerPeriod = PropBag.ReadProperty(PropNameTwipsPerPeriod, PropDfltTwipsPerPeriod)
-mInitialStyle.YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
+'mInitialStyle.HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
+'mInitialStyle.VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
+'mInitialStyle.Autoscrolling = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
+'mInitialStyle.ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor)
+'' if no ChartBackColor has been set, we'll just use the ChartSkil default
+'
+'PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
+'PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
+'PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
+'mInitialStyle.HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
+'mInitialStyle.PeriodWidth = PropBag.ReadProperty(PropNamePeriodWidth, PropDfltPeriodWidth)
+'mInitialStyle.YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 End Sub
 
 Private Sub UserControl_Resize()
@@ -233,48 +241,22 @@ End Sub
 
 Private Sub UserControl_Terminate()
 Const ProcName As String = "UserControl_Terminate"
-gLogger.Log "TradeBuildChart terminated", ProcName, ModuleName, LogLevelDetail
-Debug.Print "TradeBuildChart terminated"
+gLogger.Log "MarketChart terminated", ProcName, ModuleName, LogLevelDetail
+Debug.Print "MarketChart terminated"
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
-PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, mInitialStyle.HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
-PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, mInitialStyle.VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
-PropBag.WriteProperty PropNameAutoscroll, mInitialStyle.Autoscrolling, PropDfltAutoscroll
-PropBag.WriteProperty PropNameChartBackColor, mInitialStyle.ChartBackColor, PropDfltChartBackColor
-PropBag.WriteProperty PropNamePointerStyle, PointerStyle, PropDfltPointerStyle
-PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
-PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
-PropBag.WriteProperty PropNameShowHorizontalScrollBar, mInitialStyle.HorizontalScrollBarVisible, PropDfltShowHorizontalScrollBar
-PropBag.WriteProperty PropNameTwipsPerPeriod, mInitialStyle.TwipsPerPeriod, PropDfltTwipsPerPeriod
-PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDfltYAxisWidthCm
-End Sub
-
-'@================================================================================
-' StateChangeListener Interface Members
-'@================================================================================
-
-Private Sub StateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "StateChangeListener_Change"
-On Error GoTo Err
-
-If ev.State = MarketDataSourceStates.MarketDataSourceStateReady Then
-    ' this means that the DataSource object has retrieved the contract info, so we can
-    ' now start the chart
-
-    Set mcontract = mDataSource.Contract
-
-    If mDeferStart Then Exit Sub
-
-    setupStudies
-    loadchart
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
+'PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, mInitialStyle.HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
+'PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, mInitialStyle.VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
+'PropBag.WriteProperty PropNameAutoscroll, mInitialStyle.Autoscrolling, PropDfltAutoscroll
+'PropBag.WriteProperty PropNameChartBackColor, mInitialStyle.ChartBackColor, PropDfltChartBackColor
+'PropBag.WriteProperty PropNamePointerStyle, PointerStyle, PropDfltPointerStyle
+'PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
+'PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
+'PropBag.WriteProperty PropNameShowHorizontalScrollBar, mInitialStyle.HorizontalScrollBarVisible, PropDfltShowHorizontalScrollBar
+'PropBag.WriteProperty PropNamePeriodWidth, mInitialStyle.PeriodWidth, PropDfltPeriodWidth
+'PropBag.WriteProperty PropNameYAxisWidthCm, mInitialStyle.YAxisWidthCm, PropDfltYAxisWidthCm
 End Sub
 
 '@================================================================================
@@ -291,6 +273,32 @@ End Sub
 
 Private Sub Chart1_KeyUp(KeyCode As Integer, Shift As Integer)
 RaiseEvent KeyUp(KeyCode, Shift)
+End Sub
+
+'@================================================================================
+' mFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsAvailable Then
+    ' this means that the contract info is available, so we can
+    ' now start the chart
+
+    Set mContract = mTimeframes.ContractFuture.value
+
+    If mDeferStart Then Exit Sub
+
+    setupStudies
+    loadchart
+End If
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -354,6 +362,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Autoscrolling() As Boolean
+Attribute Autoscrolling.VB_MemberFlags = "400"
 Const ProcName As String = "Autoscrolling"
 On Error GoTo Err
 
@@ -366,6 +375,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BaseChartController() As ChartController
+Attribute BaseChartController.VB_MemberFlags = "400"
 Const ProcName As String = "BaseChartController"
 On Error GoTo Err
 
@@ -378,6 +388,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
+Attribute ChartBackColor.VB_MemberFlags = "400"
 Const ProcName As String = "ChartBackColor"
 On Error GoTo Err
 
@@ -402,6 +413,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartManager() As ChartManager
+Attribute ChartManager.VB_MemberFlags = "400"
 Const ProcName As String = "ChartManager"
 On Error GoTo Err
 
@@ -415,14 +427,19 @@ End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
+Attribute ConfigurationSection.VB_MemberFlags = "400"
 Const ProcName As String = "ConfigurationSection"
 On Error GoTo Err
 
 If mConfig Is value Then Exit Property
 If Not mConfig Is Nothing Then mConfig.Remove
+Set mConfig = Nothing
 If value Is Nothing Then Exit Property
 
 Set mConfig = value
+
+gLogger.Log "Chart added to config at: " & mConfig.Path, ProcName, ModuleName
+
 storeSettings
 
 Chart1.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartControl)
@@ -475,6 +492,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+Attribute HorizontalMouseScrollingAllowed.VB_MemberFlags = "400"
 Const ProcName As String = "HorizontalMouseScrollingAllowed"
 On Error GoTo Err
 
@@ -487,6 +505,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HorizontalScrollBarVisible() As Boolean
+Attribute HorizontalScrollBarVisible.VB_MemberFlags = "400"
 Const ProcName As String = "HorizontalScrollBarVisible"
 On Error GoTo Err
 
@@ -511,6 +530,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InitialNumberOfBars() As Long
+Attribute InitialNumberOfBars.VB_MemberFlags = "400"
 Const ProcName As String = "InitialNumberOfBars"
 On Error GoTo Err
 
@@ -558,7 +578,32 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get PeriodWidth() As Long
+Const ProcName As String = "PeriodWidth"
+On Error GoTo Err
+
+PeriodWidth = Chart1.PeriodWidth
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Let PeriodWidth(ByVal value As Long)
+Const ProcName As String = "PeriodWidth"
+On Error GoTo Err
+
+Chart1.PeriodWidth = value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Get PointerCrosshairsColor() As OLE_COLOR
+Attribute PointerCrosshairsColor.VB_MemberFlags = "400"
 Const ProcName As String = "PointerCrosshairsColor"
 On Error GoTo Err
 
@@ -583,6 +628,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
+Attribute PointerDiscColor.VB_MemberFlags = "400"
 Const ProcName As String = "PointerDiscColor"
 On Error GoTo Err
 
@@ -607,6 +653,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
+Attribute PointerStyle.VB_MemberFlags = "400"
 Const ProcName As String = "PointerStyle"
 On Error GoTo Err
 
@@ -631,6 +678,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PriceRegion() As ChartRegion
+Attribute PriceRegion.VB_MemberFlags = "400"
 Const ProcName As String = "PriceRegion"
 On Error GoTo Err
 
@@ -643,6 +691,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get RegionNames() As String()
+Attribute RegionNames.VB_MemberFlags = "400"
 Const ProcName As String = "RegionNames"
 On Error GoTo Err
 
@@ -655,6 +704,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get State() As ChartStates
+Attribute State.VB_MemberFlags = "400"
 Const ProcName As String = "State"
 On Error GoTo Err
 
@@ -666,23 +716,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DataSource() As IMarketDataSource
-Const ProcName As String = "DataSource"
-On Error GoTo Err
-
-Set DataSource = mDataSource
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
+'Public Property Get DataSource() As IMarketDataSource
+'Const ProcName As String = "DataSource"
+'On Error GoTo Err
+'
+'Set DataSource = mDataSource
+'
+'Exit Property
+'
+'Err:
+'gHandleUnexpectedError ProcName, ModuleName
+'End Property
 
 Public Property Get TimeframeCaption() As String
+Attribute TimeframeCaption.VB_MemberFlags = "400"
 Const ProcName As String = "TimeframeCaption"
 On Error GoTo Err
 
-TimeframeCaption = mPeriodLength.ToString
+TimeframeCaption = mTimePeriod.ToString
 
 Exit Property
 
@@ -691,10 +742,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeframeShortCaption() As String
+Attribute TimeframeShortCaption.VB_MemberFlags = "400"
 Const ProcName As String = "TimeframeShortCaption"
 On Error GoTo Err
 
-TimeframeShortCaption = mPeriodLength.ToShortString
+TimeframeShortCaption = mTimePeriod.ToShortString
 
 Exit Property
 
@@ -703,6 +755,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Timeframe() As Timeframe
+Attribute Timeframe.VB_MemberFlags = "400"
 Const ProcName As String = "Timeframe"
 On Error GoTo Err
 
@@ -714,11 +767,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PeriodLength() As TimePeriod
+Public Property Get TimePeriod() As TimePeriod
+Attribute TimePeriod.VB_MemberFlags = "400"
 Const ProcName As String = "TimePeriod"
 On Error GoTo Err
 
-Set PeriodLength = mPeriodLength
+Set TimePeriod = mTimePeriod
 
 Exit Property
 
@@ -730,31 +784,7 @@ Friend Property Get TradeBarSeries() As BarSeries
 Const ProcName As String = "TradeBarSeries"
 On Error GoTo Err
 
-Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries("Bar")
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get TwipsPerPeriod() As Long
-Const ProcName As String = "TwipsPerPeriod"
-On Error GoTo Err
-
-TwipsPerPeriod = Chart1.TwipsPerPeriod
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Let TwipsPerPeriod(ByVal value As Long)
-Const ProcName As String = "TwipsPerPeriod"
-On Error GoTo Err
-
-Chart1.TwipsPerPeriod = value
+Set TradeBarSeries = mManager.BaseStudyConfiguration.ValueSeries(StudyValueConfigNameBar)
 
 Exit Property
 
@@ -788,6 +818,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VerticalMouseScrollingAllowed() As Boolean
+Attribute VerticalMouseScrollingAllowed.VB_MemberFlags = "400"
 Const ProcName As String = "VerticalMouseScrollingAllowed"
 On Error GoTo Err
 
@@ -800,6 +831,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VolumeRegion() As ChartRegion
+Attribute VolumeRegion.VB_MemberFlags = "400"
 Const ProcName As String = "VolumeRegion"
 On Error GoTo Err
 
@@ -812,6 +844,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get YAxisWidthCm() As Single
+Attribute YAxisWidthCm.VB_MemberFlags = "400"
 Const ProcName As String = "YAxisWidthCm"
 On Error GoTo Err
 
@@ -839,18 +872,17 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub ChangePeriodLength(ByVal pNewPeriodLength As TimePeriod)
-Const ProcName As String = "ChangePeriodLength"
+Public Sub ChangeTimePeriod(ByVal pNewTimePeriod As TimePeriod)
+Const ProcName As String = "ChangeTimePeriod"
 On Error GoTo Err
-
-Dim baseStudyConfig As StudyConfiguration
 
 Assert State = ChartStateLoaded, "Can't change timeframe until chart is loaded"
 
-gLogger.Log "Changing timeframe to", ProcName, ModuleName, , pNewPeriodLength.ToString
+gLogger.Log "Changing timeframe to", ProcName, ModuleName, , pNewTimePeriod.ToString
 
 mLoadedFromConfig = False
 
+Dim baseStudyConfig As StudyConfiguration
 Set baseStudyConfig = mManager.BaseStudyConfiguration
 
 Set mPriceRegion = Nothing
@@ -860,24 +892,25 @@ mManager.ClearChart
 
 setState ChartStateBlank
 
-Set mPeriodLength = pNewPeriodLength
+Set mTimePeriod = pNewTimePeriod
+storeSettings
 
 createTimeframe
 
-baseStudyConfig.Study = mTimeframe.TradeStudy
-baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterFactoryName = mBarFormatterFactoryName
-baseStudyConfig.StudyValueConfigurations.item("Bar").BarFormatterLibraryName = mBarFormatterLibraryName
+baseStudyConfig.Study = mTimeframe.BarStudy
+baseStudyConfig.StudyValueConfigurations.Item(StudyValueConfigNameBar).BarFormatterFactoryName = mBarFormatterFactoryName
+baseStudyConfig.StudyValueConfigurations.Item(StudyValueConfigNameBar).BarFormatterLibraryName = mBarFormatterLibraryName
+
 Dim lStudy As IStudy
-Set lStudy = mTimeframe.TradeStudy
+Set lStudy = mTimeframe.BarStudy
 baseStudyConfig.Parameters = lStudy.Parameters
 
 initialiseChart
 mManager.BaseStudyConfiguration = baseStudyConfig
-'setupStudies
 
 loadchart
 
-RaiseEvent PeriodLengthChange
+RaiseEvent TimePeriodChange
 
 Exit Sub
 
@@ -913,13 +946,13 @@ Public Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-' update the number of bars in case this chart is reloaded from the config
-If Not mChartSpec Is Nothing Then
-    If mChartSpec.InitialNumberOfBars < Chart1.Periods.Count Then
-        Set mChartSpec = CreateChartSpecifier(Chart1.Periods.Count, mChartSpec.IncludeBarsOutsideSession)
-        storeSettings
-    End If
-End If
+'' update the number of bars in case this chart is reloaded from the config
+'If Not mChartSpec Is Nothing Then
+'    If mChartSpec.InitialNumberOfBars < Chart1.Periods.Count Then
+'        Set mChartSpec = CreateChartSpecifier(Chart1.Periods.Count, mChartSpec.IncludeBarsOutsideSession)
+'        storeSettings
+'    End If
+'End If
 
 If Not mManager Is Nothing Then mManager.Finish
 
@@ -928,7 +961,7 @@ Set mManager = Nothing
 Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 
-Set mcontract = Nothing
+Set mContract = Nothing
 
 Set mPriceRegion = Nothing
 Set mVolumeRegion = Nothing
@@ -944,21 +977,26 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
+                ByVal pTimeframes As Timeframes, _
                 ByVal config As ConfigurationSection, _
-                ByVal deferStart As Boolean, _
-                ByVal pMarketDataManager As MarketDataManager)
+                ByVal pBarFormatterLibManager As BarFormatterLibManager, _
+                ByVal deferStart As Boolean)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Dim cs As ConfigurationSection
-
 Set mConfig = config
+
+gLogger.Log "Loading chart from config at: " & mConfig.Path, ProcName, ModuleName
+
 mLoadedFromConfig = True
 
 mDeferStart = deferStart
 
-Set mDataSource = pMarketDataManager.GetMarketDataSource(mConfig.GetSetting(ConfigSettingDataSourceKey))
-Set mPeriodLength = TimePeriodFromString(mConfig.GetSetting(ConfigSettingPeriodLength))
+Set mTimeframes = pTimeframes
+Set mStudyManager = mTimeframes.StudyBase.StudyManager
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
+Set mTimePeriod = TimePeriodFromString(mConfig.GetSetting(ConfigSettingTimePeriod))
 Set mChartSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
 
 Chart1.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionChartControl)
@@ -979,7 +1017,11 @@ Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
 On Error GoTo Err
 
-If Not mConfig Is Nothing Then mConfig.Remove
+If mConfig Is Nothing Then Exit Sub
+
+gLogger.Log "Chart removed from config at: " & mConfig.Path, ProcName, ModuleName
+
+mConfig.Remove
 Set mConfig = Nothing
 
 Exit Sub
@@ -1001,23 +1043,38 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ShowChart( _
-                ByVal pDataSource As IMarketDataSource, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
                 ByVal pChartStyle As ChartStyle, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 Optional ByVal pBarFormatterFactoryName As String, _
-                Optional ByVal pBarFormatterLibraryName As String)
+                Optional ByVal pBarFormatterLibraryName As String, _
+                Optional ByVal pExcludeCurrentBar As Boolean)
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
-Set mDataSource = pDataSource
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+
+setState ChartStateBlank
+
+If Not mTimeframes Is Nothing Then
+    mInitialised = False
+    Chart1.ClearChart
+End If
+
 Set mTimeframes = pTimeframes
-Set mPeriodLength = pTimePeriod
+Set mStudyManager = mTimeframes.StudyBase.StudyManager
+Set mBarFormatterLibManager = pBarFormatterLibManager
+
+Set mTimePeriod = pTimePeriod
 Set mChartSpec = pChartSpec
 Set mChartStyle = pChartStyle
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
+mExcludeCurrentBar = pExcludeCurrentBar
 
 storeSettings
 
@@ -1052,26 +1109,19 @@ Private Function createBarsStudyConfig() As StudyConfiguration
 Const ProcName As String = "createBarsStudyConfig"
 On Error GoTo Err
 
+Dim studyConfig As New StudyConfiguration
+studyConfig.UnderlyingStudy = mTimeframes.StudyBase.BaseStudy
+
 Dim lStudy As IStudy
-Dim studyDef As StudyDefinition
-
-ReDim InputValueNames(3) As String
-Dim params As New Parameters
-
-Dim studyValueConfig As StudyValueConfiguration
-
-Dim studyConfig As StudyConfiguration
-
-Set studyConfig = New StudyConfiguration
-
-studyConfig.UnderlyingStudy = mTimeframes.StudyInputHandler
-
-Set lStudy = mTimeframe.TradeStudy
+Set lStudy = mTimeframe.BarStudy
 studyConfig.Study = lStudy
+
+Dim studyDef As StudyDefinition
 Set studyDef = lStudy.StudyDefinition
 
 studyConfig.ChartRegionName = ChartRegionNamePrice
 
+ReDim InputValueNames(3) As String
 InputValueNames(0) = InputNameTrade
 InputValueNames(1) = InputNameVolume
 InputValueNames(2) = InputNameTickVolume
@@ -1079,21 +1129,24 @@ InputValueNames(3) = InputNameOpenInterest
 
 studyConfig.InputValueNames = InputValueNames
 studyConfig.Name = studyDef.Name
-params.SetParameterValue "Bar length", mPeriodLength.Length
-params.SetParameterValue "Time units", TimePeriodUnitsToString(mPeriodLength.Units)
+
+Dim params As New Parameters
+params.SetParameterValue "Bar length", mTimePeriod.Length
+params.SetParameterValue "Time units", TimePeriodUnitsToString(mTimePeriod.Units)
 studyConfig.Parameters = params
 
-Set studyValueConfig = studyConfig.StudyValueConfigurations.Add("Bar")
+Dim studyValueConfig As StudyValueConfiguration
+Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameBar)
 studyValueConfig.ChartRegionName = ChartRegionNamePrice
 studyValueConfig.IncludeInChart = True
 'studyValueConfig.Layer = 200
 studyValueConfig.BarFormatterFactoryName = mBarFormatterFactoryName
 studyValueConfig.BarFormatterLibraryName = mBarFormatterLibraryName
 
-If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash And _
-    mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
+If mContract.Specifier.secType <> SecurityTypes.SecTypeCash And _
+    mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
-    Set studyValueConfig = studyConfig.StudyValueConfigurations.Add("Volume")
+    Set studyValueConfig = studyConfig.StudyValueConfigurations.Add(StudyValueConfigNameVolume)
     studyValueConfig.ChartRegionName = ChartRegionNameVolume
     studyValueConfig.IncludeInChart = True
 End If
@@ -1108,7 +1161,7 @@ End Function
 
 Private Function createPriceFormatter() As PriceFormatter
 Set createPriceFormatter = New PriceFormatter
-createPriceFormatter.Contract = mcontract
+createPriceFormatter.Contract = mContract
 End Function
 
 Private Sub createTimeframe()
@@ -1118,39 +1171,39 @@ On Error GoTo Err
 gLogger.Log "Creating timeframe", ProcName, ModuleName
 
 If mChartSpec.toTime <> CDate(0) Then
-    Set mTimeframe = mTimeframes.AddHistorical(mPeriodLength, _
+    Set mTimeframe = mTimeframes.AddHistorical(mTimePeriod, _
                                 "", _
                                 mChartSpec.InitialNumberOfBars, _
                                 mChartSpec.FromTime, _
                                 mChartSpec.toTime, _
+                                , _
                                 mChartSpec.IncludeBarsOutsideSession)
 Else
-    Set mTimeframe = mTimeframes.Add(mPeriodLength, _
+    Set mTimeframe = mTimeframes.Add(mTimePeriod, _
                                 "", _
                                 mChartSpec.InitialNumberOfBars, _
+                                mChartSpec.FromTime, _
+                                , _
                                 mChartSpec.IncludeBarsOutsideSession, _
-                                IIf(mDataSource.IsTickReplay, True, False))
+                                mExcludeCurrentBar)
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Private Sub initialiseChart()
 Const ProcName As String = "initialiseChart"
 On Error GoTo Err
 
-Static notFirstTime As Boolean
-
 gLogger.Log "Initialising chart", ProcName, ModuleName
 
 Chart1.DisableDrawing
 
-If Not notFirstTime Then
-    Set mManager = CreateChartManager(mTimeframes.StudyManager, Chart1.Controller)
+If Not mInitialised Then
+    Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager)
     If Not mConfig Is Nothing Then mManager.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionStudies)
 
     If mChartStyle Is Nothing Then
@@ -1160,7 +1213,7 @@ If Not notFirstTime Then
     End If
 
     If Not mChartStyle Is Nothing Then Chart1.Style = mChartStyle
-    notFirstTime = True
+    mInitialised = True
 End If
 
 Set mPriceRegion = Chart1.Regions.Add(100, 25, , , ChartRegionNamePrice)
@@ -1183,38 +1236,38 @@ gLogger.Log "Loading chart", ProcName, ModuleName
 
 Chart1.DisableDrawing
 
-Chart1.PeriodLength = mPeriodLength
+Chart1.TimePeriod = mTimePeriod
 
-Chart1.SessionStartTime = mcontract.SessionStartTime
-Chart1.SessionEndTime = mcontract.SessionEndTime
+Chart1.SessionStartTime = mContract.SessionStartTime
+Chart1.SessionEndTime = mContract.SessionEndTime
 
-mPriceRegion.YScaleQuantum = mcontract.TickSize
-If mMinimumTicksHeight * mcontract.TickSize <> 0 Then
-    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mcontract.TickSize
+mPriceRegion.YScaleQuantum = mContract.TickSize
+If mMinimumTicksHeight * mContract.TickSize <> 0 Then
+    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mContract.TickSize
 End If
 mPriceRegion.PriceFormatter = createPriceFormatter
 
-mPriceRegion.Title.Text = mcontract.Specifier.LocalSymbol & _
-                " (" & mcontract.Specifier.Exchange & ") " & _
+mPriceRegion.title.Text = mContract.Specifier.LocalSymbol & _
+                " (" & mContract.Specifier.Exchange & ") " & _
                 TimeframeCaption
-mPriceRegion.Title.Color = vbBlue
+mPriceRegion.title.Color = vbBlue
 
-If mcontract.Specifier.secType <> SecurityTypes.SecTypeCash _
-    And mcontract.Specifier.secType <> SecurityTypes.SecTypeIndex _
+If mContract.Specifier.secType <> SecurityTypes.SecTypeCash _
+    And mContract.Specifier.secType <> SecurityTypes.SecTypeIndex _
 Then
     On Error Resume Next
-    Set mVolumeRegion = Chart1.Regions.item(ChartRegionNameVolume)
+    Set mVolumeRegion = Chart1.Regions.Item(ChartRegionNameVolume)
     On Error GoTo Err
 
     If mVolumeRegion Is Nothing Then Set mVolumeRegion = Chart1.Regions.Add(20, , , , ChartRegionNameVolume)
 
     mVolumeRegion.MinimumHeight = 10
     mVolumeRegion.IntegerYScale = True
-    mVolumeRegion.Title.Text = "Volume"
-    mVolumeRegion.Title.Color = vbBlue
+    mVolumeRegion.title.Text = "Volume"
+    mVolumeRegion.title.Color = vbBlue
 End If
 
-If Not mTimeframe.HistoricDataLoaded Then
+If mTimeframe.State <> TimeframeStateLoaded Then
     mLoadingText.Text = "Fetching historical data"
     setState ChartStates.ChartStateInitialised
     Chart1.EnableDrawing    ' causes the loading text to appear
@@ -1237,7 +1290,7 @@ Private Sub loadStudiesFromConfig()
 Const ProcName As String = "loadStudiesFromConfig"
 On Error GoTo Err
 
-mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.TradeStudy
+mManager.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionStudies), mTimeframe.BarStudy
 
 Exit Sub
 
@@ -1252,15 +1305,14 @@ On Error GoTo Err
 createTimeframe
 initialiseChart
 
-If mDataSource.State = MarketDataSourceStates.MarketDataSourceStateReady Or _
-    mDataSource.State = MarketDataSourceStates.MarketDataSourceStateRunning _
-Then
-    Set mcontract = mDataSource.Contract
+If mTimeframes.ContractFuture.IsAvailable Then
+    Set mContract = mTimeframes.ContractFuture.value
 
     setupStudies
     loadchart
 Else
-    mDataSource.AddStateChangeListener Me
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add mTimeframes.ContractFuture
 End If
 
 Exit Sub
@@ -1331,15 +1383,13 @@ Private Sub storeSettings()
 Const ProcName As String = "storeSettings"
 On Error GoTo Err
 
-Dim cs As ConfigurationSection
-
 If mConfig Is Nothing Then Exit Sub
 
-If mDataSource Is Nothing Then Exit Sub
+'If mDataSource Is Nothing Then Exit Sub
 
-mConfig.SetSetting ConfigSettingDataSourceKey, mDataSource.Key
-mConfig.SetSetting ConfigSettingPeriodLength, mPeriodLength.ToString
-mChartSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
+'mConfig.SetSetting ConfigSettingDataSourceKey, mKey
+mConfig.SetSetting ConfigSettingTimePeriod, mTimePeriod.ToString
+If Not mChartSpec Is Nothing Then mChartSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
 mConfig.SetSetting ConfigSettingIsHistoricChart, CStr(mIsHistoricChart)
 mConfig.SetSetting ConfigSettingBarFormatterFactoryName, mBarFormatterFactoryName
 mConfig.SetSetting ConfigSettingBarFormatterLibraryName, mBarFormatterLibraryName

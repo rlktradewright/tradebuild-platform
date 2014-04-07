@@ -99,7 +99,6 @@ End Sub
 
 Private Sub Task_Cancel()
 Const ProcName As String = "Task_Cancel"
-
 On Error GoTo Err
 
 If Not mCmd Is Nothing Then
@@ -118,12 +117,11 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-
 On Error GoTo Err
 
 connectToDB
@@ -132,10 +130,10 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal value As TaskContext)
 Set mTaskContext = value
 End Property
 
@@ -155,8 +153,6 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.connection)
 Const ProcName As String = "mConnection_ExecuteComplete"
-Dim s As String
-
 On Error GoTo Err
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
@@ -192,13 +188,14 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     
     If pError.Number = 3712 Then
         ' this error is "Operation has been cancelled by the user"
-        ' This occurs occasionally when running async, but I've no idea why
+        ' This should no longer happen, but we'll make the check just in case
         logMessage taskName & ": Error 3712 returned from ADO: operation cancelled by user: retrying", pProcName:=ProcName
         connectToDB
         If Not mAsynchronous Then doWriteBar
         Exit Sub
     End If
     
+    Dim s As String
     s = "Bar Writer: execution error " & vbCrLf & _
         gGenerateErrorMessage(pError) & _
         gGenerateConnectionErrorMessages(pConnection)
@@ -210,14 +207,12 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     End If
     
     If mAsynchronous Then
-        mTaskContext.Error pError.Number, ProjectName & "." & ModuleName & ":" & ProcName & vbCrLf & s
+        mTaskContext.Error pError.Number, s, ProjectName & "." & ModuleName & ":" & ProcName
     Else
-        Err.Raise pError.Number, _
-                    ProjectName & "." & ModuleName & ":" & ProcName, _
-                    s
+        Err.Raise pError.Number, , s
     End If
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": bar written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
@@ -242,7 +237,6 @@ End Sub
 Private Sub mConnector_Connected( _
                 ByVal pConnection As ADODB.connection)
 Const ProcName As String = "mConnector_Connected"
-
 On Error GoTo Err
 
 Set mConnection = pConnection
@@ -258,16 +252,13 @@ Private Sub mConnector_ConnectFailed( _
                 ByVal errorCode As Long, _
                 ByVal errorDesc As String)
 Const ProcName As String = "mConnector_ConnectFailed"
-
 On Error GoTo Err
 
 If mAsynchronous Then
     mTaskContext.Error errorCode, _
                         "Connection error " & vbCrLf & errorDesc
 Else
-    Err.Raise errorCode, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Connection error " & vbCrLf & errorDesc
+    Err.Raise errorCode, , "Connection error " & vbCrLf & errorDesc
 End If
 
 Exit Sub
@@ -306,9 +297,6 @@ Friend Sub WriteBar( _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long)
 Const ProcName As String = "WriteBar"
-
-
-
 On Error GoTo Err
 
 mAsynchronous = False
@@ -323,6 +311,8 @@ mVolume = volume
 mTickVolume = tickVolume
 mOpenInterest = openInterest
 
+If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+
 connectToDB
 
 doWriteBar
@@ -332,7 +322,7 @@ If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function WriteBarAsync( _
@@ -349,9 +339,6 @@ Friend Function WriteBarAsync( _
                 ByVal cookie As Variant, _
                 ByVal pTaskName As String) As TaskController
 Const ProcName As String = "WriteBarAsync"
-
-
-
 On Error GoTo Err
 
 mAsynchronous = True
@@ -368,6 +355,8 @@ mOpenInterest = openInterest
 
 mSuppliedTaskName = pTaskName
 
+If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+
 Set WriteBarAsync = StartTask(Me, _
                             PriorityNormal, _
                             taskName, _
@@ -376,7 +365,7 @@ Set WriteBarAsync = StartTask(Me, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@===============================================================================
@@ -385,27 +374,25 @@ End Function
 
 Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
-
-
 On Error GoTo Err
 
 Debug.Print "BarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 Set mCmd = Nothing
-If mConnector Is Nothing Then Set mConnector = mDB.GetConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
-mConnector.connect
+If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
+If mAsynchronous Then
+    mConnector.ConnectAsync
+Else
+    mConnector.Connect
+End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doWriteBar()
 Const ProcName As String = "doWriteBar"
-
-Dim param As ADODB.Parameter
-
-
 On Error GoTo Err
 
 If Not mCmd Is Nothing Then logMessage "mCmd is already set", ProcName
@@ -413,6 +400,8 @@ Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
 mCmd.CommandText = "WriteBarData"
+
+Dim param As ADODB.Parameter
 
 ' @InstrumentID
 Set param = mCmd.CreateParameter(, _
@@ -507,13 +496,11 @@ Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Execute()
 Const ProcName As String = "Execute"
-
-
 On Error GoTo Err
 
 Set mCmd.ActiveConnection = mConnection
@@ -530,7 +517,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -539,11 +526,12 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Function taskName() As String
 Const ProcName As String = "taskName"
+
 Static lTaskName
 If lTaskName = "" Then
     If mSuppliedTaskName <> "" Then

@@ -8,9 +8,9 @@ Begin VB.UserControl MultiChart
    ClientWidth     =   9480
    ScaleHeight     =   7140
    ScaleWidth      =   9480
-   Begin TradeBuildUI27.TradeBuildChart TBChart 
+   Begin TradingUI27.MarketChart TBChart 
       Align           =   1  'Align Top
-      Height          =   4095
+      Height          =   4335
       Index           =   0
       Left            =   0
       TabIndex        =   2
@@ -18,8 +18,7 @@ Begin VB.UserControl MultiChart
       Visible         =   0   'False
       Width           =   9480
       _ExtentX        =   16722
-      _ExtentY        =   7223
-      ChartBackColor  =   0
+      _ExtentY        =   7646
    End
    Begin MSComctlLib.Toolbar ControlToolbar 
       Height          =   330
@@ -65,7 +64,7 @@ Begin VB.UserControl MultiChart
             ImageIndex      =   2
          EndProperty
       EndProperty
-      Begin TradeBuildUI27.TimeframeSelector TimeframeSelector1 
+      Begin TradingUI27.TimeframeSelector TimeframeSelector1 
          Height          =   330
          Left            =   0
          TabIndex        =   3
@@ -156,45 +155,49 @@ Event ChartStateChanged(ByVal index As Long, ev As StateChangeEventData)
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                    As String = "MultiChart"
+Private Const ModuleName                                As String = "MultiChart"
 
 Private Const ConfigSectionChartSpecifier               As String = "ChartSpecifier"
-Private Const ConfigSectionTradeBuildCharts             As String = "TradeBuildCharts"
-Private Const ConfigSectionTradeBuildChart              As String = "TradeBuildChart"
+Private Const ConfigSectionMarketCharts                 As String = "MarketCharts"
+Private Const ConfigSectionMarketChart                  As String = "MarketChart"
 
 Private Const ConfigSettingBarFormatterFactoryName      As String = "&BarFormatterFactoryName"
 Private Const ConfigSettingBarFormatterLibraryName      As String = "&BarFormatterLibraryName"
 Private Const ConfigSettingChartStyle                   As String = "&ChartStyle"
 Private Const ConfigSettingCurrentChart                 As String = "&CurrentChart"
-Private Const ConfigSettingTickerKey                    As String = "&TickerKey"
-Private Const ConfigSettingWorkspace                    As String = "&Workspace"
+Private Const ConfigSettingDataSourceKey                As String = "&DataSourceKey"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTicker                             As Ticker
 Private mStyle                              As ChartStyle
 Private mSpec                               As ChartSpecifier
 Private mIsHistoric                         As Boolean
 
 Private mCurrentIndex                       As Long
 
+Private mBarFormatterLibManager             As BarFormatterLibManager
+
 Private mBarFormatterFactoryName            As String
 Private mBarFormatterLibraryName            As String
 
-Private mChangeListeners                    As Collection
+Private mChangeListeners                    As Listeners
 
 Private mConfig                             As ConfigurationSection
 
-Private mCount                             As Long
+Private mCount                              As Long
+
+Private mTimeframes                         As Timeframes
+
+Private mExcludeCurrentBar                  As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub UserControl_Initialize()
-Set mChangeListeners = New Collection
+Set mChangeListeners = New Listeners
 ChartSelector.Tabs.Clear
 TBChart(0).Visible = True
 End Sub
@@ -223,7 +226,6 @@ End Sub
 
 Private Sub ChartSelector_Click()
 Const ProcName As String = "ChartSelector_Click"
-Dim failpoint As Long
 On Error GoTo Err
 
 switchToChart ChartSelector.SelectedItem.index
@@ -237,7 +239,6 @@ End Sub
 
 Private Sub ControlToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
 Const ProcName As String = "ControlToolbar_ButtonClick"
-Dim failpoint As Long
 On Error GoTo Err
 
 Select Case UCase$(Button.Key)
@@ -267,9 +268,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities30.StateChangeEventData)
+Private Sub TBChart_StateChange(index As Integer, ev As TWUtilities40.StateChangeEventData)
 Const ProcName As String = "TBChart_StateChange"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = getIndexFromChartControlIndex(index)
@@ -288,12 +288,11 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TBChart_TimeframeChange(index As Integer)
-Const ProcName As String = "TBChart_TimeframeChange"
-Dim failpoint As Long
+Private Sub TBChart_TimePeriodChange(index As Integer)
+Const ProcName As String = "TBChart_TimePeriodChange"
 On Error GoTo Err
 
-ChartSelector.Tabs(getIndexFromChartControlIndex(index)).caption = TBChart(index).PeriodLength.ToShortString
+ChartSelector.Tabs(getIndexFromChartControlIndex(index)).caption = TBChart(index).TimePeriod.ToShortString
 fireChange MultiChartPeriodLengthChanged
 
 Exit Sub
@@ -304,15 +303,14 @@ End Sub
 
 Private Sub TimeframeSelector1_Click()
 Const ProcName As String = "TimeframeSelector1_Click"
-Dim failpoint As Long
 On Error GoTo Err
 
 If ControlToolbar.Buttons("add").value = tbrPressed Then
-    Add TimeframeSelector1.TimeframeDesignator
+    Add TimeframeSelector1.TimePeriod
     hideTimeframeSelector
     ControlToolbar.Buttons("add").value = tbrUnpressed
 Else
-    Chart.ChangePeriodLength TimeframeSelector1.TimeframeDesignator
+    Chart.ChangeTimePeriod TimeframeSelector1.TimePeriod
     hideTimeframeSelector
     ControlToolbar.Buttons("change").value = tbrUnpressed
 End If
@@ -334,7 +332,6 @@ End Sub
 Public Property Get BaseChartController( _
                 Optional ByVal index As Long = -1) As ChartController
 Const ProcName As String = "BaseChartController"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -343,15 +340,14 @@ Set BaseChartController = getChartFromIndex(index).BaseChartController
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 ' do not make this Public because the value returned cannot be handled by non-friend
 ' components
 Friend Property Get Chart( _
-                Optional ByVal index As Long = -1) As TradeBuildChart
+                Optional ByVal index As Long = -1) As MarketChart
 Const ProcName As String = "Chart"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -360,13 +356,12 @@ Set Chart = getChartFromIndex(index)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ChartManager( _
                 Optional ByVal index As Long = -1) As ChartManager
 Const ProcName As String = "ChartManager"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -375,12 +370,11 @@ Set ChartManager = getChartFromIndex(index).ChartManager
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As Long
 On Error GoTo Err
 
 Count = mCount
@@ -388,28 +382,32 @@ Count = mCount
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ConfigurationSection( _
                 ByVal value As ConfigurationSection)
 Const ProcName As String = "ConfigurationSection"
-Dim failpoint As Long
 On Error GoTo Err
 
-If value Is mConfig Then Exit Property
+If mConfig Is value Then Exit Property
+If Not mConfig Is Nothing Then mConfig.Remove
+If value Is Nothing Then Exit Property
+
 Set mConfig = value
+
+gLogger.Log "MultiChart added to config at: " & mConfig.Path, ProcName, ModuleName
+
 storeSettings
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -417,13 +415,12 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As Long
 On Error GoTo Err
 
 UserControl.Enabled = value
@@ -432,13 +429,12 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LoadingText( _
                 Optional ByVal index As Long = -1) As Text
 Const ProcName As String = "LoadingText"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -447,13 +443,12 @@ Set LoadingText = getChartFromIndex(index).LoadingText
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PriceRegion( _
                 Optional ByVal index As Long = -1) As ChartRegion
 Const ProcName As String = "PriceRegion"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -462,7 +457,7 @@ Set PriceRegion = getChartFromIndex(index).PriceRegion
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Style(ByVal pStyle As ChartStyle)
@@ -470,7 +465,7 @@ Const ProcName As String = "Style"
 On Error GoTo Err
 
 Dim i As Long
-Dim lChart As TradeBuildChart
+Dim lChart As MarketChart
 
 Set mStyle = pStyle
 
@@ -478,7 +473,7 @@ If Not mConfig Is Nothing Then
     If mStyle Is Nothing Then
         mConfig.SetSetting ConfigSettingChartStyle, ""
     Else
-        mConfig.SetSetting ConfigSettingChartStyle, mStyle.name
+        mConfig.SetSetting ConfigSettingChartStyle, mStyle.Name
     End If
 End If
 
@@ -490,13 +485,12 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get State( _
                 Optional ByVal index As Long = -1) As ChartStates
 Const ProcName As String = "State"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -505,26 +499,12 @@ State = getChartFromIndex(index).State
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get Ticker() As Ticker
-Const ProcName As String = "Ticker"
-Dim failpoint As Long
-On Error GoTo Err
-
-Set Ticker = mTicker
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Timeframe( _
                 Optional ByVal index As Long = -1) As Timeframe
 Const ProcName As String = "Timeframe"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -533,28 +513,26 @@ Set Timeframe = getChartFromIndex(index).Timeframe
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimePeriod( _
                 Optional ByVal index As Long = -1) As TimePeriod
 Const ProcName As String = "TimePeriod"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
-Set TimePeriod = getChartFromIndex(index).PeriodLength
+Set TimePeriod = getChartFromIndex(index).TimePeriod
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get VolumeRegion( _
                 Optional ByVal index As Long = -1) As ChartRegion
 Const ProcName As String = "VolumeRegion"
-Dim failpoint As Long
 On Error GoTo Err
 
 index = checkIndex(index)
@@ -563,7 +541,7 @@ Set VolumeRegion = getChartFromIndex(index).VolumeRegion
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -571,13 +549,12 @@ End Property
 '@================================================================================
 
 Public Function Add( _
-                ByVal pPeriodLength As TimePeriod) As TradeBuildChart
-Dim lChart As TradeBuildChart
-Dim lTab As MSComctlLib.Tab
-
+                ByVal pPeriodLength As TimePeriod) As MarketChart
 Const ProcName As String = "Add"
-Dim failpoint As Long
 On Error GoTo Err
+
+Dim lChart As MarketChart
+Dim lTab As MSComctlLib.Tab
 
 Set lChart = loadChartControl
 
@@ -587,11 +564,11 @@ Set lTab = addTab(pPeriodLength)
 ' the ChartStates.ChartStateInitialised and ChartStates.ChartStateLoaded events
 fireChange MultiChartAdd
 
-If Not mConfig Is Nothing Then
-    lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts).AddConfigurationSection(ConfigSectionTradeBuildChart & "(" & GenerateGUIDString & ")")
-End If
+lChart.ShowChart mTimeframes, pPeriodLength, mSpec, mStyle, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar
 
-lChart.ShowChart mTicker, pPeriodLength, mSpec, mStyle, mBarFormatterFactoryName, mBarFormatterLibraryName
+If Not mConfig Is Nothing Then
+    lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
+End If
 
 lTab.Selected = True
 
@@ -600,39 +577,36 @@ fireChange MultiChartSelectionChanged
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddChangeListener( _
-                ByVal listener As ChangeListener)
+                ByVal pListener As ChangeListener)
 Const ProcName As String = "AddChangeListener"
-Dim failpoint As Long
 On Error GoTo Err
 
-mChangeListeners.Add listener, CStr(ObjPtr(listener))
+mChangeListeners.Add pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
                
-Public Sub ChangePeriodLength(ByVal pNewPeriodLength As TimePeriod)
+Public Sub ChangePeriodLength(ByVal pNewTimePeriod As TimePeriod)
 Const ProcName As String = "ChangePeriodLength"
-Dim failpoint As Long
 On Error GoTo Err
 
-Chart.ChangePeriodLength pNewPeriodLength
+Chart.ChangeTimePeriod pNewTimePeriod
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Clear()
 Const ProcName As String = "Clear"
-Dim failpoint As Long
 On Error GoTo Err
 
 Do While ChartSelector.Tabs.Count <> 0
@@ -642,7 +616,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub FocusChart()
@@ -660,10 +634,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
-Dim i As Long
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+Dim i As Long
 For i = 1 To mCount
     getChartFromIndex(i).Finish
     unloadChartControl i
@@ -673,21 +647,27 @@ TBChart(0).Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
-                ByVal pTicker As Ticker, _
-                Optional ByVal pSpec As ChartSpecifier, _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                ByVal pSpec As ChartSpecifier, _
                 Optional ByVal pStyle As ChartStyle, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager, _
                 Optional ByVal pBarFormatterFactoryName As String, _
                 Optional ByVal pBarFormatterLibraryName As String, _
+                Optional ByVal pExcludeCurrentBar As Boolean, _
                 Optional ByVal pBackColor As Long = &HC0C0C0)
 Const ProcName As String = "Initialise"
-Dim failpoint As Long
 On Error GoTo Err
 
-Set mTicker = pTicker
+AssertArgument pBarFormatterFactoryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterFactoryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument pBarFormatterLibraryName = "" Or Not pBarFormatterLibManager Is Nothing, "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "") Or (pBarFormatterLibraryName <> "" And pBarFormatterFactoryName <> ""), "If pBarFormatterLibraryName is not blank then pBarFormatterLibManagermust be supplied"
+
+Set mTimeframes = pTimeframes
 
 Set mSpec = pSpec
 
@@ -699,41 +679,47 @@ End If
 
 TBChart(0).ChartBackColor = pBackColor
 mIsHistoric = (mSpec.toTime <> 0)
+
+Set mBarFormatterLibManager = pBarFormatterLibManager
 mBarFormatterFactoryName = pBarFormatterFactoryName
 mBarFormatterLibraryName = pBarFormatterLibraryName
 
-TimeframeSelector1.Initialise
+mExcludeCurrentBar = pExcludeCurrentBar
+
+TimeframeSelector1.Initialise pTimePeriodValidator
 
 storeSettings
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function LoadFromConfig( _
-                ByVal config As ConfigurationSection) As Boolean
-Dim cs As ConfigurationSection
-Dim currentChartIndex As Long
-
+                ByVal pConfig As ConfigurationSection, _
+                ByVal pTimeframes As Timeframes, _
+                ByVal pTimePeriodValidator As ITimePeriodValidator, _
+                Optional ByVal pBarFormatterLibManager As BarFormatterLibManager) As Boolean
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mConfig = config
-If mConfig.GetSetting(ConfigSettingWorkspace) = "" Or _
-    mConfig.GetSetting(ConfigSettingTickerKey) = "" _
-Then
-    Exit Function
-End If
+AssertArgument Not pConfig Is Nothing, "pConfig cannot be Nothing"
 
-Set mTicker = TradeBuildAPI.WorkSpaces(mConfig.GetSetting(ConfigSettingWorkspace)).Tickers(mConfig.GetSetting(ConfigSettingTickerKey))
+Set mConfig = pConfig
+
+gLogger.Log "Loading MultiChart from config at: " & mConfig.Path, ProcName, ModuleName
+
+Set mTimeframes = pTimeframes
+Set mBarFormatterLibManager = pBarFormatterLibManager
+TimeframeSelector1.Initialise pTimePeriodValidator
+
 Set mSpec = LoadChartSpecifierFromConfig(mConfig.GetConfigurationSection(ConfigSectionChartSpecifier))
 
 Dim lStyleName As String
 lStyleName = mConfig.GetSetting(ConfigSettingChartStyle, "")
 If ChartStylesManager.Contains(lStyleName) Then
-    Set mStyle = ChartStylesManager.item(lStyleName)
+    Set mStyle = ChartStylesManager.Item(lStyleName)
 Else
     Set mStyle = ChartStylesManager.DefaultStyle
 End If
@@ -743,12 +729,12 @@ mBarFormatterLibraryName = mConfig.GetSetting(ConfigSettingBarFormatterLibraryNa
 
 mIsHistoric = (mSpec.toTime <> 0)
 
-TimeframeSelector1.Initialise
-
+Dim currentChartIndex As Long
 currentChartIndex = CLng(mConfig.GetSetting(ConfigSettingCurrentChart, "1"))
 
-For Each cs In mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts)
-    addFromConfig cs
+Dim cs As ConfigurationSection
+For Each cs In mConfig.AddConfigurationSection(ConfigSectionMarketCharts)
+    AddFromConfig cs
 Next
 
 If ChartSelector.Tabs.Count > 0 Then SelectChart currentChartIndex
@@ -759,23 +745,17 @@ Exit Function
 
 Err:
 gHandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pModuleName:=ModuleName
-
 LoadFromConfig = False
 End Function
 
 Public Sub Remove( _
                 ByVal index As Long)
-Dim nxtIndex As Long
-
 Const ProcName As String = "Remove"
-Dim failpoint As Long
 On Error GoTo Err
 
-If index > Count Or index < 1 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Index must not be less than 1 or greater than Count"
-End If
+Dim nxtIndex As Long
+
+AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
 nxtIndex = nextIndex(index)
 closeChart index
@@ -793,38 +773,37 @@ fireChange MultiChartSelectionChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub RemoveChangeListener(ByVal listener As ChangeListener)
+Public Sub RemoveChangeListener(ByVal pListener As ChangeListener)
 Const ProcName As String = "RemoveChangeListener"
-Dim failpoint As Long
 On Error GoTo Err
 
-mChangeListeners.Remove ObjPtr(listener)
+mChangeListeners.Remove pListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
 Const ProcName As String = "RemoveFromConfig"
-Dim failpoint As Long
 On Error GoTo Err
+
+gLogger.Log "MultiChart removed from config at: " & mConfig.Path, ProcName, ModuleName
 
 mConfig.Remove
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ScrollToTime(ByVal pTime As Date)
 Const ProcName As String = "ScrollToTime"
-Dim failpoint As Long
 On Error GoTo Err
 
 Chart.ScrollToTime pTime
@@ -832,62 +811,55 @@ Chart.ScrollToTime pTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SelectChart( _
                 ByVal index As Long)
 Const ProcName As String = "SelectChart"
-Dim failpoint As Long
 On Error GoTo Err
 
-If index > Count Or index < 1 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Index must not be less than 1 or greater than Count"
-End If
+AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
 ChartSelector.Tabs(index).Selected = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub addFromConfig( _
+Private Sub AddFromConfig( _
                 ByVal chartSect As ConfigurationSection)
-Dim lChart As TradeBuildChart
-Dim lTab As MSComctlLib.Tab
-
-Const ProcName As String = "addFromConfig"
-Dim failpoint As Long
+Const ProcName As String = "AddFromConfig"
 On Error GoTo Err
 
+Dim lChart As MarketChart
 Set lChart = loadChartControl
+
+Dim lTab As MSComctlLib.Tab
 Set lTab = addTab(Nothing)
 
-lChart.LoadFromConfig chartSect, True
+lChart.LoadFromConfig mTimeframes, chartSect, mBarFormatterLibManager, True
 
-lTab.caption = lChart.PeriodLength.ToShortString
+lTab.caption = lChart.TimePeriod.ToShortString
 
 fireChange MultiChartAdd
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function addTab( _
                 ByVal pPeriodLength As TimePeriod) As MSComctlLib.Tab
 
 Const ProcName As String = "addTab"
-Dim failpoint As Long
 On Error GoTo Err
 
 If pPeriodLength Is Nothing Then
@@ -904,46 +876,35 @@ If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Cha
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function checkIndex( _
                 ByVal index As Long) As Long
 Const ProcName As String = "checkIndex"
-Dim failpoint As Long
 On Error GoTo Err
 
 If index = -1 Then
-    If mCurrentIndex < 1 Then
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "No current chart"
-    Else
-        index = mCurrentIndex
-    End If
+    Assert mCurrentIndex >= 1, "No current chart"
+    index = mCurrentIndex
 End If
 
-If index > Count Or index < 1 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Index must not be less than 1 or greater than Count"
-End If
+AssertArgument index <= Count And index >= 1, "Index must not be less than 1 or greater than Count"
 
 checkIndex = index
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub closeChart( _
                 ByVal index As Long)
-Dim lChart As TradeBuildChart
 Const ProcName As String = "closeChart"
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim lChart As MarketChart
 Set lChart = getChartFromIndex(index)
 lChart.RemoveFromConfig
 lChart.Finish
@@ -959,20 +920,20 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As MultiChartChangeTypes)
+Const ProcName As String = "fireChange"
+On Error GoTo Err
+
 Dim listener As ChangeListener
 Dim ev As ChangeEventData
-Const ProcName As String = "fireChange"
-Dim failpoint As Long
-On Error GoTo Err
 
 Set ev.Source = Me
 ev.changeType = changeType
-For Each listener In mChangeListeners
+For Each listener In mChangeListeners.CurrentListeners
     listener.Change ev
 Next
 RaiseEvent Change(ev)
@@ -980,12 +941,11 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getChartControlIndexFromIndex(index) As Long
 Const ProcName As String = "getChartControlIndexFromIndex"
-Dim failpoint As Long
 On Error GoTo Err
 
 getChartControlIndexFromIndex = ChartSelector.Tabs(index).Tag
@@ -993,12 +953,11 @@ getChartControlIndexFromIndex = ChartSelector.Tabs(index).Tag
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getChartFromIndex(index) As TradeBuildChart
+Private Function getChartFromIndex(index) As MarketChart
 Const ProcName As String = "getChartFromIndex"
-Dim failpoint As Long
 On Error GoTo Err
 
 Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index)).object
@@ -1006,15 +965,14 @@ Set getChartFromIndex = TBChart(getChartControlIndexFromIndex(index)).object
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getIndexFromChartControlIndex(index) As Long
-Dim i As Long
 Const ProcName As String = "getIndexFromChartControlIndex"
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim i As Long
 For i = 1 To ChartSelector.Tabs.Count
     If getChartControlIndexFromIndex(i) = index Then
         getIndexFromChartControlIndex = i
@@ -1025,15 +983,15 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub hideChart( _
                 ByVal index As Long)
-Dim lChart As TradeBuildChart
 Const ProcName As String = "hideChart"
-Dim failpoint As Long
 On Error GoTo Err
+
+Dim lChart As MarketChart
 
 If index = 0 Or index > Count Then Exit Sub
 Set lChart = getChartFromIndex(index)
@@ -1043,12 +1001,11 @@ TBChart(getChartControlIndexFromIndex(index)).Visible = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub hideTimeframeSelector()
 Const ProcName As String = "hideTimeframeSelector"
-Dim failpoint As Long
 On Error GoTo Err
 
 ControlToolbar.Buttons("selecttimeframe").Width = 0
@@ -1060,14 +1017,14 @@ resize
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function loadChartControl() As TradeBuildChart
+Private Function loadChartControl() As MarketChart
 Const ProcName As String = "loadChartControl"
 On Error GoTo Err
 
-load TBChart(TBChart.UBound + 1)
+Load TBChart(TBChart.UBound + 1)
 TBChart(TBChart.UBound).align = vbAlignTop
 TBChart(TBChart.UBound).Top = 0
 TBChart(TBChart.UBound).Height = ChartSelector.Top
@@ -1077,13 +1034,12 @@ Set loadChartControl = TBChart(TBChart.UBound).object
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function nextIndex( _
                 ByVal index As Long) As Long
 Const ProcName As String = "nextIndex"
-Dim failpoint As Long
 On Error GoTo Err
 
 If index > 1 Then
@@ -1097,12 +1053,11 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub resize()
 Const ProcName As String = "resize"
-Dim failpoint As Long
 On Error GoTo Err
 
 If UserControl.Height < 2000 Then UserControl.Height = 2000
@@ -1121,15 +1076,15 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ShowChart( _
-                ByVal index As Long) As TradeBuildChart
-Dim lChart As TradeBuildChart
+                ByVal index As Long) As MarketChart
 Const ProcName As String = "ShowChart"
-Dim failpoint As Long
 On Error GoTo Err
+
+Dim lChart As MarketChart
 
 If index = 0 Then Exit Function
 
@@ -1151,19 +1106,18 @@ mCurrentIndex = index
 
 If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, index
 
-TimeframeSelector1.selectTimeframe lChart.PeriodLength
+TimeframeSelector1.SelectTimeframe lChart.TimePeriod
 
 Set ShowChart = lChart
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub showTimeframeSelector()
 Const ProcName As String = "showTimeframeSelector"
-Dim failpoint As Long
 On Error GoTo Err
 
 ControlToolbar.Buttons("selecttimeframe").Width = TimeframeSelector1.Width
@@ -1175,50 +1129,43 @@ resize
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub storeSettings()
-Dim i As Long
-Dim lChart As TradeBuildChart
-Dim cs As ConfigurationSection
-
 Const ProcName As String = "storeSettings"
-Dim failpoint As Long
 On Error GoTo Err
 
 If mConfig Is Nothing Then Exit Sub
 
-If Not mTicker Is Nothing Then
-    mConfig.SetSetting ConfigSettingWorkspace, mTicker.Workspace.name
-    mConfig.SetSetting ConfigSettingTickerKey, mTicker.Key
-End If
+mSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
 
-If Not mSpec Is Nothing Then mSpec.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionChartSpecifier)
-
-If Not mStyle Is Nothing Then mConfig.SetSetting ConfigSettingChartStyle, mStyle.name
+If Not mStyle Is Nothing Then mConfig.SetSetting ConfigSettingChartStyle, mStyle.Name
 
 mConfig.SetSetting ConfigSettingBarFormatterFactoryName, mBarFormatterFactoryName
 mConfig.SetSetting ConfigSettingBarFormatterLibraryName, mBarFormatterLibraryName
 
-Set cs = mConfig.AddConfigurationSection(ConfigSectionTradeBuildCharts)
+Dim cs As ConfigurationSection
+Set cs = mConfig.AddConfigurationSection(ConfigSectionMarketCharts)
+
+Dim i As Long
 For i = 1 To TBChart.UBound
     If Not TBChart(i) Is Nothing Then
+        Dim lChart As MarketChart
         Set lChart = TBChart(i).object
-        lChart.ConfigurationSection = cs.AddConfigurationSection(ConfigSectionTradeBuildChart & "(" & GenerateGUIDString & ")")
+        lChart.ConfigurationSection = cs.AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
     End If
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub switchToChart( _
                 ByVal index As Long)
 Const ProcName As String = "switchToChart"
-Dim failpoint As Long
 On Error GoTo Err
 
 If index = mCurrentIndex Then Exit Sub
@@ -1229,8 +1176,7 @@ ShowChart index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unloadChartControl(ByVal index As Long)
@@ -1243,5 +1189,5 @@ mCount = mCount - 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub

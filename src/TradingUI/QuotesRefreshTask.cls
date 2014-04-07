@@ -47,9 +47,8 @@ Private Const ModuleName                            As String = "QuotesRefreshTa
 '@================================================================================
 
 Private mTaskContext                                As TaskContext
-Private mTickers                                    As Tickers
-Private mIndex                                      As Long
-Private mListener                                   As QuoteListener
+Private mTickersEn                                  As Enumerator
+Private mListener                                   As IQuoteListener
 
 '@================================================================================
 ' Class Event Handlers
@@ -68,7 +67,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
@@ -81,22 +80,23 @@ If mTaskContext.CancelPending Then
     Exit Sub
 End If
 
-mIndex = mIndex + 1
-If mIndex > mTickers.Count Then
+If Not mTickersEn.MoveNext Then
     mTaskContext.Finish Empty, False
     Exit Sub
 End If
 
-mTickers.Item(mIndex).RefreshQuotes mListener
+Dim lTicker As IMarketDataSource
+Set lTicker = mTickersEn.Current
+lTicker.RefreshQuotes mListener
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
@@ -104,12 +104,12 @@ Private Property Get Task_TaskName() As String
 Const ProcName As String = "Task_TaskName"
 On Error GoTo Err
 
-Task_TaskName = mTaskContext.name
+Task_TaskName = mTaskContext.Name
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName, pProjectName:=ProjectName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -125,10 +125,10 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pTickers As Tickers, _
-                ByVal listener As QuoteListener)
-Set mTickers = pTickers
-Set mListener = listener
+                ByVal pTickers As EnumerableCollection, _
+                ByVal pListener As IQuoteListener)
+Set mTickersEn = pTickers.Enumerator
+Set mListener = pListener
 End Sub
 
 '@================================================================================

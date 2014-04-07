@@ -29,10 +29,10 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                        As String = "TradingDO26"
+Public Const ProjectName                        As String = "TradingDO27"
 Private Const ModuleName                        As String = "Globals"
 
-Public Const ConnectCompletionTimeoutMillisecs  As Long = 2000
+Public Const ConnectCompletionTimeoutMillisecs  As Long = 5000
 
 Public Const GenericColumnId                    As String = "ID"
 Public Const GenericColumnName                  As String = "NAME"
@@ -156,8 +156,6 @@ Public Const TimeZoneColumnName                 As String = GenericColumnName
 
 Private mSqlBadWords()                          As Variant
 
-Private mLogger                                 As Logger
-
 Private mLogTokens(9)                           As String
 
 '@================================================================================
@@ -176,9 +174,10 @@ Private mLogTokens(9)                           As String
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger(InfoTypeTradingDO)
-Set gLogger = mLogger
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger(InfoTypeTradingDO, ProjectName)
+Set gLogger = sLogger
 End Property
 
 '@================================================================================
@@ -287,16 +286,11 @@ End Function
 
 
 Public Function gContractFromInstrument( _
-                ByVal instrument As instrument) As Contract
-Dim lContractBuilder As ContractBuilder
-Dim contractSpec As ContractSpecifier
-Dim LocalSymbol As InstrumentLocalSymbol
-Dim providerIDs As TWUtilities30.Parameters
-
+                ByVal instrument As instrument) As IContract
 Const ProcName As String = "gContractFromInstrument"
-Dim failpoint As String
 On Error GoTo Err
 
+Dim contractSpec As IContractSpecifier
 Set contractSpec = CreateContractSpecifier(instrument.ShortName, _
                                         instrument.Symbol, _
                                         instrument.ExchangeName, _
@@ -306,6 +300,7 @@ Set contractSpec = CreateContractSpecifier(instrument.ShortName, _
                                         instrument.StrikePrice, _
                                         instrument.OptionRight)
 
+Dim lContractBuilder As ContractBuilder
 Set lContractBuilder = CreateContractBuilder(contractSpec)
 With lContractBuilder
     .DaysBeforeExpiryToSwitch = instrument.DaysBeforeExpiryToSwitch
@@ -313,15 +308,16 @@ With lContractBuilder
     .ExpiryDate = instrument.ExpiryDate
     .TickSize = instrument.TickSize
     .Multiplier = instrument.TickValue / instrument.TickSize
-    .TimeZone = GetTimeZone(instrument.TimeZoneName)
+    .TimeZoneName = instrument.TimeZoneName
     
     .SessionEndTime = instrument.SessionEndTime
     .SessionStartTime = instrument.SessionStartTime
 
 If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     If instrument.LocalSymbols.Count > 0 Then
-        Set providerIDs = New TWUtilities30.Parameters
+        Dim providerIDs As New TWUtilities40.Parameters
 
+        Dim LocalSymbol As InstrumentLocalSymbol
         For Each LocalSymbol In instrument.LocalSymbols
             providerIDs.SetParameterValue LocalSymbol.ProviderKey, LocalSymbol.LocalSymbol
         Next
@@ -335,7 +331,7 @@ Set gContractFromInstrument = lContractBuilder.Contract
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gDatabaseTypeFromString( _
@@ -375,7 +371,7 @@ Dim lError As ADODB.Error
 Dim errMsg As String
 
 Const ProcName As String = "gGenerateConnectionErrorMessages"
-Dim failpoint As String
+
 On Error GoTo Err
 
 For Each lError In pConnection.Errors
@@ -388,13 +384,13 @@ gGenerateConnectionErrorMessages = errMsg
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGenerateErrorMessage( _
                 ByVal pError As ADODB.Error)
 Const ProcName As String = "gGenerateErrorMessage"
-Dim failpoint As String
+
 On Error GoTo Err
 
 gGenerateErrorMessage = _
@@ -406,7 +402,7 @@ gGenerateErrorMessage = _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetSequenceNumber() As Long
@@ -451,36 +447,18 @@ Public Function gIsStateSet( _
 gIsStateSet = ((value And stateToTest) = stateToTest)
 End Function
 
-Public Sub gLog(ByRef pMsg As String, _
-                ByRef pProjName As String, _
-                ByRef pModName As String, _
-                ByRef pProcName As String, _
-                Optional ByRef pMsgQualifier As String = vbNullString, _
-                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-If Not gLogger.IsLoggable(pLogLevel) Then Exit Sub
-mLogTokens(0) = "["
-mLogTokens(1) = pProjName
-mLogTokens(2) = "."
-mLogTokens(3) = pModName
-mLogTokens(4) = ":"
-mLogTokens(5) = pProcName
-mLogTokens(6) = "] "
-mLogTokens(7) = pMsg
-If Len(pMsgQualifier) <> 0 Then
-    mLogTokens(8) = ": "
-    mLogTokens(9) = pMsgQualifier
-Else
-    mLogTokens(8) = vbNullString
-    mLogTokens(9) = vbNullString
-End If
-
-gLogger.Log pLogLevel, Join(mLogTokens, "")
-End Sub
-
 Public Function gRoundTimeToSecond( _
                 ByVal timestamp As Date) As Date
 gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
+
+Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
+If IsObject(pSource) Then
+    Set pTarget = pSource
+Else
+    pTarget = pSource
+End If
+End Sub
 
 Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
 gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute

@@ -46,7 +46,9 @@ Private Const ModuleName                            As String = "PriceFormatter"
 ' Member variables
 '@================================================================================
 
-Private mcontract As Contract
+Private mContract                                   As Contract
+Private mSecType                                    As SecurityTypes
+Private mTickSize                                   As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -61,12 +63,12 @@ Private Function IPriceFormatter_FormatPrice( _
 Const ProcName As String = "IPriceFormatter_FormatPrice"
 On Error GoTo Err
 
-IPriceFormatter_FormatPrice = mcontract.FormatPrice(pValue)
+IPriceFormatter_FormatPrice = FormatPrice(pValue, mSecType, mTickSize)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Let IPriceFormatter_IntegerYScale(ByVal RHS As Boolean)
@@ -90,7 +92,9 @@ End Property
 '@================================================================================
 
 Friend Property Let Contract(ByVal value As Contract)
-Set mcontract = value
+Set mContract = value
+mSecType = mContract.Specifier.secType
+mTickSize = mContract.TickSize
 End Property
 
 '@================================================================================

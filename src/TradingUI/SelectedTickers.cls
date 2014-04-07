@@ -47,26 +47,14 @@ Private Const ModuleName                As String = "SelectedTickers"
 ' Member variables
 '@================================================================================
 
-Private mTickers As Collection
+Private mTickers                        As New EnumerableCollection
 
-Private mChanging As Boolean
-Private mChanged As Boolean
+Private mChanging                       As Boolean
+Private mChanged                        As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Const ProcName As String = "Class_Initialize"
-On Error GoTo Err
-
-Set mTickers = New Collection
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -84,17 +72,21 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pTicker As Ticker)
+Friend Sub Add(ByVal pTicker As IMarketDataSource)
+Const ProcName As String = "Add"
 On Error GoTo Err
-mTickers.Add pTicker, CStr(ObjPtr(pTicker))
+
+mTickers.Add pTicker
 If Not mChanging Then
     RaiseEvent SelectionChanged
 Else
     mChanged = True
 End If
+
 Exit Sub
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub BeginChange()
@@ -116,7 +108,7 @@ Const ProcName As String = "Clear"
 On Error GoTo Err
 
 If mTickers.Count = 0 Then Exit Sub
-Set mTickers = New Collection
+mTickers.Clear
 If Not mChanging Then
     RaiseEvent SelectionChanged
 Else
@@ -126,22 +118,24 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Contains( _
-                ByVal pTicker As Ticker) As Boolean
+                ByVal pTicker As IMarketDataSource) As Boolean
+Const ProcName As String = "Contains"
 On Error GoTo Err
-mTickers.item CStr(ObjPtr(pTicker))
-Contains = True
+
+Contains = mTickers.Contains(pTicker)
+
 Exit Function
 
 Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Count() As Long
 Const ProcName As String = "Count"
-Dim failpoint As String
 On Error GoTo Err
 
 Count = mTickers.Count
@@ -149,34 +143,33 @@ Count = mTickers.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function item(ByVal index As Variant) As Ticker
-Attribute item.VB_UserMemId = 0
+Public Function Item(ByVal pIndex As Variant) As IMarketDataSource
+Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "item"
-Dim failpoint As String
 On Error GoTo Err
 
-Set item = mTickers.item(index)
+Set Item = mTickers.Item(pIndex)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mTickers.[_NewEnum]
+Set NewEnum = mTickers.Enumerator
 End Function
 
-Friend Sub Remove(ByVal pTicker As Ticker)
+Friend Sub Remove(ByVal pTicker As IMarketDataSource)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mTickers.Remove CStr(ObjPtr(pTicker))
+mTickers.Remove pTicker
 If Not mChanging Then
     RaiseEvent SelectionChanged
 Else

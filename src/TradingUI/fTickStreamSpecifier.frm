@@ -1,14 +1,27 @@
 VERSION 5.00
 Begin VB.Form fTickStreamSpecifier 
+   BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Tickstream specifier"
-   ClientHeight    =   3930
-   ClientLeft      =   60
-   ClientTop       =   450
+   ClientHeight    =   4455
+   ClientLeft      =   45
+   ClientTop       =   435
    ClientWidth     =   7665
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3930
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
+   ScaleHeight     =   4455
    ScaleWidth      =   7665
+   ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin TradingUI27.TickStreamSpecifier TickStreamSpecifier1 
+      Height          =   4215
+      Left            =   120
+      TabIndex        =   0
+      Top             =   120
+      Width           =   6615
+      _ExtentX        =   11853
+      _ExtentY        =   7408
+   End
    Begin VB.CommandButton OkButton 
       Caption         =   "Ok"
       Enabled         =   0   'False
@@ -27,21 +40,13 @@ Begin VB.Form fTickStreamSpecifier
       Top             =   840
       Width           =   735
    End
-   Begin TradeBuildUI26.TickStreamSpecifier TickStreamSpecifier1 
-      Height          =   3735
-      Left            =   120
-      TabIndex        =   0
-      Top             =   120
-      Width           =   6615
-      _ExtentX        =   11668
-      _ExtentY        =   6588
-   End
 End
 Attribute VB_Name = "fTickStreamSpecifier"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 ''
@@ -105,12 +110,11 @@ End Sub
 
 Private Sub OKButton_Click()
 Const ProcName As String = "OKButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 Screen.MousePointer = vbHourglass
 mCancelled = False
-TickStreamSpecifier1.load
+TickStreamSpecifier1.Load
 
 Exit Sub
 
@@ -152,6 +156,21 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Initialise( _
+                ByVal pTickfileStore As ITickfileStore, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+TickStreamSpecifier1.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Helper Functions

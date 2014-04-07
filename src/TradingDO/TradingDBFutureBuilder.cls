@@ -80,7 +80,7 @@ Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As
 Const ProcName As String = "mTradingDB_ConnectFailed"
 On Error GoTo Err
 
-mFutureBuilder.Fail perrorcode, pErrorDesc
+mFutureBuilder.Fail errorCode, errorDesc, ""
 Set mSelfRef = Nothing
 
 Exit Sub
@@ -102,15 +102,15 @@ End Property
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal ConnectionString As String, _
-                ByVal DatabaseType As DatabaseTypes)
+                ByVal pConnectionParams As ConnectionParams, _
+                ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mSelfRef = Me
 Set mTradingDB = New TradingDB
-mTradingDB.Initialise ConnectionString, DatabaseType
-
+mTradingDB.Initialise pConnectionParams
+mFutureBuilder.cookie = pCookie
 
 Exit Sub
 

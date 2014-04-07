@@ -93,7 +93,6 @@ Private mMaxCurrencyCodeLength As Long
 Public Property Let CurrencyCode( _
                 ByVal value As String)
 Const ProcName As String = "CurrencyCode"
-Dim failpoint As String
 On Error GoTo Err
 
 value = Trim$(value)
@@ -110,12 +109,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrencyCode() As String
 Const ProcName As String = "CurrencyCode"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -127,12 +125,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrencyCodeInheritedFromClass() As Boolean
 Const ProcName As String = "CurrencyCodeInheritedFromClass"
-Dim failpoint As String
 On Error GoTo Err
 
 CurrencyCodeInheritedFromClass = (mDataObj.GetColumnValue(InstrumentColumnCurrency, "") = "")
@@ -140,12 +137,11 @@ CurrencyCodeInheritedFromClass = (mDataObj.GetColumnValue(InstrumentColumnCurren
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DaysBeforeExpiryToSwitch() As Long
 Const ProcName As String = "DaysBeforeExpiryToSwitch"
-Dim failpoint As String
 On Error GoTo Err
 
 DaysBeforeExpiryToSwitch = mDataObj.GetColumnValue(InstrumentColumnSwitchDay, 0)
@@ -153,12 +149,11 @@ DaysBeforeExpiryToSwitch = mDataObj.GetColumnValue(InstrumentColumnSwitchDay, 0)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExchangeName() As String
 Const ProcName As String = "ExchangeName"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mDataObj.IsNew Then
@@ -173,12 +168,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExpiryDate() As Date
 Const ProcName As String = "ExpiryDate"
-Dim failpoint As String
 On Error GoTo Err
 
 ExpiryDate = mDataObj.GetColumnValue(InstrumentColumnExpiry, 0#)
@@ -186,12 +180,11 @@ ExpiryDate = mDataObj.GetColumnValue(InstrumentColumnExpiry, 0#)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExpiryDate(ByVal value As Date)
 Const ProcName As String = "ExpiryDate"
-Dim failpoint As String
 On Error GoTo Err
 
 mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(value)
@@ -199,12 +192,11 @@ mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(value)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExpiryDateString(ByVal value As String)
 Const ProcName As String = "ExpiryDateString"
-Dim failpoint As String
 On Error GoTo Err
 
 If IsDate(value) Then
@@ -217,12 +209,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HasBarData() As Boolean
 Const ProcName As String = "HasBarData"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -234,12 +225,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HasTickData() As Boolean
 Const ProcName As String = "HasTickData"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -251,19 +241,18 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
-Dim instrmnt As instrument
 Const ProcName As String = "InstrumentClass"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.RuleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If Name <> "" Then
+    Dim instrmnt As instrument
     Set instrmnt = mDB.InstrumentFactory.LoadByName(value.ExchangeName & "/" & _
                                                     value.Name & "/" & _
                                                     Name)
@@ -274,12 +263,11 @@ mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = value.Id
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClass() As InstrumentClass
 Const ProcName As String = "InstrumentClass"
-Dim failpoint As String
 On Error GoTo Err
 
 Set InstrumentClass = mDB.InstrumentClassFactory.LoadByID(mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0))
@@ -287,12 +275,11 @@ Set InstrumentClass = mDB.InstrumentClassFactory.LoadByID(mDataObj.GetColumnValu
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClassId() As Long
 Const ProcName As String = "InstrumentClassId"
-Dim failpoint As String
 On Error GoTo Err
 
 InstrumentClassId = mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0)
@@ -300,13 +287,12 @@ InstrumentClassId = mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClassName( _
                 ByVal value As String)
 Const ProcName As String = "InstrumentClassName"
-Dim failpoint As String
 On Error GoTo Err
 
 InstrumentClass = mDB.InstrumentClassFactory.LoadByName(value)
@@ -314,12 +300,11 @@ InstrumentClass = mDB.InstrumentClassFactory.LoadByName(value)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClassName() As String
 Const ProcName As String = "InstrumentClassName"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mDataObj.IsNew Then
@@ -334,8 +319,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LocalSymbols() As InstrumentLocalSymbols
@@ -353,7 +337,6 @@ End Property
 
 Public Property Get Name() As String
 Const ProcName As String = "Name"
-Dim failpoint As String
 On Error GoTo Err
 
 Name = GetName
@@ -361,13 +344,12 @@ Name = GetName
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Name(ByVal value As String)
 ' overrides generic property
 Const ProcName As String = "Name"
-Dim failpoint As String
 On Error GoTo Err
 
 value = Trim$(value)
@@ -386,13 +368,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Notes() As String
 Const ProcName As String = "Notes"
-Dim failpoint As String
 On Error GoTo Err
 
 Notes = mDataObj.GetColumnValue(InstrumentColumnNotes, "")
@@ -400,12 +380,11 @@ Notes = mDataObj.GetColumnValue(InstrumentColumnNotes, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Notes(ByVal val As String)
 Const ProcName As String = "Notes"
-Dim failpoint As String
 On Error GoTo Err
 
 mDataObj.ColumnValue(InstrumentColumnNotes) = val
@@ -413,12 +392,11 @@ mDataObj.ColumnValue(InstrumentColumnNotes) = val
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OptionRight() As OptionRights
 Const ProcName As String = "OptionRight"
-Dim failpoint As String
 On Error GoTo Err
 
 OptionRight = OptionRightFromString(mDataObj.GetColumnValue(InstrumentColumnOptionRight, ""))
@@ -426,12 +404,11 @@ OptionRight = OptionRightFromString(mDataObj.GetColumnValue(InstrumentColumnOpti
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OptionRight(ByVal value As OptionRights)
 Const ProcName As String = "OptionRight"
-Dim failpoint As String
 On Error GoTo Err
 
 validateOptionRight value
@@ -440,12 +417,11 @@ mDataObj.ColumnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(va
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SecType() As SecurityTypes
 Const ProcName As String = "SecType"
-Dim failpoint As String
 On Error GoTo Err
 
 SecType = gCategoryToSecType(mDataObj.GetColumnValue(InstrumentColumnInstrumentCategoryId))
@@ -453,12 +429,11 @@ SecType = gCategoryToSecType(mDataObj.GetColumnValue(InstrumentColumnInstrumentC
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionEndTime() As Date
 Const ProcName As String = "SessionEndTime"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mDataObj.IsNew Then
@@ -468,12 +443,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionStartTime() As Date
 Const ProcName As String = "SessionStartTime"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not mDataObj.IsNew Then
@@ -483,12 +457,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ShortName() As String
 Const ProcName As String = "ShortName"
-Dim failpoint As String
 On Error GoTo Err
 
 ShortName = mDataObj.GetColumnValue(InstrumentColumnShortName, "")
@@ -496,12 +469,11 @@ ShortName = mDataObj.GetColumnValue(InstrumentColumnShortName, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ShortName(ByVal value As String)
 Const ProcName As String = "ShortName"
-Dim failpoint As String
 On Error GoTo Err
 
 value = Trim$(value)
@@ -512,12 +484,11 @@ mDataObj.ColumnValue(InstrumentColumnShortName) = Left$(value, mMaxShortNameLeng
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StrikePrice() As Double
 Const ProcName As String = "StrikePrice"
-Dim failpoint As String
 On Error GoTo Err
 
 StrikePrice = mDataObj.GetColumnValue(InstrumentColumnStrikePrice, 0#)
@@ -525,12 +496,11 @@ StrikePrice = mDataObj.GetColumnValue(InstrumentColumnStrikePrice, 0#)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let StrikePrice(ByVal value As Double)
 Const ProcName As String = "StrikePrice"
-Dim failpoint As String
 On Error GoTo Err
 
 validateStrikePrice value
@@ -539,12 +509,11 @@ mDataObj.ColumnValue(InstrumentColumnStrikePrice) = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let StrikePriceString(ByVal value As String)
 Const ProcName As String = "StrikePriceString"
-Dim failpoint As String
 On Error GoTo Err
 
 If IsNumeric(value) Then
@@ -557,12 +526,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Symbol(ByVal value As String)
 Const ProcName As String = "Symbol"
-Dim failpoint As String
 On Error GoTo Err
 
 value = Trim$(value)
@@ -573,12 +541,11 @@ mDataObj.ColumnValue(InstrumentColumnSymbol) = Left$(value, mMaxSymbolLength)
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Symbol() As String
 Const ProcName As String = "Symbol"
-Dim failpoint As String
 On Error GoTo Err
 
 Symbol = mDataObj.GetColumnValue(InstrumentColumnSymbol, "")
@@ -586,13 +553,12 @@ Symbol = mDataObj.GetColumnValue(InstrumentColumnSymbol, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSize( _
                 ByVal value As Double)
 Const ProcName As String = "TickSize"
-Dim failpoint As String
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleInstrumentTickSizeValid, _
@@ -606,12 +572,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickSize() As Double
 Const ProcName As String = "TickSize"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -623,12 +588,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickSizeInheritedFromClass() As Boolean
 Const ProcName As String = "TickSizeInheritedFromClass"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.GetColumnValue(InstrumentColumnTickSize, 0) = 0 Then
@@ -638,13 +602,12 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSizeString( _
                 ByVal value As String)
 Const ProcName As String = "TickSizeString"
-Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -658,13 +621,12 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValue( _
                 ByVal value As Double)
 Const ProcName As String = "TickValue"
-Dim failpoint As String
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleInstrumentTickValueValid, value < 0
@@ -677,12 +639,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValue() As Double
 Const ProcName As String = "TickValue"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -694,12 +655,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValueInheritedFromClass() As Boolean
 Const ProcName As String = "TickValueInheritedFromClass"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.GetColumnValue(InstrumentColumnTickValue, 0) = 0 Then
@@ -709,13 +669,12 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValueString( _
                 ByVal value As String)
 Const ProcName As String = "TickValueString"
-Dim failpoint As String
 On Error GoTo Err
 
 If value = "" Then
@@ -729,12 +688,11 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeZoneName() As String
 Const ProcName As String = "TimeZoneName"
-Dim failpoint As String
 On Error GoTo Err
 
 If mDataObj.IsNew Then
@@ -746,7 +704,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -765,13 +723,12 @@ CreateTickStream.Initialise mDB, Id, fromDate, toDate
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickWriter( _
                 ByVal useAsynchronousWrites As Boolean) As TickWriter
 Const ProcName As String = "CreateTickWriter"
-
 On Error GoTo Err
 
 Set CreateTickWriter = New TickWriter
@@ -780,11 +737,11 @@ CreateTickWriter.Initialise mDB, Me, useAsynchronousWrites
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
-                ByVal barTimePeriod As TimePeriod, _
+                ByVal BarTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -792,13 +749,10 @@ Public Function FetchBars( _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
-Dim bf As BarFetcher
-Dim specifier As BarDataSpecifier
-
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
-Select Case barTimePeriod.Units
+Select Case BarTimePeriod.Units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -809,35 +763,34 @@ Case TimePeriodSecond, _
     TimePeriodVolume, _
     TimePeriodTickMovement
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Bar time unit not supported"
+    AssertArgument False, "Bar time unit not supported"
 End Select
 
-Set specifier = New BarDataSpecifier
-specifier.barTimePeriod = barTimePeriod
-specifier.barType = barType
-specifier.fromDate = fromDate
-specifier.includeBarsOutsideSession = includeBarsOutsideSession
-specifier.maxNumberOfBars = maxNumberOfBars
-specifier.toDate = toDate
-specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
+Dim Specifier As BarDataSpecifier
+Set Specifier = New BarDataSpecifier
+Specifier.BarTimePeriod = BarTimePeriod
+Specifier.barType = barType
+Specifier.fromDate = fromDate
+Specifier.includeBarsOutsideSession = includeBarsOutsideSession
+Specifier.maxNumberOfBars = maxNumberOfBars
+Specifier.toDate = toDate
+Specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
+Dim bf As BarFetcher
 Set bf = New BarFetcher
 bf.Initialise mDB, Me
 
-Set FetchBars = bf.FetchBars(specifier)
+Set FetchBars = bf.FetchBars(Specifier)
 Set bf = Nothing
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function FetchbarsAsync( _
-                ByVal barTimePeriod As TimePeriod, _
+Public Function FetchBarsAsync( _
+                ByVal pBarTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -845,16 +798,13 @@ Public Function FetchbarsAsync( _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal barType As BarTypes = BarTypeTrade, _
+                Optional ByVal pListener As IBarFetchListener, _
                 Optional ByVal cookie As Variant, _
-                Optional ByVal taskName As String) As TaskController
+                Optional ByVal taskName As String) As IFuture
 Const ProcName As String = "FetchbarsAsync"
-Dim bf As BarFetcher
-Dim specifier As BarDataSpecifier
-
-
 On Error GoTo Err
 
-Select Case barTimePeriod.Units
+Select Case pBarTimePeriod.Units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -865,39 +815,37 @@ Case TimePeriodSecond, _
     TimePeriodVolume, _
     TimePeriodTickMovement
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Bar time unit not supported"
+    AssertArgument False, "Bar time unit not supported"
 End Select
 
-Set specifier = New BarDataSpecifier
-specifier.barTimePeriod = barTimePeriod
-specifier.barType = barType
-specifier.fromDate = fromDate
-specifier.includeBarsOutsideSession = includeBarsOutsideSession
-specifier.maxNumberOfBars = maxNumberOfBars
-specifier.toDate = toDate
-specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
+Dim Specifier As BarDataSpecifier
+Set Specifier = New BarDataSpecifier
+Specifier.BarTimePeriod = pBarTimePeriod
+Specifier.barType = barType
+Specifier.fromDate = fromDate
+Specifier.includeBarsOutsideSession = includeBarsOutsideSession
+Specifier.maxNumberOfBars = maxNumberOfBars
+Specifier.toDate = toDate
+Specifier.SetCustomSessionTimes customSessionStartTime, customSessionEndTime
 
+Dim bf As BarFetcher
 Set bf = New BarFetcher
 bf.Initialise mDB, Me
 
-Set FetchbarsAsync = bf.FetchbarsAsync(specifier, cookie, taskName)
-Set bf = Nothing
+bf.FetchBarsAsync Specifier, pListener, cookie, taskName
+
+Set FetchBarsAsync = bf.BarsFuture
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
 Const ProcName As String = "Initialise"
-
-
-
 On Error GoTo Err
 
 GenericInitialise db, rs
@@ -911,7 +859,7 @@ mMaxCurrencyCodeLength = mDataObj.ColumnMaxLength(InstrumentColumnCurrency)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteBar( _
@@ -926,11 +874,9 @@ Public Sub WriteBar( _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long)
 Const ProcName As String = "WriteBar"
-Dim lBarWriter As New BarWriter
-
-
 On Error GoTo Err
 
+Dim lBarWriter As New BarWriter
 lBarWriter.Initialise mDB, Id, ShortName
 
 lBarWriter.WriteBar timestamp, _
@@ -947,7 +893,7 @@ lBarWriter.WriteBar timestamp, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function WriteBarAsync( _
@@ -964,11 +910,9 @@ Public Function WriteBarAsync( _
                 Optional ByVal cookie As Variant, _
                 Optional ByVal taskName As String) As TaskController
 Const ProcName As String = "WriteBarAsync"
-Dim lBarWriter As New BarWriter
-
-
 On Error GoTo Err
 
+Dim lBarWriter As New BarWriter
 lBarWriter.Initialise mDB, Id, ShortName
 
 Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
@@ -987,7 +931,7 @@ Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -1001,8 +945,6 @@ End Function
 
 Private Function getFactory() As DataObjectFactory
 Const ProcName As String = "getFactory"
-
-
 On Error GoTo Err
 
 Set getFactory = mDB.InstrumentFactory
@@ -1010,7 +952,7 @@ Set getFactory = mDB.InstrumentFactory
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setInitialErrors()
@@ -1025,9 +967,6 @@ End Sub
 Private Sub validateOptionRight( _
                 ByVal value As OptionRights)
 Const ProcName As String = "validateOptionRight"
-
-
-
 On Error GoTo Err
 
 Select Case value
@@ -1047,15 +986,12 @@ mDataObj.RuleBroken BusRuleInstrumentOptionRightvalid, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub validateStrikePrice( _
                 ByVal value As Double)
 Const ProcName As String = "validateStrikePrice"
-
-
 On Error GoTo Err
 
 mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, _
@@ -1066,8 +1002,7 @@ mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1093,7 +1028,7 @@ ApplyEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub BusinessDataObject_CancelEdit()
@@ -1105,7 +1040,7 @@ CancelEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub BusinessDataObject_Delete()
@@ -1117,7 +1052,7 @@ Delete
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get BusinessDataObject_ErrorList() As ErrorList
@@ -1129,7 +1064,7 @@ Set BusinessDataObject_ErrorList = mDataObj.ErrorList
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
@@ -1141,7 +1076,7 @@ Set BusinessDataObject_EventSource = mDataObj.EventSource
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long
@@ -1153,7 +1088,7 @@ BusinessDataObject_ID = Id
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
@@ -1165,7 +1100,7 @@ BusinessDataObject_IsDeleted = IsDeleted
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsDirty() As Boolean
@@ -1177,7 +1112,7 @@ BusinessDataObject_IsDirty = IsDirty
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsNew() As Boolean
@@ -1189,7 +1124,7 @@ BusinessDataObject_IsNew = IsNew
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsValid() As Boolean
@@ -1201,7 +1136,7 @@ BusinessDataObject_IsValid = IsValid
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let BusinessDataObject_Name(ByVal RHS As String)
@@ -1213,7 +1148,7 @@ Name = RHS
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_Name() As String
@@ -1225,7 +1160,7 @@ BusinessDataObject_Name = Name
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub BusinessDataObject_Refresh()
@@ -1237,7 +1172,7 @@ Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -1293,7 +1228,7 @@ Set ErrorList = mDataObj.ErrorList
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Id() As Long
@@ -1305,7 +1240,7 @@ Id = mDataObj.Id
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsValid() As Boolean
@@ -1317,7 +1252,7 @@ IsValid = mDataObj.IsValid
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDeleted() As Boolean
@@ -1329,7 +1264,7 @@ IsDeleted = mDataObj.IsDeleted
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDirty() As Boolean
@@ -1341,7 +1276,7 @@ IsDirty = mDataObj.IsDirty
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsNew() As Boolean
@@ -1353,7 +1288,7 @@ IsNew = mDataObj.IsNew
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -1362,8 +1297,6 @@ End Property
 
 Public Sub ApplyEdit()
 Const ProcName As String = "ApplyEdit"
-
-
 On Error GoTo Err
 
 mDataObj.ApplyEdit
@@ -1371,13 +1304,11 @@ mDataObj.ApplyEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelEdit()
 Const ProcName As String = "CancelEdit"
-
-
 On Error GoTo Err
 
 mDataObj.CancelEdit
@@ -1386,13 +1317,11 @@ If mDataObj.IsNew Then setInitialErrors
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Delete()
 Const ProcName As String = "Delete"
-
-
 On Error GoTo Err
 
 mDataObj.Delete
@@ -1400,15 +1329,13 @@ mDataObj.Delete
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub GenericInitialise( _
                 ByVal db As Variant, _
                 Optional ByVal rs As ADODB.Recordset)
 Const ProcName As String = "GenericInitialise"
-
-
 On Error GoTo Err
 
 Set mDB = db
@@ -1421,13 +1348,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetName() As String
 Const ProcName As String = "GetName"
-
-
 On Error GoTo Err
 
 GetName = mDataObj.Name
@@ -1435,13 +1360,11 @@ GetName = mDataObj.Name
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Refresh()
 Const ProcName As String = "Refresh"
-
-
 On Error GoTo Err
 
 mDataObj.Refresh
@@ -1449,13 +1372,11 @@ mDataObj.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetName(ByVal value As String)
 Const ProcName As String = "SetName"
-
-
 On Error GoTo Err
 
 mDataObj.Name = value
@@ -1463,7 +1384,7 @@ mDataObj.Name = value
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

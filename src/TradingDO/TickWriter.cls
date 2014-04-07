@@ -48,13 +48,13 @@ Event Error( _
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                    As String = "TickWriter"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private Const ModuleName                    As String = "TickWriter"
-
-Private mTde                                As TickDataEncoder
+Private mTde                                As ITickDataEncoder
 
 Private mDataAdded                          As Boolean
 
@@ -66,13 +66,15 @@ Private mTickSize                           As Double
 
 Private mDB                                 As TradingDB
 
-Private WithEvents mWriteTimer              As IntervalTimer
-Attribute mWriteTimer.VB_VarHelpID = -1
+Private WithEvents mWriteTLI                As TimerListItem
+Attribute mWriteTLI.VB_VarHelpID = -1
 
-Private WithEvents mTickWriter              As TickDataWriter
+Private WithEvents mTickWriter              As PeriodTickDataWriter
 Attribute mTickWriter.VB_VarHelpID = -1
 
 Private mUseAsynchronousWrites              As Boolean
+
+Private mTimerList                          As TimerList
 
 '@================================================================================
 ' Class Event Handlers
@@ -80,23 +82,31 @@ Private mUseAsynchronousWrites              As Boolean
 
 Private Sub Class_Initialize()
 Randomize
+Set mTimerList = GetGlobalTimerList
 End Sub
 
 '@================================================================================
 ' TaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted( _
-                ev As TWUtilities30.TaskCompletionEventData)
+Private Sub TaskCompletionListener_TaskCompleted( _
+                ev As TaskCompletionEventData)
+ Const ProcName As String = "TaskCompletionListener_taskCompleted"
+On Error GoTo Err
+
 If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
     RaiseEvent Error(ev.ErrorNumber, ev.ErrorMessage)
 Else
     If gLogger.IsLoggable(LogLevelMediumDetail) Then
-        gLogger.Log LogLevelMediumDetail, _
-                    "TickWriter: successfully wrote data for " & mInstrument.ShortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601)
+        gLogger.Log "successfully wrote data for " & mInstrument.ShortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601), ProcName, ModuleName, LogLevelMediumDetail
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -127,13 +137,14 @@ Set mTickWriter = Nothing
 End Sub
 
 '@================================================================================
-' mWriteTimer Event Handlers
+' mWriteTLI Event Handlers
 '@================================================================================
 
-Private Sub mWriteTimer_TimerExpired()
-Const ProcName As String = "mWriteTimer_TimerExpired"
-
+Private Sub mWriteTLI_StateChange(ev As StateChangeEventData)
+Const ProcName As String = "mWriteTLI_StateChange"
 On Error GoTo Err
+
+If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
 writePeriodData
 startWriteTimer
@@ -173,7 +184,7 @@ startWriteTimer
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -187,7 +198,7 @@ writePeriodData
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteAsk( _
@@ -201,13 +212,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeAsk timestamp, price, size
+mTde.EncodeAsk timestamp, price, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteBid( _
@@ -221,13 +232,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeBid timestamp, price, size
+mTde.EncodeBid timestamp, price, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteClose( _
@@ -240,13 +251,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeClose timestamp, price
+mTde.EncodeClose timestamp, price
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteHigh( _
@@ -259,13 +270,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeHigh timestamp, price
+mTde.EncodeHigh timestamp, price
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteLow( _
@@ -278,13 +289,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeLow timestamp, price
+mTde.EncodeLow timestamp, price
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteMarketDepthData( _
@@ -302,13 +313,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeMarketDepthData timestamp, position, marketmaker, operation, side, price, size
+mTde.EncodeMarketDepthData timestamp, position, marketmaker, operation, side, price, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteMarketDepthReset( _
@@ -319,13 +330,13 @@ Const ProcName As String = "WriteMarketDepthReset"
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
-mTde.encodeMarketDepthReset timestamp
+mTde.EncodeMarketDepthReset timestamp
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteOpen( _
@@ -337,13 +348,13 @@ Const ProcName As String = "WriteOpen"
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
-mTde.encodeOpen timestamp, price
+mTde.EncodeOpen timestamp, price
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteOpenInterest( _
@@ -355,13 +366,13 @@ Const ProcName As String = "WriteOpenInterest"
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
-mTde.encodeOpenInterest timestamp, size
+mTde.EncodeOpenInterest timestamp, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteTick( _
@@ -372,7 +383,7 @@ Const ProcName As String = "WriteTick"
 On Error GoTo Err
 
 With tick
-    Select Case .tickType
+    Select Case .TickType
     Case TickTypes.TickTypeAsk
         WriteAsk .timestamp, .price, .size
     Case TickTypes.TickTypeBid
@@ -401,7 +412,8 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Sub
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteTrade( _
@@ -415,13 +427,13 @@ On Error GoTo Err
 
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
-mTde.encodeTrade timestamp, price, size
+mTde.EncodeTrade timestamp, price, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteVolume( _
@@ -433,13 +445,13 @@ Const ProcName As String = "WriteVolume"
 On Error GoTo Err
 
 checkIfNewPeriod timestamp
-mTde.encodeVolume timestamp, size
+mTde.EncodeVolume timestamp, size
 mDataAdded = True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -448,20 +460,20 @@ End Sub
 
 Private Sub checkIfNewPeriod(ByVal timestamp As Date)
 Const ProcName As String = "checkIfNewPeriod"
-Dim barTime As Date
 
 On Error GoTo Err
 
+Dim barTime As Date
 barTime = gTruncateTimeToMinute(timestamp)
 If barTime = mOpeningTimestamp Then Exit Sub
 
 If Not mTde Is Nothing Then
     writePeriodData
-    mTotalBytes = mTotalBytes + mTde.encodedDataLength
+    mTotalBytes = mTotalBytes + mTde.EncodedDataLength
 End If
 
 Set mTde = CreateTickEncoder(barTime, mTickSize)
-If Not mWriteTimer Is Nothing Then mWriteTimer.StopTimer
+If Not mWriteTLI Is Nothing Then mWriteTLI.Cancel
 startWriteTimer
 
 mOpeningTimestamp = barTime
@@ -469,52 +481,47 @@ mOpeningTimestamp = barTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub startWriteTimer()
 Const ProcName As String = "startWriteTimer"
-
-
 On Error GoTo Err
 
-If mWriteTimer Is Nothing Then Set mWriteTimer = CreateIntervalTimer(4000 + (Int(2000 * Rnd) + 1), ExpiryTimeUnitMilliseconds)
-mWriteTimer.StartTimer
+Set mWriteTLI = mTimerList.Add(Empty, 4000 + (Int(2000 * Rnd) + 1), ExpiryTimeUnitMilliseconds)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub writePeriodData()
 Const ProcName As String = "writePeriodData"
-Dim tc As TaskController
-
-
 On Error GoTo Err
 
 If mTde Is Nothing Then Exit Sub
 If Not mDataAdded Then Exit Sub
 
-Set mTickWriter = New TickDataWriter
+Set mTickWriter = New PeriodTickDataWriter
 mTickWriter.Initialise mDB, mInstrument.Id, mInstrument.ShortName
 
 If mUseAsynchronousWrites Then
-    Set tc = mTickWriter.WriteDataAsync(mTde.encodingFormatIdentifier, _
+    Dim tc As TaskController
+    Set tc = mTickWriter.WriteDataAsync(mTde.EncodingFormatIdentifier, _
                                         mTde.PeriodStartTime, _
                                         IIf(mTde.BasePrice = MaxDouble, 0#, mTde.BasePrice), _
                                         mTde.TickSize, _
-                                        mTde.encodedData)
+                                        mTde.EncodedData)
     tc.AddTaskCompletionListener Me
     Set mTickWriter = Nothing
 Else
-    mTickWriter.WriteData mTde.encodingFormatIdentifier, _
+    mTickWriter.WriteData mTde.EncodingFormatIdentifier, _
                                 mTde.PeriodStartTime, _
                                 IIf(mTde.BasePrice = MaxDouble, 0#, mTde.BasePrice), _
                                 mTde.TickSize, _
-                                mTde.encodedData
+                                mTde.EncodedData
 End If
 
 mDataAdded = False
@@ -522,7 +529,7 @@ mDataAdded = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 

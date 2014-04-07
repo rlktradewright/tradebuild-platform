@@ -10,27 +10,12 @@ Attribute VB_Name = "TickfileWriter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '@===============================================================================
 ' Description
 '@===============================================================================
-'
-'   The first byte of each record has the following structure:
-'
-'    TickType (Bits 0-3)
-'    SizeType (Bits 4-5)
-'    NoTimestamp (bit 6)
-'    NegativeTicks (bit 7)
-'
-'@===============================================================================
-' Amendment history
-'@===============================================================================
-'
-'
-'
-'
 
 '@===============================================================================
 ' Interfaces
@@ -63,15 +48,12 @@ Private Const ModuleName As String = "TickfileWriter"
 
 Private mTradingDB                  As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
-Private mConnectionString           As String
 
-Private mTickfileServiceProvider    As TickfileServiceProvider
+Private mParent                     As TickfileStore
+Private mOutputMonitor              As ITickfileOutputMonitor
 
-Private mCommonServiceConsumer      As ICommonServiceConsumer
-Private mServiceConsumer            As ITickfileOutputServiceConsumer
-Private mServiceProviderName        As String
-
-Private mContract                   As Contract
+Private mContractFuture             As IFuture
+Private mContract                   As IContract
 Private WithEvents mTickWriter      As TickWriter
 Attribute mTickWriter.VB_VarHelpID = -1
 
@@ -83,65 +65,118 @@ Private mInstrument                 As Instrument
 Private WithEvents mInstrumentTC    As TaskController
 Attribute mInstrumentTC.VB_VarHelpID = -1
 
+Private WithEvents mFutureWaiter    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
+Private mReady                      As Boolean
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
 
-Private Sub Class_Terminate()
-Debug.Print "TBInfoBase.TickfileWriter terminated"
+Private Sub Class_Initialize()
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
 '@===============================================================================
 ' ITickfileWriter Interface Members
 '@===============================================================================
 
-Private Sub ITickfileWriter_CloseOutputFile()
-Const ProcName As String = "ITickfileWriter_CloseOutputFile"
+Private Property Get ITickfileWriter_ContractFuture() As IFuture
+Set ITickfileWriter_ContractFuture = mContractFuture
+End Property
+
+Private Sub ITickfileWriter_Finish()
+Const ProcName As String = "ITickfileWriter_Finish"
 On Error GoTo Err
-finish
-mTickfileServiceProvider.dataWriterFinished Me
+
+Finish
+mParent.TickfileWriterFinished Me
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Property Get ITickfileWriter_IsReady() As Boolean
+ITickfileWriter_IsReady = mReady
+End Property
 
 Private Sub ITickfileWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
 
 End Sub
 
-Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
+Private Sub ITickfileWriter_WriteTick(pTick As GenericTick)
 Const ProcName As String = "ITickfileWriter_WriteTick"
 On Error GoTo Err
-mTickWriter.WriteTick tick
+
+mTickWriter.WriteTick pTick
+
 Exit Sub
+
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@===============================================================================
+' mFutureWaiter Event Handlers
+'@===============================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is TradingDB Then
+    Set mTradingDB = ev.Future.Value
+Else
+    Set mContract = ev.Future.Value
+End If
+
+If mTradingDB Is Nothing Or mContract Is Nothing Then Exit Sub
+
+If gLogger.IsLoggable(LogLevelDetail) Then
+    logMessage "Retrieving instrument object for " & mContract.Specifier.ToString, ProcName, , LogLevelDetail
+End If
+Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
 ' mInstrumentTC Event Handlers
 '@===============================================================================
 
-Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mInstrumentTC_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTC_Completed"
-Dim failpoint As Long
 On Error GoTo Err
+
+Dim lEv As NotificationEventData
+Set lEv.Source = mParent
 
 If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
-                            ev.ErrorMessage, _
-                            mTickfileServiceProvider.handle
-ElseIf IsEmpty(ev.result) Then
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
-                            "Specified instrument does not exist: " & mContract.Specifier.ToString, _
-                            mTickfileServiceProvider.handle
+    lEv.EventCode = TickfileEventCodes.TickfileEventDataSourceNotAvailable
+    lEv.EventMessage = ev.ErrorMessage
+    If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
+ElseIf IsEmpty(ev.Result) Then
+    lEv.EventCode = TickfileEventCodes.TickfileEventNoContractDetails
+    lEv.EventMessage = "Specified instrument does not exist: " & mContract.Specifier.ToString
+    If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
 Else
-    Set mInstrument = ev.result
-    mTickSize = mInstrument.tickSize
+    Set mInstrument = ev.Result
+    mTickSize = mInstrument.TickSize
     Set mTickWriter = mInstrument.CreateTickWriter(Not mUseSynchronousWrites)
-    mServiceConsumer.OutputTickfileCreated mConnectionString
-    mServiceConsumer.Ready
+    
+    mReady = True
+    If Not mOutputMonitor Is Nothing Then
+        mOutputMonitor.NotifyOutputFileCreated Me, mContract.Specifier.ToString & ": " & mTradingDB.ToString
+        mOutputMonitor.NotifyReady Me
+    End If
 End If
 
 Set mInstrumentTC = Nothing
@@ -149,7 +184,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -161,13 +196,17 @@ Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorDesc As String)
 Const ProcName As String = "mTickWriter_ConnectFailed"
 On Error GoTo Err
-mServiceConsumer.NotReady
-mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc, _
-                        mTickfileServiceProvider.handle
+
+Dim lEv As NotificationEventData
+Set lEv.Source = Me
+
+lEv.EventCode = TickfileEventCodes.TickfileEventDataSourceNotAvailable
+lEv.EventMessage = "Connect error " & errorCode & ": " & errorDesc
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mTickWriter_Error( _
@@ -175,9 +214,13 @@ Private Sub mTickWriter_Error( _
                             ByVal errorDesc As String)
 Const ProcName As String = "mTickWriter_Error"
 On Error GoTo Err
-mCommonServiceConsumer.NotifyRecoverableError errorCode, _
-                                    errorDesc, _
-                                    mTickfileServiceProvider.handle
+
+Dim lEv As NotificationEventData
+Set lEv.Source = Me
+
+lEv.EventCode = TickfileEventCodes.TickfileEventDataSourceNotAvailable
+lEv.EventMessage = "Write error " & errorCode & ": " & errorDesc
+If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyEvent lEv
 
 ' recreate the tickwriter as it seems to get buggered at this point
 logMessage "Re-creating tickfile writer", ProcName
@@ -185,7 +228,7 @@ Set mTickWriter = mInstrument.CreateTickWriter(Not mUseSynchronousWrites)
 
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -196,9 +239,8 @@ End Sub
 ' Methods
 '@===============================================================================
 
-Friend Sub finish()
-Const ProcName As String = "finish"
-Dim failpoint As Long
+Friend Sub Finish()
+Const ProcName As String = "Finish"
 On Error GoTo Err
 
 If Not mInstrumentTC Is Nothing Then
@@ -207,97 +249,61 @@ If Not mInstrumentTC Is Nothing Then
 End If
 
 If Not mTickWriter Is Nothing Then
-    mTickWriter.finish
+    mTickWriter.Finish
     
-    logMessage mServiceProviderName & " (" & mContract.Specifier.LocalSymbol & ")" & vbCrLf & _
+    logMessage "Tickfile writer (" & mContract.Specifier.LocalSymbol & ")" & vbCrLf & _
                         "    Total data written: " & mTickWriter.BytesWritten & " bytes", _
                 ProcName
     Set mTickWriter = Nothing
 End If
-Exit Sub
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub initialise( _
-                ByVal Name As String, _
-                ByVal dbType As DatabaseTypes, _
-                ByVal connectionString As String, _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                ByVal TickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
-                ByVal pContract As Contract, _
-                ByVal useSynchronousWrites As Boolean)
+Friend Sub Initialise( _
+                ByVal pTradingDBFuture As IFuture, _
+                ByVal pTickfileOutputMonitor As ITickfileOutputMonitor, _
+                ByVal pParent As TickfileStore, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pFormatIdentifier As String, _
+                ByVal pLocation As String, _
+                ByVal pUseSynchronousWrites As Boolean)
 Const ProcName As String = "initialise"
-
-
-Dim failpoint As Long
 On Error GoTo Err
 
-mServiceProviderName = Name
-Set mCommonServiceConsumer = CommonServiceConsumer
-Set mServiceConsumer = tickfileOutputServiceConsumer
-Set mTickfileServiceProvider = TickfileServiceProvider
-                
-mUseSynchronousWrites = useSynchronousWrites
-
-logMessage "Connecting to database", ProcName
-
-mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
-
-Set mContract = pContract
-
-If gLogger.IsLoggable(LogLevelDetail) Then
-    logMessage "Retrieving instrument object for " & mContract.Specifier.ToString, ProcName, LogLevel
+If pTradingDBFuture.IsAvailable Then
+    Set mTradingDB = pTradingDBFuture.Value
+Else
+    mFutureWaiter.Add pTradingDBFuture
 End If
 
-Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
+Set mOutputMonitor = pTickfileOutputMonitor
+Set mParent = pParent
+
+mUseSynchronousWrites = pUseSynchronousWrites
+
+Set mContractFuture = pContractFuture
+mFutureWaiter.Add pContractFuture
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
 
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Const ProcName As String = "handleFatalError"
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mTickfileServiceProvider.handle
-End Sub
-
 Private Sub logMessage( _
                 ByRef pMsg As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 

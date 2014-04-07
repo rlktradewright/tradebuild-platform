@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickDataWriter"
+Attribute VB_Name = "PeriodTickDataWriter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -51,7 +51,7 @@ Event Error( _
 '@===============================================================================
 
 
-Private Const ModuleName                As String = "TickDataWriter"
+Private Const ModuleName                As String = "PeriodTickDataWriter"
 
 '@===============================================================================
 ' Enums
@@ -92,7 +92,7 @@ Private mData()                         As Byte
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-Debug.Print "TickDataWriter terminated"
+Debug.Print "PeriodTickDataWriter terminated"
 'If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
@@ -203,13 +203,13 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         Exit Sub
     End If
     
-    errorMsg = "TickDataWriter: execution error " & vbCrLf & _
+    errorMsg = "PeriodTickDataWriter: execution error " & vbCrLf & _
                 gGenerateErrorMessage(pError) & _
                 gGenerateConnectionErrorMessages(pConnection)
     logMessage pMsg:=taskName & ": " & errorMsg, pProcName:=ProcName
     
     If gIsStateSet(mConnection.State, adStateOpen) Then
-        Debug.Print "TickDataWriter: close connection(error)"
+        Debug.Print "PeriodTickDataWriter: close connection(error)"
         mConnection.Close
     End If
     If mAsynchronous Then
@@ -375,9 +375,13 @@ Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
 On Error GoTo Err
 
-Debug.Print "TickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
-If mConnector Is Nothing Then Set mConnector = mDB.GetConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
-mConnector.connect
+Debug.Print "PeriodTickDataWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
+If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
+If mAsynchronous Then
+    mConnector.ConnectAsync
+Else
+    mConnector.Connect
+End If
 
 Exit Sub
 
@@ -485,7 +489,7 @@ End Sub
 Private Function taskName() As String
 Const ProcName As String = "taskName"
 Static lTaskName
-If lTaskName = "" Then lTaskName = "TickDataWriter/" & mShortName & "-" & _
+If lTaskName = "" Then lTaskName = "PeriodTickDataWriter/" & mShortName & "-" & _
                                 FormatTimestamp(mPeriodStartTime, TimestampNoMillisecs) & _
                                 "(" & gGetSequenceNumber & ")"
 taskName = lTaskName

@@ -136,26 +136,42 @@ Private Const ModuleName As String = "TradingDO"
 '@================================================================================
 
 Public Function CreateTradingDB( _
-                ByVal ConnectionString As String, _
-                ByVal DatabaseType As DatabaseTypes) As TradingDB
+                ByVal pConnectionParams As ConnectionParams) As TradingDB
 Const ProcName As String = "CreateTradingDB"
-Dim failpoint As String
 On Error GoTo Err
 
-Set CreateTradingDB = New TradingDB
+Dim lTradingDB As New TradingDB
+lTradingDB.Initialise pConnectionParams
 
-CreateTradingDB.Initialise ConnectionString, DatabaseType
+Set CreateTradingDB = lTradingDB
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTradingDBFuture( _
+                ByVal pConnectionParams As ConnectionParams, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "CreateTradingDBFuture"
+On Error GoTo Err
+
+Dim lTradingDBFutureBuilder As New TradingDBFutureBuilder
+lTradingDBFutureBuilder.Initialise pConnectionParams, pCookie
+
+Set CreateTradingDBFuture = lTradingDBFutureBuilder.Future
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractFromInstrument( _
-                ByVal instrument As instrument) As Contract
+                ByVal instrument As instrument) As IContract
 Const ProcName As String = "ContractFromInstrument"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set ContractFromInstrument = gContractFromInstrument(instrument)
@@ -163,13 +179,13 @@ Set ContractFromInstrument = gContractFromInstrument(instrument)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeFromString( _
                 ByVal value As String) As DatabaseTypes
 Const ProcName As String = "DatabaseTypeFromString"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DatabaseTypeFromString = gDatabaseTypeFromString(value)
@@ -177,13 +193,13 @@ DatabaseTypeFromString = gDatabaseTypeFromString(value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeToString( _
                 ByVal value As DatabaseTypes) As String
 Const ProcName As String = "DatabaseTypeToString"
-Dim failpoint As String
+
 On Error GoTo Err
 
 DatabaseTypeToString = gDatabaseTypeToString(value)
@@ -191,66 +207,25 @@ DatabaseTypeToString = gDatabaseTypeToString(value)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GenerateConnectionString( _
+Public Function CreateConnectionParams( _
                 ByVal dbType As DatabaseTypes, _
                 ByVal server As String, _
                 ByVal databaseName As String, _
                 Optional ByVal username As String, _
-                Optional ByVal password As String) As String
-
-Const ProcName As String = "GenerateConnectionString"
-Dim failpoint As String
+                Optional ByVal password As String) As ConnectionParams
+Const ProcName As String = "CreateConnectionParams"
 On Error GoTo Err
 
-Select Case dbType
-Case DbSQLServer7
-    GenerateConnectionString = "Provider=SQLOLEDB" & _
-                        ";Data Source=" & server & _
-                        ";Initial Catalog=" & databaseName & _
-                        IIf(username = "", _
-                            ";Integrated Security=SSPI", _
-                            ";User Id=" & username & ";Password=" & password)
-Case DbSQLServer2000
-    GenerateConnectionString = "Provider=SQLOLEDB" & _
-                        ";Data Source=" & server & _
-                        ";Initial Catalog=" & databaseName & _
-                        IIf(username = "", _
-                            ";Integrated Security=SSPI", _
-                            ";User Id=" & username & ";Password=" & password)
-Case DbSQLServer2005, DbSQLServer, DbSQLServer7, DbSQLServer2000
-'   NB: we don't use the SQL native Client (SQLNCLI) because it
-'   seems to cause problems on Windows 2000.
-'    GenerateConnectionString = "Provider=SQLNCLI" & _
-'                        ";DataTypeCompatibility=80" & _
-'                        ";Data Source=" & server & _
-'                        ";Initial Catalog=" & databaseName & _
-'                        ";Network Library=DBMSSOCN" & _
-'                        IIf(username = "", _
-'                            ";Integrated Security=SSPI", _
-'                            ";Uid=" & username & ";Pwd=" & password)
-    GenerateConnectionString = "Provider=SQLOLEDB" & _
-                        ";Data Source=" & server & _
-                        ";Initial Catalog=" & databaseName & _
-                        IIf(username = "", _
-                            ";Integrated Security=SSPI", _
-                            ";User Id=" & username & ";Password=" & password)
-Case DbMySQL5
-    GenerateConnectionString = "Driver={MySQL ODBC 5.1 Driver}" & _
-                        ";Server=" & server & _
-                        ";Port=3306" & _
-                        ";Database=" & databaseName & _
-                        ";User=" & username & _
-                        ";Password=" & password & _
-                        ";Option=3"
-End Select
+Set CreateConnectionParams = New ConnectionParams
+CreateConnectionParams.Initialise dbType, server, databaseName, username, password
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

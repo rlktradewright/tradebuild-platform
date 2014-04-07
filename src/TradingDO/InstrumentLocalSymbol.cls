@@ -78,7 +78,7 @@ End Property
 
 Public Property Get LocalSymbol() As String
 Const ProcName As String = "LocalSymbol"
-Dim failpoint As String
+
 On Error GoTo Err
 
 LocalSymbol = Trim$(mRs("LocalSymbol"))
@@ -86,13 +86,13 @@ LocalSymbol = Trim$(mRs("LocalSymbol"))
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LocalSymbol( _
                 ByVal value As String)
 Const ProcName As String = "LocalSymbol"
-Dim failpoint As String
+
 On Error GoTo Err
 
 value = Trim$(value)
@@ -101,12 +101,12 @@ mRs("LocalSymbol") = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ProviderKey() As String
 Const ProcName As String = "ProviderKey"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ProviderKey = Trim$(mRs("providerkey"))
@@ -114,13 +114,13 @@ ProviderKey = Trim$(mRs("providerkey"))
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ProviderKey( _
                 ByVal value As String)
 Const ProcName As String = "ProviderKey"
-Dim failpoint As String
+
 On Error GoTo Err
 
 value = Trim$(value)
@@ -129,7 +129,7 @@ mRs("providerkey") = value
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@===============================================================================

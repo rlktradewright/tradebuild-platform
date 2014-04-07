@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ContractSelectionTask"
+Attribute VB_Name = "ContractSelectionHelper"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -22,13 +22,17 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TaskCompletionListener
+Implements DeferredAction
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
 '@================================================================================
 
+Event cancelled()
+Event Error(ev As ErrorEventData)
 Event Ready()
+Event ShowContractSelector()
 
 '@================================================================================
 ' Enums
@@ -42,52 +46,64 @@ Event Ready()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "ContractSelectionTask"
+Private Const ModuleName                            As String = "ContractSelectionHelper"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
 Private mContractStore                              As IContractStore
-Private mContractSelector                           As IContractSelector
 
 Private mContractSpec                               As IContractSpecifier
 
-Private WithEvents mFetchTaskController             As TaskController
-
 Private mReady                                      As Boolean
 
-Private mAllowMultipleSelection                     As Boolean
+Private mContractsFuture                            As IFuture
+Private mContracts                                  As IContracts
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' DeferredAction Interface Members
 '@================================================================================
 
-'@================================================================================
-' mFetchTaskController Event Handlers
-'@================================================================================
-
-Private Sub mFetchTaskController_Completed(ev As TaskCompletionEventData)
-Const ProcName As String = "mFetchTaskController_Completed"
+Private Sub DeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "DeferredAction_Run"
 On Error GoTo Err
 
-Set mFetchTaskController = Nothing
+RaiseEvent ShowContractSelector
 
-If ev.Cancelled Then
-ElseIf ev.errorNumber <> 0 Then
-    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.ErrorSource
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "StateChangeListener_Change"
+On Error GoTo Err
+
+If mContractsFuture.IsCancelled Then
+    RaiseEvent cancelled
+ElseIf mContractsFuture.IsFaulted Then
+    Dim lEv As ErrorEventData
+    Set lEv.Source = Me
+    lEv.ErrorCode = mContractsFuture.ErrorNumber
+    lEv.ErrorMessage = mContractsFuture.ErrorMessage
+    lEv.ErrorSource = mContractsFuture.ErrorSource
+    RaiseEvent Error(lEv)
 Else
-    Dim lContracts As IContracts
-    Set lContracts = ev.Result
-    If lContracts.Count <= 1 Then
-        mTaskContext.Finish lContracts, False
+    Set mContracts = mContractsFuture.Value
+    mReady = True
+    If mContracts.Count > 1 Then
+        DeferAction Me, pMayYield:=True
     Else
-        mContractSelector.Initialise lContracts, mAllowMultipleSelection
-        mReady = True
         RaiseEvent Ready
     End If
 End If
@@ -99,15 +115,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get SelectedContracts() As IContracts
-Const ProcName As String = "SelectedContracts"
+Public Property Get Contracts() As IContracts
+Const ProcName As String = "Contracts"
 On Error GoTo Err
 
 Assert mReady, "Contracts not ready"
-Set SelectedContracts = mContractSelector.SelectedContracts
+Set Contracts = mContracts
 
 Exit Property
 
@@ -123,7 +143,7 @@ Public Sub Cancel()
 Const ProcName As String = "Cancel"
 On Error GoTo Err
 
-If Not mFetchTaskController Is Nothing Then mFetchTaskController.CancelTask
+If Not mContractsFuture Is Nothing Then mContractsFuture.Cancel
 
 Exit Sub
 
@@ -133,19 +153,15 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContractStore As IContractStore, _
-                ByVal pContractSelector As IContractSelector, _
-                ByVal pAllowMultipleContracts As Boolean)
+                ByVal pContractStore As IContractStore)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContractSpec = pContractSpec
 Set mContractStore = pContractStore
-Set mContractSelector = pContractSelector
-mAllowMultipleSelection = pAllowMultipleContracts
 
-Set mFetchTaskController = mContractStore.FetchContractDetails(mContractSpec)
-mFetchTaskController.AddTaskCompletionListener Me
+Set mContractsFuture = mContractStore.FetchContracts(mContractSpec)
+mContractsFuture.AddStateChangeListener Me
 
 Exit Sub
 

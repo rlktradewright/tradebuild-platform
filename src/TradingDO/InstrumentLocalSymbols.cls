@@ -90,7 +90,7 @@ End Property
 
 Public Function Add() As InstrumentLocalSymbol
 Const ProcName As String = "Add"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRs.AddNew
@@ -102,12 +102,12 @@ mCol.Add Add
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Cancel()
 Const ProcName As String = "Cancel"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRs.CancelBatch
@@ -115,12 +115,12 @@ mRs.CancelBatch
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Count() As Long
 Const ProcName As String = "count"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Count = mCol.Count
@@ -128,13 +128,13 @@ Count = mCol.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item( _
                 ByVal index As Variant) As InstrumentLocalSymbol
 Const ProcName As String = "Item"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set Item = mCol(index)
@@ -142,17 +142,17 @@ Set Item = mCol(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Load( _
                 ByVal instrumentID As Long)
-Dim obj As InstrumentLocalSymbol
-Dim SQL As String
-
 Const ProcName As String = "Load"
 Dim failpoint As String
 On Error GoTo Err
+
+Dim obj As InstrumentLocalSymbol
+Dim SQL As String
 
 If Not mRs Is Nothing Then Err.Raise 445
 
@@ -188,7 +188,7 @@ mInstrumentID = instrumentID
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -200,7 +200,7 @@ End Function
 Public Sub Remove(index As Long)
 Dim obj As InstrumentLocalSymbol
 Const ProcName As String = "Remove"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Set obj = mCol(index)
@@ -211,12 +211,12 @@ mCol.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAll()
 Const ProcName As String = "RemoveAll"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRs.MoveFirst
@@ -230,12 +230,12 @@ Set mCol = New Collection
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Save()
 Const ProcName As String = "Save"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mRs.UpdateBatch
@@ -243,7 +243,7 @@ mRs.UpdateBatch
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================

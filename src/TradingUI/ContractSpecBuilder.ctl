@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#48.0#0"; "TWControls10.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#11.1#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   3330
@@ -16,7 +16,7 @@ Begin VB.UserControl ContractSpecBuilder
       Top             =   3000
       Width           =   1335
    End
-   Begin TWControls10.TWImageCombo CurrencyCombo 
+   Begin TWControls40.TWImageCombo CurrencyCombo 
       Height          =   330
       Left            =   840
       TabIndex        =   5
@@ -36,7 +36,7 @@ Begin VB.UserControl ContractSpecBuilder
       MouseIcon       =   "ContractSpecBuilder.ctx":0000
       Text            =   ""
    End
-   Begin TWControls10.TWImageCombo RightCombo 
+   Begin TWControls40.TWImageCombo RightCombo 
       Height          =   330
       Left            =   840
       TabIndex        =   7
@@ -56,7 +56,7 @@ Begin VB.UserControl ContractSpecBuilder
       MouseIcon       =   "ContractSpecBuilder.ctx":001C
       Text            =   ""
    End
-   Begin TWControls10.TWImageCombo ExchangeCombo 
+   Begin TWControls40.TWImageCombo ExchangeCombo 
       Height          =   330
       Left            =   840
       TabIndex        =   4
@@ -76,7 +76,7 @@ Begin VB.UserControl ContractSpecBuilder
       MouseIcon       =   "ContractSpecBuilder.ctx":0038
       Text            =   ""
    End
-   Begin TWControls10.TWImageCombo TypeCombo 
+   Begin TWControls40.TWImageCombo TypeCombo 
       Height          =   330
       Left            =   840
       TabIndex        =   2
@@ -219,7 +219,7 @@ Event Ready()
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "ContractSpecBuilder"
+Private Const ModuleName                                As String = "ContractSpecBuilder"
 
 Private Const PropNameBackColor                         As String = "BackColor"
 Private Const PropNameForeColor                         As String = "ForeColor"
@@ -255,7 +255,7 @@ End Sub
 
 Private Sub UserControl_EnterFocus()
 Const ProcName As String = "UserControl_EnterFocus"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mModeAdvanced Then
@@ -280,7 +280,7 @@ Dim currDescs() As CurrencyDescriptor
 Dim i As Long
 
 Const ProcName As String = "UserControl_Initialize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mReady = False
@@ -321,8 +321,8 @@ On Error Resume Next
 
 setLabelsBackColor
 
-backColor = PropDfltBackColor
-foreColor = PropDfltForeColor
+BackColor = PropDfltBackColor
+ForeColor = PropDfltForeColor
 ModeAdvanced = PropDfltModeAdvanced
 End Sub
 
@@ -332,15 +332,15 @@ On Error Resume Next
 
 setLabelsBackColor
 
-backColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
+BackColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
 If Err.Number <> 0 Then
-    backColor = PropDfltBackColor
+    BackColor = PropDfltBackColor
     Err.Clear
 End If
 
-foreColor = PropBag.ReadProperty(PropNameForeColor, PropDfltForeColor)
+ForeColor = PropBag.ReadProperty(PropNameForeColor, PropDfltForeColor)
 If Err.Number <> 0 Then
-    backColor = PropDfltForeColor
+    BackColor = PropDfltForeColor
     Err.Clear
 End If
 
@@ -354,7 +354,7 @@ End Sub
 
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 resize
@@ -367,8 +367,8 @@ End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 On Error Resume Next
-PropBag.WriteProperty PropNameBackColor, backColor, PropDfltBackColor
-PropBag.WriteProperty PropNameForeColor, foreColor, PropDfltForeColor
+PropBag.WriteProperty PropNameBackColor, BackColor, PropDfltBackColor
+PropBag.WriteProperty PropNameForeColor, ForeColor, PropDfltForeColor
 PropBag.WriteProperty PropNameModeAdvanced, ModeAdvanced, PropDfltModeAdvanced
 End Sub
 
@@ -391,7 +391,7 @@ End Sub
 
 Private Sub CurrencyCombo_Change()
 Const ProcName As String = "CurrencyCombo_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handleCurrencyComboChange
@@ -404,7 +404,7 @@ End Sub
 
 Private Sub CurrencyCombo_Click()
 Const ProcName As String = "CurrencyCombo_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handleCurrencyComboChange
@@ -417,7 +417,7 @@ End Sub
 
 Private Sub ExchangeCombo_Change()
 Const ProcName As String = "ExchangeCombo_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -430,7 +430,7 @@ End Sub
 
 Private Sub ExchangeCombo_Click()
 Const ProcName As String = "ExchangeCombo_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -443,7 +443,7 @@ End Sub
 
 Private Sub ExpiryText_Change()
 Const ProcName As String = "ExpiryText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -456,7 +456,7 @@ End Sub
 
 Private Sub LocalSymbolText_Change()
 Const ProcName As String = "LocalSymbolText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -469,7 +469,7 @@ End Sub
 
 Private Sub RightCombo_Change()
 Const ProcName As String = "RightCombo_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -482,7 +482,7 @@ End Sub
 
 Private Sub RightCombo_Click()
 Const ProcName As String = "RightCombo_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -495,7 +495,7 @@ End Sub
 
 Private Sub StrikePriceText_Change()
 Const ProcName As String = "StrikePriceText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -508,7 +508,7 @@ End Sub
 
 Private Sub SymbolText_Change()
 Const ProcName As String = "SymbolText_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 checkIfValid
@@ -521,7 +521,7 @@ End Sub
 
 Private Sub TypeCombo_Change()
 Const ProcName As String = "TypeCombo_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handleTypeComboChange
@@ -534,7 +534,7 @@ End Sub
 
 Private Sub TypeCombo_Click()
 Const ProcName As String = "TypeCombo_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 handleTypeComboChange
@@ -557,53 +557,53 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let backColor( _
+Public Property Let BackColor( _
                 ByVal value As OLE_COLOR)
-LocalSymbolText.backColor = value
-SymbolText.backColor = value
-TypeCombo.backColor = value
-ExpiryText.backColor = value
-ExchangeCombo.backColor = value
-CurrencyCombo.backColor = value
-StrikePriceText.backColor = value
-RightCombo.backColor = value
+LocalSymbolText.BackColor = value
+SymbolText.BackColor = value
+TypeCombo.BackColor = value
+ExpiryText.BackColor = value
+ExchangeCombo.BackColor = value
+CurrencyCombo.BackColor = value
+StrikePriceText.BackColor = value
+RightCombo.BackColor = value
 End Property
 
-Public Property Get backColor() As OLE_COLOR
-backColor = LocalSymbolText.backColor
+Public Property Get BackColor() As OLE_COLOR
+BackColor = LocalSymbolText.BackColor
 End Property
 
-Public Property Let contractSpecifier( _
-                ByVal value As contractSpecifier)
-Const ProcName As String = "contractSpecifier"
-Dim failpoint As String
+Public Property Let ContractSpecifier( _
+                ByVal value As IContractSpecifier)
+Const ProcName As String = "ContractSpecifier"
+
 On Error GoTo Err
 
 If value Is Nothing Then
     Clear
     Exit Property
 End If
-LocalSymbolText = value.localSymbol
-SymbolText = value.symbol
-ExchangeCombo = value.exchange
+LocalSymbolText = value.LocalSymbol
+SymbolText = value.Symbol
+ExchangeCombo = value.Exchange
 TypeCombo = SecTypeToString(value.secType)
-CurrencyCombo = value.currencyCode
-ExpiryText = value.expiry
+CurrencyCombo = value.CurrencyCode
+ExpiryText = value.Expiry
 StrikePriceText = value.Strike
 RightCombo = OptionRightToString(value.Right)
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get contractSpecifier() As contractSpecifier
+Public Property Get ContractSpecifier() As IContractSpecifier
 Const ProcName As String = "contractSpecifier"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set contractSpecifier = CreateContractSpecifier( _
+Set ContractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
                                 SymbolText, _
                                 ExchangeCombo, _
@@ -616,36 +616,36 @@ Set contractSpecifier = CreateContractSpecifier( _
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Let foreColor( _
+Public Property Let ForeColor( _
                 ByVal value As OLE_COLOR)
 Const ProcName As String = "foreColor"
-Dim failpoint As String
+
 On Error GoTo Err
 
-LocalSymbolText.foreColor = value
-SymbolText.foreColor = value
-TypeCombo.foreColor = value
-ExpiryText.foreColor = value
-ExchangeCombo.foreColor = value
-CurrencyCombo.foreColor = value
-StrikePriceText.foreColor = value
-RightCombo.foreColor = value
+LocalSymbolText.ForeColor = value
+SymbolText.ForeColor = value
+TypeCombo.ForeColor = value
+ExpiryText.ForeColor = value
+ExchangeCombo.ForeColor = value
+CurrencyCombo.ForeColor = value
+StrikePriceText.ForeColor = value
+RightCombo.ForeColor = value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get foreColor() As OLE_COLOR
-foreColor = LocalSymbolText.foreColor
+Public Property Get ForeColor() As OLE_COLOR
+ForeColor = LocalSymbolText.ForeColor
 End Property
 
-Public Property Get isReady() As Boolean
-isReady = mReady
+Public Property Get IsReady() As Boolean
+IsReady = mReady
 End Property
 
 Public Property Let ModeAdvanced( _
@@ -679,7 +679,6 @@ End Sub
 
 Private Sub checkIfValid()
 Const ProcName As String = "checkIfValid"
-Dim failpoint As String
 On Error GoTo Err
 
 mReady = False
@@ -726,7 +725,7 @@ RaiseEvent Ready
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -744,7 +743,6 @@ End Sub
 
 Private Sub handleTypeComboChange()
 Const ProcName As String = "handleTypeComboChange"
-Dim failpoint As String
 On Error GoTo Err
 
 Select Case SecTypeFromString(TypeCombo)
@@ -787,20 +785,19 @@ checkIfValid
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub resize()
-Const rowHeight As Long = 420
-Dim controlWidth
-
 Const ProcName As String = "resize"
-Dim failpoint As String
 On Error GoTo Err
+
+Const rowHeight As Long = 420
 
 If UserControl.Width < 2190 Then UserControl.Width = 2190
 If UserControl.Height <> (8 * rowHeight) + 330 Then UserControl.Height = (8 * rowHeight) + 330
 
+Dim controlWidth As Long
 controlWidth = UserControl.Width - LocalSymbolLabel.Width
 
 If mModeAdvanced Then
@@ -862,7 +859,7 @@ If mModeAdvanced Then
     
     AdvancedButton.Top = 8 * rowHeight
     AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
-    AdvancedButton.caption = "Advanced <<"
+    AdvancedButton.Caption = "Advanced <<"
 Else
     LocalSymbolLabel.Visible = False
     
@@ -892,32 +889,31 @@ Else
     
     AdvancedButton.Top = rowHeight
     AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
-    AdvancedButton.caption = "Advanced >>"
+    AdvancedButton.Caption = "Advanced >>"
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setLabelsBackColor()
-Dim ctl As Control
-Dim lbl As Label
 Const ProcName As String = "setLabelsBackColor"
-Dim failpoint As String
 On Error GoTo Err
 
 On Error Resume Next
+Dim ctl As Control
 For Each ctl In UserControl.Controls
     If TypeOf ctl Is Label Then
+        Dim lbl As Label
         Set lbl = ctl
-        lbl.backColor = UserControl.Ambient.backColor
+        lbl.BackColor = UserControl.Ambient.BackColor
     End If
 Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub

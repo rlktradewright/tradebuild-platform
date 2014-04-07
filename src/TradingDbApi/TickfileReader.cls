@@ -30,6 +30,7 @@ Option Explicit
 ' Interfaces
 '@===============================================================================
 
+Implements IContractFetchListener
 Implements ITickfileReader
 
 '@===============================================================================
@@ -57,51 +58,108 @@ Private Const ModuleName As String = "TickfileReader"
 
 Private mTradingDB                  As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
-Private mConnectionString           As String
 
 Private mCapabilities               As Long
 
-Private mTickfileServiceProvider    As TickfileServiceProvider
-
-Private mCommonServiceConsumer      As ICommonServiceConsumer
-Private mServiceConsumer            As ITickfileInputServiceConsumer
-Private mDataConsumer               As IStreamingDataConsumer
+Private mParent                     As TickfileStore
+Private mReplayMonitor              As ITickfileReplayMonitor
+Private mDataConsumer               As IGenericTickListener
 Private mServiceProviderName        As String
+
+Private mStreamId                   As Long
 
 Private mTickRequested              As Boolean
 Private mGotFirstTick               As Boolean
 
-Private mReplayProgressEventFrequency As Long
+Private mContract                   As IContract
+Private mContracts                  As IContracts
 
-Private mContract                   As Contract
-Private mContracts                  As Contracts
-Private WithEvents mLoadContractsTC As TaskController
-Attribute mLoadContractsTC.VB_VarHelpID = -1
+Private mTargetContractSpec         As IContractSpecifier
 
 Private WithEvents mFetchTicksTC    As TaskController
 Attribute mFetchTicksTC.VB_VarHelpID = -1
-Private WithEvents mTickStream      As TickStream
+Private WithEvents mTickStream      As TradingDO27.TickStream
 Attribute mTickStream.VB_VarHelpID = -1
 
 Private mTickCounter                As Long
 
-Private mInputTickfileSpecifier     As TradeBuildSP.ITickfileSpecifier
+Private mInputTickfileSpecifier     As ITickfileSpecifier
 
 Private mFirstTick                  As GenericTick
 Private mFirstTickNotified          As Boolean
 
 Private mUseSynchronousReads        As Boolean
 
+Private WithEvents mFutureWaiter    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
 
 Private Sub Class_Initialize()
-mReplayProgressEventFrequency = 10
+Set mFutureWaiter = New FutureWaiter
 End Sub
 
-Private Sub Class_Terminate()
-Debug.Print "TBInfoBase.TickfileReader terminated"
+'@===============================================================================
+' IContractFetchListener Interface Members
+'@===============================================================================
+
+Private Sub IContractFetchListener_FetchCancelled(ByVal pCookie As Variant)
+Const ProcName As String = "IContractFetchListener_FetchCancelled"
+On Error GoTo Err
+
+mFutureWaiter.Cancel
+NotifyEvent TickfileEventCodes.TickfileEventDataSourceNotAvailable, "Contract fetch cancelled"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
+Const ProcName As String = "IContractFetchListener_FetchCompleted"
+On Error GoTo Err
+
+processContracts
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
+Const ProcName As String = "IContractFetchListener_FetchFailed"
+On Error GoTo Err
+
+mFutureWaiter.Cancel
+NotifyEvent TickfileEventCodes.TickfileEventDataSourceNotAvailable, pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractUtils27.IContract)
+Const ProcName As String = "IContractFetchListener_NotifyContract"
+On Error GoTo Err
+
+Static sFirstContractReceived As Boolean
+
+If Not sFirstContractReceived Then
+    sFirstContractReceived = True
+Else
+    mFutureWaiter.Cancel
+    NotifyEvent TickfileEventCodes.TickfileEventAmbiguousContractDetails, "Contract not uniquely specified"
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -111,58 +169,38 @@ End Sub
 Private Sub ITickfileReader_CloseInputFile()
 Const ProcName As String = "ITickfileReader_CloseInputFile"
 On Error GoTo Err
-mTickfileServiceProvider.dataReaderFinished Me
-finish
+
+If mParent Is Nothing Then Exit Sub
+
+mParent.TickfileReaderFinished Me
+Finish
+
 Exit Sub
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
-
-End Property
-
-Private Property Get ITickfileReader_Contract() As Contract
-Const ProcName As String = "ITickfileReader_Contract"
-On Error GoTo Err
-
-Set ITickfileReader_Contract = mContracts.Item(1)
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
-Const ProcName As String = "ITickfileReader_ContractSpecifier"
-On Error GoTo Err
-
-Set ITickfileReader_ContractSpecifier = mContracts.Item(1).Specifier
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Private Sub ITickfileReader_FireNextTick()
-
+Private Function ITickfileReader_FireNextTick() As Boolean
 Const ProcName As String = "ITickfileReader_FireNextTick"
 On Error GoTo Err
 
 If Not mFirstTickNotified Then
-    mFirstTickNotified = True
-    notifyTick mFirstTick
+    If mGotFirstTick Then
+        mFirstTickNotified = True
+        notifyTick mFirstTick
+        ITickfileReader_FireNextTick = True
+    Else
+        ITickfileReader_FireNextTick = False
+    End If
 Else
-    getTick
+    ITickfileReader_FireNextTick = getTick
 End If
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
 Const ProcName As String = "ITickfileReader_FirstTickFileTime"
@@ -173,84 +211,58 @@ ITickfileReader_FirstTickFileTime = mFirstTick.TimeStamp
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
-Set ITickfileReader_InputTickfileSpecifier = mInputTickfileSpecifier
-End Property
-
-Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
-If RHS = 0 Then
-    mReplayProgressEventFrequency = 1
-Else
-    mReplayProgressEventFrequency = RHS
-End If
-End Property
-
-Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
-Const ProcName As String = "ITickfileReader_ReplayProgressEventFrequency"
-ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
-End Property
-
-Private Sub ITickfileReader_ReplayTickfile( _
-                ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
-Const ProcName As String = "ITickfileReader_ReplayTickfile"
-
-
+Private Function ITickfileReader_PrepareTickfile( _
+                ByVal pTickfileSpec As ITickfileSpecifier) As Boolean
+Const ProcName As String = "ITickfileReader_PrepareTickfile"
 On Error GoTo Err
-Set mInputTickfileSpecifier = tickfileSpecifier
 
-' we retrieve our own contract definition, because the one supplied may not be defined
-' in this database
-logMessage pMsg:="Fetching contract", pProcName:="ITickfileReader_ReplayTickfile"
-If mUseSynchronousReads Then
-    Set mContracts = mTradingDB.LoadContracts(mInputTickfileSpecifier.Contract.Specifier)
-    processContracts
-    If Not mTickStream Is Nothing Then
-        mTickStream.StartStream False
-        getTick
-    End If
-Else
-    Set mLoadContractsTC = mTradingDB.LoadContractsAsync(mInputTickfileSpecifier.Contract.Specifier)
-End If
+Set mInputTickfileSpecifier = pTickfileSpec
+mFutureWaiter.Add mInputTickfileSpecifier.ContractFuture
 
-Exit Sub
+ITickfileReader_PrepareTickfile = True
+
+Exit Function
 
 Err:
-handleFatalError ProcName
-End Sub
-
-Private Function ITickfileReader_Supports( _
-                            ByVal capabilities As Long, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileReader_Supports = capabilities & mCapabilities
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Property Get ITickfileReader_tickfileSizeBytes() As Long
-ITickfileReader_tickfileSizeBytes = 0
+Private Property Get ITickfileReader_ReplayProgressPercent() As Long
+ITickfileReader_ReplayProgressPercent = 0
+End Property
+
+Private Property Get ITickfileReader_ReplayProgressTicks() As Long
+ITickfileReader_ReplayProgressTicks = mTickCounter
+End Property
+
+Private Function ITickfileReader_Supports( _
+                            ByVal Capabilities As Long, _
+                            Optional ByVal FormatIdentifier As String) As Boolean
+ITickfileReader_Supports = ((Capabilities And mCapabilities) = Capabilities)
+End Function
+
+Private Property Get ITickfileReader_TickfileSizeBytes() As Long
+ITickfileReader_TickfileSizeBytes = 0
 End Property
 
 '@===============================================================================
 ' mFetchTicksTC Event Handlers
 '@===============================================================================
 
-Private Sub mFetchTicksTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mFetchTicksTC_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mFetchTicksTC_Completed"
-Dim failpoint As Long
 On Error GoTo Err
 
 If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
-                                                ev.ErrorMessage, _
-                                                mTickfileServiceProvider.handle
-ElseIf IsEmpty(ev.result) Then
-    mServiceConsumer.NotifyEvent TFContractSpecifierInvalid, _
-                                "Contract not known", _
-                                mTickfileServiceProvider.handle
+    NotifyEvent TickfileEventCodes.TickfileEventDataSourceNotAvailable, ev.ErrorMessage
+ElseIf IsEmpty(ev.Result) Then
+    NotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "Contract not known"
 Else
-    Set mTickStream = ev.result
+    Set mTickStream = ev.Result
     mTickStream.StartStream True
     getTick
 End If
@@ -258,38 +270,44 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
-' mLoadContractsTC Event Handlers
+' mFutureWaiter Event Handlers
 '@===============================================================================
 
-Private Sub mLoadContractsTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
-Const ProcName As String = "mLoadContractsTC_Completed"
-
-
-Dim failpoint As Long
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Cancelled Then
-ElseIf ev.ErrorNumber <> 0 Then
-    mCommonServiceConsumer.NotifyRecoverableError ev.ErrorNumber, _
-                                                ev.ErrorMessage, _
-                                                mTickfileServiceProvider.handle
-ElseIf IsEmpty(ev.result) Then
-    mServiceConsumer.NotifyEvent TFContractDetailsInvalid, _
-                                "Contract not known", _
-                                mTickfileServiceProvider.handle
-Else
-    Set mContracts = ev.result
-    processContracts
+If Not ev.Future.IsAvailable Then Exit Sub
+
+If TypeOf ev.Future.Value Is IContract Then
+    Dim lContract As IContract
+    Set lContract = ev.Future.Value
+    
+    ' we retrieve our own contract definition, because the one supplied may not be defined
+    ' in this database. Note that we don't use the short name from the source contract as
+    ' this database may use a different convention for short name (eg "FTSE 100 Future Sep 09"
+    ' instead of "ZU9")
+    With lContract.Specifier
+        Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Strike, .Right)
+    End With
+
+    checkFetchContract
+ElseIf TypeOf ev.Future.Value Is TradingDB Then
+    Set mTradingDB = ev.Future.Value
+    
+    checkFetchContract
+ElseIf TypeOf ev.Future.Value Is IContracts Then
+    Set mContracts = ev.Future.Value
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -298,7 +316,7 @@ End Sub
 
 Private Sub mTickStream_DataAvailable()
 Const ProcName As String = "mTickStream_DataAvailable"
-Dim failpoint As Long
+
 On Error GoTo Err
 
 logMessage pMsg:="Ticks available", pProcName:="mTickStream_DataAvailable", pLogLevel:=LogLevelDetail
@@ -310,7 +328,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -321,53 +339,50 @@ End Sub
 ' Methods
 '@===============================================================================
 
-Friend Sub finish()
+Friend Sub Finish()
 Const ProcName As String = "finish"
 On Error GoTo Err
 
 Set mTickStream = Nothing
-Set mServiceConsumer = Nothing
+Set mReplayMonitor = Nothing
 Set mDataConsumer = Nothing
-Set mTickfileServiceProvider = Nothing
+Set mParent = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub initialise( _
-                ByVal Name As String, _
-                ByVal dbType As DatabaseTypes, _
-                ByVal connectionString As String, _
-                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal tickfileInputServiceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                ByVal TickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
-                ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
-                ByVal capabilities As Long, _
-                ByVal useSynchronousReads As Boolean)
+Friend Sub Initialise( _
+                ByVal pStreamId As Long, _
+                ByVal pTradingDBFuture As IFuture, _
+                ByVal pReplayMonitor As ITickfileReplayMonitor, _
+                ByVal pParent As TickfileStore, _
+                ByVal pDataConsumer As IGenericTickListener, _
+                ByVal pCapabilities As Long, _
+                ByVal pUseSynchronousReads As Boolean)
 Const ProcName As String = "initialise"
-
-
-Dim failpoint As Long
 On Error GoTo Err
 
-mServiceProviderName = Name
-Set mCommonServiceConsumer = CommonServiceConsumer
-Set mServiceConsumer = tickfileInputServiceConsumer
-Set mTickfileServiceProvider = TickfileServiceProvider
-Set mDataConsumer = DataConsumer
-                
-mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
+mStreamId = pStreamId
+Set mReplayMonitor = pReplayMonitor
+Set mDataConsumer = pDataConsumer
+Set mParent = pParent
 
-mCapabilities = capabilities
-mUseSynchronousReads = useSynchronousReads
+If pTradingDBFuture.IsAvailable Then
+    Set mTradingDB = pTradingDBFuture.Value
+Else
+    mFutureWaiter.Add pTradingDBFuture
+End If
+
+mCapabilities = pCapabilities
+mUseSynchronousReads = pUseSynchronousReads
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -375,18 +390,40 @@ End Sub
 ' Helper Functions
 '@===============================================================================
 
-Private Sub getTick()
-Const ProcName As String = "getTick"
-Dim tick As GenericTick
-
-Dim failpoint As Long
+Private Sub checkFetchContract()
+Const ProcName As String = "checkFetchContract"
 On Error GoTo Err
 
+If mTradingDB Is Nothing Or mTargetContractSpec Is Nothing Then Exit Sub
+
+logMessage "Fetching contract", ProcName, mTargetContractSpec.ToString
+If mUseSynchronousReads Then
+    Set mContracts = mTradingDB.FetchContracts(mTargetContractSpec)
+    processContracts
+    If Not mTickStream Is Nothing Then
+        mTickStream.StartStream False
+        getTick
+    End If
+Else
+    mFutureWaiter.Add mTradingDB.FetchContractsAsync(mTargetContractSpec, Me)
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function getTick() As Boolean
+Const ProcName As String = "getTick"
+On Error GoTo Err
+
+Dim tick As GenericTick
 Do While mTickStream.GetNextTick(tick)
     If tick.TimeStamp >= mInputTickfileSpecifier.FromDate Then
         If tick.TimeStamp >= mInputTickfileSpecifier.ToDate Then
             noMoreTicks
-            Exit Sub
+            Exit Function
         End If
         
         mTickCounter = mTickCounter + 1
@@ -394,12 +431,13 @@ Do While mTickStream.GetNextTick(tick)
             mGotFirstTick = True
             mFirstTick = tick
             logMessage pMsg:="Notify ready", pProcName:="getTick", pLogLevel:=LogLevelHighDetail
-            mServiceConsumer.Ready mInputTickfileSpecifier, 0
+            mReplayMonitor.NotifyReady Me, mInputTickfileSpecifier
         Else
             notifyTick tick
+            getTick = True
         End If
         
-        Exit Sub
+        Exit Function
     End If
 Loop
     
@@ -410,113 +448,96 @@ Else
     mTickRequested = True
 End If
 
-Exit Sub
+Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub handleFatalError( _
-                ByRef pProcName As String, _
-                Optional ByVal pFailpoint As String)
-Dim errNum As Long: errNum = Err.Number
-Dim errSource As String: errSource = Err.Source
-Dim errDesc As String: errDesc = Err.Description
-
-On Error GoTo Err
-
-' re-raise the error to get the calling procedure's procName into the source info
-errSource = errSource & vbCrLf & _
-            ProjectName & "." & _
-            ModuleName & ":" & _
-            pProcName & _
-            IIf(pFailpoint <> "", " At " & pFailpoint, "")
-
-Err.Raise errNum, errSource, errDesc
-
-' NB: will never get to here so no need for Exit Sub
-
-Err:
-mCommonServiceConsumer.NotifyFatalError Err.Number, Err.Source, Err.Description, mTickfileServiceProvider.handle
-End Sub
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub logMessage( _
                 ByRef pMsg As String, _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pProjName:=ProjectName, pModName:=ModuleName, pLogLevel:=pLogLevel
+gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Sub noMoreTicks()
 Const ProcName As String = "noMoreTicks"
-Dim failpoint As Long
 On Error GoTo Err
 
 If mGotFirstTick Then
-    mServiceConsumer.TickfileReplayComplete
+    mReplayMonitor.NotifyReplayComplete Me, mTickCounter
 Else
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFTickfileEmpty, _
-                            "No data for this specifier", _
-                            mTickfileServiceProvider.handle
+    NotifyEvent TickfileEventCodes.TickfileEventFileIsEmpty, "No data for this specifier"
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub NotifyEvent(ByVal pEventCode As Long, ByVal pEventMessage As String)
+Const ProcName As String = "NotifyEvent"
+On Error GoTo Err
+
+Dim lEv As NotificationEventData
+Set lEv.Source = mParent
+
+lEv.EventCode = pEventCode
+lEv.EventMessage = pEventMessage
+mReplayMonitor.NotifyEvent lEv
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyTick( _
-                ByRef tick As GenericTick)
+                ByRef pTick As GenericTick)
 Const ProcName As String = "notifyTick"
-
-
 On Error GoTo Err
 
-mDataConsumer.tick tick
-
-If mTickCounter Mod mReplayProgressEventFrequency = 0 Then
-    mServiceConsumer.ReplayProgress tick.TimeStamp, _
-                            mTickCounter, _
-                            100 * (tick.TimeStamp - mInputTickfileSpecifier.FromDate) / (mInputTickfileSpecifier.ToDate - mInputTickfileSpecifier.FromDate)
-End If
+Dim ev As GenericTickEventData
+Set ev.Source = mParent
+ev.StreamId = mStreamId
+ev.tick = pTick
+mDataConsumer.notifyTick ev
 
 Exit Sub
 
 Err:
-handleFatalError ProcName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processContracts()
 Const ProcName As String = "processContracts"
-Dim st As SessionTimes
-
-Dim failpoint As Long
 On Error GoTo Err
 
+Dim ev As NotificationEventData
+Set ev.Source = mParent
+
 If mContracts.Count = 0 Then
-    mServiceConsumer.NotifyEvent TFContractDetailsInvalid, _
-                                "Contract not known", _
-                                mTickfileServiceProvider.handle
+    NotifyEvent TickfileEventCodes.TickfileEventNoContractDetails, "Contract not known"
 ElseIf mContracts.Count > 1 Then
-    mServiceConsumer.NotifyEvent TFContractSpecifierInvalid, _
-                                "Contract not unique", _
-                                mTickfileServiceProvider.handle
+    NotifyEvent TickfileEventCodes.TickfileEventAmbiguousContractDetails, "Contract not unique"
 Else
-    logMessage pMsg:="contract fetched", pProcName:="processContracts", pLogLevel:=LogLevelHighDetail
-    Set mContract = mContracts(1)
+    logMessage "contract fetched", ProcName, , LogLevelHighDetail
+    Set mContract = mContracts.ItemAtIndex(1)
     
     With mInputTickfileSpecifier
         If .EntireSession Then
+            Dim st As SessionTimes
             st = GetSessionTimes(.FromDate, _
                                 mContract.SessionStartTime, _
                                 mContract.SessionEndTime)
-            .FromDate = st.startTime
-            .ToDate = st.endTime
+            .FromDate = st.StartTime
+            .ToDate = st.EndTime
         End If
     
-        logMessage pMsg:="Fetching ticks", pProcName:="processContracts", pLogLevel:=LogLevelHighDetail
+        logMessage "Fetching ticks", ProcName, , LogLevelHighDetail
         If mUseSynchronousReads Then
             Set mTickStream = mTradingDB.FetchTicks(mContract.Specifier, _
                                                         .FromDate, _
@@ -532,6 +553,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

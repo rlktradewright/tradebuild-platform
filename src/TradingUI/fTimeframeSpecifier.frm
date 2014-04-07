@@ -13,14 +13,14 @@ Begin VB.Form fTimeframeSpecifier
    ScaleWidth      =   3585
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin VB.PictureBox TimeframeSpecifier1 
+   Begin TradingUI27.TimeframeSpecifier TimeframeSpecifier1 
       Height          =   855
       Left            =   120
-      ScaleHeight     =   795
-      ScaleWidth      =   2475
       TabIndex        =   2
       Top             =   120
       Width           =   2535
+      _ExtentX        =   4471
+      _ExtentY        =   1508
    End
    Begin VB.CommandButton CancelButton 
       Caption         =   "Cancel"
@@ -92,7 +92,7 @@ Private mCancelled As Boolean
 
 Private Sub Form_Activate()
 Const ProcName As String = "Form_Activate"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCancelled = False
@@ -106,10 +106,12 @@ End Sub
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If TimeframeSpecifier1.isTimeframeValid Then OkButton.Enabled = True
+'If TimeframeSpecifier1.isTimeframeValid Then
+    OkButton.Enabled = True
+'end if
 
 Exit Sub
 
@@ -127,7 +129,7 @@ End Sub
 
 Private Sub CancelButton_Click()
 Const ProcName As String = "CancelButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCancelled = True
@@ -141,7 +143,7 @@ End Sub
 
 Private Sub OKButton_Click()
 Const ProcName As String = "OKButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 Me.Hide
@@ -158,10 +160,10 @@ End Sub
 
 Private Sub TimeframeSpecifier1_Change()
 Const ProcName As String = "TimeframeSpecifier1_Change"
-Dim failpoint As String
+
 On Error GoTo Err
 
-If TimeframeSpecifier1.isTimeframeValid Then
+If TimeframeSpecifier1.IsTimeframeValid Then
     OkButton.Enabled = True
 Else
     OkButton.Enabled = False
@@ -181,27 +183,29 @@ Friend Property Get cancelled() As Boolean
 cancelled = mCancelled
 End Property
 
-Friend Property Get TimeframeDesignator() As TimePeriod
-Const ProcName As String = "timeframeDesignator"
-Dim failpoint As String
+Friend Property Get TimePeriod() As TimePeriod
+Const ProcName As String = "TimePeriod"
+
 On Error GoTo Err
 
-If mCancelled Then
-        Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":" & ProcName, _
-                "Cancelled by user"
-End If
-Set TimeframeDesignator = TimeframeSpecifier1.TimeframeDesignator
+Assert Not mCancelled, "Cancelled by user"
+
+Set TimePeriod = TimeframeSpecifier1.TimePeriod
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Initialise( _
+                ByVal pValidator As ITimePeriodValidator)
+TimeframeSpecifier1.Initialise pValidator
+End Sub
 
 '@================================================================================
 ' Helper Functions

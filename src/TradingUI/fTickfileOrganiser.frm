@@ -1,47 +1,29 @@
 VERSION 5.00
 Begin VB.Form fTickfileOrganiser 
    Caption         =   "Tickfile Organiser"
-   ClientHeight    =   3495
+   ClientHeight    =   4215
    ClientLeft      =   60
    ClientTop       =   450
-   ClientWidth     =   7815
+   ClientWidth     =   7890
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3495
-   ScaleWidth      =   7815
+   ScaleHeight     =   4215
+   ScaleWidth      =   7890
    StartUpPosition =   3  'Windows Default
-   Begin VB.CommandButton AddTickstreamsButton 
-      Caption         =   "Add tick &stream..."
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   4680
-      TabIndex        =   5
-      Top             =   3000
-      Width           =   1695
-   End
-   Begin VB.CommandButton AddTickfilesButton 
-      Caption         =   "Add tick &file..."
-      Enabled         =   0   'False
-      Height          =   375
-      Left            =   2880
-      TabIndex        =   4
-      Top             =   3000
-      Width           =   1695
-   End
-   Begin VB.CommandButton ClearButton 
-      Caption         =   "Clear"
-      Enabled         =   0   'False
-      Height          =   495
-      Left            =   6960
-      TabIndex        =   3
-      Top             =   1920
-      Width           =   735
+   Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+      Height          =   4065
+      Left            =   240
+      TabIndex        =   2
+      Top             =   0
+      Width           =   6570
+      _ExtentX        =   11589
+      _ExtentY        =   7170
    End
    Begin VB.CommandButton CancelButton 
       Cancel          =   -1  'True
       Caption         =   "Cancel"
       Height          =   495
       Left            =   6960
-      TabIndex        =   2
+      TabIndex        =   1
       Top             =   720
       Width           =   735
    End
@@ -51,24 +33,9 @@ Begin VB.Form fTickfileOrganiser
       Enabled         =   0   'False
       Height          =   495
       Left            =   6960
-      TabIndex        =   1
-      Top             =   120
-      Width           =   735
-   End
-   Begin TradeBuildUI26.TickfileChooser TickfileChooser1 
-      Left            =   6960
-      Top             =   2640
-      _ExtentX        =   1296
-      _ExtentY        =   873
-   End
-   Begin TradeBuildUI26.TickfileListManager TickfileListManager1 
-      Height          =   2895
-      Left            =   120
       TabIndex        =   0
       Top             =   120
-      Width           =   6735
-      _ExtentX        =   11880
-      _ExtentY        =   5106
+      Width           =   735
    End
 End
 Attribute VB_Name = "fTickfileOrganiser"
@@ -76,6 +43,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 ''
@@ -114,18 +82,41 @@ Private Const ModuleName                    As String = "fTickfileOrganiser"
 
 Private mCancelled                          As Boolean
 
+Private mMinimumWidth                       As Long
+Private mMinimumHeight                      As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Form_Load()
 Const ProcName As String = "Form_Load"
-Dim failpoint As String
 On Error GoTo Err
 
-If TickfileListManager1.supportsTickFiles Then AddTickfilesButton.Enabled = True
-If TickfileListManager1.supportsTickStreams Then AddTickstreamsButton.Enabled = True
-mCancelled = True
+mMinimumWidth = 120 + TickfileOrganiser1.MinimumWidth + 120 + OkButton.Width + 120
+mMinimumHeight = 120 + TickfileOrganiser1.MinimumHeight + 120
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub Form_Resize()
+Const ProcName As String = "Form_Resize"
+On Error GoTo Err
+
+If mMinimumWidth = 0 Then Exit Sub
+
+Me.ScaleMode = vbTwips
+If Me.ScaleWidth < mMinimumWidth Then Me.ScaleWidth = mMinimumWidth
+If Me.ScaleHeight < mMinimumHeight Then Me.ScaleHeight = mMinimumHeight
+
+OkButton.Left = Me.ScaleWidth - OkButton.Width - 120
+CancelButton.Left = OkButton.Left
+TickfileOrganiser1.Width = OkButton.Left - 240
+
+TickfileOrganiser1.Height = Me.ScaleHeight - 240
 
 Exit Sub
 
@@ -145,47 +136,9 @@ End Sub
 ' Control Event Handlers
 '@================================================================================
 
-Private Sub AddTickfilesButton_Click()
-Dim tickfileNames() As String
-Const ProcName As String = "AddTickfilesButton_Click"
-Dim failpoint As String
-On Error GoTo Err
-
-tickfileNames = TickfileChooser1.chooseTickfiles
-
-If TickfileChooser1.cancelled Then Exit Sub
-
-TickfileListManager1.addTickfileNames tickfileNames
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub AddTickstreamsButton_Click()
-Dim lTickstreamSpecifier As fTickStreamSpecifier
-
-Const ProcName As String = "AddTickstreamsButton_Click"
-Dim failpoint As String
-On Error GoTo Err
-
-Set lTickstreamSpecifier = New fTickStreamSpecifier
-lTickstreamSpecifier.Show vbModal
-
-If lTickstreamSpecifier.cancelled Then Exit Sub
-
-TickfileListManager1.addTickfileSpecifiers lTickstreamSpecifier.TickfileSpecifiers
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub CancelButton_Click()
 Const ProcName As String = "CancelButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCancelled = True
@@ -197,22 +150,9 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub ClearButton_Click()
-Const ProcName As String = "ClearButton_Click"
-Dim failpoint As String
-On Error GoTo Err
-
-TickfileListManager1.Clear
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
 Private Sub OKButton_Click()
 Const ProcName As String = "OKButton_Click"
-Dim failpoint As String
+
 On Error GoTo Err
 
 mCancelled = False
@@ -224,17 +164,14 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TickfileListManager1_TickfileCountChanged()
-Const ProcName As String = "TickfileListManager1_TickfileCountChanged"
-Dim failpoint As String
+Private Sub TickfileOrganiser1_TickfileCountChanged()
+Const ProcName As String = "TickfileOrganiser1_TickfileCountChanged"
 On Error GoTo Err
 
-If TickfileListManager1.tickfileCount > 0 Then
+If TickfileOrganiser1.TickfileCount > 0 Then
     OkButton.Enabled = True
-    ClearButton.Enabled = True
 Else
     OkButton.Enabled = False
-    ClearButton.Enabled = False
 End If
 
 Exit Sub
@@ -253,20 +190,37 @@ End Property
 
 Public Property Get TickfileSpecifiers() As TickfileSpecifiers
 Const ProcName As String = "TickfileSpecifiers"
-Dim failpoint As String
 On Error GoTo Err
 
-If Not mCancelled Then Set TickfileSpecifiers = TickfileListManager1.TickfileSpecifiers
+If Not mCancelled Then Set TickfileSpecifiers = TickfileOrganiser1.TickfileSpecifiers
 
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub Initialise( _
+                ByVal pTickfileStore As ITickfileStore, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore)
+Const ProcName As String = "Initialise"
+On Error GoTo Err
+
+TickfileOrganiser1.Initialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore
+
+mCancelled = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 '@================================================================================
 ' Helper Functions

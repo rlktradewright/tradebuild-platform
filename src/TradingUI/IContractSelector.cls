@@ -60,7 +60,7 @@ Private Const ModuleName                            As String = "IContractSelect
 ' Properties
 '@================================================================================
 
-Public Property Get SelectedContracts() As Contracts
+Public Property Get SelectedContracts() As IContracts
 
 End Property
 
@@ -69,7 +69,8 @@ End Property
 '@================================================================================
 
 Public Sub Initialise( _
-                ByVal pContracts As Contracts)
+                ByVal pContracts As IContracts, _
+                ByVal pAllowMultipleSelection As Boolean)
                 
 End Sub
 

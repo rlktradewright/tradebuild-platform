@@ -49,7 +49,7 @@ Private Const ModuleName                    As String = "FetchTicksTask"
 
 Private mDB                                 As TradingDB
 
-Private mSpecifier                          As ContractSpecifier
+Private mSpecifier                          As IContractSpecifier
 Private mFromDate                           As Date
 Private mToDate                             As Date
 
@@ -72,7 +72,7 @@ End Sub
 
 Private Sub Task_Cancel()
 Const ProcName As String = "Task_Cancel"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If Not mInstrumentTaskController Is Nothing Then
@@ -83,12 +83,12 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Task_run()
 Const ProcName As String = "Task_run"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If mTaskContext.CancelPending Then
@@ -105,10 +105,10 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Private Property Let Task_TaskContext(ByVal value As TaskContext)
 Set mTaskContext = value
 End Property
 
@@ -120,7 +120,7 @@ End Property
 ' mInstrumentTaskController Event Handlers
 '@================================================================================
 
-Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEventData)
+Private Sub mInstrumentTaskController_Completed(ev As TaskCompletionEventData)
 Const ProcName As String = "mInstrumentTaskController_Completed"
 Dim lInstrument As instrument
 
@@ -131,11 +131,11 @@ If ev.Cancelled Then
     mTaskContext.Finish Empty, True
 ElseIf ev.ErrorNumber <> 0 Then
     mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
-ElseIf IsEmpty(ev.result) Then
+ElseIf IsEmpty(ev.Result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, _
                         "Specified object does not exist"
 Else
-    Set lInstrument = ev.result
+    Set lInstrument = ev.Result
     mTaskContext.Finish lInstrument.CreateTickStream(mFromDate, mToDate), False
 End If
 
@@ -155,12 +155,12 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal db As TradingDB, _
-                ByVal specifier As ContractSpecifier, _
+                ByVal Specifier As IContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date)
 Const ProcName As String = "Initialise"
 Set mDB = db
-Set mSpecifier = specifier
+Set mSpecifier = Specifier
 mFromDate = fromDate
 mToDate = toDate
 End Sub

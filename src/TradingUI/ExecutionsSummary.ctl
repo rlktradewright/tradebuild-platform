@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl ExecutionsSummary 
    ClientHeight    =   3810
    ClientLeft      =   0
@@ -73,10 +73,10 @@ Private Const ExecutionsTimeWidth = 23
 
 Private Enum ExecutionsColumns
     ExecId = 1
-    orderId
+    OrderId
     Action
     Quantity
-    symbol
+    Symbol
     Price
     Time
 End Enum
@@ -89,8 +89,7 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private mMonitoredWorkspaces            As Collection
-Private mSimulated                      As Boolean
+Private mMonitoredExecutions            As Collection
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -98,19 +97,19 @@ Private mSimulated                      As Boolean
 
 Private Sub UserControl_Initialize()
 Const ProcName As String = "UserControl_Initialize"
-Dim failpoint As String
+
 On Error GoTo Err
 
-Set mMonitoredWorkspaces = New Collection
+Set mMonitoredExecutions = New Collection
 
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.ExecId, , "Exec Id"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.orderId, , "ID"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.OrderId, , "ID"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Action, , "Action"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Quantity, , "Quant"
-ExecutionsList.ColumnHeaders.Add ExecutionsColumns.symbol, , "Symb"
+ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Symbol, , "Symb"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Price, , "Price"
 ExecutionsList.ColumnHeaders.Add ExecutionsColumns.Time, , "Time"
 
@@ -126,7 +125,7 @@ End Sub
 
 Private Sub UserControl_Resize()
 Const ProcName As String = "UserControl_Resize"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ExecutionsList.Height = UserControl.Height
@@ -135,7 +134,7 @@ ExecutionsList.Width = UserControl.Width
 ExecutionsList.ColumnHeaders(ExecutionsColumns.ExecId).Width = _
     ExecutionsExecIdWidth * ExecutionsList.Width / 100
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.orderId).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.OrderId).Width = _
     ExecutionsOrderIDWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Action).Width = _
@@ -144,7 +143,7 @@ ExecutionsList.ColumnHeaders(ExecutionsColumns.Action).Width = _
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Quantity).Width = _
     ExecutionsQuantityWidth * ExecutionsList.Width / 100
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.symbol).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.Symbol).Width = _
     ExecutionsSymbolWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.Price).Width = _
@@ -170,36 +169,17 @@ End Sub
 
 Private Sub CollectionChangeListener_Change( _
                 ev As CollectionChangeEventData)
-Dim exec As Execution
-Dim listItem As listItem
-
 Const ProcName As String = "CollectionChangeListener_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 If ev.changeType <> CollItemAdded Then Exit Sub
 
-Set exec = ev.affectedItem
-
-On Error Resume Next
-Set listItem = ExecutionsList.ListItems(exec.ExecId)
-On Error GoTo Err
-
-If listItem Is Nothing Then
-    Set listItem = ExecutionsList.ListItems.Add(, exec.ExecId, exec.ExecId)
-End If
-
-listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
-listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.OrderBrokerId
-listItem.SubItems(ExecutionsColumns.Price - 1) = exec.Price
-listItem.SubItems(ExecutionsColumns.Quantity - 1) = exec.Quantity
-listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.SecurityName
-listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
+addExecution ev.AffectedItem
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -209,7 +189,7 @@ End Sub
 
 Private Sub ExecutionsList_ColumnClick(ByVal columnHeader As columnHeader)
 Const ProcName As String = "ExecutionsList_ColumnClick"
-Dim failpoint As String
+
 On Error GoTo Err
 
 If ExecutionsList.SortKey = columnHeader.index - 1 Then
@@ -233,37 +213,13 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let Simulated(ByVal value As Boolean)
-Const ProcName As String = "Simulated"
-Dim failpoint As String
-On Error GoTo Err
-
-If mMonitoredWorkspaces.Count > 0 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Property must be set before any workspaces are monitored"
-End If
-
-mSimulated = value
-PropertyChanged "simulated"
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Get Simulated() As Boolean
-Simulated = mSimulated
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Sub Clear()
 Const ProcName As String = "Clear"
-Dim failpoint As String
+
 On Error GoTo Err
 
 ExecutionsList.ListItems.Clear
@@ -271,21 +227,19 @@ ExecutionsList.ListItems.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
-Dim i As Long
-Dim lWorkspace As Workspace
-
 Const ProcName As String = "Finish"
-Dim failpoint As String
 On Error GoTo Err
 
-For i = mMonitoredWorkspaces.Count To 1 Step -1
-    Set lWorkspace = mMonitoredWorkspaces(i)
-    lWorkspace.Executions.RemoveCollectionChangeListener Me
-    mMonitoredWorkspaces.Remove i
+Dim i As Long
+For i = mMonitoredExecutions.Count To 1 Step -1
+    Dim lExecs As Executions
+    Set lExecs = mMonitoredExecutions(i)
+    lExecs.RemoveCollectionChangeListener Me
+    mMonitoredExecutions.Remove i
 Next
 
 Clear
@@ -293,31 +247,55 @@ Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub MonitorWorkspace( _
-                ByVal pWorkspace As Workspace)
-Const ProcName As String = "MonitorWorkspace"
-Dim failpoint As String
+Public Sub MonitorExecutions( _
+                ByVal pExecutions As Executions)
+Const ProcName As String = "MonitorExecutions"
 On Error GoTo Err
 
-If mSimulated Then
-    pWorkspace.ExecutionsSimulated.AddCollectionChangeListener Me
-Else
-    pWorkspace.Executions.AddCollectionChangeListener Me
-End If
-mMonitoredWorkspaces.Add pWorkspace
+pExecutions.AddCollectionChangeListener Me
+mMonitoredExecutions.Add pExecutions
+
+Dim lExec As Execution
+For Each lExec In pExecutions
+    addExecution lExec
+Next
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
+Private Sub addExecution(ByVal pExec As Execution)
+Const ProcName As String = "addExecution"
+On Error GoTo Err
 
+Dim lListItem As ListItem
+On Error Resume Next
+Set lListItem = ExecutionsList.ListItems(pExec.Id)
+On Error GoTo Err
+
+If lListItem Is Nothing Then
+    Set lListItem = ExecutionsList.ListItems.Add(, pExec.Id, pExec.Id)
+End If
+
+lListItem.SubItems(ExecutionsColumns.Action - 1) = IIf(pExec.Action = OrderActionBuy, "BUY", "SELL")
+lListItem.SubItems(ExecutionsColumns.OrderId - 1) = pExec.BrokerId
+lListItem.SubItems(ExecutionsColumns.Price - 1) = pExec.Price
+lListItem.SubItems(ExecutionsColumns.Quantity - 1) = pExec.Quantity
+lListItem.SubItems(ExecutionsColumns.Symbol - 1) = pExec.SecurityName
+lListItem.SubItems(ExecutionsColumns.Time - 1) = pExec.FillTime
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 

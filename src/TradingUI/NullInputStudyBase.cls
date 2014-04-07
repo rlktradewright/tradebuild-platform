@@ -64,7 +64,7 @@ Private Property Get IStudyBase_BaseStudy() As IStudy
 Const ProcName As String = "IStudyBase_BaseStudy"
 On Error GoTo Err
 
-
+Set IStudyBase_BaseStudy = mStudyInputHandler
 
 Exit Property
 
@@ -76,7 +76,7 @@ Private Property Get IStudyBase_StudyManager() As StudyManager
 Const ProcName As String = "IStudyBase_StudyManager"
 On Error GoTo Err
 
-
+Set IStudyBase_StudyManager = mStudyManager
 
 Exit Property
 
@@ -85,8 +85,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Dim lContract As IContract
+Set lContract = ev.Future.value
+
+mStudyInputHandler.Name = lContract.Specifier.ToString
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' Properties
@@ -105,7 +122,8 @@ If pContractFuture.IsAvailable Then
     lName = lContract.Specifier.ToString
 Else
     lName = CStr(GetObjectKey(pContractFuture))
-    waitForFuture pContractFuture
+    Set mFutureWaiter = New FutureWaiter
+    mFutureWaiter.Add pContractFuture
 End If
 
 Set mStudyInputHandler = mStudyManager.CreateStudyInputHandler(lName)

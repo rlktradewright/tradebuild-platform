@@ -24,8 +24,8 @@ Begin VB.UserControl TickStreamSpecifier
          TabIndex        =   22
          Top             =   240
          Width           =   2535
-         Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
-            Height          =   3330
+         Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+            Height          =   3690
             Left            =   0
             TabIndex        =   0
             Top             =   0
@@ -122,7 +122,7 @@ Begin VB.UserControl TickStreamSpecifier
          End
          Begin VB.Frame SessionTimesFrame 
             Caption         =   "Session times"
-            Height          =   1095
+            Height          =   1335
             Left            =   0
             TabIndex        =   12
             Top             =   1200
@@ -167,7 +167,7 @@ Begin VB.UserControl TickStreamSpecifier
                Begin VB.OptionButton UseCustomTimesOption 
                   Caption         =   "Use custom times (must be in exchange timezone)"
                   Enabled         =   0   'False
-                  Height          =   495
+                  Height          =   615
                   Left            =   0
                   TabIndex        =   7
                   Top             =   240
@@ -226,6 +226,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
+
 Option Explicit
 
 '@================================================================================
@@ -271,29 +272,26 @@ Private Const ModuleName                As String = "TickStreamSpecifier"
 ' Member variables
 '@================================================================================
 
+Private mTickfileStore                      As ITickfileStore
+Private mPrimaryContractStore               As IContractStore
+Private mSecondaryContractStore             As IContractStore
+
 Private mSupportedTickStreamFormats()       As TickfileFormatSpecifier
-Private WithEvents mContractsLoadTC         As TaskController
-Attribute mContractsLoadTC.VB_VarHelpID = -1
-Private mContracts                          As Contracts
+Private mContracts                          As IContracts
 Attribute mContracts.VB_VarHelpID = -1
 
 Private mSecType                            As SecurityTypes
+
+Private WithEvents mFutureWaiter            As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
 
-Private Sub UserControl_Initialize()
-Const ProcName As String = "UserControl_Initialize"
-Dim failpoint As String
-On Error GoTo Err
-
-getSupportedTickstreamFormats
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
+Private Sub UserControl_Resize()
+UserControl.Height = 4200
+UserControl.Width = 6720
 End Sub
 
 '@================================================================================
@@ -306,7 +304,6 @@ End Sub
 
 Private Sub CompleteSessionCheck_Click()
 Const ProcName As String = "CompleteSessionCheck_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 If CompleteSessionCheck = vbChecked Then
@@ -329,7 +326,6 @@ End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
 Const ProcName As String = "ContractSpecBuilder1_NotReady"
-Dim failpoint As String
 On Error GoTo Err
 
 RaiseEvent NotReady
@@ -342,7 +338,6 @@ End Sub
 
 Private Sub ContractSpecBuilder1_Ready()
 Const ProcName As String = "ContractSpecBuilder1_Ready"
-Dim failpoint As String
 On Error GoTo Err
 
 checkReady
@@ -355,7 +350,6 @@ End Sub
 
 Private Sub CustomFromTimeText_Change()
 Const ProcName As String = "CustomFromTimeText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 checkReady
@@ -368,7 +362,6 @@ End Sub
 
 Private Sub CustomToTimeText_Change()
 Const ProcName As String = "CustomToTimeText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 checkReady
@@ -381,7 +374,6 @@ End Sub
 
 Private Sub FromDateText_Change()
 Const ProcName As String = "FromDateText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 checkReady
@@ -394,7 +386,6 @@ End Sub
 
 Private Sub ToDateText_Change()
 Const ProcName As String = "ToDateText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 checkReady
@@ -407,7 +398,6 @@ End Sub
 
 Private Sub UseContractTimesOption_Click()
 Const ProcName As String = "UseContractTimesOption_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 adjustCustomTimeFieldAttributes
@@ -421,7 +411,6 @@ End Sub
 
 Private Sub UseCustomTimesOption_Click()
 Const ProcName As String = "UseCustomTimesOption_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 adjustCustomTimeFieldAttributes
@@ -434,34 +423,23 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mContractsLoadTC Event Handlers
+' mFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub mContractsLoadTC_Completed(ev As TWUtilities30.TaskCompletionEventData)
-Const ProcName As String = "mContractsLoadTC_Completed"
-Dim failpoint As String
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 Screen.MousePointer = vbDefault
-If ev.errorNumber <> 0 Then
-    ErrorLabel.caption = ev.errorMessage
+
+If ev.Future.IsFaulted <> 0 Then
+    ErrorLabel.Caption = ev.Future.ErrorMessage
+ElseIf ev.Future.IsCancelled <> 0 Then
+    ErrorLabel.Caption = "Contracts fetch cancelled"
 Else
-    Set mContracts = ev.result
+    Set mContracts = ev.Future.value
     processContracts
 End If
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mContractsLoadTC_Notification(ev As TWUtilities30.TaskNotificationEventData)
-Const ProcName As String = "mContractsLoadTC_Notification"
-Dim failpoint As String
-On Error GoTo Err
-
-ErrorLabel.caption = ev.eventMessage
 
 Exit Sub
 
@@ -477,31 +455,48 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Sub load()
-Dim contractSpec As contractSpecifier
-
-Const ProcName As String = "load"
-Dim failpoint As String
+Public Sub Initialise( _
+                ByVal pTickfileStore As ITickfileStore, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore)
+Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-ErrorLabel.caption = ""
+Set mTickfileStore = pTickfileStore
+Set mPrimaryContractStore = pPrimaryContractStore
+Set mSecondaryContractStore = pSecondaryContractStore
+getSupportedTickstreamFormats
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub Load()
+Const ProcName As String = "load"
+On Error GoTo Err
+
+ErrorLabel.Caption = ""
 
 Screen.MousePointer = vbHourglass
 
-Set contractSpec = ContractSpecBuilder1.contractSpecifier
+Dim contractSpec As IContractSpecifier
+Set contractSpec = ContractSpecBuilder1.ContractSpecifier
 mSecType = contractSpec.secType
 
-Set mContractsLoadTC = TradeBuildAPI.LoadContracts(contractSpec)
+Set mFutureWaiter = New FutureWaiter
+mFutureWaiter.Add FetchContracts(contractSpec, mPrimaryContractStore, mSecondaryContractStore)
 
 Exit Sub
 
 Err:
 Screen.MousePointer = vbDefault
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    ErrorLabel.caption = Err.Description
+    ErrorLabel.Caption = Err.Description
     Exit Sub
 End If
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -510,7 +505,6 @@ End Sub
 
 Private Sub adjustCustomTimeFieldAttributes()
 Const ProcName As String = "adjustCustomTimeFieldAttributes"
-Dim failpoint As String
 On Error GoTo Err
 
 If UseCustomTimesOption Then
@@ -522,18 +516,16 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function checkOk() As Boolean
-
 Const ProcName As String = "checkOk"
-Dim failpoint As String
 On Error GoTo Err
 
 If FormatCombo.ListCount = 0 Then Exit Function
 
-If Not ContractSpecBuilder1.isReady Then Exit Function
+If Not ContractSpecBuilder1.IsReady Then Exit Function
 
 If Not IsDate(FromDateText.Text) Then Exit Function
 If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Function
@@ -556,13 +548,12 @@ checkOk = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
 Private Sub checkReady()
 Const ProcName As String = "checkReady"
-Dim failpoint As String
 On Error GoTo Err
 
 If checkOk Then
@@ -574,61 +565,59 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableCustomTimeFields()
 Const ProcName As String = "disableCustomTimeFields"
-Dim failpoint As String
 On Error GoTo Err
 
 CustomFromTimeText.Enabled = False
-CustomFromTimeText.backColor = vbButtonFace
+CustomFromTimeText.BackColor = vbButtonFace
 CustomToTimeText.Enabled = False
-CustomToTimeText.backColor = vbButtonFace
+CustomToTimeText.BackColor = vbButtonFace
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableCustomTimeFields()
 Const ProcName As String = "enableCustomTimeFields"
-Dim failpoint As String
 On Error GoTo Err
 
 CustomFromTimeText.Enabled = True
-CustomFromTimeText.backColor = vbWindowBackground
+CustomFromTimeText.BackColor = vbWindowBackground
 CustomToTimeText.Enabled = True
-CustomToTimeText.backColor = vbWindowBackground
+CustomToTimeText.BackColor = vbWindowBackground
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getSupportedTickstreamFormats()
+On Error GoTo Err
+
 Dim tff() As TickfileFormatSpecifier
 Dim i As Long
 Dim j As Long
 
-On Error GoTo Err
-
-tff = TradeBuildAPI.SupportedInputTickfileFormats
+tff = mTickfileStore.SupportedFormats
 
 ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
 j = -1
 
 For i = 0 To UBound(tff)
-    If tff(i).FormatType = StreamBased Then
+    If tff(i).FormatType = TickfileModeStreamBased Then
         j = j + 1
         If j > UBound(mSupportedTickStreamFormats) Then
             ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TickfileFormatSpecifier
         End If
         mSupportedTickStreamFormats(j) = tff(i)
-        FormatCombo.addItem mSupportedTickStreamFormats(j).name
+        FormatCombo.addItem mSupportedTickStreamFormats(j).Name
     End If
 Next
 
@@ -647,14 +636,10 @@ Err:
 End Sub
 
 Private Sub processContracts()
-Dim lTickfileSpecifiers As TickfileSpecifiers
-Dim k As Long
-Dim TickfileFormatID As String
-
 On Error GoTo Err
 
 If mContracts.Count = 0 Then
-    ErrorLabel.caption = "No contracts meet this specification"
+    ErrorLabel.Caption = "No contracts meet this specification"
     Exit Sub
 End If
 
@@ -664,19 +649,22 @@ If mSecType <> SecurityTypes.SecTypeFuture And _
 Then
     If mContracts.Count > 1 Then
         ' don't see how this can happen, but just in case!
-        ErrorLabel.caption = "More than one contract meets this specification"
+        ErrorLabel.Caption = "More than one contract meets this specification"
         Exit Sub
     End If
 End If
     
+Dim TickfileFormatID As String
+Dim k As Long
 For k = 0 To UBound(mSupportedTickStreamFormats)
-    If mSupportedTickStreamFormats(k).name = FormatCombo.Text Then
+    If mSupportedTickStreamFormats(k).Name = FormatCombo.Text Then
         TickfileFormatID = mSupportedTickStreamFormats(k).FormalID
         Exit For
     End If
 Next
 
-Set lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
+Dim lTickfileSpecifiers As TickfileSpecifiers
+Set lTickfileSpecifiers = GenerateTickfileSpecifiers( _
                                                 mContracts, _
                                                 TickfileFormatID, _
                                                 CDate(FromDateText), _
@@ -690,7 +678,7 @@ RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 Exit Sub
 
 Err:
-ErrorLabel.caption = Err.Description
+ErrorLabel.Caption = Err.Description
 
 End Sub
 

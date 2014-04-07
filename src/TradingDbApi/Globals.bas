@@ -49,6 +49,12 @@ Private Const ModuleName                            As String = "Globals"
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tradingdbapi", ProjectName)
+Set gLogger = sLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

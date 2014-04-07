@@ -33,6 +33,7 @@ Begin VB.UserControl OrderTicket
          Width           =   2655
          Begin VB.TextBox VolumeText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -43,6 +44,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox HighText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -53,6 +55,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox LowText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -63,6 +66,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox LastSizeText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -73,6 +77,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox AskSizeText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -83,6 +88,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox BidSizeText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -93,6 +99,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox BidText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -103,6 +110,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox LastText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -113,6 +121,7 @@ Begin VB.UserControl OrderTicket
          End
          Begin VB.TextBox AskText 
             Alignment       =   1  'Right Justify
+            BorderStyle     =   0  'None
             Height          =   255
             Left            =   960
             Locked          =   -1  'True
@@ -355,10 +364,10 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Ignore RTH"
             Height          =   255
             Index           =   0
-            Left            =   2640
+            Left            =   2520
             TabIndex        =   8
             Top             =   0
-            Width           =   1095
+            Width           =   1215
          End
          Begin VB.TextBox OrderRefText 
             Height          =   285
@@ -392,7 +401,7 @@ Begin VB.UserControl OrderTicket
             Left            =   2400
             TabIndex        =   21
             Top             =   2760
-            Width           =   1335
+            Width           =   1410
          End
          Begin VB.CheckBox ETradeOnlyCheck 
             Caption         =   "eTrade only"
@@ -496,7 +505,7 @@ Begin VB.UserControl OrderTicket
             Left            =   2400
             TabIndex        =   19
             Top             =   2520
-            Width           =   1095
+            Width           =   1335
          End
          Begin VB.ComboBox TIFCombo 
             Height          =   315
@@ -730,7 +739,7 @@ Option Explicit
 '@================================================================================
 
 Implements ChangeListener
-Implements QuoteListener
+Implements IGenericTickListener
 
 '@================================================================================
 ' Events
@@ -742,9 +751,10 @@ Event CaptionChanged(ByVal caption As String)
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                As String = "OrderTicket"
+Private Const ModuleName                        As String = "OrderTicket"
 
 Private Const NotReadyMessage                   As String = "Not ready for placing orders"
+Private Const NoContractMessage                 As String = NotReadyMessage & ": no contract"
 
 Private Const OrdersLiveMessage                 As String = "Orders are LIVE !!"
 Private Const OrdersSimulatedMessage            As String = "Orders are simulated"
@@ -767,7 +777,7 @@ End Enum
 
 Private Enum OrderSchemes
     SimpleOrder
-    Bracketorder
+    BracketOrder
     OCAOrder
 End Enum
 
@@ -779,17 +789,20 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTicker                              As Ticker
-Attribute mTicker.VB_VarHelpID = -1
-Private WithEvents mOrderContext                        As OrderContext
-Attribute mOrderContext.VB_VarHelpID = -1
+Private mDataSource                                     As IMarketDataSource
+Attribute mDataSource.VB_VarHelpID = -1
+Private WithEvents mActiveOrderContext                  As OrderContext
+Attribute mActiveOrderContext.VB_VarHelpID = -1
 
-Private mcontract                                       As Contract
+Private mLiveOrderContext                               As OrderContext
+Attribute mLiveOrderContext.VB_VarHelpID = -1
+Private mSimulatedOrderContext                          As OrderContext
+Attribute mSimulatedOrderContext.VB_VarHelpID = -1
 
-Private mOrderAction                                    As OrderActions
+Private mContract                                       As IContract
 
-Private WithEvents mOrderPlex                           As OrderPlex
-Attribute mOrderPlex.VB_VarHelpID = -1
+Private mBracketOrder                                   As IBracketOrder
+Attribute mBracketOrder.VB_VarHelpID = -1
 
 Private mCurrentBracketOrderIndex                       As BracketIndexes
 
@@ -799,14 +812,8 @@ Private mInvalidControls(2)                             As Control
 ' Form Event Handlers
 '@================================================================================
 
-Private Sub Form_Initialize()
-InitCommonControls
-End Sub
-
 Private Sub UserControl_Initialize()
-
 Const ProcName As String = "UserControl_Initialize"
-Dim failpoint As String
 On Error GoTo Err
 
 setupOrderSchemeCombo
@@ -818,6 +825,8 @@ setupActionCombo BracketIndexes.BracketEntryOrder
 setupActionCombo BracketIndexes.BracketStopOrder
 setupActionCombo BracketIndexes.BracketTargetOrder
 
+disableAll NoContractMessage
+
 Exit Sub
 
 Err:
@@ -825,7 +834,8 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub UserControl_Terminate()
-Finish
+On Error Resume Next
+Clear
 End Sub
 
 '@================================================================================
@@ -833,140 +843,87 @@ End Sub
 '@================================================================================
 
 Private Sub ChangeListener_Change(ev As ChangeEventData)
-Dim op As OrderPlex
-
 Const ProcName As String = "ChangeListener_Change"
-Dim failpoint As String
 On Error GoTo Err
 
+Dim op As IBracketOrder
 Set op = ev.Source
 
 Select Case ev.changeType
-Case OrderPlexChangeTypes.OrderPlexChangesApplied
+Case BracketOrderChangeTypes.BracketOrderChangesApplied
     ModifyButton.Enabled = False
     UndoButton.Enabled = False
-Case OrderPlexChangeTypes.OrderPlexChangesCancelled
+Case BracketOrderChangeTypes.BracketOrderChangesCancelled
     ModifyButton.Enabled = False
     UndoButton.Enabled = False
-Case OrderPlexChangeTypes.OrderPlexChangesPending
+Case BracketOrderChangeTypes.BracketOrderChangesPending
     ModifyButton.Enabled = True
     UndoButton.Enabled = True
-Case OrderPlexChangeTypes.OrderPlexCompleted
-    reset
-    clearOrderPlex
-Case OrderPlexChangeTypes.OrderPlexSelfCancelled
-    reset
-    clearOrderPlex
-Case OrderPlexChangeTypes.OrderPlexEntryOrderChanged
-    setOrderFieldValues op.entryOrder, BracketIndexes.BracketEntryOrder
-Case OrderPlexChangeTypes.OrderPlexStopOrderChanged
-    setOrderFieldValues op.stopOrder, BracketIndexes.BracketStopOrder
-Case OrderPlexChangeTypes.OrderPlexTargetOrderChanged
-    setOrderFieldValues op.targetOrder, BracketIndexes.BracketTargetOrder
-Case OrderPlexChangeTypes.OrderPlexCloseoutOrderCreated
-Case OrderPlexChangeTypes.OrderPlexCloseoutOrderChanged
-Case OrderPlexChangeTypes.OrderPlexProfitThresholdExceeded
-Case OrderPlexChangeTypes.OrderPlexLossThresholdExceeded
-Case OrderPlexChangeTypes.OrderPlexDrawdownThresholdExceeded
-Case OrderPlexChangeTypes.OrderPlexSizeChanged
-Case OrderPlexChangeTypes.OrderPlexStateChanged
+Case BracketOrderChangeTypes.BracketOrderCompleted
+    'clearBracketOrder
+    Set mBracketOrder = Nothing
+    setupControls
+Case BracketOrderChangeTypes.BracketOrderSelfCancelled
+    'clearBracketOrder
+    Set mBracketOrder = Nothing
+    setupControls
+Case BracketOrderChangeTypes.BracketOrderEntryOrderChanged
+    If op.EntryOrder.Status = OrderStatusFilled Then disableOrderFields BracketIndexes.BracketEntryOrder
+    setOrderFieldValues op.EntryOrder, BracketIndexes.BracketEntryOrder
+Case BracketOrderChangeTypes.BracketOrderStopOrderChanged
+    If op.StopLossOrder.Status = OrderStatusFilled Then disableOrderFields BracketIndexes.BracketStopOrder
+    setOrderFieldValues op.StopLossOrder, BracketIndexes.BracketStopOrder
+Case BracketOrderChangeTypes.BracketOrderTargetOrderChanged
+    If op.TargetOrder.Status = OrderStatusFilled Then disableOrderFields BracketIndexes.BracketTargetOrder
+    setOrderFieldValues op.TargetOrder, BracketIndexes.BracketTargetOrder
+Case BracketOrderChangeTypes.BracketOrderCloseoutOrderCreated
+Case BracketOrderChangeTypes.BracketOrderCloseoutOrderChanged
+Case BracketOrderChangeTypes.BracketOrderSizeChanged
+Case BracketOrderChangeTypes.BracketOrderStateChanged
 End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' QuoteListener Interface Members
+' IGenericTickListener Interface Members
 '@================================================================================
 
-Private Sub QuoteListener_ask(ev As QuoteEventData)
-Const ProcName As String = "QuoteListener_ask"
-Dim failpoint As String
+Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
+Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-AskText = GetFormattedPriceFromQuoteEvent(ev)
-AskSizeText = ev.Size
-setPriceFields
+Dim lPriceText As String
+lPriceText = priceToString(ev.Tick.Price)
+
+Select Case ev.Tick.TickType
+Case TickTypeBid
+    BidText = lPriceText
+    BidSizeText = ev.Tick.Size
+    setPriceFields
+Case TickTypeAsk
+    AskText = lPriceText
+    AskSizeText = ev.Tick.Size
+    setPriceFields
+Case TickTypeHighPrice
+    HighText = lPriceText
+Case TickTypeLowPrice
+    LowText = lPriceText
+Case TickTypeTrade
+    LastText = lPriceText
+    LastSizeText = ev.Tick.Size
+    setPriceFields
+Case TickTypeVolume
+    VolumeText = ev.Tick.Size
+End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub QuoteListener_bid(ev As QuoteEventData)
-Const ProcName As String = "QuoteListener_bid"
-Dim failpoint As String
-On Error GoTo Err
-
-BidText = GetFormattedPriceFromQuoteEvent(ev)
-BidSizeText = ev.Size
-setPriceFields
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub QuoteListener_high(ev As QuoteEventData)
-HighText = GetFormattedPriceFromQuoteEvent(ev)
-End Sub
-
-Private Sub QuoteListener_Low(ev As QuoteEventData)
-Const ProcName As String = "QuoteListener_Low"
-Dim failpoint As String
-On Error GoTo Err
-
-LowText = GetFormattedPriceFromQuoteEvent(ev)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub QuoteListener_openInterest(ev As QuoteEventData)
-
-End Sub
-
-Private Sub QuoteListener_previousClose(ev As QuoteEventData)
-
-End Sub
-
-Private Sub QuoteListener_sessionOpen(ev As QuoteEventData)
-
-End Sub
-
-Private Sub QuoteListener_trade(ev As QuoteEventData)
-Const ProcName As String = "QuoteListener_trade"
-Dim failpoint As String
-On Error GoTo Err
-
-LastText = GetFormattedPriceFromQuoteEvent(ev)
-LastSizeText = ev.Size
-setPriceFields
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub QuoteListener_volume(ev As QuoteEventData)
-Const ProcName As String = "QuoteListener_volume"
-Dim failpoint As String
-On Error GoTo Err
-
-VolumeText = ev.Size
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -975,7 +932,6 @@ End Sub
 
 Private Sub ActionCombo_Click(ByRef index As Integer)
 Const ProcName As String = "ActionCombo_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 setAction index
@@ -988,7 +944,6 @@ End Sub
 
 Private Sub BracketTabStrip_Click()
 Const ProcName As String = "BracketTabStrip_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 mCurrentBracketOrderIndex = BracketTabStrip.SelectedItem.index - 1
@@ -1002,14 +957,13 @@ End Sub
 
 Private Sub CancelButton_Click()
 Const ProcName As String = "CancelButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
-If Not mOrderPlex Is Nothing Then
-    mOrderPlex.Cancel True
-End If
-clearOrderPlex
-reset
+If Not mBracketOrder Is Nothing Then mBracketOrder.Cancel True
+clearBracketOrder
+setupControls
+
+CancelButton.Visible = False
 
 Exit Sub
 
@@ -1039,20 +993,19 @@ End Sub
 
 Private Sub ModifyButton_Click()
 Const ProcName As String = "ModifyButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not isValidOrder(BracketEntryOrder) Then Exit Sub
-setOrderAttributes mOrderPlex.entryOrder, BracketIndexes.BracketEntryOrder
-If Not mOrderPlex.stopOrder Is Nothing Then
+setOrderAttributes mBracketOrder.EntryOrder, BracketIndexes.BracketEntryOrder
+If Not mBracketOrder.StopLossOrder Is Nothing Then
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
-    setOrderAttributes mOrderPlex.stopOrder, BracketIndexes.BracketStopOrder
+    setOrderAttributes mBracketOrder.StopLossOrder, BracketIndexes.BracketStopOrder
 End If
-If Not mOrderPlex.targetOrder Is Nothing Then
+If Not mBracketOrder.TargetOrder Is Nothing Then
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
-    setOrderAttributes mOrderPlex.targetOrder, BracketIndexes.BracketTargetOrder
+    setOrderAttributes mBracketOrder.TargetOrder, BracketIndexes.BracketTargetOrder
 End If
-mOrderPlex.Update
+mBracketOrder.Update
 
 Exit Sub
 
@@ -1062,11 +1015,10 @@ End Sub
 
 Private Sub OffsetText_Change(index As Integer)
 Const ProcName As String = "OffsetText_Change"
-Dim failpoint As String
 On Error GoTo Err
 
 If IsNumeric(OffsetText(index)) Then
-    OffsetValueText(index) = OffsetText(index) * mcontract.TickSize
+    OffsetValueText(index) = OffsetText(index) * mContract.TickSize
 Else
     OffsetValueText(index) = ""
 End If
@@ -1079,62 +1031,69 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub OrderSchemeCombo_Click()
+Const ProcName As String = "OrderSchemeCombo_Click"
+On Error GoTo Err
+
 setOrderScheme comboItemData(OrderSchemeCombo)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub PlaceOrdersButton_Click()
-Dim op As OrderPlex
-
 Const ProcName As String = "PlaceOrdersButton_Click"
-Dim failpoint As String
 On Error GoTo Err
+
+Dim op As IBracketOrder
 
 Select Case comboItemData(OrderSchemeCombo)
 Case OrderSchemes.SimpleOrder
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     
-    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.ActionBuy Then
-        Set op = mOrderContext.CreateBuyOrderPlex( _
+    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.OrderActionBuy Then
+        Set op = mActiveOrderContext.CreateBuyBracketOrder( _
                                     QuantityText(BracketIndexes.BracketEntryOrder), _
                                     comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
                                     IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
-                                    StopOrderTypes.StopOrderTypeNone, _
+                                    BracketStopLossTypes.BracketStopLossTypeNone, _
                                     0, _
                                     0, _
                                     0, _
-                                    TargetOrderTypes.TargetOrderTypeNone, _
+                                    BracketTargetTypes.BracketTargetTypeNone, _
                                     0, _
                                     0, _
                                     0)
     Else
-        Set op = mOrderContext.CreateSellOrderPlex( _
+        Set op = mActiveOrderContext.CreateSellBracketOrder( _
                                     QuantityText(BracketIndexes.BracketEntryOrder), _
                                     comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
                                     IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
-                                    StopOrderTypes.StopOrderTypeNone, _
+                                    BracketStopLossTypes.BracketStopLossTypeNone, _
                                     0, _
                                     0, _
                                     0, _
-                                    TargetOrderTypes.TargetOrderTypeNone, _
+                                    BracketTargetTypes.BracketTargetTypeNone, _
                                     0, _
                                     0, _
                                     0)
         
     End If
     
-    setOrderAttributes op.entryOrder, BracketIndexes.BracketEntryOrder
-    mOrderContext.ExecuteOrderPlex op
-Case OrderSchemes.Bracketorder
+    setOrderAttributes op.EntryOrder, BracketIndexes.BracketEntryOrder
+    mActiveOrderContext.ExecuteBracketOrder op
+Case OrderSchemes.BracketOrder
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
     
-    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.ActionBuy Then
-        Set op = mOrderContext.CreateBuyOrderPlex( _
+    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.OrderActionBuy Then
+        Set op = mActiveOrderContext.CreateBuyBracketOrder( _
                                     QuantityText(BracketIndexes.BracketEntryOrder), _
                                     comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
@@ -1149,7 +1108,7 @@ Case OrderSchemes.Bracketorder
                                     IIf(OffsetText(BracketIndexes.BracketTargetOrder) = "", 0, OffsetText(BracketIndexes.BracketTargetOrder)), _
                                     getPrice(StopPriceText(BracketIndexes.BracketTargetOrder)))
     Else
-        Set op = mOrderContext.CreateSellOrderPlex( _
+        Set op = mActiveOrderContext.CreateSellBracketOrder( _
                                     QuantityText(BracketIndexes.BracketEntryOrder), _
                                     comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
                                     getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
@@ -1165,14 +1124,14 @@ Case OrderSchemes.Bracketorder
                                     getPrice(StopPriceText(BracketIndexes.BracketTargetOrder)))
     End If
     
-    setOrderAttributes op.entryOrder, BracketIndexes.BracketEntryOrder
-    If Not op.stopOrder Is Nothing Then
-        setOrderAttributes op.stopOrder, BracketIndexes.BracketStopOrder
+    setOrderAttributes op.EntryOrder, BracketIndexes.BracketEntryOrder
+    If Not op.StopLossOrder Is Nothing Then
+        setOrderAttributes op.StopLossOrder, BracketIndexes.BracketStopOrder
     End If
-    If Not op.targetOrder Is Nothing Then
-        setOrderAttributes op.targetOrder, BracketIndexes.BracketTargetOrder
+    If Not op.TargetOrder Is Nothing Then
+        setOrderAttributes op.TargetOrder, BracketIndexes.BracketTargetOrder
     End If
-    mOrderContext.ExecuteOrderPlex op
+    mActiveOrderContext.ExecuteBracketOrder op
 Case OrderSchemes.OCAOrder
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 End Select
@@ -1187,37 +1146,35 @@ End Sub
 Private Sub PriceText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim lPrice As Double
+Const ProcName As String = "PriceText_Validate"
+On Error GoTo Err
 
 ' allow blank Price to prevent user irritation if they place the caret
 ' in the Price field when the order type is limit, and then decide they
 ' want to change the order type - if space is not allowed then they
 ' would have to enter a valid Price before being able to get to the order
 ' type combo
-Const ProcName As String = "PriceText_Validate"
-Dim failpoint As String
-On Error GoTo Err
-
 If PriceText(index) = "" Then Exit Sub
 
-If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
+Dim lPrice As Double
+If (comboItemData(ActionCombo(index)) = OrderActions.OrderActionNone And _
         PriceText(index) <> "" _
     ) Or _
-    Not mcontract.ParsePrice(PriceText(index), lPrice) Or _
+    Not priceFromString(PriceText(index), lPrice) Or _
     lPrice <= 0 _
 Then
     Cancel = True
     Exit Sub
 End If
 
-If Not mOrderPlex Is Nothing Then
+If Not mBracketOrder Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.NewEntryPrice = lPrice
+        mBracketOrder.SetNewEntryPrice lPrice
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.NewStopPrice = lPrice
+        mBracketOrder.SetNewStopLossPrice lPrice
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.NewTargetPrice = lPrice
+        mBracketOrder.SetNewTargetPrice lPrice
     End Select
 End If
 
@@ -1230,22 +1187,20 @@ End Sub
 Private Sub QuantityText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim Quantity As Long
-Dim max As Long
-Dim min As Long
-
 Const ProcName As String = "QuantityText_Validate"
-Dim failpoint As String
 On Error GoTo Err
 
-If comboItemData(ActionCombo(index)) <> OrderActions.ActionNone And _
+If comboItemData(ActionCombo(index)) <> OrderActions.OrderActionNone And _
     Not IsNumeric(QuantityText(index)) _
 Then
     Cancel = True
     Exit Sub
 End If
 
-Select Case mcontract.Specifier.secType
+Dim max As Long
+Dim min As Long
+
+Select Case mContract.Specifier.secType
 Case SecTypeStock
     min = 10
     max = 100000
@@ -1274,15 +1229,16 @@ If Not IsInteger(QuantityText(index), min, max) Then
     Exit Sub
 End If
 
+Dim Quantity As Long
 Quantity = CLng(QuantityText(index))
 
-If mOrderPlex Is Nothing Then
+If mBracketOrder Is Nothing Then
     If Quantity = 0 Then
         Cancel = True
         Exit Sub
     End If
     
-    If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder Then
+    If comboItemData(OrderSchemeCombo) = OrderSchemes.BracketOrder Then
         Select Case index
         Case BracketIndexes.BracketEntryOrder
             QuantityText(BracketIndexes.BracketStopOrder) = Quantity
@@ -1297,7 +1253,7 @@ If mOrderPlex Is Nothing Then
     End If
     
 Else
-    mOrderPlex.NewQuantity = Quantity
+    mBracketOrder.SetNewQuantity Quantity
 End If
 
 Exit Sub
@@ -1308,11 +1264,10 @@ End Sub
 
 Private Sub ResetButton_Click()
 Const ProcName As String = "ResetButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
-clearOrderPlex
-reset
+clearBracketOrder
+setupControls
 
 Exit Sub
 
@@ -1322,15 +1277,9 @@ End Sub
 
 Private Sub SimulateOrdersCheck_Click()
 Const ProcName As String = "SimulateOrdersCheck_Click"
-Dim failpoint As String
 On Error GoTo Err
 
-If SimulateOrdersCheck.value = vbUnchecked Then
-    Set mOrderContext = mTicker.DefaultOrderContext
-Else
-    Set mOrderContext = mTicker.DefaultOrderContextSimulated
-End If
-setupTicker
+setActiveOrderContext chooseLiveOrSimulatedOrderContext
 
 Exit Sub
 
@@ -1341,30 +1290,28 @@ End Sub
 Private Sub StopPriceText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
-Dim lPrice As Double
-
 Const ProcName As String = "StopPriceText_Validate"
-Dim failpoint As String
 On Error GoTo Err
 
-If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
+Dim lPrice As Double
+If (comboItemData(ActionCombo(index)) = OrderActions.OrderActionNone And _
         StopPriceText(index) <> "" _
     ) Or _
-    Not mTicker.ParsePrice(StopPriceText(index), lPrice) Or _
-    lPrice < 0 __
+    Not priceFromString(StopPriceText(index), lPrice) Or _
+    lPrice < 0 _
 Then
     Cancel = True
     Exit Sub
 End If
 
-If Not mOrderPlex Is Nothing Then
+If Not mBracketOrder Is Nothing Then
     Select Case index
     Case BracketIndexes.BracketEntryOrder
-        mOrderPlex.NewEntryTriggerPrice = lPrice
+        mBracketOrder.SetNewEntryTriggerPrice lPrice
     Case BracketIndexes.BracketStopOrder
-        mOrderPlex.NewStopTriggerPrice = lPrice
+        mBracketOrder.SetNewStopLossTriggerPrice lPrice
     Case BracketIndexes.BracketTargetOrder
-        mOrderPlex.NewTargetTriggerPrice = lPrice
+        mBracketOrder.SetNewTargetTriggerPrice lPrice
     End Select
 End If
 
@@ -1376,7 +1323,6 @@ End Sub
 
 Private Sub TypeCombo_Click(index As Integer)
 Const ProcName As String = "TypeCombo_Click"
-Dim failpoint As String
 On Error GoTo Err
 
 configureOrderFields index
@@ -1390,10 +1336,9 @@ End Sub
 
 Private Sub UndoButton_Click()
 Const ProcName As String = "UndoButton_Click"
-Dim failpoint As String
 On Error GoTo Err
 
-mOrderPlex.CancelChanges
+mBracketOrder.CancelChanges
 
 Exit Sub
 
@@ -1402,104 +1347,26 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' mOrderContext Event Handlers
+' mActiveOrderContext Event Handlers
 '@================================================================================
 
-Private Sub mOrderContext_NotReady()
-Const ProcName As String = "mOrderContext_NotReady"
-Dim failpoint As String
+Private Sub mActiveOrderContext_Change(ev As ChangeEventData)
+Const ProcName As String = "mActiveOrderContext_Change"
 On Error GoTo Err
 
-disableAll NotReadyMessage
+Dim lChangeType As OrderContextChangeTypes
+lChangeType = ev.changeType
 
-Exit Sub
+Select Case lChangeType
+Case OrderContextReadyStateChanged
+    If mActiveOrderContext.IsReady Then
+        OrderSchemeCombo.Enabled = True
+        setupControls
+    Else
+        disableAll NotReadyMessage
+    End If
+Case OrderContextActiveStateChanged
 
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mOrderContext_Ready()
-Const ProcName As String = "mOrderContext_Ready"
-Dim failpoint As String
-On Error GoTo Err
-
-OrderSchemeCombo.Enabled = True
-setupTicker
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mOrderPlex Event Handlers
-'@================================================================================
-
-Private Sub mOrderPlex_EntryOrderFilled()
-Const ProcName As String = "mOrderPlex_EntryOrderFilled"
-Dim failpoint As String
-On Error GoTo Err
-
-disableOrderFields BracketIndexes.BracketEntryOrder
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mOrderPlex_StopOrderFilled()
-Const ProcName As String = "mOrderPlex_StopOrderFilled"
-Dim failpoint As String
-On Error GoTo Err
-
-disableOrderFields BracketIndexes.BracketStopOrder
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-Private Sub mOrderPlex_TargetOrderFilled()
-Const ProcName As String = "mOrderPlex_TargetOrderFilled"
-Dim failpoint As String
-On Error GoTo Err
-
-disableOrderFields BracketIndexes.BracketTargetOrder
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mTicker Event Handlers
-'@================================================================================
-
-Private Sub mTicker_StateChange(ev As StateChangeEventData)
-
-Const ProcName As String = "mTicker_StateChange"
-Dim failpoint As String
-On Error GoTo Err
-
-Select Case ev.State
-Case TickerStateCreated
-
-Case TickerStateStarting
-
-Case TickerStateRunning
-
-Case TickerStatePaused
-
-Case TickerStateClosing
-
-Case TickerStateStopped
-    disableAll "Ticker has been stopped"
-    Set mOrderContext = Nothing
-    Set mTicker = Nothing
 End Select
 
 Exit Sub
@@ -1515,7 +1382,6 @@ End Sub
 Public Property Get Enabled() As Boolean
 Attribute Enabled.VB_UserMemId = -514
 Const ProcName As String = "Enabled"
-Dim failpoint As String
 On Error GoTo Err
 
 Enabled = UserControl.Enabled
@@ -1523,13 +1389,12 @@ Enabled = UserControl.Enabled
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Enabled( _
                 ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As String
 On Error GoTo Err
 
 UserControl.Enabled = value
@@ -1538,79 +1403,88 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Property
-
-Public Property Let Ticker(ByVal value As Ticker)
-
-Const ProcName As String = "Ticker"
-Dim failpoint As String
-On Error GoTo Err
-
-If value Is mTicker Then Exit Property
-
-If Not mTicker Is Nothing Then mTicker.RemoveQuoteListener Me
-
-Set mTicker = value
-Set mcontract = mTicker.Contract
-
-If mTicker.OrdersAreLive Then
-    Set mOrderContext = mTicker.DefaultOrderContext
-Else
-    Set mOrderContext = mTicker.DefaultOrderContextSimulated
-End If
-If mOrderContext.isReady Then
-    setupTicker
-Else
-    disableAll NotReadyMessage
-End If
-
-Exit Property
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub Finish()
+Public Sub Clear()
+Const ProcName As String = "Clear"
 On Error GoTo Err
-If Not mTicker Is Nothing Then
-    mTicker.RemoveQuoteListener Me
-    Set mTicker = Nothing
-End If
-clearOrderPlex
+
+clearOrderContexts
+clearDataSource
+clearBracketOrder
+clearControls
+disableAll NoContractMessage
+
 Exit Sub
+
 Err:
-'ignore any errors
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub showOrderPlex( _
-                ByVal value As OrderPlex, _
-                ByVal selectedOrderNumber As Long)
-
-Dim entryOrder As Order
-Dim stopOrder As Order
-Dim targetOrder As Order
-
-Const ProcName As String = "showOrderPlex"
-Dim failpoint As String
+Public Sub SetOrderContexts( _
+                ByVal pLiveOrderContext As OrderContext, _
+                ByVal pSimulatedOrderContext As OrderContext)
+Const ProcName As String = "SetOrderContexts"
 On Error GoTo Err
 
-clearOrderPlex
+AssertArgument (Not pLiveOrderContext Is Nothing) Or (Not pSimulatedOrderContext Is Nothing)
 
-Set mOrderPlex = value
-Ticker = mOrderPlex.Ticker
+Set mLiveOrderContext = pLiveOrderContext
+Set mSimulatedOrderContext = pSimulatedOrderContext
 
-SimulateOrdersCheck.Enabled = False     ' can't allow the simulation mode to be changed
+If Not mLiveOrderContext Is Nothing Then AssertArgument Not mLiveOrderContext.IsSimulated
+If Not mSimulatedOrderContext Is Nothing Then AssertArgument mSimulatedOrderContext.IsSimulated
 
-Set entryOrder = mOrderPlex.entryOrder
-Set stopOrder = mOrderPlex.stopOrder
-Set targetOrder = mOrderPlex.targetOrder
+If Not mLiveOrderContext Is Nothing And Not mSimulatedOrderContext Is Nothing Then AssertArgument gGetContractFromContractFuture(mSimulatedOrderContext.ContractFuture).Specifier.Equals(gGetContractFromContractFuture(mLiveOrderContext.ContractFuture).Specifier), "Live and Simulated order contexts must use the same contract"
 
-If stopOrder Is Nothing And targetOrder Is Nothing Then
+If mLiveOrderContext Is Nothing Then
+    SimulateOrdersCheck.value = vbChecked
+    SimulateOrdersCheck.Visible = False
+ElseIf mSimulatedOrderContext Is Nothing Then
+    SimulateOrdersCheck.value = vbUnchecked
+    SimulateOrdersCheck.Visible = False
+Else
+    SimulateOrdersCheck.Visible = True
+End If
+
+setActiveOrderContext chooseLiveOrSimulatedOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub ShowBracketOrder( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pSelectedOrderNumber As Long)
+Const ProcName As String = "ShowBracketOrder"
+On Error GoTo Err
+
+clearBracketOrder
+
+Set mBracketOrder = pBracketOrder
+If mBracketOrder.IsSimulated Then
+    SetOrderContexts Nothing, mBracketOrder.OrderContext
+Else
+    SetOrderContexts mBracketOrder.OrderContext, Nothing
+End If
+
+Dim EntryOrder As IOrder
+Set EntryOrder = mBracketOrder.EntryOrder
+
+Dim StopOrder As IOrder
+Set StopOrder = mBracketOrder.StopLossOrder
+
+Dim TargetOrder As IOrder
+Set TargetOrder = mBracketOrder.TargetOrder
+
+If StopOrder Is Nothing And TargetOrder Is Nothing Then
     RaiseEvent CaptionChanged("Change a single order")
 Else
     RaiseEvent CaptionChanged("Change a bracket order")
@@ -1618,32 +1492,36 @@ End If
 
 OrderSchemeCombo.Enabled = False
 BracketTabStrip.Visible = True
-If selectedOrderNumber <> 0 Then
-    If Not entryOrder Is Nothing Then
-        selectedOrderNumber = selectedOrderNumber - 1
-        If selectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
+If pSelectedOrderNumber <> 0 Then
+    If Not EntryOrder Is Nothing Then
+        pSelectedOrderNumber = pSelectedOrderNumber - 1
+        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
     End If
-    If Not stopOrder Is Nothing Then
-        selectedOrderNumber = selectedOrderNumber - 1
-        If selectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabStopOrder).Selected = True
+    If Not StopOrder Is Nothing Then
+        pSelectedOrderNumber = pSelectedOrderNumber - 1
+        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabStopOrder).Selected = True
     End If
-    If Not targetOrder Is Nothing Then
-        selectedOrderNumber = selectedOrderNumber - 1
-        If selectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabTargetOrder).Selected = True
+    If Not TargetOrder Is Nothing Then
+        pSelectedOrderNumber = pSelectedOrderNumber - 1
+        If pSelectedOrderNumber = 0 Then BracketTabStrip.Tabs(BracketTabs.TabTargetOrder).Selected = True
     End If
 Else
-    If isOrderModifiable(entryOrder) Then
+    If isOrderModifiable(EntryOrder) Then
         BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
-    ElseIf isOrderModifiable(stopOrder) Then
+    ElseIf isOrderModifiable(StopOrder) Then
         BracketTabStrip.Tabs(BracketTabs.TabStopOrder).Selected = True
-    ElseIf isOrderModifiable(targetOrder) Then
+    ElseIf isOrderModifiable(TargetOrder) Then
         BracketTabStrip.Tabs(BracketTabs.TabTargetOrder).Selected = True
     End If
 End If
 
-setOrderFieldValues entryOrder, BracketIndexes.BracketEntryOrder
-setOrderFieldValues stopOrder, BracketIndexes.BracketStopOrder
-setOrderFieldValues targetOrder, BracketIndexes.BracketTargetOrder
+setOrderFieldValues EntryOrder, BracketIndexes.BracketEntryOrder
+setOrderFieldValues StopOrder, BracketIndexes.BracketStopOrder
+setOrderFieldValues TargetOrder, BracketIndexes.BracketTargetOrder
+
+configureOrderFields BracketIndexes.BracketEntryOrder
+configureOrderFields BracketIndexes.BracketStopOrder
+configureOrderFields BracketIndexes.BracketTargetOrder
 
 ModifyButton.Move PlaceOrdersButton.Left, PlaceOrdersButton.Top
 ModifyButton.Visible = True
@@ -1661,12 +1539,12 @@ CompleteOrdersButton.Visible = False
 
 ResetButton.Visible = True
 
-mOrderPlex.AddChangeListener Me
+mBracketOrder.AddChangeListener Me
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1678,7 +1556,6 @@ Private Sub addItemToCombo( _
                 ByVal itemText As String, _
                 ByVal itemData As Long)
 Const ProcName As String = "addItemToCombo"
-Dim failpoint As String
 On Error GoTo Err
 
 combo.addItem itemText
@@ -1687,41 +1564,88 @@ combo.itemData(combo.ListCount - 1) = itemData
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function chooseLiveOrSimulatedOrderContext() As OrderContext
+Set chooseLiveOrSimulatedOrderContext = IIf(SimulateOrdersCheck.value = vbUnchecked, mLiveOrderContext, mSimulatedOrderContext)
+End Function
+
+Private Sub clearBracketOrder()
+Const ProcName As String = "clearBracketOrder"
+On Error GoTo Err
+
+If mBracketOrder Is Nothing Then Exit Sub
+
+mBracketOrder.RemoveChangeListener Me
+Set mBracketOrder = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearControls()
+Const ProcName As String = "clearControls"
+On Error GoTo Err
+
+SymbolLabel.caption = ""
+                        
+clearPriceFields
+
+clearOrderFields BracketIndexes.BracketEntryOrder
+clearOrderFields BracketIndexes.BracketStopOrder
+clearOrderFields BracketIndexes.BracketTargetOrder
+
+clearDataSourceValues
+
+OrderSimulationLabel.caption = ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearDataSource()
+Const ProcName As String = "clearDataSource"
+On Error GoTo Err
+
+If Not mDataSource Is Nothing Then
+    mDataSource.RemoveGenericTickListener Me
+    Set mDataSource = Nothing
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearOrderContexts()
+Set mActiveOrderContext = Nothing
+Set mLiveOrderContext = Nothing
+Set mSimulatedOrderContext = Nothing
 End Sub
 
 Private Sub clearOrderFields(ByVal index As Long)
 Const ProcName As String = "clearOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
 enableOrderFields index
 OrderIDText(index) = ""
 ActionCombo(index).ListIndex = 0
-Select Case mcontract.Specifier.secType
-Case SecTypeStock
-    QuantityText(index) = 100
-Case SecTypeFuture
-    QuantityText(index) = 1
-Case SecTypeOption
-    QuantityText(index) = 1
-Case SecTypeFuturesOption
-    QuantityText(index) = 1
-Case SecTypeCash
-    QuantityText(index) = 25000
-Case SecTypeCombo
-    QuantityText(index) = 1
-Case SecTypeIndex
-    QuantityText(index) = 0
-End Select
+
+QuantityText(index) = 0
 
 ' don't set TypeCombo(Index) as it will affect other fields and there
 ' is no sensible value to set it to
 PriceText(index) = ""
 StopPriceText(index) = ""
 OffsetText(index) = ""
-TIFCombo(index).ListIndex = 0
-TriggerMethodCombo(index).ListIndex = 0
+If TIFCombo(index).ListCount <> 0 Then TIFCombo(index).ListIndex = 0
+If TriggerMethodCombo(index).ListCount <> 0 Then TriggerMethodCombo(index).ListIndex = 0
 IgnoreRthCheck(index) = vbUnchecked
 OrderRefText(index) = ""
 AllOrNoneCheck(index) = vbUnchecked
@@ -1742,28 +1666,45 @@ GoodTillDateTZText(index) = ""
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub clearOrderPlex()
-Const ProcName As String = "clearOrderPlex"
-Dim failpoint As String
+Private Sub clearPriceFields()
+Const ProcName As String = "clearPriceFields"
 On Error GoTo Err
 
-If Not mOrderPlex Is Nothing Then
-    mOrderPlex.RemoveChangeListener Me
-    Set mOrderPlex = Nothing
-End If
+PriceText(BracketIndexes.BracketEntryOrder) = ""
+PriceText(BracketIndexes.BracketStopOrder) = ""
+PriceText(BracketIndexes.BracketTargetOrder) = ""
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub clearDataSourceValues()
+Const ProcName As String = "clearDataSourceValues"
+On Error GoTo Err
+
+AskText.Text = ""
+AskSizeText.Text = ""
+BidText.Text = ""
+BidSizeText.Text = ""
+LastText.Text = ""
+LastSizeText.Text = ""
+VolumeText.Text = ""
+HighText.Text = ""
+LowText.Text = ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function comboItemData(ByVal combo As ComboBox) As Long
 Const ProcName As String = "comboItemData"
-Dim failpoint As String
 On Error GoTo Err
 
 If combo.ListIndex < 0 Then Exit Function
@@ -1772,137 +1713,136 @@ comboItemData = combo.itemData(combo.ListIndex)
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub configureOrderFields( _
                 ByVal orderIndex As Long)
 Const ProcName As String = "configureOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
 Select Case orderIndex
 Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(orderIndex))
-    Case EntryOrderTypeMarket
+    Case BracketEntryTypeMarket
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeMarketOnOpen
+    Case BracketEntryTypeMarketOnOpen
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeMarketOnClose
+    Case BracketEntryTypeMarketOnClose
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeMarketIfTouched
-        disableControl PriceText(orderIndex)
-        enableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeMarketToLimit
-        disableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeBid
-        disableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        enableControl OffsetText(orderIndex)
-    Case EntryOrderTypeAsk
-        disableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        enableControl OffsetText(orderIndex)
-    Case EntryOrderTypeLast
-        disableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        enableControl OffsetText(orderIndex)
-    Case EntryOrderTypeLimit
-        enableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeLimitOnOpen
-        enableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeLimitOnClose
-        enableControl PriceText(orderIndex)
-        disableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeLimitIfTouched
-        enableControl PriceText(orderIndex)
-        enableControl StopPriceText(orderIndex)
-        disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeStop
+    Case BracketEntryTypeMarketIfTouched
         disableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case EntryOrderTypeStopLimit
+    Case BracketEntryTypeMarketToLimit
+        disableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeBid
+        disableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        enableControl OffsetText(orderIndex)
+    Case BracketEntryTypeAsk
+        disableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        enableControl OffsetText(orderIndex)
+    Case BracketEntryTypeLast
+        disableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        enableControl OffsetText(orderIndex)
+    Case BracketEntryTypeLimit
+        enableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeLimitOnOpen
+        enableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeLimitOnClose
+        enableControl PriceText(orderIndex)
+        disableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeLimitIfTouched
+        enableControl PriceText(orderIndex)
+        enableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeStop
+        disableControl PriceText(orderIndex)
+        enableControl StopPriceText(orderIndex)
+        disableControl OffsetText(orderIndex)
+    Case BracketEntryTypeStopLimit
         enableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
     End Select
 Case BracketIndexes.BracketStopOrder
     Select Case comboItemData(TypeCombo(orderIndex))
-    Case StopOrderTypeNone
+    Case BracketStopLossTypeNone
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case StopOrderTypeStop
+    Case BracketStopLossTypeStop
         disableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case StopOrderTypeStopLimit
+    Case BracketStopLossTypeStopLimit
         enableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case StopOrderTypeBid
+    Case BracketStopLossTypeBid
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case StopOrderTypeAsk
+    Case BracketStopLossTypeAsk
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case StopOrderTypeLast
+    Case BracketStopLossTypeLast
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case StopOrderTypeAuto
+    Case BracketStopLossTypeAuto
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
     End Select
 Case BracketIndexes.BracketTargetOrder
     Select Case comboItemData(TypeCombo(orderIndex))
-    Case TargetOrderTypeNone
+    Case BracketTargetTypeNone
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case TargetOrderTypeLimit
+    Case BracketTargetTypeLimit
         enableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case TargetOrderTypeLimitIfTouched
+    Case BracketTargetTypeLimitIfTouched
         enableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case TargetOrderTypeMarketIfTouched
+    Case BracketTargetTypeMarketIfTouched
         disableControl PriceText(orderIndex)
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
-    Case TargetOrderTypeBid
+    Case BracketTargetTypeBid
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case TargetOrderTypeAsk
+    Case BracketTargetTypeAsk
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case TargetOrderTypeLast
+    Case BracketTargetTypeLast
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
-    Case TargetOrderTypeAuto
+    Case BracketTargetTypeAuto
         disableControl PriceText(orderIndex)
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
@@ -1912,13 +1852,12 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableAll( _
                 ByVal message As String)
 Const ProcName As String = "disableAll"
-Dim failpoint As String
 On Error GoTo Err
 
 OrderSchemeCombo.Enabled = False
@@ -1949,29 +1888,27 @@ OrderSimulationLabel = message
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableControl(ByVal field As Control)
 Const ProcName As String = "disableControl"
-Dim failpoint As String
 On Error GoTo Err
 
 field.Enabled = False
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.backColor = SystemColorConstants.vbButtonFace
+field.BackColor = SystemColorConstants.vbButtonFace
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub disableOrderFields(ByVal index As Long)
 Const ProcName As String = "disableOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
 disableControl ActionCombo(index)
@@ -2002,32 +1939,30 @@ disableControl GoodTillDateTZText(index)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableControl(ByVal field As Control)
 Const ProcName As String = "enableControl"
-Dim failpoint As String
 On Error GoTo Err
 
 field.Enabled = True
 If TypeOf field Is CheckBox Or _
     TypeOf field Is OptionButton Then Exit Sub
     
-field.backColor = SystemColorConstants.vbWindowBackground
+field.BackColor = SystemColorConstants.vbWindowBackground
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub enableOrderFields(ByVal index As Long)
 Const ProcName As String = "enableOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
-enableControl ActionCombo(index)
+If index = BracketIndexes.BracketEntryOrder Then enableControl ActionCombo(index)
 enableControl QuantityText(index)
 enableControl TypeCombo(index)
 enableControl PriceText(index)
@@ -2055,28 +1990,26 @@ enableControl GoodTillDateTZText(index)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getPrice( _
                 ByVal priceString As String) As Double
-Dim Price As Double
 Const ProcName As String = "getPrice"
-Dim failpoint As String
 On Error GoTo Err
 
-mcontract.ParsePrice priceString, Price
+Dim Price As Double
+priceFromString priceString, Price
 getPrice = Price
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function isOrderModifiable(ByVal pOrder As Order) As Boolean
+Private Function isOrderModifiable(ByVal pOrder As IOrder) As Boolean
 Const ProcName As String = "isOrderModifiable"
-Dim failpoint As String
 On Error GoTo Err
 
 If pOrder Is Nothing Then Exit Function
@@ -2085,34 +2018,31 @@ isOrderModifiable = pOrder.IsModifiable
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidPrice( _
                 ByVal priceString As String) As Boolean
-Dim Price As Double
 Const ProcName As String = "isValidPrice"
-Dim failpoint As String
 On Error GoTo Err
 
-isValidPrice = mcontract.ParsePrice(priceString, Price)
+Dim Price As Double
+isValidPrice = priceFromString(priceString, Price)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isValidOrder( _
                 ByVal index As Long) As Boolean
-
 Const ProcName As String = "isValidOrder"
-Dim failpoint As String
 On Error GoTo Err
 
-If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).backColor = vbButtonFace
+If Not mInvalidControls(index) Is Nothing Then mInvalidControls(index).BackColor = vbButtonFace
 
-If comboItemData(ActionCombo(index)) = OrderActions.ActionNone Then
+If comboItemData(ActionCombo(index)) = OrderActions.OrderActionNone Then
     isValidOrder = True
     Exit Function
 End If
@@ -2120,25 +2050,25 @@ End If
 Select Case index
 Case BracketEntryOrder
     If Not IsInteger(QuantityText(index), 0) Then setInvalidControl QuantityText(index), index: Exit Function
-    If QuantityText(index) = 0 And mOrderPlex Is Nothing Then setInvalidControl QuantityText(index), index: Exit Function
+    If QuantityText(index) = 0 And mBracketOrder Is Nothing Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
-    Case EntryOrderTypeMarket, EntryOrderTypeMarketOnOpen, EntryOrderTypeMarketOnClose
+    Case BracketEntryTypeMarket, BracketEntryTypeMarketOnOpen, BracketEntryTypeMarketOnClose
         ' other field values don't matter
-    Case EntryOrderTypeMarketIfTouched, EntryOrderTypeStop
+    Case BracketEntryTypeMarketIfTouched, BracketEntryTypeStop
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-    Case EntryOrderTypeMarketToLimit, EntryOrderTypeLimit, EntryOrderTypeLimitOnOpen, EntryOrderTypeLimitOnClose
+    Case BracketEntryTypeMarketToLimit, BracketEntryTypeLimit, BracketEntryTypeLimitOnOpen, BracketEntryTypeLimitOnClose
         If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
-    Case EntryOrderTypeBid, EntryOrderTypeAsk, EntryOrderTypeLast
+    Case BracketEntryTypeBid, BracketEntryTypeAsk, BracketEntryTypeLast
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
-    Case EntryOrderTypeLimitIfTouched, EntryOrderTypeStopLimit
+    Case BracketEntryTypeLimitIfTouched, BracketEntryTypeStopLimit
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
         If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     End Select
 Case BracketStopOrder
-    If comboItemData(TypeCombo(index)) = StopOrderTypeNone Then
+    If comboItemData(TypeCombo(index)) = BracketStopLossTypeNone Then
         isValidOrder = True
         Exit Function
     End If
@@ -2146,18 +2076,18 @@ Case BracketStopOrder
     If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
-    Case StopOrderTypeStop
+    Case BracketStopLossTypeStop
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-    Case StopOrderTypeStopLimit
+    Case BracketStopLossTypeStopLimit
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
         If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
-    Case StopOrderTypeBid, StopOrderTypeAsk, StopOrderTypeLast, StopOrderTypeAuto
+    Case BracketStopLossTypeBid, BracketStopLossTypeAsk, BracketStopLossTypeLast, BracketStopLossTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     End Select
 Case BracketTargetOrder
-    If comboItemData(TypeCombo(index)) = TargetOrderTypeNone Then
+    If comboItemData(TypeCombo(index)) = BracketStopLossTypeNone Then
         isValidOrder = True
         Exit Function
     End If
@@ -2165,14 +2095,14 @@ Case BracketTargetOrder
     If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
-    Case TargetOrderTypeLimit
+    Case BracketTargetTypeLimit
         If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
-    Case TargetOrderTypeLimitIfTouched
+    Case BracketTargetTypeLimitIfTouched
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
         If Not isValidPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
-    Case TargetOrderTypeMarketIfTouched
+    Case BracketTargetTypeMarketIfTouched
         If Not isValidPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
-    Case TargetOrderTypeBid, TargetOrderTypeAsk, TargetOrderTypeLast, TargetOrderTypeAuto
+    Case BracketTargetTypeBid, BracketTargetTypeAsk, BracketTargetTypeLast, BracketTargetTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
@@ -2196,83 +2126,100 @@ isValidOrder = True
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub loadOrderFields(ByVal index As Long)
 Const ProcName As String = "loadOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
-load OrderIDText(index)
-load ActionCombo(index)
-load QuantityText(index)
-load TypeCombo(index)
-load PriceText(index)
-load StopPriceText(index)
-load IgnoreRthCheck(index)
-load OffsetText(index)
-load OffsetValueText(index)
-load TIFCombo(index)
-load OrderRefText(index)
-load AllOrNoneCheck(index)
-load BlockOrderCheck(index)
-load ETradeOnlyCheck(index)
-load FirmQuoteOnlyCheck(index)
-load HiddenCheck(index)
-load OverrideCheck(index)
-load SweepToFillCheck(index)
-load DisplaySizeText(index)
-load MinQuantityText(index)
-load TriggerMethodCombo(index)
-load DiscrAmountText(index)
-load GoodAfterTimeText(index)
-load GoodAfterTimeTZText(index)
-load GoodTillDateText(index)
-load GoodTillDateTZText(index)
+Load OrderIDText(index)
+Load ActionCombo(index)
+Load QuantityText(index)
+Load TypeCombo(index)
+Load PriceText(index)
+Load StopPriceText(index)
+Load IgnoreRthCheck(index)
+Load OffsetText(index)
+Load OffsetValueText(index)
+Load TIFCombo(index)
+Load OrderRefText(index)
+Load AllOrNoneCheck(index)
+Load BlockOrderCheck(index)
+Load ETradeOnlyCheck(index)
+Load FirmQuoteOnlyCheck(index)
+Load HiddenCheck(index)
+Load OverrideCheck(index)
+Load SweepToFillCheck(index)
+Load DisplaySizeText(index)
+Load MinQuantityText(index)
+Load TriggerMethodCombo(index)
+Load DiscrAmountText(index)
+Load GoodAfterTimeText(index)
+Load GoodAfterTimeTZText(index)
+Load GoodTillDateText(index)
+Load GoodTillDateTZText(index)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function priceFromString( _
+                ByVal pPriceString As String, _
+                ByRef pPrice As Double) As Boolean
+Const ProcName As String = "priceFromString"
+On Error GoTo Err
+
+priceFromString = ParsePrice(pPriceString, mContract.Specifier.secType, mContract.TickSize, pPrice)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function priceToString(ByVal pPrice As Double) As String
+Const ProcName As String = "priceToString"
+On Error GoTo Err
+
+priceToString = FormatPrice(pPrice, mContract.Specifier.secType, mContract.TickSize)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub reset()
 Const ProcName As String = "reset"
-Dim failpoint As String
 On Error GoTo Err
 
 clearOrderFields BracketIndexes.BracketEntryOrder
 clearOrderFields BracketIndexes.BracketStopOrder
 clearOrderFields BracketIndexes.BracketTargetOrder
 
-If mTicker.OrdersAreLive Then
-    SimulateOrdersCheck.Enabled = True
-Else
-    SimulateOrdersCheck.value = vbChecked
-    SimulateOrdersCheck.Enabled = False
-End If
-
 OrderSchemeCombo.Enabled = True
-selectComboEntry OrderSchemeCombo, OrderSchemes.Bracketorder
-setOrderScheme OrderSchemes.Bracketorder
+selectComboEntry OrderSchemeCombo, OrderSchemes.BracketOrder
+setOrderScheme OrderSchemes.BracketOrder
 
 selectComboEntry ActionCombo(BracketIndexes.BracketEntryOrder), _
-                OrderActions.ActionBuy
+                OrderActions.OrderActionBuy
 setAction BracketIndexes.BracketEntryOrder
 
 selectComboEntry TypeCombo(BracketIndexes.BracketEntryOrder), _
-                EntryOrderTypes.EntryOrderTypeLimit
+                BracketEntryTypes.BracketEntryTypeLimit
 setOrderFieldsEnabling BracketIndexes.BracketEntryOrder, Nothing
 configureOrderFields BracketIndexes.BracketEntryOrder
 
 selectComboEntry TypeCombo(BracketIndexes.BracketStopOrder), _
-                StopOrderTypes.StopOrderTypeStop
+                BracketStopLossTypes.BracketStopLossTypeStop
 setOrderFieldsEnabling BracketIndexes.BracketStopOrder, Nothing
 configureOrderFields BracketIndexes.BracketStopOrder
 
 selectComboEntry TypeCombo(BracketIndexes.BracketTargetOrder), _
-                TargetOrderTypes.TargetOrderTypeNone
+                BracketTargetTypes.BracketTargetTypeNone
 setOrderFieldsEnabling BracketIndexes.BracketTargetOrder, Nothing
 configureOrderFields BracketIndexes.BracketTargetOrder
 
@@ -2281,19 +2228,17 @@ BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
 Private Sub selectComboEntry( _
                 ByVal combo As ComboBox, _
                 ByVal itemData As Long)
-Dim i As Long
-
 Const ProcName As String = "selectComboEntry"
-Dim failpoint As String
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To combo.ListCount - 1
     If combo.itemData(i) = itemData Then
         combo.ListIndex = i
@@ -2304,51 +2249,72 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setAction( _
                 ByVal index As Long)
 Const ProcName As String = "setAction"
-Dim failpoint As String
 On Error GoTo Err
 
-mOrderAction = comboItemData(ActionCombo(index))
-If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder And _
+If comboItemData(OrderSchemeCombo) = OrderSchemes.BracketOrder And _
     index = BracketIndexes.BracketEntryOrder _
 Then
-    If comboItemData(ActionCombo(index)) = OrderActions.ActionSell Then
-        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.ActionBuy
-        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.ActionBuy
+    If comboItemData(ActionCombo(index)) = OrderActions.OrderActionSell Then
+        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.OrderActionBuy
+        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.OrderActionBuy
     Else
-        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.ActionSell
-        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.ActionSell
+        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.OrderActionSell
+        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.OrderActionSell
     End If
-    disableControl ActionCombo(BracketIndexes.BracketStopOrder)
-    disableControl ActionCombo(BracketIndexes.BracketTargetOrder)
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setActiveOrderContext(ByVal value As OrderContext)
+Const ProcName As String = "setActiveOrderContext"
+On Error GoTo Err
+
+If value Is mActiveOrderContext Then Exit Sub
+
+If Not mDataSource Is Nothing Then mDataSource.RemoveGenericTickListener Me
+
+Set mActiveOrderContext = value
+Set mContract = gGetContractFromContractFuture(mActiveOrderContext.ContractFuture)
+
+Set mDataSource = mActiveOrderContext.DataSource
+If Not mDataSource Is Nothing Then mDataSource.AddGenericTickListener Me
+
+If mActiveOrderContext.IsReady Then
+    setupControls
+Else
+    disableAll NotReadyMessage
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setInvalidControl( _
                 ByVal pControl As Control, _
                 ByVal index As Long)
 Const ProcName As String = "setInvalidControl"
-Dim failpoint As String
 On Error GoTo Err
 
 Set mInvalidControls(index) = pControl
 If BracketTabStrip.Visible Then BracketTabStrip.Tabs(index + 1).Selected = True
-pControl.backColor = ErroredFieldColor
+pControl.BackColor = ErroredFieldColor
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '/**
@@ -2360,11 +2326,11 @@ End Sub
 '
 '*/
 Private Sub setOrderAttributes( _
-                ByVal pOrder As Order, _
+                ByVal pOrder As IOrder, _
                 ByVal orderIndex As Long)
 
 Const ProcName As String = "setOrderAttributes"
-Dim failpoint As String
+
 On Error GoTo Err
 
 With pOrder
@@ -2395,14 +2361,13 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderFieldValues( _
-                ByVal pOrder As Order, _
+                ByVal pOrder As IOrder, _
                 ByVal orderIndex As Long)
 Const ProcName As String = "setOrderFieldValues"
-Dim failpoint As String
 On Error GoTo Err
 
 If pOrder Is Nothing Then
@@ -2452,24 +2417,23 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderFieldEnabling( _
                 ByVal pControl As Control, _
-                ByVal orderAtt As OrderAttributeIds, _
-                ByVal pOrder As Order)
+                ByVal pOrderAtt As OrderAttributes, _
+                ByVal pOrder As IOrder)
 Const ProcName As String = "setOrderFieldEnabling"
-Dim failpoint As String
 On Error GoTo Err
 
 If Not pOrder Is Nothing Then
-    If pOrder.IsAttributeModifiable(orderAtt) Then
+    If pOrder.IsAttributeModifiable(pOrderAtt) Then
         enableControl pControl
     Else
         disableControl pControl
     End If
-ElseIf mOrderContext.IsAttributeSupported(orderAtt) Then
+ElseIf mActiveOrderContext.IsOrderAttributeSupported(pOrderAtt) Then
     enableControl pControl
 Else
     disableControl pControl
@@ -2478,17 +2442,16 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderFieldsEnabling( _
                 ByVal index As Long, _
-                ByVal pOrder As Order)
+                ByVal pOrder As IOrder)
 Const ProcName As String = "setOrderFieldsEnabling"
-Dim failpoint As String
 On Error GoTo Err
 
-setOrderFieldEnabling ActionCombo(index), OrderAttAction, pOrder
+If index = BracketIndexes.BracketEntryOrder Then setOrderFieldEnabling ActionCombo(index), OrderAttAction, pOrder
 setOrderFieldEnabling QuantityText(index), OrderAttQuantity, pOrder
 setOrderFieldEnabling TypeCombo(index), OrderAttOrderType, pOrder
 setOrderFieldEnabling PriceText(index), OrderAttLimitPrice, pOrder
@@ -2515,14 +2478,13 @@ setOrderFieldEnabling GoodTillDateTZText(index), OrderAttGoodTillDateTZ, pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderId( _
                 ByVal index As Long, _
                 ByVal Id As String)
 Const ProcName As String = "setOrderId"
-Dim failpoint As String
 On Error GoTo Err
 
 enableControl OrderIDText(index)
@@ -2532,13 +2494,12 @@ disableControl OrderIDText(index)
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderScheme( _
                 ByVal pOrderScheme As OrderSchemes)
 Const ProcName As String = "setOrderScheme"
-Dim failpoint As String
 On Error GoTo Err
 
 Select Case pOrderScheme
@@ -2554,7 +2515,7 @@ Case OrderSchemes.SimpleOrder
     ResetButton.Enabled = True
     showOrderFields BracketIndexes.BracketEntryOrder
     
-Case OrderSchemes.Bracketorder
+Case OrderSchemes.BracketOrder
     RaiseEvent CaptionChanged("Create a bracket order")
     BracketTabStrip.Visible = True
     PlaceOrdersButton.Enabled = True
@@ -2579,73 +2540,69 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPriceField( _
                 index As Integer)
-Dim basePrice As Double
-Dim offset As Double
-
 Const ProcName As String = "setPriceField"
-Dim failpoint As String
 On Error GoTo Err
+
+Dim lBasePrice As Double
 
 Select Case index
 Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(index))
-    Case EntryOrderTypeBid
-        basePrice = mTicker.BidPrice
-    Case EntryOrderTypeAsk
-        basePrice = mTicker.AskPrice
-    Case EntryOrderTypeLast
-        basePrice = mTicker.TradePrice
+    Case BracketEntryTypeBid
+        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+    Case BracketEntryTypeAsk
+        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    Case BracketEntryTypeLast
+        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
     Case Else
         Exit Sub
     End Select
 Case BracketIndexes.BracketStopOrder
     Select Case comboItemData(TypeCombo(index))
-    Case StopOrderTypeBid
-        basePrice = mTicker.BidPrice
-    Case StopOrderTypeAsk
-        basePrice = mTicker.AskPrice
-    Case StopOrderTypeLast
-        basePrice = mTicker.TradePrice
-    Case StopOrderTypeAuto
-        basePrice = 0
+    Case BracketStopLossTypeBid
+        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+    Case BracketStopLossTypeAsk
+        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    Case BracketStopLossTypeLast
+        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+    Case BracketStopLossTypeAuto
+        lBasePrice = 0
     Case Else
         Exit Sub
     End Select
 Case BracketIndexes.BracketTargetOrder
     Select Case comboItemData(TypeCombo(index))
-    Case TargetOrderTypeBid
-        basePrice = mTicker.BidPrice
-    Case TargetOrderTypeAsk
-        basePrice = mTicker.AskPrice
-    Case TargetOrderTypeLast
-        basePrice = mTicker.TradePrice
-    Case TargetOrderTypeAuto
-        basePrice = 0
+    Case BracketTargetTypeBid
+        lBasePrice = mDataSource.CurrentTick(TickTypeBid).Price
+    Case BracketTargetTypeAsk
+        lBasePrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    Case BracketTargetTypeLast
+        lBasePrice = mDataSource.CurrentTick(TickTypeTrade).Price
+    Case BracketTargetTypeAuto
+        lBasePrice = 0
     Case Else
         Exit Sub
     End Select
 End Select
 
-If IsNumeric(OffsetText(index)) Then
-    offset = OffsetText(index) * mcontract.TickSize
-End If
+Dim lOffset As Double
+If IsNumeric(OffsetText(index)) Then lOffset = OffsetText(index) * mContract.TickSize
 
-PriceText(index) = mTicker.FormatPrice(basePrice + offset)
+PriceText(index) = priceToString(lBasePrice + lOffset)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setPriceFields()
 Const ProcName As String = "setPriceFields"
-Dim failpoint As String
 On Error GoTo Err
 
 setPriceField BracketIndexes.BracketEntryOrder
@@ -2655,68 +2612,59 @@ setPriceField BracketIndexes.BracketTargetOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub setQuantity(ByVal pIndex As Long)
+Select Case mContract.Specifier.secType
+Case SecTypeStock
+    QuantityText(pIndex) = 100
+Case SecTypeFuture
+    QuantityText(pIndex) = 1
+Case SecTypeOption
+    QuantityText(pIndex) = 1
+Case SecTypeFuturesOption
+    QuantityText(pIndex) = 1
+Case SecTypeCash
+    QuantityText(pIndex) = 25000
+Case SecTypeCombo
+    QuantityText(pIndex) = 1
+Case SecTypeIndex
+    QuantityText(pIndex) = 0
+End Select
 End Sub
 
 Private Sub setupActionCombo(ByVal index As Long)
 Const ProcName As String = "setupActionCombo"
-Dim failpoint As String
 On Error GoTo Err
 
 ActionCombo(index).Clear
 If index <> BracketIndexes.BracketEntryOrder Then
     addItemToCombo ActionCombo(index), _
-                OrderActionToString(OrderActions.ActionNone), _
-                OrderActions.ActionNone
+                OrderActionToString(OrderActions.OrderActionNone), _
+                OrderActions.OrderActionNone
+    disableControl ActionCombo(index)
 End If
 addItemToCombo ActionCombo(index), _
-            OrderActionToString(OrderActions.ActionBuy), _
-            OrderActions.ActionBuy
+            OrderActionToString(OrderActions.OrderActionBuy), _
+            OrderActions.OrderActionBuy
 addItemToCombo ActionCombo(index), _
-            OrderActionToString(OrderActions.ActionSell), _
-            OrderActions.ActionSell
+            OrderActionToString(OrderActions.OrderActionSell), _
+            OrderActions.OrderActionSell
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setupOrderSchemeCombo()
-Const ProcName As String = "setupOrderSchemeCombo"
-Dim failpoint As String
+Private Sub setupControls()
+Const ProcName As String = "setupControls"
 On Error GoTo Err
 
-OrderSchemeCombo.Clear
-addItemToCombo OrderSchemeCombo, _
-            "Bracket order", _
-            OrderSchemes.Bracketorder
-addItemToCombo OrderSchemeCombo, _
-            "Simple order", _
-            OrderSchemes.SimpleOrder
-'addItemToCombo OrderSchemeCombo, _
-'            "OCA order", _
-'            OrderSchemes.OCAOrder
-'addItemToCombo OrderSchemeCombo, _
-'            "Combination order", _
-'            OrderSchemes.CombinationOrder
-OrderSchemeCombo.ListIndex = 0
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-End Sub
-
-Private Sub setupTicker()
-
-Const ProcName As String = "setupTicker"
-Dim failpoint As String
-On Error GoTo Err
-
-SymbolLabel.caption = mcontract.Specifier.localSymbol & _
+SymbolLabel.caption = mContract.Specifier.LocalSymbol & _
                         " on " & _
-                        mcontract.Specifier.exchange
+                        mContract.Specifier.Exchange
                         
 setupTifCombo BracketIndexes.BracketEntryOrder
 setupTifCombo BracketIndexes.BracketStopOrder
@@ -2732,11 +2680,13 @@ setupTypeCombo BracketIndexes.BracketTargetOrder
 
 reset
 
-mTicker.RemoveQuoteListener Me
-mTicker.AddQuoteListener Me
-showTickerValues
+setQuantity BracketIndexes.BracketEntryOrder
+setQuantity BracketIndexes.BracketStopOrder
+setQuantity BracketIndexes.BracketTargetOrder
 
-If mOrderContext.IsSimulated Then
+showDataSourceValues
+
+If mActiveOrderContext.IsSimulated Then
     OrderSimulationLabel.caption = OrdersSimulatedMessage
 Else
     OrderSimulationLabel.caption = OrdersLiveMessage
@@ -2745,35 +2695,54 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
+Private Sub setupOrderSchemeCombo()
+Const ProcName As String = "setupOrderSchemeCombo"
+On Error GoTo Err
+
+OrderSchemeCombo.Clear
+addItemToCombo OrderSchemeCombo, _
+            "Bracket order", _
+            OrderSchemes.BracketOrder
+addItemToCombo OrderSchemeCombo, _
+            "Simple order", _
+            OrderSchemes.SimpleOrder
+'addItemToCombo OrderSchemeCombo, _
+'            "OCA order", _
+'            OrderSchemes.OCAOrder
+'addItemToCombo OrderSchemeCombo, _
+'            "Combination order", _
+'            OrderSchemes.CombinationOrder
+OrderSchemeCombo.ListIndex = 0
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTifCombo(ByVal index As Long)
-Dim permittedTifs As Long
-
 Const ProcName As String = "setupTifCombo"
-Dim failpoint As String
 On Error GoTo Err
-
-permittedTifs = mOrderContext.PermittedOrderTifs
 
 TIFCombo(index).Clear
 
-If permittedTifs And OrderTifs.TIFDay Then
+If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFDay) Then
     addItemToCombo TIFCombo(index), _
-                OrderTIFToString(OrderTifs.TIFDay), _
-                OrderTifs.TIFDay
+                OrderTIFToString(OrderTIFs.OrderTIFDay), _
+                OrderTIFs.OrderTIFDay
 End If
-If permittedTifs And OrderTifs.TIFGoodTillCancelled Then
+If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFGoodTillCancelled) Then
     addItemToCombo TIFCombo(index), _
-                OrderTIFToString(OrderTifs.TIFGoodTillCancelled), _
-                OrderTifs.TIFGoodTillCancelled
+                OrderTIFToString(OrderTIFs.OrderTIFGoodTillCancelled), _
+                OrderTIFs.OrderTIFGoodTillCancelled
 End If
-If permittedTifs And OrderTifs.TIFImmediateOrCancel Then
+If mActiveOrderContext.IsOrderTifSupported(OrderTIFs.OrderTIFImmediateOrCancel) Then
     addItemToCombo TIFCombo(index), _
-                OrderTIFToString(OrderTifs.TIFImmediateOrCancel), _
-                OrderTifs.TIFImmediateOrCancel
+                OrderTIFToString(OrderTIFs.OrderTIFImmediateOrCancel), _
+                OrderTIFs.OrderTIFImmediateOrCancel
 End If
 
 TIFCombo(0).ListIndex = 0
@@ -2781,54 +2750,49 @@ TIFCombo(0).ListIndex = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTriggerMethodCombo(ByVal index As Long)
-Dim permittedTriggers As Long
-
 Const ProcName As String = "setupTriggerMethodCombo"
-Dim failpoint As String
 On Error GoTo Err
-
-permittedTriggers = mOrderContext.permittedStopTriggerMethods
 
 TriggerMethodCombo(index).Clear
 
-If permittedTriggers And StopTriggerMethods.StopTriggerDefault Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerDefault) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerDefault), _
-                StopTriggerMethods.StopTriggerDefault
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerDefault), _
+                OrderStopTriggerMethods.OrderStopTriggerDefault
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerLast Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerLast) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerLast), _
-                StopTriggerMethods.StopTriggerLast
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerLast), _
+                OrderStopTriggerMethods.OrderStopTriggerLast
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerBidAsk Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerBidAsk) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerBidAsk), _
-                StopTriggerMethods.StopTriggerBidAsk
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerBidAsk), _
+                OrderStopTriggerMethods.OrderStopTriggerBidAsk
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerDoubleBidAsk Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerDoubleBidAsk) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerDoubleBidAsk), _
-                StopTriggerMethods.StopTriggerDoubleBidAsk
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerDoubleBidAsk), _
+                OrderStopTriggerMethods.OrderStopTriggerDoubleBidAsk
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerDoubleLast Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerDoubleLast) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerDoubleLast), _
-                StopTriggerMethods.StopTriggerDoubleLast
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerDoubleLast), _
+                OrderStopTriggerMethods.OrderStopTriggerDoubleLast
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerLastOrBidAsk Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerLastOrBidAsk) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerLastOrBidAsk), _
-                StopTriggerMethods.StopTriggerLastOrBidAsk
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerLastOrBidAsk), _
+                OrderStopTriggerMethods.OrderStopTriggerLastOrBidAsk
 End If
-If permittedTriggers And StopTriggerMethods.StopTriggerMidPoint Then
+If mActiveOrderContext.IsStopTriggerMethodSupported(OrderStopTriggerMethods.OrderStopTriggerMidPoint) Then
     addItemToCombo TriggerMethodCombo(index), _
-                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerMidPoint), _
-                StopTriggerMethods.StopTriggerMidPoint
+                OrderStopTriggerMethodToString(OrderStopTriggerMethods.OrderStopTriggerMidPoint), _
+                OrderStopTriggerMethods.OrderStopTriggerMidPoint
 End If
 
 TriggerMethodCombo(index).ListIndex = 0
@@ -2836,144 +2800,145 @@ TriggerMethodCombo(index).ListIndex = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupTypeCombo(ByVal index As Long)
-Dim permittedOrderTypes As Long
-
 Const ProcName As String = "setupTypeCombo"
-Dim failpoint As String
 On Error GoTo Err
-
-permittedOrderTypes = mOrderContext.permittedOrderTypes
 
 TypeCombo(index).Clear
 
 If index = BracketIndexes.BracketEntryOrder Then
-    If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLimit), _
-                    EntryOrderTypes.EntryOrderTypeLimit
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeLimit), _
+                    BracketEntryTypes.BracketEntryTypeLimit
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarket Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarket) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarket), _
-                    EntryOrderTypes.EntryOrderTypeMarket
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeMarket), _
+                    BracketEntryTypes.BracketEntryTypeMarket
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeStop Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeStop), _
-                    EntryOrderTypes.EntryOrderTypeStop
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeStop), _
+                    BracketEntryTypes.BracketEntryTypeStop
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeStopLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeStopLimit), _
-                    EntryOrderTypes.EntryOrderTypeStopLimit
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeStopLimit), _
+                    BracketEntryTypes.BracketEntryTypeStopLimit
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) And _
+        Not mDataSource Is Nothing _
+    Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeBid), _
-                    EntryOrderTypes.EntryOrderTypeBid
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeBid), _
+                    BracketEntryTypes.BracketEntryTypeBid
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeAsk), _
-                    EntryOrderTypes.EntryOrderTypeAsk
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeAsk), _
+                    BracketEntryTypes.BracketEntryTypeAsk
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLast), _
-                    EntryOrderTypes.EntryOrderTypeLast
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeLast), _
+                    BracketEntryTypes.BracketEntryTypeLast
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimitOnOpen Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitOnOpen) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLimitOnOpen), _
-                    EntryOrderTypes.EntryOrderTypeLimitOnOpen
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeLimitOnOpen), _
+                    BracketEntryTypes.BracketEntryTypeLimitOnOpen
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarketOnOpen Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketOnOpen) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarketOnOpen), _
-                    EntryOrderTypes.EntryOrderTypeMarketOnOpen
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeMarketOnOpen), _
+                    BracketEntryTypes.BracketEntryTypeMarketOnOpen
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimitOnClose Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitOnClose) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLimitOnClose), _
-                    EntryOrderTypes.EntryOrderTypeLimitOnClose
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeLimitOnClose), _
+                    BracketEntryTypes.BracketEntryTypeLimitOnClose
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarketOnClose Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketOnClose) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarketOnClose), _
-                    EntryOrderTypes.EntryOrderTypeMarketOnClose
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeMarketOnClose), _
+                    BracketEntryTypes.BracketEntryTypeMarketOnClose
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimitIfTouched Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitIfTouched) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLimitIfTouched), _
-                    EntryOrderTypes.EntryOrderTypeLimitIfTouched
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeLimitIfTouched), _
+                    BracketEntryTypes.BracketEntryTypeLimitIfTouched
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarketIfTouched Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketIfTouched) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarketIfTouched), _
-                    EntryOrderTypes.EntryOrderTypeMarketIfTouched
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeMarketIfTouched), _
+                    BracketEntryTypes.BracketEntryTypeMarketIfTouched
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarketToLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketToLimit) Then
         addItemToCombo TypeCombo(index), _
-                    EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarketToLimit), _
-                    EntryOrderTypes.EntryOrderTypeMarketToLimit
+                    BracketEntryTypeToString(BracketEntryTypes.BracketEntryTypeMarketToLimit), _
+                    BracketEntryTypes.BracketEntryTypeMarketToLimit
     End If
 ElseIf index = BracketIndexes.BracketStopOrder Then
     addItemToCombo TypeCombo(index), _
-                StopOrderTypeToString(StopOrderTypes.StopOrderTypeNone), _
-                StopOrderTypes.StopOrderTypeNone
-    If permittedOrderTypes And OrderTypes.OrderTypeStop Then
+                BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeNone), _
+                BracketStopLossTypes.BracketStopLossTypeNone
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeStop), _
-                    StopOrderTypes.StopOrderTypeStop
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeStop), _
+                    BracketStopLossTypes.BracketStopLossTypeStop
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeStopLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeStopLimit), _
-                    StopOrderTypes.StopOrderTypeStopLimit
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeStopLimit), _
+                    BracketStopLossTypes.BracketStopLossTypeStopLimit
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) And _
+        Not mDataSource Is Nothing _
+    Then
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeBid), _
-                    StopOrderTypes.StopOrderTypeBid
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeBid), _
+                    BracketStopLossTypes.BracketStopLossTypeBid
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeAsk), _
-                    StopOrderTypes.StopOrderTypeAsk
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeAsk), _
+                    BracketStopLossTypes.BracketStopLossTypeAsk
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeLast), _
-                    StopOrderTypes.StopOrderTypeLast
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeLast), _
+                    BracketStopLossTypes.BracketStopLossTypeLast
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeStop Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
         addItemToCombo TypeCombo(index), _
-                    StopOrderTypeToString(StopOrderTypes.StopOrderTypeAuto), _
-                    StopOrderTypes.StopOrderTypeAuto
+                    BracketStopLossTypeToString(BracketStopLossTypes.BracketStopLossTypeAuto), _
+                    BracketStopLossTypes.BracketStopLossTypeAuto
     End If
 ElseIf index = BracketIndexes.BracketTargetOrder Then
     addItemToCombo TypeCombo(index), _
-                TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeNone), _
-                TargetOrderTypes.TargetOrderTypeNone
-    If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
+                BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeNone), _
+                BracketTargetTypes.BracketTargetTypeNone
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) Then
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeLimit), _
-                    TargetOrderTypes.TargetOrderTypeLimit
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeLimit), _
+                    BracketTargetTypes.BracketTargetTypeLimit
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeMarketIfTouched Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketIfTouched) Then
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeMarketIfTouched), _
-                    TargetOrderTypes.TargetOrderTypeMarketIfTouched
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeMarketIfTouched), _
+                    BracketTargetTypes.BracketTargetTypeMarketIfTouched
     End If
-    If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
+    If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) And _
+        Not mDataSource Is Nothing _
+    Then
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeBid), _
-                    TargetOrderTypes.TargetOrderTypeBid
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeBid), _
+                    BracketTargetTypes.BracketTargetTypeBid
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeAsk), _
-                    TargetOrderTypes.TargetOrderTypeAsk
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeAsk), _
+                    BracketTargetTypes.BracketTargetTypeAsk
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeLast), _
-                    TargetOrderTypes.TargetOrderTypeLast
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeLast), _
+                    BracketTargetTypes.BracketTargetTypeLast
         addItemToCombo TypeCombo(index), _
-                    TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeAuto), _
-                    TargetOrderTypes.TargetOrderTypeAuto
+                    BracketTargetTypeToString(BracketTargetTypes.BracketTargetTypeAuto), _
+                    BracketTargetTypes.BracketTargetTypeAuto
     End If
 End If
 
@@ -2982,15 +2947,14 @@ TypeCombo(index).ListIndex = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub showOrderFields(ByVal index As Long)
-Dim i As Long
 Const ProcName As String = "showOrderFields"
-Dim failpoint As String
 On Error GoTo Err
 
+Dim i As Long
 For i = 0 To ActionCombo.Count - 1
     If i = index Then
         OrderIDText(i).Visible = True
@@ -3052,29 +3016,30 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub showTickerValues()
-Const ProcName As String = "showTickerValues"
-Dim failpoint As String
+Private Sub showDataSourceValues()
+Const ProcName As String = "showDataSourceValues"
 On Error GoTo Err
 
-AskText.Text = mTicker.FormatPrice(mTicker.AskPrice)
-AskSizeText.Text = mTicker.AskSize
-BidText.Text = mTicker.FormatPrice(mTicker.BidPrice)
-BidSizeText.Text = mTicker.BidSize
-LastText.Text = mTicker.FormatPrice(mTicker.TradePrice)
-LastSizeText.Text = mTicker.TradeSize
-VolumeText.Text = mTicker.Volume
-HighText.Text = mTicker.FormatPrice(mTicker.HighPrice)
-LowText.Text = mTicker.FormatPrice(mTicker.LowPrice)
+If mDataSource Is Nothing Then Exit Sub
+
+AskText.Text = priceToString(mDataSource.CurrentTick(TickTypeAsk).Price)
+AskSizeText.Text = mDataSource.CurrentTick(TickTypeAsk).Size
+BidText.Text = priceToString(mDataSource.CurrentTick(TickTypeBid).Price)
+BidSizeText.Text = mDataSource.CurrentTick(TickTypeBid).Size
+LastText.Text = priceToString(mDataSource.CurrentTick(TickTypeTrade).Price)
+LastSizeText.Text = mDataSource.CurrentTick(TickTypeTrade).Size
+VolumeText.Text = mDataSource.CurrentTick(TickTypeVolume).Size
+HighText.Text = priceToString(mDataSource.CurrentTick(TickTypeHighPrice).Price)
+LowText.Text = priceToString(mDataSource.CurrentTick(TickTypeLowPrice).Price)
 setPriceFields
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

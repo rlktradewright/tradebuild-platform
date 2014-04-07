@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#172.0#0"; "ChartSkil2-6.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#168.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -8,7 +8,7 @@ Begin VB.UserControl ChartNavToolbar
    ClientWidth     =   6915
    ScaleHeight     =   3600
    ScaleWidth      =   6915
-   Begin ChartSkil26.ChartToolbar ChartToolbar1 
+   Begin ChartSkil27.ChartToolbar ChartToolbar1 
       Height          =   330
       Left            =   0
       TabIndex        =   0
@@ -59,7 +59,7 @@ Private Const ModuleName                    As String = "ChartNavToolbar"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTradeBuildChart             As TradeBuildChart
+Private WithEvents mTradeBuildChart             As MarketChart
 Attribute mTradeBuildChart.VB_VarHelpID = -1
 Private WithEvents mChartManager                As ChartManager
 Attribute mChartManager.VB_VarHelpID = -1
@@ -89,11 +89,11 @@ End Sub
 ' ChangeListener Interface Members
 '@================================================================================
 
-Private Sub ChangeListener_Change(ev As TWUtilities30.ChangeEventData)
-Dim changeType As MultiChartChangeTypes
+Private Sub ChangeListener_Change(ev As ChangeEventData)
 Const ProcName As String = "ChangeListener_Change"
-Dim failpoint As String
 On Error GoTo Err
+
+Dim changeType As MultiChartChangeTypes
 
 changeType = ev.changeType
 Select Case changeType
@@ -108,14 +108,14 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' mChartManager Event Handlers
 '@================================================================================
 
-Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As ChartUtils26.StudyConfiguration)
+Private Sub mChartManager_BaseStudyConfigurationChanged(ByVal studyConfig As StudyConfiguration)
 Const ProcName As String = "mChartManager_BaseStudyConfigurationChanged"
 On Error GoTo Err
 
@@ -131,11 +131,11 @@ End Sub
 ' mTradeBuildChart Event Handlers
 '@================================================================================
 
-Private Sub mTradeBuildChart_StateChange(ev As TWUtilities30.StateChangeEventData)
-Dim State As ChartStates
+Private Sub mTradeBuildChart_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mTradeBuildChart_StateChange"
-Dim failpoint As String
 On Error GoTo Err
+
+Dim State As ChartStates
 
 State = ev.State
 Select Case State
@@ -168,7 +168,6 @@ End Property
 Public Property Let Enabled( _
                 ByVal value As Boolean)
 Const ProcName As String = "Enabled"
-Dim failpoint As String
 On Error GoTo Err
 
 UserControl.Enabled = value
@@ -178,7 +177,7 @@ PropertyChanged "Enabled"
 Exit Property
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -186,19 +185,14 @@ End Property
 '@================================================================================
 
 Public Sub Initialise( _
-                Optional ByVal pChart As TradeBuildChart, _
+                Optional ByVal pChart As MarketChart, _
                 Optional ByVal pMultiChart As MultiChart)
 Const ProcName As String = "Initialise"
-Dim failpoint As String
 On Error GoTo Err
 
-If pChart Is Nothing And pMultiChart Is Nothing Or _
-    (Not pChart Is Nothing And Not pMultiChart Is Nothing) _
-Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & ProcName, _
-            "Either a Chart or a Multichart (but not both) must be supplied"
-End If
+AssertArgument (Not pChart Is Nothing Or Not pMultiChart Is Nothing) And _
+    (pChart Is Nothing Or pMultiChart Is Nothing), _
+    "Either a Chart or a Multichart (but not both) must be supplied"
 
 If Not pChart Is Nothing Then
     attachToChart pChart
@@ -213,16 +207,15 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub attachToChart(ByVal pChart As TradeBuildChart)
+Private Sub attachToChart(ByVal pChart As MarketChart)
 Const ProcName As String = "attachToChart"
-Dim failpoint As String
 On Error GoTo Err
 
     Set mTradeBuildChart = pChart
@@ -234,12 +227,11 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub attachToCurrentChart()
 Const ProcName As String = "attachToCurrentChart"
-Dim failpoint As String
 On Error GoTo Err
 
 If multiChartObj.Count > 0 Then
@@ -251,12 +243,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function multiChartObj() As MultiChart
 Const ProcName As String = "multiChartObj"
-Dim failpoint As String
 On Error GoTo Err
 
 Set multiChartObj = mMultichartRef.Target
@@ -264,7 +255,7 @@ Set multiChartObj = mMultichartRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setChartManager()
@@ -272,9 +263,7 @@ Set mChartManager = mTradeBuildChart.ChartManager
 End Sub
 
 Private Sub setupChartNavButtons()
-
 Const ProcName As String = "setupChartNavButtons"
-Dim failpoint As String
 On Error GoTo Err
 
 ChartToolbar1.Initialise mTradeBuildChart.BaseChartController, _
@@ -284,7 +273,6 @@ ChartToolbar1.Initialise mTradeBuildChart.BaseChartController, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
-
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
